@@ -1,0 +1,4 @@
+type: array
+description: The result of an apply task (its final output, parsed as JSON) - the modules deployed.
+items:
+  type: string

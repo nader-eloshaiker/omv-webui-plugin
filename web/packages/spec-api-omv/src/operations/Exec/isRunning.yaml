@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: execIsRunning
+  tags:
+    - Exec
+  summary: "Is a task still running?"
+  description: "Used only by the task helper, and not for polling: on a finished task it deletes the task, so a later getOutput fails."
+  x-omv-rpc:
+    service: Exec
+    method: isRunning
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.exec.isrunning
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ExecHandleRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ExecRunning.yaml
+          examples:
+            running:
+              $ref: ../../examples/execIsRunning.running.yaml

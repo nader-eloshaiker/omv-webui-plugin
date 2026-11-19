@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sshGet
+  tags:
+    - SSH
+  summary: SSH settings
+  description: The SSH service settings.
+  x-omv-rpc:
+    service: SSH
+    method: get
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SshSettings.yaml
+          examples:
+            defaults:
+              $ref: ../../examples/sshGet.defaults.yaml

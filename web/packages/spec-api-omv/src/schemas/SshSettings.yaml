@@ -1,0 +1,33 @@
+type: object
+description: The SSH service settings (conf.service.ssh).
+required:
+  [
+    enable,
+    port,
+    passwordauthentication,
+    pubkeyauthentication,
+    permitrootlogin,
+    tcpforwarding,
+    compression,
+    extraoptions,
+  ]
+properties:
+  enable:
+    type: boolean
+  port:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  passwordauthentication:
+    type: boolean
+  pubkeyauthentication:
+    type: boolean
+  permitrootlogin:
+    type: boolean
+  tcpforwarding:
+    type: boolean
+  compression:
+    type: boolean
+  extraoptions:
+    type: string
+    description: Extra lines for the SSH server's configuration file. Free text.

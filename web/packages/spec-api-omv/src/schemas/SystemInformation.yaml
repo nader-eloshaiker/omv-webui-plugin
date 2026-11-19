@@ -1,0 +1,78 @@
+type: object
+description: >-
+  System information. Every signed-in user gets `ts`, `time` and `hostname`; an administrator also
+  gets the rest.
+required: [ts, time, hostname]
+properties:
+  ts:
+    type: integer
+    description: Unix time on the server, in seconds.
+  time:
+    type: string
+    description: Display text, the server's local time in the server's locale.
+  hostname:
+    type: string
+  version:
+    type: string
+    description: Display text, e.g. "8.6.1-1 (Synchrony)".
+  cpuModelName:
+    type: string
+    nullable: true
+  cpuUtilization:
+    type: number
+    description: Percent, 0 to 100.
+  cpuCores:
+    type: integer
+    nullable: true
+  cpuMhz:
+    type: number
+    nullable: true
+  memTotal:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  memFree:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  memUsed:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  memAvailable:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  memUtilization:
+    type: string
+    description: A fraction from 0 to 1, as a decimal string (A4).
+  kernel:
+    type: string
+    description: Display text.
+  uptime:
+    type: number
+    description: Seconds.
+  loadAverage:
+    type: object
+    properties:
+      1min:
+        type: number
+      5min:
+        type: number
+      15min:
+        type: number
+  configDirty:
+    type: boolean
+  dirtyModules:
+    type: object
+    description: >-
+      Module name to the module's description (display text). An empty map arrives as `[]`; the
+      transport turns it into `{}`.
+    additionalProperties:
+      type: string
+  rebootRequired:
+    type: boolean
+  availablePkgUpdates:
+    type: integer
+  displayWelcomeMessage:
+    type: boolean

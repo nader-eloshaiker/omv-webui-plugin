@@ -12,11 +12,11 @@ Cookie: <OMV session cookie>           (sent by the browser; same origin)
 { "service": "SSH", "method": "set", "params": { … }, "options": { "updatelastaccess": false } }
 ```
 
-| Field | Notes |
-|-------|-------|
-| `service`, `method` | From the contract's `x-omv-rpc`, fixed at build time. Never from user input, a URL or a response |
-| `params` | The operation's request body. Omitted when the operation has none (`A2`) |
-| `options.updatelastaccess` | `false` on background polling so it does not extend the session; omitted otherwise |
+| Field                      | Notes                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `service`, `method`        | From the contract's `x-omv-rpc`, fixed at build time. Never from user input, a URL or a response    |
+| `params`                   | The operation's request body, or `{}` when the operation has none (`A2`: rpc.php treats them alike) |
+| `options.updatelastaccess` | `false` on background polling so it does not extend the session; omitted otherwise                  |
 
 The transport always uses `POST` with a JSON body and `credentials: "same-origin"`. It never uses the endpoint's other accepted forms (query-string parameters, other content types).
 
@@ -34,9 +34,9 @@ The transport throws one error type:
 
 ```ts
 class RpcError extends Error {
-  status: number;        // HTTP status
-  code: number | null;   // backend's numeric code
-  message: string;       // backend's message, shown as text
+  status: number; // HTTP status
+  code: number | null; // backend's numeric code
+  message: string; // backend's message, shown as text
   operationId: string;
 }
 ```
@@ -45,13 +45,13 @@ class RpcError extends Error {
 - A reply that is not JSON, or not of this shape, becomes an `RpcError` with a generic message.
 - Network failure and timeouts become an `RpcError` with status 0.
 
-| Status | Meaning to the application |
-|--------|----------------------------|
-| 401 | Session missing or expired. Clear session state, cancel queries, show login. The transport does this itself, once |
-| 403 | Not permitted for this role |
-| 400 | The backend rejected the parameters, or a domain error ("device busy"). Show `message` |
-| 429 | Too many attempts (login and second-factor verification). Show the wait |
-| 5xx / 0 | Backend failure. For a mutation, the outcome is unknown: re-read state; never retry automatically |
+| Status  | Meaning to the application                                                                                        |
+| ------- | ----------------------------------------------------------------------------------------------------------------- |
+| 401     | Session missing or expired. Clear session state, cancel queries, show login. The transport does this itself, once |
+| 403     | Not permitted for this role                                                                                       |
+| 400     | The backend rejected the parameters, or a domain error ("device busy"). Show `message`                            |
+| 429     | Too many attempts (login and second-factor verification). Show the wait                                           |
+| 5xx / 0 | Backend failure. For a mutation, the outcome is unknown: re-read state; never retry automatically                 |
 
 Queries may retry on network failure (TanStack Query default behaviour, capped at 2). Mutations never retry automatically.
 
@@ -97,18 +97,18 @@ Request: `{ start, limit, sortfield?, sortdir?, search? }` (`limit: null` or `-1
 
 A method that starts long work returns a string: a task handle (the path of a status file on the server). The client follows it with the `Exec` service:
 
-| Method | Parameters | Returns |
-|--------|------------|---------|
+| Method           | Parameters                   | Returns                                                                                   |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------- |
 | `Exec.getOutput` | `{ filename, pos, length? }` | `{ filename, pos, output, pendingOutput, running }`; throws the task's error if it failed |
-| `Exec.isRunning` | `{ filename }` | `{ filename, running }` |
-| `Exec.stop` | `{ filename }` | — |
+| `Exec.isRunning` | `{ filename }`               | `{ filename, running }`                                                                   |
+| `Exec.stop`      | `{ filename }`               | —                                                                                         |
 
 The task helper:
 
 - Polls `getOutput` from the last `pos`, starting at 500 ms and backing off to 2 s when there is no new output, with `updatelastaccess: false`.
 - Exposes `{ state: running | done | failed, output, result?, error? }` to a hook, and `stop()`.
 - When a task ends and the operation's contract entry declares a result schema, parses the final output as JSON for the result. Otherwise the output is text.
-- Treats the handle as opaque: holds it in memory only, never shows it, never puts it in a URL or storage, and passes to `Exec` only handles it received from a task-starting call in this page session (UI-5).
+- Treats the handle as opaque: holds it in memory only, never shows it, never puts it in a URL or storage, and passes to `Exec` only handles it received from a task-starting call in this page session (UI-5). The transport enforces the last part: it remembers the handles task-starting operations returned, refuses an `Exec` call with any other, and forgets a handle once the server has dropped it.
 - Renders output as plain text in the terminal-style component of the style guide.
 
 ## Downloads
@@ -123,13 +123,13 @@ Two backend methods take an uploaded package file. Not in version 1.
 
 Applied using the operation's response schema from the contract, so pages receive what the types say.
 
-| Quirk | Handling |
-|-------|----------|
-| Empty object arrives as `[]` (PHP encodes empty maps and empty lists the same) | Where the schema says object and the value is `[]`, substitute `{}` |
-| Integers above 2^53 (byte counts of large disks) lose precision in JavaScript | The contract types such fields as strings (`x-omv-int64`); the transport parses the reply so they are preserved as strings (`A4` lists the fields; the method depends on how the backend serialises them) |
-| Booleans as `0`/`1`, numbers as strings, in some fields | Converted only for fields marked `x-omv-coerce` in the contract. No global coercion |
-| Text already translated or formatted by the server (some `description` fields, `getStats` text blocks) | Typed as display text; rendered as text; raw fields preferred where they exist |
-| Fields added by other plugins to a core method's response | Response schemas are open; unknown fields are ignored by the types and passed through |
+| Quirk                                                                                                  | Handling                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Empty object arrives as `[]` (PHP encodes empty maps and empty lists the same)                         | Where the schema says object and the value is `[]`, substitute `{}`                                                                                                                                       |
+| Integers above 2^53 (byte counts of large disks) lose precision in JavaScript                          | The contract types such fields as strings (`x-omv-int64`); the transport parses the reply so they are preserved as strings (`A4` lists the fields; the method depends on how the backend serialises them) |
+| Booleans as `0`/`1`, numbers as strings, in some fields                                                | Converted only for fields marked `x-omv-coerce` in the contract. No global coercion                                                                                                                       |
+| Text already translated or formatted by the server (some `description` fields, `getStats` text blocks) | Typed as display text; rendered as text; raw fields preferred where they exist                                                                                                                            |
+| Fields added by other plugins to a core method's response                                              | Response schemas are open; unknown fields are ignored by the types and passed through                                                                                                                     |
 
 In development and test builds the transport also validates each response against its schema and reports mismatches in the console, to catch contract drift (D4). Production builds do not validate.
 
@@ -137,12 +137,15 @@ In development and test builds the transport also validates each response agains
 
 ```ts
 // web/packages/react-api-omv/src/transport/rpcClient.ts
-export const rpcClient = <T>(config: {
-  url: string;              // "/rpc/SSH/set" — from the generated client
-  method: "POST";
-  data?: unknown;
-  signal?: AbortSignal;
-}, options?: { background?: boolean }) => Promise<T>;
+export const rpcClient = <T>(
+  config: {
+    url: string; // "/rpc/SSH/set" — from the generated client
+    method: "POST";
+    data?: unknown;
+    signal?: AbortSignal;
+  },
+  options?: { background?: boolean },
+) => Promise<T>;
 ```
 
 - Resolves `url` against a table generated from the contract (`operationId`, `service`, `method`, response schema reference, flags). A `url` not in the table throws before any request is made.

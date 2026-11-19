@@ -1,0 +1,8 @@
+oneOf:
+  - $ref: ./SessionAuthenticated.yaml
+  - $ref: ./SessionChallengeRequired.yaml
+discriminator:
+  propertyName: status
+  mapping:
+    authenticated: ./SessionAuthenticated.yaml
+    challengeRequired: ./SessionChallengeRequired.yaml

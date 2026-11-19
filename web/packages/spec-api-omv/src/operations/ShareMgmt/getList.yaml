@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: shareMgmtGetList
+  tags:
+    - ShareMgmt
+  summary: Shared folders
+  description: "A page of shared folders, sorted and searched by the backend."
+  x-omv-rpc:
+    service: ShareMgmt
+    method: getList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SharedFolderList.yaml
+          examples:
+            populated:
+              $ref: ../../examples/shareMgmtGetList.populated.yaml
+            searchNoMatch:
+              $ref: ../../examples/shareMgmtGetList.searchNoMatch.yaml

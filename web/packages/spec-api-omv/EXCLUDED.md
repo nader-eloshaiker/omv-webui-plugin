@@ -1,0 +1,15 @@
+# Methods deliberately not in the contract
+
+Backend methods the interface does not use, and why (docs/04, "Excluded methods"). Check this list before adding an operation. An excluded method is added only with the owner's decision, recorded in `docs/journal.md`.
+
+| Method                                                        | Why it is excluded                                                                                                                                 |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Exec.enumerate`                                              | Lists every background task on the server. The interface follows only the tasks it started in this page session, by the handle it received (UI-5)  |
+| `Exec.attach`                                                 | Joins a task the interface did not start; same reason                                                                                              |
+| `Rrd.generate`, `Rrd.getGraph`                                | Pre-rendered graph images. Charts are drawn from data the page samples (A7)                                                                        |
+| `Config.applyChanges`, `Config.revertChanges`                 | The blocking forms of `applyChangesBg` and `revertChangesBg`. The interface always runs these as tasks, so a long apply never holds a request open |
+| `Config.getlist`, `Config.get`, `Config.set`, `Config.delete` | Generic access to any configuration object by datamodel id. The interface uses each domain's own methods, which validate what they store           |
+
+## Implicated by the private review
+
+Some backend methods are implicated by the private review of OMV's web layer (`M2`, `M3`; docs/05, "Inherited and not fixable here"). They are not named here: a method's name next to its review ID would point at a weakness that is not yet fixed upstream (AGENTS.md rule 3). The owner holds the list. Before adding any operation to the contract, ask the owner whether it is on it. None of the operations in the contract today is.

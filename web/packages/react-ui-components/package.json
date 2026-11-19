@@ -1,0 +1,8 @@
+{
+  "name": "@omv-webui/react-ui-components",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "Shared components with Storybook. Filled in Phase 2."
+}

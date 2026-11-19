@@ -1,0 +1,4 @@
+type: string
+description: An account name, in OMV's `username` format.
+x-omv-format: username
+pattern: '^[a-zA-Z0-9_.][a-zA-Z0-9_.-]*\$?$'

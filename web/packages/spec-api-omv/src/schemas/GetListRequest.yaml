@@ -1,0 +1,24 @@
+type: object
+description: >-
+  Paging, sorting and search for a list (rpc.common.getlist). The backend sorts and searches the
+  whole list. `limit` null returns every row (A2). OMV also accepts an integer `search`; the
+  contract accepts text only.
+required: [start, limit]
+properties:
+  start:
+    type: integer
+    minimum: 0
+  limit:
+    type: integer
+    nullable: true
+    minimum: 0
+  sortfield:
+    type: string
+    nullable: true
+  sortdir:
+    type: string
+    nullable: true
+    enum: [asc, desc]
+  search:
+    type: string
+    nullable: true

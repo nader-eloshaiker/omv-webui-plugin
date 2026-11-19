@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: configIsDirty
+  tags:
+    - Config
+  summary: "Are configuration changes pending?"
+  description: True when saved settings have not been applied yet.
+  x-omv-rpc:
+    service: Config
+    method: isDirty
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.config.isDirty
+    omvVersion: "8.6.1"
+  requestBody:
+    required: false
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ConfigIsDirtyRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            type: boolean
+          examples:
+            clean:
+              $ref: ../../examples/configIsDirty.clean.yaml
+            dirty:
+              $ref: ../../examples/configIsDirty.dirty.yaml

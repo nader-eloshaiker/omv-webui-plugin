@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# The contract: the openmediavault rpc.php methods the interface uses (docs/04). One path per
+# method, POST /rpc/{Service}/{method}; the transport maps each to an rpc.php request.
+openapi: 3.0.3
+info:
+  title: openmediavault-webui contract
+  version: 0.0.0
+  description: >-
+    The backend methods the openmediavault web interface calls, described from OMV's source and
+    from replies captured on a test system. Nothing on the server reads this document.
+  license:
+    name: GPL-3.0-or-later
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+servers:
+  - url: /
+tags:
+  - name: Session
+  - name: System
+  - name: Config
+  - name: Exec
+  - name: SSH
+  - name: ShareMgmt
+  - name: UserMgmt
+paths:
+  /rpc/Session/login:
+    $ref: ./operations/Session/login.yaml
+  /rpc/Session/verify:
+    $ref: ./operations/Session/verify.yaml
+  /rpc/Session/logout:
+    $ref: ./operations/Session/logout.yaml
+  /rpc/System/getInformation:
+    $ref: ./operations/System/getInformation.yaml
+  /rpc/Config/isDirty:
+    $ref: ./operations/Config/isDirty.yaml
+  /rpc/Config/applyChangesBg:
+    $ref: ./operations/Config/applyChangesBg.yaml
+  /rpc/Config/revertChangesBg:
+    $ref: ./operations/Config/revertChangesBg.yaml
+  /rpc/Exec/getOutput:
+    $ref: ./operations/Exec/getOutput.yaml
+  /rpc/Exec/isRunning:
+    $ref: ./operations/Exec/isRunning.yaml
+  /rpc/Exec/stop:
+    $ref: ./operations/Exec/stop.yaml
+  /rpc/SSH/get:
+    $ref: ./operations/SSH/get.yaml
+  /rpc/SSH/set:
+    $ref: ./operations/SSH/set.yaml
+  /rpc/ShareMgmt/getList:
+    $ref: ./operations/ShareMgmt/getList.yaml
+  /rpc/UserMgmt/getUserByContext:
+    $ref: ./operations/UserMgmt/getUserByContext.yaml
+components:
+  schemas:
+    # Named here because x-omv-task refers to it by name.
+    ConfigAppliedModules:
+      $ref: ./schemas/ConfigAppliedModules.yaml

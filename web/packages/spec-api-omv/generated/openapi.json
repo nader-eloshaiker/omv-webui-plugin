@@ -1,0 +1,1518 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "openmediavault-webui contract",
+    "version": "0.0.0",
+    "description": "The backend methods the openmediavault web interface calls, described from OMV's source and from replies captured on a test system. Nothing on the server reads this document.",
+    "license": {
+      "name": "GPL-3.0-or-later",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Session"
+    },
+    {
+      "name": "System"
+    },
+    {
+      "name": "Config"
+    },
+    {
+      "name": "Exec"
+    },
+    {
+      "name": "SSH"
+    },
+    {
+      "name": "ShareMgmt"
+    },
+    {
+      "name": "UserMgmt"
+    }
+  ],
+  "paths": {
+    "/rpc/Session/login": {
+      "post": {
+        "operationId": "sessionLogin",
+        "tags": ["Session"],
+        "summary": "Sign in",
+        "description": "Sign in with a user name and password. Wrong credentials are HTTP 400; too many failed second-factor attempts for the user are HTTP 429. Never retried automatically (UI-14).",
+        "x-omv-rpc": {
+          "service": "Session",
+          "method": "login"
+        },
+        "x-omv-role": "public",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.session.login",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionLoginReply"
+                },
+                "examples": {
+                  "authenticated": {
+                    "$ref": "#/components/examples/sessionLogin.authenticated"
+                  },
+                  "challengeRequired": {
+                    "$ref": "#/components/examples/sessionLogin.challengeRequired"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Wrong user name or password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "wrongPassword": {
+                    "$ref": "#/components/examples/sessionLogin.wrongPassword"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Session/verify": {
+      "post": {
+        "operationId": "sessionVerify",
+        "tags": ["Session"],
+        "summary": "Complete a second-factor sign-in",
+        "description": "Answer the pending challenge of Session.login. HTTP 400 for a wrong code; 429 from the third failure on, with a growing delay; 401 when no login is pending or it expired (A10).",
+        "x-omv-rpc": {
+          "service": "Session",
+          "method": "verify"
+        },
+        "x-omv-role": "public",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.session.verify",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionAuthenticated"
+                },
+                "examples": {
+                  "authenticated": {
+                    "$ref": "#/components/examples/sessionVerify.authenticated"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Wrong code.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "wrongCode": {
+                    "$ref": "#/components/examples/sessionVerify.wrongCode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Session/logout": {
+      "post": {
+        "operationId": "sessionLogout",
+        "tags": ["Session"],
+        "summary": "Sign out",
+        "description": "End the session. Returns null.",
+        "x-omv-rpc": {
+          "service": "Session",
+          "method": "logout"
+        },
+        "x-omv-role": "user",
+        "x-omv-readonly": false,
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/System/getInformation": {
+      "post": {
+        "operationId": "systemGetInformation",
+        "tags": ["System"],
+        "summary": "System information",
+        "description": "Host, version, load and memory, and whether configuration changes are pending. A user gets only the time and host name.",
+        "x-omv-rpc": {
+          "service": "System",
+          "method": "getInformation"
+        },
+        "x-omv-role": "user",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemInformation"
+                },
+                "examples": {
+                  "admin": {
+                    "$ref": "#/components/examples/systemGetInformation.admin"
+                  },
+                  "adminPendingChanges": {
+                    "$ref": "#/components/examples/systemGetInformation.adminPendingChanges"
+                  },
+                  "user": {
+                    "$ref": "#/components/examples/systemGetInformation.user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Config/isDirty": {
+      "post": {
+        "operationId": "configIsDirty",
+        "tags": ["Config"],
+        "summary": "Are configuration changes pending?",
+        "description": "True when saved settings have not been applied yet.",
+        "x-omv-rpc": {
+          "service": "Config",
+          "method": "isDirty"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.config.isDirty",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigIsDirtyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "examples": {
+                  "clean": {
+                    "$ref": "#/components/examples/configIsDirty.clean"
+                  },
+                  "dirty": {
+                    "$ref": "#/components/examples/configIsDirty.dirty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Config/applyChangesBg": {
+      "post": {
+        "operationId": "configApplyChangesBg",
+        "tags": ["Config"],
+        "summary": "Apply pending changes",
+        "description": "Deploy the pending configuration changes, as a background task. Services may restart. The task's result is the list of modules deployed.",
+        "x-omv-rpc": {
+          "service": "Config",
+          "method": "applyChangesBg"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {
+          "result": "ConfigAppliedModules"
+        },
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.config.applychanges",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigApplyChangesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "applied": {
+                    "$ref": "#/components/examples/configApplyChangesBg.applied"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Config/revertChangesBg": {
+      "post": {
+        "operationId": "configRevertChangesBg",
+        "tags": ["Config"],
+        "summary": "Discard pending changes",
+        "description": "Throw away every saved change that has not been applied, as a background task. Nothing is deployed.",
+        "x-omv-rpc": {
+          "service": "Config",
+          "method": "revertChangesBg"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-source": {
+          "datamodel": "rpc.config.revertchanges",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigRevertChangesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "reverted": {
+                    "$ref": "#/components/examples/configRevertChangesBg.reverted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Exec/getOutput": {
+      "post": {
+        "operationId": "execGetOutput",
+        "tags": ["Exec"],
+        "summary": "Read a task's output",
+        "description": "Used only by the task helper. Not read-only: the last poll of a finished task deletes it on the server (A6).",
+        "x-omv-rpc": {
+          "service": "Exec",
+          "method": "getOutput"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.exec.getoutput",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecGetOutputRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecOutput"
+                },
+                "examples": {
+                  "appliedFinished": {
+                    "$ref": "#/components/examples/execGetOutput.appliedFinished"
+                  },
+                  "revertedFinished": {
+                    "$ref": "#/components/examples/execGetOutput.revertedFinished"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Exec/isRunning": {
+      "post": {
+        "operationId": "execIsRunning",
+        "tags": ["Exec"],
+        "summary": "Is a task still running?",
+        "description": "Used only by the task helper, and not for polling: on a finished task it deletes the task, so a later getOutput fails.",
+        "x-omv-rpc": {
+          "service": "Exec",
+          "method": "isRunning"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.exec.isrunning",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecHandleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecRunning"
+                },
+                "examples": {
+                  "running": {
+                    "$ref": "#/components/examples/execIsRunning.running"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Exec/stop": {
+      "post": {
+        "operationId": "execStop",
+        "tags": ["Exec"],
+        "summary": "Stop a task",
+        "description": "Used only by the task helper. Ends the task; the handle is gone afterwards. Returns null.",
+        "x-omv-rpc": {
+          "service": "Exec",
+          "method": "stop"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.exec.stop",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecHandleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/SSH/get": {
+      "post": {
+        "operationId": "sshGet",
+        "tags": ["SSH"],
+        "summary": "SSH settings",
+        "description": "The SSH service settings.",
+        "x-omv-rpc": {
+          "service": "SSH",
+          "method": "get"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SshSettings"
+                },
+                "examples": {
+                  "defaults": {
+                    "$ref": "#/components/examples/sshGet.defaults"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SSH/set": {
+      "post": {
+        "operationId": "sshSet",
+        "tags": ["SSH"],
+        "summary": "Save SSH settings",
+        "description": "Save the SSH settings. Nothing changes on the system until the pending changes are applied. Returns the stored settings.",
+        "x-omv-rpc": {
+          "service": "SSH",
+          "method": "set"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.ssh.set",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SshSetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SshSettings"
+                },
+                "examples": {
+                  "saved": {
+                    "$ref": "#/components/examples/sshSet.saved"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/ShareMgmt/getList": {
+      "post": {
+        "operationId": "shareMgmtGetList",
+        "tags": ["ShareMgmt"],
+        "summary": "Shared folders",
+        "description": "A page of shared folders, sorted and searched by the backend.",
+        "x-omv-rpc": {
+          "service": "ShareMgmt",
+          "method": "getList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFolderList"
+                },
+                "examples": {
+                  "populated": {
+                    "$ref": "#/components/examples/shareMgmtGetList.populated"
+                  },
+                  "searchNoMatch": {
+                    "$ref": "#/components/examples/shareMgmtGetList.searchNoMatch"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/getUserByContext": {
+      "post": {
+        "operationId": "userMgmtGetUserByContext",
+        "tags": ["UserMgmt"],
+        "summary": "My account",
+        "description": "The signed-in user's own account.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getUserByContext"
+        },
+        "x-omv-role": "user",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserByContext"
+                },
+                "examples": {
+                  "user": {
+                    "$ref": "#/components/examples/userMgmtGetUserByContext.user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConfigAppliedModules": {
+        "type": "array",
+        "description": "The result of an apply task (its final output, parsed as JSON) - the modules deployed.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "Username": {
+        "type": "string",
+        "description": "An account name, in OMV's `username` format.",
+        "x-omv-format": "username",
+        "pattern": "^[a-zA-Z0-9_.][a-zA-Z0-9_.-]*\\$?$"
+      },
+      "SessionLoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "$ref": "#/components/schemas/Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "x-omv-secret": true,
+            "x-omv-format": "no-multi-line",
+            "pattern": "^[^\\r\\n]*$"
+          }
+        }
+      },
+      "Role": {
+        "type": "string",
+        "description": "The session's role. `admin` is an administrator; anything else is treated as a user.",
+        "enum": ["admin", "user"]
+      },
+      "SessionPermissions": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        }
+      },
+      "SessionAuthenticated": {
+        "type": "object",
+        "description": "A signed-in session. The server also sends `sessionid`; the transport ignores it and it is not described here (UI-6). The session lives in OMV's HttpOnly cookie.",
+        "required": ["status", "username", "permissions"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["authenticated"]
+          },
+          "username": {
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/SessionPermissions"
+          }
+        }
+      },
+      "SessionChallengeRequired": {
+        "type": "object",
+        "description": "The password was right and a second factor is required. The interface shows its own screen for each `kind` it knows (A10). The server also sends `challenge.redirecturl`, a route of the stock interface; it is ignored and not described here (UI-3). No other call may be made before Session.verify: any call discards the pending challenge.",
+        "required": ["status", "username", "challenge"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["challengeRequired"]
+          },
+          "username": {
+            "type": "string"
+          },
+          "challenge": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "The second-factor method, e.g. `totp`. An unknown kind sends the user to the classic interface."
+              }
+            }
+          }
+        }
+      },
+      "SessionLoginReply": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SessionAuthenticated"
+          },
+          {
+            "$ref": "#/components/schemas/SessionChallengeRequired"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "status",
+          "mapping": {
+            "authenticated": "#/components/schemas/SessionAuthenticated",
+            "challengeRequired": "#/components/schemas/SessionChallengeRequired"
+          }
+        }
+      },
+      "RpcErrorDetail": {
+        "type": "object",
+        "description": "The `error` member of an rpc.php failure reply. The transport turns it into an RpcError with the HTTP status; its `trace` is discarded at once and never described here (UI-9). `code` is 0 for every error observed (A8), so the status and the message are the only signals.",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The backend's message, already translated by the server. Shown as text."
+          }
+        }
+      },
+      "SessionVerifyRequest": {
+        "type": "object",
+        "description": "The answer to a `totp` challenge (openmediavault-2fa-totp, A10). OMV's core accepts any value here and hands it to the two-factor plugin; the contract accepts only the one shape the interface sends.",
+        "required": ["code"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The six-digit one-time code.",
+            "pattern": "^[0-9]{6}$",
+            "x-omv-secret": true
+          }
+        }
+      },
+      "SystemInformation": {
+        "type": "object",
+        "description": "System information. Every signed-in user gets `ts`, `time` and `hostname`; an administrator also gets the rest.",
+        "required": ["ts", "time", "hostname"],
+        "properties": {
+          "ts": {
+            "type": "integer",
+            "description": "Unix time on the server, in seconds."
+          },
+          "time": {
+            "type": "string",
+            "description": "Display text, the server's local time in the server's locale."
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "description": "Display text, e.g. \"8.6.1-1 (Synchrony)\"."
+          },
+          "cpuModelName": {
+            "type": "string",
+            "nullable": true
+          },
+          "cpuUtilization": {
+            "type": "number",
+            "description": "Percent, 0 to 100."
+          },
+          "cpuCores": {
+            "type": "integer",
+            "nullable": true
+          },
+          "cpuMhz": {
+            "type": "number",
+            "nullable": true
+          },
+          "memTotal": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "memFree": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "memUsed": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "memAvailable": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "memUtilization": {
+            "type": "string",
+            "description": "A fraction from 0 to 1, as a decimal string (A4)."
+          },
+          "kernel": {
+            "type": "string",
+            "description": "Display text."
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Seconds."
+          },
+          "loadAverage": {
+            "type": "object",
+            "properties": {
+              "1min": {
+                "type": "number"
+              },
+              "5min": {
+                "type": "number"
+              },
+              "15min": {
+                "type": "number"
+              }
+            }
+          },
+          "configDirty": {
+            "type": "boolean"
+          },
+          "dirtyModules": {
+            "type": "object",
+            "description": "Module name to the module's description (display text). An empty map arrives as `[]`; the transport turns it into `{}`.",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "rebootRequired": {
+            "type": "boolean"
+          },
+          "availablePkgUpdates": {
+            "type": "integer"
+          },
+          "displayWelcomeMessage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ConfigIsDirtyRequest": {
+        "type": "object",
+        "properties": {
+          "modules": {
+            "type": "array",
+            "description": "Ask about these modules only. Empty or absent asks about every module.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ConfigApplyChangesRequest": {
+        "type": "object",
+        "required": ["modules", "force"],
+        "properties": {
+          "modules": {
+            "type": "array",
+            "description": "The modules to deploy. Empty deploys every dirty module.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Deploy the listed modules even if they are not dirty; with no modules, every module."
+          }
+        }
+      },
+      "TaskHandle": {
+        "type": "string",
+        "description": "A background task handle: the server path of the task's status file. Opaque. Held in memory only, never shown, never put in a URL or storage, and passed to Exec only by the task helper (UI-5)."
+      },
+      "ConfigRevertChangesRequest": {
+        "type": "object",
+        "required": ["filename"],
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Always empty, as the stock interface sends; the server finds the revision itself.",
+            "enum": [""]
+          }
+        }
+      },
+      "ExecGetOutputRequest": {
+        "type": "object",
+        "required": ["filename", "pos"],
+        "properties": {
+          "filename": {
+            "$ref": "#/components/schemas/TaskHandle"
+          },
+          "pos": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Byte offset to read from; the `pos` of the previous reply."
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1024
+          }
+        }
+      },
+      "ExecOutput": {
+        "type": "object",
+        "description": "New output of a task since `pos`. The poll that reports `running: false` with nothing pending is the last one: the server then deletes the task, and any further call on the handle fails (A6). A failed task makes this call itself fail, with the task's output as the message.",
+        "required": ["filename", "pos", "output", "pendingOutput", "running"],
+        "properties": {
+          "filename": {
+            "$ref": "#/components/schemas/TaskHandle"
+          },
+          "pos": {
+            "type": "integer"
+          },
+          "output": {
+            "type": "string",
+            "description": "Plain text since the requested position, line endings normalised to newlines."
+          },
+          "pendingOutput": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExecHandleRequest": {
+        "type": "object",
+        "required": ["filename"],
+        "properties": {
+          "filename": {
+            "$ref": "#/components/schemas/TaskHandle"
+          }
+        }
+      },
+      "ExecRunning": {
+        "type": "object",
+        "required": ["filename", "running"],
+        "properties": {
+          "filename": {
+            "$ref": "#/components/schemas/TaskHandle"
+          },
+          "running": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SshSettings": {
+        "type": "object",
+        "description": "The SSH service settings (conf.service.ssh).",
+        "required": [
+          "enable",
+          "port",
+          "passwordauthentication",
+          "pubkeyauthentication",
+          "permitrootlogin",
+          "tcpforwarding",
+          "compression",
+          "extraoptions"
+        ],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "passwordauthentication": {
+            "type": "boolean"
+          },
+          "pubkeyauthentication": {
+            "type": "boolean"
+          },
+          "permitrootlogin": {
+            "type": "boolean"
+          },
+          "tcpforwarding": {
+            "type": "boolean"
+          },
+          "compression": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Extra lines for the SSH server's configuration file. Free text."
+          }
+        }
+      },
+      "SshSetRequest": {
+        "type": "object",
+        "description": "Every field is required (rpc.ssh.set).",
+        "required": [
+          "enable",
+          "port",
+          "passwordauthentication",
+          "pubkeyauthentication",
+          "permitrootlogin",
+          "tcpforwarding",
+          "compression",
+          "extraoptions"
+        ],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "passwordauthentication": {
+            "type": "boolean"
+          },
+          "pubkeyauthentication": {
+            "type": "boolean"
+          },
+          "permitrootlogin": {
+            "type": "boolean"
+          },
+          "tcpforwarding": {
+            "type": "boolean"
+          },
+          "compression": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetListRequest": {
+        "type": "object",
+        "description": "Paging, sorting and search for a list (rpc.common.getlist). The backend sorts and searches the whole list. `limit` null returns every row (A2). OMV also accepts an integer `search`; the contract accepts text only.",
+        "required": ["start", "limit"],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "sortfield": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortdir": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["asc", "desc"]
+          },
+          "search": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SharedFolderPrivilege": {
+        "type": "object",
+        "required": ["type", "name", "perms"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["user", "group"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "perms": {
+            "type": "integer",
+            "description": "0 no access, 5 read-only, 7 read and write.",
+            "enum": [0, 5, 7]
+          }
+        }
+      },
+      "SharedFolder": {
+        "type": "object",
+        "description": "A shared folder (conf.system.sharedfolder) with the fields ShareMgmt computes.",
+        "required": [
+          "uuid",
+          "name",
+          "comment",
+          "mntentref",
+          "reldirpath",
+          "_used",
+          "device",
+          "description",
+          "status"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "mntentref": {
+            "type": "string",
+            "description": "The UUID of the file system's mount point."
+          },
+          "reldirpath": {
+            "type": "string",
+            "description": "The folder's path inside its file system."
+          },
+          "privileges": {
+            "description": "The privileges set on the folder; the empty string when none are set (observed).",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "privilege": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SharedFolderPrivilege"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "string",
+                "enum": [""]
+              }
+            ]
+          },
+          "_used": {
+            "type": "boolean",
+            "description": "True if another configuration object refers to this folder."
+          },
+          "device": {
+            "type": "string",
+            "description": "The file system's label, else its device file; empty if unknown."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text built by the server."
+          },
+          "mntent": {
+            "type": "object",
+            "properties": {
+              "devicefile": {
+                "type": "string"
+              },
+              "fsname": {
+                "type": "string"
+              },
+              "dir": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "posixacl": {
+                "type": "boolean"
+              }
+            }
+          },
+          "snapshots": {
+            "type": "boolean"
+          },
+          "absdirpath": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "OK, or why the folder cannot be reached.",
+            "enum": ["OK", "ENOTDIR", "ENOENT", "ENOENT_DB_MNTENT"]
+          }
+        }
+      },
+      "SharedFolderList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every matching row, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SharedFolder"
+            }
+          }
+        }
+      },
+      "UserByContext": {
+        "type": "object",
+        "description": "The signed-in user's own account.",
+        "required": ["name", "comment", "email", "sshpubkeys", "_readonly"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "sshpubkeys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "A public key in RFC 4716 format."
+            }
+          },
+          "_readonly": {
+            "type": "boolean",
+            "description": "True if the administrator does not let this user change their account."
+          }
+        }
+      }
+    },
+    "examples": {
+      "sessionLogin.authenticated": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "username": "example-admin",
+          "status": "authenticated",
+          "permissions": {
+            "role": "admin"
+          },
+          "sessionid": "EXAMPLE-SESSION-ID"
+        }
+      },
+      "sessionLogin.challengeRequired": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "username": "example-2fa",
+          "status": "challengeRequired",
+          "challenge": {
+            "kind": "totp",
+            "redirecturl": "/tfatotp/example-2fa"
+          }
+        }
+      },
+      "sessionLogin.wrongPassword": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 400,
+        "value": {
+          "code": 0,
+          "message": "Incorrect username or password."
+        }
+      },
+      "sessionVerify.authenticated": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "status": "authenticated",
+          "username": "example-2fa",
+          "permissions": {
+            "role": "user"
+          },
+          "sessionid": "EXAMPLE-SESSION-ID"
+        }
+      },
+      "sessionVerify.wrongCode": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 400,
+        "value": {
+          "code": 0,
+          "message": "Challenge verification failed."
+        }
+      },
+      "systemGetInformation.admin": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "ts": 1795089029,
+          "time": "Thu Nov 19 11:50:29 2026",
+          "hostname": "nas",
+          "version": "8.6.1-1 (Synchrony)",
+          "cpuModelName": null,
+          "cpuUtilization": 1.4925373134328357,
+          "cpuCores": null,
+          "cpuMhz": null,
+          "memTotal": "4104114176",
+          "memFree": "3218640896",
+          "memUsed": "354963456",
+          "memAvailable": "3749150720",
+          "memUtilization": "0.08648",
+          "kernel": "Linux 6.12.117+deb13-arm64",
+          "uptime": 19539.02,
+          "loadAverage": {
+            "1min": 0.04,
+            "5min": 0.04,
+            "15min": 0
+          },
+          "configDirty": false,
+          "dirtyModules": [],
+          "rebootRequired": false,
+          "availablePkgUpdates": 33,
+          "displayWelcomeMessage": true
+        }
+      },
+      "systemGetInformation.adminPendingChanges": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "ts": 1795089032,
+          "time": "Thu Nov 19 11:50:32 2026",
+          "hostname": "nas",
+          "version": "8.6.1-1 (Synchrony)",
+          "cpuModelName": null,
+          "cpuUtilization": 0,
+          "cpuCores": null,
+          "cpuMhz": null,
+          "memTotal": "4104114176",
+          "memFree": "3214622720",
+          "memUsed": "358940672",
+          "memAvailable": "3745173504",
+          "memUtilization": "0.08745",
+          "kernel": "Linux 6.12.117+deb13-arm64",
+          "uptime": 19542.22,
+          "loadAverage": {
+            "1min": 0.2,
+            "5min": 0.07,
+            "15min": 0.01
+          },
+          "configDirty": true,
+          "dirtyModules": {
+            "avahi": "Framework for Multicast DNS Service Discovery.",
+            "ssh": "A secure shell (SSH) server."
+          },
+          "rebootRequired": false,
+          "availablePkgUpdates": 33,
+          "displayWelcomeMessage": true
+        }
+      },
+      "systemGetInformation.user": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "ts": 1795089030,
+          "time": "Thu Nov 19 11:50:30 2026",
+          "hostname": "nas"
+        }
+      },
+      "configIsDirty.clean": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": false
+      },
+      "configIsDirty.dirty": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": true
+      },
+      "configApplyChangesBg.applied": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatus7k6uanc46kul3JYrbbi"
+      },
+      "configRevertChangesBg.reverted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatuski9fqois36i17pgcHMm"
+      },
+      "execGetOutput.appliedFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatus7k6uanc46kul3JYrbbi",
+          "pos": 15,
+          "output": "[\"avahi\",\"ssh\"]",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.revertedFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatuski9fqois36i17pgcHMm",
+          "pos": 0,
+          "output": "",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execIsRunning.running": {
+        "summary": "Written by hand from Exec.isRunning in OMV 8.6.1 source; a capture would delete the task",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusEXAMPLE",
+          "running": true
+        }
+      },
+      "sshGet.defaults": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "port": 22,
+          "passwordauthentication": true,
+          "pubkeyauthentication": true,
+          "permitrootlogin": true,
+          "tcpforwarding": false,
+          "compression": false,
+          "extraoptions": ""
+        }
+      },
+      "sshSet.saved": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "port": 22,
+          "passwordauthentication": true,
+          "pubkeyauthentication": true,
+          "permitrootlogin": true,
+          "tcpforwarding": false,
+          "compression": false,
+          "extraoptions": ""
+        }
+      },
+      "shareMgmtGetList.populated": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "name": "a4share",
+              "comment": "Phase 0 A4",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "a4share/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sda1",
+              "description": "a4share [Phase 0 A4]",
+              "mntent": {
+                "devicefile": "/dev/sda1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003/a4share/",
+              "status": "OK"
+            }
+          ]
+        }
+      },
+      "shareMgmtGetList.searchNoMatch": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "userMgmtGetUserByContext.user": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "example-user",
+          "comment": "",
+          "email": "",
+          "sshpubkeys": [],
+          "_readonly": false
+        }
+      }
+    }
+  }
+}

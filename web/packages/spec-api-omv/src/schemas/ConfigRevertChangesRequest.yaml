@@ -1,0 +1,7 @@
+type: object
+required: [filename]
+properties:
+  filename:
+    type: string
+    description: Always empty, as the stock interface sends; the server finds the revision itself.
+    enum: [""]

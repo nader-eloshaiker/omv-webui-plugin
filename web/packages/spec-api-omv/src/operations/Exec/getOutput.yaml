@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: execGetOutput
+  tags:
+    - Exec
+  summary: "Read a task's output"
+  description: "Used only by the task helper. Not read-only: the last poll of a finished task deletes it on the server (A6)."
+  x-omv-rpc:
+    service: Exec
+    method: getOutput
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.exec.getoutput
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ExecGetOutputRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ExecOutput.yaml
+          examples:
+            appliedFinished:
+              $ref: ../../examples/execGetOutput.appliedFinished.yaml
+            revertedFinished:
+              $ref: ../../examples/execGetOutput.revertedFinished.yaml

@@ -1,0 +1,20 @@
+type: object
+description: >-
+  The password was right and a second factor is required. The interface shows its own screen for
+  each `kind` it knows (A10). The server also sends `challenge.redirecturl`, a route of the stock
+  interface; it is ignored and not described here (UI-3). No other call may be made before
+  Session.verify: any call discards the pending challenge.
+required: [status, username, challenge]
+properties:
+  status:
+    type: string
+    enum: [challengeRequired]
+  username:
+    type: string
+  challenge:
+    type: object
+    required: [kind]
+    properties:
+      kind:
+        type: string
+        description: The second-factor method, e.g. `totp`. An unknown kind sends the user to the classic interface.

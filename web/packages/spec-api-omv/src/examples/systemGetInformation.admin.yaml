@@ -1,0 +1,27 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  ts: 1795089029
+  time: "Thu Nov 19 11:50:29 2026"
+  hostname: nas
+  version: "8.6.1-1 (Synchrony)"
+  cpuModelName: null
+  cpuUtilization: 1.4925373134328357
+  cpuCores: null
+  cpuMhz: null
+  memTotal: "4104114176"
+  memFree: "3218640896"
+  memUsed: "354963456"
+  memAvailable: "3749150720"
+  memUtilization: "0.08648"
+  kernel: "Linux 6.12.117+deb13-arm64"
+  uptime: 19539.02
+  loadAverage:
+    "1min": 0.04
+    "5min": 0.04
+    "15min": 0
+  configDirty: false
+  dirtyModules: []
+  rebootRequired: false
+  availablePkgUpdates: 33
+  displayWelcomeMessage: true

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: configRevertChangesBg
+  tags:
+    - Config
+  summary: Discard pending changes
+  description: "Throw away every saved change that has not been applied, as a background task. Nothing is deployed."
+  x-omv-rpc:
+    service: Config
+    method: revertChangesBg
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-source:
+    datamodel: rpc.config.revertchanges
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ConfigRevertChangesRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            reverted:
+              $ref: ../../examples/configRevertChangesBg.reverted.yaml

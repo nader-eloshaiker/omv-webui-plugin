@@ -1,0 +1,12 @@
+type: object
+required: [type, name, perms]
+properties:
+  type:
+    type: string
+    enum: [user, group]
+  name:
+    type: string
+  perms:
+    type: integer
+    description: 0 no access, 5 read-only, 7 read and write.
+    enum: [0, 5, 7]

@@ -1,0 +1,31 @@
+{
+  "name": "omv-webui-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "pnpm --no-bail -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write . --cache",
+    "format:check": "prettier --check . --cache",
+    "api:spec:lint": "pnpm --filter @omv-webui/spec-api-omv lint",
+    "api:spec:build": "pnpm --filter @omv-webui/spec-api-omv build",
+    "api:react:build": "pnpm --filter @omv-webui/react-api-omv generate",
+    "api:check": "pnpm --filter @omv-webui/react-api-omv check",
+    "test:vm": "pnpm --filter @omv-webui/react-api-omv test:vm"
+  },
+  "devDependencies": {
+    "@omv-webui/ts-app-tooling": "workspace:*",
+    "eslint": "catalog:lint",
+    "prettier": "catalog:lint",
+    "prettier-plugin-organize-imports": "catalog:lint",
+    "typescript": "catalog:build"
+  }
+}

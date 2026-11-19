@@ -1,0 +1,19 @@
+{
+  "name": "@omv-webui/ts-api-omv",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "DTOs generated from the openmediavault-webui contract. No dependencies.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": [
+      "./src/*.ts",
+      "./src/*/index.ts",
+      "./src/*"
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

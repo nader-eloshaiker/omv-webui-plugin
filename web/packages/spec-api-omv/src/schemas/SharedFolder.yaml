@@ -1,0 +1,70 @@
+type: object
+description: A shared folder (conf.system.sharedfolder) with the fields ShareMgmt computes.
+required:
+  [
+    uuid,
+    name,
+    comment,
+    mntentref,
+    reldirpath,
+    _used,
+    device,
+    description,
+    status,
+  ]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  name:
+    type: string
+  comment:
+    type: string
+  mntentref:
+    type: string
+    description: The UUID of the file system's mount point.
+  reldirpath:
+    type: string
+    description: The folder's path inside its file system.
+  privileges:
+    description: The privileges set on the folder; the empty string when none are set (observed).
+    oneOf:
+      - type: object
+        properties:
+          privilege:
+            type: array
+            items:
+              $ref: ./SharedFolderPrivilege.yaml
+      - type: string
+        enum: [""]
+  _used:
+    type: boolean
+    description: True if another configuration object refers to this folder.
+  device:
+    type: string
+    description: The file system's label, else its device file; empty if unknown.
+  description:
+    type: string
+    description: Display text built by the server.
+  mntent:
+    type: object
+    properties:
+      devicefile:
+        type: string
+      fsname:
+        type: string
+      dir:
+        type: string
+      type:
+        type: string
+      posixacl:
+        type: boolean
+  snapshots:
+    type: boolean
+  absdirpath:
+    type: string
+  status:
+    type: string
+    description: OK, or why the folder cannot be reached.
+    enum: [OK, ENOTDIR, ENOENT, ENOENT_DB_MNTENT]

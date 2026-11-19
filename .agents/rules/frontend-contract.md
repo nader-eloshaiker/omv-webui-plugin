@@ -9,15 +9,15 @@ win.
 
 ## Which package does what
 
-| Package                           | Holds                                                                                                                             | Edited by hand              |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `@omv-webui/spec-api-omv`         | The contract: `src/index.yaml`, `src/operations/<Service>/`, `src/schemas/`, `src/examples/`, the `x-omv-*` lint plugins, `EXCLUDED.md`; the bundle in `generated/openapi.json` | `src/` yes; `generated/` never |
-| `@omv-webui/ts-api-omv`           | Generated DTOs (`src/generated/models`). No dependencies                                                                          | Never                       |
-| `@omv-webui/react-api-omv`        | Generated hooks (`src/generated`), the operation table, the examples index; the hand-written **transport module** and task helper | Transport and helper only   |
-| `@omv-webui/css-ui-style`         | The Tailwind entry stylesheet built from `design/tokens.css`                                                                      | Yes                         |
-| `@omv-webui/react-ui-components`  | Shared components with Storybook                                                                                                  | Yes                         |
-| `@omv-webui/ts-app-tooling`       | Shared ESLint, Prettier and tsconfig base                                                                                         | Yes                         |
-| `omv-web-app`                     | The interface                                                                                                                     | Yes                         |
+| Package                          | Holds                                                                                                                                                                           | Edited by hand                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `@omv-webui/spec-api-omv`        | The contract: `src/index.yaml`, `src/operations/<Service>/`, `src/schemas/`, `src/examples/`, the `x-omv-*` lint plugins, `EXCLUDED.md`; the bundle in `generated/openapi.json` | `src/` yes; `generated/` never |
+| `@omv-webui/ts-api-omv`          | Generated DTOs (`src/generated/models`). No dependencies                                                                                                                        | Never                          |
+| `@omv-webui/react-api-omv`       | Generated hooks (`src/generated`), the operation table, the examples index; the hand-written **transport module** and task helper                                               | Transport and helper only      |
+| `@omv-webui/css-ui-style`        | The Tailwind entry stylesheet built from `design/tokens.css`                                                                                                                    | Yes                            |
+| `@omv-webui/react-ui-components` | Shared components with Storybook                                                                                                                                                | Yes                            |
+| `@omv-webui/ts-app-tooling`      | Shared ESLint, Prettier and tsconfig base                                                                                                                                       | Yes                            |
+| `omv-web-app`                    | The interface                                                                                                                                                                   | Yes                            |
 
 `spec-api-omv`, `ts-api-omv` and `react-api-omv` never depend on the app or the component library
 (D12). React code imports hooks and DTOs from `@omv-webui/react-api-omv/generated`; framework-free
@@ -68,6 +68,9 @@ code imports DTOs from `@omv-webui/ts-api-omv`.
   overrides list that a script writes from the contract.
 - After orval, small scripts write the **operation table** (operation id, service, method, response
   schema reference, flags) and the **examples index** the mocks read.
+- `pnpm api:check` fails when the files written from the contract are out of date; CI also
+  regenerates everything and fails on any diff. `pnpm test:vm` runs the first operations against
+  the test VM through the generated client (never part of `pnpm test`).
 - `pnpm api:react:build` runs all of it. A contract change always needs `pnpm api:spec:build` then
   `pnpm api:react:build`, and the regenerated output is committed in the same change.
 - **Never edit generated code** (`spec-api-omv/generated`, `ts-api-omv/src/generated`,
@@ -93,6 +96,11 @@ code imports DTOs from `@omv-webui/ts-api-omv`.
 - Replacing the backend later means reimplementing this file against the same signature (D5).
 
 ## The mock
+
+The handlers live in `@omv-webui/react-api-omv/mocks` (`createRpcHandlers`): one handler for
+`POST /rpc.php` that answers each operation with its default example, or a named example, a written
+reply or a function of the call. Every error reply carries a trace, so a test proves it never
+surfaces (UI-9). Examples are the raw replies, before the transport normalises them.
 
 `pnpm dev:mock` serves the app on MSW answering every operation in the operation table with a named
 example from the contract. It holds no state: a write answers with its example and changes nothing a

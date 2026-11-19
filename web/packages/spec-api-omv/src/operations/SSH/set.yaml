@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sshSet
+  tags:
+    - SSH
+  summary: Save SSH settings
+  description: Save the SSH settings. Nothing changes on the system until the pending changes are applied. Returns the stored settings.
+  x-omv-rpc:
+    service: SSH
+    method: set
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.ssh.set
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SshSetRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SshSettings.yaml
+          examples:
+            saved:
+              $ref: ../../examples/sshSet.saved.yaml

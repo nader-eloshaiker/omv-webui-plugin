@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatuski9fqois36i17pgcHMm
+  pos: 0
+  output: ""
+  pendingOutput: false
+  running: false

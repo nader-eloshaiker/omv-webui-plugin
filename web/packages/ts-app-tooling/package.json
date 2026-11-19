@@ -1,0 +1,28 @@
+{
+  "name": "@omv-webui/ts-app-tooling",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint": "./eslint.config.js",
+    "./prettier": "./prettier.config.js"
+  },
+  "scripts": {
+    "test": "node --test 'eslint.*.test.mjs'"
+  },
+  "dependencies": {
+    "@eslint-react/eslint-plugin": "catalog:lint",
+    "@eslint/js": "catalog:lint",
+    "eslint-config-prettier": "catalog:lint",
+    "eslint-plugin-prettier": "catalog:lint",
+    "eslint-plugin-react-refresh": "catalog:lint",
+    "globals": "catalog:lint",
+    "prettier-plugin-organize-imports": "catalog:lint",
+    "typescript-eslint": "catalog:lint"
+  },
+  "devDependencies": {
+    "eslint": "catalog:lint"
+  }
+}

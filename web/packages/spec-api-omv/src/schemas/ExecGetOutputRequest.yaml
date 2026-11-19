@@ -1,0 +1,12 @@
+type: object
+required: [filename, pos]
+properties:
+  filename:
+    $ref: ./TaskHandle.yaml
+  pos:
+    type: integer
+    minimum: 0
+    description: Byte offset to read from; the `pos` of the previous reply.
+  length:
+    type: integer
+    minimum: 1024

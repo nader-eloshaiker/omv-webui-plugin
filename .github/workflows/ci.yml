@@ -1,0 +1,97 @@
+# Lint, types, tests, the contract and its drift against a pinned openmediavault tree, the colour
+# audit and pnpm audit. One job, `build`, which the main branch ruleset requires.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # The openmediavault tree the contract's request schemas were read from. Moved deliberately, in
+  # the change that re-checks the contract against a new OMV release.
+  OMV_REF: babf50d9b305cdced63bbefdb9df0a6d9720bac9
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out the pinned openmediavault tree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: openmediavault/openmediavault
+          ref: ${{ env.OMV_REF }}
+          path: omv-source
+          persist-credentials: false
+          sparse-checkout: |
+            deb/openmediavault/usr/share/openmediavault/datamodels
+            deb/openmediavault/usr/share/openmediavault/engined/rpc
+            deb/openmediavault/var/www/openmediavault/rpc
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      # Frozen lockfile; .npmrc sets ignore-scripts and pnpm-workspace.yaml allows no builds (UI-11).
+      - name: Install
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: web
+        run: pnpm lint
+
+      - name: Typecheck
+        working-directory: web
+        run: pnpm typecheck
+
+      - name: Unit tests
+        working-directory: web
+        run: pnpm test
+
+      - name: Formatting
+        working-directory: web
+        run: pnpm format:check && pnpm exec prettier --check ../tools/lib ../tools/contract-bootstrap ../tools/contract-capture ../tools/contract-drift
+
+      - name: Contract lint
+        working-directory: web
+        run: pnpm api:spec:lint
+
+      - name: Generated code is up to date
+        working-directory: web
+        run: |
+          pnpm api:spec:build
+          pnpm api:react:build
+          git diff --exit-code -- . || { echo "::error::Run pnpm api:spec:build and pnpm api:react:build, and commit the result."; exit 1; }
+
+      - name: Tool tests
+        run: node --test 'tools/**/*.test.mjs'
+
+      - name: Contract drift against openmediavault
+        run: node tools/contract-drift/drift.mjs --omv omv-source
+
+      - name: Colour audit
+        run: node tools/colour-audit.mjs contrast --quiet
+
+      - name: Dependency audit
+        working-directory: web
+        run: pnpm audit

@@ -1,0 +1,23 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 1
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000001"
+      name: a4share
+      comment: Phase 0 A4
+      mntentref: "00000000-0000-4000-8000-000000000002"
+      reldirpath: a4share/
+      privileges: ""
+      _used: false
+      device: /dev/sda1
+      description: "a4share [Phase 0 A4]"
+      mntent:
+        devicefile: /dev/sda1
+        fsname: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+        dir: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003
+        type: ext4
+        posixacl: true
+      snapshots: false
+      absdirpath: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003/a4share/
+      status: OK
