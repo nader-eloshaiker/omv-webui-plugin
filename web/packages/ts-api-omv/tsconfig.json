@@ -1,0 +1,8 @@
+{
+  "extends": "../ts-app-tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["."]
+}

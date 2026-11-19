@@ -1,0 +1,11 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  enable: true
+  port: 22
+  passwordauthentication: true
+  pubkeyauthentication: true
+  permitrootlogin: true
+  tcpforwarding: false
+  compression: false
+  extraoptions: ""

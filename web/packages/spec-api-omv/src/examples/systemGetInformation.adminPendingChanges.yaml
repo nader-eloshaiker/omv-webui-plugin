@@ -1,0 +1,29 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  ts: 1795089032
+  time: "Thu Nov 19 11:50:32 2026"
+  hostname: nas
+  version: "8.6.1-1 (Synchrony)"
+  cpuModelName: null
+  cpuUtilization: 0
+  cpuCores: null
+  cpuMhz: null
+  memTotal: "4104114176"
+  memFree: "3214622720"
+  memUsed: "358940672"
+  memAvailable: "3745173504"
+  memUtilization: "0.08745"
+  kernel: "Linux 6.12.117+deb13-arm64"
+  uptime: 19542.22
+  loadAverage:
+    "1min": 0.2
+    "5min": 0.07
+    "15min": 0.01
+  configDirty: true
+  dirtyModules:
+    avahi: Framework for Multicast DNS Service Discovery.
+    ssh: A secure shell (SSH) server.
+  rebootRequired: false
+  availablePkgUpdates: 33
+  displayWelcomeMessage: true

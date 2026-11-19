@@ -1,0 +1,133 @@
+[
+  {
+    "service": "Session",
+    "method": "login",
+    "name": "authenticated",
+    "flow": "login",
+    "account": "admin"
+  },
+  {
+    "service": "Session",
+    "method": "login",
+    "name": "challengeRequired",
+    "flow": "login",
+    "account": "2fa"
+  },
+  {
+    "service": "Session",
+    "method": "login",
+    "name": "wrongPassword",
+    "flow": "login",
+    "account": "user",
+    "wrongPassword": true
+  },
+  {
+    "service": "Session",
+    "method": "verify",
+    "name": "authenticated",
+    "flow": "verify",
+    "account": "2fa"
+  },
+  {
+    "service": "Session",
+    "method": "verify",
+    "name": "wrongCode",
+    "flow": "verify",
+    "account": "2fa",
+    "wrongCode": true
+  },
+  {
+    "service": "Session",
+    "method": "logout",
+    "name": "signedOut",
+    "account": "user"
+  },
+  {
+    "service": "System",
+    "method": "getInformation",
+    "name": "admin",
+    "account": "admin"
+  },
+  {
+    "service": "System",
+    "method": "getInformation",
+    "name": "user",
+    "account": "user"
+  },
+  {
+    "service": "UserMgmt",
+    "method": "getUserByContext",
+    "name": "user",
+    "account": "user"
+  },
+  {
+    "service": "ShareMgmt",
+    "method": "getList",
+    "name": "populated",
+    "account": "admin",
+    "params": { "start": 0, "limit": null }
+  },
+  {
+    "service": "ShareMgmt",
+    "method": "getList",
+    "name": "searchNoMatch",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": 25,
+      "sortfield": "name",
+      "sortdir": "asc",
+      "search": "no-such-share"
+    }
+  },
+  { "service": "SSH", "method": "get", "name": "defaults", "account": "admin" },
+  {
+    "service": "Config",
+    "method": "isDirty",
+    "name": "clean",
+    "account": "admin"
+  },
+  {
+    "service": "SSH",
+    "method": "set",
+    "name": "saved",
+    "account": "admin",
+    "paramsFrom": "SSH.get"
+  },
+  {
+    "service": "Config",
+    "method": "isDirty",
+    "name": "dirty",
+    "account": "admin"
+  },
+  {
+    "service": "System",
+    "method": "getInformation",
+    "name": "adminPendingChanges",
+    "account": "admin"
+  },
+  {
+    "service": "Config",
+    "method": "applyChangesBg",
+    "name": "applied",
+    "flow": "task",
+    "account": "admin",
+    "params": { "modules": [], "force": false }
+  },
+  {
+    "service": "SSH",
+    "method": "set",
+    "name": "saved",
+    "account": "admin",
+    "paramsFrom": "SSH.get",
+    "quiet": true
+  },
+  {
+    "service": "Config",
+    "method": "revertChangesBg",
+    "name": "reverted",
+    "flow": "task",
+    "account": "admin",
+    "params": { "filename": "" }
+  }
+]

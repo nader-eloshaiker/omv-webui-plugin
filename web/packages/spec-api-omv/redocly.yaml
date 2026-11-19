@@ -1,0 +1,35 @@
+# Lint configuration for the contract. The x-omv-* rules are in redocly-plugins/ (docs/04,
+# "Extensions"); the built-in rules below make every example validate against its schema.
+apis:
+  omv:
+    root: src/index.yaml
+
+plugins:
+  - ./redocly-plugins/index.js
+
+preprocessors:
+  # Lint only (the build skips it): an object schema also accepts `[]`, the way PHP sends an empty
+  # map, so the raw captured examples validate as the transport will normalise them.
+  omv/empty-object-as-array: on
+
+extends:
+  - recommended
+
+rules:
+  # Examples are the mocks. One that has drifted from its schema is a broken mock. Response schemas
+  # are open (other plugins add fields to core methods), so an example may carry fields the schema
+  # does not list.
+  no-invalid-media-type-examples:
+    severity: error
+    allowAdditionalProperties: true
+  omv/operation: error
+  omv/example-coverage: error
+  omv/schema-extensions: error
+  # Every operation is POST /rpc/{Service}/{method}; the servers list and security schemes do not
+  # apply (the transport owns the endpoint and the session cookie).
+  no-empty-servers: off
+  security-defined: off
+  operation-4xx-response: off
+  info-license-strict: off
+  tag-description: off
+  operation-description: off

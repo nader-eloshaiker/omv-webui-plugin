@@ -1,0 +1,8 @@
+{
+  "name": "omv-web-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "The interface. Built in Phase 2: Vite at base /ui/, router, query client, i18n, the shell."
+}

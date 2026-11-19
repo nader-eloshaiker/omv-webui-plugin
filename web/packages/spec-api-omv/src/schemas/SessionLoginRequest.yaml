@@ -1,0 +1,11 @@
+type: object
+required: [username, password]
+properties:
+  username:
+    $ref: ./Username.yaml
+  password:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    pattern: '^[^\r\n]*$'

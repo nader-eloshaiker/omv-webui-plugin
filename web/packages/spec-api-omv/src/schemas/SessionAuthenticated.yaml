@@ -1,0 +1,13 @@
+type: object
+description: >-
+  A signed-in session. The server also sends `sessionid`; the transport ignores it and it is not
+  described here (UI-6). The session lives in OMV's HttpOnly cookie.
+required: [status, username, permissions]
+properties:
+  status:
+    type: string
+    enum: [authenticated]
+  username:
+    type: string
+  permissions:
+    $ref: ./SessionPermissions.yaml

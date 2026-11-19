@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  username: example-2fa
+  status: challengeRequired
+  challenge:
+    kind: totp
+    redirecturl: /tfatotp/example-2fa

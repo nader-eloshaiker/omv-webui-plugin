@@ -1,0 +1,18 @@
+type: object
+description: The signed-in user's own account.
+required: [name, comment, email, sshpubkeys, _readonly]
+properties:
+  name:
+    type: string
+  comment:
+    type: string
+  email:
+    type: string
+  sshpubkeys:
+    type: array
+    items:
+      type: string
+      description: A public key in RFC 4716 format.
+  _readonly:
+    type: boolean
+    description: True if the administrator does not let this user change their account.

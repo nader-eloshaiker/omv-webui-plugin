@@ -1,0 +1,7 @@
+{
+  "name": "@omv-webui/css-ui-style",
+  "private": true,
+  "version": "0.0.0",
+  "license": "GPL-3.0-or-later",
+  "description": "The Tailwind entry stylesheet built from design/tokens.css. Filled in Phase 2."
+}

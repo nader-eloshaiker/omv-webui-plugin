@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetUserByContext
+  tags:
+    - UserMgmt
+  summary: My account
+  description: "The signed-in user's own account."
+  x-omv-rpc:
+    service: UserMgmt
+    method: getUserByContext
+  x-omv-role: user
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserByContext.yaml
+          examples:
+            user:
+              $ref: ../../examples/userMgmtGetUserByContext.user.yaml

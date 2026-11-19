@@ -1,0 +1,11 @@
+type: object
+required: [modules, force]
+properties:
+  modules:
+    type: array
+    description: The modules to deploy. Empty deploys every dirty module.
+    items:
+      type: string
+  force:
+    type: boolean
+    description: Deploy the listed modules even if they are not dirty; with no modules, every module.

@@ -1,0 +1,13 @@
+type: object
+description: >-
+  The `error` member of an rpc.php failure reply. The transport turns it into an RpcError with the
+  HTTP status; its `trace` is discarded at once and never described here (UI-9). `code` is 0 for
+  every error observed (A8), so the status and the message are the only signals.
+required: [code, message]
+properties:
+  code:
+    type: integer
+    nullable: true
+  message:
+    type: string
+    description: The backend's message, already translated by the server. Shown as text.

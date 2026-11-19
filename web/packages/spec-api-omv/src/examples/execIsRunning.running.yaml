@@ -1,0 +1,5 @@
+summary: Written by hand from Exec.isRunning in OMV 8.6.1 source; a capture would delete the task
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusEXAMPLE
+  running: true

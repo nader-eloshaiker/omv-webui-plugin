@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: systemGetInformation
+  tags:
+    - System
+  summary: System information
+  description: "Host, version, load and memory, and whether configuration changes are pending. A user gets only the time and host name."
+  x-omv-rpc:
+    service: System
+    method: getInformation
+  x-omv-role: user
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SystemInformation.yaml
+          examples:
+            admin:
+              $ref: ../../examples/systemGetInformation.admin.yaml
+            adminPendingChanges:
+              $ref: ../../examples/systemGetInformation.adminPendingChanges.yaml
+            user:
+              $ref: ../../examples/systemGetInformation.user.yaml

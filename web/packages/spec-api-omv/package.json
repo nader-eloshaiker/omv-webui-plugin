@@ -1,0 +1,20 @@
+{
+  "name": "@omv-webui/spec-api-omv",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "The hand-written OpenAPI contract describing the openmediavault rpc.php methods the interface uses.",
+  "exports": {
+    "./openapi.json": "./generated/openapi.json"
+  },
+  "scripts": {
+    "build": "redocly bundle src/index.yaml --skip-preprocessor omv/empty-object-as-array --output generated/openapi.json && prettier --write generated/openapi.json --ignore-path=",
+    "lint": "redocly lint src/index.yaml",
+    "test": "node --test 'redocly-plugins/*.test.js'"
+  },
+  "devDependencies": {
+    "@redocly/cli": "catalog:api",
+    "prettier": "catalog:lint"
+  }
+}

@@ -1,0 +1,3 @@
+type: string
+description: The session's role. `admin` is an administrator; anything else is treated as a user.
+enum: [admin, user]

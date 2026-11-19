@@ -1,0 +1,41 @@
+{
+  "name": "@omv-webui/react-api-omv",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "description": "The generated TanStack Query client for the openmediavault-webui contract, and the transport module: the only code that knows rpc.php.",
+  "exports": {
+    "./generated": "./src/generated/index.ts",
+    "./examples": "./src/examples/index.ts",
+    "./forms": "./src/forms/generated/index.ts",
+    "./mocks": "./src/mocks/index.ts",
+    "./tasks": "./src/tasks/index.ts",
+    "./transport": "./src/transport/index.ts",
+    "./query": "./src/query.ts"
+  },
+  "scripts": {
+    "generate": "orval --config orval.config.ts && node scripts/rewrite-shared-models-import.mjs && node scripts/write-contract-files.mjs && prettier --write src/generated src/contract/generated src/examples/generated src/forms/generated --log-level warn",
+    "check": "node scripts/write-contract-files.mjs --check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:vm": "vitest run --config vitest.vm.config.ts"
+  },
+  "dependencies": {
+    "@omv-webui/ts-api-omv": "workspace:*",
+    "@tanstack/react-query": "catalog:tanstack",
+    "react": "catalog:react",
+    "valibot": "catalog:forms"
+  },
+  "devDependencies": {
+    "@omv-webui/spec-api-omv": "workspace:*",
+    "@testing-library/react": "catalog:testing",
+    "@types/react": "catalog:react",
+    "happy-dom": "catalog:testing",
+    "msw": "catalog:api",
+    "orval": "catalog:api",
+    "prettier": "catalog:lint",
+    "react-dom": "catalog:react",
+    "vitest": "catalog:testing"
+  }
+}

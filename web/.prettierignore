@@ -1,0 +1,6 @@
+**/dist
+**/node_modules
+**/generated
+**/routeTree.gen.ts
+# pnpm writes this file; Prettier has no claim on it.
+pnpm-lock.yaml

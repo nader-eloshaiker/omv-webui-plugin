@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sessionVerify
+  tags:
+    - Session
+  summary: Complete a second-factor sign-in
+  description: "Answer the pending challenge of Session.login. HTTP 400 for a wrong code; 429 from the third failure on, with a growing delay; 401 when no login is pending or it expired (A10)."
+  x-omv-rpc:
+    service: Session
+    method: verify
+  x-omv-role: public
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.session.verify
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SessionVerifyRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SessionAuthenticated.yaml
+          examples:
+            authenticated:
+              $ref: ../../examples/sessionVerify.authenticated.yaml
+    "400":
+      description: Wrong code.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            wrongCode:
+              $ref: ../../examples/sessionVerify.wrongCode.yaml

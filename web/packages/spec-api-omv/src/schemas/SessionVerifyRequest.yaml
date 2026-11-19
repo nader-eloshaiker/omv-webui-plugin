@@ -1,0 +1,12 @@
+type: object
+description: >-
+  The answer to a `totp` challenge (openmediavault-2fa-totp, A10). OMV's core accepts any value
+  here and hands it to the two-factor plugin; the contract accepts only the one shape the
+  interface sends.
+required: [code]
+properties:
+  code:
+    type: string
+    description: The six-digit one-time code.
+    pattern: "^[0-9]{6}$"
+    x-omv-secret: true

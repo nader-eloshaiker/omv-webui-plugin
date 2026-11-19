@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: execStop
+  tags:
+    - Exec
+  summary: Stop a task
+  description: "Used only by the task helper. Ends the task; the handle is gone afterwards. Returns null."
+  x-omv-rpc:
+    service: Exec
+    method: stop
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.exec.stop
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ExecHandleRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

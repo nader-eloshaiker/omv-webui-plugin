@@ -1,0 +1,5 @@
+type: object
+required: [filename]
+properties:
+  filename:
+    $ref: ./TaskHandle.yaml

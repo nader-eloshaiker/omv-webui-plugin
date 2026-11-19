@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sessionLogout
+  tags:
+    - Session
+  summary: Sign out
+  description: End the session. Returns null.
+  x-omv-rpc:
+    service: Session
+    method: logout
+  x-omv-role: user
+  x-omv-readonly: false
+  responses:
+    "200":
+      description: The method returns null.

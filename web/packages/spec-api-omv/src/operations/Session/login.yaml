@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sessionLogin
+  tags:
+    - Session
+  summary: Sign in
+  description: "Sign in with a user name and password. Wrong credentials are HTTP 400; too many failed second-factor attempts for the user are HTTP 429. Never retried automatically (UI-14)."
+  x-omv-rpc:
+    service: Session
+    method: login
+  x-omv-role: public
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.session.login
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SessionLoginRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SessionLoginReply.yaml
+          examples:
+            authenticated:
+              $ref: ../../examples/sessionLogin.authenticated.yaml
+            challengeRequired:
+              $ref: ../../examples/sessionLogin.challengeRequired.yaml
+    "400":
+      description: Wrong user name or password.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            wrongPassword:
+              $ref: ../../examples/sessionLogin.wrongPassword.yaml

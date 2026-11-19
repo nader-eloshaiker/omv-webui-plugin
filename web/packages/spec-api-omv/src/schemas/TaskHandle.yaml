@@ -1,0 +1,5 @@
+type: string
+description: >-
+  A background task handle: the server path of the task's status file. Opaque. Held in memory
+  only, never shown, never put in a URL or storage, and passed to Exec only by the task helper
+  (UI-5).
