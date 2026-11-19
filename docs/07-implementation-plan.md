@@ -5,7 +5,7 @@ Written for hand-off. Each phase has a goal, tasks and acceptance criteria that 
 ## Ground rules
 
 1. Read [AGENTS.md](../AGENTS.md) and documents 00–06 and the [style guide](design/style-guide.md) before writing code. The `UI-*` rules in [05](05-security.md) are binding.
-2. **Never test against a production NAS.** Use a disposable OMV 8 virtual machine (the OMV repository has a `vagrant/` set-up). Agents do not type passwords; the owner provides test credentials through environment variables on the test machine.
+2. **Never test against a production NAS.** Use a disposable OMV 8 virtual machine (the OMV repository has a `vagrant/` set-up). Test credentials live in an env file outside the repository (`$OMV_WEBUI_ENV`, by default `~/.config/omv-webui/test.env`, readable only by the owner), never in the repository, a log, a commit or a chat. Scripts and tests read them from there. Before an agent types a password or one-time code into a page itself, it checks that the credential is in that file, tells the owner which account and which target, and asks; a yes covers that session only. If the file or the credential is missing, or the target is not the test machine, the agent stops and asks.
 3. **Stop and ask** when: a Phase 0 assumption is false; a backend method behaves differently from what the contract says; a `UI-*` rule cannot be met; a new runtime dependency seems necessary; you notice a weakness in OMV itself (see [05](05-security.md#reporting-weaknesses-found-while-building)).
 4. Keep `docs/journal.md`: dated entries for each verified assumption, each owner decision, each surprise. It is the memory between sessions.
 5. One phase per branch; small commits; `make test` before every build; no AI attribution anywhere.
