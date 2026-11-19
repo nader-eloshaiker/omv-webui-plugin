@@ -19,6 +19,7 @@ The design is in `docs/` (start at `README.md` for the reading order). The phase
 9. **Colour and visual changes go through the audit.** Run `node tools/colour-audit.mjs` before changing `design/tokens.css`; see `docs/design/style-guide.md`.
 10. **Mirror the reference application's structure**, not its domain code: the owner's `wheelhub-web-app` workspace (spec package, DTO package, React client package, component package).
 11. **Plain words in the interface.** No Linux knowledge assumed; destructive actions say exactly what will be lost.
+12. **Changes reach `main` only through a pull request.** Work on a branch (one phase per branch, or `repo/<topic>` for repository housekeeping), commit only when the owner asks, sign off with `git commit -s`, and open a pull request. Never push to `main` directly; the ruleset refuses it.
 
 ## Layout (target)
 
