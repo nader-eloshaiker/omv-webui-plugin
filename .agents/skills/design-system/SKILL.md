@@ -1,6 +1,6 @@
 ---
 name: design-system
-description: Standards for engineering the design system - the token architecture from design/tokens.css into css-ui-style, the shadcn mapping, component API design in react-ui-components (cva variants, Radix and Base UI composition), Storybook coverage, theming mechanics and the Content Security Policy constraints on styling. Triggers on design tokens, tokens.css, css-ui-style, react-ui-components internals, shadcn, cva variants, Storybook and dark-mode plumbing.
+description: Standards for engineering the design system - the token architecture from design/tokens.css into css-ui-style, the shadcn mapping, component API design in react-ui-components (cva variants, Base UI composition), Storybook coverage, theming mechanics and the Content Security Policy constraints on styling. Triggers on design tokens, tokens.css, css-ui-style, react-ui-components internals, shadcn, cva variants, Storybook and dark-mode plumbing.
 ---
 
 # Design system engineering standards
@@ -61,8 +61,9 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 - **No `<style>` element and no `style=` attribute** reach the page. Styling is the built stylesheet
   plus Tailwind classes. React `style={}` props for genuinely dynamic geometry are fine, because
   React sets them through the DOM's style API.
-- **A dependency that injects `<style>` at run time violates UI-1.** Some toast libraries and some
-  Radix primitives (scroll areas, select viewports, the scroll lock under dialogs and menus) do.
+- **A dependency that injects `<style>` at run time violates UI-1.** sonner and several Radix
+  primitives (scroll areas, select viewports, the scroll lock under dialogs and menus) do, which is
+  why the library uses Base UI only, inside `CSPProvider disableStyleElements` (D7).
   Before adding or upgrading a primitive, check its built output for created style elements, and
   check the browser console for CSP violations with the component open. Phase 0 assumption `A9`
   records what was found; if a primitive fails, raise it with the owner, never loosen the policy.
@@ -72,8 +73,8 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 
 - One folder per component in `web/packages/react-ui-components/src/components/<name>/`, holding
   `<name>.tsx` and `<name>.stories.tsx`; public surface through the package `exports` map.
-- Import Radix and Base UI by per-primitive subpath, never the umbrella package.
-- Components wrap **Radix or Base UI primitives** for behaviour and accessibility; never re-implement
+- Import Base UI by per-primitive subpath (`@base-ui/react/dialog`), never the umbrella entry. No Radix, no sonner (D7).
+- Components wrap **Base UI primitives** for behaviour and accessibility; never re-implement
   focus management, dismissal or ARIA wiring a primitive provides.
 - shadcn idiom: `cva` for variants, `clsx` + `tailwind-merge` (`cn()`) for class composition,
   semantic utilities only.

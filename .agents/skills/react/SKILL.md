@@ -7,7 +7,7 @@ description: Guidelines, best practices and patterns for React development and c
 
 The project's standard for React. Use it when writing, refactoring or reviewing React code. It
 assumes the workspace stack: React 19, Vite, TanStack Router and Query, Zustand for preferences,
-Tailwind CSS v4, shadcn-style components on Radix and Base UI, MSW, Vitest and Testing Library.
+Tailwind CSS v4, shadcn-style components on Base UI, MSW, Vitest and Testing Library.
 
 Read the rule that matches the work:
 
@@ -113,7 +113,7 @@ bug.
 - Every interactive control is a real `button`, `a` or `input` with an accessible name. `div
   onClick` fails review.
 - Keyboard first: focus order follows reading order; focus is visible (style guide 4.6); dialogs
-  trap and restore focus; Escape closes overlays. Use the Radix or Base UI primitive rather than
+  trap and restore focus; Escape closes overlays. Use the Base UI primitive rather than
   building behaviour by hand.
 - Colour is never the only signal: every status has its word or a distinct icon shape.
 - Respect `prefers-reduced-motion`; the base state is the finished state.
