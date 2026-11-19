@@ -152,3 +152,36 @@ With the snippet and placeholder in place: `omv-mkworkbench all` and `apt-get in
 - **A10:** the agent chooses the two-factor plugin. It installs omv-extras on the VM if needed, captures the login and verify shapes once, and the two-factor screens are then verified against MSW examples built from those captures.
 - **HSTS** is not repeated in the snippet, as proposed under A1.
 - **Charts** show only what the open page has sampled (A7). There is no history.
+
+## 2026-11-19 — A9 repeated through the A1 snippet (observed)
+
+The A9 spike build was served from `/var/www/openmediavault-webui/` through the A1 snippet on the VM, over HTTP and HTTPS, and driven by Playwright (`scratch/phase0/browser/a9_vm.mjs`, a fresh browser context per route). For this run only, the snippet also sent `Content-Security-Policy-Report-Only: require-trusted-types-for 'script'`. The results match the local run exactly. Every page shows sonner's two module-load violations, because the spike bundles it. The Base UI page with `disableStyleElements` adds nothing above that. Base UI without it adds one. Radix adds five, plus four Trusted Types reports (`innerHTML` and its `[data-radix-]` style elements). Nothing else produced a Trusted Types report. Deep links load, scripts run, and there are no page errors. This also completes A1's browser check. Still open: enforcing Trusted Types once the Phase 2 shell exists.
+
+## 2026-11-19 — A5: a link from the stock interface (observed)
+
+A navigation entry in `/usr/share/openmediavault/workbench/navigation.d/`, followed by `omv-mkworkbench all`, appears in the stock menu (shown at the bottom with `position: 95` and an external-link icon):
+
+```yaml
+version: "1.0"
+type: navigation-item
+data:
+  path: "webui"
+  position: 95
+  text: "New web interface"
+  icon: "mdi:open-in-new"
+  url: "/externalRedirect/%2Fui%2F"
+```
+
+Clicking it as an administrator opened `/ui/` in a **new tab**, and the stock tab stayed on its page. The router does not double-encode the parameter. This is the entry Phase 4 ships, with "Open the classic interface" as the matching link back. Without `permissions`, every signed-in user sees it, which suits the new interface.
+
+## 2026-11-19 — A10: sign-in with a second factor (observed with openmediavault-2fa-totp)
+
+Set-up: omv-extras installed on the VM (its install script read first), then `openmediavault-2fa-totp`; the other two-factor plugin offered is `openmediavault-2fa-emailotp`, not tried (it needs mail). `webui-2fa` was enrolled with `TfaTotp.preEnableByContext` / `enableByContext`; its secret is in the env file as `OMV_2FA_TOTP_SECRET`, so scripts can make codes (RFC 6238: SHA-1, 6 digits, 30 s, one window of drift each side).
+
+- No second factor: `Session.login` → `{username, status: "authenticated", permissions: {role}, sessionid}` (as in A3).
+- With TOTP: `Session.login` → HTTP 200 `{username, status: "challengeRequired", challenge: {kind: "totp", redirecturl: "/tfatotp/<user>"}}`, a session cookie, no `sessionid`. `redirecturl` is a route of the stock interface; the new interface must not follow it (UI-3). It shows its own code form for each `kind` it knows and, for an unknown `kind`, says to use the classic interface.
+- `Session.verify` with `{code}` (what the stock page sends, plus the user name) → `{status: "authenticated", username, permissions, sessionid}`, and the "new browser" cookie is set then.
+- **Any other call while the challenge is pending discards it**: it gets 401 "Session not authenticated.", and a following `verify`, even with the right code, gets 401 "No pending login or the login has expired." The interface must make no backend call between sign-in and verify: no polling, no prefetching.
+- Wrong code: 400 "Challenge verification failed." From the third failure on: **429** "Too many failed verification attempts. Please try again later.", for `verify` and for a new `Session.login` of that user, with no `Retry-After` and no remaining time in the reply (only in the server log). The delay doubles from 5 s to at most 300 s and resets after 15 minutes (read from source). The pending login lives 5 minutes.
+- `verify` with no pending login: 401 "No pending login or the login has expired."
+- The MSW examples for the two-factor screens are drafted from these replies; the screens are then verified on the mock.
