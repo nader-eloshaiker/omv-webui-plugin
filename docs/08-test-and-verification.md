@@ -46,7 +46,7 @@ Each row is a family the implementer expands into cases. Rule IDs are from [05](
 
 - **Transport normalisation:** `[]` for an empty object; large integers preserved; coercion only where marked; open response objects pass unknown fields.
 - **Session:** 401 on any call returns the user to login exactly once, cancels in-flight queries and clears cached server data; after signing in again as a different user no data of the previous user is shown.
-- **Tasks:** output accumulates in order; back-off; a failed task surfaces its message; stop works; leaving the page stops polling.
+- **Tasks:** output accumulates in order; back-off; a failed task surfaces its message; stop works; moving to another page keeps following the task (it stays reachable from the top bar); polling stops when the task ends or the session ends.
 - **Pending changes:** the banner appears after a dirtying mutation, clears after apply, and a "configuration is dirty" read error is shown as guidance, not as a failure.
 - **Tables:** paging, sorting and search map to backend parameters; empty and error states.
 - **Roles:** a user-role session never requests an administrator-only operation (asserted from the contract's `x-omv-role` against the requests seen in a user journey).
@@ -70,7 +70,7 @@ A release is cut only when:
    - Routes reviewed for UI-3 and UI-4.
    - Destructive flows reviewed for UI-8.
    - Runtime dependency list reviewed (UI-11).
-   - `contract/EXCLUDED.md` reviewed.
+   - `web/packages/spec-api-omv/EXCLUDED.md` reviewed.
    - The "what this does not change about security" statement in the user documentation is present and current.
 8. No journal entry is marked blocking.
 
