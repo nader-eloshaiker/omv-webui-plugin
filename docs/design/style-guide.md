@@ -373,6 +373,16 @@ A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off th
 
 - Radius: 6px for controls, 8px for cards and dialogs, full for pills, dots and meters. One radius
   per kind of thing.
+- **Squircle corners where the browser supports them.** Controls, cards, dialogs, menus and toasts
+  take `corner-shape: squircle` inside `@supports (corner-shape: squircle)`. In 2026 only Chromium
+  browsers support it; everywhere else the same elements keep ordinary rounded corners, and nothing
+  may depend on the difference. A squircle corner of the same radius looks tighter than a round
+  one, so the squircle radii are their own tokens, tuned by eye in `design/preview.html`.
+- **Pills, dots and meters stay round** (`corner-shape: round`). Their shape is part of the
+  status vocabulary (5.5): the Unknown mark is a hollow ring.
+- **Native CSS only.** No squircle made with an SVG mask, `clip-path` or a background image: those
+  cut off borders, shadows and the focus ring (4.6). Before shipping, check in a Chromium browser
+  that the focus outline follows the squircle and still clears 3:1.
 - **Borders before shadows.** A card is a `surface` with a 1px `border`. Shadows are for things
   that float above the page (menus, popovers, dialogs, toasts) and nothing else.
 - Three elevation levels only: flat, raised (menus and popovers, `shadow-md`), and modal
@@ -609,8 +619,8 @@ The rules below are the ones that shape components; where the two differ, that d
 7. **Templating never evaluates data.** No client-side template engine is run over server data, and
    no string from the server is ever passed to `eval`, `new Function` or a template compiler.
 8. **Destructive actions** follow 5.4 (UI-8).
-9. **Error messages are plain and safe**: show the server's user-facing message as text and a
-   correlation identifier; never a stack trace.
+9. **Error messages are plain and safe**: show the server's user-facing message as text; never a
+   stack trace. (`rpc.php` returns no correlation identifier, so there is none to show.)
 
 ---
 

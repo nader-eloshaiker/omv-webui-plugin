@@ -12,8 +12,10 @@
  *   3. Component   - the shadcn vocabulary (primary, muted, destructive, ...) mapped onto the
  *                    semantic tier in the app's own stylesheet (see the guide, section 3.2).
  *
- * Dark mode is the `.dark` class on <html>; nothing here keys off prefers-color-scheme (the app
- * reads the OS preference once and sets the class).
+ * Dark mode is the `.dark` class on <html> in this file. In the app (Phase 2) the same dark values
+ * also apply under `@media (prefers-color-scheme: dark)` unless <html> has `.light`, so the OS
+ * preference works from the first paint with no inline script (UI-1); the class records only an
+ * explicit choice. See docs/02-architecture.md, "Cross-cutting behaviour".
  *
  * Hex only for colours: the audit script parses hex and `var(--token)` and nothing else. Scales were
  * built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex.

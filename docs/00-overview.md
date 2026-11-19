@@ -40,7 +40,7 @@ browser ──▶ nginx (OMV's own site, OMV's own port)
 | **engined** | `omv-engined`, OMV's root RPC daemon |
 | **`rpc.php`** | OMV's web endpoint; takes `{service, method, params}` and forwards to engined |
 | **stock interface** | The Angular "workbench" OMV ships |
-| **contract** | The OpenAPI document under `contract/` |
+| **contract** | The OpenAPI document in the `spec-api-omv` package (`web/packages/spec-api-omv/src/`) |
 | **operation** | One entry in the contract; maps to exactly one backend `service.method` |
 | **transport module** | The single hand-written module that turns a generated client call into an `rpc.php` request |
 | **pending changes** | OMV stores most settings first and applies them to the system only when the administrator confirms ("apply") |

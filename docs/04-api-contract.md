@@ -18,7 +18,7 @@ POST /rpc/{Service}/{method}        one path per backend method the interface us
 
 ## Extensions
 
-Checked by lint rules under `contract/plugins/`.
+Checked by lint rules under `web/packages/spec-api-omv/redocly-plugins/`.
 
 | Extension | On | Values | Meaning |
 |-----------|----|--------|---------|
@@ -60,7 +60,7 @@ OMV formats needed early: `uuidv4`, `devicefile`, `fsuuid`, `username`, `sharena
 
 OMV has none. They are written from evidence:
 
-1. `tools/contract-capture` signs in to a **test** OMV virtual machine, calls each read operation in a set of seeded scenarios (fresh install; one disk; several disks and a RAID; several shares and users; a stopped service; pending changes), and writes the responses to `contract/src/examples/`.
+1. `tools/contract-capture` signs in to a **test** OMV virtual machine, calls each read operation in a set of seeded scenarios (fresh install; one disk; several disks and a RAID; several shares and users; a stopped service; pending changes), and writes the responses to `web/packages/spec-api-omv/src/examples/`. A capture drafts a new example. It is never re-run over committed examples to bring them "up to date": a difference between a new capture and a committed example is a finding to review, not a file to overwrite.
 2. The capture is scrubbed: host names, addresses, MAC addresses, serial numbers, UUIDs, user names and keys are replaced with fixed documentation values. The tool fails if a scrub rule that should have matched did not.
 3. The author writes the schema, starting from the related `conf.*` datamodel where the method returns a configuration object and adding the fields the method computes.
 4. Lint requires every 200 response to have at least one example and every example to validate against its schema.
@@ -89,7 +89,7 @@ Because the server does not enforce the contract, four checks do:
 ## The pipeline
 
 ```
-contract/src/**   (authored)   ── redocly lint ──▶ redocly bundle ──▶ contract/generated/openapi.json (committed)
+spec-api-omv/src/**   (authored)   ── redocly lint ──▶ redocly bundle ──▶ spec-api-omv/generated/openapi.json (committed)
                                                                               │
                                               orval (one run, in web/packages/react-api-omv)
                                                  ├──▶ ts-api-omv/src/generated/models        DTOs
@@ -97,11 +97,18 @@ contract/src/**   (authored)   ── redocly lint ──▶ redocly bundle ─�
                                                  └──  mutator: react-api-omv/src/transport/rpcClient.ts
                                               + a small script writing the operation table the transport uses
                                               + a small script writing the examples index the mocks use
+                                              + a small script writing valibot schemas for forms
 ```
+
+All paths are under `web/packages/`.
 
 Generated output is committed, so a change to the contract shows as a reviewable diff in the client.
 
 orval configuration follows the reference application: `client: "react-query"`, `mode: "tags-split"`, a custom mutator, DTOs emitted into the separate types package, no generated mocks, query hooks forced for `x-omv-readonly` operations via the operations override (generated from the contract by a script, so it is not maintained by hand).
+
+The mutator keeps the reference's config-object signature (`{url, method, data, signal}`), but the transport is written on `fetch`, not axios (D7). The reference's generated hooks import nothing from the HTTP library, only the mutator, so this changes no generated code. Check that this still holds after each orval upgrade.
+
+orval generates zod, not valibot, schemas. The form schemas are written by a small script of our own from the bundled contract, carrying over `required`, `nullable`, `enum`, `minimum` / `maximum`, `maxLength`, `pattern` and the `x-omv-format` patterns. Their output is committed and never edited, like the rest of the generated code.
 
 ## First operations
 
@@ -119,7 +126,7 @@ Chosen to exercise each pattern once (Phase 1 and 2 of [07](07-implementation-pl
 
 ## Excluded methods
 
-`contract/EXCLUDED.md` lists backend methods that are deliberately not in the contract and why: for example methods the interface has no use for, internal methods, and methods implicated by the private security review whose use the interface should not encourage. Check it before adding an operation.
+`web/packages/spec-api-omv/EXCLUDED.md` lists backend methods that are deliberately not in the contract and why: for example methods the interface has no use for, internal methods, and methods implicated by the private security review whose use the interface should not encourage. Check it before adding an operation.
 
 ## Versioning
 

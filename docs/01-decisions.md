@@ -34,7 +34,7 @@ Consequences:
 
 ## D4. A hand-written contract generates the client
 
-The contract is an OpenAPI 3.0.3 document in `contract/`. Request schemas are bootstrapped from OMV's `rpc.*` datamodels by a tool and then reviewed; response schemas are written from captured real responses. One orval run produces DTOs and TanStack Query hooks. Detail in [04](04-api-contract.md).
+The contract is an OpenAPI 3.0.3 document in the `spec-api-omv` package (`web/packages/spec-api-omv/src/`, see D7). Request schemas are bootstrapped from OMV's `rpc.*` datamodels by a tool and then reviewed; response schemas are written from captured real responses. One orval run produces DTOs and TanStack Query hooks. Detail in [04](04-api-contract.md).
 
 Nothing on the server enforces the contract. Drift is caught by: a drift tool comparing request schemas with the installed OMV's datamodels; response validation against the schema in development and test builds; captured examples that must validate.
 
@@ -48,7 +48,25 @@ The backend computes whole responses and forks a process per call; nested resolv
 
 ## D7. The stack mirrors the reference application
 
-React, TypeScript, Vite, TanStack Router and Query, Tailwind v4, shadcn-style components on Radix, lucide icons, react-hook-form with valibot, i18next, MSW for mocks, Vitest and Playwright. pnpm workspace with the package split of the owner's `wheelhub-web-app`: spec, DTOs, React client, styles, components, app.
+React, TypeScript, Vite, TanStack Router and Query, Tailwind v4, shadcn-style components on Radix, lucide icons, react-hook-form with valibot, i18next, MSW for mocks, Vitest and Playwright. pnpm workspace with the package split of the owner's `wheelhub-web-app`: spec, DTOs, React client, styles, components, tooling, app.
+
+*2026-11-19.* The owner chose `apps/wheelhub-web-app` as the template for technology selection. When this design is silent on a tool, a version or a configuration detail, take the reference's choice. Versions start from the reference's pnpm catalog. The deliberate differences:
+
+| Topic | Reference | Here | Why |
+|-------|-----------|------|-----|
+| HTTP client | axios, inside the hand-written mutator | `fetch`, inside the transport module, with the same mutator signature | The generated hooks never import the HTTP library, so nothing else changes. One less runtime dependency (UI-11) and exactly one network call site (UI-10) |
+| Contract location | Inside the spec package | Same: `web/packages/spec-api-omv/src/`, bundled to `web/packages/spec-api-omv/generated/openapi.json` | Mirrors the reference; no separate top-level folder and no re-export layer |
+| Shared tooling | `ts-app-tooling` package (ESLint, Prettier, tsconfig base) | Same: `@omv-webui/ts-app-tooling` | Mirrors the reference |
+| Package scope | `@wheelhub/` | `@omv-webui/` | `@omv/` is not ours to claim on npm, and D12 keeps publishing open |
+| Not taken | Cognito / OIDC / jose, Stripe, d3, embla, QR codes, date picker, TanStack Start, runtime `config.js`, the mock-identity packages | — | No use here; the endpoints are constants (UI-3) |
+| Fonts | Fontsource package | Fontsource packages for Inter and Roboto Mono | Bundled in the package (UI-7); SIL Open Font License |
+| Example responses | Written; the schema decides and a capture only drafts | Captured from a test VM, scrubbed, then reviewed | The backend is not ours, so a capture is the only evidence of its shape. Taken from the reference: a capture drafts an example and is never re-run over committed ones |
+
+A library that injects `<style>` elements at run time (in the reference: sonner, Radix Select and ScrollArea, the scroll lock under Radix Dialog) conflicts with UI-1. Phase 0 (`A9`) measures it; nothing is chosen around it until then.
+
+## D13. Agent instructions are provider-neutral
+
+*2026-11-19.* As in the reference application: everything that tells an AI coding agent how to work here lives in `.agents/` (rules, skills, subagents, hooks), written so it reads the same whichever assistant runs it. A harness that discovers files only in its own folder gets symlinks into `.agents/` (Claude Code: `.claude/skills/`, `.claude/agents/`), never copies. `CLAUDE.md` is a one-line import of `AGENTS.md`. The map from neutral terms to each harness is in `.agents/README.md`.
 
 ## D8. Visual design follows the style guide
 

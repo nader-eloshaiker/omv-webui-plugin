@@ -9,8 +9,9 @@ Written for hand-off. Each phase has a goal, tasks and acceptance criteria that 
 3. **Stop and ask** when: a Phase 0 assumption is false; a backend method behaves differently from what the contract says; a `UI-*` rule cannot be met; a new runtime dependency seems necessary; you notice a weakness in OMV itself (see [05](05-security.md#reporting-weaknesses-found-while-building)).
 4. Keep `docs/journal.md`: dated entries for each verified assumption, each owner decision, each surprise. It is the memory between sessions.
 5. One phase per branch; small commits; `make test` before every build; no AI attribution anywhere.
-6. Generated code (`ts-api-omv/src/generated`, `react-api-omv/src/generated`, `contract/generated`) is never edited by hand.
-7. Mirror the reference application (`wheelhub-web-app` and its `packages/`) for structure, configuration and conventions. When this plan is silent on a tooling detail, do what the reference does.
+6. Generated code (`ts-api-omv/src/generated`, `react-api-omv/src/generated`, `spec-api-omv/generated`) is never edited by hand.
+7. Mirror the reference application (`wheelhub-web-app` and its `packages/`) for structure, configuration, technology and conventions. When this plan is silent on a tooling detail, do what the reference does. The deliberate differences are listed under D7 in [01](01-decisions.md#d7-the-stack-mirrors-the-reference-application).
+8. Throwaway scripts (Phase 0 and any later spike) live in `scratch/`, which is git-ignored. They read the test VM's address and credentials only from environment variables.
 
 ## Phase 0 — Verify the ground
 
@@ -21,12 +22,12 @@ Written for hand-off. Each phase has a goal, tasks and acceptance criteria that 
 | A1 | The nginx snippet in [06](06-plugin-packaging.md#nginx-snippet) serves a static directory at `/ui/` with its own headers, wins over the stock locations, supports deep links, and survives OMV re-deploying nginx | Install a hand-made snippet and a placeholder page; inspect response headers; change an OMV web setting and apply |
 | A2 | What `rpc.php` expects when an operation has no parameters; the paging parameters for "all rows" | Call two methods each way |
 | A3 | The session cookie's name and attributes; what a call without a session returns; the idle-timeout behaviour; the effect of `options.updatelastaccess: false` | Browser developer tools and scripted calls |
-| A4 | Which fields in the first operations exceed 2^53 or arrive as strings / `0` / `1`; how large integers are serialised | Capture and inspect replies on a VM with a large virtual disk |
+| A4 | Which fields in the first operations arrive as numeric strings, as `0` / `1`, or as numbers where a string is expected; whether any numeric field is a 64-bit counter that can pass 2^53 (byte and packet counters, statistics) and how such values are serialised. (A disk cannot reach 2^53 bytes, about 9 PB, so no large virtual disk is needed.) | Capture and inspect replies |
 | A5 | How (or whether) a stock-interface navigation entry can link to `/ui/` | Try a manifest entry |
 | A6 | Exact parameters and replies of `Config.isDirty`, `applyChangesBg`, `revertChangesBg`, and of `Exec.getOutput` / `isRunning` / `stop`; what a failed task looks like; what a "configuration is dirty" error looks like | Scripted calls, including a deliberately failing apply |
 | A7 | What numeric data is available for charts (CPU, memory, network, disk usage over time) without using pre-rendered graph images | Read the `Rrd` / performance-statistics services; call them |
 | A8 | HTTP status and error body for: wrong password, validation failure, forbidden for role, unknown method, backend exception | Scripted calls |
-| A9 | The CSP of UI-1 works with the framework stack (React, Radix, TanStack, Tailwind) with no violation; whether `require-trusted-types-for 'script'` can be added | A minimal build of the stack served through the A1 snippet |
+| A9 | The CSP of UI-1 works with the framework stack (React, Radix, Base UI, TanStack, Tailwind, the toast library) with no violation; whether `require-trusted-types-for 'script'` can be added. Known risk: libraries that insert `<style>` elements at run time (sonner; Radix Select and ScrollArea; the scroll lock used by Radix Dialog, Popover and Menu). List each violation by library and what breaks | A minimal build of the stack, first with the UI-1 headers on a local static server, then through the A1 snippet |
 | A10 | `Session.login` / `verify` request and reply shapes with no second factor and with each two-factor plugin enabled; the 429 behaviour | Scripted calls with test accounts |
 | A11 | The plugin's files and snippet survive `omv-mkworkbench`, an OMV package upgrade and removal of the plugin leaves nothing behind | Do each on the VM |
 
@@ -38,10 +39,10 @@ Written for hand-off. Each phase has a goal, tasks and acceptance criteria that 
 
 Tasks:
 
-1. `web/` pnpm workspace with the six packages of [02](02-architecture.md#workspace); TypeScript, ESLint, Prettier, Vitest configured as in the reference application.
-2. `contract/`: structure, Redocly configuration, the `x-omv-*` lint rules, bundle script.
+1. `web/` pnpm workspace with the seven packages of [02](02-architecture.md#workspace), scope `@omv-webui/`; pnpm catalogs, `allowBuilds` all false and `engine-strict` as in the reference; TypeScript, ESLint, Prettier, Vitest configured through `ts-app-tooling` as in the reference application.
+2. The contract in `spec-api-omv`: structure, Redocly configuration, the `x-omv-*` lint rules, bundle script.
 3. `tools/contract-bootstrap`, `tools/contract-drift`, `tools/contract-capture` (with scrubbing) per [04](04-api-contract.md).
-4. orval configuration and the scripts around it (operation table, examples index).
+4. orval configuration and the scripts around it (operation table, examples index, valibot form schemas).
 5. The transport module per [03](03-rpc-transport.md): request building, error type, 401 handling, normalisation, development-build response validation.
 6. The task helper.
 7. The first operations of [04](04-api-contract.md#first-operations), each with request schema, captured examples and response schema.
@@ -57,7 +58,7 @@ Tasks:
 
 Tasks:
 
-1. `css-ui-style` from `design/tokens.css`; fonts packaged locally.
+1. `css-ui-style` from `design/tokens.css`; fonts packaged locally; the squircle corners of style guide 4.3, with their radii tuned in `design/preview.html`.
 2. `react-ui-components`: the components of the style guide section 5, with Storybook stories in both themes: button, field and form parts, table, status pill and dot, capacity meter, dialog and the confirmation variants, banner, toast, empty state, task log.
 3. `omv-web-app`: Vite configuration with base `/ui/`, router, query client, i18n, theme switching.
 4. Login, second factor (per kind found in A10), unsupported-kind fallback, logout, session expiry and the idle warning.
