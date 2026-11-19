@@ -5,7 +5,14 @@ Written for hand-off. Each phase has a goal, tasks and acceptance criteria that 
 ## Ground rules
 
 1. Read [AGENTS.md](../AGENTS.md) and documents 00–06 and the [style guide](design/style-guide.md) before writing code. The `UI-*` rules in [05](05-security.md) are binding.
-2. **Never test against a production NAS.** Use a disposable OMV 8 virtual machine (the OMV repository has a `vagrant/` set-up). Test credentials live in an env file outside the repository (`$OMV_WEBUI_ENV`, by default `~/.config/omv-webui/test.env`, readable only by the owner), never in the repository, a log, a commit or a chat. Scripts and tests read them from there. Before an agent types a password or one-time code into a page itself, it checks that the credential is in that file, tells the owner which account and which target, and asks; a yes covers that session only. If the file or the credential is missing, or the target is not the test machine, the agent stops and asks.
+2. **Test on a disposable OMV 8 virtual machine** (the OMV repository has a `vagrant/` set-up). The owner's own server is used only like this, and anything that does not fit goes to the VM:
+   - read-only by default; any change is shown to the owner first and made only after a yes;
+   - never a destructive, two-factor, failed-login (`M9`) or package-install test;
+   - sign-in only with the accounts made for the agent: a normal account, and an admin account (in `openmediavault-admin`) that the owner enables for capture runs only. The agent signs in from a browser context of its own, because OMV refuses a sign-in while another user's session is open in the same browser;
+   - raw captures stay in the git-ignored `scratch/` and are scrubbed before anything is committed;
+   - its name and addresses never enter the repository; it is `NAS_HOST` like any other target.
+
+   Test credentials live in env files outside the repository, readable only by the owner: `$OMV_WEBUI_ENV` (by default `~/.config/omv-webui/test.env`) for the VM and `$OMV_WEBUI_OWNER_ENV` (by default `~/.config/omv-webui/owner.env`) for the owner's server. They never go in the repository, a log, a commit or a chat. Scripts and tests read them from there. Before an agent types a password or one-time code into a page itself, it checks that the credential is in the file, tells the owner which account and which target, and asks; a yes covers that session only. If the file or the credential is missing, or the target is neither the VM nor the owner's server under this rule, the agent stops and asks.
 3. **Stop and ask** when: a Phase 0 assumption is false; a backend method behaves differently from what the contract says; a `UI-*` rule cannot be met; a new runtime dependency seems necessary; you notice a weakness in OMV itself (see [05](05-security.md#reporting-weaknesses-found-while-building)).
 4. Keep `docs/journal.md`: dated entries for each verified assumption, each owner decision, each surprise. It is the memory between sessions.
 5. One phase per branch; small commits; `make test` before every build; no AI attribution anywhere.

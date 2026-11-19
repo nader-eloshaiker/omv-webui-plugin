@@ -99,8 +99,11 @@ reproduce".
 
 Hard limits:
 
-- **Never a production NAS.** Only the disposable OMV 8 test VM.
-- **Credentials come from the env file** (`$OMV_WEBUI_ENV`, default `~/.config/omv-webui/test.env`),
+- **The test VM by default.** The owner's own server only when the request names it, and then only
+  under ground rule 2 of `docs/07-implementation-plan.md`: read-only unless the owner agrees a
+  change, none of the excluded tests, the agent's own accounts in a browser context of their own.
+- **Credentials come from the env files** (`$OMV_WEBUI_ENV` for the VM, `$OMV_WEBUI_OWNER_ENV` for
+  the owner's server; see ground rule 2),
   never from the repository or a chat, and are never printed. Scripts read them. Typing a password or
   one-time code into a page needs the owner's yes, asked once per session after checking the
   credential is in the file.

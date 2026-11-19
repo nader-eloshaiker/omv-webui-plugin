@@ -93,4 +93,4 @@ or the DOM as text (UI-5).
 - Environment: happy-dom by default; a file that needs jsdom pins it with a
   `// @vitest-environment jsdom` docblock naming the gap.
 - A behaviour that needs a real backend (a write read back, a task finishing, the idle timeout) is
-  proven in the integration or browser suite against the **test VM**, never a production NAS.
+  proven in the integration or browser suite against the **test VM**, never the owner's server.
