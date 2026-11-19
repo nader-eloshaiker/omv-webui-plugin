@@ -74,7 +74,7 @@ Tasks:
 5. Shell: navigation, top bar, the pending-changes banner with apply and revert as tasks, the HTTP notice (UI-12), "Open the classic interface" link, error and not-found states.
 6. Build checks for UI-1, UI-7 and UI-11 (no inline script or style, no external origin, no mock code in the production bundle).
 
-**Acceptance:** sign in → see the shell → sign out works against the VM for an administrator and a normal user, with and without a second factor; the colour audit exits 0; Storybook shows every component in light and dark; keyboard-only operation of login and the shell; zero CSP violations in the browser test.
+**Acceptance:** sign in → see the shell → sign out works against the VM for an administrator and a normal user, with and without a second factor; the colour audit exits 0; Storybook shows every component in light and dark; keyboard-only operation of login and the shell; zero CSP violations in the browser test; the same browser test run with `require-trusted-types-for 'script'` enforced (deferred from `A9`), and the result recorded in the journal.
 
 ## Phase 3 — First pages
 
@@ -93,7 +93,7 @@ Tasks:
 
 Tasks: `debian/`, `Makefile`, maintainer scripts with the `nginx -t` guard, the navigation entry, install / upgrade / remove / purge tests on the VM, a check that the stock interface's responses are unchanged with the plugin installed.
 
-**Acceptance:** all of [06](06-plugin-packaging.md) holds on the VM; removal leaves nothing; a deliberately broken snippet in a test build is rolled back by `postinst` without taking the stock interface down.
+**Acceptance:** all of [06](06-plugin-packaging.md) holds on the VM; the plugin's files and snippet survive an upgrade of the openmediavault package (deferred from `A11`; the first OMV release after 8.6.1); removal leaves nothing (deferred from `A11`); a deliberately broken snippet in a test build is rolled back by `postinst` without taking the stock interface down.
 
 ## Phase 5 — Coverage, by domain
 

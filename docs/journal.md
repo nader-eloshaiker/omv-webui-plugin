@@ -185,3 +185,12 @@ Set-up: omv-extras installed on the VM (its install script read first), then `op
 - Wrong code: 400 "Challenge verification failed." From the third failure on: **429** "Too many failed verification attempts. Please try again later.", for `verify` and for a new `Session.login` of that user, with no `Retry-After` and no remaining time in the reply (only in the server log). The delay doubles from 5 s to at most 300 s and resets after 15 minutes (read from source). The pending login lives 5 minutes.
 - `verify` with no pending login: 401 "No pending login or the login has expired."
 - The MSW examples for the two-factor screens are drafted from these replies; the screens are then verified on the mock.
+
+## 2026-11-19 — Phase 0 closed (owner decision)
+
+Every row from A1 to A10 has an observed, dated result above. The owner accepted the two open remainders as deferred, and Phase 0 is closed:
+
+- **A11, partly:** the files survive `omv-mkworkbench` and an OMV reinstall (observed). The check across a real OMV package upgrade waits for an OMV release, and the removal check waits for the package. Both move to Phase 4 and are added to its acceptance in [07](07-implementation-plan.md#phase-4--packaging).
+- **A9, Trusted Types:** UI-1 holds on the chosen stack, and Trusted Types reported nothing beyond what the rejected libraries caused. Enforcing `require-trusted-types-for 'script'` is tried on the real shell in Phase 2 and is added to its acceptance in [07](07-implementation-plan.md#phase-2--design-system-and-application-shell). If it passes, the header joins UI-1; if not, the cause is raised with the owner.
+
+Tested on: the test VM, OMV 8.6.1.
