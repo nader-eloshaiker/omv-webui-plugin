@@ -94,19 +94,20 @@ Where the data comes from has two forms, and a request to verify names one:
 - **the test VM**: the dev server pointed at `$NAS_HOST`, or the packaged plugin installed on the VM.
   Right for writes read back, tasks, sessions, headers and CSP.
 
-**When the request names neither, ask.** Do not assume the mock's default and report "cannot
-reproduce".
+**When the request names neither, use the mock**, unless the check needs a real backend (writes
+read back, tasks, sessions, headers, CSP); then use the test VM. The owner prefers the mock
+(ground rule 2). Do not report "cannot reproduce" from the wrong source.
 
 Hard limits:
 
 - **The test VM by default.** The owner's own server only when the request names it, and then only
   under ground rule 2 of `docs/07-implementation-plan.md`: read-only unless the owner agrees a
-  change, none of the excluded tests, the agent's own accounts in a browser context of their own.
+  change, none of the excluded tests, signed in with the account in `$OMV_WEBUI_OWNER_ENV` from a
+  fresh browser context, never the owner's browser profile.
 - **Credentials come from the env files** (`$OMV_WEBUI_ENV` for the VM, `$OMV_WEBUI_OWNER_ENV` for
   the owner's server; see ground rule 2),
-  never from the repository or a chat, and are never printed. Scripts read them. Typing a password or
-  one-time code into a page needs the owner's yes, asked once per session after checking the
-  credential is in the file.
+  never from the repository or a chat, and are never printed. Scripts read them. An agent may type a
+  password or one-time code from them into a sign-in page of a test target without asking.
 - Never trigger `alert`, `confirm` or `prompt` in a driven browser; a modal dialog stops the session.
 - A CSP check reads the browser console for violations and the response headers for each of `/ui/`,
   an asset, a deep link and a missing file.
