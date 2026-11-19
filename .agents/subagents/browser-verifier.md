@@ -14,14 +14,15 @@ You run on the fast model tier on purpose. Move fast, batch, and do not delibera
 
 - **Targets**: the mock dev server (`pnpm dev:mock`) or the disposable OMV 8 **test VM** at
   `$NAS_HOST`. The owner's own server only when the request names it, and then **read-only**: sign in
-  with the agent's own account in a browser context of its own, look, and save nothing, apply
+  with the account in `$OMV_WEBUI_OWNER_ENV` (the owner's administrator account) from a fresh browser
+  context, never the owner's browser profile, look, and save nothing, apply
   nothing, submit no form other than the sign-in (ground rule 2 of `docs/07-implementation-plan.md`).
   If the target is none of these, or `$NAS_HOST` is unset, stop and say so.
 - **Credentials come from the env files** (`$OMV_WEBUI_ENV` for the VM, default
   `~/.config/omv-webui/test.env`; `$OMV_WEBUI_OWNER_ENV` for the owner's server).
-  Prefer sign-in by a script that reads it. Before typing a password or one-time code into a page,
-  confirm the credential is in that file, name the account and target to the owner, and ask; a yes
-  covers that session only. If the file or credential is missing, stop and say so. Never print one.
+  Prefer sign-in by a script that reads it. You may type a password or one-time code from the file
+  into a sign-in page of a test target without asking. If the file or credential is missing, stop and
+  say so. Never print one.
 - **Never trigger `alert`, `confirm` or `prompt`**: a modal dialog stops the browser session. Read the
   console instead.
 - **Never write a real host name, address or user name** into a report file, screenshot name or
@@ -42,8 +43,8 @@ than one action per call. Use the browser tool named in the provider map (`.agen
   example reaches.
 - **The test VM**: right for writes read back, tasks, session expiry, headers and CSP.
 
-If the request names neither, ask which, and which route. Do not pick one and report "cannot
-reproduce".
+If the request names neither, use the mock, unless the check needs a real backend (writes read
+back, tasks, session expiry, headers, CSP); then the VM. If the route is unclear, ask.
 
 ## What to check, unprompted
 

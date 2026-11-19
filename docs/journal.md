@@ -143,3 +143,12 @@ Navigation entries (`navigation.d/*.yaml`, `type: navigation-item`, fields `path
 ## 2026-11-19 — A11 (part): files survive OMV's own tooling (observed)
 
 With the snippet and placeholder in place: `omv-mkworkbench all` and `apt-get install --reinstall openmediavault` (8.6.1-1; no newer OMV release was available) left the snippet byte-identical and the files under `/var/www/openmediavault-webui/` intact, and `verify.sh` passed on HTTP and HTTPS afterwards. Still to do: a real OMV upgrade when one is published, and removal, once there is a package (Phase 4).
+
+## 2026-11-19 — Owner decisions after the first results
+
+- **Typing test passwords:** for this repository an agent may always type a password or one-time code from the env files into a sign-in page of a test target, without asking each session. They are still never printed or committed. Ground rule 2, `AGENTS.md` rule 8 and the agent rules updated.
+- **The mock first:** the owner wants to rely more on MSW than on the VM. Screens and their states are verified on the mock; the VM is used for what only a real backend shows (headers, CSP, sessions, tasks, writes read back) and for the captures that examples are drafted from. Ground rule 2 and the verification rule updated.
+- **The owner's server has only the owner's administrator account.** There is no separate account for the agent. Ground rule 2 now says the agent signs in with the account in `$OMV_WEBUI_OWNER_ENV` from a fresh browser context, read-only.
+- **A10:** the agent chooses the two-factor plugin. It installs omv-extras on the VM if needed, captures the login and verify shapes once, and the two-factor screens are then verified against MSW examples built from those captures.
+- **HSTS** is not repeated in the snippet, as proposed under A1.
+- **Charts** show only what the open page has sampled (A7). There is no history.
