@@ -32,41 +32,67 @@ The files are deliberately **not** placed inside `/var/www/openmediavault/`, whi
 
 ## nginx snippet
 
-OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` inside its server block. The plugin adds one file:
+OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` at the end of its server block. OMV's own `headers.conf` lives in the same directory and is applied at server level too. The plugin adds one file. This version passed `A1` on the test VM (see the journal, 2026-11-19); the browser load under it is still to be done with `A9`:
 
 ```nginx
 # openmediavault-webui: serve the new interface at /ui/.
-location = /ui { return 301 /ui/; }
+# Included inside OMV's server block. Every add_header set is complete, because add_header in a
+# location replaces the ones inherited from the server block (OMV's own headers.conf).
+
+location = /ui {
+    absolute_redirect off;
+    return 301 /ui/;
+}
 
 location ^~ /ui/ {
     alias /var/www/openmediavault-webui/;
-    index index.html;
-    try_files $uri $uri/ /ui/index.html;
-
-    # Security headers for the interface (rule UI-1). Set here in full, because add_header
-    # in a location replaces the headers inherited from the server block.
+    try_files $uri /ui/index.html;
     add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "no-referrer" always;
-    add_header Cross-Origin-Opener-Policy "same-origin" always;
-    add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
     add_header Cache-Control "no-cache" always;
 
-    location ~* ^/ui/assets/ {
-        alias /var/www/openmediavault-webui/assets/;   # see note on alias with regex
+    location ^~ /ui/assets/ {
+        try_files $uri =404;
+        error_page 404 @openmediavault_webui_missing;
+        add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
         add_header Cache-Control "public, max-age=31536000, immutable" always;
-        # repeat the security headers above
     }
+}
+
+# A missing asset is a plain 404, not OMV's redirect to its own 404 page, and is never cached.
+location @openmediavault_webui_missing {
+    types { }
+    default_type text/plain;
+    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
+    add_header Cache-Control "no-store" always;
+    return 404 "Not found\n";
 }
 ```
 
-This is a starting point to be proven on a test system in Phase 0 (`A1`), not copied on faith. Points to verify and settle there:
+What `A1` settled:
 
-- `^~` makes this prefix location win over the stock regular-expression locations (the one that adds OMV's own headers to `index.html` and the PHP one), so the stricter policy applies and nothing under `/ui/` is ever passed to PHP.
-- `alias` combined with `try_files` and with a nested regular-expression location has known pitfalls. If they bite, use `root` with a directory layout that puts the files under a `ui/` directory instead. Record the final snippet in this document.
-- If OMV sets `Strict-Transport-Security` in its server-level headers, repeat it here so `/ui/` does not lose it.
-- The stock site's handling of unknown paths (`error_page 404`) must not interfere with deep links under `/ui/`.
+- `^~` wins over the stock regular-expression locations: `/ui/index.html` gets these headers, not the stock `index.html` ones, and nothing under `/ui/` reaches PHP.
+- `alias` works with `try_files` and a nested **prefix** location for assets. A nested regular-expression location is not needed.
+- `$uri/` is left out of `try_files`. With it, a directory without an index answers 403.
+- The stock `error_page 404` redirects to the stock interface's 404 page, so a missing asset would get a redirect cached as immutable. The named location returns a plain, uncached 404 instead. Deep links are unaffected, because they fall back to `index.html`.
+- `absolute_redirect off` keeps the `/ui` redirect relative.
+- **HSTS is not repeated.** OMV sends it only when HTTPS is enabled and forced, and a static snippet cannot follow that setting. When HTTPS is forced, OMV's server-level redirect runs before `/ui/`, and every `rpc.php` reply carries HSTS, so the browser gets the policy on the interface's first call. *(Proposed; owner to confirm.)*
+- OMV re-rendering its site leaves the file alone, because its Salt state manages only its own files.
+- If the snippet is broken, OMV's nginx state fails its own `nginx -t` and keeps the running configuration, but every later apply that touches nginx fails until the file is fixed. That is why `postinst` must remove a snippet that fails the test.
 
 The snippet contains no variable taken from the request and no proxying.
 
