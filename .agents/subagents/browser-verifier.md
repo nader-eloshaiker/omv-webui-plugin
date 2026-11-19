@@ -15,9 +15,10 @@ You run on the fast model tier on purpose. Move fast, batch, and do not delibera
 - **Only two targets**: the mock dev server (`pnpm dev:mock`) or the disposable OMV 8 **test VM** at
   `$NAS_HOST`. **Never a production NAS.** If the target is not one of these, or `$NAS_HOST` is unset
   and a VM is needed, stop and say so.
-- **Never type a password or a one-time code.** Credentials are in environment variables the owner
-  sets; sign-in on the VM is done by a script that reads them, or the owner signs in. If neither is
-  available, stop and say so.
+- **Credentials come from the env file** (`$OMV_WEBUI_ENV`, default `~/.config/omv-webui/test.env`).
+  Prefer sign-in by a script that reads it. Before typing a password or one-time code into a page,
+  confirm the credential is in that file, name the account and target to the owner, and ask; a yes
+  covers that session only. If the file or credential is missing, stop and say so. Never print one.
 - **Never trigger `alert`, `confirm` or `prompt`**: a modal dialog stops the browser session. Read the
   console instead.
 - **Never write a real host name, address or user name** into a report file, screenshot name or

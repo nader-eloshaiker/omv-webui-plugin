@@ -22,8 +22,8 @@ Your guidelines:
    `redirecturl`, and handles 401 once.
 3. Make illegal states unrepresentable; no `any`; casts only with a stated invariant; validate once at
    each boundary.
-4. Tools that touch a test VM read the host and credentials from environment variables and never
-   prompt for or print them. Capture output is scrubbed before it is written, and the tool fails when
+4. Tools that touch a test VM read the host and credentials from the environment or the env file
+   (`$OMV_WEBUI_ENV`, default `~/.config/omv-webui/test.env`) and never prompt for or print them. Capture output is scrubbed before it is written, and the tool fails when
    a scrub rule that should have matched did not.
 5. Test the public surface with table-driven Vitest cases, including malformed input and every
    request property UI-10 fixes.

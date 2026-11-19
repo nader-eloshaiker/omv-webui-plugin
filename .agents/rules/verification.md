@@ -100,8 +100,10 @@ reproduce".
 Hard limits:
 
 - **Never a production NAS.** Only the disposable OMV 8 test VM.
-- **Never type a password or a one-time code.** Credentials come from environment variables the
-  owner sets; a script reads them.
+- **Credentials come from the env file** (`$OMV_WEBUI_ENV`, default `~/.config/omv-webui/test.env`),
+  never from the repository or a chat, and are never printed. Scripts read them. Typing a password or
+  one-time code into a page needs the owner's yes, asked once per session after checking the
+  credential is in the file.
 - Never trigger `alert`, `confirm` or `prompt` in a driven browser; a modal dialog stops the session.
 - A CSP check reads the browser console for violations and the response headers for each of `/ui/`,
   an asset, a deep link and a missing file.

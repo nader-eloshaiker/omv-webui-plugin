@@ -47,8 +47,8 @@ code imports DTOs from `@omv-webui/ts-api-omv`.
 ## Examples are evidence, and they are the mocks
 
 - Response shapes come from **captured** replies: `tools/contract-capture` signs in to a disposable
-  **test VM**, never a production NAS, with credentials from environment variables that no agent
-  types.
+  **test VM**, never a production NAS, with credentials read from the env file
+  (`$OMV_WEBUI_ENV`), never typed or printed.
 - **Every capture is scrubbed before it is written**: host names, addresses, MAC addresses, serial
   numbers, UUIDs, user names and keys become fixed documentation values. The tool fails if a scrub
   rule that should have matched did not. Re-read a capture before committing it.
