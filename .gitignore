@@ -1,0 +1,16 @@
+# Dependencies and build output
+node_modules/
+dist/
+storybook-static/
+coverage/
+playwright-report/
+test-results/
+
+# Throwaway Phase 0 spikes and local scratch (never committed)
+scratch/
+
+# Personal harness settings
+.claude/settings.local.json
+
+# OS
+.DS_Store

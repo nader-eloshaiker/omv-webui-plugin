@@ -1,0 +1,353 @@
+#!/usr/bin/env node
+// Colour audit for the token system in design/tokens.css. No dependencies. Run from the repo root:
+//
+//   node tools/colour-audit.mjs                 # contrast + distinct + neutrals
+//   node tools/colour-audit.mjs contrast        # one section; add --quiet for failures only
+//   node tools/colour-audit.mjs legacy          # the measured defects of the stock OMV palette
+//   node tools/colour-audit.mjs measure '#fff' '#5dacdf'     # one ad-hoc pair (fg, bg)
+//   node tools/colour-audit.mjs oklch 0.55 0.12 240          # OKLCH -> hex (for building ramps)
+//
+// `contrast` exits 1 when a REQUIRED pair fails, so it can gate CI. The PAIRS list below is the
+// contract: a token family added to tokens.css gets its pairs added here in the same change.
+// Every number quoted in docs/design/style-guide.md comes from this script.
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const CSS = path.join(ROOT, "design/tokens.css");
+const args = process.argv.slice(2);
+const QUIET = args.includes("--quiet");
+const positional = args.filter((a) => !a.startsWith("--"));
+const section = positional[0];
+
+// ---------- colour maths -------------------------------------------------------------------------
+function parseHex(v) {
+  const m = String(v).trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return null;
+  let h = m[1];
+  if (h.length === 3) h = [...h].map((c) => c + c).join("");
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+}
+const toHex = (rgb) =>
+  "#" + rgb.map((c) => Math.round(Math.min(255, Math.max(0, c))).toString(16).padStart(2, "0")).join("");
+const lin = (c) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const unlin = (x) => 255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055);
+const toLin = (rgb) => rgb.map(lin);
+const fromLin = (l) => l.map((x) => unlin(Math.min(1, Math.max(0, x))));
+
+// WCAG 2.x relative luminance and contrast ratio.
+const lum = (rgb) => {
+  const [r, g, b] = toLin(rgb);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+// APCA 0.0.98G-4g (the W3 reference constants). Returns Lc, signed: positive = dark text on light.
+function apca(text, bg) {
+  const y = ([r, g, b]) => {
+    let Y = 0.2126729 * (r / 255) ** 2.4 + 0.7151522 * (g / 255) ** 2.4 + 0.072175 * (b / 255) ** 2.4;
+    if (Y < 0.022) Y += (0.022 - Y) ** 1.414;
+    return Y;
+  };
+  const t = y(text);
+  const b = y(bg);
+  if (Math.abs(b - t) < 0.0005) return 0;
+  if (b > t) {
+    const s = (b ** 0.56 - t ** 0.57) * 1.14;
+    return s < 0.1 ? 0 : (s - 0.027) * 100;
+  }
+  const s = (b ** 0.65 - t ** 0.62) * 1.14;
+  return s > -0.1 ? 0 : (s + 0.027) * 100;
+}
+
+// OKLab / OKLCH (Ottosson).
+function oklab(rgb) {
+  const [r, g, b] = toLin(rgb);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+function oklch(rgb) {
+  const [L, a, b] = oklab(rgb);
+  return [L, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360];
+}
+function oklchToRgb(L, C, H) {
+  const a = C * Math.cos((H * Math.PI) / 180);
+  const b = C * Math.sin((H * Math.PI) / 180);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const linRgb = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+  const inGamut = linRgb.every((x) => x >= -0.0005 && x <= 1.0005);
+  return { rgb: fromLin(linRgb), inGamut };
+}
+// OKLab distance x100, so "2" is about one just-noticeable difference.
+const dE = (a, b) => {
+  const [x, y] = [oklab(a), oklab(b)];
+  return 100 * Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+};
+
+// Colour-vision deficiency simulation: Machado, Oliveira & Fernandes (2009), severity 1.0,
+// applied in linear RGB.
+const CVD = {
+  deutan: [
+    [0.367322, 0.860646, -0.227968],
+    [0.280085, 0.672501, 0.047413],
+    [-0.01182, 0.04294, 0.968881],
+  ],
+  protan: [
+    [0.152286, 1.052583, -0.204868],
+    [0.114503, 0.786281, 0.099216],
+    [-0.003882, -0.048116, 1.051998],
+  ],
+};
+const simulate = (rgb, kind) => {
+  const l = toLin(rgb);
+  return fromLin(CVD[kind].map((row) => row[0] * l[0] + row[1] * l[1] + row[2] * l[2]));
+};
+const over = (fg, alpha, bg) => fg.map((c, i) => c * alpha + bg[i] * (1 - alpha));
+
+// ---------- token loading ------------------------------------------------------------------------
+// Everything outside a `.dark { }` block is the light theme; the dark theme is light overridden by
+// the `.dark` block. `var(--x)` references are resolved within the theme being read.
+function loadTokens() {
+  const css = fs.readFileSync(CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const light = {};
+  const darkOverrides = {};
+  const blockRe = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = blockRe.exec(css))) {
+    const target = /\.dark\b/.test(m[1]) ? darkOverrides : light;
+    for (const d of m[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].trim();
+  }
+  const resolve = (map) => (name, depth = 0) => {
+    let v = map[name];
+    if (v === undefined || depth > 8) return null;
+    const ref = v.match(/^var\(--([\w-]+)\)$/);
+    return ref ? resolve(map)(ref[1], depth + 1) : parseHex(v);
+  };
+  return { light: resolve(light), dark: resolve({ ...light, ...darkOverrides }) };
+}
+
+// ---------- the contract -------------------------------------------------------------------------
+// [foreground token, ground, bar, note]. A ground is a token name, or [tint token, alpha, base
+// token] for an alpha wash composited over a known ground. Bars: "text" 4.5:1, "ui" 3:1 (large text,
+// icons, control outlines, marks that carry meaning alone), "deco" = reported, never failed.
+const GROUNDS = ["theme-page", "theme-surface", "theme-muted"];
+const onGrounds = (fg, bar, note) => GROUNDS.map((g) => [fg, g, bar, note]);
+const STATUS = ["ok", "warning", "critical", "unknown"];
+const wash = (fam, base) => [`theme-${fam}`, 0.14, base];
+
+const PAIRS = [
+  // Text tiers.
+  ...onGrounds("theme-foreground", "text", "body text"),
+  ...onGrounds("theme-muted-foreground", "text", "secondary text"),
+  ...onGrounds("theme-subtle-foreground", "deco", "placeholder / disabled (exempt, 1.4.3)"),
+  // Structure.
+  ...onGrounds("theme-border", "deco", "divider (decorative)"),
+  ...onGrounds("theme-border-control", "ui", "control outline (1.4.11)"),
+  // Action blue: the one interaction hue.
+  ["theme-action-foreground", "theme-action", "text", "words on the primary button"],
+  ["theme-action-foreground", "theme-action-hover", "text", "words on the primary button, hovered"],
+  ...onGrounds("theme-action", "ui", "primary button edge / checked control"),
+  ...onGrounds("theme-action-label", "text", "link and blue label"),
+  ["theme-action-label", ["theme-action", 0.1, "theme-surface"], "text", "label on the selected tint"],
+  ["theme-foreground", ["theme-action", 0.1, "theme-surface"], "text", "body text on the selected row"],
+  ...onGrounds("theme-focus-ring", "ui", "focus ring (2.4.11 / 1.4.11)"),
+  // Identity: the sky-blue bar.
+  ["theme-identity-foreground", "theme-identity", "text", "words and icons on the top bar"],
+  ["theme-focus-ring-on-identity", "theme-identity", "ui", "focus ring on the top bar"],
+  // Pending configuration changes: the yellow.
+  ["theme-pending-foreground", "theme-pending", "text", "words on the pending banner"],
+  ...onGrounds("theme-pending-label", "text", "'pending' as a word on a ground"),
+  ...onGrounds("theme-pending-stroke", "ui", "pending dot ring / icon"),
+  ["theme-pending-label", wash("pending", "theme-surface"), "text", "label on the pending wash"],
+  // Status: fills draw, labels are read, strokes outline.
+  ...STATUS.flatMap((s) => [
+    ...onGrounds(`theme-${s}-label`, "text", `${s} as a word`),
+    ...onGrounds(`theme-${s}-stroke`, "ui", `${s} ring / icon (carries status with its word)`),
+    ...onGrounds(`theme-${s}`, "deco", `${s} fill (always ringed by its stroke)`),
+    [`theme-${s}-label`, wash(s, "theme-surface"), "text", `${s} label on its pill wash`],
+    [`theme-${s}-label`, wash(s, "theme-page"), "text", `${s} label on its pill wash (page)`],
+  ]),
+  // Destructive action.
+  ["theme-destructive-foreground", "theme-destructive", "text", "words on the destructive button"],
+  ...onGrounds("theme-destructive", "ui", "destructive button edge"),
+  // Charts.
+  ...[1, 2, 3, 4].map((n) => [`theme-series-${n}`, "theme-surface", "ui", "chart mark on the plot ground"]),
+  ...[1, 2, 3, 4].map((n) => [`theme-series-${n}`, "theme-page", "ui", "chart mark on the page"]),
+  ["theme-usage", "theme-usage-track", "ui", "capacity meter fill on its track"],
+  ["theme-usage-track-edge", "theme-surface", "ui", "capacity meter track outline"],
+  // Task output.
+  ["theme-terminal-foreground", "theme-terminal", "text", "task and log output"],
+  ["theme-terminal-muted", "theme-terminal", "text", "timestamps in task output"],
+];
+const BAR = { text: 4.5, ui: 3 };
+
+const DISTINCT = [
+  ["theme-ok", "theme-warning"],
+  ["theme-ok", "theme-critical"],
+  ["theme-ok", "theme-unknown"],
+  ["theme-warning", "theme-critical"],
+  ["theme-warning", "theme-unknown"],
+  ["theme-critical", "theme-unknown"],
+  ["theme-pending", "theme-warning"],
+  ["theme-pending", "theme-ok"],
+  ["theme-pending", "theme-critical"],
+  ["theme-action", "theme-ok"],
+  ["theme-action", "theme-unknown"],
+  ["theme-identity", "theme-unknown"],
+  ["theme-series-1", "theme-series-2"],
+  ["theme-series-1", "theme-series-3"],
+  ["theme-series-1", "theme-series-4"],
+  ["theme-series-2", "theme-series-3"],
+  ["theme-series-2", "theme-series-4"],
+  ["theme-series-3", "theme-series-4"],
+];
+const NEUTRALS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 850, 900, 950].map((n) => `color-slate-${n}`);
+
+// ---------- sections -----------------------------------------------------------------------------
+const f = (n, d = 2) => n.toFixed(d);
+const pad = (s, n) => String(s).padEnd(n);
+const groundName = (g) => (Array.isArray(g) ? `${g[0]}@${Math.round(g[1] * 100)}%/${g[2]}` : g);
+const short = (s) => s.replace(/theme-/g, "");
+
+function contrast(themes) {
+  let fails = 0;
+  let checked = 0;
+  const advisory = [];
+  for (const [themeName, get] of Object.entries(themes)) {
+    if (!QUIET) console.log(`\n== contrast: ${themeName} ==\n${pad("foreground", 24)}${pad("ground", 34)}ratio    Lc  bar   result`);
+    for (const [fgName, ground, bar, note] of PAIRS) {
+      const fg = get(fgName);
+      const bg = Array.isArray(ground) ? over(get(ground[0]) ?? [0, 0, 0], ground[1], get(ground[2]) ?? [0, 0, 0]) : get(ground);
+      if (!fg || !bg || (Array.isArray(ground) && (!get(ground[0]) || !get(ground[2])))) {
+        console.log(`MISSING TOKEN  ${themeName}: ${fgName} on ${groundName(ground)}`);
+        fails++;
+        continue;
+      }
+      const r = ratio(fg, bg);
+      const lc = apca(fg, bg);
+      const need = BAR[bar];
+      const ok = need === undefined || r >= need;
+      if (need !== undefined) checked++;
+      if (!ok) fails++;
+      // APCA advisory: body text under Lc 60 passes WCAG but reads thinner than its ratio says.
+      if (ok && bar === "text" && Math.abs(lc) < 60) advisory.push(`${themeName}: ${short(fgName)} on ${short(groundName(ground))}  ${f(r)}:1  Lc ${f(lc, 0)}  (${note})`);
+      if (!QUIET || !ok)
+        console.log(
+          `${pad(short(fgName), 24)}${pad(short(groundName(ground)), 34)}${f(r).padStart(5)}  ${f(lc, 0).padStart(4)}  ${pad(bar, 5)} ${ok ? (need ? "pass" : "-") : "FAIL"}  ${note}`,
+        );
+    }
+  }
+  console.log(`\ncontrast: ${checked} required pairs checked, ${fails} failed.`);
+  if (advisory.length) {
+    console.log(`APCA advisory (text pairs that pass 4.5:1 but sit under Lc 60; fine for labels and bold, review for body copy): ${advisory.length}`);
+    if (!QUIET) advisory.forEach((a) => console.log("  " + a));
+  }
+  return fails;
+}
+
+function distinct(themes) {
+  for (const [themeName, get] of Object.entries(themes)) {
+    console.log(`\n== distinct: ${themeName} ==  (OKLab dE x100; under ~10 a pair needs its word or icon to be told apart)`);
+    console.log(`${pad("pair", 30)}normal  deutan  protan  grey dL`);
+    for (const [a, b] of DISTINCT) {
+      const [x, y] = [get(a), get(b)];
+      if (!x || !y) {
+        console.log(`MISSING TOKEN ${a} / ${b}`);
+        continue;
+      }
+      const cols = [dE(x, y), dE(simulate(x, "deutan"), simulate(y, "deutan")), dE(simulate(x, "protan"), simulate(y, "protan"))];
+      const dL = 100 * Math.abs(oklab(x)[0] - oklab(y)[0]);
+      const weakest = Math.min(...cols);
+      console.log(`${pad(short(a) + " / " + short(b), 30)}${cols.map((c) => f(c, 1).padStart(6)).join("  ")}  ${f(dL, 1).padStart(7)}${weakest < 10 ? "   <- relies on word/icon" : ""}`);
+    }
+  }
+}
+
+function neutrals(themes) {
+  console.log(`\n== neutrals ==  (one hue, low chroma; a step > 15 degrees off the median hue reads as another colour)`);
+  console.log(`${pad("step", 18)}hex       L      C      H    drift`);
+  const rows = NEUTRALS.map((n) => [n, themes.light(n)]).filter(([, v]) => v);
+  const hues = rows.map(([, v]) => oklch(v)[2]).sort((a, b) => a - b);
+  const median = hues[Math.floor(hues.length / 2)];
+  let bad = 0;
+  for (const [n, v] of rows) {
+    const [L, C, H] = oklch(v);
+    const drift = Math.abs(H - median);
+    if (drift > 15) bad++;
+    console.log(`${pad(n, 18)}${toHex(v)}  ${f(L, 3)}  ${f(C, 3)}  ${f(H, 0).padStart(4)}  ${f(drift, 1).padStart(5)}${drift > 15 ? "  <- off-hue" : ""}`);
+  }
+  console.log(`neutrals: median hue ${f(median, 0)}, ${bad} step(s) off-hue.`);
+}
+
+// The stock OMV workbench palette (workbench/src/scss/defaults/_colors.scss), measured so the guide
+// can quote real numbers for what it changes.
+function legacy() {
+  const c = { white: "#ffffff", bg50: "#eef0f2", corporate: "#5dacdf", darker: "#1b7bba", yellow: "#f8d400", coffee: "#4d2e25", green: "#4cd964", jungle: "#1a231a", red: "#ff3b30", orange: "#f78f00", neon: "#33ff33", charleston: "#282828" };
+  const rows = [
+    ["white", "corporate", "white text on the corporate-blue top bar and primary button"],
+    ["corporate", "white", "corporate blue as link / text on white"],
+    ["corporate", "bg50", "corporate blue as text on the app background"],
+    ["darker", "white", "'corporate darker' as text on white"],
+    ["darker", "bg50", "'corporate darker' as text on the app background"],
+    ["green", "white", "status green as a word on white"],
+    ["red", "white", "status red as a word on white"],
+    ["white", "red", "white text on the red (error / warn) fill"],
+    ["yellow", "white", "warning / accent yellow as a word on white"],
+    ["orange", "white", "dark orange as a word on white"],
+    ["white", "orange", "white text on the orange fill"],
+    ["coffee", "yellow", "coffee ink on the yellow fill"],
+    ["jungle", "green", "jungle ink on the green fill"],
+    ["neon", "charleston", "terminal neon green on charleston"],
+  ];
+  console.log(`\n== legacy OMV palette ==\n${pad("pair", 26)}ratio    Lc  note`);
+  for (const [a, b, note] of rows) {
+    const [x, y] = [parseHex(c[a]), parseHex(c[b])];
+    console.log(`${pad(a + " on " + b, 26)}${f(ratio(x, y)).padStart(5)}  ${f(apca(x, y), 0).padStart(4)}  ${note}`);
+  }
+  const [y, r, g, o] = [c.yellow, c.red, c.green, c.orange].map(parseHex);
+  console.log(`\naccent yellow and warning yellow are the same value (${c.yellow}): dE 0.0, one hue with two jobs.`);
+  console.log(`green / red     dE normal ${f(dE(g, r), 1)}  deutan ${f(dE(simulate(g, "deutan"), simulate(r, "deutan")), 1)}  protan ${f(dE(simulate(g, "protan"), simulate(r, "protan")), 1)}`);
+  console.log(`yellow / orange dE normal ${f(dE(y, o), 1)}  deutan ${f(dE(simulate(y, "deutan"), simulate(o, "deutan")), 1)}  protan ${f(dE(simulate(y, "protan"), simulate(o, "protan")), 1)}`);
+}
+
+// ---------- main ---------------------------------------------------------------------------------
+if (section === "oklch") {
+  const [L, C, H] = positional.slice(1).map(Number);
+  const { rgb, inGamut } = oklchToRgb(L, C, H);
+  console.log(`${toHex(rgb)}${inGamut ? "" : "  (out of sRGB gamut, clipped)"}`);
+} else if (section === "measure") {
+  const [fg, bg] = positional.slice(1).map(parseHex);
+  if (!fg || !bg) throw new Error("usage: measure '#rrggbb' '#rrggbb'  (foreground, background)");
+  const [L, C, H] = oklch(fg);
+  console.log(`${toHex(fg)} on ${toHex(bg)}: ${f(ratio(fg, bg))}:1, APCA Lc ${f(apca(fg, bg), 0)}; foreground OKLCH ${f(L, 3)} ${f(C, 3)} ${f(H, 0)}`);
+} else if (section === "legacy") {
+  legacy();
+} else {
+  const themes = loadTokens();
+  let fails = 0;
+  if (!section || section === "contrast") fails = contrast(themes);
+  if (!section || section === "distinct") distinct(themes);
+  if (!section || section === "neutrals") neutrals(themes);
+  if (section && !["contrast", "distinct", "neutrals"].includes(section)) {
+    console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, measure, oklch)`);
+    process.exit(2);
+  }
+  process.exit(fails ? 1 : 0);
+}
