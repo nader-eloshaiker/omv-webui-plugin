@@ -511,8 +511,10 @@ One anatomy per status, used everywhere:
 ### 5.7 Long-running tasks and log output
 
 - A task (installing updates, building an array, a file-system check) has a title, a state
-  (Running, Succeeded, Failed, Cancelled) as a pill, a progress bar where progress is known, elapsed
-  time, and a cancel control where cancelling is safe.
+  (Waiting, Running, Succeeded, Failed, Cancelled) as a pill, a progress bar where progress is known,
+  elapsed time, and a cancel control where cancelling is safe. Waiting is a step in a list that has
+  not started yet because an earlier step is still running ([UX audit](ux-audit.md), R5). It uses the
+  Unknown treatment with its own word, as Disabled and Stopped do (5.5); it is never pending yellow.
 - **Output is shown on the terminal pair** in both themes: `terminal` ground,
   `terminal-foreground` text (13.68:1 light theme, 14.57:1 dark), `terminal-muted` for timestamps
   (6.40 and 6.82:1), Roboto Mono 13px. The text has a faint green tint as a nod to OMV's terminal;

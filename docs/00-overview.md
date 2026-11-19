@@ -31,7 +31,7 @@ browser ──▶ nginx (OMV's own site, OMV's own port)
 - **Fixing security weaknesses in OMV's web layer.** The interface cannot, and does not claim to. Those are reported and fixed upstream. See [05](05-security.md#inherited-and-not-fixable-here).
 - **The API gateway.** Designed, parked: [later-gateway](later-gateway/README.md).
 - **Feature parity on day one.** Coverage grows domain by domain; the stock interface remains available for everything else.
-- **Rendering other plugins' pages** in version 1. Other plugins keep working in the stock interface. See [01](01-decisions.md#open-questions).
+- **Rendering other plugins' pages** in version 1. Other plugins keep working in the stock interface. The exceptions are the RAID and ZFS plugins, whose storage tasks version 1 covers. See [01](01-decisions.md#open-questions).
 
 ## Glossary
 

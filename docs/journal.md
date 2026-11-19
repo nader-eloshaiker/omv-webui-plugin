@@ -213,3 +213,20 @@ Built on branch `phase-1`. What the design left open, and what was found:
 - **Acceptance:** each first operation succeeds against the VM through the generated client, with development-build validation reporting no mismatch (`pnpm test:vm`, 8 tests: administrator, user, second factor, signed out); the same transport, task and query tests pass against the mock (116 tests); contract lint and drift are clean; a `url` not in the operation table throws before any request.
 
 Tested on: the test VM, OMV 8.6.1, and the mock.
+
+## 2026-11-20 — Owner decisions: excluded methods, the UX audit, the RAID and ZFS plugins
+
+- **`EXCLUDED.md` and `M2`/`M3`: confirmed.** The methods behind review IDs are not named in `EXCLUDED.md`; the owner holds the list. docs/05 (the `M3` row) and docs/04 ("Excluded methods") are reworded to say so.
+- **The UX audit moves into the repository** as [design/ux-audit.md](design/ux-audit.md). Before the move, two source citations were made less specific and the audit's list of possible OMV issues was removed (rule 3); those are held privately by the owner. The flows are the starting design for Phase 5.
+- **The audit's open questions**, answered:
+  - Q1: Flow A ("Add storage and share it") stays one flow, with a visible "Mount the new file system" checkpoint.
+  - Q2: a flow refuses to start while other changes are pending, and offers to apply or undo them first (R1).
+  - Q3: EXT4 is the default for one disk; multi-disk BTRFS is its own flow, with RAID1 as the default.
+  - Q4: new shared folders get mode 770, so only the people given access can reach them. This differs from the classic interface (775), and Flow A's summary says so.
+  - Q5: new accounts get no login shell unless "SSH access" is ticked.
+  - Q6: "Anyone on the network, without a password" is offered in Flow A, as a separate, explained choice.
+  - Q7: after turning on HTTPS, the page may show a link to the new address, built from the current host name and the chosen port. The owner reads this as allowed under UI-3, because nothing in it comes from a reply or a URL. The page says it cannot confirm the result from the old address.
+  - Q8: version 1 supports both the RAID plugin (`openmediavault-md`) and the ZFS plugin (`openmediavault-zfs`), shown only when installed. This is an exception to docs/01's open question 1, which is updated. The ZFS plugin's methods are read from its own source before its contract entries are written.
+  - Q9: the effective access to a folder (`ShareMgmt.getFileACL`, which reads the disk) is shown only on that folder's own page.
+  - Q10: "Waiting" joins the task states (style guide 5.7), with the Unknown treatment.
+  - Q11: the first sign-in shows a short set-up checklist built from server state, in place of the stock welcome panel.

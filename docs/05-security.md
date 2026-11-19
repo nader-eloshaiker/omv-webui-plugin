@@ -41,7 +41,7 @@ Stated plainly so that nobody mistakes a new interface for a security upgrade. T
 | H1 | The backend endpoint accepts calls without an origin check and in forms other than a JSON `POST`; the stock interface has a route that turns a link into a backend call | Unchanged. The new interface has no such route (UI-4), but the stock one is still installed |
 | H2 | The download endpoint trusts what a method returns | Unchanged. The new interface uses that endpoint only for a fixed list (UI-4) |
 | M2 | One backend method without a role check | Unchanged; not in the contract |
-| M3 | A second-factor plugin trusts client-supplied verification data | Unchanged; the affected operations are in `EXCLUDED.md` |
+| M3 | A second-factor plugin trusts client-supplied verification data | Unchanged; not in the contract. The affected operations are not named in `EXCLUDED.md`, since a name beside this ID would point at the weakness; the owner holds the list |
 | M4 | Factory default password; HTTP by default | Unchanged. The interface warns on HTTP (UI-12) and may nudge the administrator to change a default password |
 | M8 | Second-factor handling depends on the exact spelling of the user name under some directory set-ups | Unchanged; login is OMV's |
 | M9 | Repeated failed logins can lock an account permanently | Unchanged. The login screen explains what happened and how to recover; it cannot prevent it |
