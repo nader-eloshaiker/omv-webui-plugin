@@ -94,7 +94,7 @@ OMV e-mails a user when their account logs in from a browser it has not seen. Th
 
 None blocks the build. Each is decided by the owner when its phase arrives.
 
-1. **Other plugins' pages.** Plugins describe their settings pages in YAML manifests for the stock interface. Version 1 links to the stock interface for them. Whether to render those manifests natively is a later decision (Phase 5).
+1. **Other plugins' pages.** Plugins describe their settings pages in YAML manifests for the stock interface. Version 1 links to the stock interface for them. Whether to render those manifests natively is a later decision (Phase 5). Two plugins are an exception, decided on 2026-11-20: version 1 covers the storage tasks of the RAID plugin (`openmediavault-md`) and the ZFS plugin (`openmediavault-zfs`) with its own pages, shown only when the plugin is installed ([UX audit](design/ux-audit.md), Q8).
 2. **Languages.** The plan builds with i18next from the start and ships English first. Reusing OMV's existing translations is to be investigated in Phase 5.
 3. **Making the new interface the default landing page.** Possible later as an opt-in setting; not in version 1.
 4. **Order of domains** in Phase 5: a suggested order is in [07](07-implementation-plan.md#phase-5--coverage-by-domain).

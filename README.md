@@ -4,7 +4,7 @@
 
 The plugin installs a new single-page application beside the stock one. It talks to OMV's existing backend endpoint (`rpc.php`) with the user's existing login. It does not modify openmediavault, and the stock interface keeps working.
 
-> **Status: design complete; Phase 0 (verifying the design's assumptions on a test system) in progress.** There is no code to install yet. This repository holds the design and the implementation plan.
+> **Status: Phases 0 and 1 done (the design's assumptions checked on a test system; the contract, the generated client and the transport built). Phase 2 (design system and application shell) is next.** There is nothing to install yet.
 
 ## Read in this order
 
@@ -20,6 +20,7 @@ The plugin installs a new single-page application beside the stock one. It talks
 | 07 | [Implementation plan](docs/07-implementation-plan.md) | Phases, tasks, acceptance criteria, hand-off notes |
 | 08 | [Test and verification](docs/08-test-and-verification.md) | What is tested and the release gate |
 | — | [Style guide](docs/design/style-guide.md) | Visual design, colour system, components |
+| — | [UX audit](docs/design/ux-audit.md) | The stock interface's common jobs counted, and the job-based flows that replace them |
 
 Implementing agents start with [AGENTS.md](AGENTS.md).
 

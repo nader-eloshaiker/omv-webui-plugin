@@ -126,7 +126,7 @@ Chosen to exercise each pattern once (Phase 1 and 2 of [07](07-implementation-pl
 
 ## Excluded methods
 
-`web/packages/spec-api-omv/EXCLUDED.md` lists backend methods that are deliberately not in the contract and why: for example methods the interface has no use for, internal methods, and methods implicated by the private security review whose use the interface should not encourage. Check it before adding an operation.
+`web/packages/spec-api-omv/EXCLUDED.md` lists backend methods that are deliberately not in the contract and why: for example methods the interface has no use for, and internal methods. Methods implicated by the private security review are kept out too, but are not named there, because a method's name beside its review ID would point at a weakness not yet fixed upstream (AGENTS.md rule 3); the owner holds that list. Check `EXCLUDED.md`, and ask the owner, before adding an operation.
 
 ## Versioning
 

@@ -99,7 +99,7 @@ Tasks: `debian/`, `Makefile`, maintainer scripts with the `nginx -t` guard, the 
 
 **Goal:** grow until the interface serves daily administration.
 
-Suggested order (owner to confirm): dashboard and monitoring → storage (disks, SMART, file systems) → shared folders and permissions → users and groups → services (SMB, NFS, SSH, rsync) → network → system (date and time, notifications, certificates, updates, power) → plugins list.
+Suggested order (owner to confirm): dashboard and monitoring → storage (disks, SMART, file systems, and the RAID and ZFS plugins when installed) → shared folders and permissions → users and groups → services (SMB, NFS, SSH, rsync) → network → system (date and time, notifications, certificates, updates, power) → plugins list.
 
 For each domain:
 
