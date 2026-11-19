@@ -1,0 +1,19 @@
+name: Feature request
+description: A job the new interface should make easier, or something it should cover.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: job
+    attributes:
+      label: What are you trying to do?
+      description: Describe the job, not the screen. For example "add a new disk and share it with the family".
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you do it today, and what gets in the way?
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?

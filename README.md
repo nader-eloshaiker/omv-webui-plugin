@@ -4,7 +4,7 @@
 
 The plugin installs a new single-page application beside the stock one. It talks to OMV's existing backend endpoint (`rpc.php`) with the user's existing login. It does not modify openmediavault, and the stock interface keeps working.
 
-> **Status: design complete, no code yet.** This repository holds the design and the implementation plan, ready to be built.
+> **Status: design complete; Phase 0 (verifying the design's assumptions on a test system) in progress.** There is no code to install yet. This repository holds the design and the implementation plan.
 
 ## Read in this order
 

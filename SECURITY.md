@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Report privately. Do not open a public issue for a security problem. Use GitHub's private vulnerability reporting on this repository once it is published; until then, contact the maintainer directly.
+Report privately. Do not open a public issue for a security problem. Use GitHub's [private vulnerability reporting](https://github.com/nader-eloshaiker/omv-webui-plugin/security/advisories/new) on this repository.
 
 ## Scope
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/nader-eloshaiker/omv-webui-plugin/security/advisories/new
+    about: Never open a public issue for a security problem. See SECURITY.md.
+  - name: Problems in openmediavault itself
+    url: https://github.com/openmediavault/openmediavault/issues
+    about: The backend, rpc.php, login, sessions and the stock interface belong to openmediavault.
+  - name: Design documents
+    url: https://github.com/nader-eloshaiker/omv-webui-plugin/tree/main/docs
+    about: Goals, decisions, architecture, security rules and the implementation plan.
