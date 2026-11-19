@@ -32,7 +32,7 @@ The files are deliberately **not** placed inside `/var/www/openmediavault/`, whi
 
 ## nginx snippet
 
-OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` at the end of its server block. OMV's own `headers.conf` lives in the same directory and is applied at server level too. The plugin adds one file. This version passed `A1` on the test VM (see the journal, 2026-11-19); the browser load under it is still to be done with `A9`:
+OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` at the end of its server block. OMV's own `headers.conf` lives in the same directory and is applied at server level too. The plugin adds one file. This version passed `A1` and the `A9` browser run on the test VM (see the journal, 2026-11-19):
 
 ```nginx
 # openmediavault-webui: serve the new interface at /ui/.
@@ -98,7 +98,20 @@ The snippet contains no variable taken from the request and no proxying.
 
 ## Link in the stock interface
 
-A navigation entry in the stock interface's manifest format adds "New web interface" to its menu, pointing to `/ui/`. `A5` confirms how a navigation entry can link outside the stock application's own routes; if it cannot, a small dashboard notice or a line in the plugin's description is used instead. The new interface has a matching "Open the classic interface" link to `/`.
+`/usr/share/openmediavault/workbench/navigation.d/webui.yaml` adds "New web interface" to the stock menu. Stock navigation entries go through the stock application's router, so the entry points at its external-redirect route, which opens `/ui/` in a new tab (`A5`, observed):
+
+```yaml
+version: "1.0"
+type: navigation-item
+data:
+  path: "webui"
+  position: 95
+  text: "New web interface"
+  icon: "mdi:open-in-new"
+  url: "/externalRedirect/%2Fui%2F"
+```
+
+The new interface has a matching "Open the classic interface" link to `/`.
 
 ## Maintainer scripts
 
