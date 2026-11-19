@@ -25,6 +25,10 @@ Implementing agents start with [AGENTS.md](AGENTS.md).
 
 `docs/later-gateway/` holds a complete, parked design for replacing `rpc.php` with a hardened API gateway. It is **not** part of the current build. See [its README](docs/later-gateway/README.md).
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Report security problems privately: see [SECURITY.md](SECURITY.md).
+
 ## Relationship to openmediavault
 
 This is not the official openmediavault interface and is not endorsed by the openmediavault project.
