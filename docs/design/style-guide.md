@@ -17,7 +17,7 @@ openmediavault interface. It does not use the openmediavault logo artwork (upstr
 the product name appears as plain text, and the About screen says the UI is a community plugin and
 links to upstream.
 
-**Stack assumption:** React, Tailwind CSS v4, shadcn-style components (Radix primitives), and
+**Stack assumption:** React, Tailwind CSS v4, shadcn-style components (Base UI primitives), and
 lucide icons, organised the way the reference application is: a token stylesheet package, a
 component package, and the app. Tailwind reads the `@theme` block for utilities; the semantic
 `--theme-*` roles are exposed to it with `@theme inline` in the app stylesheet.
@@ -571,7 +571,7 @@ The bar is **WCAG 2.2 level AA**. In particular:
 - **Never colour alone** (1.4.1): status, selection, validation, required fields, links in running
   text (underlined), chart series.
 - **Keyboard** (2.1.1, 2.1.2): everything is operable without a pointer; no trap; menus, dialogs,
-  tabs and tables follow the WAI-ARIA Authoring Practices patterns. Use the Radix primitives rather
+  tabs and tables follow the WAI-ARIA Authoring Practices patterns. Use the Base UI primitives rather
   than hand-built ones.
 - **Focus visible and not obscured** (2.4.7, 2.4.11): section 4.6. Sticky bars must not cover the
   focused element.

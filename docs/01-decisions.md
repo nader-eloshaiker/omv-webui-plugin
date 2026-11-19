@@ -48,7 +48,7 @@ The backend computes whole responses and forks a process per call; nested resolv
 
 ## D7. The stack mirrors the reference application
 
-React, TypeScript, Vite, TanStack Router and Query, Tailwind v4, shadcn-style components on Radix, lucide icons, react-hook-form with valibot, i18next, MSW for mocks, Vitest and Playwright. pnpm workspace with the package split of the owner's `wheelhub-web-app`: spec, DTOs, React client, styles, components, tooling, app.
+React, TypeScript, Vite, TanStack Router and Query, Tailwind v4, shadcn-style components on Base UI, lucide icons, react-hook-form with valibot, i18next, MSW for mocks, Vitest and Playwright. pnpm workspace with the package split of the owner's `wheelhub-web-app`: spec, DTOs, React client, styles, components, tooling, app.
 
 *2026-11-19.* The owner chose `apps/wheelhub-web-app` as the template for technology selection. When this design is silent on a tool, a version or a configuration detail, take the reference's choice. Versions start from the reference's pnpm catalog. The deliberate differences:
 
@@ -61,8 +61,10 @@ React, TypeScript, Vite, TanStack Router and Query, Tailwind v4, shadcn-style co
 | Not taken | Cognito / OIDC / jose, Stripe, d3, embla, QR codes, date picker, TanStack Start, runtime `config.js`, the mock-identity packages | — | No use here; the endpoints are constants (UI-3) |
 | Fonts | Fontsource package | Fontsource packages for Inter and Roboto Mono | Bundled in the package (UI-7); SIL Open Font License |
 | Example responses | Written; the schema decides and a capture only drafts | Captured from a test VM, scrubbed, then reviewed | The backend is not ours, so a capture is the only evidence of its shape. Taken from the reference: a capture drafts an example and is never re-run over committed ones |
+| Component primitives | radix-ui and Base UI | **Base UI only**, inside `CSPProvider disableStyleElements` | *2026-11-19, owner, after `A9`.* Radix Dialog, Popover, Menu, Select and ScrollArea insert `<style>` elements, which UI-1 blocks (scroll lock and scrollbar hiding break) and Trusted Types reject. Base UI with style elements disabled passes both. The one rule it would insert (`.base-ui-disable-scrollbar`) lives in `css-ui-style` |
+| Toasts | sonner | **Base UI Toast** | *2026-11-19, owner, after `A9`.* sonner inserts its stylesheet as a `<style>` element on every page load |
 
-A library that injects `<style>` elements at run time (in the reference: sonner, Radix Select and ScrollArea, the scroll lock under Radix Dialog) conflicts with UI-1. Phase 0 (`A9`) measures it; nothing is chosen around it until then.
+A new primitive or upgrade is checked the same way: open it under the UI-1 policy and look for violations (see the `design-system` skill).
 
 ## D13. Agent instructions are provider-neutral
 
