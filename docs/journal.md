@@ -269,3 +269,14 @@ Built on branch `phase-2`, verified on the mock; the VM run follows with the she
 - **Locked accounts (M9):** after a second wrong password the page explains, by class only, that the server can lock an account, that waiting does not unlock it, and who can. Wording approved by the owner, with the title "Check the password before trying again".
 - **Mock scenarios** (administrator, user, second factor, wrong password, too many attempts, session expired, pending changes) are picked in `pnpm dev:mock` only. The production build was checked: one external module script, no inline script or style, fonts bundled, no mock code.
 - Router scroll restoration is off: it wrote visited paths to `sessionStorage`.
+
+## 2026-11-20 — Phase 2: the shell
+
+Built on branch `phase-2`, verified on the mock and in the browser test; the VM run follows.
+
+- **Navigation** is read from the stock `navigation.d/*.yaml` (OMV source) into one fixed table. An administrator sees System, Network, Storage, Services, Users, Diagnostics and Account in the stock order, plus one "Add-ons" entry that points to the classic interface. A normal user sees the Dashboard and Account, as in the stock interface. Every item opens `/$group/$item`, whose two segments can only select an entry of that table (anything else is "not found"); the classic link is the entry's literal path (UI-3, UI-4). A normal user who types an administrator's address gets a plain "only administrators" page; the backend enforces.
+- **Pending changes** are read from `System.getInformation` (`dirtyModules`) as a background poll every 20 s for administrators, so the poll cannot keep a session alive (UI-14). Module ids are shown as plain names (41 ids, from the engine modules and the Salt deploy states); an unknown id is shown as itself. The apply confirmation warns that the connection may drop when `systemd-networkd`, `nginx`, `phpfpm`, `certificates` or `iptables` is pending. Apply and Undo run as tasks; Undo asks first. A failed apply keeps the band in its failed state with "Try applying again" and the full output behind "Show what happened" (A6, R7). The failed-apply example is written by hand from the A6 observation and says so.
+- **The HTTP notice** (UI-12) links an administrator to the classic interface's web-interface settings; a normal user is told to ask an administrator.
+- **Tasks** carry start and end times, and an ended task stays in the top bar's tasks menu until dismissed (style guide 5.7).
+- **The About dialog** says the interface is an unofficial community plugin and links to upstream openmediavault. That link is allowed by name in the build check: it is a fixed link the reader follows, never a request.
+- Found while testing: moving focus to the page title failed under React's StrictMode; the test harness now renders in StrictMode so tests catch it.

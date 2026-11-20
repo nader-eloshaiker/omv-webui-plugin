@@ -52,6 +52,10 @@ export const ALLOWED_URLS = new Map([
     "Tailwind's licence comment at the top of the stylesheet",
   ],
   [
+    "https://www.openmediavault.org/",
+    "The About dialog's fixed link to the upstream project (UI-3: an external link written in code, opened only by the reader's click in a new tab with rel=\"noopener noreferrer\"); nothing fetches or loads it",
+  ],
+  [
     "http://localhost",
     'TanStack Router\'s stand-in origin for parsing paths when window.origin is "null"; it builds URL objects, never a request',
   ],

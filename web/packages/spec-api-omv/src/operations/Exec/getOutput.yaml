@@ -31,3 +31,12 @@ post:
               $ref: ../../examples/execGetOutput.appliedFinished.yaml
             revertedFinished:
               $ref: ../../examples/execGetOutput.revertedFinished.yaml
+    "500":
+      description: "The task failed: the message is the task's whole output (for an apply, the Salt log). Also the answer for a handle the server has already deleted (A6)."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            applyFailed:
+              $ref: ../../examples/execGetOutput.applyFailed.yaml

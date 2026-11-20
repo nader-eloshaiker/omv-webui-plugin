@@ -1,0 +1,25 @@
+summary: "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only."
+x-omv-status: 500
+value:
+  code: 0
+  message: |-
+    Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; omv-salt deploy run --no-color ssh 2>&1' with exit code '1': nas:
+    ----------
+              ID: configure_ssh_sshd_config
+        Function: file.managed
+            Name: /etc/ssh/sshd_config
+          Result: True
+         Comment: File /etc/ssh/sshd_config updated
+    ----------
+              ID: start_ssh_service
+        Function: service.running
+            Name: ssh
+          Result: False
+         Comment: Job for ssh.service failed because the control process exited with error code.
+
+    Summary for nas
+    ------------
+    Succeeded: 1 (changed=1)
+    Failed:    1
+    ------------
+    Total states run:     2

@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignedInRouteImport } from './routes/_signedIn'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignedInIndexRouteImport } from './routes/_signedIn/index'
+import { Route as SignedInSplatRouteImport } from './routes/_signedIn/$'
+import { Route as SignedInAddOnsRouteImport } from './routes/_signedIn/add-ons'
+import { Route as SignedInGroupItemRouteImport } from './routes/_signedIn/$group/$item'
 
 const SignedInRoute = SignedInRouteImport.update({
   id: '/_signedIn',
@@ -27,27 +30,58 @@ const SignedInIndexRoute = SignedInIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SignedInRoute,
 } as any)
+const SignedInSplatRoute = SignedInSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInAddOnsRoute = SignedInAddOnsRouteImport.update({
+  id: '/add-ons',
+  path: '/add-ons',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInGroupItemRoute = SignedInGroupItemRouteImport.update({
+  id: '/$group/$item',
+  path: '/$group/$item',
+  getParentRoute: () => SignedInRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SignedInIndexRoute
   '/sign-in': typeof SignInRoute
+  '/$': typeof SignedInSplatRoute
+  '/add-ons': typeof SignedInAddOnsRoute
+  '/$group/$item': typeof SignedInGroupItemRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
+  '/$': typeof SignedInSplatRoute
+  '/add-ons': typeof SignedInAddOnsRoute
   '/': typeof SignedInIndexRoute
+  '/$group/$item': typeof SignedInGroupItemRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_signedIn': typeof SignedInRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_signedIn/$': typeof SignedInSplatRoute
+  '/_signedIn/add-ons': typeof SignedInAddOnsRoute
   '/_signedIn/': typeof SignedInIndexRoute
+  '/_signedIn/$group/$item': typeof SignedInGroupItemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in'
+  fullPaths: '/' | '/sign-in' | '/$' | '/add-ons' | '/$group/$item'
   fileRoutesByTo: FileRoutesByTo
-  to: '/sign-in' | '/'
-  id: '__root__' | '/_signedIn' | '/sign-in' | '/_signedIn/'
+  to: '/sign-in' | '/$' | '/add-ons' | '/' | '/$group/$item'
+  id:
+    | '__root__'
+    | '/_signedIn'
+    | '/sign-in'
+    | '/_signedIn/$'
+    | '/_signedIn/add-ons'
+    | '/_signedIn/'
+    | '/_signedIn/$group/$item'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +112,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInIndexRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/$': {
+      id: '/_signedIn/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SignedInSplatRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/add-ons': {
+      id: '/_signedIn/add-ons'
+      path: '/add-ons'
+      fullPath: '/add-ons'
+      preLoaderRoute: typeof SignedInAddOnsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/$group/$item': {
+      id: '/_signedIn/$group/$item'
+      path: '/$group/$item'
+      fullPath: '/$group/$item'
+      preLoaderRoute: typeof SignedInGroupItemRouteImport
+      parentRoute: typeof SignedInRoute
+    }
   }
 }
 
 interface SignedInRouteChildren {
+  SignedInSplatRoute: typeof SignedInSplatRoute
+  SignedInAddOnsRoute: typeof SignedInAddOnsRoute
   SignedInIndexRoute: typeof SignedInIndexRoute
+  SignedInGroupItemRoute: typeof SignedInGroupItemRoute
 }
 
 const SignedInRouteChildren: SignedInRouteChildren = {
+  SignedInSplatRoute: SignedInSplatRoute,
+  SignedInAddOnsRoute: SignedInAddOnsRoute,
   SignedInIndexRoute: SignedInIndexRoute,
+  SignedInGroupItemRoute: SignedInGroupItemRoute,
 }
 
 const SignedInRouteWithChildren = SignedInRoute._addFileChildren(

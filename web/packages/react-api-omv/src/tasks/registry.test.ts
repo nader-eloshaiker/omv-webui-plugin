@@ -79,17 +79,21 @@ function script(
   );
 }
 
-/** A registry whose waits resolve at once, recording each delay asked for. */
+/** A registry whose waits resolve at once, recording each delay asked for, on a clock it controls. */
 function registry() {
   const waits: number[] = [];
-  const r = createTaskRegistry(async (ms, signal) => {
-    waits.push(ms);
-    if (signal.aborted) {
-      throw signal.reason;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  });
-  return { r, waits };
+  const clock = { now: 1_000 };
+  const r = createTaskRegistry(
+    async (ms, signal) => {
+      waits.push(ms);
+      if (signal.aborted) {
+        throw signal.reason;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    },
+    () => clock.now,
+  );
+  return { r, waits, clock };
 }
 
 const settled = (r: ReturnType<typeof createTaskRegistry>) =>
@@ -225,5 +229,48 @@ describe("the task registry", () => {
     const task = await done;
     expect(JSON.stringify(task)).not.toContain("bgstatus");
     expect(JSON.stringify(r.list())).not.toContain("bgstatus");
+  });
+
+  it("records when a task started and ended", async () => {
+    script([{ output: "x", running: false }]);
+    const { r, clock } = registry();
+    const done = settled(r);
+    const id = r.start("Applying changes", () =>
+      configApplyChangesBg({ modules: [], force: false }),
+    );
+    expect(r.get(id)).toMatchObject({ startedAt: 1_000 });
+    expect(r.get(id)?.endedAt).toBeUndefined();
+    clock.now = 4_500;
+    const task = await done;
+    expect(task).toMatchObject({ startedAt: 1_000, endedAt: 4_500 });
+  });
+
+  it("dismisses an ended task, and never a running one", async () => {
+    script([{ output: "working\n" }]);
+    const { r } = registry();
+    const running = r.start("Applying changes", () =>
+      configApplyChangesBg({ modules: [], force: false }),
+    );
+    r.dismiss(running);
+    expect(r.get(running)?.state).toBe("running");
+    r.clear();
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    server.resetHandlers();
+    script([{ output: "x", running: false }]);
+    const ended = r.start("Applying changes", () =>
+      configApplyChangesBg({ modules: [], force: false }),
+    );
+    await new Promise<void>((resolve) => {
+      const off = r.onSettled((t) => {
+        if (t.id === ended) {
+          off();
+          resolve();
+        }
+      });
+    });
+    r.dismiss(ended);
+    expect(r.get(ended)).toBeUndefined();
+    expect(r.list()).toEqual([]);
   });
 });

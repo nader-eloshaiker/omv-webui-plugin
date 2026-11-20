@@ -16,6 +16,7 @@ export const SCENARIOS = [
   "tooManyAttempts",
   "sessionExpired",
   "pendingChanges",
+  "applyFails",
   "idleWarning",
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
@@ -33,6 +34,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   tooManyAttempts: "Too many attempts",
   sessionExpired: "Session ends after loading",
   pendingChanges: "Administrator, changes pending",
+  applyFails: "Administrator, applying fails",
   idleWarning: "Idle warning soon (1-minute timeout)",
 };
 
@@ -65,13 +67,26 @@ export interface MockSession {
   pending: boolean;
   /** The next 401 says the session expired, as OMV's first answer after a timeout does. */
   expiring: boolean;
+  /** Configuration changes are saved and not applied. A finished apply or undo clears it. */
+  dirty: boolean;
 }
 
-export const newMockSession = (signedIn = false): MockSession => ({
+export const newMockSession = (
+  signedIn = false,
+  dirty = false,
+): MockSession => ({
   signedIn,
   pending: false,
   expiring: false,
+  dirty,
 });
+
+/** Whether a scenario starts with changes pending. */
+export const startsDirty = (name: ScenarioName): boolean =>
+  name === "pendingChanges" || name === "applyFails";
+
+// The handle the contract's apply example returns.
+const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
 
 const SIGNED_IN_EXAMPLES = new Set(["authenticated", "authenticatedUser"]);
 
@@ -170,21 +185,31 @@ export function scenarioAnswers(
       session.pending = false;
       return "null";
     },
-    systemGetInformation: guarded(
-      user
-        ? "user"
-        : name === "pendingChanges"
-          ? "adminPendingChanges"
-          : "admin",
-    ),
+    systemGetInformation: () =>
+      guarded(
+        user ? "user" : session.dirty ? "adminPendingChanges" : "admin",
+      )(),
     userMgmtGetUserByContext: guarded("user"),
     webGuiGetAutoLogoutSettings: guarded(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
-    configIsDirty: guarded(name === "pendingChanges" ? "dirty" : "clean"),
+    configIsDirty: () => guarded(session.dirty ? "dirty" : "clean")(),
     configApplyChangesBg: guarded("applied"),
     configRevertChangesBg: guarded("reverted"),
-    execGetOutput: guarded("appliedFinished"),
+    // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
+    // apply or undo, after which nothing is pending.
+    execGetOutput: ({ params }) => {
+      const apply =
+        (params as { filename?: unknown } | null)?.filename === APPLY_HANDLE;
+      if (apply && name === "applyFails") {
+        return guarded("applyFailed")();
+      }
+      const answer = guarded(apply ? "appliedFinished" : "revertedFinished")();
+      if (typeof answer === "string") {
+        session.dirty = false;
+      }
+      return answer;
+    },
     execIsRunning: guarded("running"),
     execStop: guarded("null"),
     sshGet: guarded("defaults"),

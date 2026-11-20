@@ -22,6 +22,9 @@ export interface TaskSnapshot {
   /** The parsed result, when the operation declares a result schema and the task succeeded. */
   readonly result?: unknown;
   readonly error?: RpcError;
+  /** When the task was started, and when it ended (ms since the epoch), for "elapsed" in the tasks menu. */
+  readonly startedAt: number;
+  readonly endedAt?: number;
 }
 
 /** Waits `ms` unless aborted. Tests pass their own. */
@@ -70,11 +73,16 @@ export interface TaskRegistry {
   subscribe(listener: () => void): () => void;
   /** Called with every task that ends, whatever the outcome. */
   onSettled(listener: (task: TaskSnapshot) => void): () => void;
+  /** Forget a task that has ended: the reader has seen its result (5.7). A running task stays. */
+  dismiss(id: number): void;
   /** Stop following every task and forget them (sign-out, session end). Tasks keep running on the server. */
   clear(): void;
 }
 
-export function createTaskRegistry(wait: Wait = realWait): TaskRegistry {
+export function createTaskRegistry(
+  wait: Wait = realWait,
+  now: () => number = Date.now,
+): TaskRegistry {
   const tasks = new Map<number, Running>();
   const listeners = new Set<() => void>();
   const settledListeners = new Set<(task: TaskSnapshot) => void>();
@@ -88,7 +96,15 @@ export function createTaskRegistry(wait: Wait = realWait): TaskRegistry {
     }
   };
   const update = (task: Running, change: Partial<TaskSnapshot>) => {
-    task.snapshot = { ...task.snapshot, ...change };
+    const ends =
+      change.state !== undefined &&
+      change.state !== "running" &&
+      task.snapshot.state === "running";
+    task.snapshot = {
+      ...task.snapshot,
+      ...change,
+      ...(ends && { endedAt: now() }),
+    };
     publish();
     if (task.snapshot.state !== "running") {
       for (const l of [...settledListeners]) {
@@ -159,7 +175,7 @@ export function createTaskRegistry(wait: Wait = realWait): TaskRegistry {
     start(label, begin) {
       const id = nextId++;
       const task: Running = {
-        snapshot: { id, label, state: "running", output: "" },
+        snapshot: { id, label, state: "running", output: "", startedAt: now() },
         handle: undefined,
         controller: new AbortController(),
       };
@@ -189,6 +205,14 @@ export function createTaskRegistry(wait: Wait = realWait): TaskRegistry {
     onSettled(listener) {
       settledListeners.add(listener);
       return () => settledListeners.delete(listener);
+    },
+    dismiss(id) {
+      const task = tasks.get(id);
+      if (!task || task.snapshot.state === "running") {
+        return;
+      }
+      tasks.delete(id);
+      publish();
     },
     clear() {
       for (const task of tasks.values()) {
