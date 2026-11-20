@@ -185,9 +185,22 @@ function bundlePath(
 /** @param {string} html @returns {{ name: string, closing: boolean, attributes: [string, string][], content: string }[]} */
 function htmlElements(html) {
   // Comments are inert, so they are dropped; an unterminated one would hide everything after it.
-  const text = html.replace(/<!--[^]*?-->/g, "");
-  if (text.includes("<!--")) {
-    throw new Error("an unterminated <!-- comment");
+  // A scan rather than a regular-expression replace: one pass, and nothing it removes can join
+  // the text around it into a new comment opener.
+  let text = "";
+  let from = 0;
+  for (;;) {
+    const open = html.indexOf("<!--", from);
+    if (open === -1) {
+      text += html.slice(from);
+      break;
+    }
+    const close = html.indexOf("-->", open + 4);
+    if (close === -1) {
+      throw new Error("an unterminated <!-- comment");
+    }
+    text += html.slice(from, open);
+    from = close + 3;
   }
   const tag = /<(\/?)([a-z][a-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
   const attribute =
