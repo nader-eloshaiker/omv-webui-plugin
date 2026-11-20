@@ -511,7 +511,6 @@ export const SCHEMAS: SchemaTable = {
       },
       status: {
         type: "string",
-        enum: ["OK", "ENOTDIR", "ENOENT", "ENOENT_DB_MNTENT"],
       },
     },
   },

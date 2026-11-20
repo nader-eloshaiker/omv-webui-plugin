@@ -37,7 +37,6 @@ export * from './sharedFolderPrivilege.ts';
 export * from './sharedFolderPrivilegePerms.ts';
 export * from './sharedFolderPrivileges.ts';
 export * from './sharedFolderPrivilegeType.ts';
-export * from './sharedFolderStatus.ts';
 export * from './sshSetRequest.ts';
 export * from './sshSettings.ts';
 export * from './systemInformation.ts';

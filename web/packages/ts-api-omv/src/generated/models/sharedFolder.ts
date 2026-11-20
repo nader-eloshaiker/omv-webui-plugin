@@ -4,7 +4,6 @@
  */
 import type { SharedFolderMntent } from './sharedFolderMntent.ts';
 import type { SharedFolderPrivileges } from './sharedFolderPrivileges.ts';
-import type { SharedFolderStatus } from './sharedFolderStatus.ts';
 
 /**
  * A shared folder (conf.system.sharedfolder) with the fields ShareMgmt computes.
@@ -29,6 +28,6 @@ export interface SharedFolder {
   mntent?: SharedFolderMntent;
   snapshots?: boolean;
   absdirpath?: string;
-  /** OK, or why the folder cannot be reached. */
-  status: SharedFolderStatus;
+  /** OK, or why the folder cannot be reached: ENOTDIR, ENOENT or ENOENT_DB_MNTENT in OMV 8.6. Open to other codes, so a later OMV's code is shown as Unknown rather than refused. */
+  status: string;
 }

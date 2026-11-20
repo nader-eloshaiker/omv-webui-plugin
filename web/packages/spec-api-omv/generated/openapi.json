@@ -1592,8 +1592,7 @@
           },
           "status": {
             "type": "string",
-            "description": "OK, or why the folder cannot be reached.",
-            "enum": ["OK", "ENOTDIR", "ENOENT", "ENOENT_DB_MNTENT"]
+            "description": "OK, or why the folder cannot be reached: ENOTDIR, ENOENT or ENOENT_DB_MNTENT in OMV 8.6. Open to other codes, so a later OMV's code is shown as Unknown rather than refused."
           }
         }
       },
