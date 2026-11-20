@@ -92,3 +92,10 @@ catalogs:
     typescript-eslint: ^8.71.0
     "@eslint-react/eslint-plugin": ^5.23.3
     "@eslint/js": ^10.0.1
+
+# Security fixes for development-only dependencies, scoped to the path that brings them in. Remove
+# each when its parent depends on a fixed version.
+overrides:
+  # Storybook's docgen plugin pins glob 13 (GHSA-3g3m-2fjr-6pw4), which also brings a vulnerable
+  # minimatch (GHSA-g3hv-75wg-m249). glob 14.0.2 fixes both; its API is unchanged for this use.
+  "@joshwooding/vite-plugin-react-docgen-typescript>glob": ^14.0.2
