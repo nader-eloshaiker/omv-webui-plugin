@@ -350,3 +350,26 @@ Defaults taken without a question, open to change:
   - one "Your account" menu item replaces the stock "Settings" and "Password" items.
 
 **A Phase 2 defect, found by the design review:** the classic interface routes with a hash (`useHash: true`), but the navigation table's classic links had no `/#`. On the VM, `/system/date-time` redirects to the classic interface's 404 page. Every classic link moves to the `/#/…` form in Phase 3.
+
+## 2026-11-20 — Phase 3: the pages, on the mock and the test VM
+
+Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with the owner's decisions above. The owner was away for the last part and asked for the recommended answer to each open point. Those answers are marked *(recommended)*.
+
+- **Pages.** The Dashboard with the set-up checklist and the attention list, Services > SSH, Storage > Shared Folders (read-only) and "Your account". Their navigation items open the new routes. The shell now mounts the library's toaster; nothing had mounted it before.
+- **Shared-folder table state** (page, sort, page size, search) is kept in a small in-memory store, cleared when the session ends. It is not in Zustand, which holds preferences only, and not in the address (UI-4). The search is sent 300 ms after typing stops. When the list shrinks, the table moves back to the last page that exists.
+- **The checklist's HTTPS item** gives the port as text ("The secure connection uses port …"). This puts the bare string `https://` in the bundle, so the build check's allow list names it, with the reason: it is display text that nothing fetches or opens.
+- **The main chunk** was 503 kB. Route splitting was already on; the cause was the component library's barrel, which did not declare itself free of side effects. `"sideEffects": false` in `react-ui-components/package.json` *(recommended)* brings the entry chunk to 281 kB, with each page in its own chunk.
+- **`SecretField`** now passes a caller's `ref` on to its input *(recommended)*. Before, the ref was dropped silently.
+- **`ShareMgmt.getList`'s `status`** is open to any string *(recommended)*. A code a later OMV adds is shown as Unknown instead of failing the development build's check.
+- **`Network.getGeneralSettings`** stays in the contract, though no page uses it yet *(recommended)*. The checklist reads the host name from `System.getInformation`, and the Phase 5 network page will use this operation.
+- **Fixed in the browser test's mock:** `SSH.get` was keyed under the wrong operation id, a Phase 2 slip that no test had reached.
+
+**On the test VM** (OMV 8.6.1), the final build was deployed behind the committed snippet (`nginx -t` passed), and `pnpm test:browser:vm` ran:
+
+- **HTTP:** 9 passed, 2 skipped.
+- **HTTPS:** 9 passed, 2 skipped.
+- **The skips** are the same as before: the administrator with a second factor (it needs a temporary account) and the idle warning (it needs a short timeout).
+- **The Phase 3 acceptance journey** passed: sign in, change an SSH setting ("Compress data"), save, apply, watch the task finish, reload, and see the new value, also in `SSH.get`'s reply. The test then puts the old value back and applies again. It skips itself when changes are already pending, because applying is global.
+- **The table:** the backend is asked for exactly the page, sort, page size and search shown, and the range shown matches its reply.
+- **A normal user** sees their account page, and is refused the SSH and shared-folder pages with no `SSH.get` or `ShareMgmt.getList` call.
+- **Afterwards** nothing was pending, compression was off as before, and the welcome flag was still set.
