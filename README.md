@@ -4,7 +4,7 @@
 
 The plugin installs a new single-page application beside the stock one. It talks to OMV's existing backend endpoint (`rpc.php`) with the user's existing login. It does not modify openmediavault, and the stock interface keeps working.
 
-> **Status: Phases 0 and 1 done (the design's assumptions checked on a test system; the contract, the generated client and the transport built). Phase 2 (design system and application shell) is next.** There is nothing to install yet.
+> **Status: Phases 0 to 4 done: the design checked on a test system; the contract, client and transport; the design system and shell; the first pages; and the Debian package. Phase 5 (the remaining pages, domain by domain) is next.** There is no release yet. CI builds a development package on every pull request.
 
 ## Read in this order
 

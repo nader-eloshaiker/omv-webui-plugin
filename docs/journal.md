@@ -381,3 +381,37 @@ Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with t
 The table frame is now `relative` and a container, and a state row is as wide as the frame's visible part and stays there while the table scrolls. Left as they are:
 - the read-only account shows its "locked" sentence under both Details and Change password, as the design's table says;
 - a mismatched password pair clears both fields.
+
+## 2026-11-21 — Owner decisions after Phase 3
+
+- **Phase 5's domain order** in [07](07-implementation-plan.md#phase-5--coverage-by-domain) is confirmed as written.
+- **Phase 4 (packaging) comes first.** The owner said "go ahead" without naming a phase. Phase 4 was taken first *(recommended)*: it is small and fully specified, it turns the hand deployment into the package, and it unblocks the real OMV upgrade check (A11), now that a newer OMV is published.
+
+## 2026-11-21 — Phase 4: the package, on the test VM
+
+Built on `phase-4`, following the owner's spindown plugin for `debian/` and the `Makefile` targets.
+
+- **The package.**
+  - **Build:** `make build` then `make docker-deb` (or `make deb` on a Debian 13 host). It builds in a Debian 13 container from the bundle already built, and runs lintian, with no errors or warnings. CI does the same on every pull request and keeps the `.deb` as a build artifact.
+  - **Contents:** the bundle in `/var/www/openmediavault-webui/` (root-owned, directories 0755, files 0644), the snippet, the menu entry, and in `/usr/share/doc` the README, the machine-readable copyright (the bundled libraries and fonts by licence, the OFL text in full) and `openapi.json.gz`.
+  - **Lintian overrides:** files under `/var/www`, the `Plugin-Section` field, and fonts in a non-font package, each with its reason.
+- **The snippet is a symbolic link** in `/etc/nginx/openmediavault-webgui.d/`, pointing at `/usr/share/openmediavault-webui/nginx/` *(recommended)*. As a regular file under `/etc` it would be a conffile. It would then survive `remove`. And once `postinst` had deleted a broken one, dpkg would never install it again. [06](06-plugin-packaging.md) is updated.
+- **`postinst`** puts the link back if an earlier failed configure removed it. It then tests the whole nginx configuration and reloads only if the test passes. On failure it removes the link, reloads if what is left passes, says whether the snippet or something else is at fault, and leaves the package unconfigured.
+- **Version** `8.0.0~dev1`: the tilde sorts below `8.0.0`, so the first release replaces it. **Synopsis** "new web interface for openmediavault", without the leading article, as lintian asks *(recommended)*.
+
+**On the test VM** (OMV 8.6.1, nginx 1.26.3), with a snapshot taken first, `tools/package-test` (`make package-test`) passed every check, over HTTP and HTTPS:
+
+- **Clean install, reinstall, and an upgrade from an older build:**
+  - `dpkg --verify` is clean, the permissions are right, and `www-data` cannot write to the web root.
+  - The menu entry is in the stock interface.
+  - `/ui` redirects to `/ui/`, and `/ui/` and a deep link serve `index.html` with the UI-1 headers. An asset is immutable, and a missing asset gets a plain, uncached 404.
+  - The upgrade removes the old build's extra asset.
+- **Remove and purge:** no file, link or menu entry is left. `nginx -T` has no `/ui/` location. Every stock reply is as it was before the install, `/ui` included.
+- **A broken snippet** (a build with an invalid directive):
+  - the install fails with `postinst`'s explanation, and the package is left unconfigured (`iF`);
+  - the link is removed, `nginx -t` passes, and nginx keeps serving;
+  - the stock replies are unchanged;
+  - configuring again fails again, the same way.
+- **"The stock replies"** here means 20 requests, recorded before the install and compared after each step: status, headers (less the ones that change on every request) and a hash of the body.
+
+**A11, the OMV upgrade (observed):** OMV 8.7.0 is now published. With the package installed, openmediavault was upgraded from 8.6.1-1 to 8.7.0-1, and then `omv-salt deploy run nginx` and `omv-mkworkbench all` were run. Every check passed after each: the files are unchanged, the link and the menu entry are in place, and the headers are right. This closes A11. On 8.7.0, `pnpm test:browser:vm` (HTTP) gave 9 passed and 2 skipped, the same skips as before. That is information only. Support for 8.7.0 is not declared until `tools/contract-drift` and the integration suite have been run against it, which is a separate change that also moves CI's pinned tree. The VM was then reverted to its snapshot on 8.6.1. The package was installed there with `make package-test`, which replaces the hand-deployed copy of earlier phases. Nothing is pending.
