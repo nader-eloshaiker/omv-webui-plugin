@@ -4,5 +4,43 @@
   "version": "0.0.0",
   "type": "module",
   "license": "GPL-3.0-or-later",
-  "description": "The interface. Built in Phase 2: Vite at base /ui/, router, query client, i18n, the shell."
+  "description": "The interface: Vite at base /ui/, TanStack Router and Query, i18n, sign-in and the shell.",
+  "scripts": {
+    "dev": "vite",
+    "dev:mock": "vite --mode mock",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@omv-webui/css-ui-style": "workspace:*",
+    "@omv-webui/react-api-omv": "workspace:*",
+    "@omv-webui/react-ui-components": "workspace:*",
+    "@tanstack/react-query": "catalog:tanstack",
+    "@tanstack/react-router": "catalog:tanstack",
+    "i18next": "catalog:i18n",
+    "lucide-react": "catalog:ui",
+    "react": "catalog:react",
+    "react-dom": "catalog:react",
+    "react-i18next": "catalog:i18n",
+    "zustand": "catalog:react"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:style",
+    "@tanstack/router-plugin": "catalog:tanstack",
+    "@testing-library/jest-dom": "catalog:testing",
+    "@testing-library/react": "catalog:testing",
+    "@testing-library/user-event": "catalog:testing",
+    "@types/node": "catalog:build",
+    "@types/react": "catalog:react",
+    "@types/react-dom": "catalog:react",
+    "@vitejs/plugin-react": "catalog:build",
+    "happy-dom": "catalog:testing",
+    "msw": "catalog:api",
+    "tailwindcss": "catalog:style",
+    "typescript": "catalog:build",
+    "vite": "catalog:build",
+    "vitest": "catalog:testing"
+  }
 }
