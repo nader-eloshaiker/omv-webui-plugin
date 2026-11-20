@@ -1,0 +1,24 @@
+Source: openmediavault-webui
+Section: admin
+XB-Plugin-Section: system
+Priority: optional
+Maintainer: Nader Eloshaiker <1904325+nader-eloshaiker@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.2
+Homepage: https://github.com/nader-eloshaiker/omv-webui-plugin
+Vcs-Git: https://github.com/nader-eloshaiker/omv-webui-plugin.git
+Vcs-Browser: https://github.com/nader-eloshaiker/omv-webui-plugin
+Rules-Requires-Root: no
+
+Package: openmediavault-webui
+Architecture: all
+Depends: openmediavault (>= 8.6),
+         ${misc:Depends}
+Description: new web interface for openmediavault
+ A second web interface for openmediavault, served at /ui/ beside the
+ stock one. It uses openmediavault's own backend and the same sign-in, so
+ the same accounts, permissions and settings apply in both interfaces.
+ .
+ The package installs static files and one nginx snippet. It changes no
+ openmediavault setting and adds no service, user or database entry.
+ Removing it leaves the stock interface as it was.

@@ -5,7 +5,7 @@
 | Field | Value |
 |-------|-------|
 | Source and binary package | `openmediavault-webui` |
-| Short description | "A new web interface for openmediavault" |
+| Short description | "new web interface for openmediavault" (Debian synopsis style: no leading article) |
 | Architecture | `all` (static files only) |
 | Depends | `openmediavault (>= 8.6)`, `${misc:Depends}` |
 | Build-Depends | `debhelper-compat (= 13)`. The web bundle is built before packaging (`make build`) and shipped as files, so the package build needs no Node toolchain and no network |
@@ -21,10 +21,13 @@ Follow the conventions of the owner's other OMV plugins for `debian/`, the `Make
 /var/www/openmediavault-webui/                                   root:root, dirs 0755, files 0644
     index.html
     assets/…                                                     content-hashed file names
-/etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf     root:root 0644
+/usr/share/openmediavault-webui/nginx/openmediavault-webui.conf  the snippet, root:root 0644
+/etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf     symbolic link to it
 /usr/share/openmediavault/workbench/navigation.d/webui.yaml      link in the stock interface
-/usr/share/doc/openmediavault-webui/                             README, licence, changelog
+/usr/share/doc/openmediavault-webui/                             README, copyright, changelog, openapi.json.gz
 ```
+
+**The snippet in `/etc` is a symbolic link, not a configuration file** *(recommended, 2026-11-21)*. A regular file under `/etc` would be a dpkg conffile: it would stay behind after `remove`, and once `postinst` had deleted a snippet that failed `nginx -t`, dpkg would treat it as deleted by the administrator and never install it again. The snippet carries the UI-1 headers and is not meant to be edited, so it belongs to the package like any other file: dpkg removes the link on `remove` and puts it back on a reinstall.
 
 No daemon, no system user, no datamodel, no backend service, no Salt state, no configuration database entry. Version 1 has no settings.
 
@@ -78,9 +81,10 @@ The new interface has a matching "Open the classic interface" link to `/`.
 `postinst configure`:
 
 1. `dpkg-trigger update-workbench` (so the stock interface picks up the navigation entry), as other OMV plugins do.
-2. `nginx -t`; only if it passes, reload nginx. If it fails, remove the snippet, reload, and exit with a clear error. A broken snippet must never take OMV's own interface down.
+2. Put the snippet's link back if an earlier failed configure removed it.
+3. `nginx -t`; only if it passes, reload nginx. If it fails, remove the link, reload if what is left passes, and exit with a clear error, which says whether the snippet or something else is at fault. A broken snippet must never take OMV's own interface down. The package stays unconfigured, so it is not reported as installed while `/ui/` is not served.
 
-`postrm remove|purge`: remove the snippet (dpkg removes the file), `nginx -t`, reload nginx, trigger the workbench update.
+`postrm remove|purge`: dpkg has removed the link and the files; if `nginx -t` passes, reload nginx; trigger the workbench update.
 
 No `omv-salt` run, no engined restart.
 
@@ -89,6 +93,8 @@ No `omv-salt` run, no engined restart.
 - **Upgrade:** files are replaced; `index.html` is served with `no-cache` and assets have content-hashed names, so browsers pick up the new build on next load. A tab left open on the old build keeps working until reloaded; if a call fails in a way that suggests a version mismatch, the interface offers a reload.
 - **OMV upgrade:** the plugin owns no file of another package. OMV re-rendering its nginx site does not touch the include directory. Before declaring support for a new OMV release, run `tools/contract-drift` and the integration suite against it.
 - **Removal:** leaves no file, user or nginx rule behind. The stock interface is as it was.
+
+All of this is checked on the test VM by `tools/package-test` (`make package-test NAS=<ssh destination>`, never the owner's server): clean install, reinstall, upgrade from an older build, removal, purge, and a deliberately broken snippet rolled back by `postinst`, each followed by the headers under `/ui/` and a comparison of the stock interface's replies with those recorded before the package was installed. `omv-upgrade` mode upgrades openmediavault with the plugin installed. CI builds the package in Debian 13 and runs lintian on every pull request (`make docker-deb`).
 - **Backend unavailable:** the interface shows a "cannot reach the NAS" state and retries reads.
 
 ## Separation for other interface builders

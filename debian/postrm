@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# This file is part of openmediavault-webui.
+#
+# openmediavault-webui is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either version 3 of
+# the License, or any later version.
+#
+# openmediavault-webui is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# openmediavault-webui. If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+case "$1" in
+    remove|purge)
+        # dpkg has removed the files and the snippet. Take /ui/ out of the running nginx, if what is
+        # left still passes its test; otherwise leave the running configuration alone.
+        if command -v nginx >/dev/null 2>&1 && nginx -t -q 2>/dev/null; then
+            if [ -d /run/systemd/system ] && systemctl is-active --quiet nginx.service; then
+                deb-systemd-invoke reload nginx.service || :
+            fi
+        fi
+        # The stock interface rebuilds its menu without "New web interface".
+        if command -v omv-mkworkbench >/dev/null 2>&1; then
+            dpkg-trigger update-workbench || :
+        fi
+    ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument '$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
