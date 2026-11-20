@@ -6,6 +6,18 @@ coverage/
 playwright-report/
 test-results/
 
+# debhelper build output
+debian/openmediavault-webui/
+debian/.debhelper/
+debian/files
+debian/*.debhelper
+debian/*.debhelper.log
+debian/*.substvars
+debian/debhelper-build-stamp
+*.deb
+*.buildinfo
+*.changes
+
 # Throwaway Phase 0 spikes and local scratch (never committed)
 scratch/
 

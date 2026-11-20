@@ -1,0 +1,3 @@
+web/apps/omv-web-app/dist/* var/www/openmediavault-webui
+etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf usr/share/openmediavault-webui/nginx
+usr/share/openmediavault/workbench/navigation.d/webui.yaml usr/share/openmediavault/workbench/navigation.d

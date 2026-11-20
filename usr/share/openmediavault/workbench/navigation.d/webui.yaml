@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# "New web interface" in the stock menu. Stock entries go through the stock application's router, so
+# the entry uses its external-redirect route, which opens /ui/ in a new tab (A5, docs/journal.md).
+# No permissions: every signed-in user may open the new interface.
+version: "1.0"
+type: navigation-item
+data:
+  path: "webui"
+  position: 95
+  text: "New web interface"
+  icon: "mdi:open-in-new"
+  url: "/externalRedirect/%2Fui%2F"

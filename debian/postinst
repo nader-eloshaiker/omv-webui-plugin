@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# This file is part of openmediavault-webui.
+#
+# openmediavault-webui is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either version 3 of
+# the License, or any later version.
+#
+# openmediavault-webui is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# openmediavault-webui. If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+SNIPPET=/etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf
+SOURCE=/usr/share/openmediavault-webui/nginx/openmediavault-webui.conf
+
+reload_nginx() {
+    if [ -d /run/systemd/system ] && systemctl is-active --quiet nginx.service; then
+        deb-systemd-invoke reload nginx.service || \
+            echo "openmediavault-webui: nginx did not reload; run: systemctl reload nginx" >&2
+    fi
+}
+
+case "$1" in
+    configure)
+        # The stock interface rebuilds its menu, which now has "New web interface".
+        dpkg-trigger update-workbench
+
+        # A broken snippet must never take openmediavault's own interface down, and would make every
+        # later apply that touches nginx fail. Test the whole configuration; reload only if it passes.
+        # The snippet is put back first, in case an earlier failed configure removed it.
+        if command -v nginx >/dev/null 2>&1; then
+            [ -e "${SNIPPET}" ] || ln -sf "${SOURCE}" "${SNIPPET}"
+            if nginx -t -q 2>/dev/null; then
+                reload_nginx
+            else
+                nginx -t || :
+                rm -f "${SNIPPET}"
+                if nginx -t -q 2>/dev/null; then
+                    reload_nginx
+                    echo "openmediavault-webui: nginx refused this package's snippet, so it was removed" >&2
+                    echo "and /ui/ is not served. openmediavault's own interface is unchanged." >&2
+                else
+                    echo "openmediavault-webui: the nginx configuration fails its test even without" >&2
+                    echo "this package's snippet. Fix it first (see nginx -t above), then run:" >&2
+                    echo "dpkg --configure openmediavault-webui" >&2
+                fi
+                exit 1
+            fi
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument '$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

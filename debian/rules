@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+# The web bundle is built before packaging (make build) and shipped as files, so the package build
+# needs no Node toolchain and no network (docs/06-plugin-packaging.md).
+
+%:
+	dh $@
+
+# The top-level Makefile is a developer helper; keep debhelper's build system away from it.
+override_dh_auto_clean override_dh_auto_test override_dh_auto_install:
+
+override_dh_auto_build:
+	@test -f web/apps/omv-web-app/dist/index.html || { \
+		echo "debian/rules: no web build in web/apps/omv-web-app/dist. Run make build first." >&2; \
+		exit 1; }
+
+# The snippet is a symbolic link into /usr/share (debian/links), not a configuration file: it carries
+# the security headers (UI-1), belongs to the package, and must come back on a reinstall after
+# postinst has removed a snippet that failed nginx -t.

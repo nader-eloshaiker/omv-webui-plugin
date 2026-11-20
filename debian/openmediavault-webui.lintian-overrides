@@ -1,0 +1,8 @@
+# The interface is served by openmediavault's nginx site from /var/www, beside openmediavault's own
+# files (docs/06-plugin-packaging.md).
+openmediavault-webui: dir-or-file-in-var-www [var/www/openmediavault-webui/*]
+# Plugin-Section is read by the openmediavault plugin manager.
+openmediavault-webui: unknown-field Plugin-Section
+# The web fonts are part of the interface's bundle, served to the browser, not installed for the system.
+openmediavault-webui: font-in-non-font-package [var/www/openmediavault-webui/assets/*]
+openmediavault-webui: font-outside-font-dir [var/www/openmediavault-webui/assets/*]
