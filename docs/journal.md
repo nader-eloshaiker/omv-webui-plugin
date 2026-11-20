@@ -230,3 +230,18 @@ Tested on: the test VM, OMV 8.6.1, and the mock.
   - Q9: the effective access to a folder (`ShareMgmt.getFileACL`, which reads the disk) is shown only on that folder's own page.
   - Q10: "Waiting" joins the task states (style guide 5.7), with the Unknown treatment.
   - Q11: the first sign-in shows a short set-up checklist built from server state, in place of the stock welcome panel.
+
+## 2026-11-20 — Owner decisions before Phase 2
+
+- **Navigation before the pages exist:** the side navigation shows OMV's full menu from the start (System, Network, Storage, Services, Users, Diagnostics), filtered by role. An item whose page is not built yet opens a short "Not in the new interface yet" page with a fixed link to the same page in the classic interface. Each item switches over as its page is built.
+- **The job runner and Pattern G in Phase 2** (UX audit section 5, item 4): both are built as presentational components in `react-ui-components`, with a story for every state: the step list (Waiting, Running, Succeeded, Failed, Cancelled), the pre-flight notice (R1), the failure and retry states (R6, R7) and the "Used by" panel. Nothing is connected to a real flow until Phase 5.
+- **The set-up checklist (Q11)** is built in Phase 3, with the dashboard. Phase 2 leaves a place for it on the landing page.
+- **Commits on `phase-2`:** one signed-off commit per finished part, each after the test battery passes. The pull request is opened when the acceptance criteria are met.
+
+Defaults taken without a question, open to change:
+
+- The idle warning reads OMV's timeout through `WebGui.getAutoLogoutSettings`, which every signed-in user may call (read from source; to be captured on the VM before its contract entry is final).
+- Second factor: only the `totp` kind gets a code form (A10). Any other kind, including the e-mail code plugin, gets the "use the classic interface" fallback.
+- The top bar's notifications are the task registry's tasks (running and recently ended). OMV has no server-side notification feed to show.
+- The squircle radii are proposed in `design/preview.html` and shown to the owner as a Chromium screenshot before they enter `tokens.css`.
+- Runtime dependencies added in Phase 2, all from D7 or the shadcn pattern it names: TanStack Router, Base UI, lucide, class-variance-authority, clsx, tailwind-merge, i18next with react-i18next, zustand, react-hook-form, and the Fontsource packages for Inter and Roboto Mono. Each is justified in the pull request (UI-11).
