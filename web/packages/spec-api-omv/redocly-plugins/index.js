@@ -4,6 +4,7 @@
 import {
   acceptEmptyArrayForObject,
   checkExampleCoverage,
+  checkOmit,
   checkPathItem,
   checkSchema,
 } from "./checks.js";
@@ -27,6 +28,15 @@ function Operation() {
         reportAll(
           ctx,
           checkPathItem(String(ctx.key), item, (name) => schemaNames.has(name)),
+          ctx.location,
+        );
+      },
+    },
+    Operation: {
+      enter(op, ctx) {
+        reportAll(
+          ctx,
+          checkOmit(op, (node) => ctx.resolve(node).node),
           ctx.location,
         );
       },

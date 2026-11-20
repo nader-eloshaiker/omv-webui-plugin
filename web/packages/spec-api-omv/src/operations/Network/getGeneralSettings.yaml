@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetGeneralSettings
+  tags:
+    - Network
+  summary: Host name
+  description: "The system's host name and domain name."
+  x-omv-rpc:
+    service: Network
+    method: getGeneralSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkGeneralSettings.yaml
+          examples:
+            noDomain:
+              $ref: ../../examples/networkGetGeneralSettings.noDomain.yaml
+            withDomain:
+              $ref: ../../examples/networkGetGeneralSettings.withDomain.yaml

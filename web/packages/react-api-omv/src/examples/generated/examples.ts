@@ -159,6 +159,36 @@ export const CONTRACT_EXAMPLES = {
         displayWelcomeMessage: true,
       },
     },
+    adminWelcomeDismissed: {
+      status: 200,
+      value: {
+        ts: 1795168084,
+        time: "Fri Nov 20 09:48:04 2026",
+        hostname: "nas",
+        version: "8.6.1-1 (Synchrony)",
+        cpuModelName: null,
+        cpuUtilization: 0.5,
+        cpuCores: null,
+        cpuMhz: null,
+        memTotal: "4104114176",
+        memFree: "3065991168",
+        memUsed: "364711936",
+        memAvailable: "3739402240",
+        memUtilization: "0.08886",
+        kernel: "Linux 6.12.117+deb13-arm64",
+        uptime: 98577.63,
+        loadAverage: {
+          "1min": 0.23,
+          "5min": 0.09,
+          "15min": 0.02,
+        },
+        configDirty: false,
+        dirtyModules: [],
+        rebootRequired: false,
+        availablePkgUpdates: 34,
+        displayWelcomeMessage: false,
+      },
+    },
     user: {
       status: 200,
       value: {
@@ -317,6 +347,13 @@ export const CONTRACT_EXAMPLES = {
         data: [],
       },
     },
+    empty: {
+      status: 200,
+      value: {
+        total: 0,
+        data: [],
+      },
+    },
   },
   userMgmtGetUserByContext: {
     user: {
@@ -344,6 +381,138 @@ export const CONTRACT_EXAMPLES = {
       },
     },
   },
+  webGuiGetSettings: {
+    http: {
+      status: 200,
+      value: {
+        port: 80,
+        enablessl: false,
+        sslport: 443,
+        forcesslonly: false,
+        sslcertificateref: "",
+        timeout: 6,
+      },
+    },
+    https: {
+      status: 200,
+      value: {
+        port: 80,
+        enablessl: true,
+        sslport: 443,
+        forcesslonly: false,
+        sslcertificateref: "00000000-0000-4000-8000-000000000001",
+        timeout: 6,
+      },
+    },
+  },
+  webGuiDismissWelcomeMessage: {
+    null: {
+      status: 200,
+      value: null,
+    },
+  },
+  userMgmtSetUserByContext: {
+    saved: {
+      status: 200,
+      value: {
+        uuid: "00000000-0000-4000-8000-000000000002",
+        name: "example-user",
+        email: "",
+        disallowusermod: false,
+        sshpubkeys: [],
+        uid: 1001,
+        groups: ["users"],
+        shell: "/bin/sh",
+        password: "",
+        comment: "",
+      },
+    },
+    readOnly: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Unauthorized attempt to modify the user account 'example-readonly'",
+      },
+    },
+    systemAccount: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Unauthorized attempt to modify the system user account 'admin'",
+      },
+    },
+  },
+  userMgmtSetPasswordByContext: {
+    null: {
+      status: 200,
+      value: null,
+    },
+  },
+  networkGetGeneralSettings: {
+    noDomain: {
+      status: 200,
+      value: {
+        hostname: "nas",
+        domainname: "",
+      },
+    },
+    withDomain: {
+      status: 200,
+      value: {
+        hostname: "nas",
+        domainname: "example.org",
+      },
+    },
+  },
+  systemGetTimeSettings: {
+    defaults: {
+      status: 200,
+      value: {
+        date: {
+          local: "Fri Nov 20 09:47:24 2026",
+          ISO8601: "2026-11-20T09:47:24+00:00",
+        },
+        timezone: "Etc/UTC",
+        ntpenable: true,
+        ntptimeservers: "pool.ntp.org",
+        ntpclients: "",
+      },
+    },
+  },
+  emailNotificationGet: {
+    notConfigured: {
+      status: 200,
+      value: {
+        enable: false,
+        server: "",
+        port: 25,
+        tls: "none",
+        sender: "",
+        primaryemail: "",
+        secondaryemail: "",
+        authenable: false,
+        username: "",
+        password: "",
+      },
+    },
+    configured: {
+      status: 200,
+      value: {
+        enable: true,
+        server: "smtp.example.com",
+        port: 587,
+        tls: "starttls",
+        sender: "nas@example.com",
+        primaryemail: "admin@example.com",
+        secondaryemail: "",
+        authenable: true,
+        username: "example-smtp-user",
+        password: "EXAMPLE-PASSWORD",
+      },
+    },
+  },
 } as const satisfies ContractExampleTable;
 
 export const DEFAULT_EXAMPLE = {
@@ -362,4 +531,11 @@ export const DEFAULT_EXAMPLE = {
   shareMgmtGetList: "populated",
   userMgmtGetUserByContext: "user",
   webGuiGetAutoLogoutSettings: "admin",
+  webGuiGetSettings: "http",
+  webGuiDismissWelcomeMessage: "null",
+  userMgmtSetUserByContext: "saved",
+  userMgmtSetPasswordByContext: "null",
+  networkGetGeneralSettings: "noDomain",
+  systemGetTimeSettings: "defaults",
+  emailNotificationGet: "notConfigured",
 } as const satisfies Record<keyof typeof CONTRACT_EXAMPLES, string>;

@@ -8,3 +8,11 @@ export {
   type SessionVerifyFormValues,
 } from "./sessionVerify.ts";
 export { SshSetRequestSchema, type SshSetFormValues } from "./sshSet.ts";
+export {
+  UserMgmtSetPasswordByContextRequestSchema,
+  type UserMgmtSetPasswordByContextFormValues,
+} from "./userMgmtSetPasswordByContext.ts";
+export {
+  UserMgmtSetUserByContextRequestSchema,
+  type UserMgmtSetUserByContextFormValues,
+} from "./userMgmtSetUserByContext.ts";

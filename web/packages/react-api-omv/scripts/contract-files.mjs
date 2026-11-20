@@ -109,6 +109,7 @@ export function buildOperationTable(contract) {
         download: { contentType: op["x-omv-download"].contentType },
       }),
       ...(op["x-omv-destructive"] && { destructive: op["x-omv-destructive"] }),
+      ...(op["x-omv-omit"] && { omit: op["x-omv-omit"] }),
       response: response ? slim(response.schema, used) : null,
     };
   }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The transport against the mock: request shape (UI-10), unknown operations (UI-4), errors and
-// traces (UI-9), the session ending, normalisation, and the Session fields it drops (UI-3, UI-6).
+// traces (UI-9), the session ending, normalisation, the Session fields it drops (UI-3, UI-6), and the
+// fields the contract omits (x-omv-omit, UI-6).
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
@@ -12,15 +13,18 @@ import {
   it,
   vi,
 } from "vitest";
+import { CONTRACT_EXAMPLES } from "../examples/generated/examples.ts";
 import {
   configApplyChangesBg,
   configIsDirty,
 } from "../generated/omv/config/config.ts";
+import { emailNotificationGet } from "../generated/omv/email-notification/email-notification.ts";
 import { execGetOutput, execStop } from "../generated/omv/exec/exec.ts";
 import { sessionLogin } from "../generated/omv/session/session.ts";
 import { shareMgmtGetList } from "../generated/omv/share-mgmt/share-mgmt.ts";
 import { sshSet } from "../generated/omv/ssh/ssh.ts";
 import { systemGetInformation } from "../generated/omv/system/system.ts";
+import { userMgmtSetUserByContext } from "../generated/omv/user-mgmt/user-mgmt.ts";
 import {
   createRpcHandlers,
   MOCK_TRACE,
@@ -376,6 +380,94 @@ describe("task handles (UI-5)", () => {
     // The server deletes a finished task; the handle is forgotten with it.
     await expect(execGetOutput({ filename: handle, pos: 2 })).rejects.toThrow(
       /handle/,
+    );
+  });
+});
+
+describe("fields the contract omits (x-omv-omit, UI-6)", () => {
+  // A value no example contains, so finding it anywhere means the strip failed.
+  const SECRET = "not-a-real-smtp-password-7f3a";
+
+  it.each([
+    {
+      name: "EmailNotification.get, configured",
+      call: () => emailNotificationGet(),
+      answers: { emailNotificationGet: "configured" } satisfies Answers,
+      raw: CONTRACT_EXAMPLES.emailNotificationGet.configured.value,
+    },
+    {
+      name: "EmailNotification.get, not configured",
+      call: () => emailNotificationGet(),
+      answers: { emailNotificationGet: "notConfigured" } satisfies Answers,
+      raw: CONTRACT_EXAMPLES.emailNotificationGet.notConfigured.value,
+    },
+    {
+      name: "UserMgmt.setUserByContext",
+      call: () => userMgmtSetUserByContext({ email: "", comment: "" }),
+      answers: { userMgmtSetUserByContext: "saved" } satisfies Answers,
+      raw: CONTRACT_EXAMPLES.userMgmtSetUserByContext.saved.value,
+    },
+  ])(
+    "$name: the server's reply carries password, the caller never gets it",
+    async ({ call, answers, raw }) => {
+      expect(raw).toHaveProperty("password");
+      answer(answers);
+      const value: object = await call();
+      expect(value).not.toHaveProperty("password");
+      const { password: _dropped, ...rest } = raw;
+      expect(value).toEqual(rest);
+    },
+  );
+
+  it("removes the field before validation, so a mismatch report never carries it", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    answer({
+      emailNotificationGet: {
+        status: 200,
+        value: {
+          ...CONTRACT_EXAMPLES.emailNotificationGet.configured.value,
+          port: "587",
+          password: SECRET,
+        },
+      },
+    });
+    const value = await emailNotificationGet();
+    expect(warn).toHaveBeenCalledWith(
+      "[contract] emailNotificationGet: the reply does not match the contract",
+      ["$.port: expected integer, got string"],
+    );
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(SECRET);
+    expect(JSON.stringify(value)).not.toContain(SECRET);
+  });
+
+  it.each([
+    {
+      name: "a reply without the field",
+      value: { enable: false },
+      want: { enable: false },
+    },
+    { name: "PHP's [] for an empty map", value: [], want: {} },
+    {
+      name: "only the named field",
+      value: { password: SECRET, passwordHint: "kept", username: "u" },
+      want: { passwordHint: "kept", username: "u" },
+    },
+  ])("handles $name", async ({ value, want }) => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    answer({ emailNotificationGet: { status: 200, value } });
+    expect(await emailNotificationGet()).toEqual(want);
+  });
+
+  it("leaves a field of that name alone where the contract does not omit it", async () => {
+    answer({
+      systemGetInformation: {
+        status: 200,
+        value: { ts: 1, time: "t", hostname: "nas", password: "plugin-field" },
+      },
+    });
+    expect(await systemGetInformation()).toHaveProperty(
+      "password",
+      "plugin-field",
     );
   });
 });

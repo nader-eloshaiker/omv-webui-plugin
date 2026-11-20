@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: webGuiGetSettings
+  tags:
+    - WebGui
+  summary: Web interface settings
+  description: "The web interface's ports, whether it is served over HTTPS, and the session timeout."
+  x-omv-rpc:
+    service: WebGui
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/WebGuiSettings.yaml
+          examples:
+            http:
+              $ref: ../../examples/webGuiGetSettings.http.yaml
+            https:
+              $ref: ../../examples/webGuiGetSettings.https.yaml

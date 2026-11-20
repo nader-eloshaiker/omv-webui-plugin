@@ -31,7 +31,7 @@ code imports DTOs from `@omv-webui/ts-api-omv`.
 - The request body is the method's `params`; the 200 response is the method's `response`. The
   `{response, error}` envelope is the transport's business and never appears in the contract.
 - Every operation carries `x-omv-rpc` and `x-omv-role`, and where they apply `x-omv-readonly`,
-  `x-omv-dirty`, `x-omv-task`, `x-omv-download`, `x-omv-destructive`, `x-omv-source`. Schema
+  `x-omv-dirty`, `x-omv-task`, `x-omv-download`, `x-omv-destructive`, `x-omv-source`, `x-omv-omit`. Schema
   properties use `x-omv-secret`, `x-omv-int64`, `x-omv-coerce`, `x-omv-format`. Meanings and lint
   rules: [docs/04](../../docs/04-api-contract.md#extensions).
 - **Request schemas accept exactly what OMV accepts, or less. Never looser.** They are bootstrapped
@@ -86,6 +86,7 @@ code imports DTOs from `@omv-webui/ts-api-omv`.
   is made.
 - Always `POST`, `Content-Type: application/json`, `credentials: "same-origin"`, to the constant
   `/rpc.php` (or `/download.php` for `x-omv-download` operations only) (UI-3, UI-4, UI-10).
+- It deletes the reply fields named in `x-omv-omit` before anything else (UI-6).
 - It decodes errors into one `RpcError` and discards `trace` immediately (UI-9); handles 401 once;
   normalises the known quirks using the operation's schema (`[]` for empty objects, `x-omv-int64`,
   `x-omv-coerce` only where marked); and, in development and test builds only, validates responses

@@ -46,6 +46,7 @@ const OPERATION_KEYS = new Set([
   "x-omv-download",
   "x-omv-destructive",
   "x-omv-source",
+  "x-omv-omit",
 ]);
 
 const PATH = /^\/rpc\/([A-Z][A-Za-z0-9]*)\/([a-z][A-Za-z0-9]*)$/;
@@ -212,6 +213,23 @@ export function checkPathItem(path, item, hasSchema = () => true) {
     }
   }
 
+  if ("x-omv-omit" in op) {
+    const omit = op["x-omv-omit"];
+    if (
+      !Array.isArray(omit) ||
+      omit.length === 0 ||
+      omit.some((k) => typeof k !== "string" || k === "")
+    ) {
+      report(
+        "x-omv-omit must be a non-empty list of response field names.",
+        "post",
+        "x-omv-omit",
+      );
+    } else if (new Set(omit).size !== omit.length) {
+      report("x-omv-omit names a field twice.", "post", "x-omv-omit");
+    }
+  }
+
   if (!op.responses || !op.responses["200"]) {
     report(
       "A 200 response is required: the method's response value.",
@@ -256,6 +274,58 @@ export function checkExampleCoverage(op, resolve = (n) => n) {
         "The 200 response needs at least one example: a scrubbed capture. The first is the mock's default.",
       at: ["responses", "200", "content", "application/json"],
     });
+  }
+  return findings;
+}
+
+/**
+ * x-omv-omit names top-level fields of the 200 reply that the transport deletes before anything
+ * else sees the reply (docs/03, "Quirks the transport normalises"). The contract must not describe
+ * them: a field in the schema would be a field the generated types promise and never deliver.
+ * @param {object} op the resolved operation
+ * @param {(node: object) => object} resolve resolves a $ref'd node, returns others unchanged
+ */
+export function checkOmit(op, resolve = (n) => n) {
+  const findings = [];
+  const omit = op?.["x-omv-omit"];
+  if (!Array.isArray(omit)) {
+    return findings;
+  }
+  const at = ["x-omv-omit"];
+  const response = op.responses?.["200"] && resolve(op.responses["200"]);
+  const json = response?.content?.["application/json"];
+  const resolved = json?.schema && resolve(json.schema);
+  // Lint restates an object schema to accept [] as well (acceptEmptyArrayForObject): look inside.
+  const schema = resolved?.["x-omv-lint-restated"]
+    ? resolve(resolved.anyOf[0])
+    : resolved;
+  if (
+    !schema ||
+    (schema.type !== "object" && !schema.properties) ||
+    schema.oneOf ||
+    schema.anyOf ||
+    schema.allOf
+  ) {
+    findings.push({
+      message:
+        "x-omv-omit applies only to an operation whose 200 reply is a plain object schema.",
+      at,
+    });
+    return findings;
+  }
+  for (const key of omit) {
+    if (Object.hasOwn(schema.properties ?? {}, key)) {
+      findings.push({
+        message: `x-omv-omit removes "${key}", so the response schema must not declare it.`,
+        at,
+      });
+    }
+    if ((schema.required ?? []).includes(key)) {
+      findings.push({
+        message: `x-omv-omit removes "${key}", so the response schema must not require it.`,
+        at,
+      });
+    }
   }
   return findings;
 }

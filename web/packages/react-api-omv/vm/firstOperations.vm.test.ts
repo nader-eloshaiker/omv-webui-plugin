@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Phase 1 acceptance (docs/07): each first operation succeeds against the test VM through the
-// generated client, with development-build response validation reporting no mismatch.
+// generated client, with development-build response validation reporting no mismatch. The reads
+// Phase 3 added are checked the same way.
 //
 // Credentials come from $OMV_WEBUI_ENV and are never printed. The only writes send the SSH
 // settings back unchanged, then apply or revert them, and force a redeploy of one harmless module
@@ -22,8 +23,10 @@ import {
   configApplyChangesBg,
   configIsDirty,
   configRevertChangesBg,
+  emailNotificationGet,
   execIsRunning,
   execStop,
+  networkGetGeneralSettings,
   sessionLogin,
   sessionLogout,
   sessionVerify,
@@ -31,8 +34,10 @@ import {
   sshGet,
   sshSet,
   systemGetInformation,
+  systemGetTimeSettings,
   userMgmtGetUserByContext,
   webGuiGetAutoLogoutSettings,
+  webGuiGetSettings,
 } from "../src/generated/index.ts";
 import {
   createTaskRegistry,
@@ -131,6 +136,21 @@ describe("as an administrator", () => {
     expect(Number.isInteger(timeout)).toBe(true);
     expect(timeout).toBeGreaterThanOrEqual(0);
     expect(timeout).toBeLessThanOrEqual(1440);
+  });
+
+  it("reads the host name, the clock, the web interface settings and the e-mail settings", async () => {
+    const { hostname } = await networkGetGeneralSettings();
+    expect(hostname).not.toBe("");
+    const time = await systemGetTimeSettings();
+    expect(time.timezone).not.toBe("");
+    expect(Number.isNaN(Date.parse(time.date.ISO8601))).toBe(false);
+    const web = await webGuiGetSettings();
+    expect(typeof web.enablessl).toBe("boolean");
+    expect(web.timeout).toBe((await webGuiGetAutoLogoutSettings()).timeout);
+    const email = await emailNotificationGet();
+    expect(typeof email.enable).toBe("boolean");
+    // The server sends the SMTP password; the transport removes it (x-omv-omit, UI-6).
+    expect(email).not.toHaveProperty("password");
   });
 
   it("saves SSH settings, sees the change pending, and applies it as a task", async () => {

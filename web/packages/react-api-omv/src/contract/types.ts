@@ -45,6 +45,11 @@ export interface OperationEntry {
   task?: { result?: string };
   download?: { contentType: string };
   destructive?: "data" | "access" | "service";
+  /**
+   * Top-level reply fields the transport deletes before anything else sees the reply (x-omv-omit):
+   * a secret the server sends that the interface must never hold, such as the SMTP password.
+   */
+  omit?: readonly string[];
   /** The 200 response's schema; null when the method returns null. */
   response: Schema | null;
 }

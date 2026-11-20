@@ -1,5 +1,7 @@
 export * from "./config/config.ts";
+export * from "./email-notification/email-notification.ts";
 export * from "./exec/exec.ts";
+export * from "./network/network.ts";
 export * from "./session/session.ts";
 export * from "./share-mgmt/share-mgmt.ts";
 export * from "./ssh/ssh.ts";

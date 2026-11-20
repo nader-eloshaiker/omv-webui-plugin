@@ -22,6 +22,8 @@ post:
               $ref: ../../examples/systemGetInformation.admin.yaml
             adminPendingChanges:
               $ref: ../../examples/systemGetInformation.adminPendingChanges.yaml
+            adminWelcomeDismissed:
+              $ref: ../../examples/systemGetInformation.adminWelcomeDismissed.yaml
             user:
               $ref: ../../examples/systemGetInformation.user.yaml
     "401":

@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: webGuiDismissWelcomeMessage
+  tags:
+    - WebGui
+  summary: Dismiss the welcome message
+  description: >-
+    Stop showing the first-sign-in welcome to every administrator, in every browser
+    (`displayWelcomeMessage` in System.getInformation becomes false). Takes effect at once; nothing
+    is left pending. Calling it again when the welcome is already dismissed also succeeds. No
+    method shows the welcome again. Returns null.
+  x-omv-rpc:
+    service: WebGui
+    method: dismissWelcomeMessage
+  x-omv-role: admin
+  x-omv-readonly: false
+  responses:
+    "200":
+      description: The method returns null.

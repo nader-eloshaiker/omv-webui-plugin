@@ -31,3 +31,5 @@ post:
               $ref: ../../examples/shareMgmtGetList.populated.yaml
             searchNoMatch:
               $ref: ../../examples/shareMgmtGetList.searchNoMatch.yaml
+            empty:
+              $ref: ../../examples/shareMgmtGetList.empty.yaml

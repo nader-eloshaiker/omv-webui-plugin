@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtSetUserByContext
+  tags:
+    - UserMgmt
+  summary: Save my account
+  description: >-
+    Save the signed-in user's own e-mail address and description. The server refuses it (HTTP 500)
+    for a system account such as `admin`, and for an account the administrator does not let its
+    user change (`_readonly` in UserMgmt.getUserByContext). The account changes at once; the mail
+    settings (and the SSH settings, when the account has SSH keys) are left pending. Returns the
+    stored account.
+  x-omv-rpc:
+    service: UserMgmt
+    method: setUserByContext
+  x-omv-role: user
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-omit: [password]
+  x-omv-source:
+    datamodel: rpc.usermgmt.setuserbycontext
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtSetUserByContextRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserByContextSaved.yaml
+          examples:
+            saved:
+              $ref: ../../examples/userMgmtSetUserByContext.saved.yaml
+    "500":
+      description: The account may not be changed by its user.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            readOnly:
+              $ref: ../../examples/userMgmtSetUserByContext.readOnly.yaml
+            systemAccount:
+              $ref: ../../examples/userMgmtSetUserByContext.systemAccount.yaml

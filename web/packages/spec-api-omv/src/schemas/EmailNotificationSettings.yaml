@@ -1,0 +1,47 @@
+type: object
+description: >-
+  How the system sends notification e-mail (conf.system.notification.email). The server also
+  sends the SMTP password in plain text; the contract leaves it out and the transport removes it
+  from the reply before anything else sees it (`x-omv-omit` on EmailNotification.get).
+required:
+  [
+    enable,
+    server,
+    port,
+    tls,
+    sender,
+    primaryemail,
+    secondaryemail,
+    authenable,
+    username,
+  ]
+properties:
+  enable:
+    type: boolean
+    description: Whether notifications are sent by e-mail.
+  server:
+    type: string
+    description: The SMTP server's name or address, or empty.
+  port:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  tls:
+    type: string
+    enum: [none, ssl, starttls, auto]
+    description: How the connection to the SMTP server is encrypted.
+  sender:
+    type: string
+    description: The sender's e-mail address, or empty.
+  primaryemail:
+    type: string
+    description: The address notifications go to, or empty.
+  secondaryemail:
+    type: string
+    description: A second address notifications go to, or empty.
+  authenable:
+    type: boolean
+    description: Whether the system signs in to the SMTP server.
+  username:
+    type: string
+    description: The user name for the SMTP server, or empty.
