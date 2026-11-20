@@ -257,3 +257,15 @@ A UX review of `react-ui-components` (commit `d202d21`) raised three questions:
 - **Steps that never ran** after a failed step keep the word Waiting, because a retry would run them, and the failure notice says how many did not run ("3 steps did not run"). No new task word.
 - **One verb for discarding pending changes: "Undo".** The pending-changes banner reads "Apply 3 changes" and "Undo 3 changes", and the job runner uses the same verb. Style guide 5.8 changes from "Revert" to "Undo"; the backend method is still `Config.revertChangesBg`.
 - **Undo asks first.** A plain confirmation names what is lost ("The saved changes to SMB, SSH and Network are discarded"), with focus on Cancel. No typed confirmation, since no data on disk is lost.
+
+## 2026-11-20 — Phase 2: app scaffold and sign-in
+
+Built on branch `phase-2`, verified on the mock; the VM run follows with the shell.
+
+- **Learning whether a session exists on load:** two reads in parallel, `System.getInformation` and `UserMgmt.getUserByContext`. A 401 (or no answer) from the first shows sign-in. OMV has no read that returns the role, so the role comes from the shape of `System.getInformation`: only an administrator gets the full answer (the schema says so). The role only changes what is shown; the backend enforces. The user name comes from the second read; if it fails, the session still stands. The session (name, role) lives in memory only.
+- **Reloading during the second-factor step** cancels the pending login, because the load-time reads count as "any other call" (A10). The person signs in again.
+- **The idle clock** follows the server's notion of activity: the transport now emits an event after each foreground call the server answered (anything but a 401). Background calls, failures and downloads do not count, which matches OMV's last-access handling read from source. The warning opens 60 s before the end (or halfway, for a timeout under 2 minutes). "Stay signed in" is one foreground read. When time runs out, the app checks with background reads, which cannot extend the session. It never calls `Session.logout` on its own, so it does not end the user's other tabs.
+- **New contract examples:** the 429 and 401 replies of `Session.login`, `Session.verify` and `System.getInformation`, from the messages observed in A3, A8 and A10. A normal user's sign-in reply is written by hand from the administrator capture and says so.
+- **Locked accounts (M9):** after a second wrong password the page explains, by class only, that the server can lock an account, that waiting does not unlock it, and who can. Wording approved by the owner, with the title "Check the password before trying again".
+- **Mock scenarios** (administrator, user, second factor, wrong password, too many attempts, session expired, pending changes) are picked in `pnpm dev:mock` only. The production build was checked: one external module script, no inline script or style, fonts bundled, no mock code.
+- Router scroll restoration is off: it wrote visited paths to `sessionStorage`.

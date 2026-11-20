@@ -32,6 +32,21 @@ const isPendingChangesQuery = (query: Query) =>
   PENDING_CHANGES_URLS.has(String(query.queryKey[1]));
 
 /**
+ * Forget everything this page session learned from the server: stop following tasks, forget their
+ * handles, cancel running reads and drop all server data. Runs when the session ends (401) and after
+ * the user signs out.
+ */
+export function dropServerState(
+  queryClient: QueryClient,
+  registry: TaskRegistry = taskRegistry,
+): void {
+  registry.clear();
+  forgetTaskHandles();
+  void queryClient.cancelQueries();
+  queryClient.clear();
+}
+
+/**
  * Wire a query client to the transport:
  * - after a mutation marked x-omv-dirty succeeds, refetch the pending-changes reads;
  * - after a task ends (an apply or revert changes what the system reports), refetch everything;
@@ -49,12 +64,7 @@ export function connectQueryClient(
     registry.onSettled(() => {
       void queryClient.invalidateQueries();
     }),
-    onSessionEnded(() => {
-      registry.clear();
-      forgetTaskHandles();
-      void queryClient.cancelQueries();
-      queryClient.clear();
-    }),
+    onSessionEnded(() => dropServerState(queryClient, registry)),
   ];
   return () => {
     for (const off of offs) {

@@ -81,6 +81,9 @@
                   },
                   "challengeRequired": {
                     "$ref": "#/components/examples/sessionLogin.challengeRequired"
+                  },
+                  "authenticatedUser": {
+                    "$ref": "#/components/examples/sessionLogin.authenticatedUser"
                   }
                 }
               }
@@ -96,6 +99,21 @@
                 "examples": {
                   "wrongPassword": {
                     "$ref": "#/components/examples/sessionLogin.wrongPassword"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed second-factor attempts for this user. The reply says no wait time (A10).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "tooManyAttempts": {
+                    "$ref": "#/components/examples/sessionLogin.tooManyAttempts"
                   }
                 }
               }
@@ -160,6 +178,36 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "No login is pending, or it expired (300 s) or was discarded by another call.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "noPendingLogin": {
+                    "$ref": "#/components/examples/sessionVerify.noPendingLogin"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many wrong codes. The delay grows from 5 s to 300 s; the reply does not say how long (A10).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "tooManyAttempts": {
+                    "$ref": "#/components/examples/sessionVerify.tooManyAttempts"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -212,6 +260,24 @@
                   },
                   "user": {
                     "$ref": "#/components/examples/systemGetInformation.user"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No session, or it ended. The first call after the idle timeout says so; later ones say there is no session (A3).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notSignedIn": {
+                    "$ref": "#/components/examples/systemGetInformation.notSignedIn"
+                  },
+                  "sessionExpired": {
+                    "$ref": "#/components/examples/systemGetInformation.sessionExpired"
                   }
                 }
               }
@@ -1334,12 +1400,32 @@
           }
         }
       },
+      "sessionLogin.authenticatedUser": {
+        "summary": "Written by hand from the administrator capture: a normal user's sign-in (seen in pnpm test:vm, OMV 8.6.1)",
+        "x-omv-status": 200,
+        "value": {
+          "username": "example-user",
+          "status": "authenticated",
+          "permissions": {
+            "role": "user"
+          },
+          "sessionid": "EXAMPLE-SESSION-ID"
+        }
+      },
       "sessionLogin.wrongPassword": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
         "x-omv-status": 400,
         "value": {
           "code": 0,
           "message": "Incorrect username or password."
+        }
+      },
+      "sessionLogin.tooManyAttempts": {
+        "summary": "Observed on the test VM (OMV 8.6.1, A10): a new sign-in of a user with too many failed second-factor attempts",
+        "x-omv-status": 429,
+        "value": {
+          "code": 0,
+          "message": "Too many failed verification attempts. Please try again later."
         }
       },
       "sessionVerify.authenticated": {
@@ -1360,6 +1446,22 @@
         "value": {
           "code": 0,
           "message": "Challenge verification failed."
+        }
+      },
+      "sessionVerify.noPendingLogin": {
+        "summary": "Observed on the test VM (OMV 8.6.1, A10): no login is pending, or it expired or was discarded",
+        "x-omv-status": 401,
+        "value": {
+          "code": 0,
+          "message": "No pending login or the login has expired."
+        }
+      },
+      "sessionVerify.tooManyAttempts": {
+        "summary": "Observed on the test VM (OMV 8.6.1, A10): from the third wrong code on",
+        "x-omv-status": 429,
+        "value": {
+          "code": 0,
+          "message": "Too many failed verification attempts. Please try again later."
         }
       },
       "systemGetInformation.admin": {
@@ -1434,6 +1536,22 @@
           "ts": 1795089030,
           "time": "Thu Nov 19 11:50:30 2026",
           "hostname": "nas"
+        }
+      },
+      "systemGetInformation.notSignedIn": {
+        "summary": "Observed on the test VM (OMV 8.6.1, A3, A8): no session",
+        "x-omv-status": 401,
+        "value": {
+          "code": 0,
+          "message": "Session not authenticated."
+        }
+      },
+      "systemGetInformation.sessionExpired": {
+        "summary": "Observed on the test VM (OMV 8.6.1, A3): the first call after the idle timeout",
+        "x-omv-status": 401,
+        "value": {
+          "code": 0,
+          "message": "Session expired."
         }
       },
       "configIsDirty.clean": {

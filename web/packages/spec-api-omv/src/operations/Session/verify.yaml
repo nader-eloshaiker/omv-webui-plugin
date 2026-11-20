@@ -38,3 +38,21 @@ post:
           examples:
             wrongCode:
               $ref: ../../examples/sessionVerify.wrongCode.yaml
+    "401":
+      description: No login is pending, or it expired (300 s) or was discarded by another call.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noPendingLogin:
+              $ref: ../../examples/sessionVerify.noPendingLogin.yaml
+    "429":
+      description: Too many wrong codes. The delay grows from 5 s to 300 s; the reply does not say how long (A10).
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            tooManyAttempts:
+              $ref: ../../examples/sessionVerify.tooManyAttempts.yaml

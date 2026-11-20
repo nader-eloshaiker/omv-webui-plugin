@@ -6,13 +6,25 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type { ReactNode } from "react";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { useConfigIsDirty } from "./generated/omv/config/config.ts";
 import { useSessionLogin } from "./generated/omv/session/session.ts";
 import { useSshSet } from "./generated/omv/ssh/ssh.ts";
 import { useSystemGetInformation } from "./generated/omv/system/system.ts";
 import { createRpcHandlers, type Answers } from "./mocks/handlers.ts";
-import { connectQueryClient, createQueryClient } from "./query.ts";
+import {
+  connectQueryClient,
+  createQueryClient,
+  dropServerState,
+} from "./query.ts";
 import { createTaskRegistry } from "./tasks/registry.ts";
 
 const server = setupServer();
@@ -84,6 +96,20 @@ describe("connectQueryClient", () => {
     );
     await act(() => result.current.refetch());
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+    disconnect();
+  });
+});
+
+describe("dropServerState", () => {
+  it("drops all server data and stops following tasks, as after signing out", async () => {
+    const { wrapper, queryClient, disconnect } = setup();
+    const registry = createTaskRegistry();
+    const { result } = renderHook(() => useSystemGetInformation(), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const cleared = vi.spyOn(registry, "clear");
+    dropServerState(queryClient, registry);
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+    expect(cleared).toHaveBeenCalledOnce();
     disconnect();
   });
 });
