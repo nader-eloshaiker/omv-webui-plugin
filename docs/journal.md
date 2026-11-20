@@ -176,7 +176,7 @@ Clicking it as an administrator opened `/ui/` in a **new tab**, and the stock ta
 
 ## 2026-11-19 — A10: sign-in with a second factor (observed with openmediavault-2fa-totp)
 
-Set-up: omv-extras installed on the VM (its install script read first), then `openmediavault-2fa-totp`; the other two-factor plugin offered is `openmediavault-2fa-emailotp`, not tried (it needs mail). `webui-2fa` was enrolled with `TfaTotp.preEnableByContext` / `enableByContext`; its secret is in the env file as `OMV_2FA_TOTP_SECRET`, so scripts can make codes (RFC 6238: SHA-1, 6 digits, 30 s, one window of drift each side).
+Set-up: omv-extras installed on the VM (its install script read first), then `openmediavault-2fa-totp`; the other two-factor plugin offered is `openmediavault-2fa-emailotp`, not tried (it needs mail). The second-factor test account (`OMV_2FA_USER` in the env file) was enrolled with `TfaTotp.preEnableByContext` / `enableByContext`; its secret is in the env file as `OMV_2FA_TOTP_SECRET`, so scripts can make codes (RFC 6238: SHA-1, 6 digits, 30 s, one window of drift each side).
 
 - No second factor: `Session.login` → `{username, status: "authenticated", permissions: {role}, sessionid}` (as in A3).
 - With TOTP: `Session.login` → HTTP 200 `{username, status: "challengeRequired", challenge: {kind: "totp", redirecturl: "/tfatotp/<user>"}}`, a session cookie, no `sessionid`. `redirecturl` is a route of the stock interface; the new interface must not follow it (UI-3). It shows its own code form for each `kind` it knows and, for an unknown `kind`, says to use the classic interface.
