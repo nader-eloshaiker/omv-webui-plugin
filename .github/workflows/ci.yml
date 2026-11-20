@@ -1,6 +1,6 @@
-# Lint, types, tests, the production build and its UI-1/UI-7/UI-11 checks, the contract and its drift
-# against a pinned openmediavault tree, the colour audit and pnpm audit. One job, `build`, which the
-# main branch ruleset requires.
+# Lint, types, tests, the production build and its UI-1/UI-7/UI-11 checks, the Debian package and
+# lintian, the contract and its drift against a pinned openmediavault tree, the colour audit and pnpm
+# audit. One job, `build`, which the main branch ruleset requires.
 name: CI
 
 on:
@@ -91,6 +91,17 @@ jobs:
       # What ships: no inline script or style, nothing from another origin, no mock or test code.
       - name: Build checks (UI-1, UI-7, UI-11)
         run: node tools/build-check/check.mjs web/apps/omv-web-app/dist
+
+      # The .deb in Debian 13 from the bundle just built, then lintian (docs/06). Install, upgrade,
+      # removal and the broken-snippet rollback are checked on the test VM (tools/package-test).
+      - name: Package
+        run: make docker-deb
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: openmediavault-webui-deb
+          path: dist/*.deb
+          if-no-files-found: error
 
       - name: Tool tests
         run: node --test 'tools/**/*.test.mjs'
