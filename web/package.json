@@ -9,6 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "build": "pnpm --filter omv-web-app build",
     "typecheck": "pnpm --no-bail -r typecheck",
     "test": "pnpm -r test",
     "lint": "eslint .",
@@ -19,7 +20,9 @@
     "api:spec:build": "pnpm --filter @omv-webui/spec-api-omv build",
     "api:react:build": "pnpm --filter @omv-webui/react-api-omv generate",
     "api:check": "pnpm --filter @omv-webui/react-api-omv check",
-    "test:vm": "pnpm --filter @omv-webui/react-api-omv test:vm"
+    "test:vm": "pnpm --filter @omv-webui/react-api-omv test:vm",
+    "test:browser": "pnpm build && pnpm --filter omv-web-app test:browser",
+    "test:browser:install": "pnpm --filter omv-web-app test:browser:install"
   },
   "devDependencies": {
     "@omv-webui/ts-app-tooling": "workspace:*",
