@@ -390,7 +390,7 @@ A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off th
 - **Borders before shadows.** A card is a `surface` with a 1px `border`. Shadows are for things
   that float above the page (menus, popovers, dialogs, toasts) and nothing else.
 - Three elevation levels only: flat, raised (menus and popovers, `shadow-md`), and modal
-  (`shadow-lg` over a scrim).
+  (`shadow-lg` over the `scrim` token, which nothing is ever read on).
 
 ### 4.4 Icons
 

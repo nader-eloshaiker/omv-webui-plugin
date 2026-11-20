@@ -20,6 +20,15 @@ catalogs:
   tanstack:
     "@tanstack/react-query": ^5.104.0
 
+  # Component primitives and the shadcn idiom (D7). Base UI only, inside CSPProvider
+  # disableStyleElements: Radix and sonner insert <style> elements, which UI-1 blocks (A9).
+  ui:
+    "@base-ui/react": ^1.8.0
+    class-variance-authority: ^0.7.1
+    clsx: ^2.1.1
+    lucide-react: ^1.49.0
+    tailwind-merge: ^3.7.0
+
   forms:
     valibot: ^1.5.0
 
@@ -31,11 +40,22 @@ catalogs:
   testing:
     # Above the reference's ^20.14.5: versions up to 21.0.3 carry two high advisories (pnpm audit).
     happy-dom: ^21.0.4
+    jsdom: ^30.1.1
     vitest: ^5.0.4
+    "@testing-library/jest-dom": ^7.0.1
     "@testing-library/react": ^16.3.3
+    "@testing-library/user-event": ^14.6.7
+
+  # Development only: the component review surface. Nothing from it reaches the product bundle.
+  storybook:
+    storybook: ^10.6.7
+    "@storybook/react-vite": ^10.6.7
+    "@storybook/addon-docs": ^10.6.7
+    "@storybook/addon-themes": ^10.6.7
 
   style:
     tailwindcss: ^4.3.3
+    "@tailwindcss/vite": ^4.3.3
 
   # Bundled with the interface, never fetched from a font host (UI-7). Variable builds: one file per
   # script subset carries every weight the style guide uses (400, 500, 600). SIL Open Font License.
@@ -45,6 +65,7 @@ catalogs:
 
   build:
     typescript: ~6.0.2
+    vite: ^8.3.2
     "@types/node": ^26.6.4
 
   lint:
