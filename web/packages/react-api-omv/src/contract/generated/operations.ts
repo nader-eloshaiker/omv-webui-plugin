@@ -157,11 +157,33 @@ export const OPERATIONS = {
       $ref: "UserByContext",
     },
   },
+  "/rpc/WebGui/getAutoLogoutSettings": {
+    operationId: "webGuiGetAutoLogoutSettings",
+    service: "WebGui",
+    method: "getAutoLogoutSettings",
+    role: "user",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "AutoLogoutSettings",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
 
 export const SCHEMAS: SchemaTable = {
+  AutoLogoutSettings: {
+    type: "object",
+    required: ["timeout"],
+    properties: {
+      timeout: {
+        type: "integer",
+        minimum: 0,
+        maximum: 1440,
+      },
+    },
+  },
   ConfigAppliedModules: {
     type: "array",
     items: {

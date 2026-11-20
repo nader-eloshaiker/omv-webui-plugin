@@ -274,6 +274,20 @@ export const CONTRACT_EXAMPLES = {
       },
     },
   },
+  webGuiGetAutoLogoutSettings: {
+    admin: {
+      status: 200,
+      value: {
+        timeout: 6,
+      },
+    },
+    user: {
+      status: 200,
+      value: {
+        timeout: 6,
+      },
+    },
+  },
 } as const satisfies ContractExampleTable;
 
 export const DEFAULT_EXAMPLE = {
@@ -291,4 +305,5 @@ export const DEFAULT_EXAMPLE = {
   sshSet: "saved",
   shareMgmtGetList: "populated",
   userMgmtGetUserByContext: "user",
+  webGuiGetAutoLogoutSettings: "admin",
 } as const satisfies Record<keyof typeof CONTRACT_EXAMPLES, string>;

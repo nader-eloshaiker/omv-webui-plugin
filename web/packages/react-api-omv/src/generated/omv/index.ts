@@ -5,3 +5,4 @@ export * from "./share-mgmt/share-mgmt.ts";
 export * from "./ssh/ssh.ts";
 export * from "./system/system.ts";
 export * from "./user-mgmt/user-mgmt.ts";
+export * from "./web-gui/web-gui.ts";
