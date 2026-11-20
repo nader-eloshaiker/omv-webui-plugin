@@ -249,3 +249,11 @@ Defaults taken without a question, open to change:
 ## 2026-11-20 — Owner decision: squircle radii
 
 The owner approved the proposed squircle radii after seeing the comparison in `design/preview.html` (light and dark, Chromium): 10px for controls and 14px for cards, dialogs, menus and toasts, in place of the round 6px and 8px where `corner-shape: squircle` is supported. Elsewhere the round radii stay.
+
+## 2026-11-20 — Owner decisions after the component review
+
+A UX review of `react-ui-components` (commit `d202d21`) raised three questions:
+
+- **Steps that never ran** after a failed step keep the word Waiting, because a retry would run them, and the failure notice says how many did not run ("3 steps did not run"). No new task word.
+- **One verb for discarding pending changes: "Undo".** The pending-changes banner reads "Apply 3 changes" and "Undo 3 changes", and the job runner uses the same verb. Style guide 5.8 changes from "Revert" to "Undo"; the backend method is still `Config.revertChangesBg`.
+- **Undo asks first.** A plain confirmation names what is lost ("The saved changes to SMB, SSH and Network are discarded"), with focus on Cancel. No typed confirmation, since no data on disk is lost.
