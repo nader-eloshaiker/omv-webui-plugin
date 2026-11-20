@@ -19,7 +19,10 @@
  * explicit choice. See docs/02-architecture.md, "Cross-cutting behaviour".
  *
  * Hex only for colours: the audit script parses hex and `var(--token)` and nothing else. Scales were
- * built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex.
+ * built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex. The one exception
+ * is the alpha inks nothing is ever read on, the shadows and the scrim: they are written as rgb() with
+ * alpha, the audit resolves them to nothing, and a contrast pair that named one would fail as a
+ * missing token.
  */
 
 /* ─── Tier 1: primitives ──────────────────────────────────────────────────────────────────────── */
@@ -185,6 +188,9 @@
   --theme-shadow-sm: 0 1px 2px rgb(16 22 26 / 0.08);
   --theme-shadow-md: 0 4px 12px rgb(16 22 26 / 0.12);
   --theme-shadow-lg: 0 12px 32px rgb(16 22 26 / 0.18);
+  /* The scrim under a modal dialog: the shadow ink at more strength. Nothing is read on it, so it has
+     no contrast pair; it only takes the page back so the dialog is the one thing in front. */
+  --theme-scrim: rgb(16 22 26 / 0.4);
 }
 
 /* ─── Tier 2: semantic roles, dark theme (re-derived, not inverted) ───────────────────────────── */
@@ -242,6 +248,7 @@
   --theme-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04);
   --theme-shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
   --theme-shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
+  --theme-scrim: rgb(0 0 0 / 0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {

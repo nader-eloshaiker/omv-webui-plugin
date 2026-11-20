@@ -1,0 +1,6 @@
+/* The app's stylesheet chain, so a story renders with the real design system: css-ui-style brings
+   Tailwind, the tokens, both themes and the base rules. */
+@import "@omv-webui/css-ui-style";
+
+/* Tailwind scans Storybook's own tree by default; the components and stories live under src/. */
+@source "../src";
