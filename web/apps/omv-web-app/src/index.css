@@ -1,0 +1,5 @@
+/* The app's stylesheet: the design system, plus the trees whose classes Tailwind must see. */
+@import "@omv-webui/css-ui-style";
+
+@source ".";
+@source "../../../packages/react-ui-components/src";

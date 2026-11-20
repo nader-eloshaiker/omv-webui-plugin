@@ -1,0 +1,10 @@
+{
+  "extends": "../../packages/ts-app-tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"],
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+}

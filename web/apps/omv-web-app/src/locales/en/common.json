@@ -1,0 +1,81 @@
+{
+  "app": {
+    "name": "openmediavault",
+    "loading": "Loading…",
+    "serverMessage": "Message from the server",
+    "newTab": "(opens in a new tab)"
+  },
+  "theme": {
+    "label": "Appearance",
+    "system": "Same as this device",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "role": {
+    "admin": "administrator",
+    "user": "user"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "intro": "Use the same account as for the classic openmediavault interface.",
+    "username": "User name",
+    "password": "Password",
+    "submit": "Sign in",
+    "missingUsername": "Enter your user name.",
+    "missingPassword": "Enter your password.",
+    "failedTitle": "Sign-in failed",
+    "unreachableTitle": "Could not reach the server",
+    "tooManyAttemptsTitle": "Too many attempts",
+    "tooManyAttemptsBody": "Wait a few minutes, then try again. Each failed attempt makes the wait longer, so trying again straight away does not help.",
+    "lockedTitle": "Check the password before trying again",
+    "lockedBody": "After repeated failed sign-ins the server can lock an account. Waiting does not unlock it, and this page cannot either. Ask another administrator to unlock the account. If it is the only administrator account, someone with access to the server's own screen and keyboard has to reset it there.",
+    "endedNotice": "Your session ended, so you were signed out. Sign in again to carry on where you were.",
+    "signedOutNotice": "You have signed out.",
+    "challengeExpiredNotice": "The code step took too long or was interrupted, so the sign-in was cancelled. Sign in again.",
+    "rejectedBody": "Check the user name and password, then try again.",
+    "unreachableBody": "Check that the server is switched on and connected to the network, then try again."
+  },
+  "totp": {
+    "title": "Enter your code",
+    "intro": "Open the authenticator app you set up for {{username}} and enter the code it shows now.",
+    "code": "6-digit code",
+    "hint": "The code changes every 30 seconds. You can paste it.",
+    "invalid": "Enter the 6 digits your authenticator app shows.",
+    "submit": "Verify",
+    "cancel": "Use a different account",
+    "failedTitle": "Code not accepted",
+    "tooManyAttemptsTitle": "Too many wrong codes",
+    "tooManyAttemptsBody": "Wait a few minutes, then enter the code your app shows at that moment. Each wrong code makes the wait longer.",
+    "rejectedBody": "Enter the code your authenticator app shows now. Each code works for only 30 seconds."
+  },
+  "unsupported": {
+    "title": "Finish signing in with the classic interface",
+    "body": "Your password was accepted, but this account has a second sign-in step that this interface does not support yet. Sign in with the classic interface instead; it opens in a new tab.",
+    "link": "Open the classic interface",
+    "cancel": "Use a different account"
+  },
+  "landing": {
+    "title": "Welcome",
+    "signedInAs": "You are signed in as {{username}}, with {{role}} rights.",
+    "signedInRole": "You are signed in with {{role}} rights.",
+    "placeholder": "The pages of the new interface are on their way. Until then, the classic interface has everything.",
+    "classicLink": "Open the classic interface"
+  },
+  "signOut": {
+    "action": "Sign out",
+    "failedTitle": "Could not sign out",
+    "failedBody": "You are still signed in. Try again in a moment."
+  },
+  "idle": {
+    "title": "Are you still there?",
+    "body": "Nothing has happened here for a while, so the server will sign you out in {{time}}.",
+    "stay": "Stay signed in",
+    "signOut": "Sign out",
+    "stayFailed": "Could not reach the server. Try again, or sign out."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "There is no page at this address.",
+    "home": "Go to the start page"
+  }
+}
