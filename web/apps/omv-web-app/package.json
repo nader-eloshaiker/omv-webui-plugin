@@ -13,7 +13,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:browser": "playwright test --config e2e/playwright.config.ts",
-    "test:browser:install": "playwright install chromium"
+    "test:browser:install": "playwright install chromium",
+    "test:browser:vm": "playwright test --config e2e/vm/playwright.config.ts"
   },
   "dependencies": {
     "@omv-webui/css-ui-style": "workspace:*",

@@ -22,7 +22,8 @@
     "api:check": "pnpm --filter @omv-webui/react-api-omv check",
     "test:vm": "pnpm --filter @omv-webui/react-api-omv test:vm",
     "test:browser": "pnpm build && pnpm --filter omv-web-app test:browser",
-    "test:browser:install": "pnpm --filter omv-web-app test:browser:install"
+    "test:browser:install": "pnpm --filter omv-web-app test:browser:install",
+    "test:browser:vm": "pnpm --filter omv-web-app test:browser:vm"
   },
   "devDependencies": {
     "@omv-webui/ts-app-tooling": "workspace:*",
