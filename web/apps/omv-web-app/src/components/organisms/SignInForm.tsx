@@ -12,6 +12,7 @@ import {
   FieldControl,
   FieldError,
   FieldLabel,
+  InlineAlert,
 } from "@omv-webui/react-ui-components";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,7 +21,6 @@ import {
   signInProblemOf,
   type SignInProblem,
 } from "../../session/signInProblem.ts";
-import { FormAlert } from "../molecules/FormAlert.tsx";
 import { SignInProblemAlert } from "../molecules/SignInProblemAlert.tsx";
 
 interface SignInFormProps {
@@ -101,15 +101,15 @@ export function SignInForm({ notice, onReply }: SignInFormProps) {
         <p className="text-muted-foreground">{t("signIn.intro")}</p>
       </div>
       {notice && showNotice ? (
-        <FormAlert tone="neutral">{t(NOTICE_KEY[notice])}</FormAlert>
+        <InlineAlert tone="neutral">{t(NOTICE_KEY[notice])}</InlineAlert>
       ) : null}
       {problem ? (
         <SignInProblemAlert problem={problem} step="password" />
       ) : null}
       {problem?.kind === "rejected" && rejections >= 2 ? (
-        <FormAlert tone="neutral" title={t("signIn.lockedTitle")}>
+        <InlineAlert tone="neutral" title={t("signIn.lockedTitle")}>
           {t("signIn.lockedBody")}
-        </FormAlert>
+        </InlineAlert>
       ) : null}
       <Field invalid={missing.username || undefined}>
         <FieldLabel>{t("signIn.username")}</FieldLabel>

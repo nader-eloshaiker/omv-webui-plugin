@@ -102,20 +102,21 @@ test("an administrator uses the shell: menus, a classic-only page, and applying 
   await expect(about).toBeVisible();
   await about.getByRole("button", { name: copy.about.close }).click();
 
-  // A page only the classic interface has: a fixed link out, and no call.
+  // A page only the classic interface has: a fixed link out, in the classic interface's hash form,
+  // and no call.
   const before = rpc.calls.length;
   await page
     .getByRole("navigation", { name: copy.app.navigation })
-    .getByRole("link", { name: new RegExp(`^${copy.nav.items.services.ssh}`) })
+    .getByRole("link", { name: new RegExp(`^${copy.nav.items.services.nfs}`) })
     .click();
   await expect(
-    page.getByRole("heading", { name: copy.nav.items.services.ssh }),
+    page.getByRole("heading", { name: copy.nav.items.services.nfs }),
   ).toBeFocused();
   await expect(
     page.getByRole("link", {
-      name: `${copy.classicOnly.link.replace("{{page}}", copy.nav.items.services.ssh)} ${copy.app.newTab}`,
+      name: `${copy.classicOnly.link.replace("{{page}}", copy.nav.items.services.nfs)} ${copy.app.newTab}`,
     }),
-  ).toHaveAttribute("href", "/services/ssh");
+  ).toHaveAttribute("href", "/#/services/nfs");
   expect(
     rpc.calls.slice(before).filter((c) => c !== "System.getInformation"),
   ).toEqual([]);

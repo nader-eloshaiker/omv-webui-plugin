@@ -2,10 +2,9 @@
 // Why a sign-in step failed: the page's own plain words for what to do first, then the backend's
 // message as text in the library's ServerMessage (UI-9). "Too many attempts" says to wait; nothing
 // retries by itself (UI-14).
-import { ServerMessage } from "@omv-webui/react-ui-components";
+import { InlineAlert, ServerMessage } from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
 import type { SignInProblem } from "../../session/signInProblem.ts";
-import { FormAlert } from "./FormAlert.tsx";
 
 export function SignInProblemAlert({
   problem,
@@ -36,11 +35,11 @@ export function SignInProblemAlert({
       body = t(code ? "totp.rejectedBody" : "signIn.rejectedBody");
   }
   return (
-    <FormAlert tone="critical" title={title}>
+    <InlineAlert tone="critical" title={title}>
       <p>{body}</p>
       <ServerMessage label={t("app.serverMessage")}>
         {problem.message}
       </ServerMessage>
-    </FormAlert>
+    </InlineAlert>
   );
 }

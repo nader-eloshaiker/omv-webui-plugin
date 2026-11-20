@@ -15,6 +15,10 @@ import { Route as SignedInIndexRouteImport } from './routes/_signedIn/index'
 import { Route as SignedInSplatRouteImport } from './routes/_signedIn/$'
 import { Route as SignedInAddOnsRouteImport } from './routes/_signedIn/add-ons'
 import { Route as SignedInGroupItemRouteImport } from './routes/_signedIn/$group/$item'
+import { Route as SignedInAccountPasswordRouteImport } from './routes/_signedIn/account/password'
+import { Route as SignedInAccountSettingsRouteImport } from './routes/_signedIn/account/settings'
+import { Route as SignedInServicesSshRouteImport } from './routes/_signedIn/services/ssh'
+import { Route as SignedInStorageSharedFoldersRouteImport } from './routes/_signedIn/storage/shared-folders'
 
 const SignedInRoute = SignedInRouteImport.update({
   id: '/_signedIn',
@@ -45,6 +49,27 @@ const SignedInGroupItemRoute = SignedInGroupItemRouteImport.update({
   path: '/$group/$item',
   getParentRoute: () => SignedInRoute,
 } as any)
+const SignedInAccountPasswordRoute = SignedInAccountPasswordRouteImport.update({
+  id: '/account/password',
+  path: '/account/password',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInAccountSettingsRoute = SignedInAccountSettingsRouteImport.update({
+  id: '/account/settings',
+  path: '/account/settings',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInServicesSshRoute = SignedInServicesSshRouteImport.update({
+  id: '/services/ssh',
+  path: '/services/ssh',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInStorageSharedFoldersRoute =
+  SignedInStorageSharedFoldersRouteImport.update({
+    id: '/storage/shared-folders',
+    path: '/storage/shared-folders',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SignedInIndexRoute
@@ -52,6 +77,10 @@ export interface FileRoutesByFullPath {
   '/$': typeof SignedInSplatRoute
   '/add-ons': typeof SignedInAddOnsRoute
   '/$group/$item': typeof SignedInGroupItemRoute
+  '/account/password': typeof SignedInAccountPasswordRoute
+  '/account/settings': typeof SignedInAccountSettingsRoute
+  '/services/ssh': typeof SignedInServicesSshRoute
+  '/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -59,6 +88,10 @@ export interface FileRoutesByTo {
   '/add-ons': typeof SignedInAddOnsRoute
   '/': typeof SignedInIndexRoute
   '/$group/$item': typeof SignedInGroupItemRoute
+  '/account/password': typeof SignedInAccountPasswordRoute
+  '/account/settings': typeof SignedInAccountSettingsRoute
+  '/services/ssh': typeof SignedInServicesSshRoute
+  '/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +101,34 @@ export interface FileRoutesById {
   '/_signedIn/add-ons': typeof SignedInAddOnsRoute
   '/_signedIn/': typeof SignedInIndexRoute
   '/_signedIn/$group/$item': typeof SignedInGroupItemRoute
+  '/_signedIn/account/password': typeof SignedInAccountPasswordRoute
+  '/_signedIn/account/settings': typeof SignedInAccountSettingsRoute
+  '/_signedIn/services/ssh': typeof SignedInServicesSshRoute
+  '/_signedIn/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/$' | '/add-ons' | '/$group/$item'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/$'
+    | '/add-ons'
+    | '/$group/$item'
+    | '/account/password'
+    | '/account/settings'
+    | '/services/ssh'
+    | '/storage/shared-folders'
   fileRoutesByTo: FileRoutesByTo
-  to: '/sign-in' | '/$' | '/add-ons' | '/' | '/$group/$item'
+  to:
+    | '/sign-in'
+    | '/$'
+    | '/add-ons'
+    | '/'
+    | '/$group/$item'
+    | '/account/password'
+    | '/account/settings'
+    | '/services/ssh'
+    | '/storage/shared-folders'
   id:
     | '__root__'
     | '/_signedIn'
@@ -82,6 +137,10 @@ export interface FileRouteTypes {
     | '/_signedIn/add-ons'
     | '/_signedIn/'
     | '/_signedIn/$group/$item'
+    | '/_signedIn/account/password'
+    | '/_signedIn/account/settings'
+    | '/_signedIn/services/ssh'
+    | '/_signedIn/storage/shared-folders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,6 +192,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInGroupItemRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/account/password': {
+      id: '/_signedIn/account/password'
+      path: '/account/password'
+      fullPath: '/account/password'
+      preLoaderRoute: typeof SignedInAccountPasswordRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/account/settings': {
+      id: '/_signedIn/account/settings'
+      path: '/account/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof SignedInAccountSettingsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/services/ssh': {
+      id: '/_signedIn/services/ssh'
+      path: '/services/ssh'
+      fullPath: '/services/ssh'
+      preLoaderRoute: typeof SignedInServicesSshRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/shared-folders': {
+      id: '/_signedIn/storage/shared-folders'
+      path: '/storage/shared-folders'
+      fullPath: '/storage/shared-folders'
+      preLoaderRoute: typeof SignedInStorageSharedFoldersRouteImport
+      parentRoute: typeof SignedInRoute
+    }
   }
 }
 
@@ -141,6 +228,10 @@ interface SignedInRouteChildren {
   SignedInAddOnsRoute: typeof SignedInAddOnsRoute
   SignedInIndexRoute: typeof SignedInIndexRoute
   SignedInGroupItemRoute: typeof SignedInGroupItemRoute
+  SignedInAccountPasswordRoute: typeof SignedInAccountPasswordRoute
+  SignedInAccountSettingsRoute: typeof SignedInAccountSettingsRoute
+  SignedInServicesSshRoute: typeof SignedInServicesSshRoute
+  SignedInStorageSharedFoldersRoute: typeof SignedInStorageSharedFoldersRoute
 }
 
 const SignedInRouteChildren: SignedInRouteChildren = {
@@ -148,6 +239,10 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInAddOnsRoute: SignedInAddOnsRoute,
   SignedInIndexRoute: SignedInIndexRoute,
   SignedInGroupItemRoute: SignedInGroupItemRoute,
+  SignedInAccountPasswordRoute: SignedInAccountPasswordRoute,
+  SignedInAccountSettingsRoute: SignedInAccountSettingsRoute,
+  SignedInServicesSshRoute: SignedInServicesSshRoute,
+  SignedInStorageSharedFoldersRoute: SignedInStorageSharedFoldersRoute,
 }
 
 const SignedInRouteWithChildren = SignedInRoute._addFileChildren(

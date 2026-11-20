@@ -5,6 +5,7 @@
 // The examples hold no state. The one thing tracked here is whether the mock session is signed in,
 // so that a reload starts at sign-in and the screens of signing in can be walked: every operation
 // outside Session answers 401 until Session.login (or verify) succeeds, and again after logout.
+import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { Answers, FixedAnswer } from "@omv-webui/react-api-omv/mocks";
 
 export const SCENARIOS = [
@@ -18,6 +19,14 @@ export const SCENARIOS = [
   "pendingChanges",
   "applyFails",
   "idleWarning",
+  "builtInAdmin",
+  "checklistHidden",
+  "alertsConfigured",
+  "httpsOn",
+  "attention",
+  "noSharedFolders",
+  "folderProblems",
+  "readOnlyAccount",
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -36,7 +45,18 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   pendingChanges: "Administrator, changes pending",
   applyFails: "Administrator, applying fails",
   idleWarning: "Idle warning soon (1-minute timeout)",
+  builtInAdmin: "Administrator signed in as admin",
+  checklistHidden: "Administrator, set-up checklist hidden",
+  alertsConfigured: "Administrator, email alerts set up",
+  httpsOn: "Administrator, HTTPS on",
+  attention: "Administrator, restart needed and clocks differ",
+  noSharedFolders: "Administrator, no shared folders",
+  folderProblems: "Administrator, shared folders that cannot be reached",
+  readOnlyAccount: "Normal user, account locked",
 };
+
+/** The scenarios signed in as a normal user. */
+const USER_SCENARIOS: readonly ScenarioName[] = ["user", "readOnlyAccount"];
 
 // Session replies with no captured example: written here, in the shape OMV sends (A3, A8).
 const NOT_SIGNED_IN: FixedAnswer = {
@@ -61,6 +81,107 @@ const OTHER_KIND_CHALLENGE: FixedAnswer = {
 // A one-minute timeout, so the idle warning opens after 30 seconds in the browser.
 const ONE_MINUTE: FixedAnswer = { status: 200, value: { timeout: 1 } };
 
+// Replies written from the contract's examples for states no capture shows. Each changes only what
+// its scenario is about; the rest is the captured example.
+const LOGIN = CONTRACT_EXAMPLES.sessionLogin;
+const INFO = CONTRACT_EXAMPLES.systemGetInformation;
+const ACCOUNT = CONTRACT_EXAMPLES.userMgmtGetUserByContext.user.value;
+const FOLDERS = CONTRACT_EXAMPLES.shareMgmtGetList.populated.value;
+
+/** The built-in administrator, whose password the factory one is. */
+const BUILT_IN_ADMIN_LOGIN: FixedAnswer = {
+  status: 200,
+  value: { ...LOGIN.authenticated.value, username: "admin" },
+};
+const BUILT_IN_ADMIN_ACCOUNT: FixedAnswer = {
+  status: 200,
+  value: { ...ACCOUNT, name: "admin" },
+};
+/** An account the administrator has locked (OMV's "disallow user modification"). */
+const LOCKED_ACCOUNT: FixedAnswer = {
+  status: 200,
+  value: { ...ACCOUNT, _readonly: true },
+};
+
+const FOLDER = FOLDERS.data[0];
+/** Three folders that cannot be reached, one for each reason OMV reports, beside the healthy one. */
+const PROBLEM_FOLDERS: FixedAnswer = {
+  status: 200,
+  value: {
+    total: 4,
+    data: [
+      FOLDER,
+      {
+        ...FOLDER,
+        uuid: "00000000-0000-4000-8000-000000000011",
+        name: "backups",
+        comment: "",
+        reldirpath: "backups/",
+        absdirpath:
+          "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003/backups/",
+        description: "backups",
+        status: "ENOENT",
+      },
+      {
+        ...FOLDER,
+        uuid: "00000000-0000-4000-8000-000000000012",
+        name: "photos",
+        comment: "",
+        reldirpath: "photos",
+        absdirpath:
+          "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003/photos",
+        description: "photos",
+        status: "ENOTDIR",
+      },
+      {
+        ...FOLDER,
+        uuid: "00000000-0000-4000-8000-000000000013",
+        name: "old-disk",
+        comment: "",
+        reldirpath: "old/",
+        device: "",
+        absdirpath: "",
+        description: "old-disk",
+        status: "ENOENT_DB_MNTENT",
+      },
+    ],
+  },
+};
+
+/**
+ * The examples were captured at a fixed moment, so their `ts` is in the past. The mock moves it to
+ * now, so the dashboard's clock check compares like with like; the "attention" scenario keeps the
+ * captured time, so the clocks differ.
+ */
+function information(
+  example: keyof typeof INFO,
+  change: { now: boolean; rebootRequired?: boolean },
+): FixedAnswer {
+  const { status, value } = INFO[example];
+  if (status !== 200) {
+    return { status, message: value.message };
+  }
+  return {
+    status,
+    value: {
+      ...value,
+      ...(change.now ? { ts: Math.floor(Date.now() / 1000) } : {}),
+      ...(change.rebootRequired ? { rebootRequired: true } : {}),
+    },
+  };
+}
+
+/** The one folder matches a search for any of its words; anything else finds nothing (A2). */
+function folderSearch(params: unknown): "populated" | "searchNoMatch" {
+  const search = (params as { search?: unknown } | null)?.search;
+  if (typeof search !== "string" || search === "") {
+    return "populated";
+  }
+  return JSON.stringify(FOLDER).toLowerCase().includes(search.toLowerCase())
+    ? "populated"
+    : "searchNoMatch";
+}
+
 export interface MockSession {
   signedIn: boolean;
   /** A password was accepted and a second factor is awaited (A10). */
@@ -69,6 +190,8 @@ export interface MockSession {
   expiring: boolean;
   /** Configuration changes are saved and not applied. A finished apply or undo clears it. */
   dirty: boolean;
+  /** An administrator hid the set-up checklist (WebGui.dismissWelcomeMessage). */
+  welcomeDismissed: boolean;
 }
 
 export const newMockSession = (
@@ -79,6 +202,7 @@ export const newMockSession = (
   pending: false,
   expiring: false,
   dirty,
+  welcomeDismissed: false,
 });
 
 /** Whether a scenario starts with changes pending. */
@@ -115,7 +239,7 @@ export function scenarioAnswers(
   name: ScenarioName,
   session: MockSession = newMockSession(),
 ): Answers {
-  const user = name === "user";
+  const user = USER_SCENARIOS.includes(name);
   let ended = false;
   let readsBeforeEnd = 2;
 
@@ -156,7 +280,10 @@ export function scenarioAnswers(
     sessionLogin: login(() => {
       switch (name) {
         case "user":
+        case "readOnlyAccount":
           return "authenticatedUser";
+        case "builtInAdmin":
+          return BUILT_IN_ADMIN_LOGIN;
         case "secondFactor":
           return "challengeRequired";
         case "secondFactorOtherKind":
@@ -186,10 +313,28 @@ export function scenarioAnswers(
       return "null";
     },
     systemGetInformation: () =>
-      guarded(
-        user ? "user" : session.dirty ? "adminPendingChanges" : "admin",
+      guarded<never>(
+        information(
+          user
+            ? "user"
+            : session.dirty
+              ? "adminPendingChanges"
+              : name === "checklistHidden" || session.welcomeDismissed
+                ? "adminWelcomeDismissed"
+                : "admin",
+          {
+            now: name !== "attention",
+            rebootRequired: name === "attention",
+          },
+        ),
       )(),
-    userMgmtGetUserByContext: guarded("user"),
+    userMgmtGetUserByContext: guarded(
+      name === "builtInAdmin"
+        ? BUILT_IN_ADMIN_ACCOUNT
+        : name === "readOnlyAccount"
+          ? LOCKED_ACCOUNT
+          : "user",
+    ),
     webGuiGetAutoLogoutSettings: guarded(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
@@ -213,7 +358,36 @@ export function scenarioAnswers(
     execIsRunning: guarded("running"),
     execStop: guarded("null"),
     sshGet: guarded("defaults"),
-    sshSet: guarded("saved"),
-    shareMgmtGetList: guarded("populated"),
+    // Saving marks ssh and avahi dirty on OMV, so the band appears (Phase 1).
+    sshSet: () => {
+      const answer = guarded("saved")();
+      if (answer === "saved") {
+        session.dirty = true;
+      }
+      return answer;
+    },
+    shareMgmtGetList: ({ params }) =>
+      guarded(
+        name === "noSharedFolders"
+          ? "empty"
+          : name === "folderProblems"
+            ? PROBLEM_FOLDERS
+            : folderSearch(params),
+      )(),
+    webGuiGetSettings: guarded(name === "httpsOn" ? "https" : "http"),
+    emailNotificationGet: guarded(
+      name === "alertsConfigured" ? "configured" : "notConfigured",
+    ),
+    systemGetTimeSettings: guarded("defaults"),
+    networkGetGeneralSettings: guarded("noDomain"),
+    webGuiDismissWelcomeMessage: () => {
+      const answer = guarded("null")();
+      if (answer === "null") {
+        session.welcomeDismissed = true;
+      }
+      return answer;
+    },
+    userMgmtSetUserByContext: guarded("saved"),
+    userMgmtSetPasswordByContext: guarded("null"),
   };
 }

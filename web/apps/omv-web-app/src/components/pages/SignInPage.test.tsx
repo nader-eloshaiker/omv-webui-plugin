@@ -53,9 +53,10 @@ describe("signing in with a password", () => {
     const { user } = await renderApp();
     await signIn(user);
     expect(
-      await screen.findByText(
-        "You are signed in as example-admin, with administrator rights.",
-      ),
+      await screen.findByRole("heading", { name: "Dashboard" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Account: example-admin" }),
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/ui/");
     const login = seenCalls.find((c) => c.call === "Session.login");

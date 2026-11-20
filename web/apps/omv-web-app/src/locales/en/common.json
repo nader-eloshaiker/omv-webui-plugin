@@ -10,6 +10,43 @@
     "closeNav": "Close navigation",
     "navigation": "Main navigation"
   },
+  "common": {
+    "tryAgain": "Try again",
+    "save": "Save",
+    "saving": "Saving…",
+    "discard": "Discard changes",
+    "noChanges": "No changes to save",
+    "notReported": "Not reported",
+    "none": "None",
+    "notAvailable": "Not available",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copySelected": "Selected. Press Ctrl+C to copy.",
+    "inClassic": "{{page}} in the classic interface"
+  },
+  "leave": {
+    "title": "Leave without saving?",
+    "body": "Your changes on this page are not saved and will be lost.",
+    "confirm": "Leave without saving",
+    "cancel": "Stay on this page"
+  },
+  "format": {
+    "duration": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "hours_one": "{{count}} hour",
+      "hours_other": "{{count}} hours",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "pair": "{{first}}, {{second}}",
+      "underMinute": "less than a minute"
+    },
+    "percentUnder1": "<1%"
+  },
+  "toast": {
+    "region": "Notifications",
+    "close": "Dismiss"
+  },
   "role": {
     "admin": "administrator",
     "user": "user"
@@ -74,7 +111,52 @@
     "title": "Dashboard",
     "signedInAs": "You are signed in as {{username}}, with {{role}} rights.",
     "signedInRole": "You are signed in with {{role}} rights.",
-    "placeholder": "The pages of the new interface are on their way. Until then, the classic interface has everything, and the menu takes you to each page there."
+    "loading": "Loading the system information…",
+    "loadFailed": "Could not read the system information.",
+    "fresh": "Updated every 20 seconds. Last update {{time}}.",
+    "stale": "Could not update since {{time}}. The figures may be out of date.",
+    "system": {
+      "title": "System",
+      "name": "Name",
+      "version": "openmediavault version",
+      "processor": "Processor",
+      "processorValue": "{{model}}, {{count}} cores",
+      "processorCores_one": "{{count}} core",
+      "processorCores_other": "{{count}} cores",
+      "uptime": "Running for",
+      "time": "Time on the NAS",
+      "kernel": "Kernel",
+      "updates": "Updates",
+      "updatesAvailable_one": "{{count}} available",
+      "updatesAvailable_other": "{{count}} available",
+      "updatesNone": "None found at the last check",
+      "updatesLink": "Review updates in the classic interface",
+      "moreLink": "More system details in the classic interface"
+    },
+    "usage": {
+      "title": "Usage",
+      "cpu": "Processor",
+      "cpuValue": "{{percent}} in use",
+      "memory": "Memory",
+      "memoryValue": "{{used}} of {{total}} in use ({{percent}})",
+      "load": "Average load",
+      "loadValue": "1 min {{one}} · 5 min {{five}} · 15 min {{fifteen}}",
+      "loadHint": "How many tasks wait for the processor on average. Below {{cores}}, the number of processor cores, the NAS keeps up.",
+      "loadHintNoCores": "Lower means less busy."
+    },
+    "attention": {
+      "label": "Needs attention",
+      "warning": "Warning",
+      "restart": "A restart is needed to finish installing updates. Restarting is in the classic interface, in the power menu at the top right.",
+      "restartLink": "Open the classic interface",
+      "clock": "The NAS clock and this computer's clock differ by {{duration}}. If the NAS clock is wrong, schedules and logs will be too.",
+      "clockLink": "Check Date and time in the classic interface"
+    },
+    "user": {
+      "title": "This NAS",
+      "account": "To change your password or your details, go to your account.",
+      "accountLink": "Your account"
+    }
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -133,8 +215,7 @@
         "report": "Report"
       },
       "account": {
-        "settings": "Settings",
-        "password": "Password"
+        "settings": "Your account"
       }
     }
   },
@@ -196,7 +277,8 @@
     "undoTitleAll": "Undo the pending changes?",
     "undoBody": "The saved changes to <list></list> are discarded. The settings go back to how they are on the server now.",
     "undoBodyAll": "The saved changes are discarded. The settings go back to how they are on the server now.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "itemMark": "Not applied yet"
   },
   "modules": {
     "apt": "Software packages",
@@ -290,5 +372,204 @@
     "system": "Same as this device",
     "light": "Light",
     "dark": "Dark"
+  },
+  "checklist": {
+    "title": "Set up your NAS",
+    "intro": "A few things to check after installing. Each item is read from the NAS's current settings.",
+    "state": {
+      "done": "Done",
+      "notDone": "Not done",
+      "notChecked": "Not checked",
+      "checking": "Checking…"
+    },
+    "password": {
+      "title": "Change the factory password",
+      "body": "openmediavault is installed with a password that anyone can look up. If it has not been changed yet, change it now. This page cannot check whether it has been.",
+      "bodyOtherAdmin": "openmediavault is installed with a password for the admin account that anyone can look up. This page cannot check whether it has been changed. To change it, sign in as admin and open Your account.",
+      "link": "Change your password"
+    },
+    "https": {
+      "title": "Use a secure connection (HTTPS)",
+      "done": "HTTPS is on.",
+      "doneOnHttp": "HTTPS is on, but this page was opened without it.",
+      "secureNoLink": "Open this page with an address that starts with https://.",
+      "securePort": "The secure connection uses port <port></port>.",
+      "notDone": "HTTPS is off. The notice at the top of the page says why that matters. Turning it on needs a certificate, which the classic interface can create.",
+      "link": "Open Web interface settings in the classic interface",
+      "readFailed": "Could not read the web interface settings."
+    },
+    "email": {
+      "title": "Get email alerts",
+      "done": "Alerts go to {{address}}.",
+      "off": "Alerts are off. Turn them on to hear about failing disks, full file systems and available updates. You need the details of an email account the NAS can send from.",
+      "incomplete": "Alerts are on, but some details are missing, so none can be sent.",
+      "applyHint": "After saving there, apply the changes, then send a test email.",
+      "link": "Open Notifications in the classic interface",
+      "readFailed": "Could not read the email alert settings."
+    },
+    "updates": {
+      "title": "Install updates",
+      "available_one": "{{count}} update is available.",
+      "available_other": "{{count}} updates are available.",
+      "none": "No updates were found the last time the NAS looked. This page cannot tell when that was, so check for updates once to be sure.",
+      "link": "Open Updates in the classic interface"
+    },
+    "name": {
+      "title": "Name of your NAS",
+      "body": "Your NAS is called <name></name>. Other computers on your network find it by this name.",
+      "link": "Change it in the classic interface"
+    },
+    "timezone": {
+      "title": "Time zone",
+      "body": "Time zone: <zone></zone>. Schedules, logs and the clock use it.",
+      "ntpOn": "The clock is set automatically from the internet.",
+      "ntpOff": "The clock is not set automatically.",
+      "link": "Change it in the classic interface",
+      "readFailed": "Could not read the date and time settings."
+    },
+    "hide": "Hide the checklist",
+    "hideHint": "Hides it for every administrator, and hides the classic interface's welcome panel too.",
+    "hideTitle": "Hide the set-up checklist?",
+    "hideBody": "It is hidden for every administrator, on every computer, and the classic interface's welcome panel goes too. This interface cannot show it again.",
+    "hideCancel": "Cancel",
+    "hideFailed": "The checklist was not hidden.",
+    "hidden": "Set-up checklist hidden."
+  },
+  "ssh": {
+    "title": "SSH",
+    "intro": "SSH lets you sign in to the NAS from another computer and type commands. It is for advanced tasks; most people never need it.",
+    "pendingOnArrival": "Saved SSH settings are waiting to be applied. The form shows the saved settings, which are not in effect yet.",
+    "enable": "Turn on SSH",
+    "enableHint": "Each person also needs SSH access on their own account, which is set under Users.",
+    "offNote": "The settings below are used when SSH is on.",
+    "port": "Port",
+    "portHint": "The number SSH programs connect to. The usual one is 22; if you change it, tell your SSH program the new number.",
+    "portRequired": "Enter a port number. The usual one is 22.",
+    "portRange": "Enter a whole number from 1 to 65535.",
+    "portInUse": "Port {{port}} is already used by this web interface. Choose another, such as 22.",
+    "signIn": "Signing in",
+    "password": "Allow signing in with a password",
+    "key": "Allow signing in with a key",
+    "keyHint": "A key is a file on your computer that proves who you are, with no password to guess. Keys are added to each account under Users.",
+    "root": "Allow the root account to sign in",
+    "rootHint": "root is the built-in account with full control of the NAS. It is safer to leave this off and sign in with your own account.",
+    "connection": "Connection",
+    "forwarding": "Allow port forwarding",
+    "forwardingHint": "Lets someone signed in pass other network traffic through the NAS. Leave it off unless you use it.",
+    "compression": "Compress data",
+    "compressionHint": "Can speed up slow connections, at the cost of some processor time.",
+    "advanced": "Advanced",
+    "advancedSet_one": "Advanced ({{count}} line set)",
+    "advancedSet_other": "Advanced ({{count}} lines set)",
+    "extra": "Extra configuration lines",
+    "extraHint": "These lines are added as they are to the SSH server's configuration file. A mistake can stop SSH from starting, so leave this empty unless you know you need it.",
+    "warnNoMethod": "With both ways of signing in turned off, nobody can sign in over SSH. To stop SSH, turn it off at the top instead.",
+    "warnTurningOff": "After you apply this, new SSH connections are refused. Anything that connects over SSH, such as a backup from another computer, stops working.",
+    "warnRootPassword": "The root account can sign in with only a password. Anyone who guesses it controls the NAS. Turn off root sign-in, or allow keys only.",
+    "warnKeysOnly": "Only people with a key on their account can sign in now. Check that yours is added before you apply.",
+    "saved": "Saved. The changes take effect when you apply them in the band at the top of the page.",
+    "saveFailed": "The SSH settings were not saved.",
+    "loadFailed": "Could not read the SSH settings.",
+    "loading": "Loading the SSH settings…"
+  },
+  "sharedFolders": {
+    "title": "Shared folders",
+    "intro": "Folders on your disks that other computers can reach over the network. To add, change or delete one, use the classic interface for now.",
+    "add": "Add a shared folder",
+    "addClassic": "Add a shared folder in the classic interface",
+    "tableLabel": "Shared folders",
+    "col": {
+      "name": "Name",
+      "status": "Status",
+      "device": "File system",
+      "path": "Path",
+      "fullPath": "Full path",
+      "description": "Description",
+      "used": "In use"
+    },
+    "usedNote": "In use: a network share, backup job or other setting refers to this folder. Which one is not reported.",
+    "yes": "Yes",
+    "no": "No",
+    "showAll": "Show all",
+    "showLess": "Show less",
+    "copyPath": "Copy full path of {{name}}",
+    "status": {
+      "ok": "OK",
+      "critical": "Critical",
+      "unknown": "Unknown"
+    },
+    "reason": {
+      "ENOENT": "Folder not found. Its disk may be disconnected or not mounted.",
+      "ENOTDIR": "The path leads to a file, not a folder.",
+      "ENOENT_DB_MNTENT": "Its file system is no longer set up on this NAS.",
+      "other": "Status not recognised: <code></code>"
+    },
+    "rollUp_one": "{{count}} of {{total}} shared folders cannot be reached.",
+    "rollUp_other": "{{count}} of {{total}} shared folders cannot be reached.",
+    "showFirst": "Show these first",
+    "search": "Search shared folders",
+    "searchPlaceholder": "Name, path, file system…",
+    "searchHint": "Search looks at every detail of a folder, including some not shown in the table, so a short word such as \"ok\" or \"1\" can match more folders than you expect.",
+    "clearSearch": "Clear the search",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "rangeMatching": "{{from}}–{{to}} of {{total}} matching",
+    "pages": "Pages of shared folders",
+    "pageSize": "Rows per page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "firstPageReason": "This is the first page.",
+    "lastPageReason": "This is the last page.",
+    "sorted": "Sorted by {{column}}, {{direction}}",
+    "ascending": "ascending",
+    "descending": "descending",
+    "lastRefreshed": "Last refreshed {{time}}",
+    "refresh": "Refresh",
+    "loading": "Loading shared folders…",
+    "loadFailed": "Could not read the shared folders.",
+    "empty": "There are no shared folders yet. A shared folder is a folder on one of your disks that other computers can reach over the network.",
+    "filteredEmpty": "No shared folders match \"{{search}}\"."
+  },
+  "account": {
+    "title": "Your account",
+    "signedInAs": "Signed in as <name></name>",
+    "loading": "Loading your account…",
+    "details": "Details",
+    "name": "User name",
+    "comment": "Description",
+    "commentHint": "A note about this account, such as your full name. Administrators see it in the list of users.",
+    "commentInvalid": "A description cannot contain a colon (:) or a line break.",
+    "email": "Email address",
+    "emailHint": "Messages the NAS sends to your account are forwarded here.",
+    "emailInvalid": "Enter an email address like name@example.com, or leave it empty.",
+    "saveDetails": "Save details",
+    "detailsSaved": "Details saved.",
+    "detailsFailed": "Your details were not saved.",
+    "adminNote": "This page cannot change an administrator's details. Email alerts about the NAS are set up under Notifications.",
+    "adminNoteLink": "Open Notifications in the classic interface",
+    "lockedNote": "Your administrator has locked this account's details and password. Ask them if something needs changing.",
+    "password": "Change password",
+    "passwordIntro": "The new password works straight away; there is nothing to apply. It is the same account everywhere, so it also becomes your password for the classic interface and, if you use them, for shared folders on other computers.",
+    "newPassword": "New password",
+    "newPasswordHint": "Use a long password that you do not use anywhere else.",
+    "repeatPassword": "Type the new password again",
+    "showPassword": "Show password",
+    "passwordRequired": "Enter a new password.",
+    "repeatRequired": "Type the new password again.",
+    "passwordMismatch": "The two passwords are not the same. Type them again.",
+    "changePassword": "Change password",
+    "changingPassword": "Changing password…",
+    "passwordChanged": "Password changed.",
+    "passwordChangedLine": "Password changed. Use the new password the next time you sign in.",
+    "pendingNote": "Changes are now waiting to be applied. Apply them with the band at the top of the page.",
+    "passwordFailed": "The password was not changed.",
+    "keys": "SSH keys",
+    "keyN": "Key {{n}}",
+    "showKey": "Show full key",
+    "hideKey": "Hide full key",
+    "copyKey": "Copy key",
+    "noKeys": "No SSH keys are added to this account.",
+    "noKeysUser": "An administrator adds them under Users.",
+    "noKeysAdminLink": "Add keys under Users in the classic interface",
+    "loadFailed": "Could not read your account."
   }
 }

@@ -59,6 +59,10 @@ export const ALLOWED_URLS = new Map([
     "http://localhost",
     'TanStack Router\'s stand-in origin for parsing paths when window.origin is "null"; it builds URL objects, never a request',
   ],
+  [
+    "https://",
+    'The set-up checklist\'s sentence "Open this page with an address that starts with https://." (catalogue key checklist.https.secureNoLink): words shown to the reader, with no host; the item builds no link (owner, 2026-11-20), and nothing fetches, loads or navigates to it',
+  ],
 ]);
 
 /**

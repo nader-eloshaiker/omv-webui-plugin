@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The groups of the side navigation for the session's role (navigation.ts), used beside the content
-// from 1024px and in the drawer below it. Pages that exist only in the classic interface say so.
+// from 1024px and in the drawer below it. Pages built here link to their own route; pages that exist
+// only in the classic interface say so.
 import type { Role } from "@omv-webui/react-api-omv/generated";
 import { SideNavGroup, SideNavItem } from "@omv-webui/react-ui-components";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Puzzle } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { navFor } from "../../navigation/navigation.ts";
+import { builtRoute, isCurrent, navFor } from "../../navigation/navigation.ts";
 
 export function MainNav({
   role,
@@ -32,22 +33,33 @@ export function MainNav({
       </ul>
       {navFor(role).map(({ group, pages }) => (
         <SideNavGroup key={group} label={t(`nav.groups.${group}`)}>
-          {pages.map((page) => (
-            <SideNavItem
-              key={page.item}
-              classicOnly={classic}
-              current={pathname === `/${page.group}/${page.item}`}
-              render={
-                <Link
-                  to="/$group/$item"
-                  params={{ group: page.group, item: page.item }}
-                  onClick={onNavigate}
-                />
-              }
-            >
-              {t(page.labelKey)}
-            </SideNavItem>
-          ))}
+          {pages.map((page) => {
+            const built = builtRoute(page);
+            return built ? (
+              <SideNavItem
+                key={page.item}
+                current={isCurrent(pathname, built)}
+                render={<Link to={built} onClick={onNavigate} />}
+              >
+                {t(page.labelKey)}
+              </SideNavItem>
+            ) : (
+              <SideNavItem
+                key={page.item}
+                classicOnly={classic}
+                current={pathname === `/${page.group}/${page.item}`}
+                render={
+                  <Link
+                    to="/$group/$item"
+                    params={{ group: page.group, item: page.item }}
+                    onClick={onNavigate}
+                  />
+                }
+              >
+                {t(page.labelKey)}
+              </SideNavItem>
+            );
+          })}
         </SideNavGroup>
       ))}
       {role === "admin" ? (
