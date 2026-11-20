@@ -56,6 +56,7 @@ function SecretField({
   className,
   disabled,
   autoComplete = "new-password",
+  ref,
   ...inputProps
 }: SecretFieldProps) {
   const [revealed, setRevealed] = React.useState(false);
@@ -63,6 +64,18 @@ function SecretField({
   const inputId = React.useId();
   const labelId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  // The caller's ref reaches the input too, beside the field's own.
+  const setInputRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
   const changeRef = React.useRef<HTMLButtonElement>(null);
   // Never forwarded, whatever a caller casts its way past the type: the field opens empty.
   const safeProps: Record<string, unknown> = { ...inputProps };
@@ -131,7 +144,7 @@ function SecretField({
         <div className="relative flex-1">
           <FieldControl
             {...safeProps}
-            ref={inputRef}
+            ref={setInputRef}
             id={inputId}
             type={revealed ? "text" : "password"}
             autoComplete={autoComplete}
