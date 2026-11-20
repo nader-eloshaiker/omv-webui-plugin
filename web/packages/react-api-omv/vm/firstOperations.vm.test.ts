@@ -32,6 +32,7 @@ import {
   sshSet,
   systemGetInformation,
   userMgmtGetUserByContext,
+  webGuiGetAutoLogoutSettings,
 } from "../src/generated/index.ts";
 import {
   createTaskRegistry,
@@ -125,6 +126,13 @@ describe("as an administrator", () => {
     expect(page).toEqual({ total: 0, data: [] });
   });
 
+  it("reads the session timeout", async () => {
+    const { timeout } = await webGuiGetAutoLogoutSettings();
+    expect(Number.isInteger(timeout)).toBe(true);
+    expect(timeout).toBeGreaterThanOrEqual(0);
+    expect(timeout).toBeLessThanOrEqual(1440);
+  });
+
   it("saves SSH settings, sees the change pending, and applies it as a task", async () => {
     const ssh = await sshGet();
     expect(await sshSet(ssh)).toEqual(ssh);
@@ -189,6 +197,12 @@ describe("as a user", () => {
       "time",
       "ts",
     ]);
+  });
+
+  it("reads the session timeout", async () => {
+    const { timeout } = await webGuiGetAutoLogoutSettings();
+    expect(Number.isInteger(timeout)).toBe(true);
+    expect(timeout).toBeGreaterThanOrEqual(0);
   });
 
   it("is refused an administrator's operation", async () => {

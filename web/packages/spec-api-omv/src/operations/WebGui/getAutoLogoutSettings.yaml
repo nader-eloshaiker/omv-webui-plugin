@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: webGuiGetAutoLogoutSettings
+  tags:
+    - WebGui
+  summary: Session timeout
+  description: "How long the server keeps an idle session before ending it. Every signed-in user can read it."
+  x-omv-rpc:
+    service: WebGui
+    method: getAutoLogoutSettings
+  x-omv-role: user
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/AutoLogoutSettings.yaml
+          examples:
+            admin:
+              $ref: ../../examples/webGuiGetAutoLogoutSettings.admin.yaml
+            user:
+              $ref: ../../examples/webGuiGetAutoLogoutSettings.user.yaml

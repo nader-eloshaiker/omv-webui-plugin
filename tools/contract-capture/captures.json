@@ -61,6 +61,18 @@
     "account": "user"
   },
   {
+    "service": "WebGui",
+    "method": "getAutoLogoutSettings",
+    "name": "admin",
+    "account": "admin"
+  },
+  {
+    "service": "WebGui",
+    "method": "getAutoLogoutSettings",
+    "name": "user",
+    "account": "user"
+  },
+  {
     "service": "ShareMgmt",
     "method": "getList",
     "name": "populated",

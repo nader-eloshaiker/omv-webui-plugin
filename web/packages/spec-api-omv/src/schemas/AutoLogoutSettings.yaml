@@ -1,0 +1,11 @@
+type: object
+description: >-
+  The session timeout, from the web administration settings (conf.webadmin). The server ends a
+  session that has been idle this long.
+required: [timeout]
+properties:
+  timeout:
+    type: integer
+    minimum: 0
+    maximum: 1440
+    description: Minutes. 0 means the server never ends an idle session.

@@ -21,6 +21,7 @@ tags:
   - name: SSH
   - name: ShareMgmt
   - name: UserMgmt
+  - name: WebGui
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -50,6 +51,8 @@ paths:
     $ref: ./operations/ShareMgmt/getList.yaml
   /rpc/UserMgmt/getUserByContext:
     $ref: ./operations/UserMgmt/getUserByContext.yaml
+  /rpc/WebGui/getAutoLogoutSettings:
+    $ref: ./operations/WebGui/getAutoLogoutSettings.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

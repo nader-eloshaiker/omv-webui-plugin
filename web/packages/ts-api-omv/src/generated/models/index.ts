@@ -3,6 +3,7 @@
  * openmediavault-webui contract
  */
 
+export * from './autoLogoutSettings.ts';
 export * from './configAppliedModules.ts';
 export * from './configApplyChangesRequest.ts';
 export * from './configIsDirtyRequest.ts';
