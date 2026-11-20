@@ -65,7 +65,7 @@ A release is cut only when:
 3. `tools/contract-drift` is clean against both versions.
 4. `pnpm audit` is clean or each finding is triaged in writing.
 5. `node tools/colour-audit.mjs` exits 0.
-6. Install, upgrade, remove and purge tests pass; the stock interface is unaffected.
+6. Install, upgrade, remove and purge tests pass; the stock interface is unaffected (`tools/package-test`, on the VM at each supported OMV version).
 7. Review items signed by the owner:
    - Routes reviewed for UI-3 and UI-4.
    - Destructive flows reviewed for UI-8.
