@@ -134,7 +134,9 @@ describe("the unencrypted-connection notice (UI-12)", () => {
     });
     expect(notice).toHaveTextContent("This connection is not encrypted.");
     expect(
-      within(notice).getByRole("link", { name: /Turn on HTTPS/ }),
+      within(notice).getByRole("link", {
+        name: "Use a secure connection (HTTPS) (opens in a new tab)",
+      }),
     ).toHaveAttribute("href", "/system/workbench/settings");
   });
 
@@ -213,6 +215,8 @@ describe("the pending-changes band", () => {
       ).not.toBeInTheDocument(),
     );
     expect(callNames()).toContain("Config.applyChangesBg");
+    // The control that had focus went with the band: focus is on the page title, not the page.
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveFocus();
     expect(
       seenCalls
         .filter((c) => c.call === "Exec.getOutput")
@@ -264,6 +268,7 @@ describe("the pending-changes band", () => {
       ).not.toBeInTheDocument(),
     );
     expect(callNames()).toContain("Config.revertChangesBg");
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveFocus();
   });
 
   it("shows a failed apply, offers to try again, and keeps the server's account behind a control", async () => {
@@ -282,9 +287,14 @@ describe("the pending-changes band", () => {
         "Applying the changes failed. They are still saved and waiting.",
       ),
     );
-    expect(
-      within(band).getByRole("button", { name: "Try applying again" }),
-    ).toBeEnabled();
+    // The offer to try again is the default: the last control, outlined like the others, with focus.
+    const retry = within(band).getByRole("button", {
+      name: "Try applying again",
+    });
+    expect(retry).toBeEnabled();
+    expect(retry).toHaveFocus();
+    expect(within(band).getAllByRole("button").at(-1)).toBe(retry);
+    expect(retry.className).toContain("bg-transparent");
     expect(
       within(band).getByRole("button", { name: "Undo 2 changes" }),
     ).toBeEnabled();

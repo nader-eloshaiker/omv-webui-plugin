@@ -131,7 +131,9 @@ interface SideNavDrawerProps {
 
 /**
  * The side navigation under 1024px: a modal drawer from the leading edge, on Base UI's Dialog, so
- * focus moves into it and back to the toggle, Escape closes it, and the page behind is inert.
+ * focus moves into it and back to the toggle, Escape closes it, and the page behind is inert. Focus
+ * opens on the current page's item, or the first item: not on the close button, whose tooltip would
+ * then take the first Escape.
  */
 function SideNavDrawer({
   open,
@@ -140,6 +142,7 @@ function SideNavDrawer({
   closeLabel,
   children,
 }: SideNavDrawerProps) {
+  const navRef = React.useRef<HTMLElement>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -147,6 +150,14 @@ function SideNavDrawer({
         <Dialog.Popup
           data-slot="side-nav-drawer"
           aria-label={label}
+          initialFocus={() => {
+            const nav = navRef.current;
+            return (
+              nav?.querySelector<HTMLElement>('[aria-current="page"]') ??
+              nav?.querySelector<HTMLElement>("a[href], button") ??
+              true
+            );
+          }}
           className={cn(
             "fixed inset-y-0 start-0 z-50 flex w-[min(18rem,85vw)] flex-col overflow-y-auto border-e border-border bg-page shadow-lg outline-hidden",
             "transition-transform duration-slow data-ending-style:-translate-x-full data-starting-style:-translate-x-full rtl:data-ending-style:translate-x-full rtl:data-starting-style:translate-x-full",
@@ -159,7 +170,7 @@ function SideNavDrawer({
               }
             />
           </div>
-          <SideNav aria-label={label} className="pt-0">
+          <SideNav ref={navRef} aria-label={label} className="pt-0">
             {children}
           </SideNav>
         </Dialog.Popup>

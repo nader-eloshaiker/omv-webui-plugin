@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 interface TopBarProps extends Omit<React.ComponentProps<"header">, "children"> {
   /** The product name, as text: this is an unofficial community plugin, so no logo artwork. */
   productName: React.ReactNode;
-  /** The NAS's host name, from the backend, in the mono face. Hidden under 640px. */
+  /** The NAS's host name, from the backend, in the mono face. Hidden under 640px; truncates first. */
   hostName?: string;
   /** The control that opens the navigation drawer under 1024px. Hidden from 1024px. */
   navToggle?: React.ReactNode;
@@ -43,7 +43,9 @@ function TopBar({
       {...props}
     >
       {navToggle ? <div className="flex lg:hidden">{navToggle}</div> : null}
-      <span className="min-w-0 truncate text-lg font-semibold">
+      {/* The product name never gives way: it keeps its width (one step smaller under 640px), and
+          the host name, hidden under 640px, is the one that truncates. */}
+      <span className="shrink-0 text-base font-semibold whitespace-nowrap sm:text-lg">
         {productName}
       </span>
       {hostName ? (

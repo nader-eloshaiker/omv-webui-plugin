@@ -230,3 +230,33 @@ export function takeLeakedRequests(): string[] {
   }
   return lines;
 }
+
+/**
+ * Fail if anything was refused since the last call: every request a test sends must be answered by
+ * the test's own MSW handlers. setup.ts calls this after every test.
+ */
+export function failOnLeakedRequests(): void {
+  const leaked = takeLeakedRequests();
+  if (leaked.length === 0) {
+    return;
+  }
+  throw new Error(
+    `This test sent ${leaked.length} request(s) that nothing answered; the network guard refused them. ` +
+      `Answer them through MSW (src/test/server.ts):\n\n${[...new Set(leaked)].join("\n")}`,
+  );
+}
+
+/**
+ * Node's own console, which happy-dom prints a refused request's error through (not the test's
+ * `console`). A test that sends a request on purpose mutes it.
+ */
+export const nodeConsole = (): { error: (...args: unknown[]) => void } =>
+  (
+    globalThis as unknown as {
+      process: {
+        getBuiltinModule(id: "node:console"): {
+          error: (...args: unknown[]) => void;
+        };
+      };
+    }
+  ).process.getBuiltinModule("node:console");
