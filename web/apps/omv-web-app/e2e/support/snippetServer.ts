@@ -75,6 +75,11 @@ export function readSnippet(path: string = SNIPPET): SnippetReplies {
   };
 }
 
+/** A Content-Security-Policy value with `require-trusted-types-for 'script'` enforced on top (A9). */
+export function withTrustedTypes(policy: string): string {
+  return `${policy}; require-trusted-types-for 'script'`;
+}
+
 /** The snippet's replies with `require-trusted-types-for 'script'` added to every policy (A9). */
 export function withVariant(
   replies: SnippetReplies,
@@ -87,10 +92,7 @@ export function withVariant(
       const enforce = (headers: readonly Header[]): Header[] =>
         headers.map((h) =>
           h.name.toLowerCase() === "content-security-policy"
-            ? {
-                name: h.name,
-                value: `${h.value}; require-trusted-types-for 'script'`,
-              }
+            ? { name: h.name, value: withTrustedTypes(h.value) }
             : h,
         );
       return {

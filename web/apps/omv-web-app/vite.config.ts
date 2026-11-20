@@ -117,7 +117,8 @@ export default defineConfig(({ command, mode }) => ({
       jsdom: { url: "http://localhost/ui/" },
     },
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
+    // e2e/: the browser tests' own helpers (the Playwright specs are *.spec.ts and never run here).
+    include: ["src/**/*.test.{ts,tsx}", "e2e/**/*.test.ts"],
     testTimeout: 15_000,
   },
 }));

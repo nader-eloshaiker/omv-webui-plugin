@@ -1,0 +1,97 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The violation observer both browser tests share (the mock one in this directory and the VM one in
+// ../vm): every CSP violation (enforced or report-only, Trusted Types included), console error,
+// uncaught page error and request to another origin. Any of them fails the test, except the console
+// errors a caller lists as allowed, each with the reason a real reply causes it.
+import { expect, type ConsoleMessage, type Page } from "@playwright/test";
+
+export interface Observed {
+  violations: string[];
+  consoleErrors: string[];
+  pageErrors: string[];
+  foreignRequests: string[];
+}
+
+/** A console error the page is allowed to log, and why. */
+export interface ConsoleAllowance {
+  /** Why a real or mocked reply legitimately causes it; shown nowhere, kept for the reader. */
+  reason: string;
+  matches: (message: ConsoleMessage, origin: string) => boolean;
+}
+
+/** The name the page reports violations through; set up before any of the page's own scripts. */
+const BINDING = "__omvReportViolation";
+
+/**
+ * Chromium logs every 4xx reply as a console error. A 401 from rpc.php is the answer to the
+ * load-time probe while signed out (docs/03 "Login"), and to a background check after the session
+ * ended; nothing else is let through by this allowance.
+ */
+export const RPC_401: ConsoleAllowance = {
+  reason: "rpc.php answers 401 while signed out (the load-time probe)",
+  matches: (message, origin) =>
+    message.location().url === `${origin}/rpc.php` &&
+    message
+      .text()
+      .startsWith(
+        "Failed to load resource: the server responded with a status of 401",
+      ),
+};
+
+/** Start observing `page`, served from `origin`. Call before the first navigation. */
+export async function observe(
+  page: Page,
+  origin: string,
+  allowed: readonly ConsoleAllowance[],
+): Promise<Observed> {
+  const observed: Observed = {
+    violations: [],
+    consoleErrors: [],
+    pageErrors: [],
+    foreignRequests: [],
+  };
+  await page.exposeBinding(BINDING, (_source, summary: unknown) => {
+    observed.violations.push(String(summary));
+  });
+  await page.addInitScript((binding: string) => {
+    document.addEventListener("securitypolicyviolation", (event) => {
+      const report: unknown = Reflect.get(window, binding);
+      if (typeof report === "function") {
+        report(
+          `${event.disposition} ${event.effectiveDirective}: blocked ${event.blockedURI || "(inline)"}` +
+            ` at ${event.sourceFile}:${event.lineNumber}:${event.columnNumber}` +
+            (event.sample ? ` sample "${event.sample}"` : ""),
+        );
+      }
+    });
+  }, BINDING);
+  page.on("console", (message) => {
+    if (
+      message.type() === "error" &&
+      !allowed.some((a) => a.matches(message, origin))
+    ) {
+      observed.consoleErrors.push(
+        `${message.text()} (${message.location().url})`,
+      );
+    }
+  });
+  page.on("pageerror", (error) => {
+    observed.pageErrors.push(`${error.name}: ${error.message}`);
+  });
+  page.on("request", (request) => {
+    if (new URL(request.url()).origin !== origin) {
+      observed.foreignRequests.push(request.url());
+    }
+  });
+  return observed;
+}
+
+/** Fail the test (softly, so every kind is reported) if anything was observed. */
+export function expectNothingObserved(observed: Observed): void {
+  expect.soft(observed.violations, "CSP violations").toEqual([]);
+  expect.soft(observed.consoleErrors, "console errors").toEqual([]);
+  expect.soft(observed.pageErrors, "uncaught page errors").toEqual([]);
+  expect
+    .soft(observed.foreignRequests, "requests to another origin (UI-7)")
+    .toEqual([]);
+}
