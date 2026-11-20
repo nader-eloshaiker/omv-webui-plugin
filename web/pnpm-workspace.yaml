@@ -54,6 +54,9 @@ catalogs:
     "@testing-library/jest-dom": ^7.0.1
     "@testing-library/react": ^16.3.3
     "@testing-library/user-event": ^14.6.7
+    # The browser test (pnpm test:browser): the production build under the nginx snippet's headers.
+    # Not part of `pnpm test`; the browser comes from `playwright install`, never an install script.
+    "@playwright/test": ^1.63.0
 
   # Development only: the component review surface. Nothing from it reaches the product bundle.
   storybook:

@@ -1,5 +1,6 @@
-# Lint, types, tests, the contract and its drift against a pinned openmediavault tree, the colour
-# audit and pnpm audit. One job, `build`, which the main branch ruleset requires.
+# Lint, types, tests, the production build and its UI-1/UI-7/UI-11 checks, the contract and its drift
+# against a pinned openmediavault tree, the colour audit and pnpm audit. One job, `build`, which the
+# main branch ruleset requires.
 name: CI
 
 on:
@@ -70,7 +71,7 @@ jobs:
 
       - name: Formatting
         working-directory: web
-        run: pnpm format:check && pnpm exec prettier --check ../tools/lib ../tools/contract-bootstrap ../tools/contract-capture ../tools/contract-drift
+        run: pnpm format:check && pnpm exec prettier --check ../tools/lib ../tools/contract-bootstrap ../tools/contract-capture ../tools/contract-drift ../tools/build-check
 
       - name: Contract lint
         working-directory: web
@@ -82,6 +83,14 @@ jobs:
           pnpm api:spec:build
           pnpm api:react:build
           git diff --exit-code -- . || { echo "::error::Run pnpm api:spec:build and pnpm api:react:build, and commit the result."; exit 1; }
+
+      - name: Build
+        working-directory: web
+        run: pnpm build
+
+      # What ships: no inline script or style, nothing from another origin, no mock or test code.
+      - name: Build checks (UI-1, UI-7, UI-11)
+        run: node tools/build-check/check.mjs web/apps/omv-web-app/dist
 
       - name: Tool tests
         run: node --test 'tools/**/*.test.mjs'
