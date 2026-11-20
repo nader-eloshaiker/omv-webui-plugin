@@ -26,6 +26,8 @@ const ACCOUNT = new RegExp(`^${copy.user.menu.split("{{name}}")[0] ?? ""}`);
 const ADMIN_GROUPS = Object.values(copy.nav.groups);
 const USER_GROUPS = [copy.nav.groups.account];
 const SSH = copy.nav.items.services.ssh;
+// A page only the classic interface has (SSH is built here since Phase 3).
+const NFS = copy.nav.items.services.nfs;
 
 const navigation = (page: Page) =>
   page.getByRole("navigation", { name: copy.app.navigation });
@@ -126,7 +128,7 @@ async function expectUserMenuNames(page: Page, username: string) {
 async function openClassicOnlyPage(page: Page, rpcLog: RpcLog) {
   const before = rpcLog.calls.length;
   await navigation(page)
-    .getByRole("link", { name: new RegExp(`^${SSH}`) })
+    .getByRole("link", { name: new RegExp(`^${NFS}`) })
     .click();
   await expectClassicOnlyPage(page);
   expect(
@@ -135,12 +137,13 @@ async function openClassicOnlyPage(page: Page, rpcLog: RpcLog) {
 }
 
 async function expectClassicOnlyPage(page: Page) {
-  await expect(page.getByRole("heading", { name: SSH })).toBeFocused();
+  await expect(page.getByRole("heading", { name: NFS })).toBeFocused();
+  // The classic interface routes by hash: its pages are at /#/<group>/<item>.
   await expect(
     page.getByRole("link", {
-      name: `${copy.classicOnly.link.replace("{{page}}", SSH)} ${copy.app.newTab}`,
+      name: `${copy.classicOnly.link.replace("{{page}}", NFS)} ${copy.app.newTab}`,
     }),
-  ).toHaveAttribute("href", "/services/ssh");
+  ).toHaveAttribute("href", "/#/services/nfs");
 }
 
 /** Sign in with a second factor; nothing may be called between login and verify (A10). */
@@ -265,7 +268,7 @@ test.describe("an administrator without a second factor", () => {
     await pressUntilFocused(
       page,
       "Shift+Tab",
-      navigation(page).getByRole("link", { name: new RegExp(`^${SSH}`) }),
+      navigation(page).getByRole("link", { name: new RegExp(`^${NFS}`) }),
     );
     await page.keyboard.press("Enter");
     await expectClassicOnlyPage(page);

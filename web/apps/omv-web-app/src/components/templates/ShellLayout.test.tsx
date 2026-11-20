@@ -54,7 +54,41 @@ describe("the side navigation", () => {
     const links = within(nav())
       .getAllByRole("link")
       .map((a) => a.textContent);
-    expect(links).toEqual(["Dashboard", "SettingsClassic", "PasswordClassic"]);
+    expect(links).toEqual(["Dashboard", "Your account"]);
+  });
+
+  it("links the pages built here to their own routes, without the classic mark", async () => {
+    const { user } = await shell();
+    for (const [name, path] of [
+      ["SSH", "/ui/services/ssh"],
+      ["Shared folders", "/ui/storage/shared-folders"],
+      ["Your account", "/ui/account/settings"],
+    ] as const) {
+      const link = within(nav()).getByRole("link", { name });
+      expect(link).toHaveAttribute("href", path);
+      await user.click(link);
+      await waitFor(() =>
+        expect(within(nav()).getByRole("link", { name })).toHaveAttribute(
+          "aria-current",
+          "page",
+        ),
+      );
+    }
+    // A page still in the classic interface keeps its mark.
+    expect(within(nav()).getByRole("link", { name: /^NFS/ })).toHaveTextContent(
+      "Classic",
+    );
+    expect(
+      within(nav()).getByRole("link", { name: "SSH" }),
+    ).not.toHaveTextContent("Classic");
+  });
+
+  it("marks Your account as current at the password address too", async () => {
+    await shell({ scenario: "user", path: "/account/password" });
+    await screen.findByRole("heading", { name: "Your account" });
+    expect(
+      within(nav()).getByRole("link", { name: "Your account" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   it("marks the current page", async () => {
@@ -70,22 +104,23 @@ describe("a page only the classic interface has", () => {
     const { user } = await shell();
     await screen.findByRole("heading", { name: "Dashboard" });
     const before = seenCalls.length;
-    await user.click(within(nav()).getByRole("link", { name: /^SSH/ }));
-    const title = await screen.findByRole("heading", { name: "SSH" });
+    await user.click(within(nav()).getByRole("link", { name: /^NFS/ }));
+    const title = await screen.findByRole("heading", { name: "NFS" });
     await waitFor(() => expect(title).toHaveFocus());
-    expect(document.title).toBe("SSH – openmediavault");
-    expect(window.location.pathname).toBe("/ui/services/ssh");
+    expect(document.title).toBe("NFS – openmediavault");
+    expect(window.location.pathname).toBe("/ui/services/nfs");
+    // The classic interface routes by hash: its pages are at /#/<group>/<item>.
     const link = screen.getByRole("link", {
-      name: "Open SSH in the classic interface (opens in a new tab)",
+      name: "Open NFS in the classic interface (opens in a new tab)",
     });
-    expect(link).toHaveAttribute("href", "/services/ssh");
+    expect(link).toHaveAttribute("href", "/#/services/nfs");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(seenCalls.slice(before)).toEqual([]);
   });
 
   it("tells a normal user who reaches an administrator's page by its address that it is not for them", async () => {
-    await shell({ scenario: "user", path: "/services/ssh" });
+    await shell({ scenario: "user", path: "/services/nfs" });
     expect(
       await screen.findByText(
         "Only administrators can open this page. Your account is a normal user account.",
@@ -137,7 +172,7 @@ describe("the unencrypted-connection notice (UI-12)", () => {
       within(notice).getByRole("link", {
         name: "Use a secure connection (HTTPS) (opens in a new tab)",
       }),
-    ).toHaveAttribute("href", "/system/workbench/settings");
+    ).toHaveAttribute("href", "/#/system/workbench/settings");
   });
 
   it("tells a normal user who can change it", async () => {

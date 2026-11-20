@@ -1,0 +1,97 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { describe, expect, it } from "vitest";
+import {
+  durationParts,
+  formatBytes,
+  parseByteCount,
+  percentOf,
+  wholePercent,
+} from "./format.ts";
+
+const NBSP = " ";
+
+describe("formatBytes", () => {
+  it.each([
+    [0, "0 B"],
+    [512, "512 B"],
+    [1024, "1.0 KiB"],
+    [1536, "1.5 KiB"],
+    [354_963_456, "338.5 MiB"],
+    [4_104_114_176, "3.8 GiB"],
+    [1024 * 1024 - 1, "1.0 MiB"],
+    [3.6 * 1024 ** 4, "3.6 TiB"],
+    [-1, "0 B"],
+  ])("%d bytes is %s", (bytes, text) => {
+    expect(formatBytes(bytes)).toBe(text.replace(" ", NBSP));
+  });
+});
+
+describe("parseByteCount", () => {
+  it("reads the server's decimal strings and refuses anything else", () => {
+    expect(parseByteCount("4104114176")).toBe(4_104_114_176);
+    expect(parseByteCount(12)).toBe(12);
+    expect(parseByteCount("")).toBeNull();
+    expect(parseByteCount(undefined)).toBeNull();
+    expect(parseByteCount("lots")).toBeNull();
+    expect(parseByteCount("-3")).toBeNull();
+  });
+});
+
+describe("wholePercent and percentOf", () => {
+  it.each([
+    [0, 0],
+    [0.2, "under1"],
+    [1.49, 1],
+    [41.4, 41],
+    [99.6, 100],
+    [120, 100],
+  ] as const)("%d%% shows as %s", (value, shown) => {
+    expect(wholePercent(value)).toBe(shown);
+  });
+
+  it("computes a share, and nothing of a zero whole", () => {
+    expect(percentOf(1, 4)).toBe(25);
+    expect(percentOf(1, 0)).toBeNull();
+  });
+});
+
+describe("durationParts", () => {
+  it.each([
+    [0, { kind: "underMinute" }],
+    [59.9, { kind: "underMinute" }],
+    [35 * 60, { kind: "parts", parts: [{ unit: "minutes", count: 35 }] }],
+    [
+      5 * 3600 + 12 * 60 + 7,
+      {
+        kind: "parts",
+        parts: [
+          { unit: "hours", count: 5 },
+          { unit: "minutes", count: 12 },
+        ],
+      },
+    ],
+    [
+      12 * 86400 + 4 * 3600 + 59 * 60,
+      {
+        kind: "parts",
+        parts: [
+          { unit: "days", count: 12 },
+          { unit: "hours", count: 4 },
+        ],
+      },
+    ],
+    [2 * 86400 + 30, { kind: "parts", parts: [{ unit: "days", count: 2 }] }],
+    [
+      19539.02,
+      {
+        kind: "parts",
+        parts: [
+          { unit: "hours", count: 5 },
+          { unit: "minutes", count: 25 },
+        ],
+      },
+    ],
+  ])("%d s", (seconds, parts) => {
+    expect(durationParts(seconds)).toEqual(parts);
+  });
+});

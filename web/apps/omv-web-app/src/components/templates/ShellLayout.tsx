@@ -2,13 +2,15 @@
 // The application shell (style guide 5.1), around every page behind sign-in. In order, and never
 // side by side: the skip link, the top bar (the only sticky part), the unencrypted-connection notice
 // (UI-12), the pending-changes band (5.8, administrators), then the side navigation and the content.
-// Under 1024px the navigation is a drawer. It renders nothing the moment the session is gone, so no
-// read under it fetches again after the server data has been dropped.
+// Under 1024px the navigation is a drawer. The pages' toasts (5.10) are shown here. It renders nothing
+// the moment the session is gone, so no read under it fetches again after the server data has been
+// dropped.
 import {
   IconButton,
   SideNav,
   SideNavDrawer,
   SkipLink,
+  Toaster,
   TopBar,
 } from "@omv-webui/react-ui-components";
 import { Outlet } from "@tanstack/react-router";
@@ -104,6 +106,10 @@ function Shell({
           <IdleWarning />
           <TaskOutputDialog id={shownTask} onClose={() => setShownTask(null)} />
           <TaskAnnouncer />
+          <Toaster
+            closeLabel={t("toast.close")}
+            regionLabel={t("toast.region")}
+          />
         </div>
       </ShowTaskContext>
     </PageFocusContext>

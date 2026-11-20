@@ -55,6 +55,7 @@ const KEPT_REPLIES = new Set([
   "System.getInformation",
   "UserMgmt.getUserByContext",
   "WebGui.getAutoLogoutSettings",
+  "SSH.get",
 ]);
 
 function callName(body: unknown): string {

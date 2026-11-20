@@ -18,6 +18,7 @@ import {
   createSessionStore,
   type SessionStore,
 } from "./session/sessionStore.ts";
+import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
 
 export interface App {
   queryClient: QueryClient;
@@ -47,12 +48,22 @@ export async function bootApp(): Promise<App> {
     void router.navigate({ to: "/sign-in" });
   });
 
+  // What a page keeps in memory for the session (the shared-folders table's page, sort and search) is
+  // forgotten when the session goes, so the next account starts with the stock view.
+  const offViewState = session.subscribe(() => {
+    if (session.getState().status !== "signedIn") {
+      sharedFoldersTable.reset();
+    }
+  });
+
   return {
     queryClient,
     session,
     activity,
     router,
     dispose() {
+      offViewState();
+      sharedFoldersTable.reset();
       offSessionEnded();
       activity.disconnect();
       disconnectQuery();

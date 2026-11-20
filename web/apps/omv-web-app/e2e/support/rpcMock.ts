@@ -40,9 +40,12 @@ const APPLY_HANDLE = CONTRACT_EXAMPLES.configApplyChangesBg.applied.value;
 const isOperationId = (value: string): value is OperationId =>
   Object.hasOwn(CONTRACT_EXAMPLES, value);
 
-/** `<service><Method>` in lower camel case: the contract's operationId rule (docs/04). */
+/**
+ * `<service><Method>` in lower camel case: the contract's operationId rule (docs/04). A service that
+ * starts with an acronym lowers all of it: SSH.get is `sshGet`, ShareMgmt.getList `shareMgmtGetList`.
+ */
 const operationIdOf = (service: string, method: string) =>
-  `${service.charAt(0).toLowerCase()}${service.slice(1)}${method.charAt(0).toUpperCase()}${method.slice(1)}`;
+  `${service.replace(/^[A-Z]+(?![a-z])|^[A-Z]/, (head) => head.toLowerCase())}${method.charAt(0).toUpperCase()}${method.slice(1)}`;
 
 function exampleReply(operationId: OperationId, name: string): Reply {
   const examples: Readonly<
@@ -71,6 +74,8 @@ export class RpcMock {
   /** Requests that broke the transport's rules (UI-10) or named a method the contract lacks. */
   readonly problems: string[] = [];
   private login: LoginExample = "authenticated";
+  /** The role the last successful sign-in gave; System.getInformation answers as OMV does for it. */
+  private role: "admin" | "user" = "admin";
   private signedIn = false;
   private pending = false;
   /** Configuration changes are saved and not applied; a finished apply or undo clears them. */
@@ -131,8 +136,10 @@ export class RpcMock {
     }
     switch (operationId) {
       case "sessionLogin": {
-        const outcome = CONTRACT_EXAMPLES.sessionLogin[this.login].value.status;
+        const reply = CONTRACT_EXAMPLES.sessionLogin[this.login].value;
+        const outcome = reply.status;
         this.signedIn = outcome === "authenticated";
+        this.role = "permissions" in reply ? reply.permissions.role : "user";
         this.pending = outcome === "challengeRequired";
         return exampleReply(operationId, this.login);
       }
@@ -142,6 +149,8 @@ export class RpcMock {
         }
         this.pending = false;
         this.signedIn = true;
+        this.role =
+          CONTRACT_EXAMPLES.sessionVerify.authenticated.value.permissions.role;
         return exampleReply(operationId, "authenticated");
       }
       case "sessionLogout":
@@ -163,8 +172,30 @@ export class RpcMock {
       case "systemGetInformation":
         return exampleReply(
           operationId,
-          this.dirty ? "adminPendingChanges" : "admin",
+          this.role === "user"
+            ? "user"
+            : this.dirty
+              ? "adminPendingChanges"
+              : "admin",
         );
+      // The one example folder matches a search for any of its words; anything else finds nothing.
+      case "shareMgmtGetList": {
+        const { params } = body as { params?: { search?: unknown } };
+        const search = params?.search;
+        const folder =
+          CONTRACT_EXAMPLES.shareMgmtGetList.populated.value.data[0];
+        return exampleReply(
+          operationId,
+          typeof search !== "string" ||
+            JSON.stringify(folder).toLowerCase().includes(search.toLowerCase())
+            ? "populated"
+            : "searchNoMatch",
+        );
+      }
+      // Saving the SSH settings leaves ssh and avahi pending on OMV (Phase 1), so the band appears.
+      case "sshSet":
+        this.dirty = true;
+        return exampleReply(operationId, DEFAULT_EXAMPLE[operationId]);
       case "configIsDirty":
         return exampleReply(operationId, this.dirty ? "dirty" : "clean");
       case "execGetOutput": {

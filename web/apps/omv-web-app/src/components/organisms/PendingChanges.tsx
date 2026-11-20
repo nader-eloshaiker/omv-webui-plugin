@@ -9,14 +9,17 @@ import {
   useConfigRevertChangesBg,
 } from "@omv-webui/react-api-omv/generated";
 import { taskRegistry, useTasks } from "@omv-webui/react-api-omv/tasks";
-import { ConfirmDialog, PendingBanner } from "@omv-webui/react-ui-components";
+import {
+  ConfirmDialog,
+  InlineAlert,
+  PendingBanner,
+} from "@omv-webui/react-ui-components";
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
 import { mayCutConnection, pendingModules } from "../../pending/modules.ts";
 import { MAIN_ID, PENDING_BAND_ID } from "../../shell/ids.ts";
 import { useShowTask } from "../../shell/taskDialog.ts";
-import { FormAlert } from "../molecules/FormAlert.tsx";
 import { ModuleName, ModuleNames } from "../molecules/ModuleNames.tsx";
 
 type Action = "apply" | "undo";
@@ -138,7 +141,9 @@ export function PendingChanges() {
           </div>
         ) : null}
         {mayCutConnection(modules) ? (
-          <FormAlert tone="neutral">{t("pending.connectionWarning")}</FormAlert>
+          <InlineAlert tone="neutral">
+            {t("pending.connectionWarning")}
+          </InlineAlert>
         ) : null}
       </ConfirmDialog>
       <ConfirmDialog
