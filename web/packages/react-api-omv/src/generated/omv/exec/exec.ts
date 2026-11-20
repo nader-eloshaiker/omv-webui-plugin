@@ -7,6 +7,7 @@ import type {
   ExecHandleRequest,
   ExecOutput,
   ExecRunning,
+  RpcErrorDetail,
 } from "@omv-webui/ts-api-omv";
 
 import type {
@@ -50,7 +51,7 @@ export const execGetOutput = (
 export const getExecGetOutputMutationKey = () => ["execGetOutput"] as const;
 
 export const getExecGetOutputMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -91,7 +92,7 @@ export type ExecGetOutputMutationResult = NonNullable<
   Awaited<ReturnType<typeof execGetOutput>>
 >;
 export type ExecGetOutputMutationBody = BodyType<ExecGetOutputRequest>;
-export type ExecGetOutputMutationError = ErrorType<unknown>;
+export type ExecGetOutputMutationError = ErrorType<RpcErrorDetail>;
 export type ExecGetOutputMutationVariables = {
   data: BodyType<ExecGetOutputRequest>;
 };
@@ -101,7 +102,7 @@ export type ExecGetOutputMutationVariables = {
  * @summary Read a task's output
  */
 export const useExecGetOutput = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
   TContext = unknown,
 >(
   options?: {

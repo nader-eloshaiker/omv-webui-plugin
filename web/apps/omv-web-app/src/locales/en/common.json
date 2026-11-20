@@ -3,13 +3,12 @@
     "name": "openmediavault",
     "loading": "Loading…",
     "serverMessage": "Message from the server",
-    "newTab": "(opens in a new tab)"
-  },
-  "theme": {
-    "label": "Appearance",
-    "system": "Same as this device",
-    "light": "Light",
-    "dark": "Dark"
+    "newTab": "(opens in a new tab)",
+    "documentTitle": "{{page}} – openmediavault",
+    "skipToMain": "Skip to main content",
+    "openNav": "Open navigation",
+    "closeNav": "Close navigation",
+    "navigation": "Main navigation"
   },
   "role": {
     "admin": "administrator",
@@ -54,13 +53,6 @@
     "link": "Open the classic interface",
     "cancel": "Use a different account"
   },
-  "landing": {
-    "title": "Welcome",
-    "signedInAs": "You are signed in as {{username}}, with {{role}} rights.",
-    "signedInRole": "You are signed in with {{role}} rights.",
-    "placeholder": "The pages of the new interface are on their way. Until then, the classic interface has everything.",
-    "classicLink": "Open the classic interface"
-  },
   "signOut": {
     "action": "Sign out",
     "failedTitle": "Could not sign out",
@@ -75,7 +67,228 @@
   },
   "notFound": {
     "title": "Page not found",
-    "body": "There is no page at this address.",
-    "home": "Go to the start page"
+    "body": "There is no page at this address. It may have moved, or the address may be mistyped.",
+    "home": "Go to the dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "signedInAs": "You are signed in as {{username}}, with {{role}} rights.",
+    "signedInRole": "You are signed in with {{role}} rights.",
+    "placeholder": "The pages of the new interface are on their way. Until then, the classic interface has everything, and the menu takes you to each page there."
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "classic": "Classic",
+    "addOns": "Add-ons",
+    "groups": {
+      "system": "System",
+      "network": "Network",
+      "storage": "Storage",
+      "services": "Services",
+      "usermgmt": "Users",
+      "diagnostics": "Diagnostics",
+      "account": "Account"
+    },
+    "items": {
+      "system": {
+        "workbench": "Web interface",
+        "date-time": "Date and time",
+        "notification": "Notifications",
+        "powermgmt": "Power management",
+        "monitoring": "Monitoring",
+        "cron": "Scheduled tasks",
+        "certificate": "Certificates",
+        "updatemgmt": "Updates",
+        "plugins": "Plugins"
+      },
+      "network": {
+        "general": "General",
+        "interfaces": "Interfaces",
+        "proxy": "Proxy",
+        "firewall": "Firewall"
+      },
+      "storage": {
+        "disks": "Disks",
+        "smart": "Disk health (S.M.A.R.T.)",
+        "filesystems": "File systems",
+        "shared-folders": "Shared folders"
+      },
+      "services": {
+        "nfs": "NFS",
+        "rsync": "Rsync",
+        "smb": "SMB/CIFS",
+        "ssh": "SSH"
+      },
+      "usermgmt": {
+        "settings": "Settings",
+        "users": "Users",
+        "groups": "Groups"
+      },
+      "diagnostics": {
+        "system-information": "System information",
+        "system-logs": "System logs",
+        "processes": "Processes",
+        "services": "Services",
+        "performance-statistics": "Performance statistics",
+        "report": "Report"
+      },
+      "account": {
+        "settings": "Settings",
+        "password": "Password"
+      }
+    }
+  },
+  "classicOnly": {
+    "body": "This page is not in the new interface yet. It works as before in the classic interface.",
+    "link": "Open {{page}} in the classic interface",
+    "addOnsTitle": "Add-ons",
+    "addOnsBody": "Pages that installed plugins add are only in the classic interface for now.",
+    "addOnsLink": "Open the classic interface"
+  },
+  "adminOnly": {
+    "body": "Only administrators can open this page. Your account is a normal user account.",
+    "home": "Go to the dashboard"
+  },
+  "routeError": {
+    "title": "This page could not be shown",
+    "body": "Something went wrong while opening this page. Try again, or go back to the dashboard.",
+    "retry": "Try again",
+    "home": "Go to the dashboard"
+  },
+  "httpNotice": {
+    "label": "Connection notice",
+    "body": "This connection is not encrypted. Passwords and settings you send can be read by others on the network.",
+    "adminLink": "Turn on HTTPS in the classic interface",
+    "userBody": "Ask an administrator to turn on HTTPS."
+  },
+  "pending": {
+    "label": "Pending changes",
+    "message_one": "{{count}} change waiting to be applied:",
+    "message_other": "{{count}} changes waiting to be applied:",
+    "messageUnknown": "Saved changes are waiting to be applied.",
+    "apply_one": "Apply {{count}} change",
+    "apply_other": "Apply {{count}} changes",
+    "applyAll": "Apply changes",
+    "undo_one": "Undo {{count}} change",
+    "undo_other": "Undo {{count}} changes",
+    "undoAll": "Undo changes",
+    "retry": "Try applying again",
+    "showProgress": "Show progress",
+    "showDetails": "Show what happened",
+    "applying": "Applying the changes…",
+    "undoing": "Undoing the changes…",
+    "applyFailed": "Applying the changes failed. They are still saved and waiting.",
+    "undoFailed": "Undoing the changes failed. They are still saved and waiting.",
+    "indicator_one": "{{count}} pending change",
+    "indicator_other": "{{count}} pending changes",
+    "indicatorUnknown": "Pending changes",
+    "indicatorShort": "pending",
+    "applyTask": "Apply changes",
+    "undoTask": "Undo changes",
+    "applyTitle_one": "Apply {{count}} change?",
+    "applyTitle_other": "Apply {{count}} changes?",
+    "applyTitleAll": "Apply the pending changes?",
+    "applyBody": "The saved settings are put into effect now. The services listed below are reconfigured and may restart.",
+    "applyAffects": "What is applied",
+    "connectionWarning": "This includes the network, the web server or certificates, so this page may lose its connection while they restart. If it stops responding, wait a minute, then reload the page.",
+    "undoTitle_one": "Undo {{count}} change?",
+    "undoTitle_other": "Undo {{count}} changes?",
+    "undoTitleAll": "Undo the pending changes?",
+    "undoBody": "The saved changes to <list></list> are discarded. The settings go back to how they are on the server now.",
+    "undoBodyAll": "The saved changes are discarded. The settings go back to how they are on the server now.",
+    "cancel": "Cancel"
+  },
+  "modules": {
+    "apt": "Software packages",
+    "apticron": "Update notifications",
+    "avahi": "Network discovery (Zeroconf)",
+    "certificates": "Certificates",
+    "chrony": "Time synchronisation",
+    "collectd": "Performance statistics",
+    "cpupower": "Processor power saving",
+    "cron": "Scheduled tasks",
+    "fstab": "File system mounts",
+    "halt": "Shutdown",
+    "hostname": "Host name",
+    "hosts": "Host names on the network",
+    "initramfs": "Start-up image",
+    "iptables": "Firewall",
+    "issue": "Console welcome message",
+    "monit": "Service monitoring",
+    "nfs": "NFS",
+    "nginx": "Web server",
+    "pam": "Sign-in rules",
+    "phpfpm": "Web interface back end",
+    "postfix": "Email notifications",
+    "profile": "Command-line environment",
+    "quota": "Disk quotas",
+    "rrdcached": "Statistics storage",
+    "rsync": "Rsync tasks",
+    "rsyncd": "Rsync server",
+    "rsyslog": "System log",
+    "samba": "SMB/CIFS",
+    "sharedfolders": "Shared folders",
+    "smartmontools": "Disk health (S.M.A.R.T.)",
+    "ssh": "SSH",
+    "sysctl": "Kernel settings",
+    "systemd": "System services",
+    "systemd-journald": "System journal",
+    "systemd-logind": "Power button and sign-in sessions",
+    "systemd-networkd": "Network",
+    "task": "Queued system jobs",
+    "timezone": "Time zone",
+    "watchdog": "Watchdog",
+    "webadmin": "Web interface settings",
+    "webgui": "Web interface"
+  },
+  "tasks": {
+    "menu": "Tasks",
+    "menuRunning_one": "Tasks: {{count}} running",
+    "menuRunning_other": "Tasks: {{count}} running",
+    "menuEnded_one": "Tasks: {{count}} finished",
+    "menuEnded_other": "Tasks: {{count}} finished",
+    "none": "No tasks in this session",
+    "clearEnded": "Clear finished tasks",
+    "running": "Running",
+    "done": "Succeeded",
+    "failed": "Failed",
+    "stopped": "Cancelled",
+    "elapsedSeconds": "{{seconds}} s",
+    "elapsedMinutes": "{{minutes}} min {{seconds}} s",
+    "announce": "{{task}}: {{state}}",
+    "outputLabel": "Output of {{task}}",
+    "copy": "Copy output",
+    "copied": "Output copied",
+    "selected": "Output selected. Press Ctrl+C to copy.",
+    "download": "Download output",
+    "waiting": "Waiting for output…",
+    "noOutput": "This task wrote no output.",
+    "endDone": "The task finished.",
+    "endFailed": "The task failed. The server's account of what happened is above.",
+    "endStopped": "The task was cancelled.",
+    "dismiss": "Dismiss",
+    "close": "Close"
+  },
+  "user": {
+    "menu": "Account: {{name}}",
+    "menuNoName": "Account",
+    "signedInAs": "Signed in as {{name}}",
+    "signedIn": "Signed in",
+    "classic": "Open the classic interface",
+    "about": "About this interface",
+    "signOut": "Sign out"
+  },
+  "about": {
+    "title": "About this interface",
+    "body": "This is an unofficial community plugin that adds a new web interface to openmediavault. It is not made by the openmediavault project, and it changes nothing about how openmediavault works or how secure it is.",
+    "product": "openmediavault",
+    "upstream": "The openmediavault project",
+    "close": "Close"
+  },
+  "theme": {
+    "label": "Appearance",
+    "system": "Same as this device",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

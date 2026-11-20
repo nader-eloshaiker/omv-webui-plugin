@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Every route behind sign-in sits under this layout. Without a session, sign-in is shown instead;
-// the address the user asked for is not remembered (UI-3).
+// Every route behind sign-in sits under this layout: the shell. Without a session, sign-in is shown
+// instead; the address the user asked for is not remembered (UI-3).
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { SignedInLayout } from "../components/templates/SignedInLayout.tsx";
+import { ShellLayout } from "../components/templates/ShellLayout.tsx";
 
 export const Route = createFileRoute("/_signedIn")({
   beforeLoad: ({ context }) => {
@@ -10,5 +10,5 @@ export const Route = createFileRoute("/_signedIn")({
       throw redirect({ to: "/sign-in", replace: true });
     }
   },
-  component: SignedInLayout,
+  component: ShellLayout,
 });

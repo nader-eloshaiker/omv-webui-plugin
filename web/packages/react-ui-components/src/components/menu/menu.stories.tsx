@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MoreHorizontal, Pencil, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  MoreHorizontal,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { IconButton } from "../button/button";
 import {
   Menu,
@@ -8,6 +15,9 @@ import {
   MenuGroup,
   MenuGroupLabel,
   MenuItem,
+  MenuLinkItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSeparator,
   MenuTrigger,
 } from "./menu";
@@ -55,6 +65,33 @@ export const RowActions: Story = {
           <Trash2 aria-hidden="true" />
           Delete…
         </MenuItem>
+      </MenuContent>
+    </Menu>
+  ),
+};
+
+/** A preference chosen in place (radio items) and a fixed link out of the interface (a link item). */
+export const ChoicesAndLinks: Story = {
+  render: () => (
+    <Menu defaultOpen>
+      <MenuTrigger
+        render={<IconButton label="Account: admin" icon={<UserRound />} />}
+      />
+      <MenuContent>
+        <MenuGroup>
+          <MenuGroupLabel>Appearance</MenuGroupLabel>
+          <MenuRadioGroup defaultValue="system">
+            <MenuRadioItem value="system">Same as this device</MenuRadioItem>
+            <MenuRadioItem value="light">Light</MenuRadioItem>
+            <MenuRadioItem value="dark">Dark</MenuRadioItem>
+          </MenuRadioGroup>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuLinkItem href="/" target="_blank" rel="noopener noreferrer">
+          Open the classic interface
+          <ExternalLink aria-hidden="true" />
+          <span className="sr-only">(opens in a new tab)</span>
+        </MenuLinkItem>
       </MenuContent>
     </Menu>
   ),

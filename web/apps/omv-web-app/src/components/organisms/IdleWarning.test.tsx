@@ -26,9 +26,11 @@ async function signedIn(answers?: Parameters<typeof renderApp>[0]) {
     advanceTimers: (ms) => vi.advanceTimersByTime(ms),
     ...answers,
   });
-  await screen.findByRole("heading", { name: "Welcome" });
-  await waitFor(() => expect(timeoutReads()).toHaveLength(1));
-  return app;
+  await screen.findByRole("heading", { name: "Dashboard" });
+  // StrictMode mounts twice in development, which can cancel and repeat the first read.
+  await waitFor(() => expect(timeoutReads().length).toBeGreaterThan(0));
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  return { ...app, settled: timeoutReads().length };
 }
 
 beforeEach(() => {
@@ -58,7 +60,7 @@ describe("the idle warning", () => {
   });
 
   it("stays signed in with one deliberate foreground call", async () => {
-    const { user } = await signedIn();
+    const { user, settled } = await signedIn();
     await advance(WARN_AT);
     const dialog = await screen.findByRole("dialog");
     await user.click(
@@ -67,22 +69,22 @@ describe("the idle warning", () => {
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
-    expect(timeoutReads()).toHaveLength(2);
-    expect(timeoutReads()[1]?.background).toBe(false);
+    expect(timeoutReads()).toHaveLength(settled + 1);
+    expect(timeoutReads().at(-1)?.background).toBe(false);
     // The clock started again from that call.
     await advance(WARN_AT - 1000);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("treats Escape as staying signed in", async () => {
-    const { user } = await signedIn();
+    const { user, settled } = await signedIn();
     await advance(WARN_AT);
     await screen.findByRole("dialog");
     await user.keyboard("{Escape}");
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
-    expect(timeoutReads()).toHaveLength(2);
+    expect(timeoutReads()).toHaveLength(settled + 1);
   });
 
   it("signs out from the warning", async () => {
@@ -97,7 +99,7 @@ describe("the idle warning", () => {
   });
 
   it("when the time is up, asks in the background and shows sign-in if the server ended the session", async () => {
-    const { mock } = await signedIn();
+    const { mock, settled } = await signedIn();
     // The server ends the idle session on its own.
     mock.signedIn = false;
     mock.expiring = true;
@@ -108,18 +110,18 @@ describe("the idle warning", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Your session ended, so you were signed out.",
     );
-    const check = timeoutReads()[1];
+    const check = timeoutReads()[settled];
     expect(check?.background).toBe(true);
   });
 
   it("never opens when the server keeps idle sessions (timeout 0)", async () => {
-    await signedIn({
+    const { settled } = await signedIn({
       answers: {
         webGuiGetAutoLogoutSettings: { status: 200, value: { timeout: 0 } },
       },
     });
     await advance(60 * MINUTE);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(timeoutReads()).toHaveLength(1);
+    expect(timeoutReads()).toHaveLength(settled);
   });
 });

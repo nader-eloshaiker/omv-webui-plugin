@@ -34,6 +34,9 @@ const UNKNOWN_METHOD = {
 /** Every error carries a trace, as OMV's do; the transport must drop it (UI-9). */
 const TRACE = "#0 mock trace for the browser test";
 
+/** The handle the contract's apply example returns; the undo example returns another. */
+const APPLY_HANDLE = CONTRACT_EXAMPLES.configApplyChangesBg.applied.value;
+
 const isOperationId = (value: string): value is OperationId =>
   Object.hasOwn(CONTRACT_EXAMPLES, value);
 
@@ -70,10 +73,17 @@ export class RpcMock {
   private login: LoginExample = "authenticated";
   private signedIn = false;
   private pending = false;
+  /** Configuration changes are saved and not applied; a finished apply or undo clears them. */
+  private dirty = false;
 
   /** The example Session.login answers with from now on. */
   loginWith(example: LoginExample): void {
     this.login = example;
+  }
+
+  /** Start with changes pending: System.getInformation and Config.isDirty say so until applied. */
+  withPendingChanges(): void {
+    this.dirty = true;
   }
 
   async install(page: Page, origin: string): Promise<void> {
@@ -102,6 +112,7 @@ export class RpcMock {
     } catch {
       body = null;
     }
+    const call: object = typeof body === "object" && body !== null ? body : {};
     const { service, method } =
       typeof body === "object" && body !== null
         ? (body as { service?: unknown; method?: unknown })
@@ -139,9 +150,35 @@ export class RpcMock {
         return exampleReply(operationId, DEFAULT_EXAMPLE[operationId]);
       default:
         this.pending = false;
-        return this.signedIn
-          ? exampleReply(operationId, DEFAULT_EXAMPLE[operationId])
-          : errorReply(401, NOT_SIGNED_IN);
+        if (!this.signedIn) {
+          return errorReply(401, NOT_SIGNED_IN);
+        }
+        return this.signedInReply(operationId, call);
+    }
+  }
+
+  /** The pending-changes path: what is pending, and the last poll of an apply or undo task. */
+  private signedInReply(operationId: OperationId, body: object): Reply {
+    switch (operationId) {
+      case "systemGetInformation":
+        return exampleReply(
+          operationId,
+          this.dirty ? "adminPendingChanges" : "admin",
+        );
+      case "configIsDirty":
+        return exampleReply(operationId, this.dirty ? "dirty" : "clean");
+      case "execGetOutput": {
+        const { params } = body as { params?: { filename?: unknown } };
+        this.dirty = false;
+        return exampleReply(
+          operationId,
+          params?.filename === APPLY_HANDLE
+            ? "appliedFinished"
+            : "revertedFinished",
+        );
+      }
+      default:
+        return exampleReply(operationId, DEFAULT_EXAMPLE[operationId]);
     }
   }
 }

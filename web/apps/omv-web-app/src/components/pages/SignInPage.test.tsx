@@ -301,7 +301,7 @@ describe("the session ending", () => {
     expect(mock.signedIn).toBe(false);
     await signIn(user);
     expect(
-      await screen.findByRole("heading", { name: "Welcome" }),
+      await screen.findByRole("heading", { name: "Dashboard" }),
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/ui/");
   });
@@ -310,7 +310,10 @@ describe("the session ending", () => {
 describe("signing out", () => {
   it("ends the session on the server, forgets everything and shows sign-in", async () => {
     const { user, app } = await renderApp({ signedIn: true });
-    await user.click(await screen.findByRole("button", { name: "Sign out" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Account: example-user" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Sign out" }));
     expect(
       await screen.findByRole("heading", { name: "Sign in" }),
     ).toBeInTheDocument();
@@ -331,7 +334,7 @@ describe("secrets after submit (UI-6, UI-13)", () => {
     const code = await screen.findByLabelText("6-digit code");
     await user.type(code, "123456");
     await user.click(screen.getByRole("button", { name: "Verify" }));
-    await screen.findByRole("heading", { name: "Welcome" });
+    await screen.findByRole("heading", { name: "Dashboard" });
 
     await waitFor(() =>
       expect(app.queryClient.getMutationCache().getAll()).toHaveLength(0),

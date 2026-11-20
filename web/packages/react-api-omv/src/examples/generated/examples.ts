@@ -225,6 +225,14 @@ export const CONTRACT_EXAMPLES = {
         running: false,
       },
     },
+    applyFailed: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; omv-salt deploy run --no-color ssh 2>&1' with exit code '1': nas:\n----------\n          ID: configure_ssh_sshd_config\n    Function: file.managed\n        Name: /etc/ssh/sshd_config\n      Result: True\n     Comment: File /etc/ssh/sshd_config updated\n----------\n          ID: start_ssh_service\n    Function: service.running\n        Name: ssh\n      Result: False\n     Comment: Job for ssh.service failed because the control process exited with error code.\n\nSummary for nas\n------------\nSucceeded: 1 (changed=1)\nFailed:    1\n------------\nTotal states run:     2",
+      },
+    },
   },
   execIsRunning: {
     running: {

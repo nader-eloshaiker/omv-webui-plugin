@@ -4,6 +4,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { NotFoundPage } from "./components/pages/NotFoundPage.tsx";
+import { RouteErrorPage } from "./components/pages/RouteErrorPage.tsx";
 import { routeTree } from "./routeTree.gen.ts";
 import type { SessionStore } from "./session/sessionStore.ts";
 
@@ -21,6 +22,7 @@ export function createAppRouter(context: RouterContext) {
     // second-factor login is pending (A10).
     defaultPreload: false,
     defaultNotFoundComponent: NotFoundPage,
+    defaultErrorComponent: RouteErrorPage,
     // Off: the router would keep visited paths and scroll positions in sessionStorage, and storage
     // holds preferences only (UI-13). A path can carry an object's identifier.
     scrollRestoration: false,

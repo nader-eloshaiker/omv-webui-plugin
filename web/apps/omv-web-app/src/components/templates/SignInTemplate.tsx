@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The frame of the sign-in screens: the product name, one card, the appearance choice. Slots only.
+// The frame of the sign-in screens: the product name and one card. Slots only. The stored appearance
+// preference applies here too; it is chosen in the user menu once signed in.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ThemeSelect } from "../molecules/ThemeSelect.tsx";
 
 export function SignInTemplate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -18,9 +18,6 @@ export function SignInTemplate({ children }: { children: ReactNode }) {
           </div>
         </div>
       </main>
-      <footer className="flex justify-center px-4 pb-6">
-        <ThemeSelect />
-      </footer>
     </div>
   );
 }
