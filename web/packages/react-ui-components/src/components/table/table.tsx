@@ -27,7 +27,9 @@ function Table({
     <div
       data-slot="table-frame"
       className={cn(
-        "w-full overflow-x-auto rounded-card border border-border bg-surface",
+        // `relative` keeps absolutely placed text inside (a visually hidden label would otherwise
+        // widen the page); `@container` lets a state row measure the visible width (TableStateRow).
+        "@container relative w-full overflow-x-auto rounded-card border border-border bg-surface",
         frameClassName,
       )}
     >
@@ -187,7 +189,11 @@ function TableStateRow({
 }) {
   return (
     <tr data-slot="table-state-row">
-      <td colSpan={colSpan}>{children}</td>
+      <td colSpan={colSpan}>
+        {/* As wide as the frame's visible part, and held there while the table scrolls sideways,
+            so an empty or error state is never centred off-screen on a wide table. */}
+        <div className="sticky start-0 w-[100cqw]">{children}</div>
+      </td>
     </tr>
   );
 }

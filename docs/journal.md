@@ -373,3 +373,11 @@ Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with t
 - **The table:** the backend is asked for exactly the page, sort, page size and search shown, and the range shown matches its reply.
 - **A normal user** sees their account page, and is refused the SSH and shared-folder pages with no `SSH.get` or `ShareMgmt.getList` call.
 - **Afterwards** nothing was pending, compression was off as before, and the welcome flag was still set.
+
+**A browser pass on the mock** covered every Phase 3 page, both themes, 1280 and 375 px, the keyboard and the console. It found one defect, now fixed. With no shared folders, at 375 px, the page scrolled sideways and the empty state's text was clipped. There were two causes:
+- **The page scroll:** the visually hidden "(opens in a new tab)" text escaped the table's scrolling frame, because the frame was not positioned.
+- **The clipped text:** a state row was centred on the table's full width instead of the frame's visible part.
+
+The table frame is now `relative` and a container, and a state row is as wide as the frame's visible part and stays there while the table scrolls. Left as they are:
+- the read-only account shows its "locked" sentence under both Details and Change password, as the design's table says;
+- a mismatched password pair clears both fields.
