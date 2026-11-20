@@ -245,3 +245,7 @@ Defaults taken without a question, open to change:
 - The top bar's notifications are the task registry's tasks (running and recently ended). OMV has no server-side notification feed to show.
 - The squircle radii are proposed in `design/preview.html` and shown to the owner as a Chromium screenshot before they enter `tokens.css`.
 - Runtime dependencies added in Phase 2, all from D7 or the shadcn pattern it names: TanStack Router, Base UI, lucide, class-variance-authority, clsx, tailwind-merge, i18next with react-i18next, zustand, react-hook-form, and the Fontsource packages for Inter and Roboto Mono. Each is justified in the pull request (UI-11).
+
+## 2026-11-20 — Owner decision: squircle radii
+
+The owner approved the proposed squircle radii after seeing the comparison in `design/preview.html` (light and dark, Chromium): 10px for controls and 14px for cards, dialogs, menus and toasts, in place of the round 6px and 8px where `corner-shape: squircle` is supported. Elsewhere the round radii stay.

@@ -380,8 +380,8 @@ A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off th
   browsers support it; everywhere else the same elements keep ordinary rounded corners, and nothing
   may depend on the difference. A squircle corner of the same radius looks tighter than a round
   one, so the squircle radii are their own tokens, tuned by eye in `design/preview.html`. Components
-  write `rounded-control` and `rounded-card`, which carry both radii; the proposed squircle radii
-  (10px and 14px) await the owner's look.
+  write `rounded-control` and `rounded-card`, which carry both radii; the squircle radii
+  (10px and 14px) were approved by the owner on 2026-11-20.
 - **Pills, dots and meters stay round** (`corner-shape: round`). Their shape is part of the
   status vocabulary (5.5): the Unknown mark is a hollow ring.
 - **Native CSS only.** No squircle made with an SVG mask, `clip-path` or a background image: those

@@ -110,8 +110,8 @@
    radius, so where `corner-shape: squircle` is supported, controls and cards take these instead of
    --radius-md and --radius-lg. They sit outside `@theme` on purpose: on their own they would only
    draw a larger round corner, so nothing but css-ui-style's `rounded-control` and `rounded-card`
-   reads them. Proposed 2026-11-20 from equal corner area and equal 45-degree depth (6px round is
-   10.3 to 11px squircle, 8px is 13.7 to 14.7px); awaiting the owner's look in design/preview.html. */
+   reads them. Chosen from equal corner area and equal 45-degree depth (6px round is
+   10.3 to 11px squircle, 8px is 13.7 to 14.7px); approved by the owner on 2026-11-20 (design/preview.html). */
 :root {
   --radius-squircle-md: 10px;
   --radius-squircle-lg: 14px;
