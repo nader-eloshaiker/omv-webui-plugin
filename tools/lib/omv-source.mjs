@@ -46,24 +46,40 @@ export function readDatamodels(root) {
   return byId;
 }
 
+/**
+ * Service name -> registered method names, from the PHP service classes of one file. A file may
+ * hold more than one service class (notification.inc holds Notification and EmailNotification), so
+ * each class is read on its own.
+ */
+export function servicesOf(text) {
+  const services = new Map();
+  for (const chunk of text.split(/^(?=\s*(?:final\s+|abstract\s+)?class\s)/m)) {
+    const name =
+      /function\s+getName\s*\(\s*\)\s*(?::\s*\w+\s*)?\{\s*return\s+["']([^"']+)["']/.exec(
+        chunk,
+      )?.[1];
+    if (!name) {
+      continue;
+    }
+    const methods = services.get(name) ?? new Set();
+    for (const m of chunk.matchAll(/registerMethod\(\s*["']([^"']+)["']/g)) {
+      methods.add(m[1]);
+    }
+    services.set(name, methods);
+  }
+  return services;
+}
+
 /** Service name -> set of registered method names, from the PHP service classes. */
 export function readServices(root) {
   const services = new Map();
   for (const dir of omvLayout(root).rpcDirs) {
     for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".inc"))) {
       const text = fs.readFileSync(path.join(dir, file), "utf8");
-      const name =
-        /function\s+getName\s*\(\s*\)\s*(?::\s*\w+\s*)?\{\s*return\s+["']([^"']+)["']/.exec(
-          text,
-        )?.[1];
-      if (!name) {
-        continue;
+      for (const [name, methods] of servicesOf(text)) {
+        const known = services.get(name) ?? new Set();
+        services.set(name, new Set([...known, ...methods]));
       }
-      const methods = services.get(name) ?? new Set();
-      for (const m of text.matchAll(/registerMethod\(\s*["']([^"']+)["']/g)) {
-        methods.add(m[1]);
-      }
-      services.set(name, methods);
     }
   }
   return services;

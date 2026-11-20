@@ -1,0 +1,10 @@
+type: object
+description: The host name and domain name of the system (conf.system.network.dns).
+required: [hostname, domainname]
+properties:
+  hostname:
+    type: string
+    description: The host name, without the domain.
+  domainname:
+    type: string
+    description: The domain name, or empty when none is set.

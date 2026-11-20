@@ -1,0 +1,29 @@
+type: object
+description: >-
+  The system clock and time settings (conf.system.time), with the server's current date added by
+  the method.
+required: [date, timezone, ntpenable, ntptimeservers, ntpclients]
+properties:
+  date:
+    type: object
+    description: The server's date and time when the method ran.
+    required: [local, ISO8601]
+    properties:
+      local:
+        type: string
+        description: Display text, the server's local time in the server's locale.
+      ISO8601:
+        type: string
+        description: The same moment in ISO 8601, with the server's offset from UTC.
+  timezone:
+    type: string
+    description: The time zone name, e.g. "Etc/UTC" or "Europe/Berlin".
+  ntpenable:
+    type: boolean
+    description: Whether the clock is set from time servers.
+  ntptimeservers:
+    type: string
+    description: The time servers, as one string as OMV stores it.
+  ntpclients:
+    type: string
+    description: The networks allowed to use this system as a time server, as OMV stores them.

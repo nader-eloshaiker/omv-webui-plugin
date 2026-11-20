@@ -40,6 +40,27 @@ export function compareSchemas(ours, theirs, contract, at = "$") {
     // OMV declares "any": nothing to compare against.
     return problems;
   }
+  if (b.oneOf) {
+    // OMV accepts any of its alternatives: each of ours must be no looser than one of them.
+    if (a.nullable && !b.nullable) {
+      looser("accepts null, which OMV does not");
+    }
+    const ours = a.oneOf ?? a.anyOf ?? [a];
+    ours.forEach((alt, i) => {
+      const { nullable: _nullable, ...plain } = deref(alt, contract) ?? {};
+      const fits = b.oneOf.some((theirs) =>
+        compareSchemas(plain, theirs, contract, at).every(
+          (p) => p.severity !== "looser",
+        ),
+      );
+      if (!fits) {
+        looser(
+          `${ours.length > 1 ? `alternative ${i + 1} ` : ""}accepts values that none of OMV's alternatives accepts`,
+        );
+      }
+    });
+    return problems;
+  }
 
   const ourTypes = new Set(
     typesOf(a).map((t) => (t === "integer" ? "integer" : t)),

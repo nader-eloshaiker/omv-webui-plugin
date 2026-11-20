@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Scrubbing of captured replies (docs/04, "Response schemas", step 2). Host names, addresses, MAC
-// addresses, serial numbers, UUIDs, user names and keys are replaced with fixed documentation
-// values, consistently within one capture run, so a UUID referenced twice stays the same UUID.
+// addresses, e-mail addresses, serial numbers, UUIDs, user names, passwords and keys are replaced
+// with fixed documentation values, consistently within one capture run, so a UUID referenced twice
+// stays the same UUID.
 //
 // After scrubbing, verify() checks that nothing it should have caught is left. A capture that fails
 // it is not written. Its errors name the rule and the location, never the value.
@@ -25,6 +26,10 @@ const IPV6_CANDIDATE =
   /(?<![\w:])[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,7}(?![\w:])/gi;
 const SSH_KEY =
   /(?:sk-ssh-ed25519@openssh\.com|ssh-(?:rsa|ed25519|dss)|ecdsa-sha2-nistp\d+) AAAA[0-9A-Za-z+/]+=*(?: [^\s"]+)?/g;
+// An e-mail address. Its domain is kept only when it is a documentation domain (RFC 2606).
+const EMAIL =
+  /[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*/g;
+const DOC_EMAIL = /@(?:[a-z0-9-]+\.)*example\.(?:com|net|org)$/i;
 const RFC4716 =
   /---- BEGIN SSH2 PUBLIC KEY ----[\s\S]*?---- END SSH2 PUBLIC KEY ----/g;
 
@@ -33,6 +38,9 @@ const DOMAIN_KEYS = new Set(["domainname", "domain"]);
 const SERIAL_KEY = /serial/i;
 const DROP_KEYS = new Set(["trace"]);
 const SESSION_KEYS = new Set(["sessionid"]);
+// Fields whose whole value is replaced when it is not empty, whatever it looks like. A capture entry
+// may add its own (an SMTP user name is a name the scrubber cannot otherwise recognise).
+export const KEY_PLACEHOLDERS = { password: "EXAMPLE-PASSWORD" };
 
 const DOC_UUID = /^00000000-0000-4000-8000-[0-9a-f]{12}$/i;
 const DOC_MAC = /^00:00:5e:00:53:[0-9a-f]{2}$/i;
@@ -60,6 +68,8 @@ const isKeptIPv6 = (ip) => /^(::1?|fe80:.*|2001:db8:.*)$/i.test(ip);
  * @param {{names?: Record<string, string>, literals?: string[]}} known
  *   names: real user or host name -> placeholder; literals: values that must never appear (the
  *   host, passwords, secrets), replaced by a marker if found.
+ * scrub() and verify() take, as a second argument, more field name -> placeholder rules for one
+ * reply, on top of KEY_PLACEHOLDERS.
  */
 export function createScrubber(known = {}) {
   const names = Object.entries(known.names ?? {})
@@ -71,6 +81,7 @@ export function createScrubber(known = {}) {
   const v4 = new Map();
   const v6 = new Map();
   const serials = new Map();
+  const emails = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -84,6 +95,11 @@ export function createScrubber(known = {}) {
     for (const literal of literals) {
       out = out.split(literal).join("NAS_HOST");
     }
+    out = out.replace(EMAIL, (m) =>
+      DOC_EMAIL.test(m)
+        ? m
+        : number(emails, m.toLowerCase(), (n) => `user${n}@example.com`),
+    );
     out = out.replace(RFC4716, DOC.rfc4716Key);
     out = out.replace(SSH_KEY, DOC.sshKey);
     out = out.replace(UUID, (m) =>
@@ -120,9 +136,9 @@ export function createScrubber(known = {}) {
     return out;
   }
 
-  function walk(value, keyName) {
+  function walk(value, keyName, keys) {
     if (Array.isArray(value)) {
-      return value.map((v) => walk(v, keyName));
+      return value.map((v) => walk(v, keyName, keys));
     }
     if (value && typeof value === "object") {
       const out = {};
@@ -130,7 +146,7 @@ export function createScrubber(known = {}) {
         if (DROP_KEYS.has(k)) {
           continue;
         }
-        out[scrubString(k)] = walk(v, k);
+        out[scrubString(k)] = walk(v, k, keys);
       }
       return out;
     }
@@ -139,6 +155,9 @@ export function createScrubber(known = {}) {
     }
     if (keyName && SESSION_KEYS.has(keyName)) {
       return "EXAMPLE-SESSION-ID";
+    }
+    if (keyName && Object.hasOwn(keys, keyName) && value !== "") {
+      return keys[keyName];
     }
     if (keyName && HOST_KEYS.has(keyName) && value !== "") {
       return value.includes(".") ? DOC.fqdn : DOC.hostname;
@@ -156,16 +175,19 @@ export function createScrubber(known = {}) {
     return scrubString(value);
   }
 
+  const keysWith = (extra) => ({ ...KEY_PLACEHOLDERS, ...extra });
+
   /** Scrub a parsed reply. Returns a new value; the input is untouched. */
-  function scrub(value) {
-    return walk(value, undefined);
+  function scrub(value, extraKeys = {}) {
+    return walk(value, undefined, keysWith(extraKeys));
   }
 
   /**
    * Check a scrubbed value: no known name or literal, and no address, MAC, UUID, serial or key that
    * is not a documentation value. Returns the failures as "rule at path"; empty means clean.
    */
-  function verify(value) {
+  function verify(value, extraKeys = {}) {
+    const keys = keysWith(extraKeys);
     const failures = [];
     const visit = (v, path, keyName) => {
       if (Array.isArray(v)) {
@@ -183,6 +205,14 @@ export function createScrubber(known = {}) {
         return;
       }
       checkString(v, path);
+      if (
+        keyName &&
+        Object.hasOwn(keys, keyName) &&
+        v !== "" &&
+        v !== keys[keyName]
+      ) {
+        failures.push(`${keyName} at ${path}`);
+      }
       if (
         keyName &&
         SERIAL_KEY.test(keyName) &&
@@ -234,6 +264,11 @@ export function createScrubber(known = {}) {
       for (const m of s.match(IPV6_CANDIDATE) ?? []) {
         if (isIPv6(m) && !isKeptIPv6(m)) {
           failures.push(`IPv6 address at ${path}`);
+        }
+      }
+      for (const m of s.match(EMAIL) ?? []) {
+        if (!DOC_EMAIL.test(m)) {
+          failures.push(`e-mail address at ${path}`);
         }
       }
       for (const m of s.match(SSH_KEY) ?? []) {

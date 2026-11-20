@@ -1,0 +1,14 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000002"
+  name: example-user
+  email: ""
+  disallowusermod: false
+  sshpubkeys: []
+  uid: 1001
+  groups:
+    - users
+  shell: /bin/sh
+  password: ""
+  comment: ""

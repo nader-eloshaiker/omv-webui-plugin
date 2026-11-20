@@ -168,6 +168,81 @@ export const OPERATIONS = {
       $ref: "AutoLogoutSettings",
     },
   },
+  "/rpc/WebGui/getSettings": {
+    operationId: "webGuiGetSettings",
+    service: "WebGui",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "WebGuiSettings",
+    },
+  },
+  "/rpc/WebGui/dismissWelcomeMessage": {
+    operationId: "webGuiDismissWelcomeMessage",
+    service: "WebGui",
+    method: "dismissWelcomeMessage",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/UserMgmt/setUserByContext": {
+    operationId: "userMgmtSetUserByContext",
+    service: "UserMgmt",
+    method: "setUserByContext",
+    role: "user",
+    readonly: false,
+    dirty: true,
+    omit: ["password"],
+    response: {
+      $ref: "UserByContextSaved",
+    },
+  },
+  "/rpc/UserMgmt/setPasswordByContext": {
+    operationId: "userMgmtSetPasswordByContext",
+    service: "UserMgmt",
+    method: "setPasswordByContext",
+    role: "user",
+    readonly: false,
+    dirty: true,
+    response: null,
+  },
+  "/rpc/Network/getGeneralSettings": {
+    operationId: "networkGetGeneralSettings",
+    service: "Network",
+    method: "getGeneralSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkGeneralSettings",
+    },
+  },
+  "/rpc/System/getTimeSettings": {
+    operationId: "systemGetTimeSettings",
+    service: "System",
+    method: "getTimeSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "TimeSettings",
+    },
+  },
+  "/rpc/EmailNotification/get": {
+    operationId: "emailNotificationGet",
+    service: "EmailNotification",
+    method: "get",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    omit: ["password"],
+    response: {
+      $ref: "EmailNotificationSettings",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -188,6 +263,52 @@ export const SCHEMAS: SchemaTable = {
     type: "array",
     items: {
       type: "string",
+    },
+  },
+  EmailNotificationSettings: {
+    type: "object",
+    required: [
+      "enable",
+      "server",
+      "port",
+      "tls",
+      "sender",
+      "primaryemail",
+      "secondaryemail",
+      "authenable",
+      "username",
+    ],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      server: {
+        type: "string",
+      },
+      port: {
+        type: "integer",
+        minimum: 1,
+        maximum: 65535,
+      },
+      tls: {
+        type: "string",
+        enum: ["none", "ssl", "starttls", "auto"],
+      },
+      sender: {
+        type: "string",
+      },
+      primaryemail: {
+        type: "string",
+      },
+      secondaryemail: {
+        type: "string",
+      },
+      authenable: {
+        type: "boolean",
+      },
+      username: {
+        type: "string",
+      },
     },
   },
   ExecOutput: {
@@ -220,6 +341,18 @@ export const SCHEMAS: SchemaTable = {
       },
       running: {
         type: "boolean",
+      },
+    },
+  },
+  NetworkGeneralSettings: {
+    type: "object",
+    required: ["hostname", "domainname"],
+    properties: {
+      hostname: {
+        type: "string",
+      },
+      domainname: {
+        type: "string",
       },
     },
   },
@@ -548,6 +681,36 @@ export const SCHEMAS: SchemaTable = {
   TaskHandle: {
     type: "string",
   },
+  TimeSettings: {
+    type: "object",
+    required: ["date", "timezone", "ntpenable", "ntptimeservers", "ntpclients"],
+    properties: {
+      date: {
+        type: "object",
+        required: ["local", "ISO8601"],
+        properties: {
+          local: {
+            type: "string",
+          },
+          ISO8601: {
+            type: "string",
+          },
+        },
+      },
+      timezone: {
+        type: "string",
+      },
+      ntpenable: {
+        type: "boolean",
+      },
+      ntptimeservers: {
+        type: "string",
+      },
+      ntpclients: {
+        type: "string",
+      },
+    },
+  },
   UserByContext: {
     type: "object",
     required: ["name", "comment", "email", "sshpubkeys", "_readonly"],
@@ -569,6 +732,91 @@ export const SCHEMAS: SchemaTable = {
       },
       _readonly: {
         type: "boolean",
+      },
+    },
+  },
+  UserByContextSaved: {
+    type: "object",
+    required: [
+      "name",
+      "email",
+      "comment",
+      "disallowusermod",
+      "sshpubkeys",
+      "uid",
+      "groups",
+      "shell",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      email: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      disallowusermod: {
+        type: "boolean",
+      },
+      sshpubkeys: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      uid: {
+        type: "integer",
+      },
+      groups: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      shell: {
+        type: "string",
+      },
+    },
+  },
+  WebGuiSettings: {
+    type: "object",
+    required: [
+      "port",
+      "enablessl",
+      "sslport",
+      "forcesslonly",
+      "sslcertificateref",
+      "timeout",
+    ],
+    properties: {
+      port: {
+        type: "integer",
+        minimum: 1,
+        maximum: 65535,
+      },
+      enablessl: {
+        type: "boolean",
+      },
+      sslport: {
+        type: "integer",
+        minimum: 1,
+        maximum: 65535,
+      },
+      forcesslonly: {
+        type: "boolean",
+      },
+      sslcertificateref: {
+        type: "string",
+      },
+      timeout: {
+        type: "integer",
+        minimum: 0,
+        maximum: 1440,
       },
     },
   },

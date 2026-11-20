@@ -10,7 +10,12 @@
 // disk. A capture drafts an example: it is written to the contract only when that example does not
 // exist yet. Otherwise the draft goes to scratch/captures/ for review, and a difference is a finding,
 // not a file to overwrite. Credentials and host are never printed.
-import { createHmac } from "node:crypto";
+//
+// An entry in captures.json may change the VM to reach a state: `setup` (a write before the read),
+// `revert` (a write the entry itself makes), or the `tempUser` flow (a throw-away account). Each of
+// these starts only when no configuration change is pending, and ends by discarding every pending
+// change, so the VM is left as it was.
+import { createHmac, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -40,6 +45,8 @@ const PLACEHOLDER = {
   user: "example-user",
   "2fa": "example-2fa",
 };
+// The throw-away account of the tempUser flow, created and deleted within one entry.
+const TEMP_USER = "webui-capture-tmp";
 
 function loadEnv(file) {
   const env = {};
@@ -116,6 +123,39 @@ class Session {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** The reply of a read, or with `pick` only those fields of it. */
+async function paramsFrom(session, spec, pick, merge) {
+  const [service, method] = spec.split(".");
+  const read = await session.call(service, method);
+  if (read.status !== 200) {
+    throw new Error(`${spec} failed (HTTP ${read.status})`);
+  }
+  const value = read.body.response;
+  const picked = pick
+    ? Object.fromEntries(pick.map((k) => [k, value[k]]))
+    : value;
+  return { ...picked, ...merge };
+}
+
+async function assertClean(admin, what) {
+  const r = await admin.call("Config", "isDirty");
+  if (r.status !== 200 || r.body.response !== false) {
+    throw new Error(
+      `${what}: the VM has pending configuration changes, and this entry discards every pending change when it ends. Apply or revert them first.`,
+    );
+  }
+}
+
+async function discardChanges(admin, what) {
+  const r = await admin.call("Config", "revertChanges", { filename: "" });
+  const after = await admin.call("Config", "isDirty");
+  if (r.status !== 200 || after.body.response !== false) {
+    throw new Error(
+      `${what}: could not discard the pending changes (HTTP ${r.status}); revert them on the VM`,
+    );
+  }
+}
+
 async function main() {
   const env = loadEnv(ENV_PATH);
   if (!env.NAS_HOST) {
@@ -138,7 +178,7 @@ async function main() {
   const version = /^(\d+\.\d+\.\d+)/.exec(info.version ?? "")?.[1] ?? "unknown";
   await probe.call("Session", "logout");
 
-  const names = {};
+  const names = { [TEMP_USER]: "example-readonly" };
   for (const [account, [u]] of Object.entries(ACCOUNTS)) {
     if (env[u] && env[u] !== "admin") {
       names[env[u]] = PLACEHOLDER[account];
@@ -157,7 +197,7 @@ async function main() {
   const { scrub, verify } = createScrubber({ names, literals });
 
   const results = [];
-  const record = (operationId, name, status, reply) => {
+  const record = (operationId, name, status, reply, keys = {}) => {
     const value =
       status === 200
         ? reply.response
@@ -165,8 +205,8 @@ async function main() {
             code: reply.error?.code ?? null,
             message: reply.error?.message ?? "",
           };
-    const scrubbed = scrub(value);
-    const failures = verify(scrubbed);
+    const scrubbed = scrub(value, keys);
+    const failures = verify(scrubbed, keys);
     if (failures.length) {
       results.push(
         `FAIL  ${operationId}.${name}: scrubbing left ${failures.join("; ")}. Not written.`,
@@ -200,6 +240,30 @@ async function main() {
       continue;
     }
     const s = new Session(base);
+    const keys = entry.scrubKeys ?? {};
+    // Entries that change the VM run inside a clean start and a full revert, as an administrator.
+    const changes = Boolean(
+      entry.setup || entry.revert || entry.flow === "tempUser",
+    );
+    const admin = changes ? new Session(base) : null;
+    if (admin) {
+      await admin.login(env, "admin");
+      await assertClean(admin, `${operationId}.${entry.name}`);
+    }
+    try {
+      await runEntry(entry, operationId, s, admin, keys);
+    } finally {
+      if (admin) {
+        await discardChanges(admin, `${operationId}.${entry.name}`);
+        await admin.call("Session", "logout");
+      }
+    }
+    if (s.cookies.size && operationId !== "sessionLogout") {
+      await s.call("Session", "logout");
+    }
+  }
+
+  async function runEntry(entry, operationId, s, admin, keys) {
     if (entry.flow === "login") {
       const r = entry.wrongPassword
         ? await s.call("Session", "login", {
@@ -207,7 +271,7 @@ async function main() {
             password: "not-the-password",
           })
         : await s.login(env, entry.account);
-      record(operationId, entry.name, r.status, r.body);
+      record(operationId, entry.name, r.status, r.body, keys);
     } else if (entry.flow === "verify") {
       await s.login(env, entry.account);
       const code = entry.wrongCode
@@ -244,22 +308,79 @@ async function main() {
           break;
         }
       }
+    } else if (entry.flow === "tempUser") {
+      // A throw-away account whose password exists only in this process, deleted again below.
+      const password = randomBytes(24).toString("base64url");
+      const created = await admin.call("UserMgmt", "setUser", {
+        name: TEMP_USER,
+        groups: [],
+        password,
+        email: "",
+        comment: "",
+        disallowusermod: entry.disallowusermod === true,
+        sshpubkeys: [],
+      });
+      if (created.status !== 200) {
+        throw new Error(
+          `could not create the temporary account (HTTP ${created.status})`,
+        );
+      }
+      try {
+        const signedIn = await s.call("Session", "login", {
+          username: TEMP_USER,
+          password,
+        });
+        if (signedIn.status !== 200) {
+          throw new Error(
+            `the temporary account could not sign in (HTTP ${signedIn.status})`,
+          );
+        }
+        const r = await s.call(entry.service, entry.method, entry.params ?? {});
+        record(operationId, entry.name, r.status, r.body, keys);
+      } finally {
+        await s.call("Session", "logout");
+        s.cookies.clear();
+        const deleted = await admin.call("UserMgmt", "deleteUser", {
+          name: TEMP_USER,
+        });
+        if (deleted.status !== 200) {
+          results.push(
+            `FAIL  ${operationId}.${entry.name}: the temporary account was not deleted (HTTP ${deleted.status}); delete it on the VM`,
+          );
+        }
+      }
     } else {
+      if (entry.setup) {
+        const { call, params, paramsFrom: from, merge } = entry.setup;
+        const [service, method] = call.split(".");
+        const p = from
+          ? await paramsFrom(admin, from, undefined, merge)
+          : { ...params, ...merge };
+        const r = await admin.call(service, method, p);
+        if (r.status !== 200) {
+          throw new Error(`setup ${call} failed (HTTP ${r.status})`);
+        }
+      }
       await s.login(env, entry.account);
       let params = entry.params ?? {};
       if (entry.paramsFrom) {
-        // Send back what a read returned, unchanged: a write that changes nothing but still marks
-        // the configuration dirty, so the pending-changes replies can be captured safely.
-        const [service, method] = entry.paramsFrom.split(".");
-        params = (await s.call(service, method)).body.response;
+        // Send back what a read returned, unchanged (or only the fields named in `pick`): a write
+        // that changes nothing but still marks the configuration dirty, so the pending-changes
+        // replies can be captured safely.
+        params = await paramsFrom(s, entry.paramsFrom, entry.pick);
       }
       const r = await s.call(entry.service, entry.method, params);
-      if (!entry.quiet) {
-        record(operationId, entry.name, r.status, r.body);
+      if (entry.expect === "null") {
+        // A method that returns nothing has no example to draft; only its reply is checked.
+        const ok = r.status === 200 && r.body.response === null;
+        results.push(
+          ok
+            ? `ok    ${operationId}.${entry.name}: replied null`
+            : `FAIL  ${operationId}.${entry.name}: expected null, got HTTP ${r.status}`,
+        );
+      } else if (!entry.quiet) {
+        record(operationId, entry.name, r.status, r.body, keys);
       }
-    }
-    if (s.cookies.size && operationId !== "sessionLogout") {
-      await s.call("Session", "logout");
     }
   }
 

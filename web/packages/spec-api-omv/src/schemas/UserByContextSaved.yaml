@@ -1,0 +1,33 @@
+type: object
+description: >-
+  The account as UserMgmt.setUserByContext stored it. The server also echoes the password that was
+  submitted (always empty, since the contract does not send one); the contract leaves it out and
+  the transport removes it from the reply (`x-omv-omit`).
+required:
+  [name, email, comment, disallowusermod, sshpubkeys, uid, groups, shell]
+properties:
+  uuid:
+    type: string
+    description: The account's configuration object.
+  name:
+    type: string
+  email:
+    type: string
+  comment:
+    type: string
+  disallowusermod:
+    type: boolean
+    description: True if the administrator does not let this user change their account.
+  sshpubkeys:
+    type: array
+    items:
+      type: string
+      description: A public key in RFC 4716 format.
+  uid:
+    type: integer
+  groups:
+    type: array
+    items:
+      type: string
+  shell:
+    type: string

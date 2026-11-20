@@ -77,7 +77,10 @@
     "method": "getList",
     "name": "populated",
     "account": "admin",
-    "params": { "start": 0, "limit": null }
+    "params": {
+      "start": 0,
+      "limit": null
+    }
   },
   {
     "service": "ShareMgmt",
@@ -92,7 +95,12 @@
       "search": "no-such-share"
     }
   },
-  { "service": "SSH", "method": "get", "name": "defaults", "account": "admin" },
+  {
+    "service": "SSH",
+    "method": "get",
+    "name": "defaults",
+    "account": "admin"
+  },
   {
     "service": "Config",
     "method": "isDirty",
@@ -124,7 +132,10 @@
     "name": "applied",
     "flow": "task",
     "account": "admin",
-    "params": { "modules": [], "force": false }
+    "params": {
+      "modules": [],
+      "force": false
+    }
   },
   {
     "service": "SSH",
@@ -140,6 +151,140 @@
     "name": "reverted",
     "flow": "task",
     "account": "admin",
-    "params": { "filename": "" }
+    "params": {
+      "filename": ""
+    }
+  },
+  {
+    "service": "Network",
+    "method": "getGeneralSettings",
+    "name": "noDomain",
+    "account": "admin"
+  },
+  {
+    "service": "Network",
+    "method": "getGeneralSettings",
+    "name": "withDomain",
+    "account": "admin",
+    "setup": {
+      "call": "Network.setGeneralSettings",
+      "paramsFrom": "Network.getGeneralSettings",
+      "merge": {
+        "domainname": "example.org"
+      }
+    }
+  },
+  {
+    "service": "System",
+    "method": "getTimeSettings",
+    "name": "defaults",
+    "account": "admin"
+  },
+  {
+    "service": "EmailNotification",
+    "method": "get",
+    "name": "notConfigured",
+    "account": "admin",
+    "scrubKeys": {
+      "username": "example-smtp-user",
+      "server": "smtp.example.com"
+    }
+  },
+  {
+    "service": "EmailNotification",
+    "method": "get",
+    "name": "configured",
+    "account": "admin",
+    "setup": {
+      "call": "EmailNotification.set",
+      "params": {
+        "enable": true,
+        "server": "smtp.example.com",
+        "port": 587,
+        "tls": "starttls",
+        "sender": "nas@example.com",
+        "authenable": true,
+        "username": "example-smtp-user",
+        "password": "EXAMPLE-PASSWORD",
+        "primaryemail": "admin@example.com",
+        "secondaryemail": ""
+      }
+    },
+    "scrubKeys": {
+      "username": "example-smtp-user",
+      "server": "smtp.example.com"
+    }
+  },
+  {
+    "service": "WebGui",
+    "method": "getSettings",
+    "name": "https",
+    "account": "admin"
+  },
+  {
+    "service": "WebGui",
+    "method": "getSettings",
+    "name": "http",
+    "account": "admin",
+    "setup": {
+      "call": "WebGui.setSettings",
+      "paramsFrom": "WebGui.getSettings",
+      "merge": {
+        "enablessl": false,
+        "forcesslonly": false,
+        "sslcertificateref": ""
+      }
+    }
+  },
+  {
+    "service": "UserMgmt",
+    "method": "setUserByContext",
+    "name": "saved",
+    "account": "user",
+    "paramsFrom": "UserMgmt.getUserByContext",
+    "pick": ["email", "comment"],
+    "revert": true
+  },
+  {
+    "service": "UserMgmt",
+    "method": "setUserByContext",
+    "name": "systemAccount",
+    "account": "stock",
+    "paramsFrom": "UserMgmt.getUserByContext",
+    "pick": ["email", "comment"],
+    "revert": true
+  },
+  {
+    "service": "UserMgmt",
+    "method": "setUserByContext",
+    "name": "readOnly",
+    "flow": "tempUser",
+    "disallowusermod": true,
+    "params": {
+      "email": "",
+      "comment": ""
+    }
+  },
+  {
+    "service": "WebGui",
+    "method": "dismissWelcomeMessage",
+    "name": "dismissed",
+    "account": "admin",
+    "expect": "null",
+    "comment": "Deletes /var/lib/openmediavault/display_welcome_message, which no RPC recreates: restore it over SSH afterwards (root:root, 0644, empty)."
+  },
+  {
+    "service": "WebGui",
+    "method": "dismissWelcomeMessage",
+    "name": "alreadyDismissed",
+    "account": "admin",
+    "expect": "null",
+    "comment": "Observed on OMV 8.6.1: a second call, with the marker already gone, also replies null."
+  },
+  {
+    "service": "System",
+    "method": "getInformation",
+    "name": "adminWelcomeDismissed",
+    "account": "admin"
   }
 ]

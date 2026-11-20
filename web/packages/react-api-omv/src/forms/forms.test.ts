@@ -7,6 +7,8 @@ import {
   SessionLoginRequestSchema,
   SessionVerifyRequestSchema,
   SshSetRequestSchema,
+  UserMgmtSetPasswordByContextRequestSchema,
+  UserMgmtSetUserByContextRequestSchema,
 } from "./generated/index.ts";
 
 const ok = (schema: v.GenericSchema, value: unknown) =>
@@ -86,5 +88,102 @@ describe("SSH settings", () => {
   });
   it("rejects a field the contract does not name", () => {
     expect(ok(SshSetRequestSchema, { ...valid, banner: "hi" })).toBe(false);
+  });
+});
+
+describe("e-mail address (OMV format `email`, or empty)", () => {
+  const account = (email: string) => ({ email, comment: "" });
+  it.each([
+    "",
+    "admin@example.com",
+    "first.last+tag@mail.example.org",
+    "o'brien@example.net",
+    "x@a-b.example.com",
+    "UPPER@EXAMPLE.COM",
+  ])("accepts %j", (email) => {
+    expect(ok(UserMgmtSetUserByContextRequestSchema, account(email))).toBe(
+      true,
+    );
+  });
+  it.each([
+    " ",
+    "admin",
+    "admin@",
+    "@example.com",
+    "admin@localhost",
+    "admin@example.123",
+    "admin@-example.com",
+    "admin@example-.com",
+    ".admin@example.com",
+    "ad..min@example.com",
+    "admin.@example.com",
+    "two@at@example.com",
+    "admin @example.com",
+    '"quoted"@example.com',
+    "admin@[192.0.2.1]",
+    "admin@example.com\n",
+    `${"a".repeat(65)}@example.com`,
+    `a@${"b".repeat(63)}.${"c".repeat(63)}.${"d".repeat(63)}.${"e".repeat(63)}.com`,
+  ])("rejects %j", (email) => {
+    expect(ok(UserMgmtSetUserByContextRequestSchema, account(email))).toBe(
+      false,
+    );
+  });
+});
+
+describe("my account", () => {
+  it.each(["", "Backup operator", "Ünïcode, with punctuation."])(
+    "accepts the description %j",
+    (comment) => {
+      expect(
+        ok(UserMgmtSetUserByContextRequestSchema, { email: "", comment }),
+      ).toBe(true);
+    },
+  );
+  it.each(["a:b", "two\nlines", "carriage\rreturn"])(
+    "rejects the description %j",
+    (comment) => {
+      expect(
+        ok(UserMgmtSetUserByContextRequestSchema, { email: "", comment }),
+      ).toBe(false);
+    },
+  );
+  it("rejects a password: it changes only through setPasswordByContext", () => {
+    expect(
+      ok(UserMgmtSetUserByContextRequestSchema, {
+        email: "",
+        comment: "",
+        password: "secret",
+      }),
+    ).toBe(false);
+  });
+  it("rejects a missing field (both are required)", () => {
+    expect(ok(UserMgmtSetUserByContextRequestSchema, { email: "" })).toBe(
+      false,
+    );
+  });
+});
+
+describe("my new password", () => {
+  it.each(["x", "with spaces and $ymbols", "ünïcode"])(
+    "accepts %j",
+    (password) => {
+      expect(ok(UserMgmtSetPasswordByContextRequestSchema, { password })).toBe(
+        true,
+      );
+    },
+  );
+  it.each(["", "two\nlines", "carriage\rreturn"])("rejects %j", (password) => {
+    expect(ok(UserMgmtSetPasswordByContextRequestSchema, { password })).toBe(
+      false,
+    );
+  });
+  it("rejects a field the contract does not name", () => {
+    expect(
+      ok(UserMgmtSetPasswordByContextRequestSchema, {
+        password: "x",
+        email: "",
+      }),
+    ).toBe(false);
   });
 });

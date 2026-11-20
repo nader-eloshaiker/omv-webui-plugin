@@ -1,0 +1,5 @@
+summary: "Written by hand: the reply when no shared folder exists (a fresh install). The test VM has a shared folder; the captured searchNoMatch reply has the same shape."
+x-omv-status: 200
+value:
+  total: 0
+  data: []

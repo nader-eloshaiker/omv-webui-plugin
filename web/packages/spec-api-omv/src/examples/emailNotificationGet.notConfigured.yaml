@@ -1,0 +1,13 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  enable: false
+  server: ""
+  port: 25
+  tls: none
+  sender: ""
+  primaryemail: ""
+  secondaryemail: ""
+  authenable: false
+  username: ""
+  password: ""

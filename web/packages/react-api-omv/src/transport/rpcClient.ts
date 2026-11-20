@@ -107,6 +107,27 @@ function handleOf(data: unknown): string | undefined {
 
 // ---- the call ----
 
+/**
+ * The reply without the fields the contract's x-omv-omit names. Runs first, so normalisation,
+ * development-build validation (and its console output), the query cache and every caller see only
+ * what is left (UI-6).
+ */
+function withoutOmitted(
+  value: unknown,
+  omit: readonly string[] | undefined,
+): unknown {
+  if (!omit || typeof value !== "object" || value === null) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    // PHP's [] for an empty map has no fields to remove.
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value).filter(([key]) => !omit.includes(key)),
+  );
+}
+
 function entryOf(url: string): OperationEntry {
   if (!Object.hasOwn(OPERATIONS, url)) {
     // UI-4: nothing reaches the backend that the contract does not name.
@@ -288,7 +309,7 @@ export const rpcClient = async <T>(
   }
 
   sessionLive = true;
-  let value = envelope.response;
+  let value = withoutOmitted(envelope.response, entry.omit);
   if (entry.response) {
     // Session replies keep only the fields the contract lists: `sessionid` and the challenge's
     // `redirecturl` never leave this module (UI-3, UI-6).

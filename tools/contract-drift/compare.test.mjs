@@ -178,3 +178,91 @@ test("checkContract reports a missing method, a missing datamodel and an uncheck
     ["missing aGone (A.gone)", "missing aX (A.x)", "unchecked aY (A.y)"],
   );
 });
+
+// OMV's "an e-mail address or empty" (rpc.usermgmt.setuserbycontext and others).
+const emailOrEmpty = {
+  type: "object",
+  properties: {
+    email: {
+      type: "string",
+      oneOf: [
+        { type: "string", format: "email" },
+        { type: "string", maxLength: 0 },
+      ],
+      required: true,
+    },
+  },
+};
+
+test("translate keeps oneOf alternatives instead of dropping them", () => {
+  const { schema, findings } = translate(emailOrEmpty);
+  assert.deepEqual(schema.properties.email, {
+    oneOf: [
+      { type: "string", "x-omv-format": "email" },
+      { type: "string", maxLength: 0 },
+    ],
+  });
+  assert.match(findings.join("\n"), /\$\.email: oneOf alternatives/);
+});
+
+test("translate flags a not rule it cannot carry over", () => {
+  const { findings } = translate({ type: "string", not: { enum: ["local"] } });
+  assert.match(findings.join("\n"), /"not" rule/);
+});
+
+const theirEmail = translate(emailOrEmpty).schema;
+const emailRef = {
+  type: "string",
+  "x-omv-format": "email",
+  pattern: "^[^@]+@[^@]+$",
+};
+const withRefs = { components: { schemas: { Email: emailRef } } };
+const emailCases = [
+  [
+    "the same alternatives, one by reference",
+    {
+      oneOf: [
+        { $ref: "#/components/schemas/Email" },
+        { type: "string", maxLength: 0 },
+      ],
+    },
+    [],
+  ],
+  ["only an e-mail address", { $ref: "#/components/schemas/Email" }, []],
+  ["only empty", { type: "string", maxLength: 0 }, []],
+  [
+    "any string",
+    { type: "string" },
+    ["looser $.email: accepts values that none of OMV's alternatives accepts"],
+  ],
+  [
+    "an alternative without the format",
+    { oneOf: [{ type: "string" }, { type: "string", maxLength: 0 }] },
+    [
+      "looser $.email: alternative 1 accepts values that none of OMV's alternatives accepts",
+    ],
+  ],
+  [
+    "null as well",
+    {
+      oneOf: [
+        { $ref: "#/components/schemas/Email" },
+        { type: "string", maxLength: 0 },
+      ],
+      nullable: true,
+    },
+    ["looser $.email: accepts null, which OMV does not"],
+  ],
+];
+
+for (const [name, email, want] of emailCases) {
+  test(`oneOf: ${name}`, () => {
+    const ours = { type: "object", required: ["email"], properties: { email } };
+    assert.deepEqual(
+      compareSchemas(ours, theirEmail, withRefs).map(
+        (p) => `${p.severity} ${p.at}: ${p.message}`,
+      ),
+      want,
+    );
+  });
+}

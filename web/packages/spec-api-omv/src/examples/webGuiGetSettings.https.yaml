@@ -1,0 +1,9 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  port: 80
+  enablessl: true
+  sslport: 443
+  forcesslonly: false
+  sslcertificateref: "00000000-0000-4000-8000-000000000001"
+  timeout: 6

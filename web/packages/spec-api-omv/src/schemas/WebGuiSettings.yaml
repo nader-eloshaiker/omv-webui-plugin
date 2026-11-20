@@ -1,0 +1,28 @@
+type: object
+description: The web administration settings (conf.webadmin).
+required: [port, enablessl, sslport, forcesslonly, sslcertificateref, timeout]
+properties:
+  port:
+    type: integer
+    minimum: 1
+    maximum: 65535
+    description: The HTTP port.
+  enablessl:
+    type: boolean
+    description: Whether the web interface is also served over HTTPS.
+  sslport:
+    type: integer
+    minimum: 1
+    maximum: 65535
+    description: The HTTPS port.
+  forcesslonly:
+    type: boolean
+    description: Whether HTTP is redirected to HTTPS.
+  sslcertificateref:
+    type: string
+    description: The UUID of the certificate used for HTTPS, or empty when none is chosen.
+  timeout:
+    type: integer
+    minimum: 0
+    maximum: 1440
+    description: Minutes an idle session lasts. 0 means the server never ends an idle session.

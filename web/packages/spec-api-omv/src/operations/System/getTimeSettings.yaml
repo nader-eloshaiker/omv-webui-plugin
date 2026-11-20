@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: systemGetTimeSettings
+  tags:
+    - System
+  summary: Date and time
+  description: "The time zone, whether the clock is set from time servers, and the server's current date."
+  x-omv-rpc:
+    service: System
+    method: getTimeSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TimeSettings.yaml
+          examples:
+            defaults:
+              $ref: ../../examples/systemGetTimeSettings.defaults.yaml

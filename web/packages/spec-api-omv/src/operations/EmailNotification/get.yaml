@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: emailNotificationGet
+  tags:
+    - EmailNotification
+  summary: E-mail notification settings
+  description: >-
+    How the system sends notification e-mail. The server's reply also carries the SMTP password in
+    plain text; the transport removes it before the reply is validated, cached or returned (UI-6),
+    so no page can show or keep it.
+  x-omv-rpc:
+    service: EmailNotification
+    method: get
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-omit: [password]
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/EmailNotificationSettings.yaml
+          examples:
+            notConfigured:
+              $ref: ../../examples/emailNotificationGet.notConfigured.yaml
+            configured:
+              $ref: ../../examples/emailNotificationGet.configured.yaml

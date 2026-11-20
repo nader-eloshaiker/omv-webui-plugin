@@ -22,6 +22,8 @@ tags:
   - name: ShareMgmt
   - name: UserMgmt
   - name: WebGui
+  - name: Network
+  - name: EmailNotification
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -53,6 +55,20 @@ paths:
     $ref: ./operations/UserMgmt/getUserByContext.yaml
   /rpc/WebGui/getAutoLogoutSettings:
     $ref: ./operations/WebGui/getAutoLogoutSettings.yaml
+  /rpc/WebGui/getSettings:
+    $ref: ./operations/WebGui/getSettings.yaml
+  /rpc/WebGui/dismissWelcomeMessage:
+    $ref: ./operations/WebGui/dismissWelcomeMessage.yaml
+  /rpc/UserMgmt/setUserByContext:
+    $ref: ./operations/UserMgmt/setUserByContext.yaml
+  /rpc/UserMgmt/setPasswordByContext:
+    $ref: ./operations/UserMgmt/setPasswordByContext.yaml
+  /rpc/Network/getGeneralSettings:
+    $ref: ./operations/Network/getGeneralSettings.yaml
+  /rpc/System/getTimeSettings:
+    $ref: ./operations/System/getTimeSettings.yaml
+  /rpc/EmailNotification/get:
+    $ref: ./operations/EmailNotification/get.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

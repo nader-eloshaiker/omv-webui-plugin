@@ -1,0 +1,20 @@
+type: object
+description: >-
+  The signed-in user's own e-mail address and description (rpc.usermgmt.setuserbycontext). OMV
+  also accepts `password` here; the contract leaves it out, because the interface changes a
+  password only through UserMgmt.setPasswordByContext.
+required: [email, comment]
+properties:
+  email:
+    description: An e-mail address, or empty.
+    oneOf:
+      - $ref: ./Email.yaml
+      - type: string
+        maxLength: 0
+  comment:
+    type: string
+    description: >-
+      The account's description. The system's account tools refuse a colon or a line break, so
+      the contract does too.
+    pattern: '^[^:\r\n]*$'
+additionalProperties: false

@@ -107,3 +107,58 @@ test("keys are scrubbed too", () => {
   assert.deepEqual(Object.keys(out), ["example-user"]);
   assert.deepEqual(verify(out), []);
 });
+
+test("e-mail addresses outside the documentation domains are replaced, consistently", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    sender: "Box@Mail.Invalid-Corp.test",
+    primaryemail: "box@mail.invalid-corp.test",
+    secondaryemail: "alerts@example.net",
+    owner: "webui-tester@example.com",
+    note: "mail webui-tester@corp.test or other@corp.test",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.equal(out.sender, "user1@example.com");
+  assert.equal(out.primaryemail, out.sender, "case does not make a new one");
+  assert.equal(out.secondaryemail, "alerts@example.net");
+  assert.equal(out.owner, "example-user@example.com");
+  assert.equal(out.note, "mail user2@example.com or user3@example.com");
+});
+
+test("a password field is replaced whatever its value, and empty stays empty", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({ password: "correct horse", nested: { password: "" } });
+  assert.deepEqual(out, {
+    password: "EXAMPLE-PASSWORD",
+    nested: { password: "" },
+  });
+  assert.deepEqual(verify(out), []);
+});
+
+test("a capture may name more fields to replace", () => {
+  const { scrub, verify } = createScrubber(known);
+  const extra = { username: "example-smtp-user", server: "smtp.example.com" };
+  const raw = { username: "mailer-7", server: "relay.corp.test", port: 587 };
+  const out = scrub(raw, extra);
+  assert.deepEqual(out, {
+    username: "example-smtp-user",
+    server: "smtp.example.com",
+    port: 587,
+  });
+  assert.deepEqual(verify(out, extra), []);
+  assert.deepEqual(verify(scrub(raw), extra).sort(), [
+    "server at $.server",
+    "username at $.username",
+  ]);
+});
+
+test("verify reports a password or e-mail address left in place, never the value", () => {
+  const { verify } = createScrubber(known);
+  const text = verify({
+    password: "correct horse",
+    email: "someone@corp.test",
+  }).join("\n");
+  assert.match(text, /password at \$\.password/);
+  assert.match(text, /e-mail address at \$\.email/);
+  assert.ok(!text.includes("correct horse") && !text.includes("corp.test"));
+});

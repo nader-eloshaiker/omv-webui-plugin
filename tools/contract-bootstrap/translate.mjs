@@ -33,6 +33,28 @@ export function translate(omv, at = "$") {
 }
 
 function walk(omv, at, findings) {
+  if (omv.not !== undefined) {
+    findings.push(
+      `${at}: a "not" rule, which is not translated - the contract must reject what it rejects; review`,
+    );
+  }
+  if (Array.isArray(omv.oneOf)) {
+    // OMV writes "an e-mail address or empty" as a type plus oneOf alternatives. Each alternative
+    // inherits the outer keywords it does not set itself.
+    const { oneOf, not: _not, ...outer } = omv;
+    findings.push(
+      `${at}: oneOf alternatives - the contract may accept their union or less; review`,
+    );
+    const out = {
+      oneOf: oneOf.map((alt, i) =>
+        walk({ ...outer, ...alt }, `${at}|${i + 1}`, findings),
+      ),
+    };
+    if (omv.description) {
+      out.description = omv.description;
+    }
+    return out;
+  }
   let types = Array.isArray(omv.type)
     ? [...omv.type]
     : omv.type === undefined

@@ -1,0 +1,10 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  date:
+    local: "Fri Nov 20 09:47:24 2026"
+    ISO8601: "2026-11-20T09:47:24+00:00"
+  timezone: Etc/UTC
+  ntpenable: true
+  ntptimeservers: pool.ntp.org
+  ntpclients: ""

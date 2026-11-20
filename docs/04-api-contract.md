@@ -20,33 +20,34 @@ POST /rpc/{Service}/{method}        one path per backend method the interface us
 
 Checked by lint rules under `web/packages/spec-api-omv/redocly-plugins/`.
 
-| Extension | On | Values | Meaning |
-|-----------|----|--------|---------|
-| `x-omv-rpc` | operation | `{service, method}` | The backend call. Required; must agree with the path |
-| `x-omv-role` | operation | `user` \| `admin` (and `public` for `Session.login` / `verify` only) | Required. What the backend demands; the interface uses it to hide what a user cannot do |
-| `x-omv-readonly` | operation | boolean | Does not change state → query hook |
-| `x-omv-dirty` | operation | boolean | Leaves configuration changes pending → invalidates the pending-changes query |
-| `x-omv-task` | operation | `{result?: <schema ref>}` | Returns a task handle; follow with the task helper |
-| `x-omv-download` | operation | `{contentType}` | Called through the download endpoint and saved as a file |
-| `x-omv-destructive` | operation | `data` \| `access` \| `service` | Loses data, can lock the administrator out, or interrupts a service → the confirmation pattern of the style guide (UI-8) |
-| `x-omv-secret` | schema property | boolean | Masked in forms, never echoed, never logged (UI-6). `format: password` implies it |
-| `x-omv-int64` | schema (string) | boolean | A 64-bit integer carried as a decimal string |
-| `x-omv-coerce` | schema | boolean | The transport may convert `0`/`1`/numeric strings to the declared type for this field |
-| `x-omv-format` | schema (string) | an OMV format name | The OMV format this string must satisfy; drives form validation |
-| `x-omv-source` | operation | `{datamodel, omvVersion}` | Where a bootstrapped request schema came from, for drift checks |
+| Extension           | On              | Values                                                               | Meaning                                                                                                                                                                                                                                                                                                 |
+| ------------------- | --------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `x-omv-rpc`         | operation       | `{service, method}`                                                  | The backend call. Required; must agree with the path                                                                                                                                                                                                                                                    |
+| `x-omv-role`        | operation       | `user` \| `admin` (and `public` for `Session.login` / `verify` only) | Required. What the backend demands; the interface uses it to hide what a user cannot do                                                                                                                                                                                                                 |
+| `x-omv-readonly`    | operation       | boolean                                                              | Does not change state → query hook                                                                                                                                                                                                                                                                      |
+| `x-omv-dirty`       | operation       | boolean                                                              | Leaves configuration changes pending → invalidates the pending-changes query                                                                                                                                                                                                                            |
+| `x-omv-task`        | operation       | `{result?: <schema ref>}`                                            | Returns a task handle; follow with the task helper                                                                                                                                                                                                                                                      |
+| `x-omv-download`    | operation       | `{contentType}`                                                      | Called through the download endpoint and saved as a file                                                                                                                                                                                                                                                |
+| `x-omv-destructive` | operation       | `data` \| `access` \| `service`                                      | Loses data, can lock the administrator out, or interrupts a service → the confirmation pattern of the style guide (UI-8)                                                                                                                                                                                |
+| `x-omv-secret`      | schema property | boolean                                                              | Masked in forms, never echoed, never logged (UI-6). `format: password` implies it                                                                                                                                                                                                                       |
+| `x-omv-int64`       | schema (string) | boolean                                                              | A 64-bit integer carried as a decimal string                                                                                                                                                                                                                                                            |
+| `x-omv-coerce`      | schema          | boolean                                                              | The transport may convert `0`/`1`/numeric strings to the declared type for this field                                                                                                                                                                                                                   |
+| `x-omv-format`      | schema (string) | an OMV format name                                                   | The OMV format this string must satisfy; drives form validation                                                                                                                                                                                                                                         |
+| `x-omv-source`      | operation       | `{datamodel, omvVersion}`                                            | Where a bootstrapped request schema came from, for drift checks                                                                                                                                                                                                                                         |
+| `x-omv-omit`        | operation       | list of field names                                                  | Top-level fields of the reply that the transport deletes before anything else sees it: a secret the server sends that the interface must never hold, such as the SMTP password in `EmailNotification.get` (UI-6). The response schema must not declare or require them, and the reply must be an object |
 
 ## Request schemas
 
 Bootstrapped from OMV's `rpc.*` datamodels by `tools/contract-bootstrap`, then reviewed and committed. The tool translates OMV's dialect:
 
-| OMV dialect | OpenAPI 3.0.3 |
-|-------------|---------------|
-| `"required": true` on a property | name added to the parent's `required` list |
-| `"type": ["string", "null"]` | `type: string`, `nullable: true` |
-| `"type": ["string", "integer", "null"]` | `oneOf` of the scalar types, `nullable: true`; flagged for review |
-| `"type": "any"` | not translated; the author writes a real schema after reading the method |
-| `"format": "uuidv4"` and other OMV formats | `x-omv-format` plus an equivalent `pattern` |
-| `minimum`, `maximum`, `enum`, `pattern`, `maxLength`, `default` | carried over |
+| OMV dialect                                                     | OpenAPI 3.0.3                                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `"required": true` on a property                                | name added to the parent's `required` list                               |
+| `"type": ["string", "null"]`                                    | `type: string`, `nullable: true`                                         |
+| `"type": ["string", "integer", "null"]`                         | `oneOf` of the scalar types, `nullable: true`; flagged for review        |
+| `"type": "any"`                                                 | not translated; the author writes a real schema after reading the method |
+| `"format": "uuidv4"` and other OMV formats                      | `x-omv-format` plus an equivalent `pattern`                              |
+| `minimum`, `maximum`, `enum`, `pattern`, `maxLength`, `default` | carried over                                                             |
 
 Rules for authors:
 
@@ -75,16 +76,18 @@ Conventions:
 
 Examples are also the mock data: MSW serves them in development and tests, as in the reference application. A drifted example is a broken mock, which is why lint validates them.
 
+An example is the raw reply, so a field named in `x-omv-omit` stays in it, with a documentation value (the scrubber replaces any `password` with `EXAMPLE-PASSWORD`). The mock then sends what the server sends, and every test that reads the operation through the transport proves the field is removed, as the `sessionid` placeholder in the login examples does.
+
 ## Keeping it true
 
 Because the server does not enforce the contract, four checks do:
 
-| Check | Catches | Runs |
-|-------|---------|------|
-| Redocly lint with the `x-omv-*` rules | Missing role, path/`x-omv-rpc` disagreement, examples that do not validate, missing examples | CI |
-| `tools/contract-drift` | A request schema that is looser than, or has diverged from, the OMV datamodel named in `x-omv-source`; a method that no longer exists | CI against a pinned OMV source tree; before declaring support for a new OMV version |
-| Development-build response validation in the transport | A live response that does not match its schema | During development and in integration tests against the VM |
-| Integration tests | Each operation called against a real OMV | Before release |
+| Check                                                  | Catches                                                                                                                               | Runs                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Redocly lint with the `x-omv-*` rules                  | Missing role, path/`x-omv-rpc` disagreement, examples that do not validate, missing examples                                          | CI                                                                                  |
+| `tools/contract-drift`                                 | A request schema that is looser than, or has diverged from, the OMV datamodel named in `x-omv-source`; a method that no longer exists | CI against a pinned OMV source tree; before declaring support for a new OMV version |
+| Development-build response validation in the transport | A live response that does not match its schema                                                                                        | During development and in integration tests against the VM                          |
+| Integration tests                                      | Each operation called against a real OMV                                                                                              | Before release                                                                      |
 
 ## The pipeline
 
@@ -114,15 +117,15 @@ orval generates zod, not valibot, schemas. The form schemas are written by a sma
 
 Chosen to exercise each pattern once (Phase 1 and 2 of [07](07-implementation-plan.md)):
 
-| Operation | Pattern |
-|-----------|---------|
-| `Session.login`, `verify`, `logout` | Authentication |
-| `System.getInformation` | Simple read |
-| `Config.isDirty`, `applyChangesBg`, `revertChangesBg` | Pending changes; tasks |
-| `Exec.getOutput`, `isRunning`, `stop` | Task following (used by the helper, not by pages) |
-| `SSH.get`, `SSH.set` | A configuration object; a mutation that dirties configuration |
-| `ShareMgmt.getList` | A paged list with computed fields |
-| `UserMgmt.getUserByContext` | A `user`-role operation |
+| Operation                                             | Pattern                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------- |
+| `Session.login`, `verify`, `logout`                   | Authentication                                                |
+| `System.getInformation`                               | Simple read                                                   |
+| `Config.isDirty`, `applyChangesBg`, `revertChangesBg` | Pending changes; tasks                                        |
+| `Exec.getOutput`, `isRunning`, `stop`                 | Task following (used by the helper, not by pages)             |
+| `SSH.get`, `SSH.set`                                  | A configuration object; a mutation that dirties configuration |
+| `ShareMgmt.getList`                                   | A paged list with computed fields                             |
+| `UserMgmt.getUserByContext`                           | A `user`-role operation                                       |
 
 ## Excluded methods
 

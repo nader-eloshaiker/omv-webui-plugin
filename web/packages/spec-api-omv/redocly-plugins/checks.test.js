@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   acceptEmptyArrayForObject,
   checkExampleCoverage,
+  checkOmit,
   checkPathItem,
   checkSchema,
   operationIdOf,
@@ -263,4 +264,107 @@ test("lint restates an object schema to accept the empty array PHP sends for an 
   ]);
   assert.equal(acceptEmptyArrayForObject(schema), false, "only once");
   assert.equal(acceptEmptyArrayForObject({ type: "string" }), false);
+});
+
+const omitOp = (omit, schema) => ({
+  "x-omv-omit": omit,
+  responses: {
+    200: { content: { "application/json": { schema } } },
+  },
+});
+
+test("x-omv-omit: shape", () => {
+  const ok = okOp({ "x-omv-omit": ["password"] });
+  assert.deepEqual(checkPathItem("/rpc/SSH/get", ok), []);
+  for (const bad of [[], "password", [""], [1], null]) {
+    assert.match(
+      messages(checkPathItem("/rpc/SSH/get", okOp({ "x-omv-omit": bad }))),
+      /must be a non-empty list of response field names/,
+      JSON.stringify(bad),
+    );
+  }
+  assert.match(
+    messages(
+      checkPathItem(
+        "/rpc/SSH/get",
+        okOp({ "x-omv-omit": ["password", "password"] }),
+      ),
+    ),
+    /names a field twice/,
+  );
+});
+
+const omitCases = [
+  {
+    name: "a field the schema does not describe",
+    op: omitOp(["password"], {
+      type: "object",
+      required: ["username"],
+      properties: { username: { type: "string" } },
+    }),
+    want: [],
+  },
+  {
+    name: "a declared field",
+    op: omitOp(["password"], {
+      type: "object",
+      properties: { password: { type: "string" } },
+    }),
+    want: ["must not declare it"],
+  },
+  {
+    name: "a required field",
+    op: omitOp(["password"], { type: "object", required: ["password"] }),
+    want: ["must not require it"],
+  },
+  {
+    name: "a reply that is not an object",
+    op: omitOp(["password"], { type: "string" }),
+    want: ["plain object schema"],
+  },
+  {
+    name: "a union reply",
+    op: omitOp(["password"], { oneOf: [{ type: "object" }] }),
+    want: ["plain object schema"],
+  },
+  {
+    name: "no reply body",
+    op: { "x-omv-omit": ["password"], responses: { 200: {} } },
+    want: ["plain object schema"],
+  },
+  {
+    name: "no x-omv-omit",
+    op: omitOp(undefined, { type: "string" }),
+    want: [],
+  },
+];
+
+for (const { name, op, want } of omitCases) {
+  test(`x-omv-omit: ${name}`, () => {
+    const found = checkOmit(op).map((f) => f.message);
+    assert.equal(found.length, want.length, found.join("\n"));
+    want.forEach((w, i) => assert.ok(found[i].includes(w), found[i]));
+  });
+}
+
+test("x-omv-omit: the reply's schema is resolved first", () => {
+  const schema = {
+    type: "object",
+    properties: { password: { type: "string" } },
+  };
+  const op = omitOp(["password"], { $ref: "#/x" });
+  const resolve = (n) => (n.$ref ? schema : n);
+  assert.match(messages(checkOmit(op, resolve)), /must not declare it/);
+});
+
+test("x-omv-omit: looks inside an object schema lint restated for PHP's empty array", () => {
+  const schema = {
+    type: "object",
+    properties: { password: { type: "string" } },
+  };
+  acceptEmptyArrayForObject(schema);
+  assert.match(
+    messages(checkOmit(omitOp(["password"], schema))),
+    /must not declare it/,
+  );
 });
