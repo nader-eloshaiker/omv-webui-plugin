@@ -6,8 +6,10 @@ import { Button, IconButton } from "../button/button";
 import { Checkbox } from "../checkbox/checkbox";
 import { EmptyState } from "../empty-state/empty-state";
 import { Input } from "../field/field";
-import { StatusPill } from "../status/status";
+import { StatusIcon, StatusPill } from "../status/status";
 import type { HealthStatus } from "../status/status-kinds";
+import { Identifier } from "../text/identifier";
+import { Tooltip } from "../tooltip/tooltip";
 import {
   Table,
   TableBody,
@@ -31,8 +33,7 @@ interface Disk {
   device: string;
   model: string;
   capacity: string;
-  bytes: number;
-  temperature: string;
+  temperature: string | null;
   status: HealthStatus;
 }
 
@@ -41,7 +42,6 @@ const DISKS: Disk[] = [
     device: "/dev/sda",
     model: "Example HDD 4T",
     capacity: "3.6 TiB",
-    bytes: 4,
     temperature: "34 °C",
     status: "ok",
   },
@@ -49,7 +49,6 @@ const DISKS: Disk[] = [
     device: "/dev/sdb",
     model: "Example HDD 4T",
     capacity: "3.6 TiB",
-    bytes: 4,
     temperature: "47 °C",
     status: "warning",
   },
@@ -57,7 +56,6 @@ const DISKS: Disk[] = [
     device: "/dev/sdc",
     model: "Example HDD 4T",
     capacity: "3.6 TiB",
-    bytes: 4,
     temperature: "36 °C",
     status: "critical",
   },
@@ -65,8 +63,7 @@ const DISKS: Disk[] = [
     device: "/dev/sdd",
     model: "Example SSD 500G with a long model name from the firmware",
     capacity: "465.8 GiB",
-    bytes: 0.5,
-    temperature: "n/a",
+    temperature: null,
     status: "unknown",
   },
 ];
@@ -80,35 +77,20 @@ const WORDS: Record<HealthStatus, string> = {
   stopped: "Stopped",
 };
 
-function Head({ sort, onSort }: { sort: SortDirection; onSort: () => void }) {
-  return (
-    <TableHeader>
-      <TableRow>
-        <TableHead className="w-10">
-          <span className="sr-only">Selected</span>
-        </TableHead>
-        <TableHead sort={sort} onSort={onSort}>
-          Device
-        </TableHead>
-        <TableHead>Model</TableHead>
-        <TableHead numeric sort="none" onSort={() => undefined}>
-          Capacity
-        </TableHead>
-        <TableHead numeric>Temperature</TableHead>
-        <TableHead>Health</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
-}
+type State = "data" | "loading" | "empty" | "filtered" | "error";
 
 function DisksTable({
   state,
+  touch = false,
 }: {
-  state: "data" | "loading" | "empty" | "filtered" | "error";
+  state: State;
+  touch?: boolean;
 }) {
   const [selected, setSelected] = React.useState<string[]>(["/dev/sdb"]);
   const [sort, setSort] = React.useState<SortDirection>("ascending");
   const rows = sort === "ascending" ? DISKS : [...DISKS].reverse();
+  const all = selected.length === DISKS.length;
+  const some = selected.length > 0 && !all;
   const toggle = (device: string) =>
     setSelected((current) =>
       current.includes(device)
@@ -121,25 +103,71 @@ function DisksTable({
         <Input
           aria-label="Search disks"
           placeholder="Search"
-          className="h-7 w-48"
+          className="min-h-7 w-48"
         />
-        <Button size="sm" variant="neutral" disabled={selected.length !== 1}>
-          SMART details
-        </Button>
-        <div className="ms-auto">
-          <Button size="sm" variant="neutral" disabled={selected.length === 0}>
-            <Trash2 aria-hidden="true" />
-            Wipe...
+        <span
+          role="status"
+          className="text-sm text-muted-foreground tabular-nums"
+        >
+          {selected.length > 0 ? `${String(selected.length)} selected` : ""}
+        </span>
+        <Tooltip content="Select exactly one disk to see its SMART details.">
+          <Button
+            size="sm"
+            variant="neutral"
+            disabled={selected.length !== 1}
+            focusableWhenDisabled
+          >
+            SMART details
           </Button>
+        </Tooltip>
+        <div className="ms-auto">
+          <Tooltip content="Select one disk to wipe it.">
+            <Button
+              size="sm"
+              variant="neutral"
+              disabled={selected.length !== 1}
+              focusableWhenDisabled
+            >
+              <Trash2 aria-hidden="true" />
+              Wipe…
+            </Button>
+          </Tooltip>
         </div>
       </TableToolbar>
-      <Table aria-label="Disks" busy={state === "loading"}>
-        <Head
-          sort={sort}
-          onSort={() =>
-            setSort(sort === "ascending" ? "descending" : "ascending")
-          }
-        />
+      <Table
+        aria-label="Disks"
+        busy={state === "loading"}
+        busyLabel="Loading disks…"
+      >
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-10">
+              <Checkbox
+                aria-label="Select all disks"
+                checked={all}
+                indeterminate={some}
+                onCheckedChange={() =>
+                  setSelected(all ? [] : DISKS.map((d) => d.device))
+                }
+              />
+            </TableHead>
+            <TableHead
+              sort={sort}
+              onSort={() =>
+                setSort(sort === "ascending" ? "descending" : "ascending")
+              }
+            >
+              Device
+            </TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead numeric sort="none" onSort={() => undefined}>
+              Capacity
+            </TableHead>
+            <TableHead numeric>Temperature</TableHead>
+            <TableHead>Health</TableHead>
+          </TableRow>
+        </TableHeader>
         <TableBody>
           {state === "loading" ? (
             <TableSkeletonRows columns={6} rows={4} />
@@ -160,7 +188,7 @@ function DisksTable({
                 variant="filtered"
                 action={<Button variant="neutral">Clear the search</Button>}
               >
-                No disks match “nvme”.
+                No disks match <Identifier>nvme</Identifier>.
               </EmptyState>
             </TableStateRow>
           ) : null}
@@ -169,9 +197,13 @@ function DisksTable({
               <EmptyState
                 variant="error"
                 title="Could not read the disks"
+                serverMessage={{
+                  label: "Message from the server",
+                  text: "The request timed out after 30 seconds.",
+                }}
                 action={<Button variant="neutral">Try again</Button>}
               >
-                The request timed out after 30 seconds.
+                The list of disks did not load. Nothing was changed.
               </EmptyState>
             </TableStateRow>
           ) : null}
@@ -180,6 +212,7 @@ function DisksTable({
                 <TableRow
                   key={disk.device}
                   selected={selected.includes(disk.device)}
+                  size={touch ? "touch" : "default"}
                 >
                   <TableCell>
                     <Checkbox
@@ -189,19 +222,17 @@ function DisksTable({
                     />
                   </TableCell>
                   <TableCell mono>{disk.device}</TableCell>
-                  <TableCell className="max-w-56 truncate">
+                  <TableCell className="max-w-64 [overflow-wrap:anywhere]">
                     {disk.model}
                   </TableCell>
                   <TableCell numeric>{disk.capacity}</TableCell>
-                  <TableCell
-                    numeric
-                    className={
-                      disk.status === "unknown"
-                        ? "text-subtle-foreground"
-                        : undefined
-                    }
-                  >
-                    {disk.temperature}
+                  <TableCell numeric>
+                    {disk.temperature ?? (
+                      <span className="inline-flex items-center gap-1 text-unknown-label">
+                        <StatusIcon status="unknown" />
+                        No reading
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <StatusPill status={disk.status}>
@@ -230,6 +261,9 @@ function DisksTable({
 
 export const WithSelection: Story = {
   render: () => <DisksTable state="data" />,
+};
+export const TouchRows: Story = {
+  render: () => <DisksTable state="data" touch />,
 };
 export const Loading: Story = { render: () => <DisksTable state="loading" /> };
 export const Empty: Story = { render: () => <DisksTable state="empty" /> };

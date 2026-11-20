@@ -66,28 +66,60 @@ export const IconOnly: Story = {
   ),
 };
 
+// A disabled control says why, in muted text linked to it (style guide 5.3), and stays reachable by
+// keyboard so the reason is heard.
 export const Disabled: Story = {
   render: () => (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button disabled>Save</Button>
-      <Button variant="neutral" disabled>
-        Cancel
-      </Button>
-      <Button variant="ghost" disabled>
-        Refresh
-      </Button>
-      <Button variant="destructive" disabled>
-        Wipe disk
-      </Button>
+    <div className="flex flex-col gap-4">
+      {(
+        [
+          ["primary", "Save", "Nothing has changed yet."],
+          ["neutral", "SMART details", "Select one disk to see its details."],
+          ["ghost", "Refresh", "The list refreshes itself every 30 seconds."],
+          [
+            "destructive",
+            "Wipe disk",
+            "Type the device name to confirm first.",
+          ],
+        ] as const
+      ).map(([variant, label, reason]) => (
+        <div key={label} className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={variant}
+            disabled
+            focusableWhenDisabled
+            aria-describedby={`reason-${variant}`}
+          >
+            {label}
+          </Button>
+          <span
+            id={`reason-${variant}`}
+            className="text-sm text-muted-foreground"
+          >
+            {reason}
+          </span>
+        </div>
+      ))}
     </div>
   ),
 };
 
-export const Loading: Story = { args: { loading: true, children: "Saving" } };
+export const Loading: Story = { args: { loading: true, children: "Saving…" } };
 
 export const LongLabel: Story = {
   args: {
     variant: "neutral",
     children: "Open the classic interface for scheduled jobs and notifications",
   },
+};
+
+// A translated label longer than the space: the button grows and wraps instead of spilling out.
+export const WrapsAtNarrowWidth: Story = {
+  render: () => (
+    <div className="w-[18rem] rounded-card border border-border p-3">
+      <Button variant="neutral">
+        Gemeinsamen Ordner und alle zugehörigen Freigaben jetzt hinzufügen
+      </Button>
+    </div>
+  ),
 };

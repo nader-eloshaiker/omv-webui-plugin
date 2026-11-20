@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { Copy } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { IconButton } from "../button/button";
@@ -14,11 +14,20 @@ interface TaskLogProps {
   label: string;
   /** The copy control's name: "Copy output". */
   copyLabel: string;
-  /** Announced after copying: "Output copied". */
+  /** Shown and announced after copying: "Output copied". */
   copiedLabel: string;
   /**
-   * Set when the task has ended: the result in words ("Finished: 3 packages upgraded"). Announced
-   * through a polite live region and kept on screen (5.7).
+   * Shown and announced where the browser has no clipboard (a page served over plain HTTP): the output
+   * is selected instead. "Output selected. Press Ctrl+C to copy."
+   */
+  selectedLabel: string;
+  /** The download control: its name ("Download output") and the file's name ("install-updates.log"). */
+  download?: { label: string; fileName: string };
+  /** Shown while there is no output yet: "Waiting for output…". */
+  emptyLabel?: React.ReactNode;
+  /**
+   * Set when the task has ended: the result, best as a status pill with the fixed word and a plain
+   * sentence. Announced through a polite live region and kept on screen (5.7).
    */
   endMessage?: React.ReactNode;
   className?: string;
@@ -27,27 +36,39 @@ interface TaskLogProps {
 // Within this many pixels of the end counts as "at the bottom", so a sub-pixel scroll position does
 // not stop the view following.
 const BOTTOM_SLACK = 8;
+// How long the copy confirmation stays visible. It is also announced, so nothing depends on seeing it.
+const CONFIRMATION_MS = 4000;
 
-function lineText(line: TaskLogLine) {
-  return typeof line === "string" ? line : line.text;
+function plainText(lines: readonly TaskLogLine[]) {
+  return lines
+    .map((line) =>
+      typeof line === "string"
+        ? stripControl(line)
+        : `${stripControl(line.time)}  ${stripControl(line.text)}`,
+    )
+    .join("\n");
 }
 
 /**
  * Task and log output on the terminal pair (style guide 5.7). Every line is a text node: backend
  * output is never parsed as markup, and terminal escape sequences are removed. The view follows new
- * output while the reader is at the bottom and stops when they scroll up.
+ * output while the reader is at the bottom and stops when they scroll up. Copy and download take the
+ * cleaned text.
  */
 function TaskLog({
   lines,
   label,
   copyLabel,
   copiedLabel,
+  selectedLabel,
+  download,
+  emptyLabel,
   endMessage,
   className,
 }: TaskLogProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const followRef = React.useRef(true);
-  const [announcement, setAnnouncement] = React.useState("");
+  const [notice, setNotice] = React.useState("");
   // Output lines have no identity but their position, and the list only grows at the end.
   const rows = lines.map((line, position) => ({ key: position, line }));
 
@@ -57,6 +78,14 @@ function TaskLog({
       element.scrollTop = element.scrollHeight;
     }
   }, [lines]);
+
+  React.useEffect(() => {
+    if (notice === "") {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setNotice(""), CONFIRMATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
   const onScroll = () => {
     const element = scrollRef.current;
@@ -68,25 +97,44 @@ function TaskLog({
   };
 
   const copy = async () => {
-    const text = lines
-      .map((line) =>
-        typeof line === "string"
-          ? stripControl(line)
-          : `${line.time}  ${stripControl(line.text)}`,
-      )
-      .join("\n");
     try {
-      await navigator.clipboard.writeText(text);
-      setAnnouncement("");
-      setAnnouncement(copiedLabel);
+      if (!(navigator.clipboard as Clipboard | undefined)) {
+        throw new Error("no clipboard");
+      }
+      await navigator.clipboard.writeText(plainText(lines));
+      setNotice(copiedLabel);
     } catch {
       // No clipboard (a page served over plain HTTP has none): select the output so the reader can
-      // copy it with the keyboard.
+      // copy it with the keyboard, and say so.
       const element = scrollRef.current;
       if (element) {
+        element.focus();
         window.getSelection()?.selectAllChildren(element);
       }
+      setNotice(selectedLabel);
     }
+  };
+
+  // The download is a real link with a `download` attribute, given a blob of the cleaned text on
+  // demand: nothing leaves the page and no address is navigated to. The link is rendered by React, so
+  // no code assigns an address (UI-3).
+  const downloadRef = React.useRef<HTMLAnchorElement>(null);
+  const [downloadUrl, setDownloadUrl] = React.useState<string | undefined>();
+  // Once the link carries the new blob, follow it; the blob is released when it is replaced or the log
+  // goes away.
+  React.useEffect(() => {
+    if (downloadUrl === undefined) {
+      return undefined;
+    }
+    downloadRef.current?.click();
+    return () => URL.revokeObjectURL(downloadUrl);
+  }, [downloadUrl]);
+  const save = () => {
+    setDownloadUrl(
+      URL.createObjectURL(
+        new Blob([plainText(lines)], { type: "text/plain;charset=utf-8" }),
+      ),
+    );
   };
 
   return (
@@ -98,8 +146,13 @@ function TaskLog({
           aria-label={label}
           tabIndex={0}
           onScroll={onScroll}
-          className="max-h-80 min-h-24 overflow-auto rounded-card bg-terminal py-3 ps-3.5 pe-12 font-mono text-sm leading-relaxed whitespace-pre-wrap text-terminal-foreground [overflow-wrap:anywhere]"
+          className="max-h-80 min-h-24 overflow-auto rounded-card bg-terminal py-3 ps-3.5 pe-20 font-mono text-sm leading-relaxed whitespace-pre-wrap text-terminal-foreground [overflow-wrap:anywhere]"
         >
+          {rows.length === 0 && emptyLabel ? (
+            <p data-slot="task-log-empty" className="text-terminal-muted">
+              {emptyLabel}
+            </p>
+          ) : null}
           {rows.map(({ key, line }) => (
             <div key={key} data-slot="task-log-line">
               {typeof line === "string" ? null : (
@@ -108,29 +161,57 @@ function TaskLog({
                   {"  "}
                 </span>
               )}
-              {stripControl(lineText(line))}
+              {stripControl(typeof line === "string" ? line : line.text)}
             </div>
           ))}
         </div>
-        <IconButton
-          label={copyLabel}
-          icon={<Copy />}
-          size="icon-sm"
-          onClick={() => {
-            void copy();
-          }}
-          className="absolute end-2 top-2 bg-terminal text-terminal-muted hover:bg-terminal hover:text-terminal-foreground focus-visible:outline-terminal-foreground"
-        />
+        <div className="absolute end-2 top-2 flex gap-1">
+          <IconButton
+            label={copyLabel}
+            icon={<Copy />}
+            size="icon-sm"
+            disabled={rows.length === 0}
+            onClick={() => {
+              void copy();
+            }}
+            className="bg-terminal text-terminal-muted hover:bg-terminal hover:text-terminal-foreground focus-visible:outline-terminal-foreground data-disabled:bg-terminal data-disabled:opacity-50"
+          />
+          {download ? (
+            <IconButton
+              label={download.label}
+              icon={<Download />}
+              size="icon-sm"
+              disabled={rows.length === 0}
+              onClick={save}
+              className="bg-terminal text-terminal-muted hover:bg-terminal hover:text-terminal-foreground focus-visible:outline-terminal-foreground data-disabled:bg-terminal data-disabled:opacity-50"
+            />
+          ) : null}
+        </div>
       </div>
+      {download ? (
+        <a
+          ref={downloadRef}
+          href={downloadUrl}
+          download={download.fileName}
+          hidden
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      ) : null}
       <p
         role="status"
-        className="text-base font-medium text-foreground empty:hidden"
+        data-slot="task-log-notice"
+        className="min-h-5 text-sm text-muted-foreground"
+      >
+        {notice}
+      </p>
+      <div
+        role="status"
+        data-slot="task-log-end"
+        className="text-base text-foreground empty:hidden"
       >
         {endMessage}
-      </p>
-      <span role="status" className="sr-only">
-        {announcement}
-      </span>
+      </div>
     </div>
   );
 }

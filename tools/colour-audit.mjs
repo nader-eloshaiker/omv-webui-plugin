@@ -167,6 +167,8 @@ const PAIRS = [
   ...onGrounds("theme-action-label", "text", "link and blue label"),
   ["theme-action-label", ["theme-action", 0.1, "theme-surface"], "text", "label on the selected tint"],
   ["theme-foreground", ["theme-action", 0.1, "theme-surface"], "text", "body text on the selected row"],
+  ["theme-action-label", ["theme-action", 0.1, "theme-page"], "text", "current side-navigation item"],
+  ["theme-action", ["theme-action", 0.1, "theme-page"], "ui", "current item's leading bar"],
   ...onGrounds("theme-focus-ring", "ui", "focus ring (2.4.11 / 1.4.11)"),
   // Identity: the sky-blue bar.
   ["theme-identity-foreground", "theme-identity", "text", "words and icons on the top bar"],

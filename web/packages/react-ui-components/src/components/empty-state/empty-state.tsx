@@ -2,6 +2,7 @@
 import { CircleAlert, Inbox, SearchX } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
+import { ServerMessage } from "../text/server-message";
 
 const DEFAULT_ICONS = {
   empty: Inbox,
@@ -13,24 +14,31 @@ interface EmptyStateProps extends Omit<React.ComponentProps<"div">, "title"> {
   /**
    * `empty`: nothing here yet, with the action that creates it. `filtered`: a filter hides everything,
    * with the action that clears it. `error`: the list could not be read, with a retry. "No disks found"
-   * and "could not read disks" are different states and look different (style guide 5.9).
+   * and "could not read disks" are different states and look different (style guide 5.9): their own
+   * icon, their own words, and for `error` a retry and the server's message.
    */
   variant?: "empty" | "filtered" | "error";
-  /** A short heading. For `error`, says what could not be read. */
+  /** A short heading. For `error`, says what could not be read: "Could not read the disks". */
   title?: React.ReactNode;
-  /** One sentence. For `error`, the backend's message, as text. */
+  /** One plain sentence: what belongs here, or what went wrong and what to do. */
   children: React.ReactNode;
+  /** For `error`: the backend's own words, shown second and labelled as from the server (UI-9). */
+  serverMessage?: { label: React.ReactNode; text: string };
   /** One control: create, clear the filter, or try again. */
   action?: React.ReactNode;
   /** Replaces the default neutral icon. */
   icon?: React.ReactElement;
 }
 
-/** What a list shows when it has nothing to show, or could not be read. */
+/**
+ * What a list shows when it has nothing to show, or could not be read. Neutral in every variant: a
+ * read that failed is not a monitored thing in a failed state, so it takes no status red (2.1).
+ */
 function EmptyState({
   variant = "empty",
   title,
   children,
+  serverMessage,
   action,
   icon,
   className,
@@ -53,24 +61,30 @@ function EmptyState({
         aria-hidden="true"
         className={cn(
           "flex [&_svg]:size-6",
-          error ? "text-critical-stroke" : "text-muted-foreground",
+          error ? "text-foreground" : "text-muted-foreground",
         )}
       >
         {icon ?? <Icon />}
       </span>
       {title ? (
-        <p
-          className={cn(
-            "text-base font-semibold",
-            error ? "text-critical-label" : "text-foreground",
-          )}
-        >
-          {title}
-        </p>
+        <p className="text-base font-semibold text-foreground">{title}</p>
       ) : null}
-      <p className="max-w-prose text-base whitespace-pre-wrap text-muted-foreground">
+      <p
+        className={cn(
+          "max-w-prose text-base",
+          error ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
         {children}
       </p>
+      {serverMessage ? (
+        <ServerMessage
+          label={serverMessage.label}
+          className="w-full max-w-prose text-start"
+        >
+          {serverMessage.text}
+        </ServerMessage>
+      ) : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );

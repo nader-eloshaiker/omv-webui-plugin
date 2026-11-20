@@ -2,6 +2,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { Button } from "../button/button";
+import { buttonRowClass } from "../button/button-class";
 import { useToast } from "./use-toast";
 
 const meta = {
@@ -15,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 function Triggers() {
   const toast = useToast();
   return (
-    <div className="flex flex-wrap gap-2 p-6">
+    <div className={`p-6 ${buttonRowClass}`}>
       <Button
         variant="neutral"
         onClick={() => toast.show({ title: "Shared folder media saved" })}
@@ -26,38 +27,42 @@ function Triggers() {
         variant="neutral"
         onClick={() =>
           toast.show({
-            tone: "ok",
-            title: "Updates installed",
+            tone: "succeeded",
+            statusLabel: "Succeeded",
+            title: "Install updates",
             description: "3 packages upgraded.",
             action: { label: "Show task", onClick: () => undefined },
           })
         }
       >
-        Result with an action
+        Task succeeded, with an action
+      </Button>
+      <Button
+        variant="neutral"
+        onClick={() =>
+          toast.show({
+            tone: "failed",
+            statusLabel: "Failed",
+            title: "Backup job nightly",
+            description: "The task log has the details.",
+            action: { label: "Show task", onClick: () => undefined },
+          })
+        }
+      >
+        Task failed (assertive, stays)
       </Button>
       <Button
         variant="neutral"
         onClick={() =>
           toast.show({
             tone: "warning",
-            title: "Scrub finished with warnings",
-            description: "2 checksum errors were corrected on pool tank.",
+            statusLabel: "Warning",
+            title: "Pool tank: scrub found 2 errors",
+            description: "Both were corrected.",
           })
         }
       >
-        Warning
-      </Button>
-      <Button
-        variant="neutral"
-        onClick={() =>
-          toast.show({
-            tone: "critical",
-            title: "Backup job nightly failed",
-            description: "The task log has the details.",
-          })
-        }
-      >
-        Critical (assertive, stays)
+        Warning about a monitored thing
       </Button>
       <Button
         variant="neutral"
@@ -83,14 +88,17 @@ function Shown() {
     shownRef.current = true;
     toast.show({ title: "Shared folder media saved" });
     toast.show({
-      tone: "critical",
-      title: "Backup job nightly failed",
+      tone: "failed",
+      statusLabel: "Failed",
+      title: "Backup job nightly",
       description: "The task log has the details.",
       action: { label: "Show task", onClick: () => undefined },
     });
   }, [toast]);
   return (
-    <p className="p-6 text-muted-foreground">Toasts appear at the bottom.</p>
+    <p className="p-6 text-muted-foreground">
+      Toasts appear bottom-end, or under the top bar on a narrow screen.
+    </p>
   );
 }
 

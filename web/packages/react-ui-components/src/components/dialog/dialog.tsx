@@ -2,6 +2,7 @@
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
 import type * as React from "react";
 import { cn } from "../../utils";
+import { buttonRowClass } from "../button/button-class";
 import { backdropClass, popupClass } from "./dialog-classes";
 
 /**
@@ -63,11 +64,11 @@ function DialogDescription({
   );
 }
 
-/** The buttons, end-aligned: Cancel first, the act last. */
+/** The buttons: Cancel first, the act last; stacked full width under 640px. */
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-2 flex flex-wrap justify-end gap-2", className)}
+      className={cn("mt-2 sm:justify-end", buttonRowClass, className)}
       {...props}
     />
   );

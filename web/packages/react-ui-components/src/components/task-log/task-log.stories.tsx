@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
+import { StatusPill } from "../status/status";
 import { TaskLog, type TaskLogLine } from "./task-log";
+
+const labels = {
+  label: "Output of Install updates",
+  copyLabel: "Copy output",
+  copiedLabel: "Output copied",
+  selectedLabel: "Output selected. Press Ctrl+C to copy.",
+  download: { label: "Download output", fileName: "install-updates.log" },
+};
 
 const meta = {
   title: "Components/Task log",
   component: TaskLog,
-  args: {
-    label: "Output of Install updates",
-    copyLabel: "Copy output",
-    copiedLabel: "Output copied",
-    lines: [],
-  },
+  args: { ...labels, lines: [] },
   decorators: [(Story) => <div className="max-w-2xl">{Story()}</div>],
 } satisfies Meta<typeof TaskLog>;
 
@@ -34,12 +38,21 @@ const APT: TaskLogLine[] = [
   { time: "12:04:21", text: "Setting up libssl3 ..." },
 ];
 
+export const WaitingForOutput: Story = {
+  args: { lines: [], emptyLabel: "Waiting for output…" },
+};
+
 export const Running: Story = { args: { lines: APT } };
 
 export const Ended: Story = {
   args: {
     lines: [...APT, { time: "12:04:30", text: "Done." }],
-    endMessage: "Finished: 3 packages upgraded.",
+    endMessage: (
+      <span className="flex flex-wrap items-center gap-2">
+        <StatusPill status="succeeded">Succeeded</StatusPill>3 packages were
+        upgraded.
+      </span>
+    ),
   },
 };
 
@@ -70,17 +83,11 @@ function Streaming() {
     }, 700);
     return () => window.clearInterval(timer);
   }, []);
-  return (
-    <TaskLog
-      label="Output of Install updates"
-      copyLabel="Copy output"
-      copiedLabel="Output copied"
-      lines={lines}
-    />
-  );
+  return <TaskLog {...labels} lines={lines} />;
 }
 
 export const FollowsTheTail: Story = {
+  args: { lines: [] },
   render: () => <Streaming />,
   parameters: {
     docs: {

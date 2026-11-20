@@ -70,14 +70,22 @@ function SecretField({
   delete safeProps.defaultValue;
 
   const setChangingState = (next: boolean) => {
+    movedRef.current = true;
     setChanging(next);
     setRevealed(false);
     onChangingChange?.(next);
   };
 
+  // Focus follows the reader: into the new input on Change, back to Change on Keep.
+  const movedRef = React.useRef(false);
   React.useEffect(() => {
+    if (!movedRef.current) {
+      return;
+    }
     if (changing) {
       inputRef.current?.focus();
+    } else {
+      changeRef.current?.focus();
     }
   }, [changing]);
 

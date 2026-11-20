@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cva } from "class-variance-authority";
 
-// Heights are the style guide's (4.2): 28px in table toolbars, 32px by default, 40px on the sign-in
-// form. Every size clears the 24px target minimum (WCAG 2.5.8).
-/** The button look, for Base UI parts that render their own button (a toast action). */
+// Heights are minimums from the style guide (4.2): 28px in table toolbars, 32px by default, 40px on
+// the sign-in form. A label wraps instead of overflowing at 320px or at 200% zoom (WCAG 1.4.10), so a
+// long translation grows the button rather than spilling out of it. Every size clears the 24px
+// target minimum (WCAG 2.5.8).
+/** The button look, also for Base UI parts that render their own button (a toast action). */
 export const buttonClass = cva(
-  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border font-medium whitespace-nowrap select-none transition-colors " +
+  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none transition-colors " +
     "data-disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
@@ -31,11 +33,16 @@ export const buttonClass = cva(
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
           "focus-visible:outline-pending-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
+        // On the top bar: never a filled button (5.1). Ink on the identity ground (6.91:1 light,
+        // 9.48:1 dark), an edge in the same ink on hover, and the bar's own focus ring.
+        onIdentity:
+          "border-transparent bg-transparent text-identity-foreground hover:border-identity-foreground " +
+          "focus-visible:outline-focus-ring-on-identity data-popup-open:border-identity-foreground data-disabled:opacity-60",
       },
       size: {
-        sm: "h-7 px-2.5 text-sm",
-        md: "h-8 px-3 text-base",
-        lg: "h-10 px-4 text-base",
+        sm: "min-h-7 px-2.5 py-0.5 text-sm",
+        md: "min-h-8 px-3 py-1 text-base",
+        lg: "min-h-10 px-4 py-1.5 text-base",
         "icon-sm": "size-7",
         icon: "size-8",
         "icon-lg": "size-10",
@@ -44,3 +51,10 @@ export const buttonClass = cva(
     defaultVariants: { variant: "primary", size: "md" },
   },
 );
+
+/**
+ * A row of buttons: stacked full width under 640px, side by side from there (WCAG 1.4.10). DOM order
+ * is reading and focus order, so Cancel comes before the act in both layouts.
+ */
+export const buttonRowClass =
+  "flex flex-col gap-2 *:w-full sm:flex-row sm:flex-wrap sm:*:w-auto";

@@ -43,3 +43,13 @@ export const OverCritical: Story = {
     threshold: { status: "critical", label: "Critical" },
   },
 };
+export const NoReading: Story = {
+  args: {
+    label: "File system: archive",
+    value: null,
+    valueText: "No reading: the file system is not mounted.",
+  },
+};
+export const Loading: Story = {
+  args: { value: null, loading: true, valueText: "Loading…" },
+};

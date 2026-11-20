@@ -42,13 +42,18 @@ export const RowActions: Story = {
             Permissions
           </MenuItem>
           <MenuItem disabled>
-            Access control list (no file system support)
+            <span className="flex flex-col">
+              <span>Access control list</span>
+              <span className="text-sm text-muted-foreground">
+                The file system does not support access control lists.
+              </span>
+            </span>
           </MenuItem>
         </MenuGroup>
         <MenuSeparator />
         <MenuItem>
           <Trash2 aria-hidden="true" />
-          Delete...
+          Delete…
         </MenuItem>
       </MenuContent>
     </Menu>

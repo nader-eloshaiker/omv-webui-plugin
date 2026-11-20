@@ -305,8 +305,9 @@ labels and strokes flip.
 
 - `x/NN` is alpha over whatever is below. It is safe on one known ground (a pill on a card) and
   unpredictable over variable ones. The audited washes are 14% status and pending tints on
-  `surface` and `page`, and the 10% action tint for a selected row on `surface`. Any other
-  combination must be added to the audit before it ships.
+  `surface` and `page`, the 10% action tint for a selected row on `surface`, and the same tint for
+  the current side-navigation item on `page`. Any other combination must be added to the audit
+  before it ships.
 - **State layers** (hover, pressed) use the neutral `muted` step. Pick tonal step or overlay per
   component and do not mix them.
 - **No gradients.** Not on the bar, not on cards, not on meters. A gradient carries no information
@@ -323,7 +324,7 @@ labels and strokes flip.
 - About 8% of men have a red-green deficiency. The design does not depend on telling green from
   red by hue: lightness separates them, and words and shapes carry every status.
 
-Current audit result: **160 required pairs, 0 failures**, both themes. Ten text pairs pass 4.5:1
+Current audit result: **164 required pairs, 0 failures**, both themes. Ten text pairs pass 4.5:1
 but sit under Lc 60 (the top-bar ink at Lc 53, the terminal timestamps at Lc 46 to 47, and the dark
 pairs listed in 3.8); all are labels, bar text or deliberately quiet metadata.
 
@@ -433,8 +434,16 @@ the rule written here first.
   indicator, notifications, and the user menu. Nothing on the bar looks like a filled button.
 - **Side navigation** on `page`, grouped as OMV groups it (System, Network, Storage, Services,
   Users, Diagnostics) so existing users find things. The current item has the blue tint and
-  `action-label` text plus a non-colour cue (a bar on the leading edge and medium weight).
+  `action-label` text (5.87:1 light, 8.49:1 dark) plus a non-colour cue (an `action` bar on the
+  leading edge, 4.15 and 6.28:1, and medium weight) and `aria-current="page"`. An item whose page
+  exists only in the classic interface says so with a short word and the external-link mark.
 - Under 1024px wide the side navigation collapses to a drawer.
+- **What stacks under the top bar**, in this order and never side by side: the top bar; the
+  unencrypted-connection notice (UI-12), which stays for the whole visit; the pending-changes band
+  (5.8), which comes and goes. Both bands are full width and in the page flow, not fixed, so they
+  never cover a focused control (6); only the top bar may be sticky, and it carries the pending
+  indicator, so nothing is lost when the bands scroll away. A skip link to the main content is the
+  first focusable element on every page.
 - One page title per page, in the content area. Breadcrumbs only below the second level.
 - The address bar always reflects where you are, but a URL only ever *selects a view*. See 7.
 
@@ -539,13 +548,20 @@ OMV's signature, and the only place the yellow appears at size.
 - A full-width band on `pending` with `pending-foreground` text, directly under the top bar, shown
   whenever there are saved-but-unapplied changes. It is not dismissible while changes are pending.
 - It says what is pending in words ("3 pending changes: SMB, SSH, Network"), with **Apply** and
-  **Revert** controls. Buttons on the band are outlined in the coffee ink; the yellow is the
-  ground, not the button.
+  **Undo** controls that carry the count ("Apply 3 changes", "Undo 3 changes"). "Undo" is the one
+  verb for discarding pending changes everywhere, the job runner included; the backend method is
+  still `Config.revertChangesBg`. Buttons on the band are outlined in the coffee ink; the yellow is
+  the ground, not the button.
+- Undo asks first: a plain confirmation that names what is lost ("The saved changes to SMB, SSH
+  and Network are discarded"), focus on Cancel, no typing, since nothing on disk is lost.
 - Apply opens a confirmation that lists the affected services and warns when applying may cut the
   current connection (network and web-server changes).
 - The item that is pending carries a small pending mark (the pending icon with `pending-stroke`,
   3.75 to 4.67:1 light) and, as text, `pending-label`.
-- While changes are being applied the band shows progress and both controls are disabled.
+- While changes are being applied the band shows progress, both controls are disabled, and a
+  "Show progress" control opens the apply task's output.
+- If applying fails, the band says so and its first offer is "Try applying again" (UX audit R7);
+  Undo stays available.
 - The same indicator sits in the top bar, so the state is visible when the band is scrolled away.
 
 ### 5.9 Empty states

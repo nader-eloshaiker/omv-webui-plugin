@@ -129,3 +129,34 @@ describe("TypeToConfirmDialog", () => {
     ).toHaveValue("");
   });
 });
+
+describe("ConfirmDialog, plain (Undo)", () => {
+  function Undo({ onConfirm }: { onConfirm: () => void }) {
+    const [open, setOpen] = React.useState(true);
+    return (
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Undo 3 changes?"
+        description="The saved changes to SMB, SSH and Network are discarded."
+        confirmLabel="Undo 3 changes"
+        cancelLabel="Cancel"
+        onConfirm={onConfirm}
+      />
+    );
+  }
+
+  it("starts on Cancel, names what is lost, and asks for no typing", async () => {
+    const onConfirm = vi.fn();
+    const user = userEvent.setup();
+    render(<Undo onConfirm={onConfirm} />);
+    const cancel = await screen.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    expect(screen.getByRole("alertdialog")).toHaveAccessibleDescription(
+      "The saved changes to SMB, SSH and Network are discarded.",
+    );
+    expect(screen.queryByRole("textbox")).toBeNull();
+    await user.keyboard("{Enter}");
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+});

@@ -6,6 +6,8 @@ import { cn } from "../../utils";
 interface TableProps extends React.ComponentProps<"table"> {
   /** Loading: set while skeleton rows stand in for data, so assistive technology hears it is busy. */
   busy?: boolean;
+  /** Announced while `busy`, since the skeleton rows are hidden from assistive technology: "Loading disks…". */
+  busyLabel?: string;
   /** Classes for the scrolling frame around the table. */
   frameClassName?: string;
 }
@@ -14,7 +16,13 @@ interface TableProps extends React.ComponentProps<"table"> {
  * A data table (style guide 5.2) in its own horizontal scroll region, so a wide table never makes the
  * page scroll sideways (6, reflow). Name it with `aria-label` or a `<caption>`.
  */
-function Table({ busy, frameClassName, className, ...props }: TableProps) {
+function Table({
+  busy,
+  busyLabel,
+  frameClassName,
+  className,
+  ...props
+}: TableProps) {
   return (
     <div
       data-slot="table-frame"
@@ -23,6 +31,9 @@ function Table({ busy, frameClassName, className, ...props }: TableProps) {
         frameClassName,
       )}
     >
+      <span role="status" className="sr-only">
+        {busy ? busyLabel : null}
+      </span>
       <table
         data-slot="table"
         aria-busy={busy || undefined}
@@ -51,16 +62,26 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
 interface TableRowProps extends React.ComponentProps<"tr"> {
   /** The row is selected. The row also needs its checked checkbox: selection is never colour alone. */
   selected?: boolean;
+  /** `touch`: 44px, where the row is the main touch target on a narrow screen (style guide 4.2). */
+  size?: "default" | "touch";
 }
 
-/** Hover is the neutral step; selected is the 10% action tint (3.10). No zebra stripes. */
-function TableRow({ selected, className, ...props }: TableRowProps) {
+/** Hover is the neutral step on body rows; selected is the 10% action tint (3.10). No zebra stripes. */
+function TableRow({
+  selected,
+  size = "default",
+  className,
+  ...props
+}: TableRowProps) {
   return (
     <tr
       data-slot="table-row"
       data-selected={selected || undefined}
+      data-size={size}
       className={cn(
-        "border-t border-border first:border-t-0 hover:bg-muted data-selected:bg-action/10",
+        // Hover only on body rows: the header row is not a target.
+        "border-t border-border first:border-t-0 [tbody>&]:hover:bg-muted data-selected:bg-action/10",
+        "data-[size=touch]:*:h-11",
         className,
       )}
       {...props}

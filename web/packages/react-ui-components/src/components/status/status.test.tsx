@@ -51,17 +51,18 @@ describe("StatusPill", () => {
 });
 
 describe("StatusDot", () => {
-  it("draws the Unknown family hollow and names every dot", () => {
+  it("draws the Unknown family hollow, names every dot, and is not a tab stop", () => {
     const { container } = render(
       <>
         <StatusDot status="ok" label="OK" />
         <StatusDot status="unknown" label="Unknown" />
       </>,
     );
-    expect(screen.getByRole("img", { name: "OK" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Unknown" })).toBeInTheDocument();
+    expect(screen.getByText("OK")).toHaveClass("sr-only");
+    expect(screen.getByText("Unknown")).toHaveClass("sr-only");
     const unknown = container.querySelector("[data-status=unknown]");
     expect(unknown?.className).toContain("bg-transparent");
+    expect(container.querySelectorAll("[tabindex]")).toHaveLength(0);
   });
 });
 
