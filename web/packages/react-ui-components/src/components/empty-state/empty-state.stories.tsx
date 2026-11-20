@@ -2,6 +2,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Plus } from "lucide-react";
 import { Button } from "../button/button";
+import { Identifier } from "../text/identifier";
 import { EmptyState } from "./empty-state";
 
 const meta = {
@@ -37,7 +38,11 @@ export const Empty: Story = {
 export const Filtered: Story = {
   args: {
     variant: "filtered",
-    children: "No shared folders match “photos-2019”.",
+    children: (
+      <>
+        No shared folders match <Identifier>photos-2019</Identifier>.
+      </>
+    ),
     action: <Button variant="neutral">Clear the search</Button>,
   },
 };
@@ -47,7 +52,11 @@ export const CouldNotRead: Story = {
     variant: "error",
     title: "Could not read the disks",
     children:
-      "Failed to execute command 'export PATH=...; smartctl --xall /dev/sdb': exit code 2",
+      "The list of disks did not load. Nothing was changed. Try again; if it keeps failing, the server's message below helps a search or a support request.",
+    serverMessage: {
+      label: "Message from the server",
+      text: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin; smartctl --xall /dev/sdb': exit code 2",
+    },
     action: <Button variant="neutral">Try again</Button>,
   },
 };

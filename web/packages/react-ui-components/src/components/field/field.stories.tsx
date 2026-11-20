@@ -102,10 +102,18 @@ export const Controls: Story = {
         <Checkbox indeterminate />
         Select all disks
       </label>
-      <label className="flex items-center gap-2 text-subtle-foreground">
-        <Checkbox disabled />
-        Spin down when idle (not supported by this disk)
-      </label>
+      <div className="flex flex-col gap-1">
+        <label className="flex items-center gap-2">
+          <Checkbox disabled aria-describedby="controls-spin-reason" />
+          Spin down when idle
+        </label>
+        <p
+          id="controls-spin-reason"
+          className="ps-6 text-sm text-muted-foreground"
+        >
+          This disk does not support spinning down.
+        </p>
+      </div>
       <label className="flex items-center gap-2">
         <Switch defaultChecked />
         SSH service

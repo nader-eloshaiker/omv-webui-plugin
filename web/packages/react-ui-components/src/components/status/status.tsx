@@ -57,7 +57,7 @@ function StatusIcon({
 
 // A 14% wash of the fill, a 1px stroke edge, the word in the -label member (5.5). Running is neutral.
 const pillVariants = cva(
-  "inline-flex h-5.5 max-w-full items-center gap-1 rounded-full border ps-1.5 pe-2 text-xs font-medium whitespace-nowrap",
+  "inline-flex min-h-5.5 max-w-full items-center gap-1 rounded-full border py-0.5 ps-1.5 pe-2 text-xs font-medium",
   {
     variants: {
       tone: {
@@ -94,7 +94,7 @@ function StatusPill({
       {...props}
     >
       <StatusIcon status={status} />
-      <span className="truncate">{children}</span>
+      <span className="[overflow-wrap:anywhere]">{children}</span>
     </span>
   );
 }
@@ -140,7 +140,7 @@ function StatusDot({
     <span
       data-slot="status-dot"
       data-status={status}
-      className={cn(dotVariants({ tone }), !showLabel && className)}
+      className={dotVariants({ tone })}
     />
   );
   if (showLabel) {
@@ -153,15 +153,15 @@ function StatusDot({
       </span>
     );
   }
+  // Not a tab stop: the word is in hidden text for assistive technology, and the tooltip is a
+  // convenience for pointers. A keyboard reader reaches the word with the surrounding content.
   return (
     <Tooltip content={label}>
-      <span
-        role="img"
-        aria-label={label}
-        tabIndex={0}
-        className="inline-flex rounded-full p-1"
-      >
-        {dot}
+      <span className={cn("inline-flex p-1", className)}>
+        <span aria-hidden="true" className="inline-flex">
+          {dot}
+        </span>
+        <span className="sr-only">{label}</span>
       </span>
     </Tooltip>
   );

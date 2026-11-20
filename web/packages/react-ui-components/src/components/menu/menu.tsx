@@ -2,6 +2,7 @@
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import type * as React from "react";
 import { cn } from "../../utils";
+import { itemHighlightClass } from "./item-class";
 
 /**
  * A list of actions on one object, on Base UI's Menu. Items are neutral: an item that destroys
@@ -53,8 +54,9 @@ function MenuItem({
     <BaseMenu.Item
       data-slot="menu-item"
       className={cn(
-        "flex cursor-default items-center gap-2 rounded-control px-2 py-1.5 text-base outline-hidden select-none",
-        "data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:text-subtle-foreground",
+        "flex cursor-default items-center gap-2 rounded-control px-2 py-1.5 text-base select-none",
+        itemHighlightClass,
+        "data-disabled:text-subtle-foreground",
         "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
         className,
       )}

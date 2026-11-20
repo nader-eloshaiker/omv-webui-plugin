@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { stripControl } from "./strip-control";
 import { TaskLog } from "./task-log";
 
@@ -8,6 +9,7 @@ const labels = {
   label: "Output of Install updates",
   copyLabel: "Copy output",
   copiedLabel: "Output copied",
+  selectedLabel: "Output selected. Press Ctrl+C to copy.",
 };
 
 describe("stripControl", () => {
@@ -67,5 +69,67 @@ describe("TaskLog", () => {
         .getAllByRole("status")
         .some((s) => s.textContent === "Finished: 3 packages upgraded"),
     ).toBe(true);
+  });
+});
+
+describe("TaskLog notices", () => {
+  it("has its live regions from the first render and says when there is no output yet", () => {
+    render(<TaskLog {...labels} lines={[]} emptyLabel="Waiting for output…" />);
+    expect(screen.getAllByRole("status").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Waiting for output…")).toBeInTheDocument();
+  });
+
+  it("copies and says so, visibly and in a live region", async () => {
+    const user = userEvent.setup();
+    // user-event installs its own clipboard; watch it after setup.
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    render(<TaskLog {...labels} lines={["\u001b[32mDone.\u001b[0m"]} />);
+    await user.click(screen.getByRole("button", { name: "Copy output" }));
+    expect(writeText).toHaveBeenCalledWith("Done.");
+    expect(await screen.findByText("Output copied")).toBeInTheDocument();
+  });
+
+  it("selects the output and says how to copy it where there is no clipboard", async () => {
+    const user = userEvent.setup();
+    const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+    });
+    render(<TaskLog {...labels} lines={["Done."]} />);
+    await user.click(screen.getByRole("button", { name: "Copy output" }));
+    expect(
+      await screen.findByText("Output selected. Press Ctrl+C to copy."),
+    ).toBeInTheDocument();
+    if (original) {
+      Object.defineProperty(navigator, "clipboard", original);
+    }
+  });
+
+  it("downloads the cleaned output as a file", async () => {
+    const createObjectURL = vi.fn(() => "blob:test");
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, { createObjectURL, revokeObjectURL }),
+    );
+    const clicked: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicked.push(this.download);
+    });
+    const user = userEvent.setup();
+    render(
+      <TaskLog
+        {...labels}
+        lines={["Done."]}
+        download={{ label: "Download output", fileName: "install-updates.log" }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Download output" }));
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(clicked).toEqual(["install-updates.log"]);
+    vi.unstubAllGlobals();
   });
 });

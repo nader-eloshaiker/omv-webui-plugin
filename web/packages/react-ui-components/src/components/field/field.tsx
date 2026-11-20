@@ -33,7 +33,7 @@ function FieldLabel({
     <BaseField.Label
       data-slot="field-label"
       className={cn(
-        "text-base font-medium text-foreground data-disabled:text-subtle-foreground",
+        "text-base font-medium text-foreground data-disabled:text-muted-foreground",
         className,
       )}
       {...props}

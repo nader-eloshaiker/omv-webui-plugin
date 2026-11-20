@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ExternalLink } from "lucide-react";
 import { Button } from "../button/button";
+import { ExternalLink } from "../external-link/external-link";
 import { UsedByPanel } from "./used-by-panel";
 
 const meta = {
@@ -10,7 +10,7 @@ const meta = {
   decorators: [(Story) => <div className="max-w-lg">{Story()}</div>],
   args: {
     title: "Used by",
-    emptyText: "Nothing uses this shared folder. It can be deleted.",
+    emptyText: "Nothing uses this shared folder.",
     referrers: [],
   },
 } satisfies Meta<typeof UsedByPanel>;
@@ -18,46 +18,101 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const open = (
-  <Button variant="ghost" size="sm">
-    Open
-  </Button>
-);
+// Every row's control is named in full: three "Open" buttons side by side would be indistinguishable.
+function open(name: string) {
+  return (
+    <Button variant="ghost" size="sm" aria-label={`Open ${name}`}>
+      Open
+    </Button>
+  );
+}
+
+const blocked = {
+  label: "Delete shared folder",
+  reason: "Remove the 2 shares and the rsync job that use it first.",
+};
 
 export const Referrers: Story = {
   args: {
     referrers: [
-      { id: "smb-1", kind: "SMB share", name: "media", action: open },
-      { id: "nfs-1", kind: "NFS share", name: "/export/media", action: open },
+      {
+        id: "smb-1",
+        kind: "SMB share",
+        name: "media",
+        action: open("SMB share media"),
+      },
+      {
+        id: "nfs-1",
+        kind: "NFS share",
+        name: "/export/media",
+        action: open("NFS share /export/media"),
+      },
       {
         id: "rsync-1",
         kind: "Rsync job",
-        name: "nightly to backup-nas",
-        action: open,
+        name: "nightly-to-backup-nas-in-the-garage-cupboard",
+        action: open("Rsync job nightly-to-backup-nas-in-the-garage-cupboard"),
       },
     ],
-    blockedAction: {
-      label: "Delete shared folder",
-      reason: "Remove the 2 shares and the rsync job that use it first.",
-    },
+    blockedAction: blocked,
   },
 };
 
 export const NothingUsesIt: Story = {};
+
+export const Loading: Story = {
+  args: { loading: { label: "Checking what uses this shared folder…" } },
+};
+
+export const CouldNotCheck: Story = {
+  args: {
+    error: {
+      message:
+        "Could not check whether anything uses this shared folder. Until it is checked, do not delete it.",
+      serverMessage: {
+        label: "Message from the server",
+        text: "The request timed out after 30 seconds.",
+      },
+      retryLabel: "Check again",
+      onRetry: () => undefined,
+    },
+  },
+};
+
+export const PartlyChecked: Story = {
+  args: {
+    referrers: [
+      {
+        id: "smb-1",
+        kind: "SMB share",
+        name: "media",
+        action: open("SMB share media"),
+      },
+    ],
+    partial: {
+      message:
+        "Rsync jobs could not be checked, so this list may be incomplete.",
+      retryLabel: "Check again",
+      onRetry: () => undefined,
+    },
+    blockedAction: {
+      ...blocked,
+      reason: "Remove the share that uses it first.",
+    },
+  },
+};
 
 export const UsedByUnknown: Story = {
   args: {
     unknownUse: {
       message: "Used by an add-on or setting this interface does not show yet.",
       classicLink: (
-        <a
+        <ExternalLink
           href="/#/storage/shared-folders"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-action-label underline underline-offset-2"
+          newTabLabel="(opens in a new tab)"
         >
           See it in the classic interface
-          <ExternalLink aria-hidden="true" className="size-3.5" />
-        </a>
+        </ExternalLink>
       ),
     },
     blockedAction: {

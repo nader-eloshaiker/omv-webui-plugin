@@ -44,6 +44,9 @@ describe("SecretField", () => {
       screen.getByRole("button", { name: "Keep the current shared secret" }),
     );
     expect(container.querySelector("input")).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Change shared secret" }),
+    ).toHaveFocus();
   });
 
   it("reveals what was typed only on request", async () => {

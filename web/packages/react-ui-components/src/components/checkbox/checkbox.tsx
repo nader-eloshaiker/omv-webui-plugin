@@ -17,7 +17,9 @@ function Checkbox({
     <BaseCheckbox.Root
       data-slot="checkbox"
       className={cn(
-        "inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-action-foreground",
+        "relative inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-action-foreground",
+        // The box is 16px; the press target is 24px (WCAG 2.5.8) through an empty pseudo-element.
+        "after:absolute after:-inset-1 after:content-['']",
         "data-checked:border-action data-checked:bg-action data-indeterminate:border-action data-indeterminate:bg-action",
         "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:bg-muted data-disabled:text-subtle-foreground",
         className,

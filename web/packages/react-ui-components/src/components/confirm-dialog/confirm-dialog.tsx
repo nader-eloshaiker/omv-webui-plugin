@@ -4,24 +4,29 @@ import { TriangleAlert } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button } from "../button/button";
+import { buttonRowClass } from "../button/button-class";
 import { backdropClass, popupClass } from "../dialog/dialog-classes";
-import { Field, FieldControl, FieldLabel } from "../field/field";
+import { TypeToConfirmField } from "../type-to-confirm/type-to-confirm-field";
+import { typedMatches } from "../type-to-confirm/typed-matches";
 
 interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** States the act and names the exact object: "Wipe disk /dev/sdb, WDC WD40EFRX, 3.6 TiB?" */
   title: React.ReactNode;
-  /** The consequence in one plain sentence, with what depends on it (style guide 5.4). */
+  /**
+   * The consequence in one plain sentence, with what depends on it (style guide 5.4). Set in the body
+   * colour: it is the sentence the decision rests on.
+   */
   description: React.ReactNode;
   /** Anything else the reader must see before deciding: the affected services, a dependency list. */
   children?: React.ReactNode;
-  /** The act, as a verb with its object: "Wipe disk", "Apply changes". */
+  /** The act, as a verb with its object: "Wipe disk", "Apply 3 changes", "Undo 3 changes". */
   confirmLabel: React.ReactNode;
   cancelLabel: React.ReactNode;
   /**
    * `destructive` for anything that destroys data or cuts access: a warning-shaped icon beside the
-   * title, the red confirm button, and focus starting on Cancel.
+   * title and the red confirm button. Every confirmation starts with focus on Cancel.
    */
   variant?: "default" | "destructive";
   /** The act is running: the confirm button shows it and ignores further presses. */
@@ -30,13 +35,15 @@ interface ConfirmDialogProps {
   error?: React.ReactNode;
   /** Called on the confirm button only. The dialog does not close itself: close it on success. */
   onConfirm: () => void;
+  /** Keeps the act unavailable until a condition holds (the typed confirmation sets it). */
+  confirmDisabled?: boolean;
   className?: string;
 }
 
 /**
  * A confirmation, on Base UI's AlertDialog (`role="alertdialog"`; Escape and Cancel close it; the
- * scrim does not). There is no form, so Enter never confirms: only the confirm button does. A
- * destructive confirmation starts with focus on Cancel (style guide 5.4, UI-8).
+ * scrim does not). There is no form, so Enter never confirms: only the confirm button does. Focus
+ * starts on Cancel (style guide 5.4, UI-8; the owner's decision for Undo).
  */
 function ConfirmDialog({
   open,
@@ -50,12 +57,9 @@ function ConfirmDialog({
   pending = false,
   error,
   onConfirm,
-  className,
   confirmDisabled = false,
-}: ConfirmDialogProps & {
-  /** For the typed confirmation: keeps the act unavailable until its condition holds. */
-  confirmDisabled?: boolean;
-}) {
+  className,
+}: ConfirmDialogProps) {
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   const destructive = variant === "destructive";
   return (
@@ -65,7 +69,7 @@ function ConfirmDialog({
         <AlertDialog.Popup
           data-slot="confirm-dialog"
           data-variant={variant}
-          initialFocus={destructive ? cancelRef : true}
+          initialFocus={cancelRef}
           className={cn(popupClass, className)}
         >
           <div className="flex items-start gap-3">
@@ -79,7 +83,7 @@ function ConfirmDialog({
               <AlertDialog.Title className="text-lg leading-tight font-semibold text-foreground [overflow-wrap:anywhere]">
                 {title}
               </AlertDialog.Title>
-              <AlertDialog.Description className="text-base text-muted-foreground">
+              <AlertDialog.Description className="text-base text-foreground">
                 {description}
               </AlertDialog.Description>
             </div>
@@ -93,7 +97,7 @@ function ConfirmDialog({
               {error}
             </p>
           ) : null}
-          <div className="mt-2 flex flex-wrap justify-end gap-2">
+          <div className={cn("mt-2 sm:justify-end", buttonRowClass)}>
             <AlertDialog.Close
               ref={cancelRef}
               render={<Button variant="neutral" />}
@@ -117,32 +121,17 @@ function ConfirmDialog({
   );
 }
 
-interface TypeToConfirmDialogProps extends Omit<ConfirmDialogProps, "variant"> {
+interface TypeToConfirmDialogProps extends Omit<
+  ConfirmDialogProps,
+  "variant" | "confirmDisabled"
+> {
   /** The exact text to type: the object's name. Case-sensitive; surrounding spaces are ignored. */
   confirmText: string;
   /**
    * The instruction, one translated sentence containing `confirmText` wherever the language puts it:
-   * "Type media to confirm." The name is set in code type where it appears.
+   * "Type /dev/sdb to confirm." The name is set in code type where it appears.
    */
   prompt: string;
-}
-
-// The name is set in code type by finding it in the sentence, so a translation keeps its own word
-// order and no markup enters the catalogue. A sentence that lost the name still renders, as text.
-function Prompt({ sentence, name }: { sentence: string; name: string }) {
-  const at = name ? sentence.indexOf(name) : -1;
-  if (at < 0) {
-    return <>{sentence}</>;
-  }
-  return (
-    <>
-      {sentence.slice(0, at)}
-      <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.95em] font-semibold [overflow-wrap:anywhere] text-foreground">
-        {name}
-      </code>
-      {sentence.slice(at + name.length)}
-    </>
-  );
 }
 
 /**
@@ -166,7 +155,7 @@ function TypeToConfirmDialog({
       setTyped("");
     }
   }
-  const matches = typed.trim() === confirmText;
+  const matches = typedMatches(typed, confirmText);
   return (
     <ConfirmDialog
       {...props}
@@ -180,21 +169,12 @@ function TypeToConfirmDialog({
       }}
     >
       {children}
-      <Field>
-        <FieldLabel className="font-regular">
-          <Prompt sentence={prompt} name={confirmText} />
-        </FieldLabel>
-        <FieldControl
-          data-slot="type-to-confirm-input"
-          value={typed}
-          onValueChange={(value) => setTyped(value)}
-          autoComplete="off"
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck={false}
-          className="font-mono"
-        />
-      </Field>
+      <TypeToConfirmField
+        confirmText={confirmText}
+        prompt={prompt}
+        value={typed}
+        onValueChange={setTyped}
+      />
     </ConfirmDialog>
   );
 }

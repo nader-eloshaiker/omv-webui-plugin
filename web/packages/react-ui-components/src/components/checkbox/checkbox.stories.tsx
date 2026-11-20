@@ -25,14 +25,24 @@ export const States: Story = {
         <Checkbox indeterminate />
         Select all disks (2 of 4 selected)
       </label>
-      <label className="flex items-center gap-2 text-subtle-foreground">
-        <Checkbox disabled />
-        Spin down when idle (this disk does not support it)
-      </label>
-      <label className="flex items-center gap-2 text-subtle-foreground">
-        <Checkbox disabled defaultChecked />
-        Write cache (set by the controller)
-      </label>
+      <div className="flex flex-col gap-1">
+        <label className="flex items-center gap-2">
+          <Checkbox disabled aria-describedby="spin-down-reason" />
+          Spin down when idle
+        </label>
+        <p id="spin-down-reason" className="ps-6 text-sm text-muted-foreground">
+          This disk does not support spinning down.
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="flex items-center gap-2">
+          <Checkbox disabled defaultChecked aria-describedby="cache-reason" />
+          Write cache
+        </label>
+        <p id="cache-reason" className="ps-6 text-sm text-muted-foreground">
+          Set by the disk controller and cannot be changed here.
+        </p>
+      </div>
     </div>
   ),
 };

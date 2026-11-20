@@ -4,6 +4,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
 import { controlClass } from "../field/control-class";
+import { itemHighlightClass } from "../menu/item-class";
 
 // The floating surface shared by select and menu popups: raised (shadow-md), a card corner.
 const popupClass =
@@ -96,8 +97,9 @@ function SelectItem({
     <BaseSelect.Item
       data-slot="select-item"
       className={cn(
-        "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-control py-1.5 ps-2 pe-3 text-base outline-hidden select-none",
-        "data-highlighted:bg-muted data-disabled:text-subtle-foreground",
+        "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-control py-1.5 ps-2 pe-3 text-base select-none",
+        itemHighlightClass,
+        "data-disabled:text-subtle-foreground",
         className,
       )}
       {...props}

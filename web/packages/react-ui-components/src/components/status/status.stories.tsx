@@ -118,9 +118,15 @@ export const RollUp: Story = {
   },
 };
 
-export const LongWord: Story = {
-  args: {
-    status: "unknown",
-    children: "Nicht überwacht (keine SMART-Unterstützung)",
-  },
+// A translated word is the catalogue's fixed word (5.5 forbids synonyms); any reason sits beside the
+// pill as its own text, never inside it.
+export const TranslatedWordWithReason: Story = {
+  render: () => (
+    <div className="flex max-w-xs flex-wrap items-center gap-2">
+      <StatusPill status="unknown">Unbekannt</StatusPill>
+      <span className="text-sm text-muted-foreground">
+        Dieses Laufwerk unterstützt kein SMART.
+      </span>
+    </div>
+  ),
 };
