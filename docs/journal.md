@@ -301,3 +301,52 @@ The build and the new snippet were deployed to the test VM (`nginx -t` passed) a
 
 - **HTTP:** 7 passed, 1 skipped (the idle test, which needs a short timeout; it passed earlier today).
 - **HTTPS** (`OMV_WEBUI_VM_SCHEME=https`, the VM's self-signed certificate): 7 passed, 1 skipped. Chromium's "Cross-Origin-Opener-Policy header has been ignored" error does not appear over HTTPS; the test allows it for an `http:` origin only, so its absence is checked.
+
+## 2026-11-20 — Owner decisions before Phase 3
+
+PR #6 (Phase 2) was approved and merged to `main` with a rebase. Phase 3 is built on `phase-3`. The backend facts behind these questions were read from OMV's source (8.6.x) and are captured on the VM before their contract entries are final.
+
+- **The set-up checklist (Q11)** is shown to administrators while OMV's own welcome flag is set (`displayWelcomeMessage` in `System.getInformation`). "Hide the checklist" calls `WebGui.dismissWelcomeMessage` after the click. That hides it for every administrator and every browser, and hides the stock welcome panel too, which matches "in place of the stock welcome panel".
+- **The factory password:** OMV has no way to report whether the `admin` password is still the factory one. The checklist shows "Change the factory password" as advice, with a link to the password form, and says in words that the interface cannot check it. It has no done state.
+- **E-mail alerts:** `EmailNotification.get` is the only read that tells whether alerts are set up, and it returns the mail password in plain text. The checklist reads it. The password is left out of the contract's response schema, and the transport removes it from the reply before anything is cached or rendered. The item is done when the server's own test passes: alerts enabled, and server, port, sender and primary address set.
+- **Host name and time zone:** the installer sets both, so "not done yet" cannot be detected. The checklist shows the current values ("Your NAS is called …", "Time zone: …") with a Change link, and no done state.
+- **The account page** shows name, description, e-mail and SSH keys. E-mail and description can be edited when the account allows it: not `_readonly`, and not a system account such as `admin`, for which OMV refuses the change. The password change (typed twice) is offered to every account and hidden when `_readonly` is set. The backend does not check that flag for a password change; the interface honours it anyway.
+- **The shared-folders table** is read-only in Phase 3. Creating a folder is Flow A in Phase 5. Until then, the empty state's action and the toolbar's Add are fixed links to the classic interface's shared-folder page, marked as opening the classic interface.
+- **SSH "extra options"** sits under a collapsed "Advanced" section. Its help text says the lines are written into the SSH server's configuration and that a mistake can stop SSH from starting. The section opens by itself when the field already holds text.
+
+Defaults taken without a question, open to change:
+
+- **Table state** (page, sort, search) lives in memory, not in the address. UI-4 does not let a query string carry free-form parameters to a call.
+- **The updates item** uses `availablePkgUpdates` from `System.getInformation` and links to the classic interface's updates page. Phase 3 does not add `Apt.update` (a task). A count of 0 can also mean the package list was never fetched, so the item does not claim "up to date" with certainty.
+- **HTTPS** is read from `WebGui.getSettings` (`enablessl`). No certificate method is added in Phase 3.
+- **The checklist's links** go to a page of the new interface where one exists (the account page for the password), and otherwise to the classic interface by a fixed link.
+- **Route-level code splitting** comes with the Phase 3 pages, for the main-chunk size warning.
+
+## 2026-11-20 — Phase 3: the contract additions and the page design
+
+**Contract.** Seven operations were added, each read from source and captured on the test VM where a capture was possible: `Network.getGeneralSettings`, `System.getTimeSettings`, `EmailNotification.get`, `WebGui.getSettings`, `WebGui.dismissWelcomeMessage`, `UserMgmt.setUserByContext` and `UserMgmt.setPasswordByContext`.
+
+- **`x-omv-omit`**, a new operation extension, lists reply fields the transport deletes as soon as the reply is accepted. The deletion comes before normalisation, the development-build validation and its warnings, the query cache and the caller. `EmailNotification.get` uses it for the mail password, and `UserMgmt.setUserByContext` for the `password` it echoes. A lint rule refuses an omitted field that the reply schema declares. The raw examples keep the field with the placeholder `EXAMPLE-PASSWORD`, so every test on the mock proves the field is removed. Documented in [03](03-rpc-transport.md) and [04](04-api-contract.md).
+- **`UserMgmt.setUserByContext`'s request** carries `email` and `comment` only, with no `password`, and nothing else is accepted. The interface sends passwords through `setPasswordByContext` alone.
+
+**Observed on the VM** (OMV 8.6.1):
+
+- `UserMgmt.setPasswordByContext` changes the password at once, but it also leaves `postfix` pending for any account OMV keeps in its database. So the operation carries `x-omv-dirty`.
+- `UserMgmt.setUserByContext` refuses a system account (`admin`) and an account marked read-only with HTTP 500, code 0.
+- `WebGui.dismissWelcomeMessage` returns `null`, and a second call returns `null` again.
+- The VM was put back as it was: the captures' changes were undone without applying them, the welcome marker file was restored exactly, and the temporary account was deleted. The test user's password hash was rewritten to the same password with a new salt.
+
+**Tooling.** The contract bootstrap tool used to drop OMV's "e-mail or empty" `oneOf` silently. It now keeps the alternatives, and the drift check compares each one. The source reader read only the first service class in a file and now reads each class. The scrubber replaces e-mail addresses and any `password` value. The capture tool can make a change, capture, and then discard what it changed.
+
+**Page design:** [design/phase-3-pages.md](design/phase-3-pages.md). Owner decisions on its questions:
+
+- The checklist's HTTPS item has **no link**. It says to use an `https://` address and gives the port as text. A link built from a reply's port would break UI-3.
+- The shared-folders page **may read every folder** a second time, to show how many cannot be reached. If that read fails, the count is left out.
+- Pending changes caused by an account change (`postfix`, and `ssh` for an account with keys) are **accepted and recorded here**. When an administrator's own account change causes them, the success message says changes wait to be applied. The pending band is unchanged.
+- Accepted as designed:
+  - hiding the checklist asks first;
+  - "Restart needed" is a Warning pill;
+  - a dashboard row appears when the NAS clock and the browser's clock differ by more than 5 minutes;
+  - one "Your account" menu item replaces the stock "Settings" and "Password" items.
+
+**A Phase 2 defect, found by the design review:** the classic interface routes with a hash (`useHash: true`), but the navigation table's classic links had no `/#`. On the VM, `/system/date-time` redirects to the classic interface's 404 page. Every classic link moves to the `/#/…` form in Phase 3.
