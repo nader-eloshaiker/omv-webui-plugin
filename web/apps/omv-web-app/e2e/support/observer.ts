@@ -95,3 +95,30 @@ export function expectNothingObserved(observed: Observed): void {
     .soft(observed.foreignRequests, "requests to another origin (UI-7)")
     .toEqual([]);
 }
+
+/**
+ * The canary: break the snippet's policy on purpose, in two ways it forbids, so a clean run of the
+ * other tests is evidence and not silence. A script's text assigned from a plain string is refused by
+ * Trusted Types (`require-trusted-types-for 'script'`), and an inline style element is refused by
+ * `style-src 'self'`. Each must come back as an enforced violation.
+ */
+export const CANARY_VIOLATIONS: readonly RegExp[] = [
+  /^enforce require-trusted-types-for:/,
+  /^enforce style-src-elem: blocked inline/,
+];
+
+export async function breakThePolicy(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const script = document.createElement("script");
+    try {
+      script.textContent = "void 0";
+      document.head.append(script);
+    } catch {
+      // Trusted Types threw on the assignment; the violation event has been sent.
+    }
+    const style = document.createElement("style");
+    style.textContent = "body { outline: 0 }";
+    document.head.append(style);
+    style.remove();
+  });
+}

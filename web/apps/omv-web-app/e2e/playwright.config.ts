@@ -7,12 +7,11 @@
 // Not part of `pnpm test`: it needs the build and a downloaded browser. rpc.php is answered in the
 // browser from the contract's examples (support/rpcMock.ts); nothing talks to a real backend.
 //
-// Two projects run the same tests: with the snippet's headers exactly, and with
-// `require-trusted-types-for 'script'` enforced on top (A9, Phase 2 acceptance).
+// The headers are the snippet's, exactly; they enforce Trusted Types (UI-1), and the canary test
+// proves that enforcement is in force.
 import { defineConfig, devices } from "@playwright/test";
-import type { HeaderVariant } from "./support/snippetServer.ts";
 
-export default defineConfig<object, { headerVariant: HeaderVariant }>({
+export default defineConfig({
   testDir: ".",
   testMatch: "**/*.spec.ts",
   // The VM's own browser test (vm/) has its own configuration and never runs here.
@@ -30,14 +29,5 @@ export default defineConfig<object, { headerVariant: HeaderVariant }>({
     screenshot: "only-on-failure",
     video: "off",
   },
-  projects: [
-    {
-      name: "snippet-headers",
-      use: { headerVariant: "snippet" },
-    },
-    {
-      name: "trusted-types-enforced",
-      use: { headerVariant: "trustedTypesEnforced" },
-    },
-  ],
+  projects: [{ name: "snippet-headers" }],
 });

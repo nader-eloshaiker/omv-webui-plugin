@@ -35,9 +35,6 @@ export interface SnippetReplies {
   missingBody: string;
 }
 
-/** The header variants the browser test runs under. */
-export type HeaderVariant = "snippet" | "trustedTypesEnforced";
-
 function expectArgs(actual: readonly string[], expected: readonly string[]) {
   if (
     actual.length !== expected.length ||
@@ -73,40 +70,6 @@ export function readSnippet(path: string = SNIPPET): SnippetReplies {
     missing: headersOf(missing),
     missingBody: body ?? "",
   };
-}
-
-/** A Content-Security-Policy value with `require-trusted-types-for 'script'` enforced on top (A9). */
-export function withTrustedTypes(policy: string): string {
-  return `${policy}; require-trusted-types-for 'script'`;
-}
-
-/** The snippet's replies with `require-trusted-types-for 'script'` added to every policy (A9). */
-export function withVariant(
-  replies: SnippetReplies,
-  variant: HeaderVariant,
-): SnippetReplies {
-  switch (variant) {
-    case "snippet":
-      return replies;
-    case "trustedTypesEnforced": {
-      const enforce = (headers: readonly Header[]): Header[] =>
-        headers.map((h) =>
-          h.name.toLowerCase() === "content-security-policy"
-            ? { name: h.name, value: withTrustedTypes(h.value) }
-            : h,
-        );
-      return {
-        ...replies,
-        app: enforce(replies.app),
-        assets: enforce(replies.assets),
-        missing: enforce(replies.missing),
-      };
-    }
-    default: {
-      const unknown: never = variant;
-      throw new Error(`Unknown header variant ${String(unknown)}`);
-    }
-  }
 }
 
 const TYPES: Readonly<Record<string, string>> = {

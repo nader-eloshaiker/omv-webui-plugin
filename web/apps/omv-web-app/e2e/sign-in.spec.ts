@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Sign in, see the shell, use its menus and the pending-changes band, sign out, under the snippet's
-// headers (UI-1) and again with Trusted Types enforced. The page is found by what a person sees: the form's labels and the
-// buttons' names, taken from the app's own English catalogue so a copy change does not break this.
+// headers (UI-1), which enforce Trusted Types. The page is found by what a person sees: the form's
+// labels and the buttons' names, taken from the app's own English catalogue so a copy change does not
+// break this.
 // Any CSP violation, console error, page error or request to another origin fails a test
 // (support/fixtures.ts).
 import type { Page } from "@playwright/test";
@@ -9,6 +10,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
+import { breakThePolicy, CANARY_VIOLATIONS } from "./support/observer.ts";
 import { DIST } from "./support/snippetServer.ts";
 
 // Typed into the mock only; no real system is involved.
@@ -149,28 +151,15 @@ test("an administrator uses the shell: menus, a classic-only page, and applying 
 test("the observer reports a violation, so a clean run is evidence", async ({
   page,
   observed,
-  headerVariant,
 }) => {
   await page.goto("/ui/");
   await expect(page.getByLabel(copy.signIn.username)).toBeVisible();
-  // An inline script added after load: CSP blocks it (script-src), and with Trusted Types enforced
-  // the text assignment itself is refused first.
-  await page.evaluate(() => {
-    try {
-      const script = document.createElement("script");
-      script.textContent = "void 0";
-      document.head.append(script);
-    } catch {
-      // Trusted Types threw on the assignment; the violation event has been sent.
-    }
-  });
-  const expected =
-    headerVariant === "trustedTypesEnforced"
-      ? /^enforce require-trusted-types-for:/
-      : /^enforce script-src-elem: blocked inline/;
-  await expect
-    .poll(() => observed.violations)
-    .toContainEqual(expect.stringMatching(expected));
+  await breakThePolicy(page);
+  for (const expected of CANARY_VIOLATIONS) {
+    await expect
+      .poll(() => observed.violations)
+      .toContainEqual(expect.stringMatching(expected));
+  }
   // Caught as intended: clear the record so the fixture's own check passes.
   observed.violations.length = 0;
   observed.consoleErrors.length = 0;

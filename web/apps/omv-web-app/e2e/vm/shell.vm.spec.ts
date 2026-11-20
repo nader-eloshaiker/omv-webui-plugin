@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Phase 2 acceptance on the test VM (docs/07): sign in, see the shell, sign out, against the real
 // backend, for an administrator and a normal user, with and without a second factor; keyboard-only
-// sign-in and shell for the administrator; the headers nginx sends under /ui/. Every test also runs
-// with Trusted Types enforced (the second project), and any CSP or Trusted Types report, console
-// error, page error or request to another origin fails it (support/vmFixtures.ts).
+// sign-in and shell for the administrator; the headers nginx sends under /ui/, whose policy enforces
+// Trusted Types (UI-1). Any CSP or Trusted Types report, console error, page error or request to
+// another origin fails a test (support/vmFixtures.ts).
 //
 // Account names, the host name, passwords and codes come from the env file and are never printed:
 // a comparison with one of them is made in the test and reported as true or false.
 import type { Locator, Page } from "@playwright/test";
 import copy from "../../src/locales/en/common.json" with { type: "json" };
+import { breakThePolicy, CANARY_VIOLATIONS } from "../support/observer.ts";
 import { readSnippet } from "../support/snippetServer.ts";
 import { freshTotp } from "./support/totp.ts";
 import { expect, target, test, type RpcLog } from "./support/vmFixtures.ts";
@@ -459,26 +460,15 @@ test.describe("the canary", () => {
   test("the observer reports a violation on the VM, so a clean run is evidence", async ({
     page,
     observed,
-    headerVariant,
   }) => {
     await page.goto("/ui/");
     await expect(page.getByLabel(copy.signIn.username)).toBeVisible();
-    await page.evaluate(() => {
-      try {
-        const script = document.createElement("script");
-        script.textContent = "void 0";
-        document.head.append(script);
-      } catch {
-        // Trusted Types threw on the assignment; the violation event has been sent.
-      }
-    });
-    const expected =
-      headerVariant === "trustedTypesEnforced"
-        ? /^enforce require-trusted-types-for:/
-        : /^enforce script-src-elem: blocked inline/;
-    await expect
-      .poll(() => observed.violations)
-      .toContainEqual(expect.stringMatching(expected));
+    await breakThePolicy(page);
+    for (const expected of CANARY_VIOLATIONS) {
+      await expect
+        .poll(() => observed.violations)
+        .toContainEqual(expect.stringMatching(expected));
+    }
     observed.violations.length = 0;
     observed.consoleErrors.length = 0;
   });
@@ -487,12 +477,7 @@ test.describe("the canary", () => {
 test.describe("the headers under /ui/", () => {
   test("match the snippet for the app, a deep link, an asset and a missing asset", async ({
     request,
-    headerVariant,
   }) => {
-    test.skip(
-      headerVariant !== "vm",
-      "The headers are the VM's own; the rewrite only happens in the page.",
-    );
     const snippet = readSnippet();
     const home = await request.get("/ui/", { maxRedirects: 0 });
     const asset =

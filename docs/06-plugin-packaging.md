@@ -32,56 +32,16 @@ The files are deliberately **not** placed inside `/var/www/openmediavault/`, whi
 
 ## nginx snippet
 
-OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` at the end of its server block. OMV's own `headers.conf` lives in the same directory and is applied at server level too. The plugin adds one file. This version passed `A1` and the `A9` browser run on the test VM (see the journal, 2026-11-19):
+OMV's site includes `/etc/nginx/openmediavault-webgui.d/*.conf` at the end of its server block. OMV's own `headers.conf` lives in the same directory and is applied at server level too. The plugin adds one file, [`etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf`](../etc/nginx/openmediavault-webgui.d/openmediavault-webui.conf). It is the only copy: the browser tests read their headers from it, and `tools/lib/nginx-conf.test.mjs` checks that every location sends exactly the UI-1 set ([05](05-security.md)). It passed `A1` and the `A9` browser run on the test VM (journal, 2026-11-19), and the Phase 2 run with Trusted Types enforced (journal, 2026-11-20).
 
-```nginx
-# openmediavault-webui: serve the new interface at /ui/.
-# Included inside OMV's server block. Every add_header set is complete, because add_header in a
-# location replaces the ones inherited from the server block (OMV's own headers.conf).
+In outline:
 
-location = /ui {
-    absolute_redirect off;
-    return 301 /ui/;
-}
+- `location = /ui` redirects to `/ui/`.
+- `location ^~ /ui/` serves `/var/www/openmediavault-webui/` with `alias` and `try_files $uri /ui/index.html` (deep links get `index.html`), the UI-1 headers and `Cache-Control: no-cache`.
+- The nested `location ^~ /ui/assets/` serves the hashed files with the same UI-1 headers and `Cache-Control: public, max-age=31536000, immutable`; a missing file goes to the named location below.
+- `location @openmediavault_webui_missing` answers a plain `404 Not found`, with the UI-1 headers and `Cache-Control: no-store`.
 
-location ^~ /ui/ {
-    alias /var/www/openmediavault-webui/;
-    try_files $uri /ui/index.html;
-    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
-        add_header X-Frame-Options "DENY" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header Referrer-Policy "no-referrer" always;
-        add_header Cross-Origin-Opener-Policy "same-origin" always;
-        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
-    add_header Cache-Control "no-cache" always;
-
-    location ^~ /ui/assets/ {
-        try_files $uri =404;
-        error_page 404 @openmediavault_webui_missing;
-        add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
-        add_header X-Frame-Options "DENY" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header Referrer-Policy "no-referrer" always;
-        add_header Cross-Origin-Opener-Policy "same-origin" always;
-        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
-        add_header Cache-Control "public, max-age=31536000, immutable" always;
-    }
-}
-
-# A missing asset is a plain 404, not OMV's redirect to its own 404 page, and is never cached.
-location @openmediavault_webui_missing {
-    types { }
-    default_type text/plain;
-    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" always;
-        add_header X-Frame-Options "DENY" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header Referrer-Policy "no-referrer" always;
-        add_header Cross-Origin-Opener-Policy "same-origin" always;
-        add_header Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" always;
-    add_header Cache-Control "no-store" always;
-    return 404 "Not found\n";
-}
-```
+Every location repeats the complete header set, because `add_header` in a location replaces the ones inherited from the server block.
 
 What `A1` settled:
 
