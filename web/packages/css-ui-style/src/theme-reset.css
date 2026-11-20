@@ -1,0 +1,19 @@
+/* Narrows Tailwind's default theme to the token system before design/tokens.css fills it again.
+ *
+ * Imported after `tailwindcss` and before generated/tokens.css, so these namespaces hold only what
+ * the tokens declare. A class outside the system then generates nothing, instead of a value the
+ * style guide forbids:
+ *   --color-*    no Tailwind palette (`bg-blue-500`), no `white` or `black` (style guide 2.1, 3.1).
+ *   --radius-*   one radius per kind of thing; no `rounded-xl` (4.3).
+ *   --shadow-*   three elevation levels, from the semantic tier (4.3).
+ *   --text-*     the type scale of 4.1, without Tailwind's per-size line heights: text inherits 1.5
+ *                and titles and figures say `leading-tight`.
+ *   --ease-*     one ease-out curve (4.5).
+ */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --text-*: initial;
+  --ease-*: initial;
+}

@@ -10,11 +10,12 @@
  *   1. Primitives  - the static scales in `@theme` (--color-brand-*, --color-slate-*, ...).
  *   2. Semantic    - --theme-* roles on :root, redefined under `.dark`.
  *   3. Component   - the shadcn vocabulary (primary, muted, destructive, ...) mapped onto the
- *                    semantic tier in the app's own stylesheet (see the guide, section 3.2).
+ *                    semantic tier in web/packages/css-ui-style/index.css (the guide, section 3.2).
  *
- * Dark mode is the `.dark` class on <html> in this file. In the app (Phase 2) the same dark values
- * also apply under `@media (prefers-color-scheme: dark)` unless <html> has `.light`, so the OS
- * preference works from the first paint with no inline script (UI-1); the class records only an
+ * Dark mode is the `.dark` class in this file. The css-ui-style package is built from this file
+ * (`pnpm --filter @omv-webui/css-ui-style tokens`) and adds, from the same `.dark` block, the dark
+ * values under `@media (prefers-color-scheme: dark)` unless <html> has `.light`, so the OS
+ * preference works from the first paint with no inline script (UI-1); a class records only an
  * explicit choice. See docs/02-architecture.md, "Cross-cutting behaviour".
  *
  * Hex only for colours: the audit script parses hex and `var(--token)` and nothing else. Scales were
@@ -61,12 +62,16 @@
   --color-status-unknown: #b6bfc7;
 
   /* Pending configuration changes: stock OMV yellow and its coffee-brown ink, unchanged. */
-  --color-pending: #f8d400;
+  --color-pending-fill: #f8d400;
   --color-pending-ink: #4d2e25;
 
   /* Type */
-  --font-sans: "Inter", "Roboto", "Helvetica Neue", helvetica, arial, sans-serif;
-  --font-mono: "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+  /* The bundled Fontsource variable builds name their families "Inter Variable" and "Roboto Mono
+     Variable"; the plain names follow for a locally installed copy (design/preview.html). */
+  --font-sans:
+    "Inter Variable", "Inter", "Roboto", "Helvetica Neue", helvetica, arial, sans-serif;
+  --font-mono:
+    "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
   --text-xs: 0.75rem; /* 12px  captions, table meta */
   --text-sm: 0.8125rem; /* 13px  dense table cells, form hints */
   --text-base: 0.875rem; /* 14px  body: the console default */
@@ -83,17 +88,29 @@
   /* Space: a 4px base. Density comes from choosing smaller steps, never from off-scale values. */
   --spacing: 0.25rem;
 
-  /* Radius */
+  /* Radius: one per kind of thing. Controls and cards take squircle corners where the browser
+     supports them, with the radii in the block after this one. */
   --radius-sm: 4px; /* pills' inner marks, checkboxes */
   --radius-md: 6px; /* controls: buttons, inputs, menu items */
-  --radius-lg: 8px; /* cards, dialogs, tiles */
-  --radius-full: 9999px; /* status pills, dots, meters */
+  --radius-lg: 8px; /* cards, dialogs, menus, popovers, toasts, tiles */
+  --radius-full: 9999px; /* status pills, dots, meters: always round */
 
   /* Motion: short and functional. Everything is disabled under prefers-reduced-motion. */
   --duration-fast: 120ms; /* hover, focus, pressed */
   --duration-base: 180ms; /* menus, popovers, toasts */
   --duration-slow: 260ms; /* dialogs, page-level reveals */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Squircle radii (style guide 4.3). A squircle corner looks tighter than a round one of the same
+   radius, so where `corner-shape: squircle` is supported, controls and cards take these instead of
+   --radius-md and --radius-lg. They sit outside `@theme` on purpose: on their own they would only
+   draw a larger round corner, so nothing but css-ui-style's `rounded-control` and `rounded-card`
+   reads them. Proposed 2026-11-20 from equal corner area and equal 45-degree depth (6px round is
+   10.3 to 11px squircle, 8px is 13.7 to 14.7px); awaiting the owner's look in design/preview.html. */
+:root {
+  --radius-squircle-md: 10px;
+  --radius-squircle-lg: 14px;
 }
 
 /* ─── Tier 2: semantic roles, light theme ─────────────────────────────────────────────────────── */
@@ -125,7 +142,7 @@
   --theme-focus-ring-on-identity: var(--color-brand-950);
 
   /* Pending configuration changes */
-  --theme-pending: var(--color-pending);
+  --theme-pending: var(--color-pending-fill);
   --theme-pending-foreground: var(--color-pending-ink);
   --theme-pending-label: #695205;
   --theme-pending-stroke: #8d7100;
@@ -196,7 +213,7 @@
   --theme-focus-ring-on-identity: var(--color-brand-50);
 
   --theme-pending-label: #f3d754;
-  --theme-pending-stroke: var(--color-pending);
+  --theme-pending-stroke: var(--color-pending-fill);
 
   --theme-ok-stroke: var(--color-status-ok);
   --theme-ok-label: #70e093;

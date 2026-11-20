@@ -20,7 +20,8 @@ links to upstream.
 **Stack assumption:** React, Tailwind CSS v4, shadcn-style components (Base UI primitives), and
 lucide icons, organised the way the reference application is: a token stylesheet package, a
 component package, and the app. Tailwind reads the `@theme` block for utilities; the semantic
-`--theme-*` roles are exposed to it with `@theme inline` in the app stylesheet.
+`--theme-*` roles are exposed to it with `@theme inline` in the `css-ui-style` package, which is
+built from `design/tokens.css`.
 
 ---
 
@@ -114,9 +115,10 @@ Checks that follow from the table:
 ### 3.1 Three tiers
 
 1. **Primitives**: the static scales in `@theme` (`--color-brand-*`, `--color-slate-*`,
-   `--color-status-*`, `--color-pending`).
+   `--color-status-*`, `--color-pending-fill`, `--color-pending-ink`).
 2. **Semantic roles**: `--theme-*`, declared on `:root` and redefined under `.dark`.
-3. **Component vocabulary**: the shadcn names, mapped onto the semantic tier in the app stylesheet.
+3. **Component vocabulary**: the shadcn names, mapped onto the semantic tier in `css-ui-style`.
+   Every semantic role is also a utility by its own name (`bg-page`, `text-warning-label`).
 
 Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind palette class
 (`bg-blue-500`), or a literal colour.
@@ -377,7 +379,9 @@ A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off th
   take `corner-shape: squircle` inside `@supports (corner-shape: squircle)`. In 2026 only Chromium
   browsers support it; everywhere else the same elements keep ordinary rounded corners, and nothing
   may depend on the difference. A squircle corner of the same radius looks tighter than a round
-  one, so the squircle radii are their own tokens, tuned by eye in `design/preview.html`.
+  one, so the squircle radii are their own tokens, tuned by eye in `design/preview.html`. Components
+  write `rounded-control` and `rounded-card`, which carry both radii; the proposed squircle radii
+  (10px and 14px) await the owner's look.
 - **Pills, dots and meters stay round** (`corner-shape: round`). Their shape is part of the
   status vocabulary (5.5): the Unknown mark is a hollow ring.
 - **Native CSS only.** No squircle made with an SVG mask, `clip-path` or a background image: those

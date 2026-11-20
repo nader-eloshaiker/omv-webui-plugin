@@ -36,8 +36,9 @@
   --usage:var(--brand-600); --usage-track:var(--slate-200); --usage-track-edge:#6b7782;
   --terminal:#131619; --terminal-foreground:#cde6cf; --terminal-muted:#8c9e8e;
   --shadow-md:0 4px 12px rgb(16 22 26 / 0.12);
-  --font-sans:"Inter","Roboto","Helvetica Neue",helvetica,arial,sans-serif;
-  --font-mono:"Roboto Mono",ui-monospace,"SF Mono","Cascadia Mono",monospace;
+  --font-sans:"Inter Variable","Inter","Roboto","Helvetica Neue",helvetica,arial,sans-serif;
+  --font-mono:"Roboto Mono Variable","Roboto Mono",ui-monospace,"SF Mono","Cascadia Mono",monospace;
+  --radius-md:6px; --radius-lg:8px; --radius-squircle-md:10px; --radius-squircle-lg:14px;
 }
 .dark {
   --page:var(--slate-950); --surface:var(--slate-900); --muted:var(--slate-850);
@@ -150,6 +151,38 @@ input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
 .chart { width:100%; height:140px; display:block; }
 .note { font-size:0.8125rem; color:var(--muted-foreground); margin-top:8px; }
 @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+
+/* Squircle corners where supported (style guide 4.3), as css-ui-style's rounded-control and
+   rounded-card draw them. Pills, dots and meters stay round. */
+@supports (corner-shape: squircle) {
+  .btn, input[type=text], .bar button, .banner button { corner-shape:squircle; border-radius:var(--radius-squircle-md); }
+  .card, .tablewrap, .ground, .terminal { corner-shape:squircle; border-radius:var(--radius-squircle-lg); }
+}
+
+/* Corner comparison: round against squircle at candidate radii. */
+.cmp { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+.cmp figure { margin:0; display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+.cmp figcaption { font-size:0.75rem; color:var(--muted-foreground); font-variant-numeric:tabular-nums; }
+.cmp figcaption b { color:var(--foreground); font-weight:600; }
+.cmp .btn, .cmp input[type=text] { width:132px; }
+.cmp .menu { width:100%; max-width:180px; background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-md); padding:6px; }
+.cmp .menu p { padding:5px 8px; }
+.cmp .menu p.hover { background:var(--muted); }
+.ring { outline:2px solid var(--focus-ring); outline-offset:2px; }
+.c-r6 { border-radius:6px !important; corner-shape:round !important; }
+.c-r8 { border-radius:8px !important; corner-shape:round !important; }
+.c-s6, .c-s8, .c-s10, .c-s12, .c-s14, .c-s16 { corner-shape:squircle !important; }
+.c-s6 { border-radius:6px !important; } .c-s8 { border-radius:8px !important; } .c-s10 { border-radius:10px !important; }
+.c-s12 { border-radius:12px !important; } .c-s14 { border-radius:14px !important; } .c-s16 { border-radius:16px !important; }
+.ov { position:relative; width:150px; height:110px; }
+.ov i { position:absolute; inset:0; border:2px solid var(--foreground); }
+.ov i.round { border:2px dashed var(--muted-foreground); }
+.ov .x6r { border-radius:36px; } .ov .x8r { border-radius:48px; }
+.ov .x8 { border-radius:48px; corner-shape:squircle; } .ov .x10 { border-radius:60px; corner-shape:squircle; }
+.ov .x12 { border-radius:72px; corner-shape:squircle; } .ov .x14 { border-radius:84px; corner-shape:squircle; }
+.ov .x16 { border-radius:96px; corner-shape:squircle; }
+.sq-missing { display:none; }
+@supports not (corner-shape: squircle) { .sq-missing { display:block; } }
 </style>
 </head>
 <body>
@@ -294,6 +327,48 @@ input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
     </div>
     <p class="note">No status hue, blue or yellow is ever a series.</p>
   </div>
+  <section id="corners">
+  <h2>Corners: round and squircle (proposal, style guide 4.3)</h2>
+  <p class="note">Proposed squircle radii: <b>10px</b> for controls (6px round) and <b>14px</b> for cards, dialogs, menus and toasts (8px round). A squircle of the same radius looks tighter; equal corner area gives 10.3px and 13.7px, equal depth at 45 degrees gives 11px and 14.7px. The specimen above already uses the proposal.</p>
+  <p class="note sq-missing">This browser does not support <span class="mono">corner-shape</span>: every sample below is drawn round. Open this page in a Chromium browser to compare.</p>
+
+  <h3 style="margin-top:16px">Controls, 32px high; the focus ring is drawn on the neutral button</h3>
+  <div class="card cmp">
+    <figure><button class="btn btn-primary c-r6" type="button">Save</button><input class="c-r6" type="text" value="media" aria-label="Sample" autocomplete="off"><button class="btn btn-neutral c-r6 ring" type="button">Cancel</button><figcaption>round 6px (today)</figcaption></figure>
+    <figure><button class="btn btn-primary c-s6" type="button">Save</button><input class="c-s6" type="text" value="media" aria-label="Sample" autocomplete="off"><button class="btn btn-neutral c-s6 ring" type="button">Cancel</button><figcaption>squircle 6px</figcaption></figure>
+    <figure><button class="btn btn-primary c-s8" type="button">Save</button><input class="c-s8" type="text" value="media" aria-label="Sample" autocomplete="off"><button class="btn btn-neutral c-s8 ring" type="button">Cancel</button><figcaption>squircle 8px</figcaption></figure>
+    <figure><button class="btn btn-primary c-s10" type="button">Save</button><input class="c-s10" type="text" value="media" aria-label="Sample" autocomplete="off"><button class="btn btn-neutral c-s10 ring" type="button">Cancel</button><figcaption><b>squircle 10px (proposed)</b></figcaption></figure>
+    <figure><button class="btn btn-primary c-s12" type="button">Save</button><input class="c-s12" type="text" value="media" aria-label="Sample" autocomplete="off"><button class="btn btn-neutral c-s12 ring" type="button">Cancel</button><figcaption>squircle 12px</figcaption></figure>
+  </div>
+
+  <h3 style="margin-top:16px">Cards, dialogs and menus (raised, with a hovered item)</h3>
+  <div class="cmp">
+    <figure><div class="menu c-r8"><p>Edit</p><p class="hover">Apply changes</p><p>Delete</p></div><figcaption>round 8px (today)</figcaption></figure>
+    <figure><div class="menu c-s8"><p>Edit</p><p class="hover">Apply changes</p><p>Delete</p></div><figcaption>squircle 8px</figcaption></figure>
+    <figure><div class="menu c-s12"><p>Edit</p><p class="hover">Apply changes</p><p>Delete</p></div><figcaption>squircle 12px</figcaption></figure>
+    <figure><div class="menu c-s14"><p>Edit</p><p class="hover">Apply changes</p><p>Delete</p></div><figcaption><b>squircle 14px (proposed)</b></figcaption></figure>
+    <figure><div class="menu c-s16"><p>Edit</p><p class="hover">Apply changes</p><p>Delete</p></div><figcaption>squircle 16px</figcaption></figure>
+  </div>
+
+  <h3 style="margin-top:16px">The corner at 6 times size: dashed is round, solid is squircle</h3>
+  <div class="card cmp">
+    <figure><div class="ov"><i class="round x6r"></i><i class="x8"></i></div><figcaption>6px round / 8px squircle</figcaption></figure>
+    <figure><div class="ov"><i class="round x6r"></i><i class="x10"></i></div><figcaption><b>6px round / 10px squircle</b></figcaption></figure>
+    <figure><div class="ov"><i class="round x6r"></i><i class="x12"></i></div><figcaption>6px round / 12px squircle</figcaption></figure>
+    <figure><div class="ov"><i class="round x8r"></i><i class="x12"></i></div><figcaption>8px round / 12px squircle</figcaption></figure>
+    <figure><div class="ov"><i class="round x8r"></i><i class="x14"></i></div><figcaption><b>8px round / 14px squircle</b></figcaption></figure>
+    <figure><div class="ov"><i class="round x8r"></i><i class="x16"></i></div><figcaption>8px round / 16px squircle</figcaption></figure>
+  </div>
+
+  <h3 style="margin-top:16px">Stay round: pills, dots and meters</h3>
+  <div class="card row">
+    <span class="pill pill-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>OK</span>
+    <span class="pill pill-pending"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>Pending</span>
+    <span class="row"><span class="dot dot-ok"></span>OK</span>
+    <span class="row"><span class="dot dot-unknown"></span>Unknown</span>
+    <div class="meter" style="width:160px;margin:0" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62" aria-label="Sample usage"><i style="width:62%"></i></div>
+  </div>
+  </section>
 </main>
 
 <script>

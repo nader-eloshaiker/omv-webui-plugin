@@ -2,6 +2,24 @@
   "name": "@omv-webui/css-ui-style",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "license": "GPL-3.0-or-later",
-  "description": "The Tailwind entry stylesheet built from design/tokens.css. Filled in Phase 2."
+  "description": "The Tailwind v4 entry stylesheet, built from design/tokens.css: the token system, the shadcn mapping, the bundled fonts and the base rules.",
+  "style": "./index.css",
+  "exports": {
+    ".": {
+      "style": "./index.css",
+      "default": "./index.css"
+    },
+    "./index.css": "./index.css"
+  },
+  "scripts": {
+    "tokens": "node scripts/tokens.mjs",
+    "test": "node scripts/tokens.mjs --check && node --test 'test/*.test.mjs'"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "catalog:fonts",
+    "@fontsource-variable/roboto-mono": "catalog:fonts",
+    "tailwindcss": "catalog:style"
+  }
 }
