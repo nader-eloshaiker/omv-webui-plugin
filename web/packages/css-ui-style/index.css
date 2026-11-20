@@ -1,0 +1,156 @@
+/* @omv-webui/css-ui-style: the Tailwind v4 entry stylesheet for the interface and for Storybook.
+ *
+ * Every colour, size and duration comes from design/tokens.css, through generated/tokens.css
+ * (scripts/tokens.mjs; `pnpm test` fails if that copy is stale). This file declares none of its own.
+ * It narrows Tailwind's theme to the tokens, maps the shadcn vocabulary (style guide 3.2), bundles
+ * the fonts, and writes once the rules the style guide asks of every surface.
+ *
+ * It is plain CSS compiled at build time. Nothing here, and nothing the interface needs, is inserted
+ * at run time, so it loads under `style-src 'self'` with no exception (UI-1).
+ *
+ * A consumer imports this file and adds `@source` for the trees whose classes Tailwind must see
+ * (the app's own source and react-ui-components).
+ */
+@import "tailwindcss";
+@import "./src/theme-reset.css";
+@import "./generated/tokens.css";
+
+/* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
+   page downloads only the scripts it shows. The family names are in --font-sans and --font-mono. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/roboto-mono";
+
+/* ─── Theme switching ─────────────────────────────────────────────────────────────────────────── */
+/* `dark:` follows the same rule as the tokens: the `.dark` class, or the OS preference unless
+   `.light` is set. `:where()` keeps both branches at zero specificity. Prefer a semantic token; a
+   `dark:` override is for what a token cannot express. Nested opposite-theme subtrees are not
+   resolved for `dark:` (an element under both `.dark` and a nearer `.light` still matches); the
+   tokens themselves do resolve them. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:not(:where(.light, .light *)) {
+      @slot;
+    }
+  }
+}
+
+/* ─── The shadcn vocabulary (style guide 3.2) ─────────────────────────────────────────────────── */
+/* Each semantic role is already a utility by its own name (`bg-page`, `text-warning-label`, from
+   generated/tokens.css). These are the shadcn names components are written in. `accent` and
+   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and yellow
+   would paint every hover as "pending". `inline` so each utility reads the `--theme-*` variable
+   where it is used and a `.dark` or `.light` subtree flips. */
+@theme inline {
+  --color-background: var(--theme-page);
+  --color-card: var(--theme-surface);
+  --color-card-foreground: var(--theme-foreground);
+  --color-popover: var(--theme-surface);
+  --color-popover-foreground: var(--theme-foreground);
+  --color-primary: var(--theme-action);
+  --color-primary-foreground: var(--theme-action-foreground);
+  --color-secondary: var(--theme-muted);
+  --color-secondary-foreground: var(--theme-foreground);
+  --color-accent: var(--theme-muted);
+  --color-accent-foreground: var(--theme-foreground);
+  --color-input: var(--theme-border-control);
+  --color-ring: var(--theme-focus-ring);
+  /* foreground, muted, muted-foreground, destructive, destructive-foreground and border are
+     semantic roles of the same name. */
+
+  /* Motion: `duration-fast`, `duration-base` and `duration-slow` read the tokens, and a transition
+     utility without a duration takes the fast one. All are 0ms under prefers-reduced-motion
+     (design/tokens.css). A numeric `duration-150` bypasses the token and is not used. */
+  --transition-duration-fast: var(--duration-fast);
+  --transition-duration-base: var(--duration-base);
+  --transition-duration-slow: var(--duration-slow);
+  --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-out);
+}
+
+/* ─── Corners (style guide 4.3) ───────────────────────────────────────────────────────────────── */
+/* One utility per kind of thing. Where the browser supports `corner-shape` (Chromium in 2026) the
+   corner is a squircle with its own, larger radius; elsewhere it is the ordinary round corner and
+   nothing may depend on the difference. Native CSS only, so borders, shadows and the focus outline
+   follow the shape. Pills, dots and meters use `rounded-full` and stay round; checkboxes and inner
+   marks use `rounded-sm`. */
+@utility rounded-control {
+  border-radius: var(--radius-md);
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+    border-radius: var(--radius-squircle-md);
+  }
+}
+
+@utility rounded-card {
+  border-radius: var(--radius-lg);
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+    border-radius: var(--radius-squircle-lg);
+  }
+}
+
+/* ─── Base rules: written once, for every surface ─────────────────────────────────────────────── */
+@layer base {
+  /* Native controls, scrollbars and form widgets follow the same theme as the tokens. */
+  :root {
+    color-scheme: light dark;
+  }
+  .light {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+
+  /* A bare `border` is the divider; a control's edge says `border-input`. */
+  *,
+  ::before,
+  ::after,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--theme-border);
+  }
+
+  /* 14px is the console default (style guide 4.1); rem stays 16px so the scale and zoom hold. */
+  body {
+    background-color: var(--theme-page);
+    color: var(--theme-foreground);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+
+  /* The floor for every interactive element (style guide 4.6): a 2px ring with a 2px offset. A
+     component that draws its own indicator opts out with `outline-hidden`, which wins as a
+     utility. */
+  :focus-visible {
+    outline: 2px solid var(--theme-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* The one rule Base UI would insert as a <style> element (ScrollArea and the scroll lock). The
+     interface runs Base UI inside `CSPProvider disableStyleElements` (D7), so it lives here.
+     Copied from @base-ui/react utils/styles; check it on every Base UI upgrade. */
+  .base-ui-disable-scrollbar {
+    scrollbar-width: none;
+  }
+  .base-ui-disable-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Reduced motion (style guide 4.5). The duration tokens are already 0ms; this is the net for
+     anything that does not read them, such as a keyframe animation. `!important` in a layer beats
+     any utility, important or not. Indeterminate progress is a static label in the component. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: var(--duration-fast) !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: var(--duration-fast) !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

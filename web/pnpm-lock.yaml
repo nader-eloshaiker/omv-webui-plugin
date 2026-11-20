@@ -19,6 +19,13 @@ catalogs:
     typescript:
       specifier: ~6.0.2
       version: 6.0.3
+  fonts:
+    '@fontsource-variable/inter':
+      specifier: ^5.3.0
+      version: 5.3.0
+    '@fontsource-variable/roboto-mono':
+      specifier: ^5.3.0
+      version: 5.3.0
   forms:
     valibot:
       specifier: ^1.5.0
@@ -64,6 +71,10 @@ catalogs:
     react-dom:
       specifier: ^19.3.0
       version: 19.3.1
+  style:
+    tailwindcss:
+      specifier: ^4.3.3
+      version: 4.3.5
   tanstack:
     '@tanstack/react-query':
       specifier: ^5.104.0
@@ -101,7 +112,17 @@ importers:
 
   apps/omv-web-app: {}
 
-  packages/css-ui-style: {}
+  packages/css-ui-style:
+    dependencies:
+      '@fontsource-variable/inter':
+        specifier: catalog:fonts
+        version: 5.3.0
+      '@fontsource-variable/roboto-mono':
+        specifier: catalog:fonts
+        version: 5.3.0
+      tailwindcss:
+        specifier: catalog:style
+        version: 4.3.5
 
   packages/react-api-omv:
     dependencies:
@@ -491,6 +512,12 @@ packages:
   '@eslint/plugin-kit@0.7.3':
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@fontsource-variable/inter@5.3.0':
+    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+
+  '@fontsource-variable/roboto-mono@5.3.0':
+    resolution: {integrity: sha512-h5r+KY/6qy8JEOj33JgcrFO81YAnvrc1EAwMpl/EPJLb2OIvOy0/jmB5M7qs7x/uXk5JUP5Ux4LrkeOK7faHkQ==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -1798,6 +1825,9 @@ packages:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
 
+  tailwindcss@4.3.5:
+    resolution: {integrity: sha512-FcQk9BuffmEHJP2G0XmB2SplU1aLTI7j07Kunk+U74Ny+XiWOtzXz9aujFZ/avntw1e2cOv/3PkgzflQ7gX2vQ==}
+
   tinybench@6.2.3:
     resolution: {integrity: sha512-Al01C2JIBnO2CXCAPbpAl6sUiOZHeThGtHYNTa51JRw9PyWOCdr+9Ong05R4qg/Sk3+H645E8ov1h2c58ityNw==}
     engines: {node: '>=20.0.0'}
@@ -2287,6 +2317,10 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@fontsource-variable/inter@5.3.0': {}
+
+  '@fontsource-variable/roboto-mono@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -3591,6 +3625,8 @@ snapshots:
       '@pkgr/core': 0.3.6
 
   tagged-tag@1.0.0: {}
+
+  tailwindcss@4.3.5: {}
 
   tinybench@6.2.3: {}
 

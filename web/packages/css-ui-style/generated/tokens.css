@@ -1,0 +1,396 @@
+/* GENERATED from design/tokens.css by web/packages/css-ui-style/scripts/tokens.mjs. Do not edit:
+   change design/tokens.css and run `pnpm --filter @omv-webui/css-ui-style tokens`. The source is
+   copied verbatim first; the three derived blocks follow it. */
+
+/* Design tokens for the new openmediavault web UI (unofficial community plugin).
+ *
+ * This file is the single source of truth for colour, type, space, radius, elevation and motion.
+ * Why each value is what it is: docs/design/style-guide.md. Every colour pair that must hold a
+ * contrast bar is listed in tools/colour-audit.mjs (PAIRS); change a value here, then run
+ *
+ *     node tools/colour-audit.mjs
+ *
+ * Three tiers, and components read only the semantic one:
+ *   1. Primitives  - the static scales in `@theme` (--color-brand-*, --color-slate-*, ...).
+ *   2. Semantic    - --theme-* roles on :root, redefined under `.dark`.
+ *   3. Component   - the shadcn vocabulary (primary, muted, destructive, ...) mapped onto the
+ *                    semantic tier in web/packages/css-ui-style/index.css (the guide, section 3.2).
+ *
+ * Dark mode is the `.dark` class in this file. The css-ui-style package is built from this file
+ * (`pnpm --filter @omv-webui/css-ui-style tokens`) and adds, from the same `.dark` block, the dark
+ * values under `@media (prefers-color-scheme: dark)` unless <html> has `.light`, so the OS
+ * preference works from the first paint with no inline script (UI-1); a class records only an
+ * explicit choice. See docs/02-architecture.md, "Cross-cutting behaviour".
+ *
+ * Hex only for colours: the audit script parses hex and `var(--token)` and nothing else. Scales were
+ * built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex.
+ */
+
+/* ─── Tier 1: primitives ──────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* OMV sky blue. 400 is the stock OMV "corporate" blue, unchanged; the rest of the ramp is the
+     same hue (OKLCH ~240) stepped in lightness. */
+  --color-brand-50: #edf7fe;
+  --color-brand-100: #daeefe;
+  --color-brand-200: #b4defc;
+  --color-brand-300: #87c6f2;
+  --color-brand-400: #5dacdf;
+  --color-brand-500: #3991cb;
+  --color-brand-600: #1272ab;
+  --color-brand-700: #095a8a;
+  --color-brand-800: #074469;
+  --color-brand-900: #052e49;
+  --color-brand-950: #021d30;
+
+  /* Slate: the one neutral family. Cool, hue ~245 (between the brand's 240 and stock OMV slate's
+     248), chroma 0.003-0.024 so the tint is felt, not seen. */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f4f7;
+  --color-slate-200: #e2e7eb;
+  --color-slate-300: #ced5dc;
+  --color-slate-400: #9ca6af;
+  --color-slate-500: #76828d;
+  --color-slate-600: #586570;
+  --color-slate-700: #404c57;
+  --color-slate-800: #28323a;
+  --color-slate-850: #212930;
+  --color-slate-900: #181f25;
+  --color-slate-950: #10161a;
+
+  /* Status FILLS: theme-invariant, so a state reads as the same state in both themes. They draw
+     (dots, meter segments, pill washes); they are never words. Words come from the -label members
+     of the semantic tier, which flip per theme. */
+  --color-status-ok: #74e791;
+  --color-status-warning: #f78f00; /* stock OMV "dark orange", unchanged */
+  --color-status-critical: #d01d21;
+  --color-status-unknown: #b6bfc7;
+
+  /* Pending configuration changes: stock OMV yellow and its coffee-brown ink, unchanged. */
+  --color-pending-fill: #f8d400;
+  --color-pending-ink: #4d2e25;
+
+  /* Type */
+  /* The bundled Fontsource variable builds name their families "Inter Variable" and "Roboto Mono
+     Variable"; the plain names follow for a locally installed copy (design/preview.html). */
+  --font-sans:
+    "Inter Variable", "Inter", "Roboto", "Helvetica Neue", helvetica, arial, sans-serif;
+  --font-mono:
+    "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+  --text-xs: 0.75rem; /* 12px  captions, table meta */
+  --text-sm: 0.8125rem; /* 13px  dense table cells, form hints */
+  --text-base: 0.875rem; /* 14px  body: the console default */
+  --text-lg: 1rem; /* 16px  section titles */
+  --text-xl: 1.25rem; /* 20px  page titles */
+  --text-2xl: 1.5rem; /* 24px  dashboard figures */
+  --text-3xl: 1.875rem; /* 30px  the one headline figure on a tile */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Space: a 4px base. Density comes from choosing smaller steps, never from off-scale values. */
+  --spacing: 0.25rem;
+
+  /* Radius: one per kind of thing. Controls and cards take squircle corners where the browser
+     supports them, with the radii in the block after this one. */
+  --radius-sm: 4px; /* pills' inner marks, checkboxes */
+  --radius-md: 6px; /* controls: buttons, inputs, menu items */
+  --radius-lg: 8px; /* cards, dialogs, menus, popovers, toasts, tiles */
+  --radius-full: 9999px; /* status pills, dots, meters: always round */
+
+  /* Motion: short and functional. Everything is disabled under prefers-reduced-motion. */
+  --duration-fast: 120ms; /* hover, focus, pressed */
+  --duration-base: 180ms; /* menus, popovers, toasts */
+  --duration-slow: 260ms; /* dialogs, page-level reveals */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Squircle radii (style guide 4.3). A squircle corner looks tighter than a round one of the same
+   radius, so where `corner-shape: squircle` is supported, controls and cards take these instead of
+   --radius-md and --radius-lg. They sit outside `@theme` on purpose: on their own they would only
+   draw a larger round corner, so nothing but css-ui-style's `rounded-control` and `rounded-card`
+   reads them. Proposed 2026-11-20 from equal corner area and equal 45-degree depth (6px round is
+   10.3 to 11px squircle, 8px is 13.7 to 14.7px); awaiting the owner's look in design/preview.html. */
+:root {
+  --radius-squircle-md: 10px;
+  --radius-squircle-lg: 14px;
+}
+
+/* ─── Tier 2: semantic roles, light theme ─────────────────────────────────────────────────────── */
+:root {
+  /* Grounds: the three surfaces anything can sit on. */
+  --theme-page: var(--color-slate-100);
+  --theme-surface: #ffffff;
+  --theme-muted: var(--color-slate-200); /* neutral hover, table header, inset panel */
+
+  /* Text tiers */
+  --theme-foreground: var(--color-slate-900);
+  --theme-muted-foreground: #4d5964; /* secondary text; between slate-600 and -700 so it clears 4.5:1 on muted */
+  --theme-subtle-foreground: var(--color-slate-500); /* placeholder, disabled */
+
+  /* Structure */
+  --theme-border: var(--color-slate-300); /* dividers: decorative */
+  --theme-border-control: #6b7782; /* the edge of an input, checkbox, meter track: 3:1 on every ground */
+
+  /* Action: the one interaction hue. */
+  --theme-action: var(--color-brand-600);
+  --theme-action-hover: var(--color-brand-700);
+  --theme-action-foreground: #ffffff;
+  --theme-action-label: var(--color-brand-700); /* links and blue words on a ground */
+  --theme-focus-ring: var(--color-brand-600);
+
+  /* Identity: the sky-blue top bar. A container, never a control. */
+  --theme-identity: var(--color-brand-400);
+  --theme-identity-foreground: var(--color-brand-950);
+  --theme-focus-ring-on-identity: var(--color-brand-950);
+
+  /* Pending configuration changes */
+  --theme-pending: var(--color-pending-fill);
+  --theme-pending-foreground: var(--color-pending-ink);
+  --theme-pending-label: #695205;
+  --theme-pending-stroke: #8d7100;
+
+  /* Status: fill / stroke / label. */
+  --theme-ok: var(--color-status-ok);
+  --theme-ok-stroke: #007938;
+  --theme-ok-label: #00612c;
+  --theme-warning: var(--color-status-warning);
+  --theme-warning-stroke: #ad5c15;
+  --theme-warning-label: #8a4613;
+  --theme-critical: var(--color-status-critical);
+  --theme-critical-stroke: #c51e21;
+  --theme-critical-label: #a91518;
+  --theme-unknown: var(--color-status-unknown);
+  --theme-unknown-stroke: #6b7782;
+  --theme-unknown-label: #4d5964;
+
+  /* Destructive action: same red family as critical, kept apart by form (a button with a verb). */
+  --theme-destructive: #b7191c;
+  --theme-destructive-foreground: #ffffff;
+
+  /* Charts: four categorical series, none of them a status hue, the brand, or the yellow. */
+  --theme-series-1: #6635a3; /* violet */
+  --theme-series-2: #006c6c; /* teal */
+  --theme-series-3: #d4599b; /* pink */
+  --theme-series-4: #62691b; /* olive */
+
+  /* Capacity: one hue by lightness. */
+  --theme-usage: var(--color-brand-600);
+  --theme-usage-track: var(--color-slate-200);
+  --theme-usage-track-edge: #6b7782;
+
+  /* Task and log output: a dark ground in both themes, with a faint phosphor-green tint. */
+  --theme-terminal: #131619;
+  --theme-terminal-foreground: #cde6cf;
+  --theme-terminal-muted: #8c9e8e;
+
+  /* Elevation: light theme uses shadow; the ink is slate, never pure black. */
+  --theme-shadow-sm: 0 1px 2px rgb(16 22 26 / 0.08);
+  --theme-shadow-md: 0 4px 12px rgb(16 22 26 / 0.12);
+  --theme-shadow-lg: 0 12px 32px rgb(16 22 26 / 0.18);
+}
+
+/* ─── Tier 2: semantic roles, dark theme (re-derived, not inverted) ───────────────────────────── */
+.dark {
+  --theme-page: var(--color-slate-950);
+  --theme-surface: var(--color-slate-900);
+  --theme-muted: var(--color-slate-850);
+
+  --theme-foreground: #e4e8ed;
+  --theme-muted-foreground: #b3bcc3;
+  --theme-subtle-foreground: #6d767d;
+
+  --theme-border: #31363b;
+  --theme-border-control: #76828d;
+
+  /* In dark, the stock OMV sky blue IS the action colour, with dark ink on it. */
+  --theme-action: var(--color-brand-400);
+  --theme-action-hover: var(--color-brand-300);
+  --theme-action-foreground: var(--color-brand-950);
+  --theme-action-label: var(--color-brand-300);
+  --theme-focus-ring: var(--color-brand-300);
+
+  /* A large sky-blue panel glows on a dark page, so the bar takes the deep container blue. */
+  --theme-identity: var(--color-brand-800);
+  --theme-identity-foreground: var(--color-brand-50);
+  --theme-focus-ring-on-identity: var(--color-brand-50);
+
+  --theme-pending-label: #f3d754;
+  --theme-pending-stroke: var(--color-pending-fill);
+
+  --theme-ok-stroke: var(--color-status-ok);
+  --theme-ok-label: #70e093;
+  --theme-warning-stroke: var(--color-status-warning);
+  --theme-warning-label: #fbb360;
+  --theme-critical-stroke: #f66d67;
+  --theme-critical-label: #fb9890;
+  --theme-unknown-stroke: var(--color-status-unknown);
+  --theme-unknown-label: #b3bcc3;
+
+  --theme-destructive: #f66d67;
+  --theme-destructive-foreground: #2a0606;
+
+  --theme-series-1: #9369d4;
+  --theme-series-2: #97e9e8;
+  --theme-series-3: #e97ab2;
+  --theme-series-4: #b5c06b;
+
+  --theme-usage: var(--color-brand-400);
+  --theme-usage-track: var(--color-slate-850);
+  --theme-usage-track-edge: #76828d;
+
+  --theme-terminal: #0b0e11;
+
+  /* Elevation in dark is a lighter surface plus a hairline, not a shadow. */
+  --theme-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04);
+  --theme-shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
+  --theme-shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
+
+/* ─── Derived 1: the dark theme from the OS preference, unless <html> has .light ───────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --theme-page: var(--color-slate-950);
+    --theme-surface: var(--color-slate-900);
+    --theme-muted: var(--color-slate-850);
+    --theme-foreground: #e4e8ed;
+    --theme-muted-foreground: #b3bcc3;
+    --theme-subtle-foreground: #6d767d;
+    --theme-border: #31363b;
+    --theme-border-control: #76828d;
+    --theme-action: var(--color-brand-400);
+    --theme-action-hover: var(--color-brand-300);
+    --theme-action-foreground: var(--color-brand-950);
+    --theme-action-label: var(--color-brand-300);
+    --theme-focus-ring: var(--color-brand-300);
+    --theme-identity: var(--color-brand-800);
+    --theme-identity-foreground: var(--color-brand-50);
+    --theme-focus-ring-on-identity: var(--color-brand-50);
+    --theme-pending-label: #f3d754;
+    --theme-pending-stroke: var(--color-pending-fill);
+    --theme-ok-stroke: var(--color-status-ok);
+    --theme-ok-label: #70e093;
+    --theme-warning-stroke: var(--color-status-warning);
+    --theme-warning-label: #fbb360;
+    --theme-critical-stroke: #f66d67;
+    --theme-critical-label: #fb9890;
+    --theme-unknown-stroke: var(--color-status-unknown);
+    --theme-unknown-label: #b3bcc3;
+    --theme-destructive: #f66d67;
+    --theme-destructive-foreground: #2a0606;
+    --theme-series-1: #9369d4;
+    --theme-series-2: #97e9e8;
+    --theme-series-3: #e97ab2;
+    --theme-series-4: #b5c06b;
+    --theme-usage: var(--color-brand-400);
+    --theme-usage-track: var(--color-slate-850);
+    --theme-usage-track-edge: #76828d;
+    --theme-terminal: #0b0e11;
+    --theme-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04);
+    --theme-shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
+    --theme-shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* ─── Derived 2: an explicit light choice, also inside a dark subtree ──────────────────────── */
+.light {
+  --theme-page: var(--color-slate-100);
+  --theme-surface: #ffffff;
+  --theme-muted: var(--color-slate-200);
+  --theme-foreground: var(--color-slate-900);
+  --theme-muted-foreground: #4d5964;
+  --theme-subtle-foreground: var(--color-slate-500);
+  --theme-border: var(--color-slate-300);
+  --theme-border-control: #6b7782;
+  --theme-action: var(--color-brand-600);
+  --theme-action-hover: var(--color-brand-700);
+  --theme-action-foreground: #ffffff;
+  --theme-action-label: var(--color-brand-700);
+  --theme-focus-ring: var(--color-brand-600);
+  --theme-identity: var(--color-brand-400);
+  --theme-identity-foreground: var(--color-brand-950);
+  --theme-focus-ring-on-identity: var(--color-brand-950);
+  --theme-pending-label: #695205;
+  --theme-pending-stroke: #8d7100;
+  --theme-ok-stroke: #007938;
+  --theme-ok-label: #00612c;
+  --theme-warning-stroke: #ad5c15;
+  --theme-warning-label: #8a4613;
+  --theme-critical-stroke: #c51e21;
+  --theme-critical-label: #a91518;
+  --theme-unknown-stroke: #6b7782;
+  --theme-unknown-label: #4d5964;
+  --theme-destructive: #b7191c;
+  --theme-destructive-foreground: #ffffff;
+  --theme-series-1: #6635a3;
+  --theme-series-2: #006c6c;
+  --theme-series-3: #d4599b;
+  --theme-series-4: #62691b;
+  --theme-usage: var(--color-brand-600);
+  --theme-usage-track: var(--color-slate-200);
+  --theme-usage-track-edge: #6b7782;
+  --theme-terminal: #131619;
+  --theme-shadow-sm: 0 1px 2px rgb(16 22 26 / 0.08);
+  --theme-shadow-md: 0 4px 12px rgb(16 22 26 / 0.12);
+  --theme-shadow-lg: 0 12px 32px rgb(16 22 26 / 0.18);
+}
+
+/* ─── Derived 3: one utility per semantic role, by its own name ───────────────────────────── */
+@theme inline {
+  --color-page: var(--theme-page);
+  --color-surface: var(--theme-surface);
+  --color-muted: var(--theme-muted);
+  --color-foreground: var(--theme-foreground);
+  --color-muted-foreground: var(--theme-muted-foreground);
+  --color-subtle-foreground: var(--theme-subtle-foreground);
+  --color-border: var(--theme-border);
+  --color-border-control: var(--theme-border-control);
+  --color-action: var(--theme-action);
+  --color-action-hover: var(--theme-action-hover);
+  --color-action-foreground: var(--theme-action-foreground);
+  --color-action-label: var(--theme-action-label);
+  --color-focus-ring: var(--theme-focus-ring);
+  --color-identity: var(--theme-identity);
+  --color-identity-foreground: var(--theme-identity-foreground);
+  --color-focus-ring-on-identity: var(--theme-focus-ring-on-identity);
+  --color-pending: var(--theme-pending);
+  --color-pending-foreground: var(--theme-pending-foreground);
+  --color-pending-label: var(--theme-pending-label);
+  --color-pending-stroke: var(--theme-pending-stroke);
+  --color-ok: var(--theme-ok);
+  --color-ok-stroke: var(--theme-ok-stroke);
+  --color-ok-label: var(--theme-ok-label);
+  --color-warning: var(--theme-warning);
+  --color-warning-stroke: var(--theme-warning-stroke);
+  --color-warning-label: var(--theme-warning-label);
+  --color-critical: var(--theme-critical);
+  --color-critical-stroke: var(--theme-critical-stroke);
+  --color-critical-label: var(--theme-critical-label);
+  --color-unknown: var(--theme-unknown);
+  --color-unknown-stroke: var(--theme-unknown-stroke);
+  --color-unknown-label: var(--theme-unknown-label);
+  --color-destructive: var(--theme-destructive);
+  --color-destructive-foreground: var(--theme-destructive-foreground);
+  --color-series-1: var(--theme-series-1);
+  --color-series-2: var(--theme-series-2);
+  --color-series-3: var(--theme-series-3);
+  --color-series-4: var(--theme-series-4);
+  --color-usage: var(--theme-usage);
+  --color-usage-track: var(--theme-usage-track);
+  --color-usage-track-edge: var(--theme-usage-track-edge);
+  --color-terminal: var(--theme-terminal);
+  --color-terminal-foreground: var(--theme-terminal-foreground);
+  --color-terminal-muted: var(--theme-terminal-muted);
+  --shadow-sm: var(--theme-shadow-sm);
+  --shadow-md: var(--theme-shadow-md);
+  --shadow-lg: var(--theme-shadow-lg);
+}

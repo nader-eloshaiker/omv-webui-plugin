@@ -18,7 +18,7 @@ The single source of truth is [`design/tokens.css`](../../../design/tokens.css).
 declares a colour, size or duration.
 
 1. **Primitives**: the static scales in `@theme` (`--color-brand-*`, `--color-slate-*`,
-   `--color-status-*`, `--color-pending`). Theme-invariant.
+   `--color-status-*`, `--color-pending-fill`, `--color-pending-ink`). Theme-invariant.
 2. **Semantic roles**: `--theme-*` on `:root`, redefined under `.dark`. This is the layer that makes
    light and dark work.
 3. **Component vocabulary**: the shadcn names mapped onto the semantic tier with `@theme inline` in
@@ -39,8 +39,10 @@ Rules:
 - **The surfaces nobody drew are still ours to theme**: text selection, the caret, scrollbars, the
   focus ring, link underline offset. Give each a `--theme-*` pair for both themes and apply it once in
   the base layer.
-- `css-ui-style` is built from `design/tokens.css`; `design/preview.html` mirrors the tokens for a
-  no-build specimen. A token change updates both and the style guide's quoted numbers.
+- `css-ui-style` is built from `design/tokens.css` (`pnpm --filter @omv-webui/css-ui-style tokens`
+  writes its `generated/tokens.css`; `pnpm test` fails on a stale copy); `design/preview.html`
+  mirrors the tokens for a no-build specimen. A token change updates both and the style guide's
+  quoted numbers.
 
 ## 2. Theming mechanics
 
