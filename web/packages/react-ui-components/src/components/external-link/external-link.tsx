@@ -30,13 +30,17 @@ function ExternalLink({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "inline-flex items-center gap-1 rounded-sm text-action-label underline underline-offset-2 hover:no-underline",
+        // Inline, not inline-flex, so a link that wraps keeps the mark after its last word.
+        "rounded-sm text-action-label underline underline-offset-2 hover:no-underline",
         className,
       )}
       {...props}
     >
       {children}
-      <ExternalIcon aria-hidden="true" className="size-3.5 shrink-0" />
+      <ExternalIcon
+        aria-hidden="true"
+        className="ms-1 inline size-3.5 align-[-0.125em]"
+      />
       <span className="sr-only">{newTabLabel}</span>
     </a>
   );
