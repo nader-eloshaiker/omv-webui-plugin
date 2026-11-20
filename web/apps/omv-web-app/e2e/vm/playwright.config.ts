@@ -11,17 +11,17 @@
 // the repository: no trace (it records typed values), and screenshots of a failure go to the system's
 // temporary directory.
 //
-// Two projects run the same tests: with the VM's headers as nginx sends them, and with
-// `require-trusted-types-for 'script'` added to every document and asset reply in the browser.
+// The page gets the VM's headers exactly as nginx sends them; they enforce Trusted Types (UI-1), and
+// the canary test proves that enforcement is in force. OMV_WEBUI_VM_SCHEME=https runs the same tests
+// over HTTPS.
 import { defineConfig, devices } from "@playwright/test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { VmHeaderVariant } from "./support/vmFixtures.ts";
 import { readVmTarget } from "./support/vmTarget.ts";
 
 const target = readVmTarget();
 
-export default defineConfig<object, { headerVariant: VmHeaderVariant }>({
+export default defineConfig({
   testDir: ".",
   testMatch: "**/*.vm.spec.ts",
   outputDir: join(tmpdir(), "omv-webui-vm-browser"),
@@ -42,25 +42,5 @@ export default defineConfig<object, { headerVariant: VmHeaderVariant }>({
     screenshot: "only-on-failure",
     video: "off",
   },
-  projects: [
-    {
-      name: "vm-headers",
-      use: { headerVariant: "vm" },
-    },
-    {
-      name: "vm-trusted-types-enforced",
-      use: {
-        headerVariant: "trustedTypesEnforced",
-        // A document fulfilled by route interception has no network address, so Chromium's Local
-        // Network Access check takes it for a public page and blocks its non-secure calls to the
-        // VM's private address. Loaded from nginx (the other project), the page and rpc.php share
-        // the address and nothing is blocked. Only this check is switched off, only here.
-        launchOptions: {
-          args: [
-            "--disable-features=LocalNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights",
-          ],
-        },
-      },
-    },
-  ],
+  projects: [{ name: "vm" }],
 });

@@ -292,3 +292,12 @@ The production build of `0a47e7a` was deployed to the test VM (OMV 8.6.1, nginx 
 - **The idle warning,** with the timeout set to 2 minutes for the run: it opened about a minute before the end, with the background poll running, and "Stay signed in" kept the session past the original end. The timeout was put back and applied.
 - **Allowed console errors on the real backend, each listed in the test:** the 401 of the signed-out probe (as on the mock), and, over plain HTTP only, Chromium's "Cross-Origin-Opener-Policy header has been ignored" for each document, because COOP applies only on a potentially trustworthy origin. The header stays: it applies as soon as the page is served over HTTPS.
 - **A harness detail:** a document fulfilled by route interception has no network address, so Chromium's Local Network Access check blocked its calls to the VM's private address. Only the interception project switches that check off; the real-headers project shows the page as served.
+
+## 2026-11-20 — Trusted Types joins UI-1
+
+Per the owner's decision when Phase 0 closed ("If it passes, the header joins UI-1"), `require-trusted-types-for 'script'` is now part of the UI-1 policy in [05](05-security.md) and in every `Content-Security-Policy` of the snippet. [06](06-plugin-packaging.md) now points at the committed snippet instead of embedding a copy that had drifted. The browser tests no longer add the header themselves: each runs one project with the snippet's own headers, and the shared canary must see both a Trusted Types violation and an inline-style violation, so enforcement is proven in force.
+
+The build and the new snippet were deployed to the test VM (`nginx -t` passed) and `pnpm test:browser:vm` was run with a temporary administrator with a second factor, deleted afterwards:
+
+- **HTTP:** 7 passed, 1 skipped (the idle test, which needs a short timeout; it passed earlier today).
+- **HTTPS** (`OMV_WEBUI_VM_SCHEME=https`, the VM's self-signed certificate): 7 passed, 1 skipped. Chromium's "Cross-Origin-Opener-Policy header has been ignored" error does not appear over HTTPS; the test allows it for an `http:` origin only, so its absence is checked.

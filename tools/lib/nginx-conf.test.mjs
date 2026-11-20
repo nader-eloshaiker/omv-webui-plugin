@@ -140,6 +140,7 @@ const UI1_CSP = [
   "frame-ancestors 'none'",
   "base-uri 'none'",
   "form-action 'self'",
+  "require-trusted-types-for 'script'",
 ];
 const UI1_FIXED = {
   "X-Frame-Options": "DENY",

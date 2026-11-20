@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The browser test's fixtures:
-// - `headerVariant` (per project): the snippet's headers as they are, or with Trusted Types enforced.
 // - `server` (per worker): the production build behind the snippet's headers, on a free port.
 // - `rpc` (per test): rpc.php answered from the contract's examples, in the browser.
 // - `observed` (per test, automatic): every CSP violation (enforced or report-only), console error,
@@ -17,15 +16,12 @@ import { RpcMock } from "./rpcMock.ts";
 import {
   readSnippet,
   startSnippetServer,
-  withVariant,
-  type HeaderVariant,
   type RunningServer,
 } from "./snippetServer.ts";
 
 export type { Observed };
 
 interface WorkerFixtures {
-  headerVariant: HeaderVariant;
   server: RunningServer;
 }
 
@@ -35,13 +31,9 @@ interface TestFixtures {
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
-  headerVariant: ["snippet", { option: true, scope: "worker" }],
-
   server: [
-    async ({ headerVariant }, provide) => {
-      const server = await startSnippetServer(
-        withVariant(readSnippet(), headerVariant),
-      );
+    async ({ browserName: _browser }, provide) => {
+      const server = await startSnippetServer(readSnippet());
       await provide(server);
       await server.close();
     },

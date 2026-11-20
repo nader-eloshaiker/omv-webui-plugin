@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The VM browser test's fixtures. The app is the build deployed on the test VM, served by the VM's
-// nginx through the plugin's snippet, and talks to the VM's real rpc.php.
-// - `headerVariant` (per project): the VM's headers as they are, or with
-//   `require-trusted-types-for 'script'` added to the policy of every document and asset reply,
-//   rewritten in the browser by route interception (A9, Phase 2 acceptance).
+// nginx through the plugin's snippet (whose policy enforces Trusted Types, UI-1), and talks to the VM's
+// real rpc.php. Nothing rewrites a reply: the page gets exactly what nginx sends.
+// - `vm` (per worker): the target and its accounts (vmTarget.ts).
 // - `rpcLog` (per test, automatic): which `Service.method` the page called, in order, and the replies
 //   of a few reads the test compares with the screen. Parameters are never kept: they carry
 //   passwords and codes.
 // - `observed` (per test, automatic): the shared violation observer (../../support/observer.ts),
 //   with only the console errors listed in VM_ALLOWANCES let through.
-import { test as base, expect, type Page, type Route } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 import {
   expectNothingObserved,
   observe,
@@ -17,10 +16,7 @@ import {
   type ConsoleAllowance,
   type Observed,
 } from "../../support/observer.ts";
-import { withTrustedTypes } from "../../support/snippetServer.ts";
 import { readVmTarget, type VmTarget } from "./vmTarget.ts";
-
-export type VmHeaderVariant = "vm" | "trustedTypesEnforced";
 
 /** The target, or null without an env file; read once, when the suite loads. */
 export const target: VmTarget | null = readVmTarget();
@@ -122,89 +118,24 @@ export class RpcLog {
   }
 }
 
-/** What the Trusted Types rewrite did: every reply under /ui/ it rewrote, and any it could not. */
-interface Rewrites {
-  rewritten: string[];
-  withoutPolicy: string[];
-}
-
-async function enforceTrustedTypes(
-  page: Page,
-  origin: string,
-): Promise<Rewrites> {
-  const rewrites: Rewrites = { rewritten: [], withoutPolicy: [] };
-  const handler = async (route: Route) => {
-    if (route.request().method() !== "GET") {
-      await route.continue();
-      return;
-    }
-    const response = await route.fetch({ maxRedirects: 0 });
-    // The body arrives decoded; its encoding and length headers no longer describe it.
-    const {
-      "content-encoding": _encoding,
-      "content-length": _length,
-      ...headers
-    } = response.headers();
-    const path = new URL(route.request().url()).pathname;
-    const policy = headers["content-security-policy"];
-    if (policy === undefined) {
-      rewrites.withoutPolicy.push(path);
-      await route.fulfill({ response, headers });
-      return;
-    }
-    rewrites.rewritten.push(path);
-    await route.fulfill({
-      response,
-      headers: {
-        ...headers,
-        "content-security-policy": withTrustedTypes(policy),
-      },
-    });
-  };
-  await page.route(
-    (url) => url.origin === origin && url.pathname.startsWith("/ui/"),
-    handler,
-  );
-  return rewrites;
-}
-
 interface WorkerFixtures {
-  headerVariant: VmHeaderVariant;
   vm: VmTarget;
 }
 
 interface TestFixtures {
   rpcLog: RpcLog;
   observed: Observed;
-  trustedTypes: Rewrites | null;
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
-  headerVariant: ["vm", { option: true, scope: "worker" }],
-
   vm: [
-    async ({ headerVariant: _variant }, provide) => {
+    async ({ browserName: _browser }, provide) => {
       if (target === null) {
         throw new Error("The VM suite runs only with an env file.");
       }
       await provide(target);
     },
     { scope: "worker" },
-  ],
-
-  trustedTypes: [
-    async ({ page, vm, headerVariant }, provide) => {
-      if (headerVariant === "vm") {
-        await provide(null);
-        return;
-      }
-      const rewrites = await enforceTrustedTypes(page, vm.origin);
-      await provide(rewrites);
-      expect
-        .soft(rewrites.withoutPolicy, "replies under /ui/ without a CSP")
-        .toEqual([]);
-    },
-    { auto: true },
   ],
 
   rpcLog: [
