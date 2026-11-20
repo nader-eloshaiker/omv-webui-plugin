@@ -1,0 +1,5 @@
+summary: "Observed on the test VM (OMV 8.6.1, A3, A8): no session"
+x-omv-status: 401
+value:
+  code: 0
+  message: Session not authenticated.

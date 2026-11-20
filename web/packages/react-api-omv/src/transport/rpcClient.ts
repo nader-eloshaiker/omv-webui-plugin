@@ -37,8 +37,10 @@ export type BodyType<B> = B;
 // ---- events: the session ending, and configuration left pending ----
 
 type Listener = () => void;
+type ActivityListener = (sentAt: number) => void;
 const sessionEndedListeners = new Set<Listener>();
 const pendingChangesListeners = new Set<Listener>();
+const activityListeners = new Set<ActivityListener>();
 let sessionLive = true;
 
 /** Called once when a call gets 401, until a later call succeeds. Returns an unsubscribe. */
@@ -53,10 +55,26 @@ export function onPendingChanges(listener: Listener): () => void {
   return () => pendingChangesListeners.delete(listener);
 }
 
-const emit = (listeners: Set<Listener>) => {
+/**
+ * Called after each call the server counted as activity on the session, with the time the call was
+ * sent. rpc.php refreshes a signed-in session's last-access time for every call it accepts, whatever
+ * the method then answers, unless the call is a background one (`updatelastaccess: false`); a 401
+ * means there was no session to refresh, and download.php never refreshes it. The idle warning
+ * follows this, so its clock is the server's (UI-14). The time is the moment the request left, which
+ * is never later than the server's own: the warning errs early, never late. Returns an unsubscribe.
+ */
+export function onActivity(listener: ActivityListener): () => void {
+  activityListeners.add(listener);
+  return () => activityListeners.delete(listener);
+}
+
+const emit = <A extends unknown[]>(
+  listeners: Set<(...args: A) => void>,
+  ...args: A
+) => {
   for (const listener of [...listeners]) {
     try {
-      listener();
+      listener(...args);
     } catch (e) {
       console.error(e);
     }
@@ -198,6 +216,7 @@ export const rpcClient = async <T>(
     ...(options?.background ? { options: { updatelastaccess: false } } : {}),
   };
 
+  const sentAt = Date.now();
   let response: Response;
   try {
     response = await fetch(endpoint, {
@@ -218,6 +237,10 @@ export const rpcClient = async <T>(
       throw e;
     }
     throw failure(entry, 0, GENERIC_NETWORK);
+  }
+
+  if (!options?.background && !entry.download && response.status !== 401) {
+    emit(activityListeners, sentAt);
   }
 
   if (entry.download && response.ok) {

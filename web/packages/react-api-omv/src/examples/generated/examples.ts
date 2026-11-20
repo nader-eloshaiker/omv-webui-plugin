@@ -27,11 +27,30 @@ export const CONTRACT_EXAMPLES = {
         },
       },
     },
+    authenticatedUser: {
+      status: 200,
+      value: {
+        username: "example-user",
+        status: "authenticated",
+        permissions: {
+          role: "user",
+        },
+        sessionid: "EXAMPLE-SESSION-ID",
+      },
+    },
     wrongPassword: {
       status: 400,
       value: {
         code: 0,
         message: "Incorrect username or password.",
+      },
+    },
+    tooManyAttempts: {
+      status: 429,
+      value: {
+        code: 0,
+        message:
+          "Too many failed verification attempts. Please try again later.",
       },
     },
   },
@@ -52,6 +71,21 @@ export const CONTRACT_EXAMPLES = {
       value: {
         code: 0,
         message: "Challenge verification failed.",
+      },
+    },
+    noPendingLogin: {
+      status: 401,
+      value: {
+        code: 0,
+        message: "No pending login or the login has expired.",
+      },
+    },
+    tooManyAttempts: {
+      status: 429,
+      value: {
+        code: 0,
+        message:
+          "Too many failed verification attempts. Please try again later.",
       },
     },
   },
@@ -131,6 +165,20 @@ export const CONTRACT_EXAMPLES = {
         ts: 1795089030,
         time: "Thu Nov 19 11:50:30 2026",
         hostname: "nas",
+      },
+    },
+    notSignedIn: {
+      status: 401,
+      value: {
+        code: 0,
+        message: "Session not authenticated.",
+      },
+    },
+    sessionExpired: {
+      status: 401,
+      value: {
+        code: 0,
+        message: "Session expired.",
       },
     },
   },

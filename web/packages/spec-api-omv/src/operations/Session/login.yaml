@@ -31,6 +31,8 @@ post:
               $ref: ../../examples/sessionLogin.authenticated.yaml
             challengeRequired:
               $ref: ../../examples/sessionLogin.challengeRequired.yaml
+            authenticatedUser:
+              $ref: ../../examples/sessionLogin.authenticatedUser.yaml
     "400":
       description: Wrong user name or password.
       content:
@@ -40,3 +42,12 @@ post:
           examples:
             wrongPassword:
               $ref: ../../examples/sessionLogin.wrongPassword.yaml
+    "429":
+      description: Too many failed second-factor attempts for this user. The reply says no wait time (A10).
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            tooManyAttempts:
+              $ref: ../../examples/sessionLogin.tooManyAttempts.yaml

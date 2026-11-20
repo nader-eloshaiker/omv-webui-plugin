@@ -27,7 +27,12 @@ import {
   type Answers,
 } from "../mocks/handlers.ts";
 import { RpcError } from "./RpcError.ts";
-import { onPendingChanges, onSessionEnded, rpcClient } from "./rpcClient.ts";
+import {
+  onActivity,
+  onPendingChanges,
+  onSessionEnded,
+  rpcClient,
+} from "./rpcClient.ts";
 
 const server = setupServer();
 const seen: {
@@ -224,6 +229,42 @@ describe("the session ending", () => {
     });
     await systemGetInformation().catch(() => undefined);
     expect(ended).toHaveBeenCalledTimes(2);
+    off();
+  });
+});
+
+describe("activity on the session (the idle clock, UI-14)", () => {
+  it("reports each foreground call the server answered, with the time it was sent", async () => {
+    answer({ sessionLogin: "wrongPassword" });
+    const activity = vi.fn();
+    const off = onActivity(activity);
+    const before = Date.now();
+    await systemGetInformation();
+    // A refused call still refreshed the session on the server: rpc.php counts it before the method runs.
+    await sessionLogin({ username: "example-user", password: "x" }).catch(
+      () => undefined,
+    );
+    expect(activity).toHaveBeenCalledTimes(2);
+    const [sentAt] = activity.mock.calls[0] as [number];
+    expect(sentAt).toBeGreaterThanOrEqual(before);
+    expect(sentAt).toBeLessThanOrEqual(Date.now());
+    off();
+  });
+
+  it("does not report a background call, a 401 or a network failure", async () => {
+    const activity = vi.fn();
+    const off = onActivity(activity);
+    answer();
+    await configIsDirty(undefined, { background: true });
+    server.resetHandlers();
+    answer({
+      systemGetInformation: { status: 401, message: "Session expired." },
+    });
+    await systemGetInformation().catch(() => undefined);
+    server.resetHandlers();
+    server.use(http.post("*/rpc.php", () => HttpResponse.error()));
+    await systemGetInformation().catch(() => undefined);
+    expect(activity).not.toHaveBeenCalled();
     off();
   });
 });

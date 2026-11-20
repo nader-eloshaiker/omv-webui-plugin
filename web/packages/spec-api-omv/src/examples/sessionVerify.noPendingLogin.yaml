@@ -1,0 +1,5 @@
+summary: "Observed on the test VM (OMV 8.6.1, A10): no login is pending, or it expired or was discarded"
+x-omv-status: 401
+value:
+  code: 0
+  message: No pending login or the login has expired.

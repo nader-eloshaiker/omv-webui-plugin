@@ -1,0 +1,5 @@
+summary: "Observed on the test VM (OMV 8.6.1, A10): a new sign-in of a user with too many failed second-factor attempts"
+x-omv-status: 429
+value:
+  code: 0
+  message: Too many failed verification attempts. Please try again later.

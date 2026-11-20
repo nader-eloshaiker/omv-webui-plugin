@@ -24,3 +24,14 @@ post:
               $ref: ../../examples/systemGetInformation.adminPendingChanges.yaml
             user:
               $ref: ../../examples/systemGetInformation.user.yaml
+    "401":
+      description: No session, or it ended. The first call after the idle timeout says so; later ones say there is no session (A3).
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notSignedIn:
+              $ref: ../../examples/systemGetInformation.notSignedIn.yaml
+            sessionExpired:
+              $ref: ../../examples/systemGetInformation.sessionExpired.yaml
