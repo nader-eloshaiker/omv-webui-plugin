@@ -38,7 +38,9 @@ function NoticeBanner({
       <span aria-hidden="true" className="flex shrink-0 [&_svg]:size-4">
         {icon ?? <TriangleAlert />}
       </span>
-      <p className="min-w-0 flex-1">{children}</p>
+      {/* A floor on the sentence's width, as on the pending band: a short action wraps to its own
+          line on a narrow screen instead of squeezing the sentence into a column of single words. */}
+      <p className="min-w-0 flex-1 basis-48">{children}</p>
       {action ? <div className="flex gap-2">{action}</div> : null}
     </section>
   );

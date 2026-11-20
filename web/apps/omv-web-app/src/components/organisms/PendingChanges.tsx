@@ -10,11 +10,11 @@ import {
 } from "@omv-webui/react-api-omv/generated";
 import { taskRegistry, useTasks } from "@omv-webui/react-api-omv/tasks";
 import { ConfirmDialog, PendingBanner } from "@omv-webui/react-ui-components";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
 import { mayCutConnection, pendingModules } from "../../pending/modules.ts";
-import { PENDING_BAND_ID } from "../../shell/ids.ts";
+import { MAIN_ID, PENDING_BAND_ID } from "../../shell/ids.ts";
 import { useShowTask } from "../../shell/taskDialog.ts";
 import { FormAlert } from "../molecules/FormAlert.tsx";
 import { ModuleName, ModuleNames } from "../molecules/ModuleNames.tsx";
@@ -38,7 +38,22 @@ export function PendingChanges() {
   const running = task?.state === "running";
   const failed = task?.state === "failed";
 
-  if (!dirty && !running) {
+  const visible = dirty || running;
+
+  // When an apply or undo finishes, the band goes, and with it the control that had focus. Focus then
+  // moves to the page title, so a keyboard user is not left on the page itself.
+  const wasVisibleRef = useRef(visible);
+  useEffect(() => {
+    if (wasVisibleRef.current && !visible) {
+      const active = document.activeElement;
+      if (active === null || active === document.body) {
+        document.querySelector<HTMLElement>(`#${MAIN_ID} h1`)?.focus();
+      }
+    }
+    wasVisibleRef.current = visible;
+  }, [visible]);
+
+  if (!visible) {
     return null;
   }
 

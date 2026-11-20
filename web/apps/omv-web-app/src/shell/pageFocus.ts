@@ -18,15 +18,15 @@ export const usePageFocus = (): PageFocus => use(PageFocusContext);
 /** Follow the router: any later change of path counts as a navigation. */
 export function useNavigationTracker(): PageFocus {
   const router = useRouter();
-  const navigated = useRef(false);
+  const navigatedRef = useRef(false);
   useEffect(
     () =>
       router.subscribe("onBeforeLoad", (event) => {
         if (event.fromLocation && event.pathChanged) {
-          navigated.current = true;
+          navigatedRef.current = true;
         }
       }),
     [router],
   );
-  return useMemo(() => ({ navigated: () => navigated.current }), []);
+  return useMemo(() => ({ navigated: () => navigatedRef.current }), []);
 }
