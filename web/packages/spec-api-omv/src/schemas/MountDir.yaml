@@ -1,0 +1,7 @@
+type: string
+description: >-
+  The folder a file system is mounted on, as FileSystemMgmt.getList reports it in `mountpoint`
+  (OMV makes it "/srv/dev-disk-by-uuid-…"). OMV's `dirpath` format, and stricter: an absolute path,
+  never "/" itself, with no ".." step at all, and ASCII only.
+x-omv-format: dirpath
+pattern: "^(?!.*/\\.{2}(/|$))/[-\\w./@ ]*[-\\w.@ ]$"

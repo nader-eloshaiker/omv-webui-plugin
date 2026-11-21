@@ -5,23 +5,36 @@
 import type {
   ConfiguredFilesystemList,
   DetectedFilesystemList,
+  DeviceFileRequest,
+  FileSystemMgmtCreateBtrfsRequest,
+  FileSystemMgmtCreateRequest,
   FileSystemMgmtEnumerateMountedFilesystemsRequest,
+  FileSystemMgmtGrowRequest,
+  FileSystemMgmtSetMountPointRequest,
+  FileSystemMgmtUmountByDirRequest,
+  FilesystemDetails,
   GetListRequest,
+  MountEntry,
   MountedFilesystemList,
+  RpcErrorDetail,
+  TaskHandle,
 } from "@omv-webui/ts-api-omv";
 
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import type { BodyType, ErrorType } from "../../../transport/rpcClient.ts";
 import { rpcClient } from "../../../transport/rpcClient.ts";
@@ -593,6 +606,953 @@ export function useFileSystemMgmtEnumerateFilesystems<
 } {
   const queryOptions =
     getFileSystemMgmtEnumerateFilesystemsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.
+ * @summary File systems found but not set up
+ */
+export const fileSystemMgmtGetMountCandidates = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<DetectedFilesystemList>(
+    { url: `/rpc/FileSystemMgmt/getMountCandidates`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getFileSystemMgmtGetMountCandidatesQueryKey = () => {
+  return ["POST", `/rpc/FileSystemMgmt/getMountCandidates`] as const;
+};
+
+export const getFileSystemMgmtGetMountCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFileSystemMgmtGetMountCandidatesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>
+  > = ({ signal }) => fileSystemMgmtGetMountCandidates(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FileSystemMgmtGetMountCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>
+>;
+export type FileSystemMgmtGetMountCandidatesQueryError = ErrorType<unknown>;
+
+/**
+ * The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.
+ * @summary File systems found but not set up
+ */
+export function useFileSystemMgmtGetMountCandidates<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.
+ * @summary File systems found but not set up
+ */
+export function useFileSystemMgmtGetMountCandidates<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.
+ * @summary File systems found but not set up
+ */
+export function useFileSystemMgmtGetMountCandidates<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.
+ * @summary File systems found but not set up
+ */
+export function useFileSystemMgmtGetMountCandidates<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetMountCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFileSystemMgmtGetMountCandidatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * The devices the server would offer for a new file system, as a background task, so a disk that hangs does not hold the request; the task's result is the list. It leaves out read-only devices, those that hold a file system or are part of one, and any that still carries a partition table or a file system, RAID or other signature. It reads that from the system's device information first and runs wipefs on a device only when that says nothing, which reads the disk. Changes nothing; the interface starts it only when the reader opens the add-storage flow or re-checks.
+ * @summary Disks free for a new file system
+ */
+export const fileSystemMgmtGetCandidatesBg = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TaskHandle>(
+    { url: `/rpc/FileSystemMgmt/getCandidatesBg`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getFileSystemMgmtGetCandidatesBgMutationKey = () =>
+  ["fileSystemMgmtGetCandidatesBg"] as const;
+
+export const getFileSystemMgmtGetCandidatesBgMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtGetCandidatesBgMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>,
+    void
+  > = () => {
+    return fileSystemMgmtGetCandidatesBg(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtGetCandidatesBgMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>
+>;
+
+export type FileSystemMgmtGetCandidatesBgMutationError = ErrorType<unknown>;
+
+/**
+ * The devices the server would offer for a new file system, as a background task, so a disk that hangs does not hold the request; the task's result is the list. It leaves out read-only devices, those that hold a file system or are part of one, and any that still carries a partition table or a file system, RAID or other signature. It reads that from the system's device information first and runs wipefs on a device only when that says nothing, which reads the disk. Changes nothing; the interface starts it only when the reader opens the add-storage flow or re-checks.
+ * @summary Disks free for a new file system
+ */
+export const useFileSystemMgmtGetCandidatesBg = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtGetCandidatesBg>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtGetCandidatesBgMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Erase a device and create one file system across it, as a background task: the server removes the partition table and signatures, makes one partition over the whole disk (a RAID array or other stacked device is used as it is), and formats it. Everything on the device is lost and cannot be recovered. The server erases any device it is given: it does not check that the device is a candidate, empty, unmounted or not the system disk. Before calling it the interface itself refuses every device that its candidate list and the disk-use model do not both allow (journal, 2026-11-21). While it runs, FileSystemMgmt.getList shows the new file system as being created (status 2). The task's output is the commands' log text; it has no result. The new file system is neither mounted nor set up: FileSystemMgmt.setMountPoint does that. Changes no configuration, so nothing is pending afterwards.
+ * @summary Create a file system on a disk
+ */
+export const fileSystemMgmtCreate = (
+  fileSystemMgmtCreateRequest: BodyType<FileSystemMgmtCreateRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TaskHandle>(
+    {
+      url: `/rpc/FileSystemMgmt/create`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: fileSystemMgmtCreateRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtCreateMutationKey = () =>
+  ["fileSystemMgmtCreate"] as const;
+
+export const getFileSystemMgmtCreateMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtCreate>>,
+    TError,
+    FileSystemMgmtCreateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtCreate>>,
+  TError,
+  FileSystemMgmtCreateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtCreateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtCreate>>,
+    FileSystemMgmtCreateMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return fileSystemMgmtCreate(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtCreate>>
+>;
+export type FileSystemMgmtCreateMutationBody =
+  BodyType<FileSystemMgmtCreateRequest>;
+export type FileSystemMgmtCreateMutationError = ErrorType<unknown>;
+export type FileSystemMgmtCreateMutationVariables = {
+  data: BodyType<FileSystemMgmtCreateRequest>;
+};
+
+/**
+ * Erase a device and create one file system across it, as a background task: the server removes the partition table and signatures, makes one partition over the whole disk (a RAID array or other stacked device is used as it is), and formats it. Everything on the device is lost and cannot be recovered. The server erases any device it is given: it does not check that the device is a candidate, empty, unmounted or not the system disk. Before calling it the interface itself refuses every device that its candidate list and the disk-use model do not both allow (journal, 2026-11-21). While it runs, FileSystemMgmt.getList shows the new file system as being created (status 2). The task's output is the commands' log text; it has no result. The new file system is neither mounted nor set up: FileSystemMgmt.setMountPoint does that. Changes no configuration, so nothing is pending afterwards.
+ * @summary Create a file system on a disk
+ */
+export const useFileSystemMgmtCreate = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtCreate>>,
+      TError,
+      FileSystemMgmtCreateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtCreate>>,
+  TError,
+  FileSystemMgmtCreateMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtCreateMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Erase several disks and create one BTRFS file system across them, as a background task: the server removes each disk's partition table and signatures and runs mkfs.btrfs on the whole disks (no partitions). Everything on every disk is lost and cannot be recovered. The server erases any devices it is given and checks neither that they are candidates nor that there are enough for the profile; the interface refuses both itself (journal, 2026-11-21). Unlike FileSystemMgmt.create it leaves no "being created" row in FileSystemMgmt.getList while it runs. The task's output is mkfs.btrfs's text; it has no result. The new file system is neither mounted nor set up. Changes no configuration.
+ * @summary Combine disks into one BTRFS file system
+ */
+export const fileSystemMgmtCreateBtrfs = (
+  fileSystemMgmtCreateBtrfsRequest: BodyType<FileSystemMgmtCreateBtrfsRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TaskHandle>(
+    {
+      url: `/rpc/FileSystemMgmt/createBtrfs`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: fileSystemMgmtCreateBtrfsRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtCreateBtrfsMutationKey = () =>
+  ["fileSystemMgmtCreateBtrfs"] as const;
+
+export const getFileSystemMgmtCreateBtrfsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>,
+    TError,
+    FileSystemMgmtCreateBtrfsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>,
+  TError,
+  FileSystemMgmtCreateBtrfsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtCreateBtrfsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>,
+    FileSystemMgmtCreateBtrfsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return fileSystemMgmtCreateBtrfs(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtCreateBtrfsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>
+>;
+export type FileSystemMgmtCreateBtrfsMutationBody =
+  BodyType<FileSystemMgmtCreateBtrfsRequest>;
+export type FileSystemMgmtCreateBtrfsMutationError = ErrorType<unknown>;
+export type FileSystemMgmtCreateBtrfsMutationVariables = {
+  data: BodyType<FileSystemMgmtCreateBtrfsRequest>;
+};
+
+/**
+ * Erase several disks and create one BTRFS file system across them, as a background task: the server removes each disk's partition table and signatures and runs mkfs.btrfs on the whole disks (no partitions). Everything on every disk is lost and cannot be recovered. The server erases any devices it is given and checks neither that they are candidates nor that there are enough for the profile; the interface refuses both itself (journal, 2026-11-21). Unlike FileSystemMgmt.create it leaves no "being created" row in FileSystemMgmt.getList while it runs. The task's output is mkfs.btrfs's text; it has no result. The new file system is neither mounted nor set up. Changes no configuration.
+ * @summary Combine disks into one BTRFS file system
+ */
+export const useFileSystemMgmtCreateBtrfs = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>,
+      TError,
+      FileSystemMgmtCreateBtrfsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtCreateBtrfs>>,
+  TError,
+  FileSystemMgmtCreateBtrfsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtCreateBtrfsMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Create the mount entry of a file system found on a disk, with its warning level and tags. The server records it by a predictable device file (its /dev/disk/by-uuid/ link first) and makes its folder under /srv; it refuses a file system that already has a mount entry (HTTP 500). Nothing is mounted yet: it marks the fstab, collectd, monit and quota modules dirty (observed on the test VM), and applying fstab mounts it. Returns the stored mount entry.
+ * @summary Set up a file system for mounting
+ */
+export const fileSystemMgmtSetMountPoint = (
+  fileSystemMgmtSetMountPointRequest: BodyType<FileSystemMgmtSetMountPointRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<MountEntry>(
+    {
+      url: `/rpc/FileSystemMgmt/setMountPoint`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: fileSystemMgmtSetMountPointRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtSetMountPointMutationKey = () =>
+  ["fileSystemMgmtSetMountPoint"] as const;
+
+export const getFileSystemMgmtSetMountPointMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>,
+    TError,
+    FileSystemMgmtSetMountPointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>,
+  TError,
+  FileSystemMgmtSetMountPointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtSetMountPointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>,
+    FileSystemMgmtSetMountPointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return fileSystemMgmtSetMountPoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtSetMountPointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>
+>;
+export type FileSystemMgmtSetMountPointMutationBody =
+  BodyType<FileSystemMgmtSetMountPointRequest>;
+export type FileSystemMgmtSetMountPointMutationError =
+  ErrorType<RpcErrorDetail>;
+export type FileSystemMgmtSetMountPointMutationVariables = {
+  data: BodyType<FileSystemMgmtSetMountPointRequest>;
+};
+
+/**
+ * Create the mount entry of a file system found on a disk, with its warning level and tags. The server records it by a predictable device file (its /dev/disk/by-uuid/ link first) and makes its folder under /srv; it refuses a file system that already has a mount entry (HTTP 500). Nothing is mounted yet: it marks the fstab, collectd, monit and quota modules dirty (observed on the test VM), and applying fstab mounts it. Returns the stored mount entry.
+ * @summary Set up a file system for mounting
+ */
+export const useFileSystemMgmtSetMountPoint = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>,
+      TError,
+      FileSystemMgmtSetMountPointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtSetMountPoint>>,
+  TError,
+  FileSystemMgmtSetMountPointMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtSetMountPointMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Grow a mounted file system to the full size of the device it is on, after that device has grown (a larger RAID array, say). This cannot be undone: nothing shrinks it again. It loses nothing, and the file system stays mounted and in use while it grows. Synchronous: the request lasts as long as the resize. The server refuses a type that cannot grow while mounted ("does not support online resizing"). When there is no room to grow it does nothing and still returns null (observed on the test VM). Changes no configuration.
+ * @summary Grow a file system to fill its device
+ */
+export const fileSystemMgmtGrow = (
+  fileSystemMgmtGrowRequest: BodyType<FileSystemMgmtGrowRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<void>(
+    {
+      url: `/rpc/FileSystemMgmt/grow`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: fileSystemMgmtGrowRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtGrowMutationKey = () =>
+  ["fileSystemMgmtGrow"] as const;
+
+export const getFileSystemMgmtGrowMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtGrow>>,
+    TError,
+    FileSystemMgmtGrowMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtGrow>>,
+  TError,
+  FileSystemMgmtGrowMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtGrowMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtGrow>>,
+    FileSystemMgmtGrowMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return fileSystemMgmtGrow(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtGrowMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtGrow>>
+>;
+export type FileSystemMgmtGrowMutationBody =
+  BodyType<FileSystemMgmtGrowRequest>;
+export type FileSystemMgmtGrowMutationError = ErrorType<RpcErrorDetail>;
+export type FileSystemMgmtGrowMutationVariables = {
+  data: BodyType<FileSystemMgmtGrowRequest>;
+};
+
+/**
+ * Grow a mounted file system to the full size of the device it is on, after that device has grown (a larger RAID array, say). This cannot be undone: nothing shrinks it again. It loses nothing, and the file system stays mounted and in use while it grows. Synchronous: the request lasts as long as the resize. The server refuses a type that cannot grow while mounted ("does not support online resizing"). When there is no room to grow it does nothing and still returns null (observed on the test VM). Changes no configuration.
+ * @summary Grow a file system to fill its device
+ */
+export const useFileSystemMgmtGrow = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtGrow>>,
+      TError,
+      FileSystemMgmtGrowMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtGrow>>,
+  TError,
+  FileSystemMgmtGrowMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtGrowMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Unmount the file system on a folder and delete its mount entry, with its warning level and tags. Nothing on the file system is deleted, but everything on it is out of reach until it is set up again. A file system in use (a program with a file open, or a shell in its folder) is refused with the system's "target is busy" message (HTTP 500), and then nothing changes. The server does not check what refers to the mount entry: it deletes the entry even while shared folders still point to it, so the interface refuses that itself (journal, 2026-11-21). It then applies the fstab module at once by itself, forced, which also applies any other mount change already pending and, like every apply, discards the snapshots that undoing pending changes restores from. It leaves the collectd, monit and quota modules dirty (observed on the test VM). Slow, because of that apply.
+ * @summary Unmount a file system and forget it
+ */
+export const fileSystemMgmtUmountByDir = (
+  fileSystemMgmtUmountByDirRequest: BodyType<FileSystemMgmtUmountByDirRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<void>(
+    {
+      url: `/rpc/FileSystemMgmt/umountByDir`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: fileSystemMgmtUmountByDirRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtUmountByDirMutationKey = () =>
+  ["fileSystemMgmtUmountByDir"] as const;
+
+export const getFileSystemMgmtUmountByDirMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>,
+    TError,
+    FileSystemMgmtUmountByDirMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>,
+  TError,
+  FileSystemMgmtUmountByDirMutationVariables,
+  TContext
+> => {
+  const mutationKey = getFileSystemMgmtUmountByDirMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>,
+    FileSystemMgmtUmountByDirMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return fileSystemMgmtUmountByDir(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type FileSystemMgmtUmountByDirMutationResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>
+>;
+export type FileSystemMgmtUmountByDirMutationBody =
+  BodyType<FileSystemMgmtUmountByDirRequest>;
+export type FileSystemMgmtUmountByDirMutationError = ErrorType<RpcErrorDetail>;
+export type FileSystemMgmtUmountByDirMutationVariables = {
+  data: BodyType<FileSystemMgmtUmountByDirRequest>;
+};
+
+/**
+ * Unmount the file system on a folder and delete its mount entry, with its warning level and tags. Nothing on the file system is deleted, but everything on it is out of reach until it is set up again. A file system in use (a program with a file open, or a shell in its folder) is refused with the system's "target is busy" message (HTTP 500), and then nothing changes. The server does not check what refers to the mount entry: it deletes the entry even while shared folders still point to it, so the interface refuses that itself (journal, 2026-11-21). It then applies the fstab module at once by itself, forced, which also applies any other mount change already pending and, like every apply, discards the snapshots that undoing pending changes restores from. It leaves the collectd, monit and quota modules dirty (observed on the test VM). Slow, because of that apply.
+ * @summary Unmount a file system and forget it
+ */
+export const useFileSystemMgmtUmountByDir = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>,
+      TError,
+      FileSystemMgmtUmountByDirMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof fileSystemMgmtUmountByDir>>,
+  TError,
+  FileSystemMgmtUmountByDirMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getFileSystemMgmtUmountByDirMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails ("Failed to get mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.
+ * @summary A file system's technical report
+ */
+export const fileSystemMgmtGetDetails = (
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<FilesystemDetails>(
+    {
+      url: `/rpc/FileSystemMgmt/getDetails`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: deviceFileRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtGetDetailsQueryKey = (
+  deviceFileRequest?: BodyType<DeviceFileRequest>,
+) => {
+  return ["POST", `/rpc/FileSystemMgmt/getDetails`, deviceFileRequest] as const;
+};
+
+export const getFileSystemMgmtGetDetailsQueryOptions = <
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getFileSystemMgmtGetDetailsQueryKey(deviceFileRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>
+  > = ({ signal }) =>
+    fileSystemMgmtGetDetails(deviceFileRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FileSystemMgmtGetDetailsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>
+>;
+export type FileSystemMgmtGetDetailsQueryError = ErrorType<RpcErrorDetail>;
+
+/**
+ * The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails ("Failed to get mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.
+ * @summary A file system's technical report
+ */
+export function useFileSystemMgmtGetDetails<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails ("Failed to get mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.
+ * @summary A file system's technical report
+ */
+export function useFileSystemMgmtGetDetails<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails ("Failed to get mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.
+ * @summary A file system's technical report
+ */
+export function useFileSystemMgmtGetDetails<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails ("Failed to get mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.
+ * @summary A file system's technical report
+ */
+export function useFileSystemMgmtGetDetails<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  deviceFileRequest: BodyType<DeviceFileRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetDetails>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFileSystemMgmtGetDetailsQueryOptions(
+    deviceFileRequest,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

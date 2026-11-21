@@ -68,6 +68,9 @@
     },
     {
       "name": "MdMgmt"
+    },
+    {
+      "name": "FsTab"
     }
   ],
   "paths": {
@@ -517,6 +520,18 @@
                   },
                   "selfTestFinished": {
                     "$ref": "#/components/examples/execGetOutput.selfTestFinished"
+                  },
+                  "fsCandidatesFinished": {
+                    "$ref": "#/components/examples/execGetOutput.fsCandidatesFinished"
+                  },
+                  "fsCandidatesNoneFinished": {
+                    "$ref": "#/components/examples/execGetOutput.fsCandidatesNoneFinished"
+                  },
+                  "createExt4Finished": {
+                    "$ref": "#/components/examples/execGetOutput.createExt4Finished"
+                  },
+                  "createBtrfsRaid1Finished": {
+                    "$ref": "#/components/examples/execGetOutput.createBtrfsRaid1Finished"
                   }
                 }
               }
@@ -535,6 +550,12 @@
                   },
                   "wipeFailed": {
                     "$ref": "#/components/examples/execGetOutput.wipeFailed"
+                  },
+                  "createFailed": {
+                    "$ref": "#/components/examples/execGetOutput.createFailed"
+                  },
+                  "createBtrfsFailed": {
+                    "$ref": "#/components/examples/execGetOutput.createBtrfsFailed"
                   }
                 }
               }
@@ -1160,6 +1181,15 @@
                   },
                   "initializing": {
                     "$ref": "#/components/examples/fileSystemMgmtGetList.initializing"
+                  },
+                  "creating": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetList.creating"
+                  },
+                  "mountPending": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetList.mountPending"
+                  },
+                  "withTags": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetList.withTags"
                   }
                 }
               }
@@ -2576,6 +2606,484 @@
           }
         }
       }
+    },
+    "/rpc/FileSystemMgmt/getMountCandidates": {
+      "post": {
+        "operationId": "fileSystemMgmtGetMountCandidates",
+        "tags": ["FileSystemMgmt"],
+        "summary": "File systems found but not set up",
+        "description": "The detected file systems OMV could set up for mounting: not mounted, not on the system disk, not swap or bcache, and with no mount entry yet. A file system just created, and one from another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems returns, which this method calls, so reading it touches the disks no more than getList does. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "getMountCandidates"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectedFilesystemList"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetMountCandidates.created"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetMountCandidates.none"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/getCandidatesBg": {
+      "post": {
+        "operationId": "fileSystemMgmtGetCandidatesBg",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Disks free for a new file system",
+        "description": "The devices the server would offer for a new file system, as a background task, so a disk that hangs does not hold the request; the task's result is the list. It leaves out read-only devices, those that hold a file system or are part of one, and any that still carries a partition table or a file system, RAID or other signature. It reads that from the system's device information first and runs wipefs on a device only when that says nothing, which reads the disk. Changes nothing; the interface starts it only when the reader opens the add-storage flow or re-checks.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "getCandidatesBg"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {
+          "result": "FilesystemCandidateList"
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetCandidatesBg.started"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/create": {
+      "post": {
+        "operationId": "fileSystemMgmtCreate",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Create a file system on a disk",
+        "description": "Erase a device and create one file system across it, as a background task: the server removes the partition table and signatures, makes one partition over the whole disk (a RAID array or other stacked device is used as it is), and formats it. Everything on the device is lost and cannot be recovered. The server erases any device it is given: it does not check that the device is a candidate, empty, unmounted or not the system disk. Before calling it the interface itself refuses every device that its candidate list and the disk-use model do not both allow (journal, 2026-11-21). While it runs, FileSystemMgmt.getList shows the new file system as being created (status 2). The task's output is the commands' log text; it has no result. The new file system is neither mounted nor set up: FileSystemMgmt.setMountPoint does that. Changes no configuration, so nothing is pending afterwards.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "create"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.create",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/fileSystemMgmtCreate.started"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/createBtrfs": {
+      "post": {
+        "operationId": "fileSystemMgmtCreateBtrfs",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Combine disks into one BTRFS file system",
+        "description": "Erase several disks and create one BTRFS file system across them, as a background task: the server removes each disk's partition table and signatures and runs mkfs.btrfs on the whole disks (no partitions). Everything on every disk is lost and cannot be recovered. The server erases any devices it is given and checks neither that they are candidates nor that there are enough for the profile; the interface refuses both itself (journal, 2026-11-21). Unlike FileSystemMgmt.create it leaves no \"being created\" row in FileSystemMgmt.getList while it runs. The task's output is mkfs.btrfs's text; it has no result. The new file system is neither mounted nor set up. Changes no configuration.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "createBtrfs"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.createbtrfs",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtCreateBtrfsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/fileSystemMgmtCreateBtrfs.started"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/setMountPoint": {
+      "post": {
+        "operationId": "fileSystemMgmtSetMountPoint",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Set up a file system for mounting",
+        "description": "Create the mount entry of a file system found on a disk, with its warning level and tags. The server records it by a predictable device file (its /dev/disk/by-uuid/ link first) and makes its folder under /srv; it refuses a file system that already has a mount entry (HTTP 500). Nothing is mounted yet: it marks the fstab, collectd, monit and quota modules dirty (observed on the test VM), and applying fstab mounts it. Returns the stored mount entry.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "setMountPoint"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.setMountPoint",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtSetMountPointRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MountEntry"
+                },
+                "examples": {
+                  "saved": {
+                    "$ref": "#/components/examples/fileSystemMgmtSetMountPoint.saved"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The file system already has a mount entry, or it was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "alreadyExists": {
+                    "$ref": "#/components/examples/fileSystemMgmtSetMountPoint.alreadyExists"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/grow": {
+      "post": {
+        "operationId": "fileSystemMgmtGrow",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Grow a file system to fill its device",
+        "description": "Grow a mounted file system to the full size of the device it is on, after that device has grown (a larger RAID array, say). This cannot be undone: nothing shrinks it again. It loses nothing, and the file system stays mounted and in use while it grows. Synchronous: the request lasts as long as the resize. The server refuses a type that cannot grow while mounted (\"does not support online resizing\"). When there is no room to grow it does nothing and still returns null (observed on the test VM). Changes no configuration.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "grow"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.grow",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtGrowRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "The type cannot grow while mounted, or there is no such file system.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "noOnlineResize": {
+                    "$ref": "#/components/examples/fileSystemMgmtGrow.noOnlineResize"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/umountByDir": {
+      "post": {
+        "operationId": "fileSystemMgmtUmountByDir",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Unmount a file system and forget it",
+        "description": "Unmount the file system on a folder and delete its mount entry, with its warning level and tags. Nothing on the file system is deleted, but everything on it is out of reach until it is set up again. A file system in use (a program with a file open, or a shell in its folder) is refused with the system's \"target is busy\" message (HTTP 500), and then nothing changes. The server does not check what refers to the mount entry: it deletes the entry even while shared folders still point to it, so the interface refuses that itself (journal, 2026-11-21). It then applies the fstab module at once by itself, forced, which also applies any other mount change already pending and, like every apply, discards the snapshots that undoing pending changes restores from. It leaves the collectd, monit and quota modules dirty (observed on the test VM). Slow, because of that apply.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "umountByDir"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.umountbydir",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtUmountByDirRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "The file system is in use, or the folder has no mount entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "busy": {
+                    "$ref": "#/components/examples/fileSystemMgmtUmountByDir.busy"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FileSystemMgmt/getDetails": {
+      "post": {
+        "operationId": "fileSystemMgmtGetDetails",
+        "tags": ["FileSystemMgmt"],
+        "summary": "A file system's technical report",
+        "description": "The file system's own report on itself, as text. Its tools read the file system on the disk, so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it works only while the file system is mounted; otherwise the server fails (\"Failed to get mountpoint\", observed on the test VM). Fails with HTTP 500 when the device holds no file system. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "getDetails"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.getdetails",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilesystemDetails"
+                },
+                "examples": {
+                  "ext4": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetDetails.ext4"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The device holds no file system, or a BTRFS file system is not mounted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notFound": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetDetails.notFound"
+                  },
+                  "btrfsNotMounted": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetDetails.btrfsNotMounted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FsTab/getByFsName": {
+      "post": {
+        "operationId": "fsTabGetByFsName",
+        "tags": ["FsTab"],
+        "summary": "A file system's mount entry",
+        "description": "The mount entry OMV has for a file system, found by its UUID or any of its device files, or the boolean false when it has none (this method does not fail for that). Reads only the configuration; touches no disk. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "FsTab",
+          "method": "getByFsName"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.fstab.getbyfsname",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FsTabGetByFsNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FsTabEntryOrNone"
+                },
+                "examples": {
+                  "entry": {
+                    "$ref": "#/components/examples/fsTabGetByFsName.entry"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/fsTabGetByFsName.none"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/FsTab/set": {
+      "post": {
+        "operationId": "fsTabSet",
+        "tags": ["FsTab"],
+        "summary": "Save a file system's warning level and tags",
+        "description": "Store a mount entry; the interface uses it only to change the warning level and the tags of an existing one. On a change it marks only the monit module dirty (observed on the test VM): the warning level takes effect when that is applied, and nothing is unmounted or mounted. Returns the stored entry.",
+        "x-omv-rpc": {
+          "service": "FsTab",
+          "method": "set"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.fstab.set",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FsTabSetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MountEntry"
+                },
+                "examples": {
+                  "saved": {
+                    "$ref": "#/components/examples/fsTabSet.saved"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2602,6 +3110,13 @@
               "$ref": "#/components/schemas/SmartDevice"
             }
           }
+        }
+      },
+      "FilesystemCandidateList": {
+        "type": "array",
+        "description": "The devices the server offers for a new file system, in no particular order. A disk that holds anything, even an empty partition table, is left out without a word.",
+        "items": {
+          "$ref": "#/components/schemas/FilesystemCandidate"
         }
       },
       "Username": {
@@ -3705,7 +4220,9 @@
             "description": "The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file."
           },
           "label": {
-            "type": "string"
+            "type": "string",
+            "nullable": true,
+            "description": "The file system's label; empty when it has none, null for one being created (observed)."
           },
           "type": {
             "type": "string",
@@ -5446,6 +5963,249 @@
           "$ref": "#/components/schemas/MdArray"
         }
       },
+      "FileSystemMgmtCreateRequest": {
+        "type": "object",
+        "description": "The device to erase and the file system to create on it (rpc.filesystemmgmt.create). OMV accepts any type it has a backend for; the contract accepts only the four the interface offers (JFS and the rest are left to the classic interface).",
+        "required": ["devicefile", "type"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["ext4", "xfs", "btrfs", "f2fs"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileSystemMgmtCreateBtrfsRequest": {
+        "type": "object",
+        "description": "The disks to erase and combine into one BTRFS file system, and how (rpc.filesystemmgmt.createbtrfs). Stricter than OMV: two or more devices (one disk uses FileSystemMgmt.create), no `dup` profile, and no `label`, which the interface does not set.",
+        "required": ["profile", "devicefiles"],
+        "properties": {
+          "profile": {
+            "type": "string",
+            "enum": ["single", "raid0", "raid1", "raid10"],
+            "description": "How data and metadata are kept: raid1 a mirror (each block on two disks), raid10 mirrored stripes (four disks or more), raid0 striped with no copy, single joined with no copy. With single the server keeps metadata twice (dup); otherwise metadata uses the same profile. The server does not check the number of disks a profile needs."
+          },
+          "devicefiles": {
+            "type": "string",
+            "description": "The devices, as OMV takes them: one string of device files separated by commas with no spaces (\"/dev/sdb,/dev/sdc\"), not a list. Each part is in OMV's `devicefile` format. The server does not refuse a device named twice.",
+            "pattern": "^/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+(,/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+)+$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileSystemMgmtSetMountPointRequest": {
+        "type": "object",
+        "description": "The file system to set up for mounting, with its warning level and tags (rpc.filesystemmgmt.setMountPoint). OMV also accepts the file system's UUID as `id`; the contract accepts only a device file, as getMountCandidates reports it.",
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "usagewarnthreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percent used at which OMV warns; 0 means it never warns. The server stores 0 when it is left out."
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "The tags, as one string with \",\" between them. The server stores \"\" when it is left out."
+          }
+        },
+        "additionalProperties": false
+      },
+      "MountEntry": {
+        "type": "object",
+        "description": "OMV's mount entry for a file system (conf.system.filesystem.mountpoint): where and how it is mounted, its warning level and its tags. Other configuration, such as a shared folder's `mntentref`, refers to it by `uuid`.",
+        "required": [
+          "uuid",
+          "fsname",
+          "dir",
+          "type",
+          "opts",
+          "freq",
+          "passno",
+          "hidden",
+          "usagewarnthreshold",
+          "comment"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "fsname": {
+            "type": "string",
+            "description": "The file system, as OMV records it: a predictable device file (a /dev/disk/by-uuid/ link first) for one mounted through this interface or the classic one, or a UUID or folder for older and add-on entries."
+          },
+          "dir": {
+            "type": "string",
+            "description": "The folder it is mounted on."
+          },
+          "type": {
+            "type": "string",
+            "description": "The file system type, such as \"ext4\"."
+          },
+          "opts": {
+            "type": "string",
+            "description": "The mount options, separated by commas, as OMV chose them for the type and the disk."
+          },
+          "freq": {
+            "type": "integer"
+          },
+          "passno": {
+            "type": "integer",
+            "enum": [0, 1, 2]
+          },
+          "hidden": {
+            "type": "boolean",
+            "description": "Whether OMV keeps it out of /etc/fstab (a type mounted another way)."
+          },
+          "usagewarnthreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percent used at which OMV warns; 0 means it never warns."
+          },
+          "comment": {
+            "type": "string",
+            "description": "The tags, as one string. The classic interface writes several tags joined by \",\" with no space, sorted and without repeats (\"Media,Photos\")."
+          }
+        }
+      },
+      "FsUuid": {
+        "type": "string",
+        "description": "A file system's own UUID, in OMV's `fsuuid` format: a standard UUID (EXT4, XFS, BTRFS), the short FAT and exFAT form \"ABCD-1234\", the 16-digit NTFS form, or the time stamp a CD or DVD carries (\"2026-11-19-05-53-43-00\"). It is made when the file system is created and says nothing about the disk.",
+        "x-omv-format": "fsuuid",
+        "pattern": "^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}|[a-fA-F0-9]{4}-[a-fA-F0-9]{4}|[a-fA-F0-9]{16}|[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]{2})$"
+      },
+      "FileSystemMgmtGrowRequest": {
+        "type": "object",
+        "description": "The file system to grow, by its own UUID (rpc.filesystemmgmt.grow).",
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/FsUuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MountDir": {
+        "type": "string",
+        "description": "The folder a file system is mounted on, as FileSystemMgmt.getList reports it in `mountpoint` (OMV makes it \"/srv/dev-disk-by-uuid-…\"). OMV's `dirpath` format, and stricter: an absolute path, never \"/\" itself, with no \"..\" step at all, and ASCII only.",
+        "x-omv-format": "dirpath",
+        "pattern": "^(?!.*/\\.{2}(/|$))/[-\\w./@ ]*[-\\w.@ ]$"
+      },
+      "FileSystemMgmtUmountByDirRequest": {
+        "type": "object",
+        "description": "The folder of the file system to unmount and forget (rpc.filesystemmgmt.umountbydir). Stricter than OMV's `dirpath`: an absolute folder, never the system's root.",
+        "required": ["dir"],
+        "properties": {
+          "dir": {
+            "$ref": "#/components/schemas/MountDir"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FilesystemDetails": {
+        "type": "string",
+        "description": "The file system's own report, as display text with newlines: dumpe2fs for EXT4 (its superblock, then one section per block group, so hundreds of lines on a large disk), xfs_info for XFS, and for BTRFS the output of \"btrfs filesystem show\", \"filesystem df\", \"device stats\" and \"scrub status\". The EXT4 report contains the file system's UUID. Shown as preformatted text, never as markup."
+      },
+      "FsTabGetByFsNameRequest": {
+        "type": "object",
+        "description": "The file system whose mount entry to find (rpc.fstab.getbyfsname): its UUID or one of its device files. The server also looks under the file system's other device files and its UUID, so any of them finds the entry.",
+        "required": ["fsname"],
+        "properties": {
+          "fsname": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FsUuid"
+              },
+              {
+                "$ref": "#/components/schemas/DeviceFile"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FsTabEntryOrNone": {
+        "description": "The mount entry, or the boolean false when OMV has none for the file system (FsTab.getByFsName returns false rather than failing).",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/MountEntry"
+          },
+          {
+            "type": "boolean",
+            "enum": [false]
+          }
+        ]
+      },
+      "DirPath": {
+        "type": "string",
+        "description": "A folder path, in OMV's `dirpath` format: letters, digits, \"_\", \"-\", \".\", \"/\", \"@\" and spaces, with no \"../\" step. OMV's check also accepts letters outside ASCII; the contract does not.",
+        "x-omv-format": "dirpath",
+        "pattern": "^(?!.*/\\.{2}/)(?!\\.{2}/)[-\\w./@ ]+$"
+      },
+      "FsTabSetRequest": {
+        "type": "object",
+        "description": "A mount entry to store (rpc.fstab.set), as FsTab.getByFsName returned it with the warning level or tags changed. The interface sends every other field back unchanged: the server does not check `fsname`, `dir`, `type` or `opts` against the file system, and a change to them is not applied to the system until the mount module is applied for another reason. With OMV's placeholder UUID it would create a second entry; the interface creates entries only through FileSystemMgmt.setMountPoint. `hidden` is not in OMV's request model, but the stored object has it and the classic form sends it back.",
+        "required": ["uuid", "fsname", "dir", "type", "opts", "freq", "passno"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "fsname": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FsUuid"
+              },
+              {
+                "$ref": "#/components/schemas/DeviceFile"
+              },
+              {
+                "$ref": "#/components/schemas/DirPath"
+              }
+            ]
+          },
+          "dir": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "opts": {
+            "type": "string"
+          },
+          "freq": {
+            "type": "integer"
+          },
+          "passno": {
+            "type": "integer",
+            "enum": [0, 1, 2]
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "usagewarnthreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percent used at which OMV warns; 0 means it never warns."
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "The tags, as one string with \",\" between them."
+          }
+        },
+        "additionalProperties": false
+      },
       "SmartDevice": {
         "type": "object",
         "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
@@ -5533,6 +6293,26 @@
           "_used": {
             "type": "boolean",
             "description": "Whether a scheduled S.M.A.R.T. test refers to this disk."
+          }
+        }
+      },
+      "FilesystemCandidate": {
+        "type": "object",
+        "description": "A device the server offers for a new file system: not read-only, holding no file system, and with no partition table, file system, RAID or other signature left on it.",
+        "required": ["devicefile", "size", "description"],
+        "properties": {
+          "devicefile": {
+            "type": "string",
+            "description": "The device under /dev, such as \"/dev/sdb\"."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "description": {
+            "type": "string",
+            "description": "Server display text in English, such as \"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]\"."
           }
         }
       }
@@ -5844,6 +6624,50 @@
           "running": false
         }
       },
+      "execGetOutput.fsCandidatesFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the result of FileSystemMgmt.getCandidatesBg with three empty scratch disks, as JSON text.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusrnc318qtho8iaWoTdOT",
+          "pos": 355,
+          "output": "[{\"devicefile\":\"/dev/sdb\",\"size\":\"8589934592\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]\"},{\"devicefile\":\"/dev/sdc\",\"size\":\"8589934592\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]\"},{\"devicefile\":\"/dev/sdd\",\"size\":\"8589934592\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]\"}]",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.fsCandidatesNoneFinished": {
+        "summary": "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::getCandidates): no disk is free for a new file system. The result is an empty list as JSON text.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusrnc318qtho8iaWoTdOT",
+          "pos": 2,
+          "output": "[]",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.createExt4Finished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the last poll of creating EXT4 on an empty 8 GiB scratch disk, which carries mke2fs's lines; the partitioning lines came in earlier polls. mke2fs writes its progress with backspace characters.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatus4f3qem0hkifa1yy2zQt",
+          "pos": 1150,
+          "output": "mke2fs 1.47.2 (1-Jan-2025)\nCreating filesystem with 2096891 4k blocks and 524288 inodes\nFilesystem UUID: 00000000-0000-4000-8000-000000000003\nSuperblock backups stored on blocks: \n\t32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632\n\nAllocating group tables:  0/64\b\b\b\b\b     \b\b\b\b\bdone                            \nWriting inode tables:  0/64\b\b\b\b\b     \b\b\b\b\bdone                            \nCreating journal (16384 blocks): done\nWriting superblocks and filesystem accounting information:  0/64\b\b\b\b\b     \b\b\b\b\bdone\n\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.createBtrfsRaid1Finished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the last poll of combining two empty 8 GiB scratch disks into a BTRFS mirror (RAID1).",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatuso5eujkmfl2es72PtO4V",
+          "pos": 930,
+          "output": "btrfs-progs v6.14\nSee https://btrfs.readthedocs.io for more information.\n\nNOTE: several default settings have changed in version 5.15, please make sure\n      this does not affect your deployments:\n      - DUP for metadata (-m dup)\n      - enabled no-holes (-O no-holes)\n      - enabled free-space-tree (-R free-space-tree)\n\nLabel:              (null)\nUUID:               00000000-0000-4000-8000-000000000007\nNode size:          16384\nSector size:        4096\t(CPU page size: 4096)\nFilesystem size:    16.00GiB\nBlock group profiles:\n  Data:             RAID1             1.00GiB\n  Metadata:         RAID1           256.00MiB\n  System:           RAID1             8.00MiB\nSSD detected:       no\nZoned device:       no\nFeatures:           extref, skinny-metadata, no-holes, free-space-tree\nChecksum:           crc32c\nNumber of devices:  2\nDevices:\n   ID        SIZE  PATH    \n    1     8.00GiB  /dev/sdb\n    2     8.00GiB  /dev/sdc\n\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
       "execGetOutput.applyFailed": {
         "summary": "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only.",
         "x-omv-status": 500,
@@ -5858,6 +6682,22 @@
         "value": {
           "code": 0,
           "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; blockdev --rereadpt '/dev/sda' 2>&1' with exit code '1': blockdev: ioctl error on BLKRRPART: Device or resource busy"
+        }
+      },
+      "execGetOutput.createFailed": {
+        "summary": "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::create): the disk was erased and partitioned, but its new partition did not appear within 10 seconds (the disk was pulled, say), so nothing was formatted. The task fails and getOutput answers HTTP 500. Not seen on the test VM.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Device '/dev/sdd1' is not available after a waiting period of 10 seconds."
+        }
+      },
+      "execGetOutput.createBtrfsFailed": {
+        "summary": "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::createBtrfs): mkfs.btrfs fails because one of the disks is still in use. The disks were already erased before mkfs.btrfs ran. Not seen on the test VM.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; mkfs.btrfs --force --data 'raid1' --metadata 'raid1' /dev/sdb /dev/sdc 2>&1' with exit code '1': btrfs-progs v6.14\nSee https://btrfs.readthedocs.io for more information.\n\nERROR: unable to open /dev/sdc: Device or resource busy"
         }
       },
       "execIsRunning.running": {
@@ -6421,7 +7261,7 @@
         }
       },
       "fileSystemMgmtGetList.initializing": {
-        "summary": "Written by hand from the configured capture and the source (OMV 8.6.1, FileSystemMgmt::getList): beside the available file system, one still being created (status 2), not yet configured, so it has no mount point, threshold or mount options. The test VM was creating none.",
+        "summary": "Written by hand from the configured capture and the source (OMV 8.6.1, FileSystemMgmt::getList): beside the available file system, one still being created (status 2), not yet configured, so it has no mount point, threshold or mount options. Its label is null, as in the creating capture: the server takes it from the marker file, which never holds one.",
         "x-omv-status": 200,
         "value": {
           "total": 2,
@@ -6479,7 +7319,7 @@
               "parentdevicefile": "/dev/sdb",
               "devlinks": [],
               "uuid": "",
-              "label": "backup",
+              "label": null,
               "type": "ext4",
               "blocks": "-1",
               "mounted": false,
@@ -6502,6 +7342,290 @@
               "_readonly": false,
               "_used": false,
               "status": 2
+            }
+          ]
+        }
+      },
+      "fileSystemMgmtGetList.creating": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: while EXT4 was being created on the scratch disk (status 2). That row has a null label and an empty hasmultipledevices.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "devicename": "",
+              "devicefile": "/dev/sdd1",
+              "predictabledevicefile": "",
+              "canonicaldevicefile": "",
+              "parentdevicefile": "/dev/sdd",
+              "devlinks": [],
+              "uuid": "",
+              "label": null,
+              "type": "ext4",
+              "blocks": "-1",
+              "mounted": false,
+              "mountpoint": "",
+              "used": "-1",
+              "available": "-1",
+              "size": "-1",
+              "percentage": -1,
+              "description": "",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": "",
+              "devicefiles": ["/dev/sdd1"],
+              "comment": "",
+              "_readonly": false,
+              "_used": false,
+              "propreadonly": false,
+              "status": 2
+            },
+            {
+              "devicename": "sda1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "canonicaldevicefile": "/dev/sda1",
+              "parentdevicefile": "/dev/sda",
+              "devlinks": [
+                "/dev/disk/by-diskseq/2-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "label": "",
+              "type": "ext4",
+              "blocks": "8153544",
+              "mounted": true,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+              "used": "2.03 MiB",
+              "available": "8330313728",
+              "size": "8349229056",
+              "percentage": 1,
+              "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sda1"],
+              "comment": "",
+              "_readonly": false,
+              "_used": true,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
+            }
+          ]
+        }
+      },
+      "fileSystemMgmtGetList.mountPending": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the new file system set up with FileSystemMgmt.setMountPoint and not yet applied, so not mounted.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "devicename": "sda1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "canonicaldevicefile": "/dev/sda1",
+              "parentdevicefile": "/dev/sda",
+              "devlinks": [
+                "/dev/disk/by-diskseq/2-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "label": "",
+              "type": "ext4",
+              "blocks": "8153544",
+              "mounted": true,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+              "used": "2.03 MiB",
+              "available": "8330313728",
+              "size": "8349229056",
+              "percentage": 1,
+              "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sda1"],
+              "comment": "",
+              "_readonly": false,
+              "_used": true,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
+            },
+            {
+              "devicename": "sdd1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "canonicaldevicefile": "/dev/sdd1",
+              "parentdevicefile": "/dev/sdd",
+              "devlinks": [
+                "/dev/disk/by-diskseq/5-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-uuid/00000000-0000-4000-8000-000000000003",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000003",
+              "label": "",
+              "type": "ext4",
+              "blocks": "-1",
+              "mounted": false,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+              "used": "-1",
+              "available": "-1",
+              "size": "-1",
+              "percentage": -1,
+              "description": "/dev/sdd1 [EXT4, 7.99 GiB]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sdd1"],
+              "comment": "Media,Photos",
+              "_readonly": false,
+              "_used": false,
+              "propreadonly": false,
+              "usagewarnthreshold": 85,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
+            }
+          ]
+        }
+      },
+      "fileSystemMgmtGetList.withTags": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the new file system mounted, with a warning level of 90% and three tags.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "devicename": "sda1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "canonicaldevicefile": "/dev/sda1",
+              "parentdevicefile": "/dev/sda",
+              "devlinks": [
+                "/dev/disk/by-diskseq/2-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "label": "",
+              "type": "ext4",
+              "blocks": "8153544",
+              "mounted": true,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+              "used": "2.03 MiB",
+              "available": "8330313728",
+              "size": "8349229056",
+              "percentage": 1,
+              "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sda1"],
+              "comment": "",
+              "_readonly": false,
+              "_used": true,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
+            },
+            {
+              "devicename": "sdd1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "canonicaldevicefile": "/dev/sdd1",
+              "parentdevicefile": "/dev/sdd",
+              "devlinks": [
+                "/dev/disk/by-diskseq/5-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-uuid/00000000-0000-4000-8000-000000000003",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000003",
+              "label": "",
+              "type": "ext4",
+              "blocks": "8153544",
+              "mounted": true,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+              "used": "2.03 MiB",
+              "available": "8330317824",
+              "size": "8349229056",
+              "percentage": 1,
+              "description": "/dev/sdd1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sdd1"],
+              "comment": "Media,Photos,Backups",
+              "_readonly": false,
+              "_used": false,
+              "propreadonly": false,
+              "usagewarnthreshold": 90,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
             }
           ]
         }
@@ -8891,6 +10015,211 @@
         "value": {
           "code": 0,
           "message": "RPC service 'MdMgmt' not found."
+        }
+      },
+      "fileSystemMgmtGetMountCandidates.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: EXT4 just created on the scratch disk, and the cloud-init CD of the VM.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sdd1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/sdd1",
+            "parentdevicefile": "/dev/sdd",
+            "devlinks": [
+              "/dev/disk/by-diskseq/5-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sdd1 [EXT4, 7.99 GiB]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sdd1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
+          },
+          {
+            "devicename": "sr0",
+            "devicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "predictabledevicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "canonicaldevicefile": "/dev/sr0",
+            "parentdevicefile": "/dev/sr0",
+            "devlinks": [
+              "/dev/cdrom",
+              "/dev/disk/by-diskseq/7",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "/dev/disk/by-label/cidata",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+              "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+            ],
+            "uuid": "2026-11-19-05-53-43-00",
+            "label": "cidata",
+            "type": "iso9660",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sr0 [ISO9660, 900.00 KiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sr0"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": true
+          }
+        ]
+      },
+      "fileSystemMgmtGetMountCandidates.none": {
+        "summary": "Written by hand: no file system is waiting to be set up, as on the test VM before a create.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "fileSystemMgmtGetCandidatesBg.started": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusrnc318qtho8iaWoTdOT"
+      },
+      "fileSystemMgmtCreate.started": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatus4f3qem0hkifa1yy2zQt"
+      },
+      "fileSystemMgmtCreateBtrfs.started": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatuso5eujkmfl2es72PtO4V"
+      },
+      "fileSystemMgmtSetMountPoint.saved": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the new EXT4 file system on the scratch disk, with a warning level of 85% and two tags.",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+          "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+          "type": "ext4",
+          "opts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+          "freq": 0,
+          "passno": 2,
+          "hidden": false,
+          "usagewarnthreshold": 85,
+          "comment": "Media,Photos"
+        }
+      },
+      "fileSystemMgmtSetMountPoint.alreadyExists": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the same file system a second time.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "A mount point already exists for the file system '/dev/sdd1'."
+        }
+      },
+      "fileSystemMgmtGrow.noOnlineResize": {
+        "summary": "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::grow): an NTFS file system from another computer, a type OMV cannot grow while it is mounted. Not seen on the test VM, which has no such file system.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The file system '0000000000000001' (type=ntfs) does not support online resizing."
+        }
+      },
+      "fileSystemMgmtUmountByDir.busy": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a shell had its working folder inside the file system. Nothing changed.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; umount -v -f '/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003' 2>&1' with exit code '32': umount: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003: target is busy."
+        }
+      },
+      "fileSystemMgmtGetDetails.ext4": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: dumpe2fs of a new 8 GiB EXT4 file system, mounted. Shortened by hand to the superblock section; the 64 block-group sections after it (468 lines) are left out, because the scrubber took their four-digit block ranges for FAT volume IDs.",
+        "x-omv-status": 200,
+        "value": "dumpe2fs 1.47.2 (1-Jan-2025)\nFilesystem volume name:   <none>\nLast mounted on:          <not available>\nFilesystem UUID:          00000000-0000-4000-8000-000000000003\nFilesystem magic number:  0xEF53\nFilesystem revision #:    1 (dynamic)\nFilesystem features:      has_journal ext_attr resize_inode dir_index orphan_file filetype needs_recovery extent 64bit flex_bg metadata_csum_seed sparse_super large_file huge_file dir_nlink extra_isize quota metadata_csum orphan_present\nFilesystem flags:         unsigned_directory_hash\nDefault mount options:    user_xattr acl\nFilesystem state:         clean\nErrors behavior:          Continue\nFilesystem OS type:       Linux\nInode count:              524288\nBlock count:              2096891\nReserved block count:     0\nOverhead clusters:        58505\nFree blocks:              2037865\nFree inodes:              524276\nFirst block:              0\nBlock size:               4096\nFragment size:            4096\nGroup descriptor size:    64\nReserved GDT blocks:      1023\nBlocks per group:         32768\nFragments per group:      32768\nInodes per group:         8192\nInode blocks per group:   512\nFlex block group size:    16\nFilesystem created:       Sat Nov 21 08:50:49 2026\nLast mount time:          Sat Nov 21 08:50:53 2026\nLast write time:          Sat Nov 21 08:50:53 2026\nMount count:              1\nMaximum mount count:      -1\nLast checked:             Sat Nov 21 08:50:49 2026\nCheck interval:           0 (<none>)\nLifetime writes:          6285 kB\nReserved blocks uid:      0 (user root)\nReserved blocks gid:      0 (group root)\nFirst inode:              11\nInode size:               256\nRequired extra isize:     32\nDesired extra isize:      32\nJournal inode:            8\nDefault directory hash:   half_md4\nDirectory Hash Seed:      00000000-0000-4000-8000-000000000006\nJournal backup:           inode blocks\nUser quota inode:         3\nGroup quota inode:        4\nChecksum type:            crc32c\nChecksum:                 0x6f071c24\nChecksum seed:            0xa7941a62\nOrphan file inode:        12\nJournal features:         journal_64bit journal_checksum_v3\nTotal journal size:       64M\nTotal journal blocks:     16384\nMax transaction length:   16384\nFast commit length:       0\nJournal sequence:         0x00000001\nJournal start:            0\nJournal checksum type:    crc32c\nJournal checksum:         0xf7367658\n"
+      },
+      "fileSystemMgmtGetDetails.notFound": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a partition that does not exist.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to get the file system implementation for '/dev/sdd9' or the file system does not exist."
+        }
+      },
+      "fileSystemMgmtGetDetails.btrfsNotMounted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the details of a BTRFS mirror (RAID1) on two disks, just created and not mounted. The BTRFS report needs the file system mounted.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to get mountpoint of '/dev/sdb'."
+        }
+      },
+      "fsTabGetByFsName.entry": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the new file system once set up.",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+          "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+          "type": "ext4",
+          "opts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+          "freq": 0,
+          "passno": 2,
+          "hidden": false,
+          "usagewarnthreshold": 85,
+          "comment": "Media,Photos"
+        }
+      },
+      "fsTabGetByFsName.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the new file system before it was set up.",
+        "x-omv-status": 200,
+        "value": false
+      },
+      "fsTabSet.saved": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the warning level changed to 90% and a third tag added.",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+          "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003",
+          "type": "ext4",
+          "opts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+          "freq": 0,
+          "passno": 2,
+          "hidden": false,
+          "usagewarnthreshold": 90,
+          "comment": "Media,Photos,Backups"
         }
       }
     }

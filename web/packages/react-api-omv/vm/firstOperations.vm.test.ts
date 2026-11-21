@@ -4,10 +4,14 @@
 // Phases 3 and 5 added are checked the same way.
 //
 // Credentials come from $OMV_WEBUI_ENV and are never printed. The disks and disk-health reads of
-// Phase 5 only read; none of their writes is called here. The only writes send the SSH
+// Phase 5 only read; none of their writes is called here, nor any file-system write (creating,
+// mounting, growing or unmounting is captured by tools/contract-capture/filesystem.mjs instead). The only writes send the SSH
 // settings back unchanged, then apply or revert them, and force a redeploy of one harmless module
 // to have a task that runs long enough to stop.
-import type { SmartDeviceList } from "@omv-webui/ts-api-omv";
+import type {
+  FilesystemCandidateList,
+  SmartDeviceList,
+} from "@omv-webui/ts-api-omv";
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -33,7 +37,11 @@ import {
   execStop,
   fileSystemMgmtEnumerateFilesystems,
   fileSystemMgmtEnumerateMountedFilesystems,
+  fileSystemMgmtGetCandidatesBg,
+  fileSystemMgmtGetDetails,
   fileSystemMgmtGetList,
+  fileSystemMgmtGetMountCandidates,
+  fsTabGetByFsName,
   logFileGetList,
   mdMgmtEnumerateDevices,
   networkEnumerateDevicesList,
@@ -290,6 +298,57 @@ describe("as an administrator", () => {
       expect(names).toContain(fs.canonicaldevicefile);
     }
     expect(detected.length).toBeGreaterThan(configured.total);
+  });
+
+  it("reads a file system's mount entry, its report and the candidates, without changing anything", async () => {
+    const configured = await fileSystemMgmtGetList({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+    });
+    // The test VM's data disk carries one EXT4 file system set up in OMV.
+    const fs = configured.data.find((f) => f.status === 1 && f.type === "ext4");
+    expect(fs).toBeDefined();
+    const entry = await fsTabGetByFsName({ fsname: fs!.canonicaldevicefile });
+    expect(entry).not.toBe(false);
+    expect(entry).toMatchObject({ dir: fs!.mountpoint, type: "ext4" });
+    // Found by the file system's own UUID too.
+    expect(await fsTabGetByFsName({ fsname: fs!.uuid })).toEqual(entry);
+    // A device with no file system has no entry: false, not an error.
+    expect(await fsTabGetByFsName({ fsname: "/dev/sdz9" })).toBe(false);
+    const report = await fileSystemMgmtGetDetails({
+      devicefile: fs!.canonicaldevicefile,
+    });
+    expect(report).toContain("Filesystem UUID:");
+    await expect(
+      fileSystemMgmtGetDetails({ devicefile: "/dev/sdz9" }),
+    ).rejects.toMatchObject({ status: 500 });
+    // What is offered is not mounted and has no folder; the data file system, set up already, is
+    // not among it.
+    const candidates = await fileSystemMgmtGetMountCandidates();
+    for (const c of candidates) {
+      expect(c.mounted).toBe(false);
+      expect(c.mountpoint).toBe("");
+    }
+    expect(candidates.map((c) => c.canonicaldevicefile)).not.toContain(
+      fs!.canonicaldevicefile,
+    );
+    const registry = createTaskRegistry();
+    const id = registry.start("Looking for free disks", () =>
+      fileSystemMgmtGetCandidatesBg(),
+    );
+    const task = await settled(registry, id);
+    expect(task.state).toBe("done");
+    const free = task.result as FilesystemCandidateList;
+    expect(Array.isArray(free)).toBe(true);
+    for (const d of free) {
+      expect(d.devicefile).toMatch(/^\/dev\//);
+      expect(Number(d.size)).toBeGreaterThan(0);
+    }
+    // The disk the data file system is on is not free.
+    expect(free.map((d) => d.devicefile)).not.toContain(fs!.parentdevicefile);
+    expect(await configIsDirty()).toBe(false);
   });
 
   it("is told the RAID plugin is not installed by HTTP 404", async () => {

@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtGetMountCandidates
+  tags:
+    - FileSystemMgmt
+  summary: File systems found but not set up
+  description: >-
+    The detected file systems OMV could set up for mounting: not mounted, not on the system disk,
+    not swap or bcache, and with no mount entry yet. A file system just created, and one from
+    another computer, are among them. Each row is the same object as FileSystemMgmt.enumerateFilesystems
+    returns, which this method calls, so reading it touches the disks no more than getList does.
+    Changes nothing.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: getMountCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/DetectedFilesystemList.yaml
+          examples:
+            created:
+              $ref: ../../examples/fileSystemMgmtGetMountCandidates.created.yaml
+            none:
+              $ref: ../../examples/fileSystemMgmtGetMountCandidates.none.yaml

@@ -1,0 +1,5 @@
+summary: "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::grow): an NTFS file system from another computer, a type OMV cannot grow while it is mounted. Not seen on the test VM, which has no such file system."
+x-omv-status: 500
+value:
+  code: 0
+  message: "The file system '0000000000000001' (type=ntfs) does not support online resizing."

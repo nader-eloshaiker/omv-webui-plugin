@@ -38,3 +38,9 @@ post:
               $ref: ../../examples/fileSystemMgmtGetList.missing.yaml
             initializing:
               $ref: ../../examples/fileSystemMgmtGetList.initializing.yaml
+            creating:
+              $ref: ../../examples/fileSystemMgmtGetList.creating.yaml
+            mountPending:
+              $ref: ../../examples/fileSystemMgmtGetList.mountPending.yaml
+            withTags:
+              $ref: ../../examples/fileSystemMgmtGetList.withTags.yaml

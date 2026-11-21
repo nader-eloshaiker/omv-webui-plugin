@@ -1,0 +1,7 @@
+type: object
+description: The file system to grow, by its own UUID (rpc.filesystemmgmt.grow).
+required: [id]
+properties:
+  id:
+    $ref: ./FsUuid.yaml
+additionalProperties: false

@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the result of FileSystemMgmt.getCandidatesBg with three empty scratch disks, as JSON text."
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusrnc318qtho8iaWoTdOT
+  pos: 355
+  output: '[{"devicefile":"/dev/sdb","size":"8589934592","description":"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"},{"devicefile":"/dev/sdc","size":"8589934592","description":"VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"},{"devicefile":"/dev/sdd","size":"8589934592","description":"VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"}]'
+  pendingOutput: false
+  running: false

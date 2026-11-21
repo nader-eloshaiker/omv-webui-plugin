@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtGetCandidatesBg
+  tags:
+    - FileSystemMgmt
+  summary: Disks free for a new file system
+  description: >-
+    The devices the server would offer for a new file system, as a background task, so a disk that
+    hangs does not hold the request; the task's result is the list. It leaves out read-only devices,
+    those that hold a file system or are part of one, and any that still carries a partition table
+    or a file system, RAID or other signature. It reads that from the system's device information
+    first and runs wipefs on a device only when that says nothing, which reads the disk. Changes
+    nothing; the interface starts it only when the reader opens the add-storage flow or re-checks.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: getCandidatesBg
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task:
+    result: FilesystemCandidateList
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/fileSystemMgmtGetCandidatesBg.started.yaml

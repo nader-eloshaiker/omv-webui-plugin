@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: a shell had its working folder inside the file system. Nothing changed."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; umount -v -f '/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003' 2>&1' with exit code '32': umount: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003: target is busy."

@@ -1,0 +1,80 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: EXT4 just created on the scratch disk, and the cloud-init CD of the VM."
+x-omv-status: 200
+value:
+  - devicename: sdd1
+    devicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+    predictabledevicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+    canonicaldevicefile: /dev/sdd1
+    parentdevicefile: /dev/sdd
+    devlinks:
+      - /dev/disk/by-diskseq/5-part1
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0005-part1
+      - /dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6-part1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partnum/1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-partuuid/00000000-0000-4000-8000-000000000004"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part/by-uuid/00000000-0000-4000-8000-000000000003"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0-part1"
+      - /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+    uuid: "00000000-0000-4000-8000-000000000003"
+    label: ""
+    type: ext4
+    blocks: "-1"
+    mounted: false
+    mountpoint: ""
+    used: "-1"
+    available: "-1"
+    size: "-1"
+    percentage: -1
+    description: "/dev/sdd1 [EXT4, 7.99 GiB]"
+    propposixacl: true
+    propquota: true
+    propresize: true
+    propfstab: true
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: false
+    devicefiles:
+      - /dev/sdd1
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+  - devicename: sr0
+    devicefile: /dev/disk/by-uuid/2026-11-19-05-53-43-00
+    predictabledevicefile: /dev/disk/by-uuid/2026-11-19-05-53-43-00
+    canonicaldevicefile: /dev/sr0
+    parentdevicefile: /dev/sr0
+    devlinks:
+      - /dev/cdrom
+      - /dev/disk/by-diskseq/7
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006
+      - /dev/disk/by-label/cidata
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-2"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0"
+      - /dev/disk/by-uuid/2026-11-19-05-53-43-00
+    uuid: "2026-11-19-05-53-43-00"
+    label: cidata
+    type: iso9660
+    blocks: "-1"
+    mounted: false
+    mountpoint: ""
+    used: "-1"
+    available: "-1"
+    size: "-1"
+    percentage: -1
+    description: "/dev/sr0 [ISO9660, 900.00 KiB]"
+    propposixacl: false
+    propquota: false
+    propresize: false
+    propfstab: true
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: false
+    devicefiles:
+      - /dev/sr0
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: true

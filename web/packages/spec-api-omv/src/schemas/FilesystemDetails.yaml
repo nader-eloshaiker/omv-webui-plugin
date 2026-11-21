@@ -1,0 +1,6 @@
+type: string
+description: >-
+  The file system's own report, as display text with newlines: dumpe2fs for EXT4 (its superblock,
+  then one section per block group, so hundreds of lines on a large disk), xfs_info for XFS, and for
+  BTRFS the output of "btrfs filesystem show", "filesystem df", "device stats" and "scrub status".
+  The EXT4 report contains the file system's UUID. Shown as preformatted text, never as markup.

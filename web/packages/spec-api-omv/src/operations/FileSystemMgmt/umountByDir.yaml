@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtUmountByDir
+  tags:
+    - FileSystemMgmt
+  summary: Unmount a file system and forget it
+  description: >-
+    Unmount the file system on a folder and delete its mount entry, with its warning level and
+    tags. Nothing on the file system is deleted, but everything on it is out of reach until it is
+    set up again. A file system in use (a program with a file open, or a shell in its folder) is
+    refused with the system's "target is busy" message (HTTP 500), and then nothing changes. The
+    server does not check what refers to the mount entry: it deletes the entry even while shared
+    folders still point to it, so the interface refuses that itself (journal, 2026-11-21). It then
+    applies the fstab module at once by itself, forced, which also applies any other mount change
+    already pending and, like every apply, discards the snapshots that undoing pending changes
+    restores from. It leaves the collectd, monit and quota modules dirty (observed on the test VM).
+    Slow, because of that apply.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: umountByDir
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.umountbydir
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtUmountByDirRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: The file system is in use, or the folder has no mount entry.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            busy:
+              $ref: ../../examples/fileSystemMgmtUmountByDir.busy.yaml

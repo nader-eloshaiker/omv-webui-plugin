@@ -1,0 +1,6 @@
+type: string
+description: >-
+  A folder path, in OMV's `dirpath` format: letters, digits, "_", "-", ".", "/", "@" and spaces,
+  with no "../" step. OMV's check also accepts letters outside ASCII; the contract does not.
+x-omv-format: dirpath
+pattern: "^(?!.*/\\.{2}/)(?!\\.{2}/)[-\\w./@ ]+$"

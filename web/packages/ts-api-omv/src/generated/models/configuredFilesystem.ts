@@ -20,7 +20,11 @@ export interface ConfiguredFilesystem {
   devlinks: string[];
   /** The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file. */
   uuid: string;
-  label: string;
+  /**
+     * The file system's label; empty when it has none, null for one being created (observed).
+     * @nullable
+     */
+  label: string | null;
   /** The file system type, such as "ext4" or "btrfs". */
   type: string;
   mounted: boolean;

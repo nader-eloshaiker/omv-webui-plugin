@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtCreate
+  tags:
+    - FileSystemMgmt
+  summary: Create a file system on a disk
+  description: >-
+    Erase a device and create one file system across it, as a background task: the server removes
+    the partition table and signatures, makes one partition over the whole disk (a RAID array or
+    other stacked device is used as it is), and formats it. Everything on the device is lost and
+    cannot be recovered. The server erases any device it is given: it does not check that the
+    device is a candidate, empty, unmounted or not the system disk. Before calling it the interface
+    itself refuses every device that its candidate list and the disk-use model do not both allow
+    (journal, 2026-11-21). While it runs, FileSystemMgmt.getList shows the new file system as
+    being created (status 2). The task's output is the commands' log text; it has no result. The
+    new file system is neither mounted nor set up: FileSystemMgmt.setMountPoint does that. Changes
+    no configuration, so nothing is pending afterwards.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: create
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.create
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtCreateRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/fileSystemMgmtCreate.started.yaml

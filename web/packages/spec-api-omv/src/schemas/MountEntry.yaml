@@ -1,0 +1,54 @@
+type: object
+description: >-
+  OMV's mount entry for a file system (conf.system.filesystem.mountpoint): where and how it is
+  mounted, its warning level and its tags. Other configuration, such as a shared folder's
+  `mntentref`, refers to it by `uuid`.
+required:
+  [
+    uuid,
+    fsname,
+    dir,
+    type,
+    opts,
+    freq,
+    passno,
+    hidden,
+    usagewarnthreshold,
+    comment,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  fsname:
+    type: string
+    description: >-
+      The file system, as OMV records it: a predictable device file (a /dev/disk/by-uuid/ link
+      first) for one mounted through this interface or the classic one, or a UUID or folder for
+      older and add-on entries.
+  dir:
+    type: string
+    description: The folder it is mounted on.
+  type:
+    type: string
+    description: The file system type, such as "ext4".
+  opts:
+    type: string
+    description: The mount options, separated by commas, as OMV chose them for the type and the disk.
+  freq:
+    type: integer
+  passno:
+    type: integer
+    enum: [0, 1, 2]
+  hidden:
+    type: boolean
+    description: Whether OMV keeps it out of /etc/fstab (a type mounted another way).
+  usagewarnthreshold:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: Percent used at which OMV warns; 0 means it never warns.
+  comment:
+    type: string
+    description: >-
+      The tags, as one string. The classic interface writes several tags joined by "," with no
+      space, sorted and without repeats ("Media,Photos").

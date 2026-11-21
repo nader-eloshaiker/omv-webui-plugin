@@ -1,0 +1,5 @@
+summary: "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::create): the disk was erased and partitioned, but its new partition did not appear within 10 seconds (the disk was pulled, say), so nothing was formatted. The task fails and getOutput answers HTTP 500. Not seen on the test VM."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Device '/dev/sdd1' is not available after a waiting period of 10 seconds."

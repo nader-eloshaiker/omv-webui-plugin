@@ -1,0 +1,6 @@
+type: array
+description: >-
+  The devices the server offers for a new file system, in no particular order. A disk that holds
+  anything, even an empty partition table, is left out without a word.
+items:
+  $ref: ./FilesystemCandidate.yaml
