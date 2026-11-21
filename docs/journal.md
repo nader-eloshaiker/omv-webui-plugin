@@ -415,3 +415,13 @@ Built on `phase-4`, following the owner's spindown plugin for `debian/` and the 
 - **"The stock replies"** here means 20 requests, recorded before the install and compared after each step: status, headers (less the ones that change on every request) and a hash of the body.
 
 **A11, the OMV upgrade (observed):** OMV 8.7.0 is now published. With the package installed, openmediavault was upgraded from 8.6.1-1 to 8.7.0-1, and then `omv-salt deploy run nginx` and `omv-mkworkbench all` were run. Every check passed after each: the files are unchanged, the link and the menu entry are in place, and the headers are right. This closes A11. On 8.7.0, `pnpm test:browser:vm` (HTTP) gave 9 passed and 2 skipped, the same skips as before. That is information only. Support for 8.7.0 is not declared until `tools/contract-drift` and the integration suite have been run against it, which is a separate change that also moves CI's pinned tree. The VM was then reverted to its snapshot on 8.6.1. The package was installed there with `make package-test`, which replaces the hand-deployed copy of earlier phases. Nothing is pending.
+
+## 2026-11-21 — Owner decisions for Phase 5's first domain, dashboard and monitoring
+
+- **Merging:** for this repository the owner gave a standing approval: once CI is green, rebase-merge the pull request and carry on with the next piece of work without asking.
+- **The private review list:** none of these methods is on it, so all may enter the contract: `FileSystemMgmt.enumerateMountedFilesystems`, `Smart.getListBg`, `Services.getStatus`, `Network.enumerateDevicesList`, `LogFile.getList`, `System.getTopInfo`, `SMB.getStats`, `NFS.getStats`, `SSH.getStats`.
+- **Scope:**
+  - **The dashboard** gains Storage, Disk health, Services and Network cards, and new attention rows: a file system nearly full or missing, a failing disk, and a service that is enabled but not running.
+  - **Diagnostics** gains a System logs viewer, Processes and the service details.
+  - **Left in the classic interface:** clearing a log (destructive) and the diagnostic report (a download).
+- **Charts** are a small SVG line chart of our own in the component library, drawn with SVG attributes: no new runtime dependency. They show only what the open page has sampled (A7).
