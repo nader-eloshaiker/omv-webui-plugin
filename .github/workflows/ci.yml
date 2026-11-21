@@ -41,6 +41,8 @@ jobs:
             deb/openmediavault/usr/share/openmediavault/datamodels
             deb/openmediavault/usr/share/openmediavault/engined/rpc
             deb/openmediavault/var/www/openmediavault/rpc
+            deb/openmediavault-md/usr/share/openmediavault/datamodels
+            deb/openmediavault-md/usr/share/openmediavault/engined/rpc
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
