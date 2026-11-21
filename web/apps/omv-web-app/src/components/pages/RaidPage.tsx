@@ -167,8 +167,9 @@ function Raid() {
           <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
           <span>
             {t("raid.rollUp", {
-              count: statuses.filter((s) => s === worst).length,
-              total: summary.total,
+              // The plural follows the number of arrays: "1 of 3 arrays".
+              count: summary.total,
+              number: statuses.filter((s) => s === worst).length,
               status: t(`health.${worst}`),
             })}
           </span>

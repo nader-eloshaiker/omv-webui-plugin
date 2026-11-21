@@ -262,3 +262,68 @@ test("without the plugin there is no RAID item, and its address says what to ins
     ...observed.consoleErrors.filter((m) => !notFound.test(m)),
   );
 });
+
+test("makes a RAID5 bigger with the free disk, only after its name is typed", async ({
+  page,
+  rpc,
+}) => {
+  test.setTimeout(90_000);
+  const calls = await signInWith(page, rpc, "raidRaid5Free");
+  await page.goto("/ui/storage/md/md0");
+  await page.getByRole("link", { name: copy.raidAdd.open }).click();
+  await expect(
+    page.getByRole("heading", {
+      level: 2,
+      name: "Add a disk to RAID /dev/md0",
+    }),
+  ).toBeVisible();
+  // What the disk is for has no default (D15).
+  const spare = page.getByRole("radio", { name: /^Keep it as a spare/ });
+  const bigger = page.getByRole("radio", { name: /^Make the array bigger/ });
+  await expect(spare).not.toBeChecked();
+  await expect(bigger).not.toBeChecked();
+  await bigger.click();
+  await page.getByRole("checkbox", { name: /^\/dev\/sdd\s?, / }).click();
+  await page.getByRole("button", { name: copy.raidCreate.continue }).click();
+  await expect(page.getByText(/Reshaping cannot be undone/)).toBeVisible();
+  const confirm = page.getByRole("button", { name: "Erase disk and add it" });
+  await expect(confirm).toHaveAttribute("aria-disabled", "true");
+  const field = page.getByRole("textbox", {
+    name: "Type /dev/sdd to confirm.",
+  });
+  await field.fill("/dev/sdd");
+  await field.press("Enter");
+  expect(calls).not.toContain("MdMgmt.grow");
+  await confirm.click();
+  await expect(page.getByText(copy.raidAdd.done.biggerTitle)).toBeVisible({
+    timeout: 60_000,
+  });
+  expect(calls.filter((c) => c === "MdMgmt.grow")).toHaveLength(1);
+  expect(calls).not.toContain("MdMgmt.add");
+  await expectNoSidewaysScroll(page);
+});
+
+test("at a phone's width the list and the disks keep their key facts on screen", async ({
+  page,
+  rpc,
+}) => {
+  await signInWith(page, rpc, "raidFailed");
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/ui/storage/md");
+  const table = page.getByRole("table", { name: copy.raid.tableLabel });
+  const onScreen = async (text: string | RegExp) => {
+    const box = await table.getByText(text).first().boundingBox();
+    expect(box, `${String(text)} is shown`).not.toBeNull();
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(390);
+  };
+  await onScreen(/Mirror \(RAID1\), 8\.0\sGiB/);
+  await onScreen("1 of 2 disks working");
+  await page.goto("/ui/storage/md/md0");
+  const disks = page.getByRole("table", { name: "Disks of RAID /dev/md0" });
+  const role = await disks
+    .getByText(copy.raidRole.failed)
+    .first()
+    .boundingBox();
+  expect((role?.x ?? 0) + (role?.width ?? 0)).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1280, height: 720 });
+});

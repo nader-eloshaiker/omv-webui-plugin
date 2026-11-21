@@ -206,7 +206,7 @@ export function RaidTable({
   } else {
     body = sorted(rows).map(({ row, state, report, used }) => (
       <TableRow key={`${row.uuid}:${row.devicefile}`}>
-        <TableCell className="min-w-36 py-2">
+        <TableCell className="min-w-32 py-2">
           <span className="whitespace-nowrap">
             <ArrayLink devicefile={row.devicefile} />
           </span>
@@ -215,19 +215,38 @@ export function RaidTable({
               {t("raid.noPage")}
             </span>
           )}
+          {/* Under the small breakpoint the columns after State are hidden, and said here. */}
+          <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
+            <span>
+              {t("array.subtitle", {
+                level: words.levelWord(row.level),
+                size: words.sizeText(row.size),
+              })}
+            </span>
+            <span>{words.disksText(row, report)}</span>
+            <MemberDisks devices={row.devices} disks={disks} />
+            <span className="flex flex-wrap gap-x-1">
+              <span className="text-muted-foreground">
+                {t("raid.usedByLabel")}
+              </span>
+              <UsedByCell used={used} />
+            </span>
+          </span>
         </TableCell>
-        <TableCell className="min-w-56 py-2">
+        <TableCell className="py-2 sm:min-w-56">
           <RaidStateView row={row} state={state} compact />
         </TableCell>
-        <TableCell className="py-2">{words.levelWord(row.level)}</TableCell>
-        <TableCell className="py-2 text-end whitespace-nowrap tabular-nums">
+        <TableCell className="py-2 max-sm:hidden">
+          {words.levelWord(row.level)}
+        </TableCell>
+        <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
           {words.sizeText(row.size)}
         </TableCell>
-        <TableCell className="min-w-40 py-2">
+        <TableCell className="min-w-40 py-2 max-sm:hidden">
           <span className="block">{words.disksText(row, report)}</span>
           <MemberDisks devices={row.devices} disks={disks} />
         </TableCell>
-        <TableCell className="min-w-32 py-2">
+        <TableCell className="min-w-32 py-2 max-sm:hidden">
           <UsedByCell used={used} />
         </TableCell>
       </TableRow>
@@ -254,16 +273,22 @@ export function RaidTable({
               {arrayLabel}
             </TableHead>
             <TableHead>{t("raid.col.state")}</TableHead>
-            <TableHead>{t("raid.col.level")}</TableHead>
+            <TableHead className="max-sm:hidden">
+              {t("raid.col.level")}
+            </TableHead>
             <TableHead
-              className="text-end"
+              className="text-end max-sm:hidden"
               sort={sortable ? sortOf("size") : undefined}
               onSort={() => sortBy("size", sizeLabel)}
             >
               {sizeLabel}
             </TableHead>
-            <TableHead>{t("raid.col.disks")}</TableHead>
-            <TableHead>{t("raid.col.usedBy")}</TableHead>
+            <TableHead className="max-sm:hidden">
+              {t("raid.col.disks")}
+            </TableHead>
+            <TableHead className="max-sm:hidden">
+              {t("raid.col.usedBy")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>{body}</TableBody>

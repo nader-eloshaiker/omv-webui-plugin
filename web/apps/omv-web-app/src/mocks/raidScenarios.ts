@@ -47,6 +47,8 @@ export const RAID_SCENARIOS = [
   "raidReadFails",
   "raidCreateFails",
   "raidLeftoverFs",
+  "raidRaid5Free",
+  "raidRaid6Free",
 ] as const;
 export type RaidScenarioName = (typeof RAID_SCENARIOS)[number];
 
@@ -73,6 +75,10 @@ export const RAID_SCENARIO_LABELS: Record<RaidScenarioName, string> = {
   raidNoPlugin: "RAID: the plugin is not installed (404)",
   raidReadFails: "RAID: reading the arrays fails (hand-written)",
   raidCreateFails: "RAID: creating the array fails (hand-written)",
+  raidRaid5Free:
+    "RAID: a RAID5 with sdd free, to add a spare or make it bigger (hand-written)",
+  raidRaid6Free:
+    "RAID: a RAID6 with sdd free, to add a spare or make it bigger (hand-written)",
   raidLeftoverFs:
     "RAID: a new array shows an earlier array's file system (seen on the VM, written by hand)",
 };
@@ -213,6 +219,34 @@ export function newRaidMockState(name: string): RaidMockState {
             device,
             role: "working" as const,
           })),
+          size: 2 * UNIT,
+        }),
+      );
+      break;
+    case "raidRaid5Free":
+      // Its third member (sde) is not one of the mock's disks, so sdd stays free to add.
+      arrays.push(
+        mirror({
+          uuid: uuidOf(6),
+          level: "raid5",
+          numdevices: 3,
+          members: ["/dev/sdb", "/dev/sdc", "/dev/sde"].map((device) => ({
+            device,
+            role: "working" as const,
+          })),
+          size: 2 * UNIT,
+        }),
+      );
+      break;
+    case "raidRaid6Free":
+      arrays.push(
+        mirror({
+          uuid: uuidOf(7),
+          level: "raid6",
+          numdevices: 4,
+          members: ["/dev/sdb", "/dev/sdc", "/dev/sde", "/dev/sdf"].map(
+            (device) => ({ device, role: "working" as const }),
+          ),
           size: 2 * UNIT,
         }),
       );

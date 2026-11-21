@@ -120,6 +120,11 @@ describe("an array's page", () => {
     expect(dialog).toHaveTextContent(
       "It has failed and holds no part of the working array, so nothing is lost.",
     );
+    // A failed disk is not among the array's disks with a size: no stray ", ." where it would be.
+    expect(dialog).toHaveTextContent(
+      "serial number EXAMPLE-SERIAL-0003. Failed.",
+    );
+    expect(dialog).not.toHaveTextContent(", .");
     expect(
       within(dialog).getByRole("button", { name: "Cancel" }),
     ).toHaveFocus();
@@ -156,7 +161,7 @@ describe("an array's page", () => {
       LONG,
     );
     expect(dialog).toHaveTextContent(
-      "The array then runs without that disk and loses protection: It cannot lose another disk.",
+      "The array then runs without that disk and loses protection. It cannot lose another disk.",
     );
     const confirm = within(dialog).getByRole("button", {
       name: "Take disk out",

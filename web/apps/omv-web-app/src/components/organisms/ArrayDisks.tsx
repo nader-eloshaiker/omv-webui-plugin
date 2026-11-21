@@ -292,8 +292,12 @@ export function ArrayDisks({
         sentence={(tokens) =>
           t(
             shownDisk?.model.trim()
-              ? "raidRemove.disk"
-              : "raidRemove.diskNoModel",
+              ? sizeText === ""
+                ? "raidRemove.diskNoSize"
+                : "raidRemove.disk"
+              : sizeText === ""
+                ? "raidRemove.diskNoModelNoSize"
+                : "raidRemove.diskNoModel",
             {
               ...tokens,
               size: sizeText,
@@ -385,12 +389,16 @@ export function ArrayDisks({
         <TableHeader>
           <TableRow>
             <TableHead>{t("array.disks.col.disk")}</TableHead>
-            <TableHead>{t("array.disks.col.model")}</TableHead>
-            <TableHead className="text-end">
+            <TableHead className="max-sm:hidden">
+              {t("array.disks.col.model")}
+            </TableHead>
+            <TableHead className="text-end max-sm:hidden">
               {t("array.disks.col.size")}
             </TableHead>
             <TableHead>{t("array.disks.col.role")}</TableHead>
-            <TableHead>{t("array.disks.col.health")}</TableHead>
+            <TableHead className="max-sm:hidden">
+              {t("array.disks.col.health")}
+            </TableHead>
             <TableHead>
               <span className="sr-only">{t("array.disks.takeOut")}</span>
             </TableHead>
@@ -404,8 +412,8 @@ export function ArrayDisks({
                   <TableCell className="py-2 text-muted-foreground">
                     {t("array.disks.missing")}
                   </TableCell>
-                  <TableCell className="py-2" />
-                  <TableCell className="py-2" />
+                  <TableCell className="py-2 max-sm:hidden" />
+                  <TableCell className="py-2 max-sm:hidden" />
                   <TableCell className="py-2">
                     <span className="flex flex-wrap items-center gap-2">
                       <StatusPill status="critical">
@@ -414,7 +422,7 @@ export function ArrayDisks({
                       <span>{t("raidRole.missing")}</span>
                     </span>
                   </TableCell>
-                  <TableCell className="py-2" />
+                  <TableCell className="py-2 max-sm:hidden" />
                   <TableCell className="py-2" />
                 </TableRow>
               );
@@ -444,8 +452,33 @@ export function ArrayDisks({
                   ) : (
                     <Identifier>{m.device}</Identifier>
                   )}
+                  {/* Under the small breakpoint, Model, Size and Health are hidden and said here. */}
+                  <span className="mt-1 flex flex-col gap-0.5 text-sm whitespace-normal sm:hidden">
+                    <span dir="auto">
+                      {[
+                        disk?.model.trim() ?? "",
+                        size === null ? "" : formatBytes(size),
+                      ]
+                        .filter((x) => x !== "")
+                        .join(", ")}
+                    </span>
+                    {serial === "" ? null : (
+                      <span className="text-xs text-muted-foreground">
+                        <Slotted
+                          sentence={(tokens) => t("array.disks.serial", tokens)}
+                          values={{ serial: <Identifier>{serial}</Identifier> }}
+                        />
+                      </span>
+                    )}
+                    <DiskHealthStatus
+                      checked={check.result !== undefined}
+                      reading={check.reading(
+                        disk?.canonicaldevicefile ?? m.device,
+                      )}
+                    />
+                  </span>
                 </TableCell>
-                <TableCell className="min-w-40 py-2">
+                <TableCell className="min-w-40 py-2 max-sm:hidden">
                   <span className="block" dir="auto">
                     {disk?.model.trim() ?? ""}
                   </span>
@@ -458,10 +491,10 @@ export function ArrayDisks({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="py-2 text-end whitespace-nowrap tabular-nums">
+                <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
                   {size === null ? "" : formatBytes(size)}
                 </TableCell>
-                <TableCell className="min-w-32 py-2">
+                <TableCell className="py-2 sm:min-w-32">
                   {!rolesKnown ? (
                     <span className="text-muted-foreground">
                       {t("raidRole.unknown")}
@@ -493,7 +526,7 @@ export function ArrayDisks({
                     t("raidRole.working")
                   )}
                 </TableCell>
-                <TableCell className="min-w-32 py-2">
+                <TableCell className="min-w-32 py-2 max-sm:hidden">
                   <DiskHealthStatus
                     checked={check.result !== undefined}
                     reading={check.reading(

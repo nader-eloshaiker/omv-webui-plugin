@@ -286,10 +286,19 @@ export function ArrayDeleteSection({
     return (
       <Slotted
         sentence={(tokens) =>
-          t(disk?.model.trim() ? "raidDelete.disk" : "raidDelete.diskNoModel", {
-            ...tokens,
-            size: sizeText,
-          })
+          t(
+            disk?.model.trim()
+              ? sizeText === ""
+                ? "raidDelete.diskNoSize"
+                : "raidDelete.disk"
+              : sizeText === ""
+                ? "raidDelete.diskNoModelNoSize"
+                : "raidDelete.diskNoModel",
+            {
+              ...tokens,
+              size: sizeText,
+            },
+          )
         }
         values={{
           device: <Identifier>{device}</Identifier>,

@@ -41,9 +41,11 @@ describe("Storage > RAID", () => {
     expect(row).toHaveTextContent("8.0 GiB");
     expect(row).toHaveTextContent("2 of 2 disks working");
     expect(row).toHaveTextContent("Nothing");
+    // The phone layout repeats the disks on a second line (hidden by CSS, which happy-dom does not
+    // apply), so the link is found at least once.
     expect(
-      within(row).getByRole("link", { name: "Open disk /dev/sdb" }),
-    ).toBeVisible();
+      within(row).getAllByRole("link", { name: "Open disk /dev/sdb" }).length,
+    ).toBeGreaterThan(0);
     // Nothing is wrong, so nothing is claimed; nothing polls an idle NAS.
     expect(screen.queryByText(/arrays?: /)).toBeNull();
     expect(
@@ -193,7 +195,8 @@ describe("Storage > RAID", () => {
           within(t).getAllByRole("link", { name: /^Open RAID / }),
         ).toHaveLength(20),
       LONG,
-    );
+    ); // The plural follows the number of arrays, not the number in trouble.
+    expect(screen.getByText("1 of 20 arrays: Warning")).toBeVisible();
   });
 
   it("gives a normal user the administrators-only page, and asks nothing about RAID", async () => {
