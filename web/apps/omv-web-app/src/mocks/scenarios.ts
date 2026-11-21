@@ -844,7 +844,8 @@ export function scenarioAnswers(
       guarded(
         name === "servicePending" && session.dirty
           ? "pendingChanges"
-          : name === "serviceOutputs"
+          : // SMB/CIFS is on and running in these scenarios, so it reports its connections.
+            name === "serviceOutputs" || name === "serviceDown"
             ? "connected"
             : name === "serviceOutputsEmpty"
               ? EMPTY_OUTPUT

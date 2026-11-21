@@ -335,9 +335,12 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
             </Button>
           </div>
         ) : null}
-        <p className="text-sm">
-          <SettingsLink tab={tab} />
-        </p>
+        {off ? null : (
+          // When the service is off, the link is the empty state's own action: shown once.
+          <p className="text-sm">
+            <SettingsLink tab={tab} />
+          </p>
+        )}
       </section>
     </div>
   );

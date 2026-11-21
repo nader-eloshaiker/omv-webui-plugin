@@ -53,11 +53,12 @@ describe("Service details", () => {
     ).toBeInTheDocument();
     const heading = screen.getByRole("heading", { level: 2, name: "SMB/CIFS" });
     expect(heading.parentElement).toHaveTextContent("SMB/CIFSDisabledOff");
-    expect(
-      screen.getAllByRole("link", {
-        name: "Open SMB/CIFS settings in the classic interface (opens in a new tab)",
-      })[0],
-    ).toHaveAttribute("href", "/#/services/smb/settings");
+    // The settings link once, as the empty state's action.
+    const links = screen.getAllByRole("link", {
+      name: "Open SMB/CIFS settings in the classic interface (opens in a new tab)",
+    });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/#/services/smb/settings");
     expect(callNames()).not.toContain("SMB.getStats");
   });
 
@@ -152,6 +153,15 @@ describe("Service details", () => {
     expect(
       await screen.findByText("Nothing is shared over NFS right now."),
     ).toBeInTheDocument();
+  });
+
+  it("shows a running SMB/CIFS service's connections in the service-down scenario", async () => {
+    await services("/diagnostics/services/smb", { scenario: "serviceDown" });
+    const output = await screen.findByRole("region", {
+      name: "Status of SMB/CIFS",
+    });
+    expect(output).toHaveTextContent("Samba version");
+    expect(output).not.toHaveTextContent("Service disabled");
   });
 
   it("shows the server's own text when it reports the service disabled anyway", async () => {
