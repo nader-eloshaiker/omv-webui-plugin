@@ -603,3 +603,12 @@ Built on `phase-5-raid` to [design/phase-5-raid.md](design/phase-5-raid.md), as 
   - a real disk failure, and the email it sends;
   - what a restart without applying does to an array's name (0.6, 0.8);
   - the log line a finished check writes.
+
+## 2026-11-22 — Phase 5, RAID: the owner's decision on a leftover file system
+
+On the VM, a new mirror made on two disks that had earlier held a mirror with a file system showed that file system again. Deleting an array erases only its marks, so the new array sits on the same disks at the same place. OMV then does not offer the array for a new file system. The build cleared the new array with a quick wipe before the file-system stage. The owner decided:
+
+- **Keep clearing the new array, and say so.** The create summary's erase line, before the typed confirmation, now says that everything on the disks is lost, "including anything left on them from an earlier array". This is the existing what-is-lost wording, not a new warning box.
+- **"Clear the new array" is a step of its own** in the step list, shown only when it runs. If it fails, the flow stops with the server's words and "Stop here" only; nothing else is erased, and the array stays.
+
+The design's 3.3, 3.4, 3.7, section 19 and copy tables say so.

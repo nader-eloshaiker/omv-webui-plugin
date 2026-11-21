@@ -219,6 +219,17 @@ export function RaidRunView({ run }: { run: RaidRun }) {
             busy={retryBusy}
           />
         );
+      case "clear":
+        // Stop, with the server's words: nothing else was erased (owner, 2026-11-22).
+        return (
+          <JobFailure
+            title={t("raidCreate.fail.clear")}
+            message={t("raidCreate.fail.clearBody")}
+            serverMessage={serverMessage(f.error)}
+            retryLabel={t("addStorage.stop")}
+            onRetry={() => raidFlowAction("stop")}
+          />
+        );
       case "fsNotFound":
         return (
           <JobFailure

@@ -23,6 +23,8 @@ export function useRaidStepLabel() {
         return t("raidCreate.step.find");
       case "fsCandidate":
         return t("raidCreate.step.fsCandidate");
+      case "clear":
+        return t("raidCreate.step.clear");
       case "fsCreate":
         return t("addStorage.step.create", {
           format: fsWords.typeWord(

@@ -2064,8 +2064,6 @@
     "loadFailed": "Could not read the RAID arrays.",
     "empty": "There are no RAID arrays yet. Create one to combine two or more disks so that your files survive a failed disk.",
     "usedUnknown": "Could not check what the arrays hold. Arrays cannot be deleted until this has been checked.",
-    "rollUp_one": "{{count}} of {{total}} array: {{status}}",
-    "rollUp_other": "{{count}} of {{total}} arrays: {{status}}",
     "tableLabel": "RAID arrays",
     "col": {
       "array": "Array",
@@ -2107,7 +2105,10 @@
       "link": "Plugins in the classic interface"
     },
     "otherRun": "Another change to RAID is under way in this session. Its steps are shown on its own page; wait until it ends, or dismiss its result there.",
-    "otherRunLink": "Show that change"
+    "otherRunLink": "Show that change",
+    "rollUp_one": "{{number}} of {{count}} array: {{status}}",
+    "rollUp_other": "{{number}} of {{count}} arrays: {{status}}",
+    "usedByLabel": "Used by:"
   },
   "raidState": {
     "unread": "Could not read its state.",
@@ -2291,8 +2292,8 @@
     "continue": "Continue",
     "summaryTitle": "Ready to create the array",
     "sum": {
-      "erase_one": "Erase {{count}} disk:",
-      "erase_other": "Erase {{count}} disks:",
+      "erase_one": "Erase {{count}} disk. Everything on it is lost, including anything left on it from an earlier array:",
+      "erase_other": "Erase {{count}} disks. Everything on them is lost, including anything left on them from an earlier array:",
       "combine": "Combine them into a new array: {{level}}. About {{usable}} can be used. {{protection}}",
       "sync": "The disks then synchronise, which takes hours for large disks. The array can be used meanwhile, but it is not fully protected until this ends.",
       "stripeTitle": "This array has no protection",
@@ -2316,10 +2317,12 @@
       "fsCandidate": "Check the array can hold a file system",
       "saveAndMount": "Save the array and mount the new file system",
       "save": "Save the array's settings",
-      "verify": "Check the result"
+      "verify": "Check the result",
+      "clear": "Clear the new array"
     },
     "task": {
-      "createFs": "Create file system on RAID {{device}}"
+      "createFs": "Create file system on RAID {{device}}",
+      "clear": "Clear RAID {{device}}"
     },
     "fail": {
       "checkRead": "Could not check the disks again, so nothing was erased.",
@@ -2334,7 +2337,9 @@
       "saveAndMount": "Saving the array and mounting the file system failed.",
       "saveBody": "The changes are still saved and waiting in the band. The array already exists on the disks.",
       "notVerified": "The NAS did not report the array, or its file system, as expected.",
-      "fsCreate": "Creating the file system on the array failed."
+      "fsCreate": "Creating the file system on the array failed.",
+      "clear": "The new array could not be cleared.",
+      "clearBody": "Nothing else was erased. The array stays: you can add storage on it under File systems, or delete it on its page."
     },
     "alsoBody": "Also pending from elsewhere: {{list}}. Saving applies them too.",
     "doneTitle": "The RAID array is ready.",
@@ -2343,7 +2348,8 @@
     "doneFs": "{{name}} is mounted and ready, with {{size}} free.",
     "openArray": "Open RAID {{device}}",
     "addStorage": "Add storage on this array",
-    "toList": "Go to RAID"
+    "toList": "Go to RAID",
+    "chooseLevel": "Choose how to protect your files."
   },
   "raidAdd": {
     "section": "Add a disk",
@@ -2452,7 +2458,7 @@
     "notErased": "The disk is not erased: it keeps the array's marks. Wipe it before you use it for something else.",
     "confirmPlain": "Take out",
     "workingTitle": "Take working disk {{device}} out of RAID {{array}}?",
-    "consequence": "The array then runs without that disk and loses protection: {{protection}}",
+    "consequence": "The array then runs without that disk and loses protection. {{protection}}",
     "ifAnother": "No file is lost now. If another disk fails before a new one is added and rebuilt, {{loss}}",
     "loss": {
       "all": "everything on the array is lost.",
@@ -2477,7 +2483,9 @@
     "unknown": "Could not tell whether the disk was taken out.",
     "refresh": "Refresh",
     "dismiss": "Dismiss",
-    "sizeLabel": "{{size}} ({{label}} on the label)"
+    "sizeLabel": "{{size}} ({{label}} on the label)",
+    "diskNoSize": "{{device}}: {{model}}, serial number {{serial}}. {{role}}.",
+    "diskNoModelNoSize": "{{device}}: serial number {{serial}}. {{role}}."
   },
   "raidCheck": {
     "title": "Check this array",
@@ -2544,6 +2552,8 @@
     "unknown": "Could not tell whether the array was deleted.",
     "refresh": "Refresh",
     "disk": "{{device}}: {{model}}, serial number {{serial}}, {{size}}.",
-    "diskNoModel": "{{device}}: serial number {{serial}}, {{size}}."
+    "diskNoModel": "{{device}}: serial number {{serial}}, {{size}}.",
+    "diskNoSize": "{{device}}: {{model}}, serial number {{serial}}.",
+    "diskNoModelNoSize": "{{device}}: serial number {{serial}}."
   }
 }

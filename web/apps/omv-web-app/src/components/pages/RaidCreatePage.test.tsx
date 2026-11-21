@@ -68,7 +68,7 @@ describe("creating an array", () => {
     expect(screen.queryByText("Ready to create the array")).toBeNull();
   });
 
-  it("repeats the Stripe warning before the typed field, keeps Stripe after Change choices, and creates it", async () => {
+  it("repeats the Stripe warning before the typed field, asks for it afresh after Change choices, and creates it", async () => {
     const { user } = await create();
     await user.click(await disk("/dev/sdb"));
     await user.click(await disk("/dev/sdc"));
@@ -89,9 +89,22 @@ describe("creating an array", () => {
     ).toBeTruthy();
     expect(screen.queryByText(/The disks then synchronise/)).toBeNull();
     await user.click(screen.getByRole("button", { name: "Change choices" }));
-    expect(
-      screen.getByRole("radio", { name: /^Stripe \(RAID0\)/ }),
-    ).toBeChecked();
+    // Stripe is never preselected, not even after Change choices: no level is chosen, focus is at
+    // the level, and Continue asks for one. The disks stay as chosen.
+    const stripe = screen.getByRole("radio", { name: /^Stripe \(RAID0\)/ });
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio).not.toBeChecked();
+    }
+    expect(await disk("/dev/sdb")).toBeChecked();
+    const level = screen.getByRole("radiogroup", { name: /^Level/ });
+    await waitFor(() =>
+      expect(document.activeElement?.contains(level)).toBe(true),
+    );
+    expect(document.activeElement).not.toBe(document.body);
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("Choose how to protect your files.")).toBeVisible();
+    expect(screen.queryByText("Ready to create the array")).toBeNull();
+    await user.click(stripe);
     await user.click(screen.getByRole("button", { name: "Continue" }));
     const confirm = screen.getByRole("button", {
       name: "Erase 2 disks and create array",
@@ -142,6 +155,12 @@ describe("creating an array", () => {
     await user.click(await disk("/dev/sdc"));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText(/The disks then synchronise/)).toBeVisible();
+    // What is lost includes anything an earlier array left on the disks (owner, 2026-11-22).
+    expect(
+      screen.getByText(
+        /^Erase 2 disks\. Everything on them is lost, including anything left on them from an earlier array:/,
+      ),
+    ).toBeVisible();
     expect(
       screen.getByText("Create an EXT4 file system on the array."),
     ).toBeVisible();
@@ -179,6 +198,8 @@ describe("creating an array", () => {
     expect(
       screen.getByRole("region", { name: "Next: share a folder on it" }),
     ).toBeVisible();
+    // Nothing was left on these disks, so there is no step to clear the array.
+    expect(within(steps).queryByText("Clear the new array")).toBeNull();
   }, 40000);
 
   it("does not start while other changes are pending", async () => {
@@ -257,5 +278,56 @@ describe("creating an array", () => {
       secure: false,
     });
     expect(calls("FileSystemMgmt.create")).toHaveLength(1);
+    // The clearing is its own step, shown because it ran.
+    const steps = screen.getByRole("list", { name: "Steps" });
+    expect(within(steps).getByText("Clear the new array")).toBeVisible();
+    expect(
+      within(steps).getByText("Clear the new array").closest("li"),
+    ).toHaveTextContent("Succeeded");
+  }, 60000);
+
+  it("stops with the server's words when the new array cannot be cleared, erasing nothing else", async () => {
+    const { user } = await renderApp({
+      signedIn: true,
+      scenario: "raidLeftoverFs",
+      path: "/storage/md/create",
+      answers: {
+        diskMgmtWipe: {
+          status: 500,
+          message:
+            "Failed to execute command 'wipefs -a /dev/md0': exit code '1'.",
+        },
+      },
+    });
+    await screen.findByRole(
+      "heading",
+      { level: 2, name: "Create a RAID array" },
+      LONG,
+    );
+    await user.click(await disk("/dev/sdb"));
+    await user.click(await disk("/dev/sdc"));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(
+      screen.getByRole("textbox", {
+        name: "Type /dev/sdb /dev/sdc to confirm.",
+      }),
+      "/dev/sdb /dev/sdc",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Erase 2 disks and create array" }),
+    );
+    const failure = await screen.findByRole("alert", {}, { timeout: 40000 });
+    await waitFor(() =>
+      expect(failure).toHaveTextContent("The new array could not be cleared."),
+    );
+    expect(failure).toHaveTextContent("Nothing else was erased.");
+    expect(failure).toHaveTextContent("wipefs -a /dev/md0");
+    expect(
+      within(failure)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Stop here"]);
+    expect(calls("FileSystemMgmt.create")).toHaveLength(0);
+    expect(calls("DiskMgmt.wipe")).toHaveLength(1);
   }, 60000);
 });

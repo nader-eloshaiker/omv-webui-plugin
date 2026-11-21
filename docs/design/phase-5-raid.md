@@ -436,7 +436,7 @@ at narrow widths. After Refresh, focus stays on Refresh. A poll never moves focu
 | `raid.loadFailed` | Could not read the RAID arrays. |
 | `raid.empty` | There are no RAID arrays yet. Create one to combine two or more disks so that your files survive a failed disk. |
 | `raid.usedUnknown` | Could not check what the arrays hold. Arrays cannot be deleted until this has been checked. |
-| `raid.rollUp_one` / `_other` | {{count}} of {{total}} array: {{status}} / {{count}} of {{total}} arrays: {{status}} |
+| `raid.rollUp_one` / `_other` | {{number}} of {{count}} array: {{status}} / {{number}} of {{count}} arrays: {{status}} (the plural follows the number of arrays) |
 | `raid.tableLabel` | RAID arrays |
 | `raid.col.array` | Array |
 | `raid.col.state` | State |
@@ -770,7 +770,9 @@ Group **"Not protected"**, last:
    icon is neutral, not a status): "No protection. If one disk fails, everything on all of them is lost.
    It uses all the space and is fast: about {{usable}}." At least 2. **It is never preselected**: not
    by default, not when it is the only level the ticked count allows, and not when the reader returns
-   with "Change choices" after choosing another level; it is chosen only by the reader's own press. A
+   with "Change choices" (after choosing Stripe, the form comes back with no level chosen, focus on
+   the level group, and Continue asks "Choose how to protect your files."); it is chosen only by the
+   reader's own press. A
    Stripe array cannot take more disks, be checked, or have a disk taken out later (sections 4, 5, 6),
    and the hint ends with "It cannot be made bigger or repaired later."
 
@@ -797,8 +799,10 @@ The array gets no name (section 17, D3). Buttons at the end: **"Continue"** (fil
 `JobSummary` with `typedConfirmation`, title "Ready to create the array". One item per action, in the
 order they run:
 
-- "Erase {{count}} disks:" then one line per disk, each as Flow A's erase or use-whole line (device,
-  model, serial number, size with the label size; for Erase and reuse, what is lost).
+- "Erase {{count}} disks. Everything on them is lost, including anything left on them from an
+  earlier array:" then one line per disk, each as Flow A's erase or use-whole line (device, model,
+  serial number, size with the label size; for Erase and reuse, what is lost). The words about an
+  earlier array are the owner's (2026-11-22): the flow may clear the new array (3.4).
 - "Combine them into RAID {{device}}: {{level}}. About {{usable}} can be used. {{protection}}" where
   the array is always said as "a new array": the server picks the next free `/dev/mdN`, and the page
   does not guess it; `{{protection}}` is 0.4's sentence.
@@ -836,6 +840,7 @@ arrival. One named, typed confirmation is the gate (style guide 5.4).
 | n | "Create the array" | `MdMgmt.create {devices, name: "", level}`: `devices` the stable names (0.7), `level` `mirror`, `raid5`, `raid6`, `raid10` or `stripe` | Synchronous, a few seconds (observed). Its reply names the new array's `devicefile`; its `level` is the word sent ("mirror"), unlike every other reply ("raid1"), so it is not read |
 | n+1 | "Find the new array" | `enumerateDevices` | The row whose `devicefile` is the reply's and whose `devices` are exactly the chosen disks (by any of their names). Exactly one must match |
 | With C3: n+2 | "Check the array can hold a file system" | `FileSystemMgmt.getCandidatesBg` | It must list the array: a new array becomes a candidate during its first synchronisation, at once on one VM run and a moment later on another (observed), so this read is made up to five times, 2 s apart, before the step stops. When it is still not offered and a file system is found on it, that file system is an earlier array's, back because deleting an array erases only its marks (7) and the new array sits on the same disks at the same place (observed on the VM): the step quick-wipes the new array, which only erases what the reader confirmed erasing with its disks, and looks again |
+| Only when needed | **"Clear the new array"** | `DiskMgmt.wipe {devicefile: the array, secure: false}`, a task, then `getCandidatesBg` again | Shown only when it runs: the array is still not offered and a file system is found on it, an earlier array's, back on the same disks (observed). It erases only what the summary named (owner, 2026-11-22). Task "Clear RAID {{device}}" |
 | n+3 … n+5 | "Create the {{format}} file system", "Find the new file system", "Set up the mount" | Flow A's steps 3 to 5 on the array's `devicefile` | No partition is made on an array (read from source) |
 | last but one | **"Save the array and mount the new file system"** (with C3) or **"Save the array's settings"** (without) | R10: expected exactly `mdadm`, `initramfs` and, with C3, `fstab`, `collectd`, `monit`, `quota` (observed); then `Config.applyChangesBg` | The checkpoint, labelled by what it does, not "Apply" |
 | last | "Check the result" | `enumerateDevices` (the array is listed and its state readable); with C3, Flow A's step 7 (mounted, entry exists) | Never claim a mounted file system that is not (UX audit B8) |
@@ -878,6 +883,7 @@ The flow stops at the failed step, never retries by itself (UI-14), says what su
 | 2, still not a candidate | erased | "{{device}} was erased, but the RAID plugin still does not offer it for an array." | "Check again"; "Stop here" |
 | n, create | disks erased (reuse ones); perhaps marks of an unfinished array on some | "The array was not created." + message, and "The disks may now carry parts of an unfinished array. Creating again overwrites them." | "Try this step again"; "Stop here" (the disks then show under Erase and reuse) |
 | n+1, not found | an array may exist | "The array was created but has not appeared yet." | "Look again"; "Stop here", with "It is listed under RAID when it appears." |
+| Clear the new array | the array exists, perhaps partly cleared; nothing else erased | "The new array could not be cleared." + "Nothing else was erased. The array stays: you can add storage on it under File systems, or delete it on its page." + the server's message | "Stop here" only |
 | n+2 to n+5 | the array exists, perhaps an empty or unmounted file system on it | Flow A's sentences for its steps 3 to 5 | Flow A's offers; "Stop here" says "The array stays. You can add storage on it under File systems, or delete it on its page." |
 | Checkpoint, R10 finds more | pending: this flow's and something else | `AlsoPendingPrompt` "Also pending from elsewhere: {{list}}. Saving applies them too." | "Apply them too"; "Stop here" (the changes stay in the band) |
 | Checkpoint, apply | some modules deployed, some not; all still pending (B3) | "Saving the array failed." (with C3: "Saving the array and mounting the file system failed.") + message | **"Try again"** first (R7); then "Stop here", the changes stay in the band. No "Undo": undoing pending changes would not remove the array, which already exists on the disks (section 17, D12) |
@@ -937,7 +943,7 @@ sentences; the keys below are new.
 | `raidCreate.useForFilesHint` | Untick this to leave the array empty, for example to use it for something set up in the classic interface. You can add storage on it later. |
 | `raidCreate.continue` | Continue |
 | `raidCreate.summaryTitle` | Ready to create the array |
-| `raidCreate.sum.erase_other` | Erase {{count}} disks: |
+| `raidCreate.sum.erase_one` / `_other` | Erase {{count}} disk. Everything on it is lost, including anything left on it from an earlier array: / Erase {{count}} disks. Everything on them is lost, including anything left on them from an earlier array: |
 | `raidCreate.sum.combine` | Combine them into RAID {{device}}: {{level}}. About {{usable}} can be used. {{protection}} |
 | `raidCreate.sum.combineNew` | Combine them into a new array: {{level}}. About {{usable}} can be used. {{protection}} |
 | `raidCreate.sum.sync` | The disks then synchronise, which takes hours for large disks. The array can be used meanwhile, but it is not fully protected until this ends. |
@@ -953,6 +959,11 @@ sentences; the keys below are new.
 | `raidCreate.step.create` | Create the array |
 | `raidCreate.step.find` | Find the new array |
 | `raidCreate.step.fsCandidate` | Check the array can hold a file system |
+| `raidCreate.step.clear` | Clear the new array |
+| `raidCreate.task.clear` | Clear RAID {{device}} |
+| `raidCreate.fail.clear` | The new array could not be cleared. |
+| `raidCreate.fail.clearBody` | Nothing else was erased. The array stays: you can add storage on it under File systems, or delete it on its page. |
+| `raidCreate.chooseLevel` | Choose how to protect your files. |
 | `raidCreate.step.saveAndMount` | Save the array and mount the new file system |
 | `raidCreate.step.save` | Save the array's settings |
 | `raidCreate.step.verify` | Check the result |
@@ -1204,8 +1215,8 @@ form so Enter does not confirm, Escape and Cancel close it, the scrim does not.
 
 1. Title: "Take working disk {{device}} out of RAID {{array}}?"
 2. The disk, named exactly: model, serial number, size with the label size, "Working".
-3. The consequence, one sentence: "The array then runs without that disk and loses protection:
-   {{protection}}" where `{{protection}}` is 0.4's sentence for the array with one disk fewer ("It
+3. The consequence: "The array then runs without that disk and loses protection. {{protection}}"
+   where `{{protection}}` is 0.4's sentence for the array with one disk fewer ("It
    cannot lose another disk." for a two-disk mirror or RAID5).
 4. "No file is lost now. If another disk fails before a new one is added and rebuilt, {{loss}}" (for
    no protection left: "everything on the array is lost."; for RAID6: "it can still lose one more.")
@@ -1254,7 +1265,7 @@ next read of the page shows the outcome.
 | `raidRemove.notErased` | The disk is not erased: it keeps the array's marks. Wipe it before you use it for something else. |
 | `raidRemove.confirmPlain` | Take out |
 | `raidRemove.workingTitle` | Take working disk {{device}} out of RAID {{array}}? |
-| `raidRemove.consequence` | The array then runs without that disk and loses protection: {{protection}} |
+| `raidRemove.consequence` | The array then runs without that disk and loses protection. {{protection}} |
 | `raidRemove.ifAnother` | No file is lost now. If another disk fails before a new one is added and rebuilt, {{loss}} |
 | `raidRemove.loss.all` | everything on the array is lost. |
 | `raidRemove.loss.oneMore` | it can still lose one more. |
@@ -1830,7 +1841,7 @@ stated, not claimed, until observed on a real NAS (the owner's own server stays 
 | A NAS without the plugin, with an array made by hand | No RAID check possible | Nothing is claimed about RAID; the disks slice's untraceable-storage sentence covers it (0.10) |
 | A degraded array chosen in Flow A | A file system would be put on an array short of a disk | Not offered (9.3) |
 | **Stripe chosen by mistake**, or by habit from the classic interface's level list | Losing one disk loses every file on all of them | Never preselected, even when it is the only level the ticked count allows or after "Change choices"; grouped apart under "Not protected", last; the loss in words in its hint and again just before the typed field; the result and Flow A's option say it too (3.2, 3.3, 9.3) |
-| Two disks ticked, Mirror changed to Stripe, then back to Change choices | The choice could silently revert to Stripe or to the default | "Change choices" keeps exactly what the reader chose last; nothing moves to or from Stripe by itself (3.2) |
+| Two disks ticked, Mirror changed to Stripe, then back to Change choices | The choice could silently stay on Stripe, or revert to the default | "Change choices" keeps the disks and the other choices, but no level: Stripe is never preselected, and nothing moves to Mirror by itself either; the reader chooses again (3.2; corrected 2026-11-22, it first kept Stripe) |
 | An array's own name of 200 characters, right-to-left, or `<img onerror>` text | Layout, UI-2 | Text nodes, `dir="auto"`, wrapping; markup shown literally; the name is shown only on the array's page; the host part is dropped (0.1) |
 | The host name in a shared screenshot of the technical details | It is personal data on screen | It is shown on screen only, in the report the reader asked for; never in an address, title, toast, log or storage; captures scrub it (0.1, 2.7, 12) |
 | `/storage/md/md0/../../rpc.php`, `/storage/md/md9999` or `/storage/md/MD0` | URL as an identifier | Pattern rejects it; not-found state; no call (0.6) |
@@ -1986,6 +1997,15 @@ Smaller deviations taken while building, each the stricter or the simpler readin
   erased first (4.3).
 - Creating an array with "Use it for files" on disks that held an earlier array's file system: the
   new array shows that file system again and is not offered for a new one (observed on the VM, the
-  second time the same two disks were made a mirror). The flow then quick-wipes the new array before
-  the file-system stage (3.4). Not in the agreed design; it erases nothing beyond the disks the summary
-  named, and the owner may prefer the flow to stop there instead.
+  second time the same two disks were made a mirror). **The owner's decision (2026-11-22):** keep
+  clearing the new array, and say so. The summary's erase line says that anything left on the disks
+  from an earlier array is lost too (3.3), and "Clear the new array" is a step of its own, shown only
+  when it runs, which stops with the server's words if it fails and erases nothing else (3.4, 3.7).
+- Stripe after "Change choices" (corrected 2026-11-22 after an independent pass on the mock): the form
+  came back with Stripe still chosen and focus lost. It now comes back with no level and focus on the
+  level group (3.2, 16.1).
+- On a phone (under 640 px) the RAID list shows Array and State as columns, with the level, size, disks
+  and what uses it on a second line under the array; an array's Disks table shows Disk, Role and Take
+  out, with the model, size, serial number and health under the disk (1.3, 2.5).
+- The take-out and delete dialogs name a disk without a size where the server reports none (a failed
+  disk is not among `getSlaves`), with no stray separator.

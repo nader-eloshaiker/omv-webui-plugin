@@ -383,6 +383,7 @@ function AddDecisions({
                 erase: (device) => t("addStorage.task.erase", { device }),
                 fsCandidates: t("addStorage.task.candidates"),
                 fsCreate: (device) => t("raidCreate.task.createFs", { device }),
+                clear: (device) => t("raidCreate.task.clear", { device }),
                 apply: t("pending.applyTask"),
               },
               fixed,

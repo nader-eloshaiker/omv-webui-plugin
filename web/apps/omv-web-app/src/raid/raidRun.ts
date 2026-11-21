@@ -104,6 +104,7 @@ export type StepKind =
   | "create"
   | "find"
   | "fsCandidate"
+  | "clear"
   | "fsCreate"
   | "fsFind"
   | "fsSetUp"
@@ -181,6 +182,8 @@ export type Failure =
   | { kind: "create"; error: unknown }
   | { kind: "notFound" }
   | { kind: "fsCandidate"; error: unknown }
+  /** The new array could not be cleared: stop, nothing else erased. */
+  | { kind: "clear"; error: unknown }
   | { kind: "fsCreate"; error: unknown }
   | { kind: "fsNotFound" }
   | { kind: "fsSetUp"; error: unknown }
@@ -202,6 +205,7 @@ export interface TaskLabels {
   erase: (device: string) => string;
   fsCandidates: string;
   fsCreate: (device: string) => string;
+  clear: (device: string) => string;
   apply: string;
 }
 
@@ -229,7 +233,8 @@ export interface RaidRun {
 
 export interface CreateDraft {
   chosen: readonly string[];
-  level: CreateLevel;
+  /** null: no level chosen (Stripe is never preselected, not even after "Change choices"). */
+  level: CreateLevel | null;
   forFiles: boolean;
   format: FsFormat;
   tags: string;
@@ -607,37 +612,80 @@ async function stepFsCandidate(ctx: Context): Promise<boolean> {
     if (!(await listed())) {
       // Deleting an array erases only its marks (7), so a new array on the same disks can show the
       // old array's file system again (observed on the VM), and the system then does not offer it.
-      // Those disks' contents are what the reader confirmed erasing: the new array is quick-wiped,
-      // as a disk under Erase and reuse is, and looked for again.
+      // Those disks' contents are what the reader confirmed erasing (the summary says so): the new
+      // array is cleared in a step of its own, shown only when it runs (owner, 2026-11-22).
       const detected = await ctx.fs.detected();
-      const leftover = detected.some((fs) => isOnArray(fs, array.devicefile));
-      if (!leftover) {
+      if (!detected.some((fs) => isOnArray(fs, array.devicefile))) {
         fail(ctx, "fsCandidate", { kind: "fsCandidate", error: undefined });
         return false;
       }
-      const taskId = await startWipe({
-        devicefile: array.devicefile,
-        device: array.devicefile,
-        serial: "",
-        secure: false,
-        label: ctx.labels.erase(array.devicefile),
-        begin: ctx.fs.wipe(array.devicefile),
-      });
-      mark(ctx, "fsCandidate", { status: "running", taskId });
-      const task = await waitFor(taskId);
-      if (task?.state !== "done" || !(await listed())) {
-        fail(ctx, "fsCandidate", { kind: "fsCandidate", error: task?.error });
-        return false;
-      }
+      mark(ctx, "fsCandidate", { status: "succeeded" });
+      update(ctx, (r) =>
+        r.steps.some((step) => step.id === "clear")
+          ? {}
+          : {
+              steps: r.steps.flatMap((step) =>
+                step.id === "fsCandidate"
+                  ? [step, { id: "clear", kind: "clear" as const }]
+                  : [step],
+              ),
+              state: { ...r.state, clear: { status: "waiting" } },
+            },
+      );
+      return await stepClear(ctx, listed);
     }
   } catch (error) {
     fail(ctx, "fsCandidate", { kind: "fsCandidate", error });
     return false;
   }
-  mark(ctx, "fsCandidate", {
-    ...(current(ctx)?.state.fsCandidate ?? {}),
-    status: "succeeded",
-  });
+  mark(ctx, "fsCandidate", { status: "succeeded" });
+  return true;
+}
+
+/**
+ * Clear the new array (owner, 2026-11-22): a quick wipe of the array this run has just made, then the
+ * candidates again. A failure stops the run with the server's words; nothing else is erased.
+ */
+async function stepClear(
+  ctx: Context,
+  listed: () => Promise<boolean>,
+): Promise<boolean> {
+  const run = current(ctx);
+  const array = run?.array;
+  if (run === null || array == null) {
+    return false;
+  }
+  mark(ctx, "clear", { status: "running" });
+  let taskId: number;
+  try {
+    taskId = await startWipe({
+      devicefile: array.devicefile,
+      device: array.devicefile,
+      serial: "",
+      secure: false,
+      label: ctx.labels.clear(array.devicefile),
+      begin: ctx.fs.wipe(array.devicefile),
+    });
+  } catch (error) {
+    fail(ctx, "clear", { kind: "clear", error });
+    return false;
+  }
+  mark(ctx, "clear", { status: "running", taskId });
+  const task = await waitFor(taskId);
+  if (task?.state !== "done") {
+    fail(ctx, "clear", { kind: "clear", error: task?.error });
+    return false;
+  }
+  try {
+    if (!(await listed())) {
+      fail(ctx, "clear", { kind: "fsCandidate", error: undefined });
+      return false;
+    }
+  } catch (error) {
+    fail(ctx, "clear", { kind: "fsCandidate", error });
+    return false;
+  }
+  mark(ctx, "clear", { status: "succeeded", taskId });
   return true;
 }
 
@@ -926,6 +974,9 @@ async function runStep(ctx: Context, step: PlanStep): Promise<boolean> {
       return stepFind(ctx);
     case "fsCandidate":
       return stepFsCandidate(ctx);
+    case "clear":
+      // Reached only by "Try again" from a later step: the array was cleared already.
+      return true;
     case "fsCreate":
       return stepFsCreate(ctx);
     case "fsFind":

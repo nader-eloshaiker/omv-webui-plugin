@@ -66,15 +66,23 @@ const PROTECTED: readonly CreateLevel[] = [
   "raid10",
 ];
 
-const initialDraft = (): CreateDraft =>
-  raidFlowStore.getState().create ?? {
-    chosen: [],
-    level: "mirror",
-    forFiles: true,
-    format: "ext4",
-    tags: "",
-    warn: DEFAULT_LEVEL,
-  };
+/** Stripe is never preselected (P3, D24): a draft that had it comes back with no level chosen. */
+const withoutStripe = (draft: CreateDraft): CreateDraft =>
+  draft.level === "stripe" ? { ...draft, level: null } : draft;
+
+const initialDraft = (): CreateDraft => {
+  const saved = raidFlowStore.getState().create;
+  return saved === null
+    ? {
+        chosen: [],
+        level: "mirror",
+        forFiles: true,
+        format: "ext4",
+        tags: "",
+        warn: DEFAULT_LEVEL,
+      }
+    : withoutStripe(saved);
+};
 
 const targetOf = (choice: RaidDiskChoice): DiskTarget => ({
   kind: "disk",
@@ -94,14 +102,19 @@ export function RaidCreateDecisions() {
   const [draft, setDraft] = useState<CreateDraft>(initialDraft);
   const [stage, setStage] = useState<"form" | "summary">("form");
   const [fixed, setFixed] = useState<CreateChoices | null>(null);
-  const [problem, setProblem] = useState<"min" | "tags" | null>(null);
+  const [problem, setProblem] = useState<"min" | "level" | "tags" | null>(null);
+  const [returned, setReturned] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
+  const levelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (stage === "summary") {
       summaryRef.current?.focus();
+    } else if (returned) {
+      // Back from the summary: focus goes to the level, which the reader may have to choose again.
+      levelRef.current?.focus();
     }
-  }, [stage]);
+  }, [stage, returned]);
 
   if (choices.state === "failed") {
     return (
@@ -146,7 +159,11 @@ export function RaidCreateDecisions() {
           }}
           confirmLabel={t("raidCreate.confirm", { count: devices.length })}
           backLabel={t("addStorage.back")}
-          onBack={() => setStage("form")}
+          onBack={() => {
+            setDraft(withoutStripe);
+            setReturned(true);
+            setStage("form");
+          }}
           onConfirm={() => {
             startRaidFlow(
               fsApi,
@@ -155,6 +172,7 @@ export function RaidCreateDecisions() {
                 erase: (device) => t("addStorage.task.erase", { device }),
                 fsCandidates: t("addStorage.task.candidates"),
                 fsCreate: (device) => t("raidCreate.task.createFs", { device }),
+                clear: (device) => t("raidCreate.task.clear", { device }),
                 apply: t("pending.applyTask"),
               },
               fixed,
@@ -189,8 +207,13 @@ export function RaidCreateDecisions() {
     );
   }
 
-  const need = MIN_DISKS[draft.level];
+  const level = draft.level;
+  const need = level === null ? 2 : MIN_DISKS[level];
   const onContinue = () => {
+    if (level === null) {
+      setProblem("level");
+      return;
+    }
     if (chosen.length < need) {
       setProblem("min");
       return;
@@ -202,13 +225,13 @@ export function RaidCreateDecisions() {
     const next: CreateChoices = {
       kind: "create",
       targets: chosenChoices.map(targetOf),
-      level: draft.level,
+      level,
       forFiles: draft.forFiles,
       format: draft.format,
       tags: tagsToSave(draft.tags),
       warn: draft.warn,
     };
-    // "Change choices" comes back to exactly these: nothing moves to or from Stripe by itself.
+    // "Change choices" comes back to these, except Stripe, which the reader must choose again.
     saveCreateDraft({ ...draft, chosen });
     setFixed(next);
     setStage("summary");
@@ -239,10 +262,10 @@ export function RaidCreateDecisions() {
         ? t("raidCreate.stripe")
         : words.levelWord(level);
   const minText =
-    need > 2
+    level !== null && need > 2
       ? t("raidCreate.minFor", {
           count: need,
-          level: words.levelWord(draft.level),
+          level: words.levelWord(level),
         })
       : t("raidCreate.min");
   const sections = [
@@ -308,34 +331,37 @@ export function RaidCreateDecisions() {
       </CheckboxListField>
       <RaidCannotUse unusable={choices.unusable} defaultOpen={false} />
 
-      <RadioGroupField
-        legend={t("raidCreate.level")}
-        value={draft.level}
-        onValueChange={(value) => {
-          const level = CREATE_LEVELS.find((l) => l === value);
-          if (level !== undefined) {
-            edit({ level });
-          }
-        }}
-      >
-        <RadioOptionGroup label={t("raidCreate.group.protected")}>
-          {PROTECTED.map((level) => (
+      <div ref={levelRef} tabIndex={-1} className="outline-hidden">
+        <RadioGroupField
+          legend={t("raidCreate.level")}
+          value={draft.level ?? ""}
+          onValueChange={(value) => {
+            const picked = CREATE_LEVELS.find((l) => l === value);
+            if (picked !== undefined) {
+              edit({ level: picked });
+            }
+          }}
+          error={problem === "level" ? t("raidCreate.chooseLevel") : undefined}
+        >
+          <RadioOptionGroup label={t("raidCreate.group.protected")}>
+            {PROTECTED.map((level) => (
+              <RadioOption
+                key={level}
+                value={level}
+                label={levelLabel(level)}
+                hint={hint(level)}
+              />
+            ))}
+          </RadioOptionGroup>
+          <RadioOptionGroup label={t("raidCreate.group.unprotected")}>
             <RadioOption
-              key={level}
-              value={level}
-              label={levelLabel(level)}
-              hint={hint(level)}
+              value="stripe"
+              label={levelLabel("stripe")}
+              hint={hint("stripe")}
             />
-          ))}
-        </RadioOptionGroup>
-        <RadioOptionGroup label={t("raidCreate.group.unprotected")}>
-          <RadioOption
-            value="stripe"
-            label={levelLabel("stripe")}
-            hint={hint("stripe")}
-          />
-        </RadioOptionGroup>
-      </RadioGroupField>
+          </RadioOptionGroup>
+        </RadioGroupField>
+      </div>
       <p className="max-w-prose text-sm text-muted-foreground">
         {t("raidCreate.combineAlt")}{" "}
         <Link to="/storage/filesystems/add-multi" className={routerLinkClass}>
