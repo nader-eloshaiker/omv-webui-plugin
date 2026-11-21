@@ -553,3 +553,11 @@ Built on `phase-5-filesystems` to [design/phase-5-filesystems.md](design/phase-5
   - the classic shared-folder picker's text for a tagged file system;
   - grow on several BTRFS disks;
   - a busy unmount and a missing file system on the VM.
+
+## 2026-11-21 — Phase 5, RAID: the owner's agreement to the design
+
+The owner answered the "For the owner to agree" points of [design/phase-5-raid.md](design/phase-5-raid.md).
+
+- **Agreed as written:** P1 (what creating an array or adding a disk may erase, the stricter of the plugin's list and the disk-use model), P2 (one summary, every device name typed), P4 (an array goes on to a file system and mount, "Use it for files" can be unticked), P5 (bigger only for RAID5 and RAID6), P6 (taking out a disk), P7 (deleting an array), P8 (Check and Stop checking; no Repair), P9 (a 30-second poll only while an array is busy), P10 (no classic link round a refusal), P11 (what is applied and what is left pending).
+- **Changed, P3:** Stripe (RAID0) is offered as well as Mirror, RAID5, RAID6 and RAID10, with a strong warning that losing one disk loses everything on all of them. Mirror stays the default and Stripe is never preselected. Still no custom array name.
+- **Test VM:** a fourth 8 GiB scratch disk is added, so RAID6, RAID10 and growing a RAID5 can be seen on the VM, and the RAID plugin is installed there after a snapshot.
