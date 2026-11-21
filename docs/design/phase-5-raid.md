@@ -6,7 +6,8 @@ RAID list, an array's own page (its state, its disks, what uses it), creating an
 checking an array, deleting an array, the UX audit's Flow F "Replace a failing disk" (its 4.7, J8a),
 and how RAID joins Flow A. RAID here is the software RAID of the RAID plugin, `openmediavault-md`.
 
-**Status: for the owner's agreement before building.** This slice erases disks (creating an array and
+**Status: agreed by the owner on 2026-11-21**, P1 to P11 as written except P3, which the owner changed
+to offer Stripe (RAID0) as well (section 18, D24). This slice erases disks (creating an array and
 adding a disk overwrite them), destroys data (deleting an array), has an irreversible action (making an
 array bigger) and one that takes away protection (removing a working disk), so the owner agrees the
 design first (journal, 2026-11-21, "Storage is built in slices"). Section 18 lists the points to agree;
@@ -328,8 +329,7 @@ In parallel, on opening, on Refresh and after an action this session started end
 6. The **table** (1.3), not paged.
 7. **Alerts line** (1.5).
 8. Footer: `ExternalLink` "RAID in the classic interface" → `/#/storage/md`, with one line before it,
-   `text-sm muted-foreground`: "Repairing an array after a check, stripes, and array names are in the
-   classic interface."
+   `text-sm muted-foreground`: "Repairing an array after a check is in the classic interface."
 
 ### 1.3 Columns
 
@@ -438,7 +438,7 @@ at narrow widths. After Refresh, focus stays on Refresh. A poll never moves focu
 | `raid.unfinished.noFs` | RAID <device></device> has no file system yet. |
 | `raid.unfinished.addStorage` | Add storage on it |
 | `raid.unfinished.notWritten` | The NAS has not written down the change to RAID <device></device> yet. Apply the pending changes so it starts the array the same way next time. |
-| `raid.footerLine` | Repairing an array after a check, stripes, and array names are in the classic interface. |
+| `raid.footerLine` | Repairing an array after a check is in the classic interface. |
 | `raid.classicLink` | RAID in the classic interface |
 | `raid.notInstalled.title` | RAID needs the openmediavault-md plugin, which is not installed on this NAS. |
 | `raid.notInstalled.body` | RAID combines several disks so that your files survive a failed disk. To use it, install openmediavault-md under System > Plugins in the classic interface, then come back here. |
@@ -724,9 +724,12 @@ differ in size. Each counts as the smallest, {{size}}; {{lost}} on the larger on
   can be erased. Connect more disks, or free some that are in use." with "Look for new disks" and the
   "Disks that cannot be used" list open.
 
-**C2. How to protect your files** (`RadioGroupField`, legend "Level", four options; each hint ends with
-the usable space for the ticked disks, 0.4, "about"; until enough disks are ticked for a level, its
-hint has no size and it says how many it needs; section 18, P3):
+**C2. How to protect your files** (`RadioGroupField` with groups, legend "Level", five options in two
+headed groups, because five exclusive choices need grouping (the uiux-design skill, 3); each hint ends
+with the usable space for the ticked disks, 0.4, "about"; until enough disks are ticked for a level,
+its hint has no size and it says how many it needs; section 18, P3, the owner's decision):
+
+Group **"Protected"**:
 
 1. **"Mirror (RAID1), recommended"** (default). "Every file is kept on every disk. It can lose all but
    one disk. You can use the space of one disk: about {{usable}}." At least 2.
@@ -737,10 +740,21 @@ hint has no size and it says how many it needs; section 18, P3):
 4. "Mirror and stripe (RAID10)". "Faster than parity. It can lose 1 disk, and sometimes more. You can
    use half the space: about {{usable}}." At least 4.
 
+Group **"Not protected"**, last:
+
+5. "Stripe (RAID0), no protection". Hint, in the body colour, with the warning-shape icon before it (the
+   icon is neutral, not a status): "No protection. If one disk fails, everything on all of them is lost.
+   It uses all the space and is fast: about {{usable}}." At least 2. **It is never preselected**: not
+   by default, not when it is the only level the ticked count allows, and not when the reader returns
+   with "Change choices" after choosing another level; it is chosen only by the reader's own press. A
+   Stripe array cannot take more disks, be checked, or have a disk taken out later (sections 4, 5, 6),
+   and the hint ends with "It cannot be made bigger or repaired later."
+
 A level that the ticked count does not allow is not disabled: it stays choosable, and Continue says
-"Choose at least {{count}} disks for {{level}}." (so the reader can choose the level first). Stripe is
-not offered (section 18, P3); under the group, `text-sm muted-foreground`: "To join disks into one large
-space without protection, use Combine disks (BTRFS) under File systems." with a router link.
+"Choose at least {{count}} disks for {{level}}." (so the reader can choose the level first). Under the
+"Not protected" group, `text-sm muted-foreground`: "For one large space without protection, Combine
+disks (BTRFS) under File systems can also join disks, so that a failed disk loses only the files on it."
+with a router link "Combine disks (BTRFS)".
 
 **C3. Use it for files** (`CheckboxField`, default ticked): "Put a file system on it and mount it, so
 you can make shared folders on it." Hint: "Untick this to leave the array empty, for example to use it
@@ -764,14 +778,21 @@ order they run:
 - "Combine them into RAID {{device}}: {{level}}. About {{usable}} can be used. {{protection}}" where
   `{{device}}` is the name the server will give (the next free `/dev/mdN`), said as "a new array" when
   it cannot be known in advance **[verify]**; `{{protection}}` is 0.4's sentence.
-- "The disks then synchronise, which takes hours for large disks. The array can be used meanwhile, but
-  it is not fully protected until this ends."
+- Every level but Stripe: "The disks then synchronise, which takes hours for large disks. The array can
+  be used meanwhile, but it is not fully protected until this ends." (A stripe has nothing to
+  synchronise, so this line is left out for it.)
 - With C3: Flow A's create, tags, level and mount lines, for the array ("Create an EXT4 file system on
   the array." …), then "Then save the array and mount the file system, which applies the changes for
   them. Nothing else is pending." and "Sharing a folder on it comes next, in the classic interface for
   now."
 - Without C3: "Then save the array's settings, which applies the changes for it. Nothing else is
   pending."
+
+**With Stripe chosen**, the warning is repeated as the last thing before the typed field, apart from the
+list: an `InlineAlert` (neutral surface, the warning-shape icon, never a status colour, since nothing has
+failed) titled "This array has no protection", body "If one disk fails, everything on all {{count}}
+disks is lost: every file on the array, not only the files on that disk. Keep a backup of anything you
+store on it." It is part of the summary's description, so it is read before the typed field.
 
 Then the typed confirmation: "Type {{devices}} to confirm.", every chosen device name separated by
 single spaces, in the order listed (Combine disks' rule and its `typedMatches` extension). The confirm
@@ -788,7 +809,7 @@ arrival. One named, typed confirmation is the gate (style guide 5.4).
 | --- | --- | --- | --- |
 | 1 | "Check the disks again" | `getCandidates`, the disk-use inputs, `enumerateDevices` | Every disk must still be offered in the same group, with the same serial number and model. Otherwise the flow stops before anything is erased (3.7) |
 | 2 … | "Erase {{device}}", one per Erase and reuse disk | `DiskMgmt.wipe {devicefile, secure: false}`, a task, output in a `Disclosure` | Then `getCandidates` again: the disk must now be a candidate |
-| n | "Create the array" | `MdMgmt.create {devices, name: "", level}`: `devices` the stable names (0.7), `level` `mirror`, `raid5`, `raid6` or `raid10` | Synchronous, a few seconds **[verify]**. Its reply names the new array's `devicefile` |
+| n | "Create the array" | `MdMgmt.create {devices, name: "", level}`: `devices` the stable names (0.7), `level` `mirror`, `raid5`, `raid6`, `raid10` or `stripe` | Synchronous, a few seconds **[verify]**. Its reply names the new array's `devicefile` |
 | n+1 | "Find the new array" | `enumerateDevices` | The row whose `devicefile` is the reply's and whose `devices` are exactly the chosen disks (by any of their names). Exactly one must match |
 | With C3: n+2 | "Check the array can hold a file system" | `FileSystemMgmt.getCandidatesBg` | It must list the array **[verify]** that a new array appears at once, during its first synchronisation |
 | n+3 … n+5 | "Create the {{format}} file system", "Find the new file system", "Set up the mount" | Flow A's steps 3 to 5 on the array's `devicefile` | No partition is made on an array (read from source) |
@@ -813,7 +834,9 @@ the NAS whatever the browser does.
 
 - Title: "The RAID array is ready."
 - "RAID {{device}} ({{level}}, about {{size}}) is synchronising its disks. Its files can be used now;
-  it is fully protected when this ends." Router link "Open RAID {{device}}".
+  it is fully protected when this ends." Router link "Open RAID {{device}}". For a Stripe: "RAID
+  {{device}} (Stripe (RAID0), about {{size}}) is ready. It has no protection: if one disk fails,
+  everything on it is lost."
 - With C3: Flow A's "{{name}} is mounted and ready, with {{size}} free.", router link "Open the file
   system", and Flow A's handover card "Next: share a folder on it" (its 6.8), unchanged.
 - Without C3: router link "Add storage on this array" (9.3).
@@ -879,8 +902,13 @@ sentences; the keys below are new.
 | `raidCreate.raid6Hint` | It can lose 2 disks. You can use all but two disks' space: about {{usable}}. |
 | `raidCreate.raid10Hint` | Faster than parity. It can lose 1 disk, and sometimes more. You can use half the space: about {{usable}}. |
 | `raidCreate.needs` | Needs at least {{count}} disks. |
-| `raidCreate.stripeHint` | To join disks into one large space without protection, use Combine disks (BTRFS) under File systems. |
-| `raidCreate.stripeLink` | Combine disks (BTRFS) |
+| `raidCreate.group.protected` | Protected |
+| `raidCreate.group.unprotected` | Not protected |
+| `raidCreate.stripe` | Stripe (RAID0), no protection |
+| `raidCreate.stripeHint` | No protection. If one disk fails, everything on all of them is lost. It uses all the space and is fast: about {{usable}}. It cannot be made bigger or repaired later. |
+| `raidCreate.stripeHintNoSize` | No protection. If one disk fails, everything on all of them is lost. It uses all the space and is fast. It cannot be made bigger or repaired later. |
+| `raidCreate.combineAlt` | For one large space without protection, Combine disks (BTRFS) under File systems can also join disks, so that a failed disk loses only the files on it. |
+| `raidCreate.combineAltLink` | Combine disks (BTRFS) |
 | `raidCreate.useForFiles` | Put a file system on it and mount it, so you can make shared folders on it. |
 | `raidCreate.useForFilesHint` | Untick this to leave the array empty, for example to use it for something set up in the classic interface. You can add storage on it later. |
 | `raidCreate.continue` | Continue |
@@ -889,6 +917,8 @@ sentences; the keys below are new.
 | `raidCreate.sum.combine` | Combine them into RAID {{device}}: {{level}}. About {{usable}} can be used. {{protection}} |
 | `raidCreate.sum.combineNew` | Combine them into a new array: {{level}}. About {{usable}} can be used. {{protection}} |
 | `raidCreate.sum.sync` | The disks then synchronise, which takes hours for large disks. The array can be used meanwhile, but it is not fully protected until this ends. |
+| `raidCreate.sum.stripeTitle` | This array has no protection |
+| `raidCreate.sum.stripeBody` | If one disk fails, everything on all {{count}} disks is lost: every file on the array, not only the files on that disk. Keep a backup of anything you store on it. |
 | `raidCreate.sum.create.ext4` | Create an EXT4 file system on the array. (and `.xfs`, `.btrfs` with their articles) |
 | `raidCreate.sum.saveAndMount` | Then save the array and mount the file system, which applies the changes for them. Nothing else is pending. |
 | `raidCreate.sum.save` | Then save the array's settings, which applies the changes for it. Nothing else is pending. |
@@ -915,6 +945,7 @@ sentences; the keys below are new.
 | `raidCreate.alsoBody` | Also pending from elsewhere: {{list}}. Saving applies them too. |
 | `raidCreate.doneTitle` | The RAID array is ready. |
 | `raidCreate.doneBody` | RAID <device></device> ({{level}}, about {{size}}) is synchronising its disks. Its files can be used now; it is fully protected when this ends. |
+| `raidCreate.doneBodyStripe` | RAID <device></device> (Stripe (RAID0), about {{size}}) is ready. It has no protection: if one disk fails, everything on it is lost. |
 | `raidCreate.openArray` | Open RAID {{device}} |
 | `raidCreate.addStorage` | Add storage on this array |
 
@@ -1478,7 +1509,9 @@ changes:
 
 - **The option's words** use 0.1's level word and the state: "RAID /dev/md0 (Mirror (RAID1), 2 disks),
   7.9 GiB", and, while it synchronises, a second line "Still synchronising its disks; that goes on while
-  the file system is created." (`addStorage.raidSyncing`). Today the raw `level` is passed; it becomes
+  the file system is created." (`addStorage.raidSyncing`). A Stripe array's option carries, in the body
+  colour, "No protection: if one disk fails, everything on it is lost." (`addStorage.raidNoProtection`),
+  and Flow A's summary repeats it on its RAID line. Today the raw `level` is passed; it becomes
   `raidLevel.*`.
 - **Which arrays are offered** is stricter: an array whose state is Critical or Unknown (degraded, not
   running, failed) is not offered; it is listed under "Cannot be used" with "RAID {{array}} is missing a
@@ -1545,7 +1578,7 @@ interface sends less, which the contract rules allow.
 | `MdMgmt.getDetail` | an array's page, the add flow, the remove dialog | open, poll, checks | foreground; background in the poll | **New, cleared.** Read-only. Plain string. Captures scrubbed: the host name (on the "Name" line and anywhere else), the array's UUID, dates kept as documentation values |
 | `MdMgmt.getSlaves` | an array's page, the add flow | open | foreground | **New, cleared.** Read-only. `{devicefile, size, vendor, serialnumber, description}[]`; `serialnumber` scrubbed; `size` a byte string **[verify]**; `description` server English, not shown |
 | `MdMgmt.getCandidates` | create and add flows | open, step 1, after an erase | foreground | **New, cleared.** Read-only; may read the disks (in the description) |
-| `MdMgmt.create` | create flow | after the typed confirmation and the re-check | foreground, short | **New, cleared.** `x-omv-destructive: data`, `x-omv-dirty: [mdadm, initramfs]`. Request: `devices` at least 2 device files (the contract's device-file pattern); `level` an enum `mirror`, `raid5`, `raid6`, `raid10` (stricter: no `stripe`); `name` required and limited to the empty string (section 17, D3). Reply: the plugin's change record `{name, devicefile, level, numdevices, devices}` |
+| `MdMgmt.create` | create flow | after the typed confirmation and the re-check | foreground, short | **New, cleared.** `x-omv-destructive: data`, `x-omv-dirty: [mdadm, initramfs]`. Request: `devices` at least 2 device files (the contract's device-file pattern); `level` an enum `mirror`, `raid5`, `raid6`, `raid10`, `stripe` (the plugin's five levels, owner's decision on P3); the description says a `stripe` has no protection; `name` required and limited to the empty string (section 17, D3). Reply: the plugin's change record `{name, devicefile, level, numdevices, devices}` |
 | `MdMgmt.add` | add flow (replace, spare; the failed disk's removal is `remove`) | after the typed confirmation | foreground, short | **New, cleared.** `x-omv-destructive: data` (the added disk is overwritten), `x-omv-dirty: [mdadm, initramfs]`. `devicefile` an array (`^/dev/md[0-9]{1,3}$`); `devices` exactly one device file (stricter: one at a time). The description says a disk added to a degraded array starts a rebuild, and to a healthy one becomes a spare |
 | `MdMgmt.grow` | add flow (bigger) | after the typed confirmation | foreground, short | **New, cleared.** `x-omv-destructive: data`; irreversible, said in the description; `x-omv-dirty: [mdadm, initramfs]`. `devices` one or more. The description says the reshape runs for hours after the call returns, and that the server adds the disks before it reshapes |
 | `MdMgmt.remove` | the remove dialogs, add flow step 5 | after the confirmation | foreground, short | **New, cleared.** `x-omv-destructive: service` (it reduces protection; nothing is erased), `x-omv-dirty: [mdadm, initramfs]`. `devices` exactly one. The description says the disk keeps the array's marks |
@@ -1623,13 +1656,13 @@ Built from scrubbed captures where the VM can show them (section 15); hand-writt
 
 | Method | Scenarios |
 | --- | --- |
-| `MdMgmt.enumerateDevices` | the existing ones (none, two mirrors, the 404), plus: a mirror synchronising (captured), resync pending (captured if the VM shows it), a mirror with a spare (captured), degraded (captured, after failing a member on the VM), degraded and rebuilding onto the spare (captured), a RAID5 of three (captured), a RAID5 not running (captured, after detaching two disks), reshaping (hand-written), being checked (captured), `state` `false` (hand-written), an unrecognised state (hand-written), an array on partitions made elsewhere, twenty arrays, a name 200 characters long, one right-to-left, one that looks like markup; an error |
+| `MdMgmt.enumerateDevices` | the existing ones (none, two mirrors, the 404), plus: a mirror synchronising (captured), resync pending (captured if the VM shows it), a mirror with a spare (captured), degraded (captured, after failing a member on the VM), degraded and rebuilding onto the spare (captured), a RAID5 of three (captured), a RAID5 not running (captured, after detaching two disks), a RAID6 and a RAID10 of four (captured), a stripe of two (captured), reshaping (captured, growing a RAID5 to four disks), being checked (captured), `state` `false` (hand-written), an unrecognised state (hand-written), an array on partitions made elsewhere, twenty arrays, a name 200 characters long, one right-to-left, one that looks like markup; an error |
 | `MdMgmt.getDetail` | one report per scenario above (captured where possible); a report whose table cannot be parsed; an error |
 | `MdMgmt.getSlaves` | a mirror's two disks (captured); a member that is gone (skipped by the server); mixed sizes (hand-written) |
 | `MdMgmt.getCandidates` | the VM's empty scratch disks (captured); none; one too small (hand-written); an error |
-| `MdMgmt.create` | a mirror of two (captured); RAID5 of three (captured); failed (hand-written from mdadm's words, **[verify]**) |
+| `MdMgmt.create` | a mirror of two (captured); RAID5 of three (captured); RAID6 and RAID10 of four (captured); a stripe of two (captured); failed (hand-written from mdadm's words, **[verify]**) |
 | `MdMgmt.add` | a spare added (captured); a replacement into a degraded array (captured); too small (hand-written) |
-| `MdMgmt.grow` | reshaping started (hand-written unless the VM has a fourth disk); added but not reshaped (hand-written) |
+| `MdMgmt.grow` | reshaping started (captured, growing a RAID5 from three disks to four on the VM); added but not reshaped (hand-written) |
 | `MdMgmt.remove` | a failed member (captured); a spare (captured); a working member (captured); an error |
 | `MdMgmt.delete` | deleted (captured); refused by the system because the array is still mounted (captured on the VM by the capture tool, with the file system put back afterwards) **[verify]** the server's words; an error |
 | `MdMgmt.setSyncAction` | check started, stopped (captured); an error for a level without copies (captured) |
@@ -1663,8 +1696,8 @@ Built from scrubbed captures where the VM can show them (section 15); hand-writt
 
 ### 15.2 On the test VM
 
-The VM (OMV 8.6.1) has three empty 8 GiB scratch disks, `sdb`, `sdc` and `sdd`; `sda` is the system disk
-with a data file system on `sda1`. A snapshot is taken first, and everything is put back afterwards:
+The VM (OMV 8.6.1) has four empty 8 GiB scratch disks, `sdb`, `sdc`, `sdd` and `sde` (the fourth
+agreed by the owner for this slice); `sda` is the system disk with a data file system on `sda1`. A snapshot is taken first, and everything is put back afterwards:
 nothing left pending, every scratch disk wiped (`wipefs -n` empty).
 
 1. **Without the plugin** (as now): the 404 state of 0.10 on every RAID address, no menu item, the Disks
@@ -1690,17 +1723,26 @@ nothing left pending, every scratch disk wiped (`wipefs -n` empty).
 9. **Unmount and remove the file system** (the file-systems slice), then **delete the mirror**: the
    disks show "No file system found"; what applying, or restarting without applying, does to the array
    names (0.6, 0.8).
-10. **RAID5 of three**: create it without a file system; detach one disk (the source's test method) for a
-    degraded array, rescan, and replace it through section 4 with the same disk, now under "Erase and
-    reuse"; detach two for a RAID5 that is not running, capture it, try reconnecting and restarting,
-    then delete it (7.1).
-11. `pnpm test:browser:vm` with the scratch disks named in the environment, over HTTP and HTTPS, with
+10. **RAID5 of three** (`sdb`, `sdc`, `sdd`): create it without a file system; detach one disk (the
+    source's test method) for a degraded array, rescan, and replace it through section 4 with the same
+    disk, now under "Erase and reuse".
+11. **Make the RAID5 bigger with `sde`** (section 4, "Make the array bigger"): capture the reshape's
+    state and progress, the `grow` reply, and the size before and after; then put a file system on it
+    through Flow A before the reshape, and grow that file system after it ends (2.6's link to the
+    file-systems slice's grow). Then unmount and remove that file system, detach two disks for a RAID5
+    that is not running, capture it, try reconnecting and restarting, then delete it (7.1).
+12. **RAID6 and RAID10 of four** (`sdb` to `sde`), each without a file system: capture their states,
+    reports and usable sizes against 0.4; on the RAID6, fail two members one after the other and capture
+    "It can lose one more disk" and "It cannot lose another disk"; delete each.
+13. **Stripe of two** (`sdb`, `sdc`): the "Not protected" group, the option never preselected (including
+    after "Change choices" and with only two disks ticked), its hint and the summary's repeated warning
+    before the typed field; capture its state (no synchronisation); check that Add a disk, Take out and
+    Check are refused with their reasons; delete it.
+14. `pnpm test:browser:vm` with the scratch disks named in the environment, over HTTP and HTTPS, with
     the destructive journeys of 3, 4, 5 and 7 on the scratch disks only.
 
-Not possible with three scratch disks: Double parity (RAID6), Mirror and stripe (RAID10), and making a
-RAID5 bigger (it needs a fourth disk). They are checked on the mock, by their hand-written scenarios,
-unless the owner adds a fourth scratch disk to the VM, in which case 10 also grows the RAID5 3 → 4 and
-captures a reshape.
+With four scratch disks every level the create flow offers, and making a RAID5 bigger, are seen on the
+VM; only a RAID6 grown from four disks to five stays on the mock.
 
 ### 15.3 Only on real hardware
 
@@ -1758,6 +1800,8 @@ stated, not claimed, until observed on a real NAS (the owner's own server stays 
 | The plugin is removed while a RAID page is open | 404 on the next read | The page switches to 0.10's state |
 | A NAS without the plugin, with an array made by hand | No RAID check possible | Nothing is claimed about RAID; the disks slice's untraceable-storage sentence covers it (0.10) |
 | A degraded array chosen in Flow A | A file system would be put on an array short of a disk | Not offered (9.3) |
+| **Stripe chosen by mistake**, or by habit from the classic interface's level list | Losing one disk loses every file on all of them | Never preselected, even when it is the only level the ticked count allows or after "Change choices"; grouped apart under "Not protected", last; the loss in words in its hint and again just before the typed field; the result and Flow A's option say it too (3.2, 3.3, 9.3) |
+| Two disks ticked, Mirror changed to Stripe, then back to Change choices | The choice could silently revert to Stripe or to the default | "Change choices" keeps exactly what the reader chose last; nothing moves to or from Stripe by itself (3.2) |
 | An array's own name of 200 characters, right-to-left, or `<img onerror>` text | Layout, UI-2 | Text nodes, `dir="auto"`, wrapping; markup shown literally; the name is shown only on the array's page; the host part is dropped (0.1) |
 | The host name in a shared screenshot of the technical details | It is personal data on screen | It is shown on screen only, in the report the reader asked for; never in an address, title, toast, log or storage; captures scrub it (0.1, 2.7, 12) |
 | `/storage/md/md0/../../rpc.php`, `/storage/md/md9999` or `/storage/md/MD0` | URL as an identifier | Pattern rejects it; not-found state; no call (0.6) |
@@ -1812,6 +1856,7 @@ unless the owner says otherwise.
 | D21 | The dashboard reads the arrays **once per visit** and shows rows only for **Critical and Unknown** *(recommended)* | The attention list is for what needs the reader; a resync needs nothing |
 | D22 | "Add storage on this array" passes the array **in memory**, never in the address *(recommended)* | As the disk handover to Flow A (the file-systems slice's D17) |
 | D23 | Catalogue: `raid.name` replaces `filesystems.raidOn` (English unchanged); `raidLevel.*` shared with Flow A's RAID option; `modules.mdadm` "RAID" *(recommended)* | Several pages now use them |
+| D24 | **Stripe (RAID0) is offered** in its own "Not protected" group, last, never preselected, its loss stated in its hint and again before the typed confirmation *(the owner's decision on P3, 2026-11-21)* | The owner wants every level the plugin can make; five exclusive choices need grouping (uiux-design skill, 3), and grouping by protection puts the one level that protects nothing apart, where it cannot be taken for a safe default |
 
 ---
 
@@ -1834,11 +1879,15 @@ question.
    dialog. The disks and the array (UUID, state, roles) are re-checked as the first step, before
    anything is erased. Accepted and stated: two sessions creating on the same disks within a few
    seconds; the second overwrites the first's new, empty array. (3.3, 3.4, 4.4, 4.5, 16.1)
-3. **P3, the levels offered and the default.** Mirror (RAID1, the default, Q3's reasoning), Parity
-   (RAID5), Double parity (RAID6) and Mirror and stripe (RAID10), each saying in words what it can lose
-   and about how much space it gives, with the plugin's minimum disk counts (2, 3, 4, 4). **Stripe is
-   not offered**: it protects nothing, and Combine disks (BTRFS) already offers Stripe and Join for one
-   large unprotected space; the page points there. No array name is asked for. (3.2, D3)
+3. **P3, the levels offered and the default. Decided by the owner (changed from the first draft):**
+   all five of the plugin's levels are offered. Under "Protected": Mirror (RAID1, the default, Q3's
+   reasoning), Parity (RAID5), Double parity (RAID6) and Mirror and stripe (RAID10). Under "Not
+   protected", last: **Stripe (RAID0)**, never preselected, with its warning in words in its hint ("No
+   protection. If one disk fails, everything on all of them is lost.") and repeated in the summary,
+   just before the typed confirmation. Each level says what it can lose and about how much space it
+   gives, with the plugin's minimum disk counts (2, 3, 4, 4, 2). Combine disks (BTRFS) is pointed to as
+   an alternative for one large unprotected space. A Stripe array still cannot take more disks, be
+   checked, or have a disk taken out (sections 4 to 6). No array name is asked for. (3.2, 3.3, D3, D24)
 4. **P4, creating continues into storage.** By default the create flow also creates a file system on
    the array and mounts it (Flow A's steps, one typed confirmation, one checkpoint that saves the array
    and mounts the file system), then hands sharing to the classic interface as Flow A does. "Use it for
@@ -1872,7 +1921,7 @@ question.
 10. **P10, no way round a refusal.** A refused create, add, removal, check or deletion offers no classic
     link that does the same without the check; the links offered lead to removing the blocker (the file
     system's page). The list's footer links to the classic RAID page for what this slice does not offer
-    (repair, stripes, names). (0.9)
+    (repair after a check). (0.9)
 11. **P11, after a removal or a deletion.** The array's change acts at once on the disks; writing the
     arrays down for the next start (`mdadm`, and the start-up image) is left pending in the band, with a
     sentence saying what applying does. The create and add flows apply their own changes at their
