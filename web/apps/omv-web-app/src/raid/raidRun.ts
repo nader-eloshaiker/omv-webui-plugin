@@ -575,6 +575,10 @@ async function fsCandidates(ctx: Context): Promise<FilesystemCandidate[]> {
   return done.result as FilesystemCandidate[];
 }
 
+/** How many times, and how far apart, the new array is looked for among the candidates. */
+const FS_CANDIDATE_TRIES = 5;
+const FS_CANDIDATE_WAIT_MS = 2_000;
+
 async function stepFsCandidate(ctx: Context): Promise<boolean> {
   const run = current(ctx);
   const array = run?.array;
@@ -583,8 +587,24 @@ async function stepFsCandidate(ctx: Context): Promise<boolean> {
   }
   mark(ctx, "fsCandidate", { status: "running" });
   try {
-    const list = await fsCandidates(ctx);
-    if (!list.some((c) => c.devicefile === array.devicefile)) {
+    // A new array is a candidate within moments of its creation, once the system has seen the new
+    // device (observed: at once on one run, a moment later on another). This is a read, so it is
+    // looked at again a few times before the step stops; no change is ever repeated (UI-14).
+    let listed = false;
+    for (
+      let attempt = 0;
+      attempt < FS_CANDIDATE_TRIES && !listed;
+      attempt += 1
+    ) {
+      if (attempt > 0) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, FS_CANDIDATE_WAIT_MS),
+        );
+      }
+      const list = await fsCandidates(ctx);
+      listed = list.some((c) => c.devicefile === array.devicefile);
+    }
+    if (!listed) {
       fail(ctx, "fsCandidate", { kind: "fsCandidate", error: undefined });
       return false;
     }
