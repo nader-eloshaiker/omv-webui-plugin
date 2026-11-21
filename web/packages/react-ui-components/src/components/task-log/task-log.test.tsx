@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { stripControl } from "./strip-control";
@@ -184,5 +184,135 @@ describe("TaskLog notices", () => {
     const lines = container.querySelectorAll("[data-slot=task-log-line]");
     expect(lines).toHaveLength(3);
     expect(lines[1]).toHaveClass("min-h-[1lh]");
+  });
+});
+
+describe("TaskLog with a limit", () => {
+  const limit = {
+    lines: 3,
+    partialLabel: (shown: number, total: number) =>
+      `Showing the first ${String(shown)} of ${String(total)} lines.`,
+    showAllLabel: "Show all lines",
+  };
+  const five = ["one", "two", "three", "four", "five"];
+
+  it("changes nothing when the output is within the limit", () => {
+    const { container } = render(
+      <TaskLog {...labels} lines={five.slice(0, 3)} limit={limit} />,
+    );
+    expect(
+      container.querySelectorAll("[data-slot=task-log-line]"),
+    ).toHaveLength(3);
+    expect(screen.queryByText(/Showing the first/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Show all lines" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: labels.label }),
+    ).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("shows only the first lines of a longer output, and says so", () => {
+    render(<TaskLog {...labels} lines={five} limit={limit} />);
+    const region = screen.getByRole("region", { name: labels.label });
+    const shown = within(region).getAllByText(/^(one|two|three|four|five)$/);
+    expect(shown.map((line) => line.textContent)).toEqual([
+      "one",
+      "two",
+      "three",
+    ]);
+    expect(region).toHaveAccessibleDescription(
+      "Showing the first 3 of 5 lines.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Show all lines" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the rest in the same frame and moves focus to it", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <TaskLog {...labels} lines={five} limit={limit} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Show all lines" }));
+    const region = screen.getByRole("region", { name: labels.label });
+    expect(region.querySelectorAll("[data-slot=task-log-line]")).toHaveLength(
+      5,
+    );
+    expect(region).toHaveTextContent("five");
+    expect(
+      container.querySelectorAll("[data-slot=task-log-line]"),
+    ).toHaveLength(5);
+    expect(screen.queryByText(/Showing the first/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Show all lines" }),
+    ).not.toBeInTheDocument();
+    expect(region).toHaveFocus();
+    expect(region).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("copies every line while showing only the first", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    render(<TaskLog {...labels} lines={five} limit={limit} />);
+    await user.click(screen.getByRole("button", { name: "Copy output" }));
+    expect(writeText).toHaveBeenCalledWith("one\ntwo\nthree\nfour\nfive");
+  });
+
+  it("shows every line before selecting them where there is no clipboard", async () => {
+    const user = userEvent.setup();
+    const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+    });
+    const selectAllChildren = vi.fn();
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      selectAllChildren,
+    } as unknown as Selection);
+    render(<TaskLog {...labels} lines={five} limit={limit} />);
+    await user.click(screen.getByRole("button", { name: "Copy output" }));
+    const region = screen.getByRole("region", { name: labels.label });
+    expect(region.querySelectorAll("[data-slot=task-log-line]")).toHaveLength(
+      5,
+    );
+    expect(selectAllChildren).toHaveBeenCalledWith(region);
+    expect(region).toHaveFocus();
+    expect(
+      await screen.findByText("Output selected. Press Ctrl+C to copy."),
+    ).toBeInTheDocument();
+    if (original) {
+      Object.defineProperty(navigator, "clipboard", original);
+    }
+  });
+
+  it("downloads every line while showing only the first", async () => {
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:test";
+        }),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    const user = userEvent.setup();
+    render(
+      <TaskLog
+        {...labels}
+        lines={five}
+        limit={limit}
+        download={{ label: "Download output", fileName: "check.log" }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Download output" }));
+    expect(blobs).toHaveLength(1);
+    expect(await blobs[0]?.text()).toBe("one\ntwo\nthree\nfour\nfive");
+    vi.unstubAllGlobals();
   });
 });

@@ -27,12 +27,18 @@ const FINISHES = {
   smartStatusUnknownFinished: "smartGetListBg",
   wipeFinished: "diskMgmtWipe",
   selfTestFinished: "smartExecuteScheduledTest",
+  fsCandidatesFinished: "fileSystemMgmtGetCandidatesBg",
+  fsCandidatesNoneFinished: "fileSystemMgmtGetCandidatesBg",
+  createExt4Finished: "fileSystemMgmtCreate",
+  createBtrfsRaid1Finished: "fileSystemMgmtCreateBtrfs",
 } as const satisfies Partial<Record<PollExample, string>>;
 
 /** Tasks with no result whose output is a log to show: the commands' text, never parsed. */
 const LOG_OUTPUT: ReadonlySet<keyof typeof FINISHES> = new Set([
   "wipeFinished",
   "selfTestFinished",
+  "createExt4Finished",
+  "createBtrfsRaid1Finished",
 ]);
 
 // The table, widened to its declared shape so every entry may carry a task.

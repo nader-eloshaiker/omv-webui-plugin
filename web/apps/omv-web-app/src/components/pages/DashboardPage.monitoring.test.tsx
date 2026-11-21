@@ -52,10 +52,8 @@ describe("the Storage card", () => {
       within(storage).queryByText(/file systems:/),
     ).not.toBeInTheDocument();
     expect(
-      within(storage).getByRole("link", {
-        name: "File systems in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/storage/filesystems");
+      within(storage).getByRole("link", { name: "Open File systems" }),
+    ).toHaveAttribute("href", "/ui/storage/filesystems");
   });
 
   it("rolls up a file system past its level and lists it in the attention list", async () => {
@@ -68,9 +66,9 @@ describe("the Storage card", () => {
     expect(rows[0]).toHaveTextContent(
       "Warning/dev/sda1 is 91% full, at or above its warning level of 85%.",
     );
-    expect(within(rows[0]!).getByRole("link")).toHaveAttribute(
-      "href",
-      "/#/storage/filesystems",
+    // The file system's page when the list has it, else the File systems list (file-systems 9).
+    expect(within(rows[0]!).getByRole("link").getAttribute("href")).toMatch(
+      /^\/ui\/storage\/filesystems(\/|$)/,
     );
   });
 

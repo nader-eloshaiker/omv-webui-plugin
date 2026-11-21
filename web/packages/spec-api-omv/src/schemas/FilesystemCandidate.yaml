@@ -1,0 +1,16 @@
+type: object
+description: >-
+  A device the server offers for a new file system: not read-only, holding no file system, and
+  with no partition table, file system, RAID or other signature left on it.
+required: [devicefile, size, description]
+properties:
+  devicefile:
+    type: string
+    description: The device under /dev, such as "/dev/sdb".
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  description:
+    type: string
+    description: Server display text in English, such as "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]".

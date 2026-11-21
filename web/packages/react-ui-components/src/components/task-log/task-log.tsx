@@ -2,11 +2,21 @@
 import { Copy, Download } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
-import { IconButton } from "../button/button";
+import { Button, IconButton } from "../button/button";
 import { stripControl } from "./strip-control";
 
 /** A line of output, optionally with its timestamp (shown in the quieter terminal ink). */
 export type TaskLogLine = string | { time: string; text: string };
+
+/** Show only the first lines of a long output until the reader asks for the rest. */
+export interface TaskLogLimit {
+  /** How many lines to show at first. */
+  lines: number;
+  /** The line under the frame while it is cut short: "Showing the first 200 of 1,204 lines." */
+  partialLabel: (shown: number, total: number) => React.ReactNode;
+  /** The control that shows the rest in the same frame: "Show all lines". */
+  showAllLabel: string;
+}
 
 interface TaskLogProps {
   lines: readonly TaskLogLine[];
@@ -48,6 +58,12 @@ interface TaskLogProps {
   follow?: boolean;
   /** The region is busy: a refresh of the output is under way. The output stays readable. */
   busy?: boolean;
+  /**
+   * Show only the first `limit.lines` lines of a longer output, with the `partialLabel` line and a
+   * `showAllLabel` button under the frame that show the rest. Copy and download always take every
+   * line. Output within the limit is shown whole, as without it.
+   */
+  limit?: TaskLogLimit;
   className?: string;
 }
 
@@ -65,6 +81,14 @@ function plainText(lines: readonly TaskLogLine[]) {
         : `${stripControl(line.time)}  ${stripControl(line.text)}`,
     )
     .join("\n");
+}
+
+/** Focuses the output and selects all of it, for the reader to copy with the keyboard. */
+function selectOutput(element: HTMLElement | null) {
+  if (element) {
+    element.focus();
+    window.getSelection()?.selectAllChildren(element);
+  }
 }
 
 /**
@@ -86,13 +110,27 @@ function TaskLog({
   size = "default",
   follow = true,
   busy,
+  limit,
   className,
 }: TaskLogProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const followRef = React.useRef(true);
   const [notice, setNotice] = React.useState("");
+  const [showAll, setShowAll] = React.useState(false);
+  const partial = limit !== undefined && !showAll && lines.length > limit.lines;
+  const shownLines = partial ? lines.slice(0, limit.lines) : lines;
   // Output lines have no identity but their position, and the list only grows at the end.
-  const rows = lines.map((line, position) => ({ key: position, line }));
+  const rows = shownLines.map((line, position) => ({ key: position, line }));
+  const partialId = `${React.useId()}-partial`;
+
+  // Set when the no-clipboard copy has to show the whole output before it can select it.
+  const selectWhenShownRef = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (showAll && selectWhenShownRef.current) {
+      selectWhenShownRef.current = false;
+      selectOutput(scrollRef.current);
+    }
+  }, [showAll]);
 
   React.useLayoutEffect(() => {
     const element = scrollRef.current;
@@ -127,11 +165,13 @@ function TaskLog({
       setNotice(copiedLabel);
     } catch {
       // No clipboard (a page served over plain HTTP has none): select the output so the reader can
-      // copy it with the keyboard, and say so.
-      const element = scrollRef.current;
-      if (element) {
-        element.focus();
-        window.getSelection()?.selectAllChildren(element);
+      // copy it with the keyboard, and say so. A cut-short output is shown whole first, so the
+      // selection, like the copy, takes every line.
+      if (partial) {
+        selectWhenShownRef.current = true;
+        setShowAll(true);
+      } else {
+        selectOutput(scrollRef.current);
       }
       setNotice(selectedLabel);
     }
@@ -168,7 +208,9 @@ function TaskLog({
           aria-label={label}
           tabIndex={0}
           aria-busy={busy || undefined}
+          aria-describedby={partial ? partialId : undefined}
           data-wrap={wrap}
+          data-partial={partial || undefined}
           data-size={size}
           onScroll={onScroll}
           className={cn(
@@ -179,7 +221,7 @@ function TaskLog({
             size === "page" ? "max-h-[70vh]" : "max-h-80",
           )}
         >
-          {rows.length === 0 && emptyLabel ? (
+          {lines.length === 0 && emptyLabel ? (
             <p data-slot="task-log-empty" className="text-terminal-muted">
               {emptyLabel}
             </p>
@@ -202,7 +244,7 @@ function TaskLog({
             label={copyLabel}
             icon={<Copy />}
             size="icon-sm"
-            disabled={rows.length === 0}
+            disabled={lines.length === 0}
             onClick={() => {
               void copy();
             }}
@@ -213,13 +255,35 @@ function TaskLog({
               label={download.label}
               icon={<Download />}
               size="icon-sm"
-              disabled={rows.length === 0}
+              disabled={lines.length === 0}
               onClick={save}
               className="bg-terminal text-terminal-muted hover:bg-terminal hover:text-terminal-foreground focus-visible:outline-terminal-foreground data-disabled:bg-terminal data-disabled:opacity-50"
             />
           ) : null}
         </div>
       </div>
+      {partial ? (
+        <div
+          data-slot="task-log-partial"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1"
+        >
+          <p id={partialId} className="text-sm text-muted-foreground">
+            {limit.partialLabel(limit.lines, lines.length)}
+          </p>
+          <Button
+            type="button"
+            variant="neutral"
+            size="sm"
+            onClick={() => {
+              setShowAll(true);
+              // The button goes away with the cut; the reader's focus moves to the output it opened.
+              scrollRef.current?.focus({ preventScroll: true });
+            }}
+          >
+            {limit.showAllLabel}
+          </Button>
+        </div>
+      ) : null}
       {download ? (
         <a
           ref={downloadRef}

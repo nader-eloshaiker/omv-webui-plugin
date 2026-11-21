@@ -1,0 +1,7 @@
+description: >-
+  The mount entry, or the boolean false when OMV has none for the file system (FsTab.getByFsName
+  returns false rather than failing).
+oneOf:
+  - $ref: ./MountEntry.yaml
+  - type: boolean
+    enum: [false]

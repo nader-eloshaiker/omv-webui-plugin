@@ -1,0 +1,8 @@
+summary: "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::getCandidates): no disk is free for a new file system. The result is an empty list as JSON text."
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusrnc318qtho8iaWoTdOT
+  pos: 2
+  output: "[]"
+  pendingOutput: false
+  running: false

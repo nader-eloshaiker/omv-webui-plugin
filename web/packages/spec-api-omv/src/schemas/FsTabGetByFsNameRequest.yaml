@@ -1,0 +1,12 @@
+type: object
+description: >-
+  The file system whose mount entry to find (rpc.fstab.getbyfsname): its UUID or one of its device
+  files. The server also looks under the file system's other device files and its UUID, so any of
+  them finds the entry.
+required: [fsname]
+properties:
+  fsname:
+    anyOf:
+      - $ref: ./FsUuid.yaml
+      - $ref: ./DeviceFile.yaml
+additionalProperties: false

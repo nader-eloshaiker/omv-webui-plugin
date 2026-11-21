@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fsTabSet
+  tags:
+    - FsTab
+  summary: Save a file system's warning level and tags
+  description: >-
+    Store a mount entry; the interface uses it only to change the warning level and the tags of an
+    existing one. On a change it marks only the monit module dirty (observed on the test VM): the
+    warning level takes effect when that is applied, and nothing is unmounted or mounted. Returns
+    the stored entry.
+  x-omv-rpc:
+    service: FsTab
+    method: set
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.fstab.set
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FsTabSetRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MountEntry.yaml
+          examples:
+            saved:
+              $ref: ../../examples/fsTabSet.saved.yaml

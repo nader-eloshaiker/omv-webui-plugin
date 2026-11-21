@@ -1,0 +1,23 @@
+type: object
+description: >-
+  The disks to erase and combine into one BTRFS file system, and how (rpc.filesystemmgmt.createbtrfs).
+  Stricter than OMV: two or more devices (one disk uses FileSystemMgmt.create), no `dup` profile,
+  and no `label`, which the interface does not set.
+required: [profile, devicefiles]
+properties:
+  profile:
+    type: string
+    enum: [single, raid0, raid1, raid10]
+    description: >-
+      How data and metadata are kept: raid1 a mirror (each block on two disks), raid10 mirrored
+      stripes (four disks or more), raid0 striped with no copy, single joined with no copy. With
+      single the server keeps metadata twice (dup); otherwise metadata uses the same profile. The
+      server does not check the number of disks a profile needs.
+  devicefiles:
+    type: string
+    description: >-
+      The devices, as OMV takes them: one string of device files separated by commas with no
+      spaces ("/dev/sdb,/dev/sdc"), not a list. Each part is in OMV's `devicefile` format. The
+      server does not refuse a device named twice.
+    pattern: "^/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+(,/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+)+$"
+additionalProperties: false

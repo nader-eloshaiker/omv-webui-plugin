@@ -61,6 +61,8 @@ properties:
       was configured by device file.
   label:
     type: string
+    nullable: true
+    description: The file system's label; empty when it has none, null for one being created (observed).
   type:
     type: string
     description: The file system type, such as "ext4" or "btrfs".

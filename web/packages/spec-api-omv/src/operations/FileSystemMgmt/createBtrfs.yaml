@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtCreateBtrfs
+  tags:
+    - FileSystemMgmt
+  summary: Combine disks into one BTRFS file system
+  description: >-
+    Erase several disks and create one BTRFS file system across them, as a background task: the
+    server removes each disk's partition table and signatures and runs mkfs.btrfs on the whole
+    disks (no partitions). Everything on every disk is lost and cannot be recovered. The server
+    erases any devices it is given and checks neither that they are candidates nor that there are
+    enough for the profile; the interface refuses both itself (journal, 2026-11-21). Unlike
+    FileSystemMgmt.create it leaves no "being created" row in FileSystemMgmt.getList while it runs.
+    The task's output is mkfs.btrfs's text; it has no result. The new file system is neither
+    mounted nor set up. Changes no configuration.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: createBtrfs
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.createbtrfs
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtCreateBtrfsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/fileSystemMgmtCreateBtrfs.started.yaml

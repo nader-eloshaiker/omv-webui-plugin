@@ -1,0 +1,13 @@
+type: object
+description: >-
+  The device to erase and the file system to create on it (rpc.filesystemmgmt.create). OMV accepts
+  any type it has a backend for; the contract accepts only the four the interface offers (JFS and
+  the rest are left to the classic interface).
+required: [devicefile, type]
+properties:
+  devicefile:
+    $ref: ./DeviceFile.yaml
+  type:
+    type: string
+    enum: [ext4, xfs, btrfs, f2fs]
+additionalProperties: false

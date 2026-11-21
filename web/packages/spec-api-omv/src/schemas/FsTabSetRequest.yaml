@@ -1,0 +1,43 @@
+type: object
+description: >-
+  A mount entry to store (rpc.fstab.set), as FsTab.getByFsName returned it with the warning level
+  or tags changed. The interface sends every other field back unchanged: the server does not check
+  `fsname`, `dir`, `type` or `opts` against the file system, and a change to them is not applied to
+  the system until the mount module is applied for another reason. With OMV's placeholder UUID it
+  would create a second entry; the interface creates entries only through
+  FileSystemMgmt.setMountPoint. `hidden` is not in OMV's request model, but the stored object has
+  it and the classic form sends it back.
+required: [uuid, fsname, dir, type, opts, freq, passno]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  fsname:
+    anyOf:
+      - $ref: ./FsUuid.yaml
+      - $ref: ./DeviceFile.yaml
+      - $ref: ./DirPath.yaml
+  dir:
+    type: string
+    minLength: 1
+  type:
+    type: string
+    minLength: 1
+  opts:
+    type: string
+  freq:
+    type: integer
+  passno:
+    type: integer
+    enum: [0, 1, 2]
+  hidden:
+    type: boolean
+  usagewarnthreshold:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: Percent used at which OMV warns; 0 means it never warns.
+  comment:
+    type: string
+    maxLength: 200
+    description: The tags, as one string with "," between them.
+additionalProperties: false

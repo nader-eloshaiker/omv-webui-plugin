@@ -4,6 +4,7 @@ export * from "./omv/disk-mgmt/disk-mgmt.ts";
 export * from "./omv/email-notification/email-notification.ts";
 export * from "./omv/exec/exec.ts";
 export * from "./omv/file-system-mgmt/file-system-mgmt.ts";
+export * from "./omv/fs-tab/fs-tab.ts";
 export * from "./omv/index.ts";
 export * from "./omv/log-file/log-file.ts";
 export * from "./omv/md-mgmt/md-mgmt.ts";

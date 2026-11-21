@@ -4,6 +4,19 @@ export {
   type DiskMgmtSetHdParmFormValues,
 } from "./diskMgmtSetHdParm.ts";
 export {
+  FileSystemMgmtGrowRequestSchema,
+  type FileSystemMgmtGrowFormValues,
+} from "./fileSystemMgmtGrow.ts";
+export {
+  FileSystemMgmtSetMountPointRequestSchema,
+  type FileSystemMgmtSetMountPointFormValues,
+} from "./fileSystemMgmtSetMountPoint.ts";
+export {
+  FileSystemMgmtUmountByDirRequestSchema,
+  type FileSystemMgmtUmountByDirFormValues,
+} from "./fileSystemMgmtUmountByDir.ts";
+export { FsTabSetRequestSchema, type FsTabSetFormValues } from "./fsTabSet.ts";
+export {
   SessionLoginRequestSchema,
   type SessionLoginFormValues,
 } from "./sessionLogin.ts";

@@ -2,7 +2,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { NumberField } from "../number-field/number-field";
-import { RadioGroupField, RadioOption } from "./radio-group-field";
+import { Identifier } from "../text/identifier";
+import {
+  RadioGroupField,
+  RadioOption,
+  RadioOptionGroup,
+} from "./radio-group-field";
 
 const meta = {
   title: "Components/RadioGroupField",
@@ -157,4 +162,156 @@ export const MarkupLookingText: Story = {
       </>
     ),
   },
+};
+
+interface DiskOption {
+  device: string;
+  model: string;
+  size: string;
+  serial: string;
+  body?: string;
+}
+
+const EMPTY_DISKS: DiskOption[] = [
+  {
+    device: "/dev/sdb",
+    model: "WDC WD40EFRX-68N32N0",
+    size: "3.64 TiB",
+    serial: "WD-EXAMPLE0000001",
+  },
+  {
+    device: "/dev/sdc",
+    model: "ST4000VN008-2DR166",
+    size: "3.64 TiB",
+    serial: "ZEXAMPLE02",
+  },
+];
+
+const REUSE_DISKS: DiskOption[] = [
+  {
+    device: "/dev/sdd",
+    model: "Samsung SSD 870 EVO 2TB",
+    size: "1.82 TiB",
+    serial: "S6EXAMPLE000003",
+    body: "Has 2 partitions with an old ext4 file system labelled backup-2019. They will be erased.",
+  },
+];
+
+const IN_USE_DISKS: DiskOption[] = [
+  {
+    device: "/dev/disk/by-id/usb-WD_Elements_25A3_575845584D504C4530303034-0:0",
+    model:
+      "WD Elements 25A3 external USB enclosure with a very long model name",
+    size: "931 GiB",
+    serial: "WXEXAMPLE0000000000000000004",
+    body: "Holds the file system media, shared as media and photos, and used by 2 scheduled backups. Choosing it erases all of that.",
+  },
+];
+
+/** A disk as one option: the device and size, the model and serial on their own line, a body line. */
+function DiskRadio({ disk }: { disk: DiskOption }) {
+  return (
+    <RadioOption
+      value={disk.device}
+      label={
+        <>
+          <span className="block">
+            <Identifier>{disk.device}</Identifier>, {disk.size}
+          </span>
+          <span className="block text-sm text-muted-foreground">
+            {disk.model}, serial number <Identifier>{disk.serial}</Identifier>
+          </span>
+        </>
+      }
+      hint={disk.body}
+    />
+  );
+}
+
+function DiskChoice({
+  sections,
+}: {
+  sections: { label: string; description?: string; disks: DiskOption[] }[];
+}) {
+  const [value, setValue] = React.useState("");
+  return (
+    <RadioGroupField
+      legend="Disk"
+      hint="The file system takes the whole disk."
+      value={value}
+      onValueChange={setValue}
+    >
+      {sections
+        // A section with no disks is left out, not drawn empty.
+        .filter((section) => section.disks.length > 0)
+        .map((section) => (
+          <RadioOptionGroup
+            key={section.label}
+            label={section.label}
+            description={section.description}
+          >
+            {section.disks.map((disk) => (
+              <DiskRadio key={disk.device} disk={disk} />
+            ))}
+          </RadioOptionGroup>
+        ))}
+    </RadioGroupField>
+  );
+}
+
+const EMPTY_SECTION = {
+  label: "Empty disks",
+  description: "Nothing is stored on these disks.",
+  disks: EMPTY_DISKS,
+};
+const REUSE_SECTION = {
+  label: "Erase and reuse",
+  description: "These disks hold old data that will be erased.",
+  disks: REUSE_DISKS,
+};
+const IN_USE_SECTION = {
+  label: "In use",
+  description: "Choosing one of these erases what it holds now.",
+  disks: IN_USE_DISKS,
+};
+const SECTIONS = [EMPTY_SECTION, REUSE_SECTION, IN_USE_SECTION];
+
+/** One headed section: still one radio group. */
+export const OneSection: Story = {
+  render: () => <DiskChoice sections={[EMPTY_SECTION]} />,
+};
+
+/**
+ * Three sections in one radio group: one tab stop, and the arrow keys run on from the last option of
+ * a section to the first of the next.
+ */
+export const ThreeSections: Story = {
+  render: () => <DiskChoice sections={SECTIONS} />,
+};
+
+/** "Erase and reuse" has no disks, so the caller leaves the section out. */
+export const EmptySectionLeftOut: Story = {
+  render: () => (
+    <DiskChoice
+      sections={[
+        EMPTY_SECTION,
+        { ...REUSE_SECTION, disks: [] },
+        IN_USE_SECTION,
+      ]}
+    />
+  ),
+};
+
+/** Long device paths, models and serial numbers wrap inside 320px; nothing scrolls sideways. */
+export const SectionsAt320px: Story = {
+  decorators: [(Story) => <div className="w-80">{Story()}</div>],
+  render: () => <DiskChoice sections={SECTIONS} />,
+};
+
+/**
+ * At 200% zoom the headings, the serial line and the body line wrap under the label; view this story
+ * with the browser zoomed to check.
+ */
+export const SectionsZoom200Note: Story = {
+  render: () => <DiskChoice sections={SECTIONS} />,
 };

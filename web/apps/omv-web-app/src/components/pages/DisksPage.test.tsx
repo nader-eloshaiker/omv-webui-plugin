@@ -89,14 +89,14 @@ describe("Storage > Disks", () => {
   });
 
   it("shows the test VM's disks with what each holds, the RAID plugin not installed being no failure", async () => {
-    await disks();
+    await disks({ scenario: "disksNoRaidPlugin" });
     const all = await rows();
     expect(all).toHaveLength(6);
     expect(await rowOf("/dev/nvme0n1")).toHaveTextContent(
       "System disk (openmediavault runs from it)",
     );
     expect(await rowOf("/dev/sda")).toHaveTextContent(
-      "File system ext4 on /dev/sda1, in use",
+      "File system EXT4 on /dev/sda1, in use",
     );
     expect(await rowOf("/dev/sdb")).toHaveTextContent("No file system found");
     expect(await rowOf("/dev/sdb")).toHaveTextContent("8.0 GiB");
@@ -136,7 +136,7 @@ describe("Storage > Disks", () => {
       "System disk (openmediavault runs from it)",
     );
     expect(system).toHaveTextContent(
-      "File system ext4 on /dev/nvme0n1p2, in use",
+      "File system EXT4 on /dev/nvme0n1p2, in use",
     );
     expect(await rowOf("/dev/sdc")).toHaveTextContent("7.3 TiB");
   });

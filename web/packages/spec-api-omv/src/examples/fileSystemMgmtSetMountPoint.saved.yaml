@@ -1,0 +1,13 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the new EXT4 file system on the scratch disk, with a warning level of 85% and two tags."
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000005"
+  fsname: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+  dir: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003
+  type: ext4
+  opts: "defaults,nofail,user_xattr,usrquota,grpquota,acl"
+  freq: 0
+  passno: 2
+  hidden: false
+  usagewarnthreshold: 85
+  comment: "Media,Photos"

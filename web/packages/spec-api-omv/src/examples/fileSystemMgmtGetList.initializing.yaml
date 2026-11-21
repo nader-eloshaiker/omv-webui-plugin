@@ -1,4 +1,4 @@
-summary: "Written by hand from the configured capture and the source (OMV 8.6.1, FileSystemMgmt::getList): beside the available file system, one still being created (status 2), not yet configured, so it has no mount point, threshold or mount options. The test VM was creating none."
+summary: "Written by hand from the configured capture and the source (OMV 8.6.1, FileSystemMgmt::getList): beside the available file system, one still being created (status 2), not yet configured, so it has no mount point, threshold or mount options. Its label is null, as in the creating capture: the server takes it from the marker file, which never holds one."
 x-omv-status: 200
 value:
   total: 2
@@ -53,7 +53,7 @@ value:
       parentdevicefile: /dev/sdb
       devlinks: []
       uuid: ""
-      label: backup
+      label: null
       type: ext4
       blocks: "-1"
       mounted: false

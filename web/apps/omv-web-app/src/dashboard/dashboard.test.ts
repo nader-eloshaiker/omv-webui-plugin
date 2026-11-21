@@ -152,6 +152,16 @@ describe("fileSystemName", () => {
       text: DATA_FS.devicefile,
     });
   });
+
+  it("names one being created, whose label is null, by its device", () => {
+    const creating =
+      CONTRACT_EXAMPLES.fileSystemMgmtGetList.creating.value.data[0];
+    expect(creating.label).toBeNull();
+    expect(fileSystemName(creating)).toEqual({
+      kind: "device",
+      text: "/dev/sdd1",
+    });
+  });
 });
 
 describe("fileSystemState", () => {

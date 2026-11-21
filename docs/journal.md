@@ -353,15 +353,15 @@ Defaults taken without a question, open to change:
 
 ## 2026-11-20 — Phase 3: the pages, on the mock and the test VM
 
-Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with the owner's decisions above. The owner was away for the last part and asked for the recommended answer to each open point. Those answers are marked *(recommended)*.
+Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with the owner's decisions above. The owner was away for the last part and asked for the recommended answer to each open point. Those answers are marked _(recommended)_.
 
 - **Pages.** The Dashboard with the set-up checklist and the attention list, Services > SSH, Storage > Shared Folders (read-only) and "Your account". Their navigation items open the new routes. The shell now mounts the library's toaster; nothing had mounted it before.
 - **Shared-folder table state** (page, sort, page size, search) is kept in a small in-memory store, cleared when the session ends. It is not in Zustand, which holds preferences only, and not in the address (UI-4). The search is sent 300 ms after typing stops. When the list shrinks, the table moves back to the last page that exists.
 - **The checklist's HTTPS item** gives the port as text ("The secure connection uses port …"). This puts the bare string `https://` in the bundle, so the build check's allow list names it, with the reason: it is display text that nothing fetches or opens.
-- **The main chunk** was 503 kB. Route splitting was already on; the cause was the component library's barrel, which did not declare itself free of side effects. `"sideEffects": false` in `react-ui-components/package.json` *(recommended)* brings the entry chunk to 281 kB, with each page in its own chunk.
-- **`SecretField`** now passes a caller's `ref` on to its input *(recommended)*. Before, the ref was dropped silently.
-- **`ShareMgmt.getList`'s `status`** is open to any string *(recommended)*. A code a later OMV adds is shown as Unknown instead of failing the development build's check.
-- **`Network.getGeneralSettings`** stays in the contract, though no page uses it yet *(recommended)*. The checklist reads the host name from `System.getInformation`, and the Phase 5 network page will use this operation.
+- **The main chunk** was 503 kB. Route splitting was already on; the cause was the component library's barrel, which did not declare itself free of side effects. `"sideEffects": false` in `react-ui-components/package.json` _(recommended)_ brings the entry chunk to 281 kB, with each page in its own chunk.
+- **`SecretField`** now passes a caller's `ref` on to its input _(recommended)_. Before, the ref was dropped silently.
+- **`ShareMgmt.getList`'s `status`** is open to any string _(recommended)_. A code a later OMV adds is shown as Unknown instead of failing the development build's check.
+- **`Network.getGeneralSettings`** stays in the contract, though no page uses it yet _(recommended)_. The checklist reads the host name from `System.getInformation`, and the Phase 5 network page will use this operation.
 - **Fixed in the browser test's mock:** `SSH.get` was keyed under the wrong operation id, a Phase 2 slip that no test had reached.
 
 **On the test VM** (OMV 8.6.1), the final build was deployed behind the committed snippet (`nginx -t` passed), and `pnpm test:browser:vm` ran:
@@ -375,17 +375,19 @@ Built on `phase-3` to [design/phase-3-pages.md](design/phase-3-pages.md), with t
 - **Afterwards** nothing was pending, compression was off as before, and the welcome flag was still set.
 
 **A browser pass on the mock** covered every Phase 3 page, both themes, 1280 and 375 px, the keyboard and the console. It found one defect, now fixed. With no shared folders, at 375 px, the page scrolled sideways and the empty state's text was clipped. There were two causes:
+
 - **The page scroll:** the visually hidden "(opens in a new tab)" text escaped the table's scrolling frame, because the frame was not positioned.
 - **The clipped text:** a state row was centred on the table's full width instead of the frame's visible part.
 
 The table frame is now `relative` and a container, and a state row is as wide as the frame's visible part and stays there while the table scrolls. Left as they are:
+
 - the read-only account shows its "locked" sentence under both Details and Change password, as the design's table says;
 - a mismatched password pair clears both fields.
 
 ## 2026-11-21 — Owner decisions after Phase 3
 
 - **Phase 5's domain order** in [07](07-implementation-plan.md#phase-5--coverage-by-domain) is confirmed as written.
-- **Phase 4 (packaging) comes first.** The owner said "go ahead" without naming a phase. Phase 4 was taken first *(recommended)*: it is small and fully specified, it turns the hand deployment into the package, and it unblocks the real OMV upgrade check (A11), now that a newer OMV is published.
+- **Phase 4 (packaging) comes first.** The owner said "go ahead" without naming a phase. Phase 4 was taken first _(recommended)_: it is small and fully specified, it turns the hand deployment into the package, and it unblocks the real OMV upgrade check (A11), now that a newer OMV is published.
 
 ## 2026-11-21 — Phase 4: the package, on the test VM
 
@@ -395,9 +397,9 @@ Built on `phase-4`, following the owner's spindown plugin for `debian/` and the 
   - **Build:** `make build` then `make docker-deb` (or `make deb` on a Debian 13 host). It builds in a Debian 13 container from the bundle already built, and runs lintian, with no errors or warnings. CI does the same on every pull request and keeps the `.deb` as a build artifact.
   - **Contents:** the bundle in `/var/www/openmediavault-webui/` (root-owned, directories 0755, files 0644), the snippet, the menu entry, and in `/usr/share/doc` the README, the machine-readable copyright (the bundled libraries and fonts by licence, the OFL text in full) and `openapi.json.gz`.
   - **Lintian overrides:** files under `/var/www`, the `Plugin-Section` field, and fonts in a non-font package, each with its reason.
-- **The snippet is a symbolic link** in `/etc/nginx/openmediavault-webgui.d/`, pointing at `/usr/share/openmediavault-webui/nginx/` *(recommended)*. As a regular file under `/etc` it would be a conffile. It would then survive `remove`. And once `postinst` had deleted a broken one, dpkg would never install it again. [06](06-plugin-packaging.md) is updated.
+- **The snippet is a symbolic link** in `/etc/nginx/openmediavault-webgui.d/`, pointing at `/usr/share/openmediavault-webui/nginx/` _(recommended)_. As a regular file under `/etc` it would be a conffile. It would then survive `remove`. And once `postinst` had deleted a broken one, dpkg would never install it again. [06](06-plugin-packaging.md) is updated.
 - **`postinst`** puts the link back if an earlier failed configure removed it. It then tests the whole nginx configuration and reloads only if the test passes. On failure it removes the link, reloads if what is left passes, says whether the snippet or something else is at fault, and leaves the package unconfigured.
-- **Version** `8.0.0~dev1`: the tilde sorts below `8.0.0`, so the first release replaces it. **Synopsis** "new web interface for openmediavault", without the leading article, as lintian asks *(recommended)*.
+- **Version** `8.0.0~dev1`: the tilde sorts below `8.0.0`, so the first release replaces it. **Synopsis** "new web interface for openmediavault", without the leading article, as lintian asks _(recommended)_.
 
 **On the test VM** (OMV 8.6.1, nginx 1.26.3), with a snapshot taken first, `tools/package-test` (`make package-test`) passed every check, over HTTP and HTTPS:
 
@@ -426,7 +428,7 @@ Built on `phase-4`, following the owner's spindown plugin for `debian/` and the 
   - **Left in the classic interface:** clearing a log (destructive) and the diagnostic report (a download).
 - **Charts** are a small SVG line chart of our own in the component library, drawn with SVG attributes: no new runtime dependency. They show only what the open page has sampled (A7).
 - **Disk health is read only when asked** (owner). `Smart.getListBg` runs `smartctl` on every disk without `--nocheck`, so it can wake sleeping disks; the stock dashboard does it every 60 s. The Disk health card has a "Check disk health" button that says so. The result is kept for the session, feeds the attention list, and nothing reads S.M.A.R.T. on its own.
-- **The log viewer reads a log once and pages it in the browser** *(recommended)*. `LogFile.getList` re-reads and re-parses the whole log or journal on every call, whatever page is asked for (read from source), so paging, sorting and searching on the server would repeat that work on each keystroke.
+- **The log viewer reads a log once and pages it in the browser** _(recommended)_. `LogFile.getList` re-reads and re-parses the whole log or journal on every call, whatever page is asked for (read from source), so paging, sorting and searching on the server would repeat that work on each keystroke.
 - **The Wi-Fi pre-shared key** (`wpapsk`) is part of `Network.enumerateDevicesList`'s reply for a configured Wi-Fi interface. The contract omits it (`x-omv-omit`, UI-6), as it does the mail password.
 - **Missing file systems** (owner): `FileSystemMgmt.getList` is not on the private review list and may enter the contract. Only it reports a file system that is configured but missing; `enumerateMountedFilesystems` drops it silently. The dashboard reads it once per visit and on "Try again", never polled, and uses it only for missing rows. Whether it can wake a sleeping disk cannot be observed on the VM, whose virtual disks do not sleep; reading it once per visit keeps that risk to the visit itself.
 - **The monitoring design's judgement calls** D1–D16 ([design/phase-5-monitoring.md](design/phase-5-monitoring.md), section 12) are taken as recommended. D3 is now settled by the owner's answer above.
@@ -496,9 +498,10 @@ Built on `phase-5-disks` to [design/phase-5-disks.md](design/phase-5-disks.md), 
 - **The contract** gains 24 operations:
   - the 21 disk and S.M.A.R.T. operations;
   - `MdMgmt.enumerateDevices`, whose "plugin not installed" reply is HTTP 404 "RPC service 'MdMgmt' not found." (observed);
-  - `FileSystemMgmt.enumerateFilesystems`, *(recommended)* because only it shows swap (P5), and `FileSystemMgmt.getList` calls it itself.
+  - `FileSystemMgmt.enumerateFilesystems`, _(recommended)_ because only it shows swap (P5), and `FileSystemMgmt.getList` calls it itself.
 
   The S.M.A.R.T. schedule fields use anchored patterns, accepting exactly the values the stock form offers. The capture scrubber now also replaces smartctl's spaced WWN form and FAT volume IDs. Both were caught in drafts that were never committed.
+
 - **The pages:**
   - Storage > Disks and a disk's page, with health details read only on request and power settings;
   - Disk health (Overview, Self-tests, Settings), the Flow D set-up page and scheduled self-tests;
@@ -516,3 +519,37 @@ Built on `phase-5-disks` to [design/phase-5-disks.md](design/phase-5-disks.md), 
   - shred's progress lines on a secure wipe;
   - the start lines of a self-test on a disk that supports one (the VM's NVMe disk does not);
   - whether a rescan or a settings save wakes a disk.
+
+## 2026-11-21 — The file-systems design, agreed by the owner
+
+The owner agreed the destructive and irreversible points of [design/phase-5-filesystems.md](design/phase-5-filesystems.md), section 18:
+
+- **P1:** what creating a file system erases, and what it refuses. The stricter of OMV's candidate list and the disks slice's disk-use model wins.
+- **P2:** the typed confirmation, with a re-check of the disk (serial included) as the first step. Accepted as a stated risk: two sessions creating on the same disk within about a second, and multi-disk BTRFS, which writes no "being created" marker.
+- **P3:** multi-disk BTRFS defaults to RAID1 (RAID10, RAID0 and single also offered).
+- **P4:** Flow A stops at the mount and hands sharing to the classic interface, saying what to choose there (770, per Q4). The in-app sharing stage (section 8) waits for the shares domain. Its methods are not yet cleared against the private review list: `ShareMgmt.set`/`setPrivileges`/`delete`, `UserMgmt.getUserList`/`getGroupList`, and `SMB.getSettings`/`setSettings`/`getShareList`/`setShare`. That question is asked then.
+- **P5:** grow is irreversible, confirmed without typing.
+- **P6:** unmount cuts access, is refused while anything uses the file system, and is confirmed without typing.
+- **P7:** unmount and remove refuse to start while other changes are pending, then apply what they leave pending without asking again.
+- **P8:** removing a missing file system has a plain confirmation.
+- **P9:** a refusal offers no classic-interface link around it.
+
+The design's other judgement calls are taken as recommended, as for the earlier slices.
+
+## 2026-11-21 — Phase 5, file systems: built, on the mock and the test VM
+
+Built on `phase-5-filesystems` to [design/phase-5-filesystems.md](design/phase-5-filesystems.md), as agreed by the owner (P1 to P9).
+
+- **The pages:**
+  - Storage > File systems, with the system drive first, "Found on the disks, not mounted" and its mount dialog, and the unfinished-work notices;
+  - a file system's page, addressed by its UUID: summary, what uses it, warning level and tags (re-read before each save), technical details on request (first 500 lines), grow, unmount, and removing a missing one;
+  - Flow A at `/storage/filesystems/add` and Combine disks (BTRFS) at `/storage/filesystems/add-multi`, with the pre-flight, the typed confirmation, the step list, every failure plan and the sharing handover.
+- **The library** gains headed sections for radio groups, a sectioned checkbox list, `typedMatches` for several names, a compact capacity meter and a partial task log.
+- **Flow A's run, grow and unmount live in memory for the session**, not in their page: leaving a page does not stop them, and coming back shows them.
+- **The mock remembers** what Flow A does (create, set up, apply, undo, unmount, wipe), written by hand from the captured shapes, so the whole journey can be walked on `pnpm dev:mock` and in the browser test. Each task gets its own handle, as the server's do.
+- **R7's forced re-apply after "Undo the mount"** deploys all four of the mount's modules (`collectd`, `fstab`, `monit`, `quota`), because which of them the failed apply had deployed is not known.
+- **On the test VM** (OMV 8.6.1), the build was installed as a package. `pnpm test:browser:vm` with `OMV_WEBUI_VM_SCRATCH_DISK=sdd` gave 22 passed and 3 skipped, over both HTTP and HTTPS. Each run included the real journey on the scratch disk `sdd`: create EXT4, mount through the checkpoint, unmount, wipe again. Afterwards `wipefs -n /dev/sdd` was empty and nothing was pending.
+- **Still to check:**
+  - the classic shared-folder picker's text for a tagged file system;
+  - grow on several BTRFS disks;
+  - a busy unmount and a missing file system on the VM.

@@ -1,0 +1,5 @@
+summary: "Written by hand from the source (OMV 8.6.1, FileSystemMgmt::createBtrfs): mkfs.btrfs fails because one of the disks is still in use. The disks were already erased before mkfs.btrfs ran. Not seen on the test VM."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; mkfs.btrfs --force --data 'raid1' --metadata 'raid1' /dev/sdb /dev/sdc 2>&1' with exit code '1': btrfs-progs v6.14\nSee https://btrfs.readthedocs.io for more information.\n\nERROR: unable to open /dev/sdc: Device or resource busy"

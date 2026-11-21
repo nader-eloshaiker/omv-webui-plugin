@@ -160,7 +160,13 @@ describe("diskUse", () => {
       {
         kind: "fsInUse",
         used: false,
-        fs: { label: "data", type: "ext4", device: "/dev/sdb1", size: 4e12 },
+        fs: {
+          label: "data",
+          type: "ext4",
+          device: "/dev/sdb1",
+          size: 4e12,
+          address: expect.any(String) as unknown,
+        },
       },
     ]);
     const used = diskUse(disk(), {

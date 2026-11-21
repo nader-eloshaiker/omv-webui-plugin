@@ -611,6 +611,120 @@ export const OPERATIONS = {
       $ref: "MdArrayList",
     },
   },
+  "/rpc/FileSystemMgmt/getMountCandidates": {
+    operationId: "fileSystemMgmtGetMountCandidates",
+    service: "FileSystemMgmt",
+    method: "getMountCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "DetectedFilesystemList",
+    },
+  },
+  "/rpc/FileSystemMgmt/getCandidatesBg": {
+    operationId: "fileSystemMgmtGetCandidatesBg",
+    service: "FileSystemMgmt",
+    method: "getCandidatesBg",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {
+      result: "FilesystemCandidateList",
+    },
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/FileSystemMgmt/create": {
+    operationId: "fileSystemMgmtCreate",
+    service: "FileSystemMgmt",
+    method: "create",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/FileSystemMgmt/createBtrfs": {
+    operationId: "fileSystemMgmtCreateBtrfs",
+    service: "FileSystemMgmt",
+    method: "createBtrfs",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/FileSystemMgmt/setMountPoint": {
+    operationId: "fileSystemMgmtSetMountPoint",
+    service: "FileSystemMgmt",
+    method: "setMountPoint",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "MountEntry",
+    },
+  },
+  "/rpc/FileSystemMgmt/grow": {
+    operationId: "fileSystemMgmtGrow",
+    service: "FileSystemMgmt",
+    method: "grow",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/FileSystemMgmt/umountByDir": {
+    operationId: "fileSystemMgmtUmountByDir",
+    service: "FileSystemMgmt",
+    method: "umountByDir",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: null,
+  },
+  "/rpc/FileSystemMgmt/getDetails": {
+    operationId: "fileSystemMgmtGetDetails",
+    service: "FileSystemMgmt",
+    method: "getDetails",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "FilesystemDetails",
+    },
+  },
+  "/rpc/FsTab/getByFsName": {
+    operationId: "fsTabGetByFsName",
+    service: "FsTab",
+    method: "getByFsName",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "FsTabEntryOrNone",
+    },
+  },
+  "/rpc/FsTab/set": {
+    operationId: "fsTabSet",
+    service: "FsTab",
+    method: "set",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "MountEntry",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -691,6 +805,7 @@ export const SCHEMAS: SchemaTable = {
       },
       label: {
         type: "string",
+        nullable: true,
       },
       type: {
         type: "string",
@@ -1114,6 +1229,42 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  FilesystemCandidate: {
+    type: "object",
+    required: ["devicefile", "size", "description"],
+    properties: {
+      devicefile: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      description: {
+        type: "string",
+      },
+    },
+  },
+  FilesystemCandidateList: {
+    type: "array",
+    items: {
+      $ref: "FilesystemCandidate",
+    },
+  },
+  FilesystemDetails: {
+    type: "string",
+  },
+  FsTabEntryOrNone: {
+    oneOf: [
+      {
+        $ref: "MountEntry",
+      },
+      {
+        type: "boolean",
+        enum: [false],
+      },
+    ],
+  },
   HdParm: {
     type: "object",
     required: [
@@ -1270,6 +1421,56 @@ export const SCHEMAS: SchemaTable = {
     type: "array",
     items: {
       $ref: "MdArray",
+    },
+  },
+  MountEntry: {
+    type: "object",
+    required: [
+      "uuid",
+      "fsname",
+      "dir",
+      "type",
+      "opts",
+      "freq",
+      "passno",
+      "hidden",
+      "usagewarnthreshold",
+      "comment",
+    ],
+    properties: {
+      uuid: {
+        $ref: "ObjectUuid",
+      },
+      fsname: {
+        type: "string",
+      },
+      dir: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      opts: {
+        type: "string",
+      },
+      freq: {
+        type: "integer",
+      },
+      passno: {
+        type: "integer",
+        enum: [0, 1, 2],
+      },
+      hidden: {
+        type: "boolean",
+      },
+      usagewarnthreshold: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+      },
+      comment: {
+        type: "string",
+      },
     },
   },
   MountedFilesystem: {
@@ -1593,6 +1794,11 @@ export const SCHEMAS: SchemaTable = {
         type: "string",
       },
     },
+  },
+  ObjectUuid: {
+    type: "string",
+    pattern:
+      "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
   },
   Role: {
     type: "string",

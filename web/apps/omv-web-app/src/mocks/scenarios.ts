@@ -22,6 +22,20 @@ import {
   wipeOutput,
   type DiskMockState,
 } from "./diskScenarios.ts";
+import {
+  FS_SCENARIO_LABELS,
+  FS_SCENARIOS,
+  fsAnswers,
+  fsApplied,
+  fsReverted,
+  fsStartsPending,
+  fsTaskOutput,
+  fsWipeAsked,
+  fsWiped,
+  newFsMockState,
+  usesFsMock,
+  type FsMockState,
+} from "./fsScenarios.ts";
 
 export const SCENARIOS = [
   "admin",
@@ -69,6 +83,7 @@ export const SCENARIOS = [
   "serviceOutputs",
   "serviceOutputsEmpty",
   ...DISK_SCENARIOS,
+  ...FS_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -122,6 +137,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   serviceOutputs: "Service details: SMB, NFS and SSH in use",
   serviceOutputsEmpty: "Service details: on, nothing to show",
   ...DISK_SCENARIO_LABELS,
+  ...FS_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -588,8 +604,12 @@ export interface MockSession {
   welcomeDismissed: boolean;
   /** Disk-health or power settings are saved and not applied: the smartmontools module is dirty. */
   smartDirty: boolean;
+  /** The modules a file-system action left dirty, with OMV's descriptions of them. */
+  fsDirty: Readonly<Record<string, string>>;
   /** What the disk scenarios remember between calls (diskScenarios.ts). */
   disk: DiskMockState;
+  /** What the file-system answers remember (fsScenarios.ts); made with the scenario's answers. */
+  fs?: FsMockState;
 }
 
 export const newMockSession = (
@@ -602,6 +622,7 @@ export const newMockSession = (
   dirty,
   welcomeDismissed: false,
   smartDirty: false,
+  fsDirty: {},
   disk: newDiskMockState(),
 });
 
@@ -619,6 +640,26 @@ const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
 const WIPE_HANDLE = CONTRACT_EXAMPLES.diskMgmtWipe.started.value;
 const SELF_TEST_HANDLE =
   CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value;
+// The file-system tasks' handles, and the last poll each answers with.
+const FS_TASK_OUTPUTS: Readonly<Record<string, ExampleName<"execGetOutput">>> =
+  {
+    [CONTRACT_EXAMPLES.fileSystemMgmtGetCandidatesBg.started.value]:
+      "fsCandidatesFinished",
+    [CONTRACT_EXAMPLES.fileSystemMgmtCreate.started.value]:
+      "createExt4Finished",
+    [CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value]:
+      "createBtrfsRaid1Finished",
+  };
+
+// OMV's descriptions of the modules the file-system actions mark dirty (engined/module/*.inc,
+// OMV 8.6.1): monit has collectd's words, and quota has none.
+const FS_MODULES = {
+  fstab: "Management of the file systems to be mounted.",
+  collectd: "Statistics collection and monitoring daemon.",
+  monit: "Statistics collection and monitoring daemon.",
+  quota: "",
+} as const;
+type FsModule = keyof typeof FS_MODULES;
 
 /** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
 const CORE_LOGS = new Set([
@@ -733,7 +774,62 @@ export function scenarioAnswers(
       }
       return answer;
     };
+  /** A file-system action saved: OMV marks these modules dirty (observed on the test VM). */
+  const fsPending =
+    <T extends string>(reply: T, modules: readonly FsModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        session.fsDirty = {
+          ...session.fsDirty,
+          ...Object.fromEntries(modules.map((m) => [m, FS_MODULES[m]])),
+        };
+      }
+      return answer;
+    };
   const disk = diskAnswers(name, session.disk);
+  const fsMock = usesFsMock(name);
+  if (fsMock && session.fs === undefined) {
+    session.fs = newFsMockState(name);
+    const starts = fsStartsPending(name);
+    if (starts.length > 0) {
+      session.fsDirty = {
+        ...session.fsDirty,
+        ...Object.fromEntries(
+          starts.map((m) => [m, FS_MODULES[m as FsModule]]),
+        ),
+      };
+    }
+  }
+  const fsState = session.fs;
+  const fsReplies =
+    fsMock && fsState !== undefined
+      ? fsAnswers(name, fsState, {
+          dirty: (modules) => {
+            session.fsDirty = {
+              ...session.fsDirty,
+              ...Object.fromEntries(
+                modules.map((m) => [
+                  m,
+                  m in FS_MODULES ? FS_MODULES[m as FsModule] : "NFS server.",
+                ]),
+              ),
+            };
+          },
+        })
+      : {};
+  /** The remembering file-system answer of an operation, behind the sign-in guard. */
+  const fsRead =
+    (operationId: string) =>
+    ({ params }: { params: unknown }): FixedAnswer => {
+      const reply = fsReplies[operationId];
+      if (reply === undefined) {
+        throw new Error(`No file-system answer for ${operationId}`);
+      }
+      // Only a signed-in call reaches the state.
+      const gate = guarded<never>({ status: 200 })();
+      return gate.status === 200 ? reply({ params }) : gate;
+    };
   /** A disk operation's answer for this scenario, behind the sign-in guard. */
   const diskRead =
     <Op extends OperationId>(operationId: Op) =>
@@ -750,7 +846,11 @@ export function scenarioAnswers(
     };
   /** The modules System.getInformation reports, with smartmontools once a disk setting is saved. */
   const withSmartDirty = (answer: FixedAnswer): FixedAnswer => {
-    if (!session.smartDirty || answer.status !== 200) {
+    const fs = session.fsDirty;
+    if (
+      (!session.smartDirty && Object.keys(fs).length === 0) ||
+      answer.status !== 200
+    ) {
       return answer;
     }
     const value = answer.value as { dirtyModules?: unknown };
@@ -764,8 +864,13 @@ export function scenarioAnswers(
         ...value,
         dirtyModules: {
           ...before,
-          smartmontools: "S.M.A.R.T. monitoring of disks.",
-          ...(name === "smartAlsoPending" ? { nfs: "NFS server." } : {}),
+          ...fs,
+          ...(session.smartDirty && {
+            smartmontools: "S.M.A.R.T. monitoring of disks.",
+          }),
+          ...(session.smartDirty && name === "smartAlsoPending"
+            ? { nfs: "NFS server." }
+            : {}),
         },
       },
     };
@@ -838,7 +943,13 @@ export function scenarioAnswers(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
     configIsDirty: () =>
-      guarded(session.dirty || session.smartDirty ? "dirty" : "clean")(),
+      guarded(
+        session.dirty ||
+          session.smartDirty ||
+          Object.keys(session.fsDirty).length > 0
+          ? "dirty"
+          : "clean",
+      )(),
     configApplyChangesBg: guarded("applied"),
     configRevertChangesBg: guarded("reverted"),
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
@@ -853,21 +964,48 @@ export function scenarioAnswers(
         )();
       }
       if (filename === WIPE_HANDLE) {
-        return guarded<ExampleName<"execGetOutput">>(
+        const answer = guarded<ExampleName<"execGetOutput">>(
           wipeOutput(name, session.disk),
         )();
+        if (answer === "wipeFinished" && fsState !== undefined) {
+          fsWiped(fsState);
+        }
+        return answer;
+      }
+      if (fsState !== undefined) {
+        const gate = guarded<never>({ status: 200 })();
+        const fsTask =
+          gate.status === 200
+            ? fsTaskOutput(name, fsState, filename)
+            : undefined;
+        if (fsTask !== undefined) {
+          return fsTask;
+        }
       }
       if (filename === SELF_TEST_HANDLE) {
         return guarded<ExampleName<"execGetOutput">>(selfTestOutput(name))();
+      }
+      const fsTask =
+        typeof filename === "string" ? FS_TASK_OUTPUTS[filename] : undefined;
+      if (fsTask !== undefined) {
+        return guarded(fsTask)();
       }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
       }
+      if (apply && fsState !== undefined && session.signedIn) {
+        if (!fsApplied(name, fsState)) {
+          return guarded("applyFailed")();
+        }
+      } else if (!apply && fsState !== undefined && session.signedIn) {
+        fsReverted(fsState);
+      }
       const answer = guarded(apply ? "appliedFinished" : "revertedFinished")();
       if (typeof answer === "string") {
         session.dirty = false;
         session.smartDirty = false;
+        session.fsDirty = {};
       }
       return answer;
     },
@@ -938,7 +1076,14 @@ export function scenarioAnswers(
     diskMgmtGetList: diskRead("diskMgmtGetList"),
     diskMgmtGetHdParm: guarded("configured"),
     diskMgmtSetHdParm: smartPending("created"),
-    diskMgmtWipe: diskRead("diskMgmtWipe"),
+    diskMgmtWipe: ({ params }) => {
+      if (fsState !== undefined && session.signedIn) {
+        const devicefile = (params as { devicefile?: unknown } | null)
+          ?.devicefile;
+        fsWipeAsked(fsState, typeof devicefile === "string" ? devicefile : "");
+      }
+      return diskRead("diskMgmtWipe")({ params });
+    },
     diskMgmtRescan: guarded("null"),
     smartEnumerateDevices: guarded("vmDisks"),
     smartEnumerateMonitoredDevices: guarded("none"),
@@ -955,10 +1100,40 @@ export function scenarioAnswers(
     smartSetScheduledTest: smartPending("created"),
     smartDeleteScheduledTest: smartPending("deleted"),
     smartExecuteScheduledTest: guarded("started"),
-    // The RAID plugin is not installed on the test VM: OMV answers the unknown service with 404.
+    // The RAID plugin's arrays: none in the default story; the test VM's 404 (the plugin is not
+    // installed) in disksNoRaidPlugin; a mirror on the NAS stories and fsRaid.
     mdMgmtEnumerateDevices: diskRead("mdMgmtEnumerateDevices"),
     fileSystemMgmtEnumerateFilesystems: diskRead(
       "fileSystemMgmtEnumerateFilesystems",
+    ),
+    // File systems (Phase 5): the test VM as captured, with EXT4 just created on its scratch disk
+    // and not yet set up. Each task answers its captured last poll through execGetOutput.
+    fileSystemMgmtGetMountCandidates: guarded("created"),
+    fileSystemMgmtGetCandidatesBg: guarded("started"),
+    fileSystemMgmtCreate: guarded("started"),
+    fileSystemMgmtCreateBtrfs: guarded("started"),
+    fileSystemMgmtSetMountPoint: fsPending("saved", [
+      "fstab",
+      "collectd",
+      "monit",
+      "quota",
+    ]),
+    fileSystemMgmtGrow: guarded("null"),
+    // The server applies fstab itself and leaves the other three pending.
+    fileSystemMgmtUmountByDir: fsPending("null", [
+      "collectd",
+      "monit",
+      "quota",
+    ]),
+    fileSystemMgmtGetDetails: guarded("ext4"),
+    fsTabGetByFsName: guarded("entry"),
+    fsTabSet: fsPending("saved", ["monit"]),
+    // The remembering file-system answers (fsScenarios.ts), in the default story and the fs scenarios.
+    ...Object.fromEntries(
+      Object.keys(fsReplies).map((operationId) => [
+        operationId,
+        fsRead(operationId),
+      ]),
     ),
     smbGetStats: () =>
       guarded(

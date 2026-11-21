@@ -167,8 +167,9 @@ export function buildExamples(contract) {
         }
       }
     }
-    // An operation that returns null has no example; its mock answer is null.
-    if (!Object.keys(named).length && !jsonOf(op.responses["200"])) {
+    // An operation that returns null has no 200 example; its mock answer is null, beside any
+    // error examples it has.
+    if (!jsonOf(op.responses["200"])) {
       named.null = { status: 200, value: null };
       defaults[op.operationId] = "null";
     }

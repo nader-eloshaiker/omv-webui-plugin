@@ -32,6 +32,7 @@ tags:
   - name: LogFile
   - name: DiskMgmt
   - name: MdMgmt
+  - name: FsTab
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -143,6 +144,26 @@ paths:
     $ref: ./operations/Smart/executeScheduledTest.yaml
   /rpc/MdMgmt/enumerateDevices:
     $ref: ./operations/MdMgmt/enumerateDevices.yaml
+  /rpc/FileSystemMgmt/getMountCandidates:
+    $ref: ./operations/FileSystemMgmt/getMountCandidates.yaml
+  /rpc/FileSystemMgmt/getCandidatesBg:
+    $ref: ./operations/FileSystemMgmt/getCandidatesBg.yaml
+  /rpc/FileSystemMgmt/create:
+    $ref: ./operations/FileSystemMgmt/create.yaml
+  /rpc/FileSystemMgmt/createBtrfs:
+    $ref: ./operations/FileSystemMgmt/createBtrfs.yaml
+  /rpc/FileSystemMgmt/setMountPoint:
+    $ref: ./operations/FileSystemMgmt/setMountPoint.yaml
+  /rpc/FileSystemMgmt/grow:
+    $ref: ./operations/FileSystemMgmt/grow.yaml
+  /rpc/FileSystemMgmt/umountByDir:
+    $ref: ./operations/FileSystemMgmt/umountByDir.yaml
+  /rpc/FileSystemMgmt/getDetails:
+    $ref: ./operations/FileSystemMgmt/getDetails.yaml
+  /rpc/FsTab/getByFsName:
+    $ref: ./operations/FsTab/getByFsName.yaml
+  /rpc/FsTab/set:
+    $ref: ./operations/FsTab/set.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.
@@ -150,3 +171,5 @@ components:
       $ref: ./schemas/ConfigAppliedModules.yaml
     SmartDeviceList:
       $ref: ./schemas/SmartDeviceList.yaml
+    FilesystemCandidateList:
+      $ref: ./schemas/FilesystemCandidateList.yaml

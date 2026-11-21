@@ -107,17 +107,18 @@ export type FsName =
   | { kind: "label"; text: string }
   | { kind: "device"; text: string };
 
+// A configured file system still being created reports a null label (FileSystemMgmt.getList).
 type Named = Pick<
   MountedFilesystem,
-  "label" | "canonicaldevicefile" | "devicefile" | "mountpoint"
->;
+  "canonicaldevicefile" | "devicefile" | "mountpoint"
+> & { label: string | null };
 
 /** `label`, else `canonicaldevicefile`, else `devicefile`; the root row is "System drive" whatever its label. */
 export function fileSystemName(fs: Named): FsName {
   if (fs.mountpoint === "/") {
     return { kind: "systemDrive" };
   }
-  if (fs.label.trim() !== "") {
+  if (fs.label !== null && fs.label.trim() !== "") {
     return { kind: "label", text: fs.label };
   }
   return {
@@ -168,8 +169,10 @@ export type StorageItem =
       name: FsName;
       state: FsState;
       fs: MountedFilesystem;
+      /** The file system's page in this interface, when it has one (file-systems design 9). */
+      address: string | null;
     }
-  | { kind: "missing"; key: string; name: FsName };
+  | { kind: "missing"; key: string; name: FsName; address: string | null };
 
 /**
  * The Storage card's items, worst first (design 1.2.4): Critical (full, then missing), Warning,
@@ -178,6 +181,9 @@ export type StorageItem =
 export function storageItems(
   mounted: readonly MountedFilesystem[],
   missing: readonly ConfiguredFilesystem[] = [],
+  /** The page of a file system, when it has one; none by default. */
+  addressOf: (fs: { uuid: string; devicefile: string }) => string | null = () =>
+    null,
 ): StorageItem[] {
   const items: StorageItem[] = [
     ...mounted.map((fs): StorageItem => ({
@@ -186,11 +192,13 @@ export function storageItems(
       name: fileSystemName(fs),
       state: fileSystemState(fs),
       fs,
+      address: fs.mountpoint === "/" ? null : addressOf(fs),
     })),
     ...missing.map((fs): StorageItem => ({
       kind: "missing",
       key: `missing:${fs.uuid || fs.devicefile}:${fs.mountpoint}`,
       name: fileSystemName(fs),
+      address: addressOf(fs),
     })),
   ];
   const rank = (item: StorageItem) =>
@@ -449,8 +457,8 @@ export function readingRows(samples: readonly UsageSample[]): ReadingRow[] {
 // ---- The attention list (design 1.7) ----
 
 export type AttentionRow =
-  | { kind: "fsFull"; key: string; name: FsName }
-  | { kind: "fsMissing"; key: string; name: FsName }
+  | { kind: "fsFull"; key: string; name: FsName; address: string | null }
+  | { kind: "fsMissing"; key: string; name: FsName; address: string | null }
   | {
       kind: "diskCritical" | "diskWarning";
       key: string;
@@ -472,6 +480,7 @@ export type AttentionRow =
       kind: "fsWarning";
       key: string;
       name: FsName;
+      address: string | null;
       percent: number;
       threshold: number;
     }
@@ -505,14 +514,25 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
   const nearlyFull: AttentionRow[] = [];
   for (const item of storage) {
     if (item.kind === "missing") {
-      missing.push({ kind: "fsMissing", key: item.key, name: item.name });
+      missing.push({
+        kind: "fsMissing",
+        key: item.key,
+        name: item.name,
+        address: item.address,
+      });
     } else if (item.state === "critical") {
-      full.push({ kind: "fsFull", key: item.key, name: item.name });
+      full.push({
+        kind: "fsFull",
+        key: item.key,
+        name: item.name,
+        address: item.address,
+      });
     } else if (item.state === "warning") {
       nearlyFull.push({
         kind: "fsWarning",
         key: item.key,
         name: item.name,
+        address: item.address,
         percent: item.fs.percentage,
         threshold: item.fs.usagewarnthreshold,
       });

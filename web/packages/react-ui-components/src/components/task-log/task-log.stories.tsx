@@ -163,3 +163,68 @@ export const RefreshingOnAPage: Story = {
     busy: true,
   },
 };
+
+// A file-system check's technical details: long output, of which the first lines say most.
+const FSCK: TaskLogLine[] = [
+  "e2fsck 1.47.2 (1-Jan-2025)",
+  "Pass 1: Checking inodes, blocks, and sizes",
+  "Pass 2: Checking directory structure",
+  "Pass 3: Checking directory connectivity",
+  "Pass 4: Checking reference counts",
+  "Pass 5: Checking group summary information",
+  ...Array.from(
+    { length: 42 },
+    (_, i) =>
+      `Block bitmap differences:  -(${String(1048576 + i * 32768)}--${String(1048576 + i * 32768 + 31)})`,
+  ),
+  "data: 18342/244195328 files (0.4% non-contiguous), 15872341/976754176 blocks",
+];
+
+const fsckLabels = {
+  label: "Technical details of Check data",
+  copyLabel: "Copy details",
+  copiedLabel: "Details copied",
+  selectedLabel: "Details selected. Press Ctrl+C to copy.",
+  download: { label: "Download details", fileName: "check-data.log" },
+  follow: false,
+  limit: {
+    lines: 20,
+    partialLabel: (shown: number, total: number) =>
+      `Showing the first ${String(shown)} of ${String(total)} lines.`,
+    showAllLabel: "Show all lines",
+  },
+};
+
+/** Within the limit: the whole output, and no partial line. */
+export const LimitUnderN: Story = {
+  args: { ...fsckLabels, lines: FSCK.slice(0, 6) },
+};
+
+/**
+ * Over the limit: the first 20 lines, the partial line and Show all lines under the frame. Copy and
+ * download still take all 49 lines.
+ */
+export const LimitOverN: Story = {
+  args: { ...fsckLabels, lines: FSCK },
+};
+
+// Opens the cut on mount, as pressing Show all lines does.
+function Expanded() {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    ref.current
+      ?.querySelector<HTMLButtonElement>("[data-slot=task-log-partial] button")
+      ?.click();
+  }, []);
+  return (
+    <div ref={ref}>
+      <TaskLog {...fsckLabels} lines={FSCK} />
+    </div>
+  );
+}
+
+/** After Show all lines: every line in the same frame, and focus on the output. */
+export const LimitExpanded: Story = {
+  args: { ...fsckLabels, lines: FSCK },
+  render: () => <Expanded />,
+};

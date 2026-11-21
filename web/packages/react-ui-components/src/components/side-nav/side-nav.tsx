@@ -7,6 +7,7 @@ import * as React from "react";
 import { cn } from "../../utils";
 import { IconButton } from "../button/button";
 import { backdropClass } from "../dialog/dialog-classes";
+import { keepTabInside } from "../dialog/keep-tab-inside";
 
 /**
  * The side navigation (style guide 5.1), on `page`, grouped as OMV groups it. From 1024px it sits
@@ -131,7 +132,8 @@ interface SideNavDrawerProps {
 
 /**
  * The side navigation under 1024px: a modal drawer from the leading edge, on Base UI's Dialog, so
- * focus moves into it and back to the toggle, Escape closes it, and the page behind is inert. Focus
+ * focus moves into it and back to the toggle, Tab and Shift+Tab cycle inside it (`keepTabInside`),
+ * Escape closes it, and the page behind is hidden from assistive technology. Focus
  * opens on the current page's item, or the first item: not on the close button, whose tooltip would
  * then take the first Escape.
  */
@@ -150,6 +152,7 @@ function SideNavDrawer({
         <Dialog.Popup
           data-slot="side-nav-drawer"
           aria-label={label}
+          onKeyDown={keepTabInside}
           initialFocus={() => {
             const nav = navRef.current;
             return (

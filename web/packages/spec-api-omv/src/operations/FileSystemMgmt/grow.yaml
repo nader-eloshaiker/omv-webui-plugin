@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtGrow
+  tags:
+    - FileSystemMgmt
+  summary: Grow a file system to fill its device
+  description: >-
+    Grow a mounted file system to the full size of the device it is on, after that device has
+    grown (a larger RAID array, say). This cannot be undone: nothing shrinks it again. It loses
+    nothing, and the file system stays mounted and in use while it grows. Synchronous: the request
+    lasts as long as the resize. The server refuses a type that cannot grow while mounted ("does not
+    support online resizing"). When there is no room to grow it does nothing and still returns
+    null (observed on the test VM). Changes no configuration.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: grow
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.grow
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtGrowRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: The type cannot grow while mounted, or there is no such file system.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noOnlineResize:
+              $ref: ../../examples/fileSystemMgmtGrow.noOnlineResize.yaml

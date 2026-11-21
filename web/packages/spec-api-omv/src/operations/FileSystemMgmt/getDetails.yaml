@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtGetDetails
+  tags:
+    - FileSystemMgmt
+  summary: A file system's technical report
+  description: >-
+    The file system's own report on itself, as text. Its tools read the file system on the disk,
+    so it can wake a sleeping disk: the interface reads it only when the reader asks. For BTRFS it
+    works only while the file system is mounted; otherwise the server fails ("Failed to get
+    mountpoint", observed on the test VM). Fails with HTTP 500 when the device holds no file
+    system. Changes nothing.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: getDetails
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.getdetails
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/FilesystemDetails.yaml
+          examples:
+            ext4:
+              $ref: ../../examples/fileSystemMgmtGetDetails.ext4.yaml
+    "500":
+      description: The device holds no file system, or a BTRFS file system is not mounted.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notFound:
+              $ref: ../../examples/fileSystemMgmtGetDetails.notFound.yaml
+            btrfsNotMounted:
+              $ref: ../../examples/fileSystemMgmtGetDetails.btrfsNotMounted.yaml

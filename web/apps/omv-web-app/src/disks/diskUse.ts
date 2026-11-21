@@ -12,6 +12,7 @@ import type {
   DiskDevice,
   MdArray,
 } from "@omv-webui/react-api-omv/generated";
+import { fsAddress } from "../filesystems/fsModel.ts";
 import { naturalCompare, parseByteCount } from "../format/format.ts";
 
 /** A file system as the "Used for" words and the wipe confirmation name it. */
@@ -20,10 +21,12 @@ export interface FsRef {
   label: string;
   /** The type, such as "ext4". */
   type: string;
-  /** The device it is on, such as "/dev/sdb1", for "ext4 on /dev/sdb1". */
+  /** The device it is on, such as "/dev/sdb1", for "EXT4 on /dev/sdb1". */
   device: string;
   /** Bytes, when the reply has a reading (only a mounted file system has one). */
   size: number | null;
+  /** The file system's page, for one OMV has set up (file-systems design 9); absent otherwise. */
+  address?: string | null;
 }
 
 export interface ArrayRef {
@@ -148,12 +151,15 @@ const onDisk = (fs: FsRow, names: ReadonlySet<string>) =>
 function fsRef(
   fs: Pick<
     DetectedFilesystem,
-    "label" | "type" | "canonicaldevicefile" | "devicefile" | "size"
-  >,
+    "type" | "canonicaldevicefile" | "devicefile" | "size"
+  > & {
+    // FileSystemMgmt.getList reports null for a file system still being created.
+    label: string | null;
+  },
 ): FsRef {
   const size = parseByteCount(fs.size);
   return {
-    label: fs.label.trim(),
+    label: (fs.label ?? "").trim(),
     type: fs.type,
     device: fs.canonicaldevicefile || fs.devicefile,
     size: size !== null && size > 0 ? size : null,
@@ -228,7 +234,7 @@ export function diskUse(
     if (!onDisk(fs, names)) {
       continue;
     }
-    const ref = fsRef(fs);
+    const ref = { ...fsRef(fs), address: fsAddress(fs) };
     seen.add(ref.device);
     if (fs.mounted || fs._used) {
       inUse.push({ kind: "fsInUse", fs: ref, used: fs._used });

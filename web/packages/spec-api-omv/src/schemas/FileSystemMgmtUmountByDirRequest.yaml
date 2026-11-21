@@ -1,0 +1,9 @@
+type: object
+description: >-
+  The folder of the file system to unmount and forget (rpc.filesystemmgmt.umountbydir). Stricter
+  than OMV's `dirpath`: an absolute folder, never the system's root.
+required: [dir]
+properties:
+  dir:
+    $ref: ./MountDir.yaml
+additionalProperties: false

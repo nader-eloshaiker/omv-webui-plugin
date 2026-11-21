@@ -4,6 +4,7 @@ import { RadioGroup } from "@base-ui/react/radio-group";
 import { CircleAlert } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
+import { OptionGroup, type OptionGroupProps } from "../field/option-group";
 
 interface RadioGroupFieldProps {
   /** The question the choice answers, always visible: "How to wipe". It names the group. */
@@ -19,7 +20,10 @@ interface RadioGroupFieldProps {
   /** Identifies the group's value when a form is submitted. */
   name?: string;
   className?: string;
-  /** The `RadioOption`s, in reading order. */
+  /**
+   * The `RadioOption`s, in reading order, or `RadioOptionGroup` sections of them. Either way the
+   * group is one tab stop and the arrow keys move across every option.
+   */
   children: React.ReactNode;
 }
 
@@ -166,5 +170,17 @@ function RadioOption({
   );
 }
 
-export { RadioGroupField, RadioOption };
-export type { RadioGroupFieldProps, RadioOptionProps };
+type RadioOptionGroupProps = OptionGroupProps;
+
+/**
+ * A headed section of a `RadioGroupField` ("Empty disks", "Erase and reuse"): a `group` inside the
+ * `radiogroup`, named by its visible heading and described by the line under it. It only labels:
+ * the whole field stays one tab stop and the arrow keys run on from the last option of one section
+ * to the first of the next. Leave out a section that has no options rather than render it empty.
+ */
+function RadioOptionGroup(props: RadioOptionGroupProps) {
+  return <OptionGroup dataSlot="radio-option-group" {...props} />;
+}
+
+export { RadioGroupField, RadioOption, RadioOptionGroup };
+export type { RadioGroupFieldProps, RadioOptionGroupProps, RadioOptionProps };

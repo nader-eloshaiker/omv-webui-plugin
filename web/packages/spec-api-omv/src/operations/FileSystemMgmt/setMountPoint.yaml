@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtSetMountPoint
+  tags:
+    - FileSystemMgmt
+  summary: Set up a file system for mounting
+  description: >-
+    Create the mount entry of a file system found on a disk, with its warning level and tags. The
+    server records it by a predictable device file (its /dev/disk/by-uuid/ link first) and makes
+    its folder under /srv; it refuses a file system that already has a mount entry (HTTP 500).
+    Nothing is mounted yet: it marks the fstab, collectd, monit and quota modules dirty (observed
+    on the test VM), and applying fstab mounts it. Returns the stored mount entry.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: setMountPoint
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.setMountPoint
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtSetMountPointRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MountEntry.yaml
+          examples:
+            saved:
+              $ref: ../../examples/fileSystemMgmtSetMountPoint.saved.yaml
+    "500":
+      description: The file system already has a mount entry, or it was not found.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            alreadyExists:
+              $ref: ../../examples/fileSystemMgmtSetMountPoint.alreadyExists.yaml

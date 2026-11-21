@@ -20,8 +20,14 @@ import "../services/i18n/index.ts";
 import { answer } from "./server.ts";
 
 const running: App[] = [];
+const mounted: (() => void)[] = [];
 
 afterEach(() => {
+  // Unmount first, so forgetting the session's memory does not re-render a page that then starts
+  // reads (or a read-only task) into the next test.
+  for (const unmount of mounted.splice(0)) {
+    unmount();
+  }
   for (const app of running.splice(0)) {
     app.dispose();
   }
@@ -62,5 +68,6 @@ export async function renderApp({
       <AppRoot app={app} />
     </StrictMode>,
   );
+  mounted.push(view.unmount);
   return { app, mock, user, ...view };
 }

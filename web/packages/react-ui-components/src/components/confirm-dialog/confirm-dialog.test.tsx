@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -158,5 +158,69 @@ describe("ConfirmDialog, plain (Undo)", () => {
     expect(screen.queryByRole("textbox")).toBeNull();
     await user.keyboard("{Enter}");
     expect(onConfirm).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConfirmDialog, keyboard", () => {
+  // The page around the dialog: a skip link before it and a control after it, as in the app shell.
+  function Page() {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <>
+        <a href="#main">Skip to main content</a>
+        <button type="button" onClick={() => setOpen(true)}>
+          Grow
+        </button>
+        <TypeToConfirmDialog
+          {...words}
+          title="Wipe disk /dev/sdb?"
+          confirmLabel="Wipe disk"
+          open={open}
+          onOpenChange={setOpen}
+          confirmText="/dev/sdb"
+          prompt="Type /dev/sdb to confirm."
+          onConfirm={vi.fn()}
+        />
+        <button type="button">After the dialog</button>
+      </>
+    );
+  }
+
+  // Waits out the frame on which Base UI's focus guards would move focus, so a trap that only works
+  // a frame later is not mistaken for one that holds.
+  const nextFrame = () =>
+    act(
+      () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    );
+
+  it.each([
+    ["Tab", false],
+    ["Shift+Tab", true],
+  ])("keeps %s inside the dialog, at every step", async (_, shift) => {
+    const user = userEvent.setup();
+    render(<Page />);
+    await user.click(screen.getByRole("button", { name: "Grow" }));
+    const cancel = await screen.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    const popup = screen.getByRole("alertdialog");
+    const input = screen.getByRole("textbox", {
+      name: "Type /dev/sdb to confirm.",
+    });
+    const wipe = screen.getByRole("button", { name: "Wipe disk" });
+
+    const visited: Element[] = [];
+    for (let step = 0; step < 7; step += 1) {
+      await user.tab({ shift });
+      // In the same keystroke, not a frame later: focus never rests outside the popup.
+      expect(popup).toContainElement(document.activeElement as HTMLElement);
+      await nextFrame();
+      expect(popup).toContainElement(document.activeElement as HTMLElement);
+      visited.push(document.activeElement as Element);
+    }
+    // Document order is the field, Cancel, Wipe disk; from Cancel the order cycles that way round.
+    const cycle = shift ? [input, wipe, cancel] : [wipe, input, cancel];
+    expect(visited.slice(0, 3)).toEqual(cycle);
+    expect(visited.slice(3, 6)).toEqual(cycle);
   });
 });

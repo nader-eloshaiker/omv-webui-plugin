@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: a partition that does not exist."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to get the file system implementation for '/dev/sdd9' or the file system does not exist."

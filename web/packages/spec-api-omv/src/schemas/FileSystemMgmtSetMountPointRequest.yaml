@@ -1,0 +1,19 @@
+type: object
+description: >-
+  The file system to set up for mounting, with its warning level and tags
+  (rpc.filesystemmgmt.setMountPoint). OMV also accepts the file system's UUID as `id`; the contract
+  accepts only a device file, as getMountCandidates reports it.
+required: [id]
+properties:
+  id:
+    $ref: ./DeviceFile.yaml
+  usagewarnthreshold:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: Percent used at which OMV warns; 0 means it never warns. The server stores 0 when it is left out.
+  comment:
+    type: string
+    maxLength: 200
+    description: The tags, as one string with "," between them. The server stores "" when it is left out.
+additionalProperties: false

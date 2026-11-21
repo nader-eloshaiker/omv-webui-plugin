@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the details of a BTRFS mirror (RAID1) on two disks, just created and not mounted. The BTRFS report needs the file system mounted."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to get mountpoint of '/dev/sdb'."

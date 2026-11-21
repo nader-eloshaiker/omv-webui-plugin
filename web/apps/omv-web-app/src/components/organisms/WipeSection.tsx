@@ -80,6 +80,7 @@ export function WipeSection({ disk }: { disk: DiskDevice }) {
       {record !== undefined && task !== undefined ? (
         <WipePanel
           record={record}
+          devicefile={disk.devicefile}
           headingRef={panelHeadingRef}
           onWipeAgain={wipeAgain}
           onDismiss={dismiss}

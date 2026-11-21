@@ -9,6 +9,7 @@ export { buttonClass, buttonRowClass } from "./components/button/button-class";
 export * from "./components/capacity-meter/capacity-meter";
 export * from "./components/card/card";
 export * from "./components/checkbox-field/checkbox-field";
+export * from "./components/checkbox-list-field/checkbox-list-field";
 export * from "./components/checkbox/checkbox";
 export * from "./components/checklist/checklist";
 export * from "./components/confirm-dialog/confirm-dialog";

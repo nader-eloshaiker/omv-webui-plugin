@@ -15,7 +15,11 @@ import {
   TaskLog,
 } from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
-import { TASK_STATUS, taskLines } from "../../shell/taskView.ts";
+import {
+  emptyOutputKey,
+  TASK_STATUS,
+  taskLines,
+} from "../../shell/taskView.ts";
 
 const END_KEY = {
   done: "tasks.endDone",
@@ -52,7 +56,7 @@ export function TaskOutputDialog({
                 label: t("tasks.download"),
                 fileName: "task-output.txt",
               }}
-              emptyLabel={t(ended ? "tasks.noOutput" : "tasks.waiting")}
+              emptyLabel={t(emptyOutputKey(task))}
               endMessage={
                 task.state === "running" ? undefined : (
                   <span className="flex flex-wrap items-center gap-2">

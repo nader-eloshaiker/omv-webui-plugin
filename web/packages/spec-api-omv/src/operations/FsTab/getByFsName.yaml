@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fsTabGetByFsName
+  tags:
+    - FsTab
+  summary: A file system's mount entry
+  description: >-
+    The mount entry OMV has for a file system, found by its UUID or any of its device files, or the
+    boolean false when it has none (this method does not fail for that). Reads only the
+    configuration; touches no disk. Changes nothing.
+  x-omv-rpc:
+    service: FsTab
+    method: getByFsName
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.fstab.getbyfsname
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FsTabGetByFsNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/FsTabEntryOrNone.yaml
+          examples:
+            entry:
+              $ref: ../../examples/fsTabGetByFsName.entry.yaml
+            none:
+              $ref: ../../examples/fsTabGetByFsName.none.yaml
