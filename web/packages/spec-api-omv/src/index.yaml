@@ -77,6 +77,8 @@ paths:
     $ref: ./operations/EmailNotification/get.yaml
   /rpc/FileSystemMgmt/enumerateMountedFilesystems:
     $ref: ./operations/FileSystemMgmt/enumerateMountedFilesystems.yaml
+  /rpc/FileSystemMgmt/getList:
+    $ref: ./operations/FileSystemMgmt/getList.yaml
   /rpc/Smart/getListBg:
     $ref: ./operations/Smart/getListBg.yaml
   /rpc/Services/getStatus:

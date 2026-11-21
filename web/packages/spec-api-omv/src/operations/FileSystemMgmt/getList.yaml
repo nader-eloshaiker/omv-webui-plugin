@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtGetList
+  tags:
+    - FileSystemMgmt
+  summary: Configured file systems
+  description: >-
+    Every file system configured in OMV, with whether it is available, being created or missing,
+    paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file
+    system whose disk is gone (status 3). The server looks for every file system on every disk and
+    measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists
+    every row.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: getList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ConfiguredFilesystemList.yaml
+          examples:
+            configured:
+              $ref: ../../examples/fileSystemMgmtGetList.configured.yaml
+            missing:
+              $ref: ../../examples/fileSystemMgmtGetList.missing.yaml
+            initializing:
+              $ref: ../../examples/fileSystemMgmtGetList.initializing.yaml
