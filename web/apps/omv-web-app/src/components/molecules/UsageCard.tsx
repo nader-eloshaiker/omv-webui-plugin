@@ -13,14 +13,22 @@ import {
 } from "@omv-webui/react-ui-components";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import { memoryUsage } from "../../dashboard/dashboard.ts";
+import { memoryUsage, type UsageSample } from "../../dashboard/dashboard.ts";
 import { formatBytes } from "../../format/format.ts";
 import { useFormat } from "../../format/useFormat.ts";
+import { UsageChart } from "./UsageChart.tsx";
 
 const load = (value: number | undefined) =>
   value === undefined ? undefined : value.toFixed(2);
 
-export function UsageCard({ info }: { info: SystemInformation | undefined }) {
+export function UsageCard({
+  info,
+  samples = [],
+}: {
+  info: SystemInformation | undefined;
+  /** This session's samples for the chart (phase 5 design 1.6). */
+  samples?: readonly UsageSample[];
+}) {
   const { t } = useTranslation();
   const format = useFormat();
   const titleId = useId();
@@ -95,6 +103,7 @@ export function UsageCard({ info }: { info: SystemInformation | undefined }) {
               : t("dashboard.usage.loadHint", { cores })}
           </p>
         </div>
+        <UsageChart samples={samples} loading={loading} />
       </CardContent>
     </Card>
   );

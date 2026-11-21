@@ -3,11 +3,19 @@
 // the server, the activity clock, and the router. main.tsx boots it for the browser and renders it with
 // AppRoot; the tests boot the same thing against MSW.
 import {
+  getSystemGetInformationQueryKey,
+  type SystemInformation,
+} from "@omv-webui/react-api-omv/generated";
+import {
   connectQueryClient,
   createQueryClient,
 } from "@omv-webui/react-api-omv/query";
 import { onSessionEnded } from "@omv-webui/react-api-omv/transport";
 import type { QueryClient } from "@tanstack/react-query";
+import { diskHealth } from "./dashboard/diskHealth.ts";
+import { recordUsage, usageSamples } from "./dashboard/usageSamples.ts";
+import { logsView } from "./logs/logsViewStore.ts";
+import { processesView } from "./processes/processesViewStore.ts";
 import { createAppRouter, type AppRouter } from "./router.ts";
 import {
   createActivityClock,
@@ -19,6 +27,21 @@ import {
   type SessionStore,
 } from "./session/sessionStore.ts";
 import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
+
+/** What pages keep in memory for the session; emptied when it ends. */
+const SESSION_VIEW_STATE = [
+  sharedFoldersTable,
+  usageSamples,
+  diskHealth,
+  logsView,
+  processesView,
+];
+const resetViewState = () => {
+  for (const store of SESSION_VIEW_STATE) {
+    store.reset();
+  }
+};
+const INFORMATION_KEY = JSON.stringify(getSystemGetInformationQueryKey());
 
 export interface App {
   queryClient: QueryClient;
@@ -48,13 +71,42 @@ export async function bootApp(): Promise<App> {
     void router.navigate({ to: "/sign-in" });
   });
 
-  // What a page keeps in memory for the session (the shared-folders table's page, sort and search) is
-  // forgotten when the session goes, so the next account starts with the stock view.
+  // What a page keeps in memory for the session (the shared-folders table's page, sort and search, the
+  // chart's samples, the last disk-health result, the logs and processes pages' view) is forgotten
+  // when the session goes, so the next account starts with the stock view.
   const offViewState = session.subscribe(() => {
     if (session.getState().status !== "signedIn") {
-      sharedFoldersTable.reset();
+      resetViewState();
     }
   });
+
+  // The Usage chart's samples (phase 5 design 1.6.1, D9): every successful reply of the shell's
+  // System.getInformation poll, on any page, for an administrator (a normal user's shell does not
+  // poll). Stamped with this computer's time of receipt, so a wrong NAS clock cannot bend the axis.
+  const sample = (data: unknown, receivedAt: number) => {
+    const state = session.getState();
+    if (
+      state.status === "signedIn" &&
+      state.role === "admin" &&
+      data !== undefined
+    ) {
+      recordUsage(data as SystemInformation, receivedAt);
+    }
+  };
+  const offSamples = queryClient.getQueryCache().subscribe((event) => {
+    if (
+      event.type === "updated" &&
+      event.action.type === "success" &&
+      JSON.stringify(event.query.queryKey) === INFORMATION_KEY
+    ) {
+      sample(event.query.state.data, event.query.state.dataUpdatedAt);
+    }
+  });
+  // The reply the boot already read (the session probe) is the first sample.
+  const booted = queryClient.getQueryState(getSystemGetInformationQueryKey());
+  if (booted?.data !== undefined) {
+    sample(booted.data, booted.dataUpdatedAt);
+  }
 
   return {
     queryClient,
@@ -62,8 +114,9 @@ export async function bootApp(): Promise<App> {
     activity,
     router,
     dispose() {
+      offSamples();
       offViewState();
-      sharedFoldersTable.reset();
+      resetViewState();
       offSessionEnded();
       activity.disconnect();
       disconnectQuery();
