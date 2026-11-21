@@ -30,6 +30,24 @@ interface TaskLogProps {
    * sentence. Announced through a polite live region and kept on screen (5.7).
    */
   endMessage?: React.ReactNode;
+  /**
+   * `true` (the default): long lines wrap, as task output reads best. `false`: lines keep their
+   * length and the block scrolls sideways inside itself, for output printed as columns (`smbstatus`,
+   * `exportfs`), which wrapping would scramble. The page itself never scrolls sideways.
+   */
+  wrap?: boolean;
+  /**
+   * `default`: up to 20rem tall, for a task's output in a dialog or a panel. `page`: the output is the
+   * page's content and grows with it up to 70% of the viewport height before it scrolls.
+   */
+  size?: "default" | "page";
+  /**
+   * `true` (the default): the view follows new output while the reader is at the bottom, as a running
+   * task's should. `false`: a snapshot that does not grow opens at its first line.
+   */
+  follow?: boolean;
+  /** The region is busy: a refresh of the output is under way. The output stays readable. */
+  busy?: boolean;
   className?: string;
 }
 
@@ -64,6 +82,10 @@ function TaskLog({
   download,
   emptyLabel,
   endMessage,
+  wrap = true,
+  size = "default",
+  follow = true,
+  busy,
   className,
 }: TaskLogProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -74,10 +96,10 @@ function TaskLog({
 
   React.useLayoutEffect(() => {
     const element = scrollRef.current;
-    if (element && followRef.current) {
+    if (element && follow && followRef.current) {
       element.scrollTop = element.scrollHeight;
     }
-  }, [lines]);
+  }, [lines, follow]);
 
   React.useEffect(() => {
     if (notice === "") {
@@ -145,8 +167,17 @@ function TaskLog({
           role="region"
           aria-label={label}
           tabIndex={0}
+          aria-busy={busy || undefined}
+          data-wrap={wrap}
+          data-size={size}
           onScroll={onScroll}
-          className="max-h-80 min-h-24 overflow-auto rounded-card bg-terminal py-3 ps-3.5 pe-20 font-mono text-sm leading-relaxed whitespace-pre-wrap text-terminal-foreground [overflow-wrap:anywhere]"
+          className={cn(
+            "min-h-24 overflow-auto rounded-card bg-terminal py-3 ps-3.5 pe-20 font-mono text-sm leading-relaxed text-terminal-foreground",
+            wrap
+              ? "whitespace-pre-wrap [overflow-wrap:anywhere]"
+              : "whitespace-pre",
+            size === "page" ? "max-h-[70vh]" : "max-h-80",
+          )}
         >
           {rows.length === 0 && emptyLabel ? (
             <p data-slot="task-log-empty" className="text-terminal-muted">

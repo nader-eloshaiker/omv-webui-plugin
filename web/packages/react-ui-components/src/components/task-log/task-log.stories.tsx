@@ -98,3 +98,68 @@ export const FollowsTheTail: Story = {
     },
   },
 };
+
+// smbstatus prints columns; wrapping would scramble them, so the block scrolls sideways instead.
+const SMBSTATUS = [
+  "",
+  "Samba version 4.22.4-Debian-4.22.4+dfsg-1~deb13u1",
+  "PID     Username     Group        Machine                                   Protocol Version  Encryption           Signing",
+  "----------------------------------------------------------------------------------------------------------------------------------------",
+  "4321    example-user example-user 192.0.2.10 (ipv4:192.0.2.10:51234)       SMB3_11           -                    partial(AES-128-GMAC)",
+  "",
+  "Service      pid     Machine       Connected at                     Encryption   Signing",
+  "---------------------------------------------------------------------------------------------",
+  "media        4321    192.0.2.10    Sat Nov 21 10:15:02 AM 2026 UTC  -            -",
+];
+
+const serviceLabels = {
+  label: "Status of SMB/CIFS",
+  copyLabel: "Copy output",
+  copiedLabel: "Output copied",
+  selectedLabel: "Output selected. Press Ctrl+C to copy.",
+};
+
+export const ColumnsNotWrapped: Story = {
+  args: {
+    ...serviceLabels,
+    download: undefined,
+    lines: SMBSTATUS,
+    wrap: false,
+    size: "page",
+    follow: false,
+  },
+};
+
+export const ColumnsWrapped: Story = {
+  args: { ...serviceLabels, download: undefined, lines: SMBSTATUS },
+};
+
+export const ShortOutputOnAPage: Story = {
+  args: {
+    ...serviceLabels,
+    label: "Status of SSH",
+    download: undefined,
+    lines: [
+      "Currently logged in users:",
+      "No users connected",
+      "",
+      "Connections:",
+      "No connections",
+    ],
+    wrap: false,
+    size: "page",
+    follow: false,
+  },
+};
+
+export const RefreshingOnAPage: Story = {
+  args: {
+    ...serviceLabels,
+    download: undefined,
+    lines: SMBSTATUS,
+    wrap: false,
+    size: "page",
+    follow: false,
+    busy: true,
+  },
+};
