@@ -162,3 +162,166 @@ test("verify reports a password or e-mail address left in place, never the value
   assert.match(text, /e-mail address at \$\.email/);
   assert.ok(!text.includes("correct horse") && !text.includes("corp.test"));
 });
+
+test("a disk's serial number and WWN are replaced in its fields and inside other text", () => {
+  const { scrub, verify } = createScrubber(known);
+  const raw = {
+    data: [
+      {
+        devicefile: "/dev/disk/by-id/nvme-Acme_Disk_ACME_SN_4711_1",
+        devicelinks: [
+          "/dev/disk/by-id/nvme-eui.0123456789abcdef0123456789abcdef",
+          "/dev/disk/by-id/nvme-Acme_Disk_ACME_SN_4711",
+        ],
+        serialnumber: "ACME SN_4711",
+        wwn: "eui.0123456789abcdef0123456789abcdef",
+      },
+      {
+        devicefile: "/dev/disk/by-id/ata-Acme_HDD_98765432109876543210",
+        devicelinks: [
+          "/dev/disk/by-id/wwn-0x5000c500a1b2c3d4",
+          "/dev/disk/by-id/scsi-35000c500a1b2c3d4",
+        ],
+        serialnumber: "98765432109876543210",
+        wwn: "0x5000c500a1b2c3d4",
+      },
+    ],
+  };
+  const out = scrub(raw);
+  assert.deepEqual(verify(out), []);
+  const [nvme, ata] = out.data;
+  assert.equal(nvme.serialnumber, "EXAMPLE-SERIAL-0001");
+  assert.equal(nvme.wwn, "EXAMPLE-WWN-0001");
+  assert.equal(
+    nvme.devicefile,
+    "/dev/disk/by-id/nvme-Acme_Disk_EXAMPLE-SERIAL-0001_1",
+  );
+  assert.deepEqual(nvme.devicelinks, [
+    "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+    "/dev/disk/by-id/nvme-Acme_Disk_EXAMPLE-SERIAL-0001",
+  ]);
+  assert.equal(ata.serialnumber, "EXAMPLE-SERIAL-0002");
+  assert.equal(ata.wwn, "EXAMPLE-WWN-0002");
+  assert.equal(
+    ata.devicefile,
+    "/dev/disk/by-id/ata-Acme_HDD_EXAMPLE-SERIAL-0002",
+  );
+  assert.deepEqual(ata.devicelinks, [
+    "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002",
+    "/dev/disk/by-id/scsi-3EXAMPLE-WWN-0002",
+  ]);
+});
+
+test("disk identifiers learnt beforehand are replaced in replies that do not carry them", () => {
+  const { scrub, verify } = createScrubber({
+    ...known,
+    serials: ["ACME SN_4711", ""],
+    wwns: ["0x5000c500a1b2c3d4"],
+  });
+  const out = scrub({
+    devlinks: ["/dev/disk/by-id/wwn-0x5000c500a1b2c3d4-part1"],
+    message: "Device: /dev/nvme0, ACME SN_4711, failed",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(out, {
+    devlinks: ["/dev/disk/by-id/wwn-EXAMPLE-WWN-0001-part1"],
+    message: "Device: /dev/nvme0, EXAMPLE-SERIAL-0001, failed",
+  });
+});
+
+test("verify reports a disk identifier left in place, never the value", () => {
+  const { verify } = createScrubber({ ...known, serials: ["ACME SN_4711"] });
+  const text = verify({
+    a: "/dev/disk/by-id/ata-Acme_HDD_98765432109876543210",
+    b: "/dev/disk/by-id/wwn-0x5000c500a1b2c3d4-part1",
+    c: "seen ACME SN_4711",
+    d: { wwn: "0x5000c500a1b2c3d4" },
+    ok: "/dev/disk/by-id/ata-Acme_HDD_EXAMPLE-SERIAL-0001",
+    path: "/dev/disk/by-path/pci-0000:00:1f.2-ata-1",
+  }).join("\n");
+  for (const want of [
+    "a disk identifier in a by-id name at $.a",
+    "a disk identifier in a by-id name at $.b",
+    "a disk serial number or WWN at $.c",
+    "WWN at $.d.wwn",
+  ]) {
+    assert.ok(text.includes(want), `missing "${want}" in:\n${text}`);
+  }
+  assert.ok(!text.includes("$.ok") && !text.includes("$.path"), text);
+  for (const secret of ["98765432109876543210", "5000c500", "4711"]) {
+    assert.ok(!text.includes(secret), "a failure must not repeat the value");
+  }
+});
+
+test("a Wi-Fi network name and key are replaced whatever their value", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    data: [
+      { wpassid: "Home Network 5G", wpapsk: "correct horse battery" },
+      { wpassid: "", wpapsk: "" },
+    ],
+  });
+  assert.deepEqual(out.data, [
+    { wpassid: "example-ssid", wpapsk: "EXAMPLE-PASSWORD" },
+    { wpassid: "", wpapsk: "" },
+  ]);
+  assert.deepEqual(verify(out), []);
+  assert.match(
+    verify({ wpapsk: "correct horse battery" }).join("\n"),
+    /wpapsk at \$\.wpapsk/,
+  );
+});
+
+test("addresses that identify nothing are kept", () => {
+  const { scrub, verify } = createScrubber(known);
+  const raw = {
+    loopback: "00:00:00:00:00:00",
+    broadcast: "ff:ff:ff:ff:ff:ff",
+    netmask6: "ffff:ffff:ffff:ffff:0000:0000:0000:0000",
+    shortmask6: "ffff:ffff:ffff:ffff::",
+    linklocal: "fe80::1",
+    newobject: "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+  };
+  const out = scrub(raw);
+  assert.deepEqual(out, raw);
+  assert.deepEqual(verify(out), []);
+});
+
+test("a link-local address derived from a MAC address follows that MAC's placeholder", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    ether: "52:54:00:12:34:56",
+    address6: "fe80::5054:ff:fe12:3456",
+    description: "eth0 [52:54:00:12:34:56] fe80::5054:ff:fe12:3456/64",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.equal(out.ether, "00:00:5e:00:53:01");
+  assert.equal(out.address6, "fe80::200:5eff:fe00:5301");
+  assert.equal(
+    out.description,
+    "eth0 [00:00:5e:00:53:01] fe80::200:5eff:fe00:5301/64",
+  );
+  assert.match(
+    verify({ address6: "fe80::5054:ff:fe12:3456" }).join("\n"),
+    /IPv6 address at \$\.address6/,
+  );
+});
+
+test("one disk spelt two ways gets one placeholder", () => {
+  const { scrub, verify } = createScrubber({
+    ...known,
+    serials: ["ACME SN 4711"],
+    wwns: ["0x5000C500A1B2C3D4"],
+  });
+  const out = scrub({
+    serialnumber: "ACME SN_4711",
+    wwn: "0x5000c500a1b2c3d4",
+    devicefile: "/dev/disk/by-id/nvme-Acme_ACME_SN_4711",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(out, {
+    serialnumber: "EXAMPLE-SERIAL-0001",
+    wwn: "EXAMPLE-WWN-0001",
+    devicefile: "/dev/disk/by-id/nvme-Acme_EXAMPLE-SERIAL-0001",
+  });
+});

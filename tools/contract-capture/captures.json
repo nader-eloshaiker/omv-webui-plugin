@@ -286,5 +286,125 @@
     "method": "getInformation",
     "name": "adminWelcomeDismissed",
     "account": "admin"
+  },
+  {
+    "service": "FileSystemMgmt",
+    "method": "enumerateMountedFilesystems",
+    "name": "withRoot",
+    "account": "admin",
+    "params": {
+      "includeroot": true
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getListBg",
+    "name": "smartDevices",
+    "flow": "task",
+    "resultJson": true,
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    }
+  },
+  {
+    "service": "Services",
+    "method": "getStatus",
+    "name": "sshOnly",
+    "account": "admin"
+  },
+  {
+    "service": "Network",
+    "method": "enumerateDevicesList",
+    "name": "ethernetAndLoopback",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    }
+  },
+  {
+    "service": "LogFile",
+    "method": "getList",
+    "name": "syslog",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": 5,
+      "sortfield": "rownum",
+      "sortdir": "desc",
+      "id": "syslog"
+    }
+  },
+  {
+    "service": "LogFile",
+    "method": "getList",
+    "name": "updates",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": 3,
+      "sortfield": "rownum",
+      "sortdir": "desc",
+      "id": "apt_term"
+    }
+  },
+  {
+    "service": "LogFile",
+    "method": "getList",
+    "name": "unknownLog",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": 5,
+      "sortfield": null,
+      "sortdir": null,
+      "id": "no-such-log"
+    }
+  },
+  {
+    "service": "System",
+    "method": "getTopInfo",
+    "name": "json",
+    "account": "admin",
+    "params": {
+      "format": "json"
+    },
+    "keepFirst": {
+      "processes": 8
+    }
+  },
+  {
+    "service": "SMB",
+    "method": "getStats",
+    "name": "disabled",
+    "account": "admin"
+  },
+  {
+    "service": "SMB",
+    "method": "getStats",
+    "name": "pendingChanges",
+    "account": "admin",
+    "setup": {
+      "call": "SMB.setSettings",
+      "paramsFrom": "SMB.getSettings"
+    }
+  },
+  {
+    "service": "NFS",
+    "method": "getStats",
+    "name": "disabled",
+    "account": "admin"
+  },
+  {
+    "service": "SSH",
+    "method": "getStats",
+    "name": "noConnections",
+    "account": "admin"
   }
 ]

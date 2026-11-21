@@ -15,6 +15,12 @@
 // `revert` (a write the entry itself makes), or the `tempUser` flow (a throw-away account). Each of
 // these starts only when no configuration change is pending, and ends by discarding every pending
 // change, so the VM is left as it was.
+//
+// Two more fields shape what is written. `keepFirst: {field: n}` keeps only the first n items of a
+// list in the reply (a process list of hundreds of rows), and the summary says so. On a `task`
+// entry, `resultJson: true` says the task's output is JSON (a list read in the background): every
+// poll asks for the output from the start, so the last one carries all of it, and that JSON is
+// scrubbed as data, field by field, before it is written back as text.
 import { createHmac, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -45,6 +51,10 @@ const PLACEHOLDER = {
   user: "example-user",
   "2fa": "example-2fa",
 };
+// The product's name, which is also OMV's factory host name and the documented factory password of
+// its admin account. A host name or literal equal to it is public, not the owner's: it is kept, or
+// every mention of openmediavault in a log line or package name would be scrubbed.
+const PRODUCT_NAME = "openmediavault";
 // The throw-away account of the tempUser flow, created and deleted within one entry.
 const TEMP_USER = "webui-capture-tmp";
 
@@ -176,6 +186,15 @@ async function main() {
   const info =
     (await probe.call("System", "getInformation")).body.response ?? {};
   const version = /^(\d+\.\d+\.\d+)/.exec(info.version ?? "")?.[1] ?? "unknown";
+  // The disks' serial numbers and WWNs, so they are replaced wherever a reply mentions them (by-id
+  // links, log messages), not only in a reply that has them as fields.
+  const disks = (await probe.call("DiskMgmt", "enumerateDevices")).body
+    .response;
+  if (!Array.isArray(disks)) {
+    throw new Error("DiskMgmt.enumerateDevices did not answer a list");
+  }
+  const serials = disks.map((d) => d.serialnumber).filter(Boolean);
+  const wwns = disks.map((d) => d.wwn).filter(Boolean);
   await probe.call("Session", "logout");
 
   const names = { [TEMP_USER]: "example-readonly" };
@@ -185,28 +204,44 @@ async function main() {
     }
   }
   const host = String(info.hostname ?? "");
-  if (host) {
+  const ownHost = host !== "" && host.split(".")[0] !== PRODUCT_NAME;
+  if (ownHost) {
     names[host.split(".")[0]] = "nas";
   }
   const literals = [
     env.NAS_HOST,
-    host,
+    ownHost ? host : "",
     env.OMV_2FA_TOTP_SECRET,
     ...Object.values(ACCOUNTS).map(([, p]) => env[p]),
-  ];
-  const { scrub, verify } = createScrubber({ names, literals });
+  ].filter((literal) => literal !== PRODUCT_NAME);
+  const { scrub, verify } = createScrubber({ names, literals, serials, wwns });
 
   const results = [];
-  const record = (operationId, name, status, reply, keys = {}) => {
-    const value =
+  const record = (operationId, name, status, reply, keys = {}, shape = {}) => {
+    let value =
       status === 200
         ? reply.response
         : {
             code: reply.error?.code ?? null,
             message: reply.error?.message ?? "",
           };
+    const notes = [];
+    for (const [field, n] of Object.entries(shape.keepFirst ?? {})) {
+      const list = value?.[field];
+      if (Array.isArray(list) && list.length > n) {
+        value = { ...value, [field]: list.slice(0, n) };
+        notes.push(`${field} shortened to its first ${n} of ${list.length}`);
+      }
+    }
+    const failures = [];
+    if (shape.jsonOutput && status === 200) {
+      // The task's result, scrubbed as data so its field rules apply, then written back as text.
+      const result = scrub(JSON.parse(value.output), keys);
+      failures.push(...verify(result, keys).map((f) => `output: ${f}`));
+      value = { ...value, output: JSON.stringify(result) };
+    }
     const scrubbed = scrub(value, keys);
-    const failures = verify(scrubbed, keys);
+    failures.push(...verify(scrubbed, keys));
     if (failures.length) {
       results.push(
         `FAIL  ${operationId}.${name}: scrubbing left ${failures.join("; ")}. Not written.`,
@@ -215,7 +250,7 @@ async function main() {
     }
     const file = `${operationId}.${name}.yaml`;
     const doc = toYaml({
-      summary: `Captured from the test VM (OMV ${version}), scrubbed`,
+      summary: `Captured from the test VM (OMV ${version}), scrubbed${notes.map((n) => `; ${n}`).join("")}`,
       "x-omv-status": status,
       value: scrubbed,
     });
@@ -290,21 +325,36 @@ async function main() {
         entry.method,
         entry.params ?? {},
       );
-      record(operationId, entry.name, started.status, started.body);
+      record(operationId, entry.name, started.status, started.body, keys);
       let pos = 0;
       for (let i = 0; i < 120 && started.status === 200; i++) {
         await sleep(500);
         const r = await s.call("Exec", "getOutput", {
           filename: started.body.response,
-          pos,
+          pos: entry.resultJson ? 0 : pos,
         });
         if (r.status !== 200) {
-          record("execGetOutput", `${entry.name}Failed`, r.status, r.body);
+          record(
+            "execGetOutput",
+            `${entry.name}Failed`,
+            r.status,
+            r.body,
+            keys,
+          );
           break;
         }
         pos = r.body.response.pos;
         if (!r.body.response.running && !r.body.response.pendingOutput) {
-          record("execGetOutput", `${entry.name}Finished`, r.status, r.body);
+          record(
+            "execGetOutput",
+            `${entry.name}Finished`,
+            r.status,
+            r.body,
+            keys,
+            {
+              jsonOutput: entry.resultJson === true,
+            },
+          );
           break;
         }
       }
@@ -379,7 +429,9 @@ async function main() {
             : `FAIL  ${operationId}.${entry.name}: expected null, got HTTP ${r.status}`,
         );
       } else if (!entry.quiet) {
-        record(operationId, entry.name, r.status, r.body, keys);
+        record(operationId, entry.name, r.status, r.body, keys, {
+          keepFirst: entry.keepFirst,
+        });
       }
     }
   }
