@@ -8,6 +8,7 @@ import {
   defaultSort,
   isLogId,
   isLogTooLong,
+  isPartialRead,
   LOG_IDS,
   logLayout,
   logRequest,
@@ -40,15 +41,61 @@ describe("the logs offered", () => {
     expect(logLayout("smbdaudit")).toBe("audit");
   });
 
-  it("is read whole, newest first, by line where there are no times", () => {
-    expect(logRequest("auth")).toEqual({
-      id: "auth",
+  it.each(LOG_IDS)("%s is read as its newest 5,000 entries, by line", (id) => {
+    expect(logRequest(id)).toEqual({
+      id,
       start: 0,
-      limit: null,
-      sortfield: "ts",
+      limit: 5000,
+      sortfield: "rownum",
       sortdir: "desc",
     });
-    expect(logRequest("apt_term").sortfield).toBe("rownum");
+  });
+
+  it.each([
+    { received: 5000, total: 99_986, want: true },
+    { received: 5000, total: 5000, want: false },
+    { received: 5, total: 5, want: false },
+    { received: 0, total: 0, want: false },
+    { received: 5000, total: undefined, want: false },
+    { received: 5000, total: Number.NaN, want: false },
+    { received: 5000, total: "99986", want: false },
+  ])(
+    "$received received of $total: only the newest shown is $want",
+    ({ received, total, want }) => {
+      expect(isPartialRead(received, total)).toBe(want);
+    },
+  );
+});
+
+describe("sorting rows that arrive newest line first", () => {
+  // The server sends the newest lines first (rownum descending); times can tie or run backwards.
+  const rows = [
+    { rownum: 3, ts: 300, message: "d" },
+    { rownum: 2, ts: 300, message: "c" },
+    { rownum: 1, ts: 100, message: "b" },
+    { rownum: 0, ts: 200, message: "a" },
+  ] as unknown as LogRow[];
+  const order = (sorted: LogRow[]) => sorted.map((r) => r.rownum);
+
+  it("orders by time whatever order they arrived in, ties by line", () => {
+    expect(order(sortRows(rows, { field: "ts", direction: "desc" }))).toEqual([
+      3, 2, 0, 1,
+    ]);
+    expect(order(sortRows(rows, { field: "ts", direction: "asc" }))).toEqual([
+      1, 0, 2, 3,
+    ]);
+    expect(
+      order(sortRows([...rows].reverse(), { field: "ts", direction: "desc" })),
+    ).toEqual([3, 2, 0, 1]);
+  });
+
+  it("orders by line in either direction", () => {
+    expect(
+      order(sortRows(rows, { field: "rownum", direction: "asc" })),
+    ).toEqual([0, 1, 2, 3]);
+    expect(
+      order(sortRows(rows, { field: "rownum", direction: "desc" })),
+    ).toEqual([3, 2, 1, 0]);
   });
 });
 

@@ -84,6 +84,19 @@ test("an administrator chooses a log by keyboard, searches it, and reads it only
   rpc,
 }) => {
   rpc.loginWith("authenticated");
+  const readParams: unknown[] = [];
+  page.on("request", (request) => {
+    const body = request.url().endsWith("/rpc.php")
+      ? (request.postDataJSON() as {
+          service?: unknown;
+          method?: unknown;
+          params?: unknown;
+        } | null)
+      : null;
+    if (body?.service === "LogFile" && body.method === "getList") {
+      readParams.push(body.params);
+    }
+  });
   await signIn(page);
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
@@ -106,6 +119,23 @@ test("an administrator chooses a log by keyboard, searches it, and reads it only
   });
   await expect(table.getByRole("row")).toHaveCount(6);
   expect(rpc.calls.filter((c) => c === "LogFile.getList")).toHaveLength(1);
+  expect(readParams).toEqual([
+    {
+      id: "syslog",
+      start: 0,
+      limit: 5000,
+      sortfield: "rownum",
+      sortdir: "desc",
+    },
+  ]);
+  // The captured reply carries 5 of the log's 28,028 entries: the page says only the newest are shown.
+  await expect(
+    page.getByText(
+      copy.logs.limit_other
+        .replace("{{shown}}", "5")
+        .replace("{{total}}", "28,028"),
+    ),
+  ).toBeVisible();
 
   const search = page.getByRole("searchbox", { name: copy.logs.search });
   await search.focus();

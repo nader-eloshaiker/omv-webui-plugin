@@ -291,20 +291,21 @@ describe("the mock scenarios", () => {
     expect(list.total).toBe(list.data.length);
   });
 
-  it("logsLarge answers the syslog with 5,000 entries, newest first", () => {
-    const answer = answerOf(
-      "logsLarge",
-      newMockSession(true),
-      "logFileGetList",
-      {
-        id: "syslog",
-        start: 0,
-        limit: null,
-      },
-    ) as FixedAnswer;
-    const value = answer.value as { total: number; data: { rownum: number }[] };
-    expect(value.total).toBe(5000);
-    expect(value.data[0]?.rownum).toBe(4999);
+  it("logsLarge pages a syslog of 12,000 entries as OMV does, newest line first", () => {
+    const read = (params: object) =>
+      (
+        answerOf("logsLarge", newMockSession(true), "logFileGetList", {
+          id: "syslog",
+          ...params,
+        }) as FixedAnswer
+      ).value as { total: number; data: { rownum: number }[] };
+    const newest = read({ start: 0, limit: 5000 });
+    expect(newest.total).toBe(12_000);
+    expect(newest.data).toHaveLength(5000);
+    expect(newest.data[0]?.rownum).toBe(11_999);
+    expect(newest.data.at(-1)?.rownum).toBe(7000);
+    const all = read({ start: 0, limit: null });
+    expect(all.data).toHaveLength(12_000);
   });
 
   it("logsTooLong answers the syslog as PHP does when it runs out of memory, and the other logs as usual", () => {

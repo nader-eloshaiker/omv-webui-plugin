@@ -699,16 +699,24 @@ Administrators only. Route `/diagnostics/system-logs`. Data: `LogFile.getList`.
 ### 2.1 How the log is read
 
 - **Once, when the reader chooses it** (owner decision, recommended): `LogFile.getList` with
-  `{ id, start: 0, limit: -1, sortfield: "ts", sortdir: "desc" }`; for `apt_term`, which has no
-  times, `sortfield: "rownum"`. The server re-reads and re-parses the whole log on every call
-  whatever page is asked for, so one read is the cheapest way.
-- Then **paged, searched and sorted in the browser**. Nothing more is asked of the server until the
-  reader presses "Refresh" or chooses another log.
+  `{ id, start: 0, limit: 5000, sortfield: "rownum", sortdir: "desc" }`, the **newest 5,000
+  entries** by their line in the log, for every log. The server re-reads and re-parses the whole log
+  on every call whatever page is asked for, so one read is the cheapest way.
+- **Why 5,000, not every row** (decided 2026-11-22, see the journal): asking for every row of a
+  journal near the server's cap ran `rpc.php` out of PHP's 128 MB memory, an HTTP 500 with an empty
+  body, as in the classic interface. Measured on the test VM, a system log of 99,986 entries: every
+  row failed after 1.8 s; 5,000 entries were about 1.0 MB in 0.7 s; 20,000 were about 3.9 MB in
+  0.8 s. 5,000 is this section's original fallback, with room to spare.
+- Then **paged, searched and sorted in the browser** over the entries read. The page sorts them
+  itself, whatever order they arrive in. Nothing more is asked of the server until the reader presses
+  "Refresh" or chooses another log.
+- When the reply's `total` is more than the entries received, a line under the count says only the
+  newest are shown (2.6). `total` counts what the server read, its last 100,000 lines
+  (`OMV_MAX_LOGFILE_LINES`) at most, so for a longer log it is the count of those.
+- If a read still fails the way a whole read did, the page shows "This log is too long for the NAS to
+  send" (2.6) instead of the ordinary error.
 - The read is a foreground read (the reader chose it). It is blocking on the server and can take a
   few seconds for a long journal; the page says so while it waits (2.6).
-- The server reads at most the last 100,000 lines of a log (`OMV_MAX_LOGFILE_LINES`). **[verify]** the
-  reply size and time for a full syslog on the VM; if a full read is too slow to be usable, the
-  fallback is to ask for the newest 5,000 entries (`limit: 5000`) and say so, and the owner is told.
 - The rows stay in memory while the page is open, and for five minutes after leaving it (the query's
   `gcTime`), so a quick look elsewhere does not force a re-read. After that, coming back reads the
   chosen log again.
@@ -833,7 +841,7 @@ focusable or selectable (there is nothing to open). Copying a message is ordinar
 | Too long to send | When the read answers 500 with a body that is not JSON (PHP stopped `rpc.php`; the transport's `unreadable`), or a 500 whose message says the memory size was exhausted: `EmptyState variant="error"` with the title "This log is too long for the NAS to send", "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit." and "Try again". No server message: the reply holds nothing the reader can use. Every other failure is the Error state (journal, 2026-11-22) |
 | Empty log | `EmptyState variant="empty"`: "This log is empty." For `smbdaudit`: "Nothing is recorded here until auditing is turned on for a shared folder in the SMB/CIFS settings." For `rsync`: "Nothing is recorded here until an rsync job has run." |
 | Filtered empty | 2.5 |
-| At the server's limit | When the count is 100,000 or more **[verify]** the exact cap in entries: a line under the count, `text-sm muted-foreground`: "Only the newest 100,000 lines of this log are read. Download the log in the classic interface for all of it." |
+| More entries than read | When the reply's `total` is more than the entries received (2.1): a line under the count, `text-sm muted-foreground`: "Showing the newest 5,000 of 99,986 entries. Download the log in the classic interface for all of it." |
 | Populated | The table |
 
 ### 2.7 Keyboard
@@ -873,7 +881,7 @@ focus stays on Refresh.
 | `logs.count_one` / `_other` | {{count}} entry, read at {{time}}. / {{count}} entries, read at {{time}}. |
 | `logs.countMatching_one` / `_other` | {{count}} of {{total}} entries matches. / {{count}} of {{total}} entries match. |
 | `logs.reading` | Reading the log… A long log can take a few seconds. |
-| `logs.limit` | Only the newest 100,000 lines of this log are read. Download the log in the classic interface for all of it. |
+| `logs.limit_one` / `_other` (by `total`) | Showing the newest {{shown}} of {{total}} entry. Download the log in the classic interface for all of it. / Showing the newest {{shown}} of {{total}} entries. Download the log in the classic interface for all of it. |
 | `logs.tableLabel` | Entries of {{log}} |
 | `logs.col.time` | Time |
 | `logs.col.message` | Message |
@@ -1354,7 +1362,7 @@ Built from scrubbed captures (verification rule). At least:
 | Twenty Docker containers | Forty `veth` interfaces | Virtual ones counted, not listed (1.5.1) |
 | The browser tab hidden for an hour | Polls stop; chart has a hole | Gaps drawn as gaps; one read on return; the idle timeout still applies |
 | The NAS clock wrong by hours | Chart's time axis would be skewed | Samples are stamped with the browser's time |
-| A syslog of 100,000 lines | Large reply, slow read, memory in the browser | One read, paged in the browser; the "reading can take a few seconds" line; the limit line; **[verify]** size and time, with a fallback to the newest 5,000 |
+| A syslog of 100,000 lines | Asking for every row runs `rpc.php` out of memory (500, empty body) | One read of the newest 5,000 entries (2.1), about 1 MB in under a second on the test VM, paged in the browser; the "reading can take a few seconds" line; the "Showing the newest …" line; the "too long to send" state if a read still fails that way |
 | Arrow keys through the log picker | A native select would read each log in turn | Base UI `Select` commits only on Enter or click (2.3) |
 | Choosing a second log while the first is reading | Two reads, the first answer arriving last | The first query is cancelled in the browser; only the current log's rows are shown |
 | A log message 5,000 characters long, right-to-left, or `<script>` text | Layout, UI-2 | Text nodes; wraps and breaks anywhere; `dir="auto"`; markup shown literally |

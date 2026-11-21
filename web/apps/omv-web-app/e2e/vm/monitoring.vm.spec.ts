@@ -204,12 +204,14 @@ test.describe("an administrator", () => {
     expect(await disks.textContent()).not.toMatch(/serial/i);
   });
 
-  // On a NAS whose journal is near OMV's 100,000-line cap, LogFile.getList runs PHP out of its
-  // memory limit and rpc.php answers 500 with an empty body; the classic interface fails the same way
-  // (journal, 2026-11-22). That is OMV's limit, which this test cannot change, so the read may end in
-  // the rows or in the page's "too long" state. Either way it is exactly one read, and no other reply
-  // fails. Chromium logs the 500 as a failed resource without the method's name, so the console line
-  // is allowed for this test only, and every failed reply is checked to be that read.
+  // The page reads the newest 5,000 entries of a log. Asking for every row of a journal near OMV's
+  // 100,000-line cap ran rpc.php out of PHP's memory: 500 with an empty body, as the classic
+  // interface does (journal, 2026-11-22); 5,000 entries read in under a second. So the rows are
+  // expected. The page keeps a "too long" state as a fallback should a read of 5,000 still fail that
+  // way; the test accepts it, records it as an annotation so a run shows it, and still asks for
+  // exactly one read with no other failed reply. Chromium logs that 500 as a failed resource without
+  // the method's name, so the console line is allowed for this test only, and every failed reply is
+  // checked to be that read.
   test.describe("reading a log", () => {
     test.use({
       extraAllowances: {
@@ -233,9 +235,10 @@ test.describe("an administrator", () => {
       page,
       vm,
     }) => {
-      // A full syslog can take a few seconds to read and parse on the server.
+      // The server still re-reads and parses the whole log, which can take a few seconds.
       test.setTimeout(2 * 60_000);
       const calls = recordCalls(page);
+      const replies = recordReplies(page);
       const failed = recordFailedReplies(page);
       await signIn(page, vm.admin);
       await navigation(page)
@@ -253,18 +256,24 @@ test.describe("an administrator", () => {
       await expect(rowsRead.or(tooLong)).toBeVisible({ timeout: 60_000 });
       const reads = () => calls.filter((c) => c.name === "LogFile.getList");
       expect(reads()).toHaveLength(1);
-      expect(reads()[0]?.params).toMatchObject({
+      expect(reads()[0]?.params).toEqual({
         id: "syslog",
         start: 0,
-        limit: null,
-        sortfield: "ts",
+        limit: 5000,
+        sortfield: "rownum",
         sortdir: "desc",
       });
       expect(reads()[0]?.background).toBe(false);
       await expect(page.getByText(copy.logs.loadFailed)).toHaveCount(0);
 
       if (await tooLong.isVisible()) {
-        // The NAS could not send this log: the one failed reply is that read.
+        // The fallback: even 5,000 entries were too much for the NAS to send. The one failed reply
+        // is that read.
+        test.info().annotations.push({
+          type: "fallback",
+          description:
+            "LogFile.getList for 5,000 entries answered 500; the page showed its too-long state",
+        });
         expect(failed).toEqual(["LogFile.getList 500"]);
         await expect(page.getByRole("table")).toHaveCount(0);
         return;
@@ -274,6 +283,20 @@ test.describe("an administrator", () => {
         name: copy.logs.tableLabel.replace("{{log}}", copy.logs.id.syslog),
       });
       await expect(table.getByRole("row").nth(1)).toBeVisible();
+      // At most 5,000 entries arrive; when the log has more, the page says only the newest are shown.
+      await expect.poll(() => replies.has("LogFile.getList")).toBe(true);
+      const reply = replies.get("LogFile.getList");
+      const received = field(reply, "data");
+      const total = field(reply, "total");
+      expect(Array.isArray(received)).toBe(true);
+      const count = Array.isArray(received) ? received.length : 0;
+      expect(count).toBeLessThanOrEqual(5000);
+      const partial = page.getByText(/^Showing the newest /);
+      if (typeof total === "number" && total > count) {
+        await expect(partial).toBeVisible();
+      } else {
+        await expect(partial).toHaveCount(0);
+      }
 
       await page
         .getByRole("searchbox", { name: copy.logs.search })
