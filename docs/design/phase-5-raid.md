@@ -7,7 +7,9 @@ checking an array, deleting an array, the UX audit's Flow F "Replace a failing d
 and how RAID joins Flow A. RAID here is the software RAID of the RAID plugin, `openmediavault-md`.
 
 **Status: agreed by the owner on 2026-11-21**, P1 to P11 as written except P3, which the owner changed
-to offer Stripe (RAID0) as well (section 18, D24). This slice erases disks (creating an array and
+to offer Stripe (RAID0) as well (section 18, D24). **Built on 2026-11-22**; where the test VM showed
+something other than this design first assumed, the sections below now say what the VM showed, and
+section 19 lists each change. This slice erases disks (creating an array and
 adding a disk overwrite them), destroys data (deleting an array), has an irreversible action (making an
 array bigger) and one that takes away protection (removing a working disk), so the owner agrees the
 design first (journal, 2026-11-21, "Storage is built in slices"). Section 18 lists the points to agree;
@@ -49,12 +51,12 @@ interface for sharing). This section adds only what is new.
 
 | What | Rule | Example |
 | --- | --- | --- |
-| An array's name for people (`{{array}}`) | "RAID" and the device file in `Identifier`: `devicefile` from `MdMgmt.enumerateDevices`. The existing key `filesystems.raidOn` ("RAID <device></device>") becomes the shared `raid.name` | `RAID /dev/md0` |
-| An array's own name | mdadm reports `name` as "host:name". The part after the first colon is shown, as text with `dir="auto"`, on the array's page only and only when it is not just digits (mdadm's default is the array's number). The part before the colon is a host name and is never shown, stored or put in a title (section 17, D3) | `Name: media` |
+| An array's name for people (`{{array}}`) | "RAID" and the device file in `Identifier`: `devicefile` from `MdMgmt.enumerateDevices`, with the level beside it. The existing key `filesystems.raidOn` becomes the shared `raid.name` ("RAID {{device}}") | `RAID /dev/md0` |
+| An array's own name | For an array made on this NAS `name` is **empty** (mdadm leaves `name=` out for its own host, observed on the VM), and `description` then reads "Software RAID  [/dev/md0, …]"; neither is used. An array made on another computer has "host:name": the part after the first colon is shown, as text with `dir="auto"`, on the array's page only and only when it is not just digits. The host part is never shown, stored, copied or put in a title, the technical details included (2.7; section 17, D3) | `Name: media` |
 | RAID level (`{{level}}`) | A shared word list `raidLevel.*`, the same words as Combine disks (BTRFS) where the idea is the same: `raid1`, `mirror` "Mirror (RAID1)"; `raid0`, `stripe` "Stripe (RAID0)"; `raid10` "Mirror and stripe (RAID10)"; `raid5` "Parity (RAID5)"; `raid6` "Double parity (RAID6)"; `raid4` "Parity disk (RAID4)"; `linear` "Joined (linear)"; empty (an array that is not running) "Not known"; anything else as received, in `Identifier` | `Mirror (RAID1)` |
 | Array size | `size` (bytes) with Phase 3's byte rule. It is what the array offers to a file system, not the total of its disks | `7.9 GiB` |
-| Progress of a sync | From `state`: the first number before `%` with one decimal, and from `finish=` (minutes) the time left with the duration rule, said with "about" | `45.0% done, about 2 hours left` |
-| How many disks | "{{working}} of {{numdevices}} disks working", tabular; a spare is counted apart: "and 1 spare" | `1 of 2 disks working` |
+| Progress of a sync | For a resync or a rebuild, from `state`: the first number before `%` with one decimal, and from `finish=` (minutes) the time left with the duration rule, said with "about". `state` carries **no** progress during a reshape or a check ("clean, reshaping", "clean, checking", observed): their percentage is read from the report (`getDetail`'s "Reshape Status : 6% complete", "Check Status : 7% complete"), without a time left. Neither: "progress not known" | `45.0% done, about 2 hours left` |
+| How many disks | "{{working}} of {{numdevices}} disks working", tabular, always counted from the report (0.3): `devices` lists failed members and spares too (observed). A spare is counted apart: "and 1 spare". Without a readable report: "{{numdevices}} disks" | `1 of 2 disks working` |
 | How many disks it can lose | 0.4's protection words | `It can lose 1 disk.` |
 | Disk names, serial numbers, label sizes | The disks slice's rules (its 0.1), including the label size in every confirmation that erases a disk | `3.6 TiB (4 TB on the label)` |
 | Server-written text (`state` when not recognised, the technical details, error messages) | As received, as text (UI-2), `dir="auto"` | |
@@ -78,8 +80,8 @@ form on the VM by capture (section 15).
 | `resyncing` with `PENDING` | **Warning** | "Waiting to synchronise its disks. This starts when something is first written to it." **[verify]** |
 | `resyncing` with `DELAYED` | **Warning** | "Waiting to synchronise its disks until another array on the same disks has finished." **[verify]** |
 | `resyncing` | **Warning** | "Synchronising its disks: {{progress}}. Its files can be used, but it is not fully protected until this ends." |
-| `checking` (or `syncaction` `check`) | **OK** | "Being checked. This can take hours." (no percentage: the server reports none for a check **[verify]**) |
-| `repair` in `syncaction` | **OK** | "Being repaired. This can take hours." |
+| `checking` (or `syncaction` `check`) | **OK** | "Being checked: {{progress}}. This can take hours." (the percentage from the report, 0.1) |
+| `repair` in `syncaction` | **OK** | "Being repaired: {{progress}}. This can take hours." |
 | `clean` or `active`, none of the above | **OK** | none |
 | anything else | **Unknown** | "Its state is “{{state}}”, which this page does not recognise." |
 
@@ -98,9 +100,10 @@ and a member's role (0.3), which carries the Critical pill only when the member 
 
 ### 0.3 A disk's role in an array
 
-`enumerateDevices` lists an array's member devices (`devices`) but not what each one is doing. The
-array's technical details (`MdMgmt.getDetail`, mdadm's report) end with one line per member, and the
-interface reads each member's role from it **[verify]** the line forms by capture:
+`enumerateDevices` lists an array's member devices (`devices`), failed members and spares included
+(observed), but not what each one is doing. The array's technical details (`MdMgmt.getDetail`, mdadm's
+report) end with one line per member, and the interface reads each member's role from it (the line
+forms as captured on the VM):
 
 | mdadm's words on the member's line | Role | Shown |
 | --- | --- | --- |
@@ -111,13 +114,18 @@ interface reads each member's role from it **[verify]** the line forms by captur
 | `removed` (a line without a device) | **Missing** | a row without a disk: the Critical pill and "Missing: not connected, or failed and taken out" |
 | anything else | as received, in `Identifier` | the words; the role is not known |
 
-- **Counts**: working disks are the Working ones; the disks missing are `numdevices` less the Working
-  and Rebuilding ones.
-- **If the report cannot be read or its table cannot be parsed**, the roles are "Not known" and every
+- **A failed disk still listed appears twice** (observed): as a "- 0 0 N removed" slot line and as a
+  "faulty /dev/sdX" line after the table. It is one Failed disk, not a Missing one and a Failed one:
+  the Missing rows are the "removed" lines beyond the "faulty" ones. A RAID6 with two failed disks is
+  "2 of 4 disks working", two Failed rows, no Missing row.
+- **Counts**: working disks are the Working ones; the disks short are `numdevices` less the Working
+  ones (a Rebuilding disk is not yet working).
+- **If the report cannot be read, its table cannot be parsed, or it does not list a device that
+  `devices` lists**, the roles are "Not known" and every
   action that depends on them (removing a disk, 5; replacing, 4) is unavailable: "Could not tell what
   each disk is doing, so this cannot be done now." with "Try again".
-- The report is read with the list's data on the array's page (2.1) and does not touch the disks
-  (0.5).
+- The report is read for every array on the list (for the counts) and on the array's page (2.1). It
+  reads a member's superblock (0.5).
 
 ### 0.4 What an array protects
 
@@ -141,25 +149,34 @@ create on the VM; the small amount mdadm keeps for its own records is not subtra
 The owner's rule is that a background read must not wake a disk; reading S.M.A.R.T. stays the disks
 slice's business and nothing here reads it.
 
+**What the VM showed** (journal, 2026-11-22): `enumerateDevices`, `getDetail` and
+`getSlaves` each read a member disk's superblock on every call, which can wake a disk that has spun
+down; `getCandidates` reads no array member. So the arrays are read only on pages the reader opened
+that are about arrays or disks (the RAID pages, Disks and a disk's page, Flow A), never from the
+dashboard, the File systems pages or in the background, except the one poll below, while an array is
+busy and its disks are active anyway. Whether the plugin is installed (the menu item) is decided by
+`getCandidates` (0.10).
+
 | Method | Touches the disks? | When this slice calls it |
 | --- | --- | --- |
-| `MdMgmt.enumerateDevices` | No: it asks mdadm and the kernel's RAID status and reads OMV's configuration **[verify]** with `/proc/diskstats` on the VM that no member disk is read | On opening a page, Refresh, after an action, and the poll below |
-| `MdMgmt.getDetail` | No: mdadm's report from the kernel **[verify]** as above | With `enumerateDevices` on an array's page, and in the poll while that page is open |
-| `MdMgmt.getSlaves` | No: the system's device information **[verify]** | On opening an array's page |
-| `MdMgmt.getCandidates` | May read each unused disk to look for anything on it **[verify]** whether it wakes one | Only on opening the create and add flows, and in their re-checks; the sentence beside the disk choice says so |
+| `MdMgmt.enumerateDevices` | Yes: a member's superblock (observed) | On opening a RAID page, Disks, a disk's page or Flow A; Refresh; after an action; the poll below |
+| `MdMgmt.getDetail` | Yes: a member's superblock (observed) | For each array on the list and on an array's page; in the poll for a busy array |
+| `MdMgmt.getSlaves` | Yes: a member's superblock (observed) | On opening an array's page and the add flow |
+| `MdMgmt.getCandidates` | No array member (observed) | Once after an administrator signs in, for the menu item; on opening the create and add flows, and in their re-checks |
 | `DiskMgmt.getList`, `FileSystemMgmt.getList`, `enumerateFilesystems`, `EmailNotification.get` | As in the earlier slices | With the page's reads |
 | `MdMgmt.create`, `add`, `grow`, `remove`, `delete`, `DiskMgmt.wipe` | Yes, they write to the disks | Only after their confirmations |
 | `MdMgmt.setSyncAction` with `check` | Yes: it reads every disk of the array, for hours | Only after its confirmation (section 6) |
 
 **The one poll** (section 18, P9). The kernel does the long work (synchronising, rebuilding,
 reshaping, checking) by itself, and the reader wants to see it move. So, **only while an array shown
-on the page is doing one of these**, the RAID list re-reads `enumerateDevices` every 30 seconds, and an
-array's page re-reads `enumerateDevices` and that array's `getDetail`. It is a background poll
+on the page is doing one of these**, the RAID list re-reads `enumerateDevices` and the busy arrays'
+`getDetail` every 30 seconds, and an array's page re-reads `enumerateDevices` and that array's
+`getDetail`. It is a background poll
 (the monitoring domain's 0.4: `updatelastaccess: false`, stopped while the tab is hidden, no retry by
 itself after a failure). It stops when nothing on the page is syncing, so a healthy, idle NAS is never
 polled. Beside the "Read at" time: "Updated every 30 seconds while an array is synchronising, rebuilding
-or being checked." The disks of an array that is syncing are awake anyway; the poll reads only the
-kernel's state. Nothing else in this slice polls; the dashboard reads the arrays once per visit (9.1).
+or being checked." The disks of an array that is syncing are awake anyway. Nothing else in this slice
+polls, and the dashboard does not read the arrays at all (9.1).
 
 ### 0.6 Naming an array in an address
 
@@ -192,32 +209,37 @@ in Flow A, **each disk is placed by both the plugin's list and the disks slice's
 | Group | A disk is here when | Shown as |
 | --- | --- | --- |
 | **Empty disks** | It is in `getCandidates`, and the disk-use model finds nothing on it ("No file system found", or "Empty (wiped at …)" in this session) | Offered first |
-| **Erase and reuse** | It is not in `getCandidates`, the disk-use model allows a wipe ("No file system found", or "File system {{name}}, not used on this NAS"), and it is not connected by USB (`hotpluggable`) | Offered under its own heading, each with what is on it; it gets a quick wipe first, as in Flow A (section 17, D8) |
+| **Erase and reuse** | It is not in `getCandidates`, the disk-use model allows a wipe ("No file system found", or "File system {{name}}, not used on this NAS"), and it is not connected by USB | Offered under its own heading, each with what is on it; it gets a quick wipe first, as in Flow A (section 17, D8). A disk taken out of an array keeps the array's marks and is not a candidate until wiped (observed), so it comes back this way |
 | **Too small** (adding only) | Otherwise offered, but smaller than the smallest disk of the array (`getSlaves` sizes) | Not offered; under "Cannot be used": "It is smaller than the array's disks ({{size}}). A disk added to an array must be at least as large as the smallest one." |
 | **Cannot be used** | Anything else in `DiskMgmt.getList`: the system disk, a read-only disk, a disk with a file system in use, set up or being created, swap, a disk already in an array, a disk being wiped, and a disk connected by USB | Not offered; listed in a `Disclosure` "Disks that cannot be used ({{count}})", each with the disks slice's blocker sentence, and for USB: "It is connected by USB. The RAID plugin does not use USB disks, because a USB connection can drop and break the array." |
 
+- **USB** is what the plugin itself refuses, by udev's `ID_BUS=usb` (read from its source on the VM).
+  DiskMgmt.getList does not report that property; udev names such a disk's stable link
+  `/dev/disk/by-id/usb-…`, which is what this interface reads. `hotpluggable` is **not** USB: the VM's
+  SATA disks report it true, and the plugin offers them (observed).
 - **"Erase and reuse" says what is on the disk**: "Holds the file system {{name}} ({{type}}, {{size}}),
   not used on this NAS." or "No file system was found, but the disk is not empty: it may hold old
   partitions, or be part of a RAID array from another computer."
 - **After a reuse disk is erased**, it must appear in `getCandidates` before it is used; if it does
   not (the plugin leaves it out for a reason the interface cannot see, such as another setting that
-  refers to it), the flow stops with the disk erased and says so (3.7, 4.7). **[verify]** on the VM
-  whether a disk with S.M.A.R.T. monitoring settings saved is still in `getCandidates`.
+  refers to it), the flow stops with the disk erased and says so (3.7, 4.7).
 - **Fail closed**: if `getCandidates` or any disk-use input fails, nothing is offered:
   `EmptyState variant="error"` "Could not check which disks can be used." + server message + "Try
   again".
 - The disk is sent to the server by its stable name (`devicefile` from `DiskMgmt.getList`, the
   `/dev/disk/by-id/…` path the wipe uses), so a disk renamed between the check and the call is never
-  hit by mistake **[verify]** that mdadm accepts it and that the array then lists the kernel name.
+  hit by mistake. mdadm accepts it and the array then lists the kernel name (observed).
 
 ### 0.8 Pending changes in this slice
 
 Every change to an array acts at once on the disks, and also tells OMV to write the arrays down again.
-That marks two modules pending (read from the plugin's module): `mdadm`, which the band calls "RAID"
-(new key `modules.mdadm`), and `initramfs`, "Start-up image" (existing). Applying them records the
-arrays so the NAS starts them under the same names after a restart and covers them in its email alerts,
-then rebuilds the start-up image, which takes a minute or two **[verify]** the time on the VM, and what
-a restart without applying does to the array's name (0.6).
+That marks two modules pending (observed): `mdadm`, which the band calls "RAID" (new key
+`modules.mdadm`), and `initramfs`, "Start-up image" (existing). The contract marks these operations
+`x-omv-dirty: true` (a boolean); the band reads the module names from `System.getInformation`'s
+`dirtyModules`, as for every other change. Applying them records the arrays so the NAS starts them
+under the same names after a restart and covers them in its email alerts, then rebuilds the start-up
+image; on the VM that took about 7 seconds. A delete the system refuses (HTTP 500, while the array's
+file system is mounted) leaves nothing pending (observed).
 
 | Action | Marks pending | Applied by |
 | --- | --- | --- |
@@ -257,14 +279,16 @@ unavailable until a read succeeds, with the server's message.
 
 ### 0.10 When the RAID plugin is not installed
 
-OMV answers `MdMgmt.enumerateDevices` with HTTP 404 "RPC service 'MdMgmt' not found." when the plugin
-is not installed (observed on the VM, 2026-11-21), and the app already reads that as "no RAID plugin"
+OMV answers every `MdMgmt` method with HTTP 404 "RPC service 'MdMgmt' not found." when the plugin is
+not installed (observed for `enumerateDevices` on the VM, 2026-11-21; the same reply for any method of
+an unknown service, read from OMV's RPC layer), and the app reads that as "no RAID plugin"
 (`isRaidPluginMissing`). This slice adds what the RAID pages show then:
 
 - **The menu item "RAID" is not shown** (Q8: shown only when installed). Whether it is shown is
-  decided by the same `enumerateDevices` read, made once after an administrator signs in and kept for
-  the session (section 11). While that read is loading, the item is not shown; on any other failure it
-  is shown, and the page shows the error.
+  decided by one `MdMgmt.getCandidates` read, which reads no array member (0.5), made once after an
+  administrator signs in and kept for the session (section 11); it is not repeated when a task ends.
+  While that read is loading, the item is not shown; on any other failure it is shown, and the page
+  shows the error. Installing the plugin shows the item at the next sign-in.
 - **Opening a RAID address anyway** (`/storage/md`, an array's page, a flow) shows, in place of the
   page's content, `EmptyState variant="empty"` with a neutral icon:
   - "RAID needs the openmediavault-md plugin, which is not installed on this NAS."
@@ -273,7 +297,7 @@ is not installed (observed on the VM, 2026-11-21), and the app already reads tha
   - `ExternalLink` "Plugins in the classic interface" → `/#/system/plugins`.
   - No other call is made, and no array-specific address is resolved.
 - **Elsewhere nothing claims anything about RAID**, as today: the Disks list has no RAID uses, Flow A
-  has no "RAID arrays" group, the dashboard has no RAID rows, and the disks slice's untraceable-storage
+  has no "RAID arrays" group, and the disks slice's untraceable-storage
   sentence (its P4) still covers arrays made by hand without the plugin.
 - If the plugin is removed while a RAID page is open, its next read answers 404 and the page switches
   to this state.
@@ -339,17 +363,14 @@ In parallel, on opening, on Refresh and after an action this session started end
 | 2 | State | 0.2 | The pill and its reason, never in a tooltip; while syncing, a compact progress bar under the reason (`ProgressBar`, 13.1) with the same figures as text |
 | 3 | Level | `level` | 0.1's word |
 | 4 | Size | `size` | 0.1, right-aligned, tabular. Sortable |
-| 5 | Disks | `devices`, `numdevices`, `DiskMgmt.getList` | "{{working}} of {{numdevices}} disks working" (0.1; from `devices` and the state words, since the list does not read each array's report), then each member device as a router link to its disk page (the disks slice's rule), one per line, in `Identifier` |
+| 5 | Disks | the report, `devices`, `DiskMgmt.getList` | "{{working}} of {{numdevices}} disks working" (0.1), counted from each array's report, which the list reads for every array (the VM showed that `devices` lists failed members and spares); "{{numdevices}} disks" without a readable report. Then each member device as a router link to its disk page (the disks slice's rule), one per line, in `Identifier` |
 | 6 | Used by | 0.11 | The file system's name as a router link to its page, or "Other storage", or "Nothing" |
 
 The rows keep the server's order on every read; problems are led by the roll-up, not by moving rows.
 There is no row selection and no row action: each array's actions are on its page, the ones that
 destroy or take away protection apart, at the end.
 
-On the list, "working" counts `devices` less any member the state words say is rebuilding or failed
-**[verify]** whether `devices` lists failed and spare members; the array's page counts from the
-report (0.3), which is exact. Where the two could differ, the list says "{{count}} disks" without
-"working", and the page says which.
+The list and the array's page count from the report alike (0.3).
 
 ### 1.4 Roll-up line
 
@@ -363,7 +384,8 @@ arrays: Critical" (`raid.rollUp`). Nothing when every array is OK; there is no "
 - Email on: "When a disk in an array fails, the NAS emails you. Which events send email is set under
   Notifications in the classic interface." with `ExternalLink` "Notification events in the classic
   interface" → `/#/system/notification/events`.
-- Email off: "Email notifications are off, so a failed disk is shown only here and on the dashboard."
+- Email off: "Email notifications are off, so a failed disk is shown only here." (the dashboard does not
+  read the arrays, 0.5, 9.1)
   with `ExternalLink` "Notification settings in the classic interface" →
   `/#/system/notification/settings`.
 - The read failed: nothing (the line is information, not a status).
@@ -422,7 +444,7 @@ at narrow widths. After Refresh, focus stays on Refresh. A poll never moves focu
 | `raid.col.size` | Size |
 | `raid.col.disks` | Disks |
 | `raid.col.usedBy` | Used by |
-| `raid.name` | RAID <device></device> |
+| `raid.name` | RAID {{device}} |
 | `raid.open` | Open RAID {{device}} |
 | `raid.noPage` | This page cannot open this array. Manage it in the classic interface. |
 | `raid.disksWorking` | {{working}} of {{total}} disks working |
@@ -433,7 +455,7 @@ at narrow widths. After Refresh, focus stays on Refresh. A poll never moves focu
 | `raid.usedBy.unknown` | Not known |
 | `raid.alerts.on` | When a disk in an array fails, the NAS emails you. Which events send email is set under Notifications in the classic interface. |
 | `raid.alerts.onLink` | Notification events in the classic interface |
-| `raid.alerts.off` | Email notifications are off, so a failed disk is shown only here and on the dashboard. |
+| `raid.alerts.off` | Email notifications are off, so a failed disk is shown only here. |
 | `raid.alerts.offLink` | Notification settings in the classic interface |
 | `raid.unfinished.noFs` | RAID <device></device> has no file system yet. |
 | `raid.unfinished.addStorage` | Add storage on it |
@@ -454,12 +476,13 @@ at narrow widths. After Refresh, focus stays on Refresh. A poll never moves focu
 | `raidState.resyncPending` | Waiting to synchronise its disks. This starts when something is first written to it. |
 | `raidState.resyncDelayed` | Waiting to synchronise its disks until another array on the same disks has finished. |
 | `raidState.resyncing` | Synchronising its disks: {{progress}}. Its files can be used, but it is not fully protected until this ends. |
-| `raidState.checking` | Being checked. This can take hours. |
-| `raidState.repairing` | Being repaired. This can take hours. |
+| `raidState.checking` | Being checked: {{progress}}. This can take hours. |
+| `raidState.repairing` | Being repaired: {{progress}}. This can take hours. |
 | `raidState.unrecognised` | Its state is “{{state}}”, which this page does not recognise. |
 | `raidState.unknownBlocks` | Its state could not be read, so it cannot be changed now. |
 | `raidState.progress` | {{percent}} done, about {{left}} left |
 | `raidState.progressNoTime` | {{percent}} done |
+| `raidState.progressUnknown` | progress not known |
 | `raidLevel.raid1` … `raidLevel.unknown` | Mirror (RAID1), Stripe (RAID0), Mirror and stripe (RAID10), Parity (RAID5), Double parity (RAID6), Parity disk (RAID4), Joined (linear), Not known |
 | `raidProtect.mirror_one` / `_other` | It can lose {{count}} disk and keep every file. / It can lose {{count}} disks and keep every file. |
 | `raidProtect.one` | It can lose 1 disk. |
@@ -580,9 +603,10 @@ when the array has a spare.
 mdadm's report, already read for the roles (`getDetail`): it does not touch the disks, so the section
 shows it on "Show technical details" without a warning sentence, as text on the terminal pair
 (`TaskLog`, `size="page"`, `wrap={false}`), with "Copy report" and "Hide technical details". Intro:
-"mdadm's own report on the array: how it was made and what each disk is doing." The report contains the
-host name and the array's UUID; it is shown on screen only, never stored beyond the session's memory
-(UI-13). Failed: `InlineAlert tone="critical"` "Could not read the technical details." + message +
+"mdadm's own report on the array: how it was made and what each disk is doing. The NAS's own name is
+left out." The report's "Name" line carries the host name ("nas:0 (local to host nas)"): the host part
+is taken out before the report is shown or copied, so the line reads "Name : 0". The array's UUID stays;
+the report lives in the session's memory only (UI-13). Failed: `InlineAlert tone="critical"` "Could not read the technical details." + message +
 "Try again" (and 0.3's roles are "Not known").
 
 ### 2.8 Keyboard and focus
@@ -681,7 +705,7 @@ Copy report, Hide), Delete array…. A poll never moves focus, and a row that di
 | `array.usedBy.growFs` | Grow the file system so it uses the added space. |
 | `array.usedBy.growFsLink` | Grow file system {{name}} |
 | `array.details.title` | Technical details |
-| `array.details.intro` | mdadm's own report on the array: how it was made and what each disk is doing. |
+| `array.details.intro` | mdadm's own report on the array: how it was made and what each disk is doing. The NAS's own name is left out. |
 | `array.details.show` | Show technical details |
 | `array.details.hide` | Hide technical details |
 | `array.details.label` | Technical details of RAID {{device}} |
@@ -776,8 +800,8 @@ order they run:
 - "Erase {{count}} disks:" then one line per disk, each as Flow A's erase or use-whole line (device,
   model, serial number, size with the label size; for Erase and reuse, what is lost).
 - "Combine them into RAID {{device}}: {{level}}. About {{usable}} can be used. {{protection}}" where
-  `{{device}}` is the name the server will give (the next free `/dev/mdN`), said as "a new array" when
-  it cannot be known in advance **[verify]**; `{{protection}}` is 0.4's sentence.
+  the array is always said as "a new array": the server picks the next free `/dev/mdN`, and the page
+  does not guess it; `{{protection}}` is 0.4's sentence.
 - Every level but Stripe: "The disks then synchronise, which takes hours for large disks. The array can
   be used meanwhile, but it is not fully protected until this ends." (A stripe has nothing to
   synchronise, so this line is left out for it.)
@@ -809,11 +833,11 @@ arrival. One named, typed confirmation is the gate (style guide 5.4).
 | --- | --- | --- | --- |
 | 1 | "Check the disks again" | `getCandidates`, the disk-use inputs, `enumerateDevices` | Every disk must still be offered in the same group, with the same serial number and model. Otherwise the flow stops before anything is erased (3.7) |
 | 2 … | "Erase {{device}}", one per Erase and reuse disk | `DiskMgmt.wipe {devicefile, secure: false}`, a task, output in a `Disclosure` | Then `getCandidates` again: the disk must now be a candidate |
-| n | "Create the array" | `MdMgmt.create {devices, name: "", level}`: `devices` the stable names (0.7), `level` `mirror`, `raid5`, `raid6`, `raid10` or `stripe` | Synchronous, a few seconds **[verify]**. Its reply names the new array's `devicefile` |
+| n | "Create the array" | `MdMgmt.create {devices, name: "", level}`: `devices` the stable names (0.7), `level` `mirror`, `raid5`, `raid6`, `raid10` or `stripe` | Synchronous, a few seconds (observed). Its reply names the new array's `devicefile`; its `level` is the word sent ("mirror"), unlike every other reply ("raid1"), so it is not read |
 | n+1 | "Find the new array" | `enumerateDevices` | The row whose `devicefile` is the reply's and whose `devices` are exactly the chosen disks (by any of their names). Exactly one must match |
-| With C3: n+2 | "Check the array can hold a file system" | `FileSystemMgmt.getCandidatesBg` | It must list the array **[verify]** that a new array appears at once, during its first synchronisation |
+| With C3: n+2 | "Check the array can hold a file system" | `FileSystemMgmt.getCandidatesBg` | It must list the array: a new array becomes a candidate during its first synchronisation, at once on one VM run and a moment later on another (observed), so this read is made up to five times, 2 s apart, before the step stops. When it is still not offered and a file system is found on it, that file system is an earlier array's, back because deleting an array erases only its marks (7) and the new array sits on the same disks at the same place (observed on the VM): the step quick-wipes the new array, which only erases what the reader confirmed erasing with its disks, and looks again |
 | n+3 … n+5 | "Create the {{format}} file system", "Find the new file system", "Set up the mount" | Flow A's steps 3 to 5 on the array's `devicefile` | No partition is made on an array (read from source) |
-| last but one | **"Save the array and mount the new file system"** (with C3) or **"Save the array's settings"** (without) | R10: expected exactly `mdadm`, `initramfs` and, with C3, `fstab`, `collectd`, `monit`, `quota` **[verify]**; then `Config.applyChangesBg` | The checkpoint, labelled by what it does, not "Apply" |
+| last but one | **"Save the array and mount the new file system"** (with C3) or **"Save the array's settings"** (without) | R10: expected exactly `mdadm`, `initramfs` and, with C3, `fstab`, `collectd`, `monit`, `quota` (observed); then `Config.applyChangesBg` | The checkpoint, labelled by what it does, not "Apply" |
 | last | "Check the result" | `enumerateDevices` (the array is listed and its state readable); with C3, Flow A's step 7 (mounted, entry exists) | Never claim a mounted file system that is not (UX audit B8) |
 
 While a task step runs, it shows "Running for {{duration}}" and its output, following the tail. The
@@ -1035,8 +1059,8 @@ gate; the summary's "cannot be undone" sentence is the difference (section 18, P
 | --- | --- | --- | --- |
 | 1 | "Check the disk and the array again" | `getCandidates`, the disk-use inputs, `enumerateDevices`, `getDetail` | The disks as 3.4 step 1. The array: the same `uuid`, level and `numdevices`, the same roles as summarised, and still not blocked (4.1). Otherwise the flow stops before anything is erased |
 | 2 | "Erase {{device}}" (Erase and reuse only) | `DiskMgmt.wipe` quick, then `getCandidates` | As 3.4 |
-| 3 | "Add {{device}} to the array" (bigger: "Add the disks and reshape the array") | `MdMgmt.add {devicefile, devices}` (replace, spare) or `MdMgmt.grow {devicefile, devices}` (bigger) | Synchronous, a few seconds; the rebuild or reshape then runs in the kernel **[verify]** |
-| 4 | "Check that it was added" | `enumerateDevices`, `getDetail` | The disk is a member; its role is Rebuilding (replace), Spare (spare), or the state says reshaping (bigger) **[verify]** the role of a disk added to a degraded array in the first seconds |
+| 3 | "Add {{device}} to the array" (bigger: "Add the disks and reshape the array") | `MdMgmt.add {devicefile, devices}` (replace, spare) or `MdMgmt.grow {devicefile, devices}` (bigger) | Synchronous, a few seconds; the rebuild or reshape then runs in the kernel (observed) |
+| 4 | "Check that it was added" | `enumerateDevices`, `getDetail` | The disk is a member; its role is Rebuilding, or already Working (a small disk) or Spare (not started yet) (replace), Spare (spare), or the state says reshaping or the array counts the new disks (bigger). A RAID5's size grows only when the reshape ends (observed) |
 | 5 | "Take the failed disk out of the array" (only with a Failed member) | `MdMgmt.remove {devicefile, devices: [failed member]}` | Safe: a failed disk holds no part of the working array. Its result line says the disk can now be disconnected, by serial number |
 | 6 | **"Save the array's settings"** | R10: expected exactly `mdadm`, `initramfs`; then `Config.applyChangesBg` | The checkpoint |
 
@@ -1134,8 +1158,10 @@ array's page whatever the browser does; it continues when the reader signs out. 
 array without that disk, and a disk that can be disconnected or reused.
 
 `MdMgmt.remove {devicefile, devices: [one member]}`: the server marks the disk failed, then takes it
-out. It is synchronous and quick. It does not erase the disk: the disk keeps the array's marks (read
-from source). It marks `mdadm` and `initramfs` pending (0.8).
+out. It is synchronous and quick. It does not erase the disk: the disk keeps the array's marks, so the
+plugin does not offer it again until it is wiped (observed). It marks `mdadm` and `initramfs` pending
+(0.8). Its reply's `numdevices` is the count before plus the disk taken out (observed): it is never
+read; the array is read again instead.
 
 ### 5.1 When it is offered (the Take out button on a member's row, 2.5)
 
@@ -1259,8 +1285,9 @@ finding in the system log.
 
 `MdMgmt.setSyncAction {devicefile, action}`: `check` starts the kernel's check, `idle` stops it. It
 writes nothing to the disks' data, reads every disk of the array for hours, and marks nothing pending.
-OMV turns off the system's own scheduled checks (read from the plugin's install script) **[verify]** on
-the VM that no scheduled check remains, so this is the only way to run one.
+OMV turns off the system's own scheduled checks (read from the plugin's install script), so this is
+the only way to run one. A level without copies has nothing to check: the call fails with HTTP 500
+(observed), and the section is not shown for it.
 
 ### 6.1 The section
 
@@ -1270,7 +1297,8 @@ the VM that no scheduled check remains, so this is the only way to run one.
   needed for a rebuild. It changes nothing. Run it every month or so. It takes about as long as reading
   one whole disk, often many hours, and the NAS is slower meanwhile. It wakes the disks."
 - Idle and OK: button **"Check now…"** (neutral).
-- Being checked (or repaired): the state line's words, and **"Stop checking…"** (neutral).
+- Being checked (or repaired): the state line's words with the check's percentage from the report,
+  and **"Stop checking…"** (neutral).
 - Otherwise unavailable, with the reason: "It is busy now ({{what}}). Wait until this ends." / "A
   degraded array cannot be checked. Replace its missing disk first." / 0.2's Unknown sentence.
 - When this session ran a check that has ended: "The check ended at {{time}}. Any differences it found
@@ -1386,7 +1414,7 @@ the dialog to the refusal. Otherwise `MdMgmt.delete` with the fresh row's `devic
 | Result | Shown |
 | --- | --- |
 | Deleted | The array's page shows, in place of its content, `JobResult` succeeded: "RAID {{array}} was deleted." then "Its disks are free: {{list}}. Apply the pending changes so the NAS forgets the array when it next starts." with router links "Go to RAID" and, for each disk, "Open disk {{device}}". On the Disks page those disks then show "No file system found" |
-| Failed | The dialog stays: "RAID {{array}} was not deleted." + server message (for example when something still uses it). "If the array was stopped but not deleted, it shows as not running after a refresh." **[verify]** whether a failure can leave the array stopped |
+| Failed | The dialog stays: "RAID {{array}} was not deleted." + server message (for example when something still uses it). "If the array was stopped but not deleted, it shows as not running after a refresh." The system refuses while the array's file system is mounted (HTTP 500, with mdadm's words) and nothing changes or is left pending (observed); the interface's own refusal (7.1) comes first |
 | The request was cut | "Could not tell whether the array was deleted." and Refresh |
 
 There is no undo. Leaving the page during the call does not stop it.
@@ -1444,7 +1472,6 @@ the pause.
 
 ### 8.1 How the reader learns of it
 
-- The dashboard's attention row (9.1): "RAID /dev/md0 is missing a disk…" with "Open RAID /dev/md0".
 - The email, when email notifications are set up (1.5).
 - The RAID list's roll-up, and the Disks list ("Part of RAID /dev/md0" beside the disk, and its health
   when checked).
@@ -1458,7 +1485,7 @@ the pause.
 | 2b | Without: "Take the failed disk out…" (5.3, plain), then turn off the NAS (the classic interface's power menu; this interface has none yet), swap the disks, turn it on, sign in, open the array | | `MdMgmt.remove` |
 | 3 | "Add the new disk…" (section 4): the replacement is preselected when it is the only disk offered; typed confirmation; steps; when a failed disk is still listed, it is taken out in the same run | | `getCandidates`, `DiskMgmt.wipe` (reuse), `MdMgmt.add`, `MdMgmt.remove` (failed), apply |
 | 4 | The array's page shows Rebuilding with its progress, polled (0.5); the reader may leave | | `enumerateDevices`, `getDetail` |
-| 5 | When rebuilding ends, the state is OK; the dashboard row is gone at the next visit | | |
+| 5 | When rebuilding ends, the state is OK | | |
 
 **Replacing a disk that still works** (the health check warns, 2.4): add the new disk as a spare
 (section 4), then take the failing disk out (5.4, typed); the kernel rebuilds onto the spare at once.
@@ -1485,22 +1512,20 @@ use the serial number printed on each disk.
 
 | Where | Becomes |
 | --- | --- |
-| Attention rows | With the plugin installed, `enumerateDevices` is read with the dashboard's other storage reads, once per visit and on "Try again" (never polled). A row per array whose state (0.2) is Critical or Unknown: "RAID {{array}} is missing a disk. If one more fails, its files are lost." (degraded), "RAID {{array}} is rebuilding: {{progress}}. It cannot lose another disk until this ends." (rebuilding, as read), "RAID {{array}} is not running. Its files cannot be reached." (not running, failed), "Could not read the state of RAID {{array}}." (Unknown). Each with router link "Open RAID {{array}}". No row for Warning (synchronising, reshaping) or OK |
-| Plugin not installed, or the read failed | No RAID row. A failed read adds nothing (the dashboard's rule: a card or row that could not be read says so only where it lives; the RAID page shows the error) |
+| Attention rows | **None.** The design first had the dashboard read `enumerateDevices` once per visit for rows about degraded arrays. The VM showed that the read touches a member disk's superblock (0.5), and the dashboard is opened most often of all, so it does not read the arrays (journal, 2026-11-22). A failed disk is reported by email (1.5), on the RAID list and on the array's page |
 
 ### 9.2 Disks and file systems
 
 | Where | Was | Becomes |
 | --- | --- | --- |
-| Disks list and a disk's page, "Used for": "Part of RAID {{array}}" | the array's name as text | A router link to the array's page; with the array's role for this disk when the page has read it ("Spare in RAID …", "Failed disk in RAID …") |
+| Disks list and a disk's page, "Used for": "Part of RAID {{array}}" | the array's name as text | A router link to the array's page, named by its device (never mdadm's "host:name"). The role variants ("Spare in RAID …", "Failed disk in RAID …") are not built: the Disks page does not read each array's report |
 | A disk's page, wipe blocker for a RAID member | "Remove it from the array under RAID management first." + `ExternalLink` "RAID management in the classic interface" | "Take it out of the array, or delete the array, on the array's page first." + router link "Open RAID {{array}}" (where section 5's and 7's own refusals apply) |
-| File systems list and a file system's page, "On": "RAID /dev/md0" | text | A router link to the array's page |
+| File systems list and a file system's page, "On": "RAID /dev/md0" | text | A router link to the array's page when the plugin is known to be installed (the menu's probe); the File systems pages themselves do not read the arrays (0.5) |
 | A file system on an array, its page's grow section | unchanged | unchanged; the array's page links to it after the array was made bigger (2.6) |
 
-Catalogue changes: `disks.use.raid` keeps its English, its `<array>` becomes a link; new
-`disks.use.raidSpare` "Spare in RAID <array></array>", `disks.use.raidFailed` "Failed disk in RAID
-<array></array>"; `wipe.blocked.raidDo` becomes "Take it out of the array, or delete the array, on the
-array's page first."; `wipe.raidLink` becomes "Open RAID {{array}}".
+Catalogue changes: `disks.use.raid` keeps its English, its `<array>` becomes a link to the device;
+`wipe.blocked.raidDo` becomes "Take it out of the array, or delete the array, on the array's page
+first."; `wipe.raidLink` becomes "Open RAID {{array}}".
 
 ### 9.3 Flow A
 
@@ -1553,9 +1578,9 @@ Every method in this slice refuses a normal user ("Invalid context role."). So:
 - **The menu item.** `NAV_PAGES` gains Storage > RAID (`item: "md"`, the classic segment;
   `labelKey: "nav.items.storage.md"` "RAID"; `classic: "/#/storage/md"`), placed where the stock menu
   places it: after Disk health (S.M.A.R.T.) and before File systems (stock positions 20, 30, 40). It is
-  the first entry with a condition: it is shown only when the shell's `enumerateDevices` read, made once
-  after an administrator signs in, did not answer 404 (0.10). That read is the same query the storage
-  pages use, so they find it warm; it does not touch the disks (0.5) **[verify]**.
+  the first entry with a condition (`when: "raidPlugin"` in the app's navigation model): it is shown only
+  when the shell's `MdMgmt.getCandidates` read, made once after an administrator signs in, did not
+  answer 404 (0.10). That read touches no array member (0.5, observed).
 - Static file routes, more specific than `$group/$item`, as before. `BuiltRoute` gains `/storage/md`;
   `isCurrent` treats `/storage/md/…` as the RAID item's.
 - `create` is a static segment matched before `$array`, and does not pass 0.6's pattern; `$array` is
@@ -1574,11 +1599,11 @@ interface sends less, which the contract rules allow.
 
 | Method | Where | When | Kind | Contract status and notes |
 | --- | --- | --- | --- | --- |
-| `MdMgmt.enumerateDevices` | shell (menu), every RAID page, dashboard, disks and file-systems pages | sign-in, open, Refresh, after an action, the poll (0.5), the re-checks | foreground; background in the poll | Exists. Its examples gain captures from the VM: a mirror synchronising, degraded, rebuilding, with a spare, a RAID5 not running; `name` and `description` scrubbed of the host name |
-| `MdMgmt.getDetail` | an array's page, the add flow, the remove dialog | open, poll, checks | foreground; background in the poll | **New, cleared.** Read-only. Plain string. Captures scrubbed: the host name (on the "Name" line and anywhere else), the array's UUID, dates kept as documentation values |
+| `MdMgmt.enumerateDevices` | every RAID page, Disks and a disk's page, Flow A | open, Refresh, after an action, the poll (0.5), the re-checks | foreground; background in the poll | Exists. Its examples gain captures from the VM. Never read by the shell, the dashboard or the File systems pages (0.5) |
+| `MdMgmt.getDetail` | the RAID list (each array), an array's page, the add flow, the remove dialog | open, poll, checks | foreground; background in the poll | **New, cleared.** Read-only. Plain string. Captures scrubbed: the host name, the array's UUID, dates kept as documentation values |
 | `MdMgmt.getSlaves` | an array's page, the add flow | open | foreground | **New, cleared.** Read-only. `{devicefile, size, vendor, serialnumber, description}[]`; `serialnumber` scrubbed; `size` a byte string **[verify]**; `description` server English, not shown |
-| `MdMgmt.getCandidates` | create and add flows | open, step 1, after an erase | foreground | **New, cleared.** Read-only; may read the disks (in the description) |
-| `MdMgmt.create` | create flow | after the typed confirmation and the re-check | foreground, short | **New, cleared.** `x-omv-destructive: data`, `x-omv-dirty: [mdadm, initramfs]`. Request: `devices` at least 2 device files (the contract's device-file pattern); `level` an enum `mirror`, `raid5`, `raid6`, `raid10`, `stripe` (the plugin's five levels, owner's decision on P3); the description says a `stripe` has no protection; `name` required and limited to the empty string (section 17, D3). Reply: the plugin's change record `{name, devicefile, level, numdevices, devices}` |
+| `MdMgmt.getCandidates` | shell (menu), create and add flows | once after sign-in; open, step 1, after an erase | foreground | **New, cleared.** Read-only; reads no array member. Its 404 says the plugin is not installed (example written from the captured enumerateDevices one) |
+| `MdMgmt.create` | create flow | after the typed confirmation and the re-check | foreground, short | **New, cleared.** `x-omv-destructive: data`, `x-omv-dirty: true` (it marks `mdadm` and `initramfs`, observed). Request: `devices` at least 2 device files (the contract's device-file pattern); `level` an enum `mirror`, `raid5`, `raid6`, `raid10`, `stripe` (the plugin's five levels, owner's decision on P3); the description says a `stripe` has no protection; `name` required and limited to the empty string (section 17, D3). Reply: the plugin's change record `{name, devicefile, level, numdevices, devices}` |
 | `MdMgmt.add` | add flow (replace, spare; the failed disk's removal is `remove`) | after the typed confirmation | foreground, short | **New, cleared.** `x-omv-destructive: data` (the added disk is overwritten), `x-omv-dirty: [mdadm, initramfs]`. `devicefile` an array (`^/dev/md[0-9]{1,3}$`); `devices` exactly one device file (stricter: one at a time). The description says a disk added to a degraded array starts a rebuild, and to a healthy one becomes a spare |
 | `MdMgmt.grow` | add flow (bigger) | after the typed confirmation | foreground, short | **New, cleared.** `x-omv-destructive: data`; irreversible, said in the description; `x-omv-dirty: [mdadm, initramfs]`. `devices` one or more. The description says the reshape runs for hours after the call returns, and that the server adds the disks before it reshapes |
 | `MdMgmt.remove` | the remove dialogs, add flow step 5 | after the confirmation | foreground, short | **New, cleared.** `x-omv-destructive: service` (it reduces protection; nothing is erased), `x-omv-dirty: [mdadm, initramfs]`. `devices` exactly one. The description says the disk keeps the array's marks |
@@ -1607,8 +1632,12 @@ Each with stories for every state in both themes (design-system engineer).
 
 | Component | Why | States to cover |
 | --- | --- | --- |
-| `ProgressBar` (extracted from `JobProgress`'s bar) | A sync's progress in a table cell and on an array's page, outside a job: the same Base UI progress, the value text beside it, `aria-valuetext` with the words | known percentage; with and without time left; indeterminate (a check), and its reduced-motion form ("Working…" with a still bar); compact in a 36px row; 320px; 200% zoom |
-| `NavItem` condition (shell extension) | The first menu entry shown only when something is known at run time (0.10) | hidden while loading, shown, hidden on 404, shown on another error; the current-item treatment when it appears while its page is open |
+| `ProgressBar` (extracted from `JobProgress`'s bar) | A sync's progress in a table cell and on an array's page, outside a job: the same Base UI progress, the value text beside it, `aria-valuetext` with the words | known percentage; with and without time left; indeterminate (progress not known), still under reduced motion; compact in a 36px row; 320px; long text |
+| `JobSummary` `notice` | The Stripe warning, apart from the list, just before the typed field (3.3) | with and without a notice |
+| `InlineAlert` `icon="warning"` | A neutral notice with the warning shape, never a status colour (3.3's Stripe warning) | the shape on the neutral surface |
+
+The menu item's condition is in the app's navigation model (`when: "raidPlugin"`), not the library: it
+is an OMV concept, and `SideNavItem` needed no change.
 
 No new colour, token or colour variant: the slice uses the status, pending, destructive and neutral
 families as they are, and the progress bar keeps `JobProgress`'s colours. The colour audit is not
@@ -1666,7 +1695,7 @@ Built from scrubbed captures where the VM can show them (section 15); hand-writt
 | `MdMgmt.remove` | a failed member (captured); a spare (captured); a working member (captured); an error |
 | `MdMgmt.delete` | deleted (captured); refused by the system because the array is still mounted (captured on the VM by the capture tool, with the file system put back afterwards) **[verify]** the server's words; an error |
 | `MdMgmt.setSyncAction` | check started, stopped (captured); an error for a level without copies (captured) |
-| The mock's memory | As Flow A's: the mock remembers creates, adds, removes, deletes, checks and their progress over time, so the journeys of sections 3, 4 and 8 can be walked on `pnpm dev:mock` and in the browser test |
+| The mock's memory | As Flow A's: the mock remembers creates, adds, removes, deletes, checks and their progress (a tenth more at every `enumerateDevices` read), so the journeys of sections 3, 4 and 8 can be walked on `pnpm dev:mock` and in the browser test. Built as `raidScenarios.ts`, over the file-system mock's disks and file systems: the default story starts with no array; `raidMirror`, `raidSyncing`, `raidSpare`, `raidFailed`, `raidRebuilding`, `raidMissing`, `raidRaid5`, `raidReshaping`, `raidChecking`, `raidRaid6TwoFailed`, `raidStripe`, `raidInUse`, and hand-written `raidNotRunning`, `raidStateFalse`, `raidUnrecognised`, `raidDetailFails`, `raidMany`, `raidHostile`, `raidNoPlugin`, `raidReadFails`, `raidCreateFails`. Its reports are written line by line in mdadm's format and read by the same parser as the captures |
 | `System.getInformation`, `Config.*` | the flows: nothing pending; `mdadm` and `initramfs` pending; those plus Flow A's four; those plus `nfs` (R10); apply failed with `mdadm` deployed and `initramfs` not |
 
 ---
@@ -1712,7 +1741,7 @@ nothing left pending, every scratch disk wiped (`wipefs -n` empty).
 4. **Add `sdd` as a spare**: capture the spare's role, and whether `devices` lists spares (1.3).
 5. **Fail a member by hand** (a test-only shell command on the VM, as the plugin's own source suggests
    for testing): capture `faulty`, `degraded`, and the automatic rebuild onto the spare with its
-   progress; the dashboard row; What to do now; then "Take the failed disk out" (5.3).
+   progress; What to do now; then "Take the failed disk out" (5.3).
 6. **Refusals**: delete refused while the file system is mounted; a working disk's removal refused while
    degraded; the system disk and `sda1`'s disk never offered; a disk with S.M.A.R.T. monitoring settings
    saved, in or out of `getCandidates` (0.7).
@@ -1852,8 +1881,8 @@ unless the owner says otherwise.
 | D17 | **Making an array bigger is offered for RAID5 and RAID6 only** *(recommended)* | Growing a mirror adds copies, not space; growing a stripe goes through a risky temporary conversion; RAID10 is not offered by the stock interface either |
 | D18 | **No "Repair"**; check and stop only (section 18, P8) *(recommended)* | Repair rewrites one copy from another when they differ, and which is right cannot be known; the classic interface keeps it |
 | D19 | A disk taken out is **not wiped automatically**; the result recommends it and links to the disk's wipe *(recommended)* | A failed disk may not be wipeable and is about to be unplugged; a working one may be kept for undo; the wipe has its own typed confirmation |
-| D20 | **The array's long work is not a task** in the Tasks menu; it is the array's state, on its page, in the list and on the dashboard *(recommended)* | It runs in the kernel, has no task handle, and survives sign-out and restarts; a task entry would vanish while the work goes on |
-| D21 | The dashboard reads the arrays **once per visit** and shows rows only for **Critical and Unknown** *(recommended)* | The attention list is for what needs the reader; a resync needs nothing |
+| D20 | **The array's long work is not a task** in the Tasks menu; it is the array's state, on its page and in the list *(recommended)* | It runs in the kernel, has no task handle, and survives sign-out and restarts; a task entry would vanish while the work goes on |
+| D21 | ~~The dashboard reads the arrays once per visit~~ **The dashboard does not read the arrays** (superseded on 2026-11-22) | The read touches a member disk's superblock (0.5), and the dashboard is the page opened most often; a failed disk is reported by email and on the RAID pages (9.1) |
 | D22 | "Add storage on this array" passes the array **in memory**, never in the address *(recommended)* | As the disk handover to Flow A (the file-systems slice's D17) |
 | D23 | Catalogue: `raid.name` replaces `filesystems.raidOn` (English unchanged); `raidLevel.*` shared with Flow A's RAID option; `modules.mdadm` "RAID" *(recommended)* | Several pages now use them |
 | D24 | **Stripe (RAID0) is offered** in its own "Not protected" group, last, never preselected, its loss stated in its hint and again before the typed confirmation *(the owner's decision on P3, 2026-11-21)* | The owner wants every level the plugin can make; five exclusive choices need grouping (uiux-design skill, 3), and grouping by protection puts the one level that protects nothing apart, where it cannot be taken for a safe default |
@@ -1926,3 +1955,37 @@ question.
     arrays down for the next start (`mdadm`, and the start-up image) is left pending in the band, with a
     sentence saying what applying does. The create and add flows apply their own changes at their
     checkpoint, after refusing to start while anything else is pending (Q2). (0.8, D11)
+
+---
+
+## 19. What the test VM showed, and what changed in this design
+
+The design was written from the plugin's source; the captures on the test VM (OMV 8.6.1,
+openmediavault-md 8.1.6, four 8 GiB scratch disks) showed otherwise in these places, and the build
+follows the VM (journal, 2026-11-22). Each section above now says so.
+
+| # | The VM showed | Changed |
+| --- | --- | --- |
+| 1 | `name` is empty for an array made on this NAS, and `description` reads "Software RAID  [/dev/md0, …]" | An array is named by its device and level everywhere; a host part is never shown, the technical details' "Name" line included (0.1, 2.7) |
+| 2 | `devices` lists failed members and spares | Counts and roles come only from `getDetail`; the list reads every array's report (0.1, 0.3, 1.3) |
+| 3 | `state` carries progress for a resync or rebuild only | A reshape's and a check's percentage is read from the report; the check's reason now has its progress (0.1, 0.2, 6.1) |
+| 4 | A failed member appears as a "removed" slot line and a "faulty" line | Counted once, as Failed; parser tests on every capture, RAID6 with one and two failed included; an unparseable report makes removing and replacing unavailable (0.3) |
+| 5 | `enumerateDevices`, `getDetail` and `getSlaves` read a member's superblock; `getCandidates` reads none | The menu item is decided by `getCandidates`; the arrays are read only on the pages about arrays or disks and Flow A; the dashboard has no RAID rows (0.5, 0.10, 9.1, 11, 12) |
+| 6 | `x-omv-dirty` is a boolean in the contract; applying `mdadm` and `initramfs` took about 7 s; a refused delete leaves nothing pending; `setSyncAction` fails 500 on a stripe or a missing array; `remove`'s `numdevices` is wrong; `create`'s reply says "mirror"; a removed disk is not a candidate until wiped; a new array is a file-system candidate at once; a RAID5 grows when the reshape ends | 0.7, 0.8, 3.4, 4.5, 5, 6, 7.4 |
+| 7 | The VM's SATA disks report `hotpluggable` true and the plugin offers them | USB is read from the `/dev/disk/by-id/usb-…` link, as udev names a disk on `ID_BUS=usb` (0.7) |
+
+Smaller deviations taken while building, each the stricter or the simpler reading:
+
+- The create summary always says "a new array" (3.3): the next `/dev/mdN` is the server's choice.
+- Taking a disk out: a failure stays in the dialog with the server's words and "Take out" available
+  again, rather than closing into a `JobFailure` in the Disks section (5.5).
+- Check and stop checking open straight to their plain confirmation; the re-read runs on confirm
+  (6.2).
+- The Disks page's "Part of RAID" links to the array but does not say the disk's role there (9.2).
+- The Erase and reuse note on the add form says that a disk taken out of an array is offered there and
+  erased first (4.3).
+- Creating an array with "Use it for files" on disks that held an earlier array's file system: the
+  new array shows that file system again and is not offered for a new one (observed on the VM, the
+  second time the same two disks were made a mirror). The flow then quick-wipes the new array before
+  the file-system stage (3.4). Not in the agreed design; it erases nothing beyond the disks the summary
+  named, and the owner may prefer the flow to stop there instead.

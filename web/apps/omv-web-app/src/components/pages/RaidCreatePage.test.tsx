@@ -237,11 +237,21 @@ describe("creating an array", () => {
     await user.click(await disk("/dev/sdc"));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.type(
-      screen.getByRole("textbox", { name: "Type /dev/sdb /dev/sdc to confirm." }),
+      screen.getByRole("textbox", {
+        name: "Type /dev/sdb /dev/sdc to confirm.",
+      }),
       "/dev/sdb /dev/sdc",
     );
-    await user.click(screen.getByRole("button", { name: "Erase 2 disks and create array" }));
-    expect(await screen.findByText("The RAID array is ready.", {}, { timeout: 40000 })).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Erase 2 disks and create array" }),
+    );
+    expect(
+      await screen.findByText(
+        "The RAID array is ready.",
+        {},
+        { timeout: 40000 },
+      ),
+    ).toBeVisible();
     expect(calls("DiskMgmt.wipe")[0]?.params).toEqual({
       devicefile: "/dev/md0",
       secure: false,

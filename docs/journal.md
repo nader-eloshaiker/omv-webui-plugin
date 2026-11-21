@@ -561,3 +561,45 @@ The owner answered the "For the owner to agree" points of [design/phase-5-raid.m
 - **Agreed as written:** P1 (what creating an array or adding a disk may erase, the stricter of the plugin's list and the disk-use model), P2 (one summary, every device name typed), P4 (an array goes on to a file system and mount, "Use it for files" can be unticked), P5 (bigger only for RAID5 and RAID6), P6 (taking out a disk), P7 (deleting an array), P8 (Check and Stop checking; no Repair), P9 (a 30-second poll only while an array is busy), P10 (no classic link round a refusal), P11 (what is applied and what is left pending).
 - **Changed, P3:** Stripe (RAID0) is offered as well as Mirror, RAID5, RAID6 and RAID10, with a strong warning that losing one disk loses everything on all of them. Mirror stays the default and Stripe is never preselected. Still no custom array name.
 - **Test VM:** a fourth 8 GiB scratch disk is added, so RAID6, RAID10 and growing a RAID5 can be seen on the VM, and the RAID plugin is installed there after a snapshot.
+
+## 2026-11-22 — Phase 5, RAID: which reads touch a member disk, and where the arrays are read
+
+The RAID captures on the test VM (OMV 8.6.1, openmediavault-md 8.1.6) showed that `MdMgmt.enumerateDevices`, `MdMgmt.getDetail` and `MdMgmt.getSlaves` each read a member disk's superblock on every call. On a real NAS that can wake a disk that has spun down. `MdMgmt.getCandidates` reads no array member. The design had assumed the first three read only the kernel's state (its 0.5). Decided, under the owner's rule that a background read must not wake a disk:
+
+- **Whether the RAID plugin is installed**, for the menu item, is decided by one `MdMgmt.getCandidates` read after an administrator signs in, kept for the session and not repeated when a task ends. Its 404 "RPC service 'MdMgmt' not found." means not installed. The contract gains that reply for `getCandidates`.
+- **The arrays are read only on pages the reader opened that are about arrays or disks:** the RAID pages, Disks and a disk's page, and Flow A. They are never read from the dashboard, the File systems pages or in the background. The dashboard therefore has no RAID rows (design 9.1, D21 superseded); a failed disk is reported by email and on the RAID pages.
+- **The one exception is P9's poll:** every 30 seconds, in the background, only while an array shown is synchronising, rebuilding, reshaping or being checked. That array's disks are busy anyway then.
+- **Each array's report is read for the RAID list too.** `devices` lists failed members and spares, so the list's counts come only from the reports. The list is a page about arrays.
+
+Whether any of these wakes a spun-down disk is still to be seen on real hardware (design 15.3); the VM's virtual disks do not sleep.
+
+## 2026-11-22 — Phase 5, RAID: built, on the mock and the test VM
+
+Built on `phase-5-raid` to [design/phase-5-raid.md](design/phase-5-raid.md), as agreed by the owner (P1 to P11, P3 changed to offer Stripe). Where the VM contradicted the design, the build follows the VM, and the design's section 19 lists each change.
+
+- **The pages:**
+  - Storage > RAID, shown in the menu only once `MdMgmt.getCandidates` says the plugin is installed;
+  - an array's page at `/storage/md/$array`: state, members with their roles from mdadm's report, what to do now, what uses it, adding a disk, taking one out, check and stop checking, technical details without the host part, delete;
+  - creating an array at `/storage/md/create`, in five levels with Stripe last and never preselected, going on by default into a file system and its mount under one typed confirmation and one checkpoint;
+  - adding a disk at `/storage/md/$array/add`: a replacement (which then takes the failed disk out), a spare, or, for RAID5 and RAID6, more space.
+- **Elsewhere:** Flow A no longer offers an array that is short of a disk, not running or Unknown, and names levels in words. The Disks pages, the wipe refusal and the File systems "On" column link to the array's page. The File systems pages no longer read the arrays.
+- **The library** gains `ProgressBar` (from `JobProgress`), a `notice` slot in `JobSummary` for the Stripe warning before the typed field, and a warning-shaped neutral `InlineAlert`.
+- **The contract** gains `getCandidates`' 404 reply.
+- **The mock remembers** creates, adds, removals, checks and deletes over the file-system mock, with the kernel's work moving on at each read, and 22 RAID scenarios.
+- **Found on the VM while building:**
+  - an available "Check now…" button carries no `aria-disabled`, only the unavailable one does (the VM spec's wait, not the page);
+  - a new mirror on two disks that earlier held a mirror with a file system shows that file system again, because deleting an array erases only its marks, and OMV then does not offer it for a new file system. The create flow now quick-wipes the array it has just made in that case. That erases nothing beyond the disks the summary named, but it is not in the agreed design, so it is for the owner to confirm (design section 19);
+  - a new array was once not yet a file-system candidate a moment after it was made, so that read is now looked at up to five times.
+- **On the test VM** (OMV 8.6.1, openmediavault-md 8.1.6), the build was installed as a package with the lifecycle test. `pnpm test:browser:vm` with `OMV_WEBUI_VM_SCRATCH_DISK=sdd` and `OMV_WEBUI_VM_RAID_DISKS=sdb,sdc,sdd,sde` gave 26 passed and 3 skipped, over HTTP and over HTTPS. The skips are the second-factor, idle-warning and `OMV_WEBUI_VM_WIPE_DISK` tests, which need env this run did not set. The RAID spec's four tests ran each time:
+  - the menu item and no array read on the dashboard;
+  - a mirror with EXT4 that synchronises, refuses a delete while mounted, takes a spare and gives it back, loses a working disk and rebuilds onto it after its wipe, is checked and stopped, then is unmounted and deleted;
+  - a stripe's refusals, and a RAID10 and a RAID6 deleted while they synchronise;
+  - a RAID5 made bigger with the fourth disk, whose size grew when the reshape ended.
+
+  Afterwards no array was in `/proc/mdstat`, `mdadm.conf` had no ARRAY line, only sda1 was mounted under `/srv`, `wipefs -n` was empty on sdb to sde, and nothing was pending.
+
+- **Still to check:**
+  - on real hardware, whether these reads wake a spun-down disk (design 15.3);
+  - a real disk failure, and the email it sends;
+  - what a restart without applying does to an array's name (0.6, 0.8);
+  - the log line a finished check writes.
