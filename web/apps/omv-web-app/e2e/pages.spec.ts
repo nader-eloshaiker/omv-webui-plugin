@@ -103,7 +103,11 @@ test("an administrator's dashboard: the cards and the set-up checklist, by keybo
   await expect(
     page.getByRole("region", { name: copy.dashboard.usage.title }),
   ).toBeVisible();
-  await expect(page.getByRole("meter")).toHaveCount(2);
+  await expect(
+    page
+      .getByRole("region", { name: copy.dashboard.usage.title })
+      .getByRole("meter"),
+  ).toHaveCount(2);
 
   const names = await tabThroughMain(page);
   expectInOrder(names, [
