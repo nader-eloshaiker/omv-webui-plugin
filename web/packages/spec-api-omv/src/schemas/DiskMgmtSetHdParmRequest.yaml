@@ -1,0 +1,36 @@
+type: object
+description: >-
+  A disk's power and cache settings (rpc.diskmgmt.sethdparm). Every field is required. The
+  contract takes the stricter bound of the method's datamodel and the stored object's
+  (conf.system.hdparm), which the server also checks: `apm` at most 254 and `spindowntime` at most
+  254.
+required: [uuid, devicefile, apm, aam, spindowntime, writecache]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  devicefile:
+    $ref: ./DeviceFile.yaml
+  apm:
+    type: integer
+    minimum: 0
+    maximum: 254
+    description: >-
+      Advanced Power Management, 0 to turn it off, otherwise 1 (lowest power, the disk may spin
+      down) to 254 (highest performance). From 128 up the disk does not spin down. The stock form
+      offers 0, 1, 64, 127, 128, 192 and 254.
+  aam:
+    type: integer
+    enum: [0, 128, 254]
+    description: Advanced Acoustic Management. 0 off, 128 quietest and slowest, 254 loudest and fastest.
+  spindowntime:
+    type: integer
+    minimum: 0
+    maximum: 254
+    description: >-
+      The standby timer in the drive's own encoding, 0 for never: 1 to 240 count steps of 5
+      seconds (60 is 5 minutes, 240 is 20 minutes); 241 to 251 count steps of 30 minutes (241 is
+      30 minutes, 242 is 1 hour). The stock form offers 0, 60, 120, 240 and from 241 up.
+  writecache:
+    type: boolean
+    description: Whether the disk's write cache is on.
+additionalProperties: false

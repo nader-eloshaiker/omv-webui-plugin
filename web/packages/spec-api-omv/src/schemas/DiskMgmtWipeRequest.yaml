@@ -1,0 +1,12 @@
+type: object
+description: The disk to wipe and how (rpc.diskmgmt.wipe). Both fields are required.
+required: [devicefile, secure]
+properties:
+  devicefile:
+    $ref: ./DeviceFile.yaml
+  secure:
+    type: boolean
+    description: >-
+      false: a quick wipe, which removes the partition table and file system signatures in seconds.
+      true: a secure wipe, which overwrites the whole disk once and can take hours.
+additionalProperties: false

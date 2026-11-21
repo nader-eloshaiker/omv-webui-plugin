@@ -1,0 +1,13 @@
+type: object
+description: >-
+  Every disk the system can see, each with its stored power and cache settings when it has any;
+  paged and sorted by the backend.
+required: [total, data]
+properties:
+  total:
+    type: integer
+    description: Every disk, before paging.
+  data:
+    type: array
+    items:
+      $ref: ./DiskDevice.yaml

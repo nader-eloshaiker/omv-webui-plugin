@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetScheduledTest
+  tags:
+    - Smart
+  summary: A scheduled self-test
+  description: >-
+    One scheduled S.M.A.R.T. self-test, by its UUID, as stored (its disk by the /dev/disk/by-id/
+    link). Fails when there is no such test. Read from the configuration only.
+  x-omv-rpc:
+    service: Smart
+    method: getScheduledTest
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartScheduledTest.yaml
+          examples:
+            configured:
+              $ref: ../../examples/smartGetScheduledTest.configured.yaml

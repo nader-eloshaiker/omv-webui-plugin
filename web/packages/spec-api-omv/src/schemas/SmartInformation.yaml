@@ -1,0 +1,48 @@
+type: object
+description: >-
+  What smartctl reports about one disk, as display text: each "Name: value" line of its information
+  and S.M.A.R.T. data sections, keyed by the name in lower case with spaces and hyphens removed
+  ("Device Model" becomes `devicemodel`). Which keys appear depends on the disk; the six required
+  ones are always there, possibly empty. When smartctl repeats a name, the last line wins.
+required:
+  [devicefile, devicemodel, serialnumber, wwn, firmwareversion, usercapacity]
+additionalProperties: true
+properties:
+  devicefile:
+    type: string
+  devicemodel:
+    type: string
+  serialnumber:
+    type: string
+  wwn:
+    type: string
+  firmwareversion:
+    type: string
+  usercapacity:
+    type: string
+    description: Display text, such as "8,589,934,592 bytes [8.58 GB]"; empty for an NVMe disk.
+  modelfamily:
+    type: string
+  smartsupportis:
+    type: string
+    description: >-
+      Display text, such as "Enabled", or "Unavailable - device lacks SMART capability." (observed
+      for the test VM's virtual SATA disks).
+  smartoverallhealthselfassessmenttestresult:
+    type: string
+    description: Display text, "PASSED" or "FAILED!".
+  temperature:
+    description: Degrees Celsius as text, such as "30"; absent when unknown.
+    oneOf:
+      - type: integer
+      - type: string
+  powercycles:
+    description: How often the disk was switched on, as text; absent when unknown.
+    oneOf:
+      - type: integer
+      - type: string
+  poweronhours:
+    description: Hours switched on, as text; absent when unknown. Some disks add minutes, such as "1234h+05m".
+    oneOf:
+      - type: integer
+      - type: string

@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetExtendedInformation
+  tags:
+    - Smart
+  summary: Everything smartctl reports
+  description: >-
+    The full smartctl report for one disk (its --xall output) as one block of text. It runs smartctl
+    on the disk without sparing it when asleep, so it can wake a sleeping disk: the interface reads
+    it only when the user asks. Changes nothing.
+  x-omv-rpc:
+    service: Smart
+    method: getExtendedInformation
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartExtendedInformation.yaml
+          examples:
+            nvme:
+              $ref: ../../examples/smartGetExtendedInformation.nvme.yaml

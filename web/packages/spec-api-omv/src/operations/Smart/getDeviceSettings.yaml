@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetDeviceSettings
+  tags:
+    - Smart
+  summary: A disk's monitoring settings
+  description: >-
+    One disk's stored S.M.A.R.T. monitoring settings, found by any of the disk's device files, with
+    whether a scheduled self-test refers to the disk. A disk has none until they are first saved,
+    and then this fails with HTTP 500: Smart.getListBg gives such a disk OMV's placeholder UUID, so
+    the interface asks only for a disk whose `uuid` is not the placeholder. Read from the
+    configuration and the system's device list; it does not run smartctl and wakes no disk.
+  x-omv-rpc:
+    service: Smart
+    method: getDeviceSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartDeviceSettings.yaml
+          examples:
+            monitored:
+              $ref: ../../examples/smartGetDeviceSettings.monitored.yaml
+    "500":
+      description: >-
+        The disk has no stored monitoring settings. The message names the configuration query.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notConfigured:
+              $ref: ../../examples/smartGetDeviceSettings.notConfigured.yaml

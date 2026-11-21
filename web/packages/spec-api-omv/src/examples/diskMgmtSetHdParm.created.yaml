@@ -1,0 +1,9 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: new power settings for one SATA disk, stored under its by-id link; not applied (discarded afterwards)."
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000003"
+  devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+  apm: 127
+  aam: 0
+  spindowntime: 241
+  writecache: true

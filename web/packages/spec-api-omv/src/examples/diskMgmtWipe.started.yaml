@@ -1,0 +1,3 @@
+summary: "Written by hand from the source (OMV 8.6.1): the handle of a wipe task. Not captured: wiping is not run on the test VM."
+x-omv-status: 200
+value: /tmp/bgstatusW7pQx2LmVa9cKe4

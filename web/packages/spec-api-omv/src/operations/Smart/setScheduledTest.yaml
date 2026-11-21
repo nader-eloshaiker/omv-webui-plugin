@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartSetScheduledTest
+  tags:
+    - Smart
+  summary: Save a scheduled self-test
+  description: >-
+    Create a scheduled S.M.A.R.T. self-test (with OMV's placeholder UUID) or change one. The disk
+    must exist and be one OMV reads S.M.A.R.T. data from; the stock interface offers only monitored
+    disks (enumerateMonitoredDevices). The server stores the disk's /dev/disk/by-id/ link. Nothing
+    changes on the system until the pending changes are applied; it marks the smartmontools module
+    dirty. The test runs on its schedule once applied. Returns the stored test.
+  x-omv-rpc:
+    service: Smart
+    method: setScheduledTest
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.smart.setscheduledtest
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SmartSetScheduledTestRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartScheduledTest.yaml
+          examples:
+            created:
+              $ref: ../../examples/smartSetScheduledTest.created.yaml

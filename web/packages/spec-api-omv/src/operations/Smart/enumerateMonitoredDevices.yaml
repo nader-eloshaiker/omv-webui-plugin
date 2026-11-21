@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartEnumerateMonitoredDevices
+  tags:
+    - Smart
+  summary: Monitored disks
+  description: >-
+    The disks of Smart.enumerateDevices whose S.M.A.R.T. monitoring is turned on: the disks the
+    stock interface offers for a scheduled self-test. It reads every disk as enumerateDevices does,
+    so it can wake sleeping disks: the interface reads it only when the user asks. Changes nothing.
+  x-omv-rpc:
+    service: Smart
+    method: enumerateMonitoredDevices
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartEnumeratedDevices.yaml
+          examples:
+            none:
+              $ref: ../../examples/smartEnumerateMonitoredDevices.none.yaml
+            monitored:
+              $ref: ../../examples/smartEnumerateMonitoredDevices.monitored.yaml

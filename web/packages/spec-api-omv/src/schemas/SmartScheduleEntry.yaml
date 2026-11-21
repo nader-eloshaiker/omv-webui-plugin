@@ -1,0 +1,57 @@
+type: object
+description: >-
+  A scheduled S.M.A.R.T. self-test with its disk as the system sees it now. When the disk is not
+  present, `devicefile`, `model` and `serialnumber` are empty, `devicelinks` is empty and `size` is
+  "-1".
+required:
+  [
+    uuid,
+    enable,
+    devicefile,
+    type,
+    hour,
+    month,
+    dayofmonth,
+    dayofweek,
+    comment,
+    devicelinks,
+    model,
+    serialnumber,
+    size,
+  ]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+  devicefile:
+    type: string
+    description: >-
+      The disk's device file under /dev, such as "/dev/sda" (not the stored by-id link that
+      Smart.getScheduledTest returns); empty when the disk is not present.
+  type:
+    type: string
+    description: S short, L long, C conveyance, O offline. Open to other values.
+  hour:
+    type: string
+  month:
+    type: string
+  dayofmonth:
+    type: string
+  dayofweek:
+    type: string
+  comment:
+    type: string
+  devicelinks:
+    type: array
+    items:
+      type: string
+  model:
+    type: string
+  serialnumber:
+    type: string
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes; "-1" when the disk is not present.

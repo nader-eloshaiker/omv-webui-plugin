@@ -1,0 +1,54 @@
+summary: "Written by hand from the scheduled capture (OMV 8.6.1): a short test every night and a long test on the first of each month for one disk, and a turned-off weekly test for a disk that has been removed, which is listed with an empty device file and size -1. The test VM was given only one test."
+x-omv-status: 200
+value:
+  total: 3
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000201"
+      enable: true
+      devicefile: /dev/sda
+      type: S
+      hour: "02"
+      month: "*"
+      dayofmonth: "*"
+      dayofweek: "*"
+      comment: Nightly short test
+      devicelinks:
+        - /dev/disk/by-diskseq/2
+        - /dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101
+        - /dev/disk/by-id/wwn-EXAMPLE-WWN-0101
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1"
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+      model: Example HDD 4TB
+      serialnumber: EXAMPLE-SERIAL-0101
+      size: "4000787030016"
+    - uuid: "00000000-0000-4000-8000-000000000202"
+      enable: true
+      devicefile: /dev/sda
+      type: L
+      hour: "03"
+      month: "*"
+      dayofmonth: "01"
+      dayofweek: "*"
+      comment: Monthly long test
+      devicelinks:
+        - /dev/disk/by-diskseq/2
+        - /dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101
+        - /dev/disk/by-id/wwn-EXAMPLE-WWN-0101
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1"
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+      model: Example HDD 4TB
+      serialnumber: EXAMPLE-SERIAL-0101
+      size: "4000787030016"
+    - uuid: "00000000-0000-4000-8000-000000000203"
+      enable: false
+      devicefile: ""
+      type: S
+      hour: "04"
+      month: "*"
+      dayofmonth: "*"
+      dayofweek: "6"
+      comment: Old backup disk
+      devicelinks: []
+      model: ""
+      serialnumber: ""
+      size: "-1"

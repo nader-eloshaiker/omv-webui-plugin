@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetSelfTestLogs
+  tags:
+    - Smart
+  summary: A disk's self-test log
+  description: >-
+    The short and extended self-tests an ATA disk has run, newest first, with how each ended. NVMe
+    disks answer an empty list (observed on the test VM). It runs smartctl on the disk without
+    sparing it when asleep, so it can wake a sleeping disk: the interface reads it only when the
+    user asks. Changes nothing.
+  x-omv-rpc:
+    service: Smart
+    method: getSelfTestLogs
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartSelfTestLog.yaml
+          examples:
+            nvme:
+              $ref: ../../examples/smartGetSelfTestLogs.nvme.yaml
+            withFailure:
+              $ref: ../../examples/smartGetSelfTestLogs.withFailure.yaml

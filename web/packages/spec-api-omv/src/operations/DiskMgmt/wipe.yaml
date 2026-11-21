@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: diskMgmtWipe
+  tags:
+    - DiskMgmt
+  summary: Wipe a disk
+  description: >-
+    Erase a disk, as a background task. A quick wipe (`secure` false) removes the partition table
+    and the file system, RAID and other signatures at both ends of the disk, in seconds; a secure
+    wipe overwrites the whole disk once and can take hours. Everything on the disk is lost and
+    cannot be recovered. Before calling it the interface itself refuses the system disk, a read-only
+    disk and a disk that holds a mounted file system or a RAID member (journal, 2026-11-21). The
+    task's output is the commands' log text; it has no result. Changes no configuration, so nothing
+    is pending afterwards.
+  x-omv-rpc:
+    service: DiskMgmt
+    method: wipe
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.diskmgmt.wipe
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DiskMgmtWipeRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/diskMgmtWipe.started.yaml

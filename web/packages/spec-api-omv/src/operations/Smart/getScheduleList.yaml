@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetScheduleList
+  tags:
+    - Smart
+  summary: Scheduled self-tests
+  description: >-
+    Every scheduled S.M.A.R.T. self-test, each with its disk as the system sees it now, paged and
+    sorted by the backend; `limit` null lists every test. A test whose disk is not present is still
+    listed, with an empty device file. Read from the configuration and the system's device list; it
+    does not run smartctl and wakes no disk.
+  x-omv-rpc:
+    service: Smart
+    method: getScheduleList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartScheduleList.yaml
+          examples:
+            none:
+              $ref: ../../examples/smartGetScheduleList.none.yaml
+            scheduled:
+              $ref: ../../examples/smartGetScheduleList.scheduled.yaml
+            several:
+              $ref: ../../examples/smartGetScheduleList.several.yaml

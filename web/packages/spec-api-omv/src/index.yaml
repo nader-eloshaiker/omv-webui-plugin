@@ -30,6 +30,7 @@ tags:
   - name: SMB
   - name: NFS
   - name: LogFile
+  - name: DiskMgmt
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -95,6 +96,48 @@ paths:
     $ref: ./operations/LogFile/getList.yaml
   /rpc/System/getTopInfo:
     $ref: ./operations/System/getTopInfo.yaml
+  /rpc/DiskMgmt/enumerateDevices:
+    $ref: ./operations/DiskMgmt/enumerateDevices.yaml
+  /rpc/DiskMgmt/getList:
+    $ref: ./operations/DiskMgmt/getList.yaml
+  /rpc/DiskMgmt/getHdParm:
+    $ref: ./operations/DiskMgmt/getHdParm.yaml
+  /rpc/DiskMgmt/setHdParm:
+    $ref: ./operations/DiskMgmt/setHdParm.yaml
+  /rpc/DiskMgmt/wipe:
+    $ref: ./operations/DiskMgmt/wipe.yaml
+  /rpc/DiskMgmt/rescan:
+    $ref: ./operations/DiskMgmt/rescan.yaml
+  /rpc/Smart/enumerateDevices:
+    $ref: ./operations/Smart/enumerateDevices.yaml
+  /rpc/Smart/enumerateMonitoredDevices:
+    $ref: ./operations/Smart/enumerateMonitoredDevices.yaml
+  /rpc/Smart/getSettings:
+    $ref: ./operations/Smart/getSettings.yaml
+  /rpc/Smart/setSettings:
+    $ref: ./operations/Smart/setSettings.yaml
+  /rpc/Smart/getDeviceSettings:
+    $ref: ./operations/Smart/getDeviceSettings.yaml
+  /rpc/Smart/setDeviceSettings:
+    $ref: ./operations/Smart/setDeviceSettings.yaml
+  /rpc/Smart/getInformation:
+    $ref: ./operations/Smart/getInformation.yaml
+  /rpc/Smart/getAttributes:
+    $ref: ./operations/Smart/getAttributes.yaml
+  /rpc/Smart/getSelfTestLogs:
+    $ref: ./operations/Smart/getSelfTestLogs.yaml
+  /rpc/Smart/getExtendedInformation:
+    $ref: ./operations/Smart/getExtendedInformation.yaml
+  /rpc/Smart/getScheduleList:
+    $ref: ./operations/Smart/getScheduleList.yaml
+  /rpc/Smart/getScheduledTest:
+    $ref: ./operations/Smart/getScheduledTest.yaml
+  /rpc/Smart/setScheduledTest:
+    $ref: ./operations/Smart/setScheduledTest.yaml
+  /rpc/Smart/deleteScheduledTest:
+    $ref: ./operations/Smart/deleteScheduledTest.yaml
+  /rpc/Smart/executeScheduledTest:
+    $ref: ./operations/Smart/executeScheduledTest.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

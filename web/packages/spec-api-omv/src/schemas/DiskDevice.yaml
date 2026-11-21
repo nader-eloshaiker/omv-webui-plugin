@@ -1,0 +1,81 @@
+type: object
+description: >-
+  A disk the system can see, including read-only ones such as an optical drive. Read without waking
+  a disk that is in standby. `hdparm` is sent by DiskMgmt.getList only, and only for a disk with
+  stored power and cache settings.
+required:
+  [
+    devicename,
+    canonicaldevicefile,
+    devicefile,
+    devicelinks,
+    model,
+    size,
+    description,
+    vendor,
+    serialnumber,
+    wwn,
+    israid,
+    isroot,
+    isreadonly,
+    powermode,
+    temperature,
+    hotpluggable,
+  ]
+properties:
+  devicename:
+    type: string
+    description: The kernel's name for the disk, such as "sda".
+  canonicaldevicefile:
+    type: string
+    description: The device file under /dev, such as "/dev/sda".
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link where it has one, otherwise its device file.
+  devicelinks:
+    type: array
+    items:
+      type: string
+  model:
+    type: string
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  description:
+    type: string
+    description: Display text, such as "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]".
+  vendor:
+    type: string
+  serialnumber:
+    type: string
+  wwn:
+    type: string
+    description: The disk's World Wide Name; the empty string when it has none.
+  israid:
+    type: boolean
+    description: Whether this is a hardware RAID device.
+  isroot:
+    type: boolean
+    description: Whether the system is installed on this disk.
+  isreadonly:
+    type: boolean
+    description: Whether the disk cannot be written to, such as an optical drive.
+  powermode:
+    type: string
+    description: >-
+      As smartctl reports it: "ACTIVE or IDLE", "ACTIVE", "IDLE", "STANDBY" (spun down) or "SLEEP";
+      "UNKNOWN" for a disk that does not support S.M.A.R.T. or does not report it (observed for an
+      NVMe disk), and "ERROR" when it could not be read. Open to other values.
+  temperature:
+    description: >-
+      Degrees Celsius as text, such as "30". The empty string when unknown, and always for a disk in
+      standby, which is not woken to read it. Also accepted as a whole number, the form the S.M.A.R.T.
+      list was observed to send.
+    oneOf:
+      - type: integer
+      - type: string
+  hotpluggable:
+    type: boolean
+  hdparm:
+    $ref: ./HdParm.yaml

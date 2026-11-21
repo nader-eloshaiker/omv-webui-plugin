@@ -1,0 +1,6 @@
+type: array
+description: >-
+  The disk's S.M.A.R.T. attributes, in smartctl's order. Empty for disks that report none in this
+  form, such as NVMe and SAS disks and disks without S.M.A.R.T.
+items:
+  $ref: ./SmartAttribute.yaml

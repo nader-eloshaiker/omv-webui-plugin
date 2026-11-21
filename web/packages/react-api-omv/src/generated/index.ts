@@ -1,5 +1,6 @@
 export * from "@omv-webui/ts-api-omv";
 export * from "./omv/config/config.ts";
+export * from "./omv/disk-mgmt/disk-mgmt.ts";
 export * from "./omv/email-notification/email-notification.ts";
 export * from "./omv/exec/exec.ts";
 export * from "./omv/file-system-mgmt/file-system-mgmt.ts";

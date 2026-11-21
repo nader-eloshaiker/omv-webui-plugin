@@ -1,0 +1,12 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: a weekly short test for the NVMe disk, not applied (discarded afterwards)."
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000007"
+  enable: true
+  devicefile: /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+  type: S
+  hour: "02"
+  month: "*"
+  dayofmonth: "*"
+  dayofweek: "7"
+  comment: Weekly short test

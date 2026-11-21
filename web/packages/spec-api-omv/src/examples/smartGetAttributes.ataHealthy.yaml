@@ -1,0 +1,157 @@
+summary: "Written by hand from smartctl's output format and OMV's assessment rules (OMV 8.6.1): a healthy hard disk. The test VM's disks report no attributes."
+x-omv-status: 200
+value:
+  - id: 1
+    attrname: Raw_Read_Error_Rate
+    flags: POSR-K
+    value: 200
+    worst: 200
+    threshold: 51
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Frequency of errors while reading raw data from the disk
+    prefailure: true
+    assessment: GOOD
+  - id: 3
+    attrname: Spin_Up_Time
+    flags: POS--K
+    value: 176
+    worst: 172
+    threshold: 21
+    whenfailed: "-"
+    rawvalue: "6191"
+    description: Time needed to spin up the disk
+    prefailure: true
+    assessment: GOOD
+  - id: 4
+    attrname: Start_Stop_Count
+    flags: "-O--CK"
+    value: 100
+    worst: 100
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "118"
+    description: Number of spindle start/stop cycles
+    prefailure: false
+    assessment: GOOD
+  - id: 5
+    attrname: Reallocated_Sector_Ct
+    flags: PO--CK
+    value: 200
+    worst: 200
+    threshold: 140
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Number of remapped sectors
+    prefailure: true
+    assessment: GOOD
+  - id: 7
+    attrname: Seek_Error_Rate
+    flags: "-OSR-K"
+    value: 200
+    worst: 200
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Frequency of errors while positioning
+    prefailure: false
+    assessment: GOOD
+  - id: 9
+    attrname: Power_On_Hours
+    flags: "-O--CK"
+    value: 52
+    worst: 52
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "35021"
+    description: Number of hours elapsed in the power-on state
+    prefailure: false
+    assessment: GOOD
+  - id: 12
+    attrname: Power_Cycle_Count
+    flags: "-O--CK"
+    value: 100
+    worst: 100
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "112"
+    description: Number of power-on events
+    prefailure: false
+    assessment: GOOD
+  - id: 193
+    attrname: Load_Cycle_Count
+    flags: "-O--CK"
+    value: 197
+    worst: 197
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "9504"
+    description: Number of cycles into landing zone position
+    prefailure: false
+    assessment: GOOD
+  - id: 194
+    attrname: Temperature_Celsius
+    flags: "-O---K"
+    value: 111
+    worst: 98
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "41 (Min/Max 18/52)"
+    description: Current internal temperature of the drive
+    prefailure: false
+    assessment: GOOD
+  - id: 196
+    attrname: Reallocated_Event_Count
+    flags: "-O--CK"
+    value: 200
+    worst: 200
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Number of remapping operations
+    prefailure: false
+    assessment: GOOD
+  - id: 197
+    attrname: Current_Pending_Sector
+    flags: "-O--CK"
+    value: 200
+    worst: 200
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Number of sectors waiting to be remapped
+    prefailure: false
+    assessment: GOOD
+  - id: 198
+    attrname: Offline_Uncorrectable
+    flags: "----CK"
+    value: 100
+    worst: 253
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: The total number of uncorrectable errors when reading/writing a sector
+    prefailure: false
+    assessment: GOOD
+  - id: 199
+    attrname: UDMA_CRC_Error_Count
+    flags: "-O--CK"
+    value: 200
+    worst: 200
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Number of CRC errors during UDMA mode
+    prefailure: false
+    assessment: GOOD
+  - id: 200
+    attrname: Multi_Zone_Error_Rate
+    flags: "---R--"
+    value: 200
+    worst: 200
+    threshold: 0
+    whenfailed: "-"
+    rawvalue: "0"
+    description: Number of errors found when writing a sector
+    prefailure: false
+    assessment: GOOD

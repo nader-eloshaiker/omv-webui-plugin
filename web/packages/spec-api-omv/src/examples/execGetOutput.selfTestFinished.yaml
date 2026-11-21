@@ -1,0 +1,8 @@
+summary: "Written by hand from the source and smartctl's output format (OMV 8.6.1): the last poll of a task that started a short self-test on a hard disk. smartctl prints its full report (shortened here to its first lines and the self-test section) and that the test has begun; the disk runs it on its own afterwards. Not captured: self-tests are not started on the test VM."
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusT3nRk8YsDf5hJu1
+  pos: 0
+  output: "smartctl 7.4 2023-08-01 r5530 [x86_64-linux-6.12.57+deb13-amd64] (local build)\nCopyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n\n=== START OF INFORMATION SECTION ===\nModel Family:     Example NAS HDD family\nDevice Model:     Example HDD 4TB\nSerial Number:    EXAMPLE-SERIAL-0101\nLU WWN Device Id: EXAMPLE-WWN-0101\nFirmware Version: 82.00A82\nUser Capacity:    4,000,787,030,016 bytes [4.00 TB]\n\n=== START OF READ SMART DATA SECTION ===\nSMART overall-health self-assessment test result: PASSED\n\n=== START OF OFFLINE IMMEDIATE AND SELF-TEST SECTION ===\nSending command: \"Execute SMART Short self-test routine immediately in off-line mode\".\nDrive command \"Execute SMART Short self-test routine immediately in off-line mode\" successful.\nTesting has begun.\nPlease wait 2 minutes for test to complete.\nTest will complete after Sat Nov 21 05:42:10 2026 UTC\nUse smartctl -X to abort test.\n"
+  pendingOutput: false
+  running: false

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: diskMgmtGetList
+  tags:
+    - DiskMgmt
+  summary: Disks with their power settings
+  description: >-
+    The disks of enumerateDevices, each with its stored power and cache settings (`hdparm`) when it
+    has any, paged and sorted by the backend; `limit` null lists every disk. It answers at once (the
+    stock interface calls it as a background task, getListBg, which this contract does not use). It
+    asks smartctl not to wake a disk that is in standby (--nocheck=standby), so it spares sleeping
+    disks: such a disk reports its power mode as STANDBY and no temperature. Changes nothing.
+  x-omv-rpc:
+    service: DiskMgmt
+    method: getList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/DiskDeviceList.yaml
+          examples:
+            vmDisks:
+              $ref: ../../examples/diskMgmtGetList.vmDisks.yaml
+            withHdparm:
+              $ref: ../../examples/diskMgmtGetList.withHdparm.yaml
+            standby:
+              $ref: ../../examples/diskMgmtGetList.standby.yaml

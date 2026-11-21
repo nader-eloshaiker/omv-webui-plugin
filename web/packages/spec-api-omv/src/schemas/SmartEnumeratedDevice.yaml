@@ -1,0 +1,57 @@
+type: object
+description: >-
+  A disk that OMV can read S.M.A.R.T. data from, with its health as smartctl reports it. The model
+  and serial number are smartctl's where it gives them.
+required:
+  [
+    devicename,
+    canonicaldevicefile,
+    devicefile,
+    devicelinks,
+    model,
+    size,
+    temperature,
+    description,
+    vendor,
+    serialnumber,
+    wwn,
+    overallstatus,
+  ]
+properties:
+  devicename:
+    type: string
+  canonicaldevicefile:
+    type: string
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link.
+  devicelinks:
+    type: array
+    items:
+      type: string
+  model:
+    type: string
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  temperature:
+    description: Degrees Celsius, as text or a whole number; the empty string when unknown.
+    oneOf:
+      - type: integer
+      - type: string
+  description:
+    type: string
+    description: Display text.
+  vendor:
+    type: string
+  serialnumber:
+    type: string
+  wwn:
+    type: string
+  overallstatus:
+    type: string
+    description: >-
+      The disk's health, with the meanings of SmartDevice's `overallstatus`: GOOD,
+      BAD_ATTRIBUTE_IN_THE_PAST, BAD_SECTOR, BAD_ATTRIBUTE_NOW, BAD_SECTOR_MANY or BAD_STATUS. Open
+      to other values.

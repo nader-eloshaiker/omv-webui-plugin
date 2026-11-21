@@ -1,0 +1,18 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: a virtual SATA disk, whose smartctl reports no S.M.A.R.T. support; OMV still answers, with the information section only."
+x-omv-status: 200
+value:
+  devicefile: /dev/sda
+  devicemodel: VMware Virtual SATA Hard Drive
+  serialnumber: EXAMPLE-SERIAL-0002
+  wwn: EXAMPLE-WWN-0002
+  firmwareversion: "00000001"
+  usercapacity: "8,589,934,592 bytes [8.58 GB]"
+  luwwndeviceid: EXAMPLE-WWN-0002
+  sectorsize: "512 bytes logical/physical"
+  rotationrate: Solid State Device
+  trimcommand: Unavailable
+  deviceis: Not in smartctl database 7.3/6293
+  ataversionis: ATA/ATAPI-6 T13/1410D revision 0
+  localtimeis: "Sat Nov 21 05:14:32 2026 UTC"
+  smartsupportis: Unavailable - device lacks SMART capability.
+  amandatorysmartcommandfailed: "exiting. To continue, add one or more '-T permissive' options."

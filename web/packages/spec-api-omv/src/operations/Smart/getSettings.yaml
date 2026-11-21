@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetSettings
+  tags:
+    - Smart
+  summary: S.M.A.R.T. settings
+  description: >-
+    The S.M.A.R.T. monitoring settings for every disk. Read from the configuration only; it does not
+    touch the disks.
+  x-omv-rpc:
+    service: Smart
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartSettings.yaml
+          examples:
+            defaults:
+              $ref: ../../examples/smartGetSettings.defaults.yaml

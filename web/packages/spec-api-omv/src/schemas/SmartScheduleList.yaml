@@ -1,0 +1,10 @@
+type: object
+description: Every scheduled S.M.A.R.T. self-test, paged and sorted by the backend.
+required: [total, data]
+properties:
+  total:
+    type: integer
+  data:
+    type: array
+    items:
+      $ref: ./SmartScheduleEntry.yaml

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartEnumerateDevices
+  tags:
+    - Smart
+  summary: Disks with S.M.A.R.T.
+  description: >-
+    Every physical disk OMV can read S.M.A.R.T. data from, with its health, as a plain list in no
+    particular order. OMV counts every ATA, SCSI and NVMe disk, so a disk whose smartctl reports no
+    S.M.A.R.T. support is listed as BAD_STATUS (observed for the test VM's virtual SATA disks). It
+    runs smartctl on every disk without sparing sleeping ones, so it can wake them: the interface
+    reads it only when the user asks. One smartctl runs per disk, so it is slow with many disks.
+    Changes nothing.
+  x-omv-rpc:
+    service: Smart
+    method: enumerateDevices
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartEnumeratedDevices.yaml
+          examples:
+            vmDisks:
+              $ref: ../../examples/smartEnumerateDevices.vmDisks.yaml

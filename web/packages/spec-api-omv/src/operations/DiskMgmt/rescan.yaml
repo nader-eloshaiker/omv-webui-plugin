@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: diskMgmtRescan
+  tags:
+    - DiskMgmt
+  summary: Look for new disks
+  description: >-
+    Ask the disk controllers to look for disks added or resized since the system started. Returns
+    null at once; a new disk can take a few seconds to appear in the lists. Changes no configuration
+    and wakes no disk.
+  x-omv-rpc:
+    service: DiskMgmt
+    method: rescan
+  x-omv-role: admin
+  x-omv-readonly: false
+  responses:
+    "200":
+      description: The method returns null.

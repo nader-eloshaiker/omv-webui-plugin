@@ -1,4 +1,5 @@
 export * from "./config/config.ts";
+export * from "./disk-mgmt/disk-mgmt.ts";
 export * from "./email-notification/email-notification.ts";
 export * from "./exec/exec.ts";
 export * from "./file-system-mgmt/file-system-mgmt.ts";

@@ -1,0 +1,24 @@
+summary: "Written by hand from the nvme and sata captures and smartctl's output format (OMV 8.6.1): a hard disk whose health check fails, with its temperature, power cycles and power-on hours. The test VM's virtual disks cannot fail."
+x-omv-status: 200
+value:
+  devicefile: /dev/sda
+  devicemodel: Example HDD 4TB
+  serialnumber: EXAMPLE-SERIAL-0101
+  wwn: EXAMPLE-WWN-0101
+  firmwareversion: "82.00A82"
+  usercapacity: "4,000,787,030,016 bytes [4.00 TB]"
+  modelfamily: Example NAS HDD family
+  luwwndeviceid: EXAMPLE-WWN-0101
+  sectorsizes: "512 bytes logical, 4096 bytes physical"
+  rotationrate: "5400 rpm"
+  formfactor: "3.5 inches"
+  deviceis: In smartctl database 7.3/5528
+  ataversionis: ACS-3 T13/2161-D revision 5
+  sataversionis: "SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)"
+  localtimeis: "Sat Nov 21 05:13:27 2026 UTC"
+  smartsupportis: Enabled
+  smartoverallhealthselfassessmenttestresult: "FAILED!"
+  smartattributesdatastructurerevisionnumber: "16"
+  temperature: "41"
+  powercycles: "112"
+  poweronhours: "35021"

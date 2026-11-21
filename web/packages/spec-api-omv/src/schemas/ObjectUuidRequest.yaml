@@ -1,0 +1,7 @@
+type: object
+description: One configuration object, by its UUID (rpc.common.objectuuid).
+required: [uuid]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+additionalProperties: false

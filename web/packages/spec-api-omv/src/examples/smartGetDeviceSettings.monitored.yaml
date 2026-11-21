@@ -1,0 +1,10 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: monitoring saved for the NVMe disk and not applied (discarded afterwards)."
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000004"
+  enable: true
+  devicefile: /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+  devicetype: nvme
+  tempdiff: 0
+  tempmax: 0
+  _used: false

@@ -1,0 +1,20 @@
+type: object
+description: >-
+  The S.M.A.R.T. monitoring settings for every disk (conf.service.smartmontools). They take effect
+  when the pending changes are applied.
+required: [enable, interval, powermode, tempdiff, tempmax]
+properties:
+  enable:
+    type: boolean
+  interval:
+    type: integer
+    description: Seconds between checks.
+  powermode:
+    type: string
+    description: Which disks a check skips so as not to wake them; never, sleep, standby or idle.
+  tempdiff:
+    type: integer
+    description: Report a temperature change of at least this many degrees Celsius; 0 is off.
+  tempmax:
+    type: integer
+    description: Report a temperature of at least this many degrees Celsius; 0 is off.

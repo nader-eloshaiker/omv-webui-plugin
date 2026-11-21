@@ -1,0 +1,4 @@
+type: array
+description: Every disk the system can see, in no particular order.
+items:
+  $ref: ./DiskDevice.yaml

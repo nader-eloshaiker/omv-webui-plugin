@@ -1,0 +1,4 @@
+type: string
+description: >-
+  Everything smartctl reports about the disk (its --xall output), as display text with newlines.
+  Shown as preformatted text, never as markup.

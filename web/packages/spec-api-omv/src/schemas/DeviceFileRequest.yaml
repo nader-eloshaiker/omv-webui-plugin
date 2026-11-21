@@ -1,0 +1,7 @@
+type: object
+description: One disk, by its device file (rpc.common.devicefile).
+required: [devicefile]
+properties:
+  devicefile:
+    $ref: ./DeviceFile.yaml
+additionalProperties: false

@@ -1,0 +1,32 @@
+type: object
+description: >-
+  The S.M.A.R.T. monitoring settings for every disk (rpc.smart.setsettings). Every field is
+  required. `tempdiff` and `tempmax` take the stored object's maximum of 255
+  (conf.service.smartmontools), which the server also checks.
+required: [enable, interval, powermode, tempdiff, tempmax]
+properties:
+  enable:
+    type: boolean
+    description: Whether S.M.A.R.T. monitoring runs at all.
+  interval:
+    type: integer
+    minimum: 10
+    description: Seconds between checks.
+  powermode:
+    type: string
+    enum: [never, sleep, standby, idle]
+    description: >-
+      Which disks a check skips so that it does not wake them: never (checks every disk, waking
+      it), sleep (skips disks in sleep mode), standby (skips disks in standby or sleep) or idle
+      (skips disks that are idle, in standby or asleep).
+  tempdiff:
+    type: integer
+    minimum: 0
+    maximum: 255
+    description: Report a temperature change of at least this many degrees Celsius. 0 turns it off.
+  tempmax:
+    type: integer
+    minimum: 0
+    maximum: 255
+    description: Report a temperature of at least this many degrees Celsius. 0 turns it off.
+additionalProperties: false

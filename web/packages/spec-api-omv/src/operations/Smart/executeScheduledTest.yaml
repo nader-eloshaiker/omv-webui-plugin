@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartExecuteScheduledTest
+  tags:
+    - Smart
+  summary: Run a scheduled self-test now
+  description: >-
+    Start a scheduled test's self-test on its disk now, as a background task. The task ends once
+    smartctl has started the test; the disk then runs it by itself (a short test for minutes, a long
+    one for hours) and records the outcome in its self-test log. It wakes the disk and slows it
+    while the test runs. The task's output is smartctl's text; it has no result. Fails at once with
+    HTTP 500 when the test's disk has no stored monitoring settings. Changes no configuration.
+  x-omv-rpc:
+    service: Smart
+    method: executeScheduledTest
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/smartExecuteScheduledTest.started.yaml
+    "500":
+      description: >-
+        The test's disk has no stored monitoring settings, or there is no such test.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noDeviceSettings:
+              $ref: ../../examples/smartExecuteScheduledTest.noDeviceSettings.yaml
