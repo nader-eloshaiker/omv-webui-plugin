@@ -460,3 +460,13 @@ Built on `phase-5-monitoring` to [design/phase-5-monitoring.md](design/phase-5-m
   - **Re-read after a disk check.** Every finished task makes the app re-read all its queries, so a disk check is followed by one extra read of the dashboard's data. The contract's `x-omv-readonly` cannot tell a read-only task apart, because a task needs a mutation hook. A marker on `x-omv-task` would.
   - **Plugin service names.** It is not yet checked that a plugin's service `name` matches its module in `dirtyModules`.
   - **Log sizes.** A full syslog's size and read time on a busy NAS are not yet known.
+
+## 2026-11-21 — Owner decisions for Phase 5's storage domain
+
+- **The private review list:** none of the storage methods is on it. That covers `DiskMgmt.*`, `Smart.*`, `FileSystemMgmt.*`, `FsTab.getByFsName`/`set`/`delete` and `MdMgmt.*`, as listed to the owner. Where reading the source called for it, the contract's request schemas are stricter than OMV's datamodels, which the contract rules allow.
+- **Storage is built in slices**, each with its own design agreed with the owner before building, because it has destructive actions:
+  1. disks and disk health (S.M.A.R.T.), which is UX-audit Flow D;
+  2. file systems, which is Flow A;
+  3. RAID (`openmediavault-md`);
+  4. ZFS (`openmediavault-zfs`), whose source is not in the OMV tree and is read separately.
+- **The interface enforces its own safeguards for destructive actions** (UI-8). It refuses to wipe a disk that holds a mounted file system or a RAID member, and to unmount a file system that shared folders use. It does not rely on the server to refuse them.
