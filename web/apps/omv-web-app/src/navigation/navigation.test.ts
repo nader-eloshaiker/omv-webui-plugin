@@ -64,6 +64,8 @@ describe("the table", () => {
         return route ? [route] : [];
       }),
     ).toEqual([
+      "/storage/disks",
+      "/storage/smart",
       "/storage/shared-folders",
       "/services/ssh",
       "/diagnostics/system-logs",
@@ -105,5 +107,15 @@ describe("isCurrent", () => {
     expect(isCurrent("/diagnostics/processes", "/diagnostics/services")).toBe(
       false,
     );
+  });
+
+  it("marks Disks on a disk's page and Disk health on each of its pages", () => {
+    expect(isCurrent("/storage/disks/sdb", "/storage/disks")).toBe(true);
+    expect(isCurrent("/storage/disks", "/storage/disks")).toBe(true);
+    expect(isCurrent("/storage/disks-x", "/storage/disks")).toBe(false);
+    for (const page of ["overview", "self-tests", "settings", "set-up"]) {
+      expect(isCurrent(`/storage/smart/${page}`, "/storage/smart")).toBe(true);
+    }
+    expect(isCurrent("/storage/smart/overview", "/storage/disks")).toBe(false);
   });
 });

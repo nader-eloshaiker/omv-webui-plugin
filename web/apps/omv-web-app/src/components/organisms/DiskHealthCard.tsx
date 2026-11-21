@@ -4,40 +4,36 @@
 // says so and waits for "Check disk health". The check is a task (Smart.getListBg) followed by the one
 // registry; its result is kept in memory for the session (diskHealth.ts) and shows every disk the
 // reply lists, monitored or not (D1). The one button keeps its place, so focus stays on it while it
-// turns into "Checking…" and then "Check again".
+// turns into "Checking…" and then "Check again". Its links lead to the Disk health pages and each
+// disk's page (disks design 8).
 import type { SmartDevice } from "@omv-webui/react-api-omv/generated";
-import { useSmartGetListBg } from "@omv-webui/react-api-omv/generated";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   EmptyState,
-  ExternalLink,
   HealthList,
   HealthListItem,
   HealthListSkeleton,
   InlineAlert,
-  rollUp,
   ServerMessage,
   StatusPill,
 } from "@omv-webui/react-ui-components";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import {
   diskState,
   diskTemperature,
   sortDisks,
-  type DiskState,
 } from "../../dashboard/dashboard.ts";
-import { diskHealth, startDiskCheck } from "../../dashboard/diskHealth.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { useFormat } from "../../format/useFormat.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
-import { useMemoryStore } from "../../shell/memoryStore.ts";
-import { IdentifierText } from "../atoms/IdentifierText.tsx";
+import { useDiskCheck } from "../../hooks/useDiskCheck.ts";
+import { useDiskRollUp } from "../../hooks/useDiskRollUp.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
+import { DiskLink } from "../atoms/DiskLink.tsx";
 import { DashboardCard } from "../molecules/DashboardCard.tsx";
-
-/** Every disk, in one request; the method takes the common list parameters (design 0.5). */
-const ALL_DISKS = { start: 0, limit: null, sortfield: null, sortdir: null };
+import { DiskReason } from "../molecules/DiskHealthStatus.tsx";
 
 function DiskItem({ disk }: { disk: SmartDevice }) {
   const { t } = useTranslation();
@@ -59,25 +55,23 @@ function DiskItem({ disk }: { disk: SmartDevice }) {
   ]
     .filter((part) => part !== "")
     .join(" · ");
-  let reason;
-  if (state.reason === "other") {
-    reason = (
-      <Trans
-        i18nKey="dashboard.disks.reason.other"
-        components={{ code: <IdentifierText value={disk.overallstatus} /> }}
-      />
-    );
-  } else if (state.reason !== null) {
-    reason = t(`dashboard.disks.reason.${state.reason}`);
-  }
   return (
     <HealthListItem
       status={state.status}
       statusLabel={t(`health.${state.status}`)}
-      name={disk.canonicaldevicefile}
+      name={
+        <DiskLink
+          devicename={disk.devicename}
+          device={disk.canonicaldevicefile}
+        />
+      }
       nameVariant="identifier"
       detail={detail === "" ? undefined : <span dir="auto">{detail}</span>}
-      reason={reason}
+      reason={
+        state.reason === null ? undefined : (
+          <DiskReason overallstatus={disk.overallstatus} />
+        )
+      }
       note={disk.monitor ? undefined : t("dashboard.disks.monitorOff")}
     />
   );
@@ -94,15 +88,9 @@ function MonitoringAdvice({ disks }: { disks: readonly SmartDevice[] }) {
       <InlineAlert tone="neutral" role="note">
         <p>{t("dashboard.disks.monitorOffAll")}</p>
         <p>
-          <ExternalLink
-            href={CLASSIC.smartSettings}
-            newTabLabel={t("app.newTab")}
-          >
+          <Link to="/storage/smart/set-up" className={routerLinkClass}>
             {t("dashboard.disks.monitorOffAllLink")}
-          </ExternalLink>
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t("dashboard.disks.monitorOffAllHint")}
+          </Link>
         </p>
       </InlineAlert>
     );
@@ -110,44 +98,19 @@ function MonitoringAdvice({ disks }: { disks: readonly SmartDevice[] }) {
   return (
     <p className="text-sm">
       {t("dashboard.disks.monitorOffSome", { count: off, total: disks.length })}{" "}
-      <ExternalLink href={CLASSIC.smartDevices} newTabLabel={t("app.newTab")}>
+      <Link to="/storage/smart/set-up" className={routerLinkClass}>
         {t("dashboard.disks.monitorOffSomeLink")}
-      </ExternalLink>
+      </Link>
     </p>
   );
-}
-
-/** "1 of 5 disks: Critical", or "5 disks: OK". */
-function useDiskSummary() {
-  const { t } = useTranslation();
-  return (
-    disks: readonly SmartDevice[],
-  ): { status: DiskState["status"]; text: string } | null => {
-    const statuses = disks.map((d) => diskState(d.overallstatus).status);
-    const summary = rollUp(statuses);
-    // The worst is one of the disks' own states.
-    const status = statuses.find((s) => s === summary.status);
-    if (status === undefined) {
-      return null;
-    }
-    const text =
-      status === "ok"
-        ? t("dashboard.disks.allOk", { count: summary.total })
-        : t("dashboard.disks.rollUp", {
-            count: summary.count,
-            total: summary.total,
-            status: t(`health.${status}`),
-          });
-    return { status, text };
-  };
 }
 
 export function DiskHealthCard() {
   const { t } = useTranslation();
   const format = useFormat();
-  const state = useMemoryStore(diskHealth);
-  const check = useSmartGetListBg();
-  const summarise = useDiskSummary();
+  const check = useDiskCheck();
+  const state = check.state;
+  const summarise = useDiskRollUp();
   // A check that ends while the card is on screen is announced; one that ended before is not.
   const [openedAt] = useState(Date.now);
 
@@ -156,30 +119,26 @@ export function DiskHealthCard() {
   const disks = result ? sortDisks(result.list.data) : undefined;
   const summary = disks ? summarise(disks) : null;
 
-  const start = () => {
-    startDiskCheck(t("dashboard.disks.taskLabel"), () =>
-      check.mutateAsync({ data: ALL_DISKS }),
-    );
-  };
+  const start = check.start;
 
   let announcement = "";
   if (checking) {
-    announcement = t("dashboard.disks.checkingLine");
+    announcement = t("diskCheck.checkingLine");
   } else if (result && result.readAt >= openedAt && !state.failed && summary) {
-    announcement = t("dashboard.disks.announce", { summary: summary.text });
+    announcement = t("diskCheck.announce", { summary: summary.text });
   }
 
   return (
     <DashboardCard
       title={t("dashboard.disks.title")}
       footer={
-        <ExternalLink href={CLASSIC.smartDevices} newTabLabel={t("app.newTab")}>
+        <Link to="/storage/smart/overview" className={routerLinkClass}>
           {t("dashboard.disks.link")}
-        </ExternalLink>
+        </Link>
       }
     >
       {state.failed && !checking ? (
-        <InlineAlert tone="critical" title={t("dashboard.disks.failed")}>
+        <InlineAlert tone="critical" title={t("diskCheck.failed")}>
           {isRpcError(state.error) ? (
             <ServerMessage label={t("app.serverMessage")}>
               {state.error.message}
@@ -221,7 +180,7 @@ export function DiskHealthCard() {
         {result ? (
           <p className="text-xs text-muted-foreground tabular-nums">
             {checking
-              ? t("dashboard.disks.checkingAgain", {
+              ? t("diskCheck.checkingAgain", {
                   time: format.clock(result.readAt),
                 })
               : t("dashboard.disks.checkedAt", {
@@ -236,12 +195,12 @@ export function DiskHealthCard() {
           onClick={checking ? undefined : start}
         >
           {checking
-            ? t("dashboard.disks.checking")
+            ? t("diskCheck.checking")
             : result
-              ? t("dashboard.disks.checkAgain")
+              ? t("diskCheck.checkAgain")
               : state.failed
                 ? t("common.tryAgain")
-                : t("dashboard.disks.check")}
+                : t("diskCheck.check")}
         </Button>
       </div>
     </DashboardCard>

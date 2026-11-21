@@ -234,11 +234,17 @@ describe("the Disk health card", () => {
     expect(
       within(disks).getByText(/^Monitoring is off for every disk\./),
     ).toBeInTheDocument();
+    // The links lead to this interface's own pages (disks design 8).
     expect(
-      within(disks).getByRole("link", {
-        name: "Turn on monitoring in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/storage/smart/settings");
+      within(disks).getByRole("link", { name: "Set up disk monitoring" }),
+    ).toHaveAttribute("href", "/ui/storage/smart/set-up");
+    expect(
+      within(disks).getByRole("link", { name: "Open Disk health" }),
+    ).toHaveAttribute("href", "/ui/storage/smart/overview");
+    expect(
+      within(disks).getByRole("link", { name: "Open disk /dev/sda" }),
+    ).toHaveAttribute("href", "/ui/storage/disks/sda");
+    expect(within(disks).queryByText(/Turn it on in Settings/)).toBeNull();
     expect(
       within(disks).getByText(
         /^Checked at .*The readings do not update by themselves\.$/,
@@ -289,8 +295,13 @@ describe("the Disk health card", () => {
     const rows = within(await attention()).getAllByRole("listitem");
     const text = rows.map((r) => r.textContent ?? "");
     expect(text[0]).toMatch(
-      /^CriticalDisk \/dev\/sdc \(Example HDD 4TB\) may fail soon: Many damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. Monitoring is off for this disk, so the NAS will not email you about it\.Open Disk health in the classic interface ?\(opens in a new tab\)Read at /,
+      /^CriticalDisk \/dev\/sdc \(Example HDD 4TB\) may fail soon: Many damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. Monitoring is off for this disk, so the NAS will not email you about it\.Open disk \/dev\/sdcRead at /,
     );
+    expect(
+      within(rows[0] as HTMLElement).getByRole("link", {
+        name: "Open disk /dev/sdc",
+      }),
+    ).toHaveAttribute("href", "/ui/storage/disks/sdc");
     expect(text[1]).toMatch(
       /^CriticalDisk \/dev\/sdd \(Example HDD 4TB\) may fail soon: It is working outside its safe limits now\./,
     );
@@ -300,7 +311,9 @@ describe("the Disk health card", () => {
     expect(text[3]).toMatch(
       /^WarningDisk \/dev\/sdb \(Example HDD 4TB\): It was once used outside its safe limits/,
     );
-    expect(within(rows[0]!).getByText("/dev/sdc").tagName).toBe("CODE");
+    for (const device of within(rows[0]!).getAllByText("/dev/sdc")) {
+      expect(device.tagName).toBe("CODE");
+    }
     const disks = card("Disk health");
     expect(
       within(disks).getByText("2 of 6 disks: Critical"),

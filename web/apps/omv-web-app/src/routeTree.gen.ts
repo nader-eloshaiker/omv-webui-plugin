@@ -25,6 +25,13 @@ import { Route as SignedInDiagnosticsServicesIndexRouteImport } from './routes/_
 import { Route as SignedInDiagnosticsServicesNfsRouteImport } from './routes/_signedIn/diagnostics/services/nfs'
 import { Route as SignedInDiagnosticsServicesSmbRouteImport } from './routes/_signedIn/diagnostics/services/smb'
 import { Route as SignedInDiagnosticsServicesSshRouteImport } from './routes/_signedIn/diagnostics/services/ssh'
+import { Route as SignedInStorageDisksIndexRouteImport } from './routes/_signedIn/storage/disks/index'
+import { Route as SignedInStorageDisksDiskRouteImport } from './routes/_signedIn/storage/disks/$disk'
+import { Route as SignedInStorageSmartIndexRouteImport } from './routes/_signedIn/storage/smart/index'
+import { Route as SignedInStorageSmartOverviewRouteImport } from './routes/_signedIn/storage/smart/overview'
+import { Route as SignedInStorageSmartSelfTestsRouteImport } from './routes/_signedIn/storage/smart/self-tests'
+import { Route as SignedInStorageSmartSetUpRouteImport } from './routes/_signedIn/storage/smart/set-up'
+import { Route as SignedInStorageSmartSettingsRouteImport } from './routes/_signedIn/storage/smart/settings'
 
 const SignedInRoute = SignedInRouteImport.update({
   id: '/_signedIn',
@@ -112,6 +119,48 @@ const SignedInDiagnosticsServicesSshRoute =
     path: '/diagnostics/services/ssh',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInStorageDisksIndexRoute =
+  SignedInStorageDisksIndexRouteImport.update({
+    id: '/storage/disks/',
+    path: '/storage/disks/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageDisksDiskRoute =
+  SignedInStorageDisksDiskRouteImport.update({
+    id: '/storage/disks/$disk',
+    path: '/storage/disks/$disk',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageSmartIndexRoute =
+  SignedInStorageSmartIndexRouteImport.update({
+    id: '/storage/smart/',
+    path: '/storage/smart/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageSmartOverviewRoute =
+  SignedInStorageSmartOverviewRouteImport.update({
+    id: '/storage/smart/overview',
+    path: '/storage/smart/overview',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageSmartSelfTestsRoute =
+  SignedInStorageSmartSelfTestsRouteImport.update({
+    id: '/storage/smart/self-tests',
+    path: '/storage/smart/self-tests',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageSmartSetUpRoute =
+  SignedInStorageSmartSetUpRouteImport.update({
+    id: '/storage/smart/set-up',
+    path: '/storage/smart/set-up',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageSmartSettingsRoute =
+  SignedInStorageSmartSettingsRouteImport.update({
+    id: '/storage/smart/settings',
+    path: '/storage/smart/settings',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SignedInIndexRoute
@@ -128,7 +177,14 @@ export interface FileRoutesByFullPath {
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
+  '/storage/smart/overview': typeof SignedInStorageSmartOverviewRoute
+  '/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
+  '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
+  '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/storage/disks/': typeof SignedInStorageDisksIndexRoute
+  '/storage/smart/': typeof SignedInStorageSmartIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -145,7 +201,14 @@ export interface FileRoutesByTo {
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
+  '/storage/smart/overview': typeof SignedInStorageSmartOverviewRoute
+  '/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
+  '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
+  '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
+  '/storage/disks': typeof SignedInStorageDisksIndexRoute
+  '/storage/smart': typeof SignedInStorageSmartIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -164,7 +227,14 @@ export interface FileRoutesById {
   '/_signedIn/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/_signedIn/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/_signedIn/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/_signedIn/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
+  '/_signedIn/storage/smart/overview': typeof SignedInStorageSmartOverviewRoute
+  '/_signedIn/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
+  '/_signedIn/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
+  '/_signedIn/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/_signedIn/storage/disks/': typeof SignedInStorageDisksIndexRoute
+  '/_signedIn/storage/smart/': typeof SignedInStorageSmartIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,7 +253,14 @@ export interface FileRouteTypes {
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/storage/disks/$disk'
+    | '/storage/smart/overview'
+    | '/storage/smart/self-tests'
+    | '/storage/smart/set-up'
+    | '/storage/smart/settings'
     | '/diagnostics/services/'
+    | '/storage/disks/'
+    | '/storage/smart/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -200,7 +277,14 @@ export interface FileRouteTypes {
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/storage/disks/$disk'
+    | '/storage/smart/overview'
+    | '/storage/smart/self-tests'
+    | '/storage/smart/set-up'
+    | '/storage/smart/settings'
     | '/diagnostics/services'
+    | '/storage/disks'
+    | '/storage/smart'
   id:
     | '__root__'
     | '/_signedIn'
@@ -218,7 +302,14 @@ export interface FileRouteTypes {
     | '/_signedIn/diagnostics/services/nfs'
     | '/_signedIn/diagnostics/services/smb'
     | '/_signedIn/diagnostics/services/ssh'
+    | '/_signedIn/storage/disks/$disk'
+    | '/_signedIn/storage/smart/overview'
+    | '/_signedIn/storage/smart/self-tests'
+    | '/_signedIn/storage/smart/set-up'
+    | '/_signedIn/storage/smart/settings'
     | '/_signedIn/diagnostics/services/'
+    | '/_signedIn/storage/disks/'
+    | '/_signedIn/storage/smart/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -340,6 +431,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInDiagnosticsServicesSshRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/storage/disks/': {
+      id: '/_signedIn/storage/disks/'
+      path: '/storage/disks'
+      fullPath: '/storage/disks/'
+      preLoaderRoute: typeof SignedInStorageDisksIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/disks/$disk': {
+      id: '/_signedIn/storage/disks/$disk'
+      path: '/storage/disks/$disk'
+      fullPath: '/storage/disks/$disk'
+      preLoaderRoute: typeof SignedInStorageDisksDiskRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/smart/': {
+      id: '/_signedIn/storage/smart/'
+      path: '/storage/smart'
+      fullPath: '/storage/smart/'
+      preLoaderRoute: typeof SignedInStorageSmartIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/smart/overview': {
+      id: '/_signedIn/storage/smart/overview'
+      path: '/storage/smart/overview'
+      fullPath: '/storage/smart/overview'
+      preLoaderRoute: typeof SignedInStorageSmartOverviewRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/smart/self-tests': {
+      id: '/_signedIn/storage/smart/self-tests'
+      path: '/storage/smart/self-tests'
+      fullPath: '/storage/smart/self-tests'
+      preLoaderRoute: typeof SignedInStorageSmartSelfTestsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/smart/set-up': {
+      id: '/_signedIn/storage/smart/set-up'
+      path: '/storage/smart/set-up'
+      fullPath: '/storage/smart/set-up'
+      preLoaderRoute: typeof SignedInStorageSmartSetUpRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/smart/settings': {
+      id: '/_signedIn/storage/smart/settings'
+      path: '/storage/smart/settings'
+      fullPath: '/storage/smart/settings'
+      preLoaderRoute: typeof SignedInStorageSmartSettingsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
   }
 }
 
@@ -357,7 +497,14 @@ interface SignedInRouteChildren {
   SignedInDiagnosticsServicesNfsRoute: typeof SignedInDiagnosticsServicesNfsRoute
   SignedInDiagnosticsServicesSmbRoute: typeof SignedInDiagnosticsServicesSmbRoute
   SignedInDiagnosticsServicesSshRoute: typeof SignedInDiagnosticsServicesSshRoute
+  SignedInStorageDisksDiskRoute: typeof SignedInStorageDisksDiskRoute
+  SignedInStorageSmartOverviewRoute: typeof SignedInStorageSmartOverviewRoute
+  SignedInStorageSmartSelfTestsRoute: typeof SignedInStorageSmartSelfTestsRoute
+  SignedInStorageSmartSetUpRoute: typeof SignedInStorageSmartSetUpRoute
+  SignedInStorageSmartSettingsRoute: typeof SignedInStorageSmartSettingsRoute
   SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
+  SignedInStorageDisksIndexRoute: typeof SignedInStorageDisksIndexRoute
+  SignedInStorageSmartIndexRoute: typeof SignedInStorageSmartIndexRoute
 }
 
 const SignedInRouteChildren: SignedInRouteChildren = {
@@ -374,7 +521,14 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInDiagnosticsServicesNfsRoute: SignedInDiagnosticsServicesNfsRoute,
   SignedInDiagnosticsServicesSmbRoute: SignedInDiagnosticsServicesSmbRoute,
   SignedInDiagnosticsServicesSshRoute: SignedInDiagnosticsServicesSshRoute,
+  SignedInStorageDisksDiskRoute: SignedInStorageDisksDiskRoute,
+  SignedInStorageSmartOverviewRoute: SignedInStorageSmartOverviewRoute,
+  SignedInStorageSmartSelfTestsRoute: SignedInStorageSmartSelfTestsRoute,
+  SignedInStorageSmartSetUpRoute: SignedInStorageSmartSetUpRoute,
+  SignedInStorageSmartSettingsRoute: SignedInStorageSmartSettingsRoute,
   SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
+  SignedInStorageDisksIndexRoute: SignedInStorageDisksIndexRoute,
+  SignedInStorageSmartIndexRoute: SignedInStorageSmartIndexRoute,
 }
 
 const SignedInRouteWithChildren = SignedInRoute._addFileChildren(
