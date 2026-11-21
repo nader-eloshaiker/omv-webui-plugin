@@ -1,0 +1,3 @@
+summary: "Written by hand in the shape of exportfs -v's output (OMV 8.6.1): one folder shared with a documentation network, its options on one long line. The test VM has no NFS share. Documentation addresses only."
+x-omv-status: 200
+value: "/export/media \t192.0.2.0/24(sync,wdelay,hide,no_subtree_check,fsid=1,sec=sys,rw,secure,root_squash,no_all_squash)\n/export \t192.0.2.0/24(sync,wdelay,hide,crossmnt,no_subtree_check,fsid=0,sec=sys,ro,secure,root_squash,no_all_squash)"

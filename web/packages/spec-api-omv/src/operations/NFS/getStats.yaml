@@ -23,6 +23,8 @@ post:
           examples:
             disabled:
               $ref: ../../examples/nfsGetStats.disabled.yaml
+            exports:
+              $ref: ../../examples/nfsGetStats.exports.yaml
 
     "500":
       description: >-

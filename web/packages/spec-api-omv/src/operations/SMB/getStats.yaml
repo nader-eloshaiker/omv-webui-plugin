@@ -23,6 +23,8 @@ post:
           examples:
             disabled:
               $ref: ../../examples/smbGetStats.disabled.yaml
+            connected:
+              $ref: ../../examples/smbGetStats.connected.yaml
 
     "500":
       description: >-
