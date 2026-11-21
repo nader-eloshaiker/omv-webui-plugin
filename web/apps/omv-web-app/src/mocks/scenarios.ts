@@ -592,6 +592,10 @@ export const startsDirty = (name: ScenarioName): boolean =>
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
 // The handle the contract's disk health example returns.
 const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
+// The handles of the contract's wipe and self-test examples.
+const WIPE_HANDLE = CONTRACT_EXAMPLES.diskMgmtWipe.started.value;
+const SELF_TEST_HANDLE =
+  CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value;
 
 /** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
 const CORE_LOGS = new Set([
@@ -696,6 +700,17 @@ export function scenarioAnswers(
       return example;
     };
 
+  /** A write that leaves its change pending, as a saved setting does on OMV. */
+  const pending =
+    <T extends string>(example: T) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(example)();
+      if (answer === example) {
+        session.dirty = true;
+      }
+      return answer;
+    };
+
   return {
     sessionLogin: login(() => {
       switch (name) {
@@ -770,6 +785,12 @@ export function scenarioAnswers(
       if (filename === SMART_HANDLE) {
         return guarded(SMART_SCENARIOS[name] ?? "smartDevicesFinished")();
       }
+      if (filename === WIPE_HANDLE) {
+        return guarded("wipeFinished")();
+      }
+      if (filename === SELF_TEST_HANDLE) {
+        return guarded("selfTestFinished")();
+      }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
@@ -840,6 +861,29 @@ export function scenarioAnswers(
       return guarded(log)();
     },
     systemGetTopInfo: guarded(name === "processesBusy" ? BUSY_TOP : "json"),
+    // Disks and disk health (Phase 5): the test VM as captured. A saved setting is pending, as on
+    // OMV, where each of these marks the smartmontools module dirty.
+    diskMgmtEnumerateDevices: guarded("vmDisks"),
+    diskMgmtGetList: guarded("vmDisks"),
+    diskMgmtGetHdParm: guarded("configured"),
+    diskMgmtSetHdParm: pending("created"),
+    diskMgmtWipe: guarded("started"),
+    diskMgmtRescan: guarded("null"),
+    smartEnumerateDevices: guarded("vmDisks"),
+    smartEnumerateMonitoredDevices: guarded("none"),
+    smartGetSettings: guarded("defaults"),
+    smartSetSettings: pending("saved"),
+    smartGetDeviceSettings: guarded("monitored"),
+    smartSetDeviceSettings: pending("created"),
+    smartGetInformation: guarded("nvme"),
+    smartGetAttributes: guarded("nvme"),
+    smartGetSelfTestLogs: guarded("nvme"),
+    smartGetExtendedInformation: guarded("nvme"),
+    smartGetScheduleList: guarded("none"),
+    smartGetScheduledTest: guarded("configured"),
+    smartSetScheduledTest: pending("created"),
+    smartDeleteScheduledTest: pending("deleted"),
+    smartExecuteScheduledTest: guarded("started"),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty

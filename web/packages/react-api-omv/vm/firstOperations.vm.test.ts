@@ -3,7 +3,8 @@
 // generated client, with development-build response validation reporting no mismatch. The reads
 // Phases 3 and 5 added are checked the same way.
 //
-// Credentials come from $OMV_WEBUI_ENV and are never printed. The only writes send the SSH
+// Credentials come from $OMV_WEBUI_ENV and are never printed. The disks and disk-health reads of
+// Phase 5 only read; none of their writes is called here. The only writes send the SSH
 // settings back unchanged, then apply or revert them, and force a redeploy of one harmless module
 // to have a task that runs long enough to stop.
 import type { SmartDeviceList } from "@omv-webui/ts-api-omv";
@@ -24,6 +25,9 @@ import {
   configApplyChangesBg,
   configIsDirty,
   configRevertChangesBg,
+  diskMgmtEnumerateDevices,
+  diskMgmtGetHdParm,
+  diskMgmtGetList,
   emailNotificationGet,
   execIsRunning,
   execStop,
@@ -38,7 +42,17 @@ import {
   sessionLogout,
   sessionVerify,
   shareMgmtGetList,
+  smartEnumerateDevices,
+  smartEnumerateMonitoredDevices,
+  smartGetAttributes,
+  smartGetDeviceSettings,
+  smartGetExtendedInformation,
+  smartGetInformation,
   smartGetListBg,
+  smartGetScheduledTest,
+  smartGetScheduleList,
+  smartGetSelfTestLogs,
+  smartGetSettings,
   smbGetStats,
   sshGet,
   sshGetStats,
@@ -212,6 +226,67 @@ describe("as an administrator", () => {
     expect(top.processes.length).toBeGreaterThan(0);
     for (const stats of [smbGetStats, nfsGetStats, sshGetStats]) {
       expect(typeof (await stats())).toBe("string");
+    }
+  });
+
+  it("reads the disks, their power settings and disk health without changing anything", async () => {
+    const disks = await diskMgmtEnumerateDevices();
+    expect(disks.length).toBeGreaterThan(0);
+    expect(disks.some((d) => d.isroot)).toBe(true);
+    const list = await diskMgmtGetList({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+    });
+    expect(list.total).toBe(disks.length);
+    expect(list.data.map((d) => d.devicename).sort()).toEqual(
+      disks.map((d) => d.devicename).sort(),
+    );
+    const smart = await smartEnumerateDevices();
+    expect(smart.length).toBeGreaterThan(0);
+    // The test VM's NVMe disk is the one that reports S.M.A.R.T. data.
+    const readable = smart.find((d) => d.overallstatus === "GOOD");
+    expect(readable).toBeDefined();
+    const devicefile = readable!.canonicaldevicefile;
+    const monitored = await smartEnumerateMonitoredDevices();
+    expect(Array.isArray(monitored)).toBe(true);
+    const settings = await smartGetSettings();
+    expect(settings.interval).toBeGreaterThanOrEqual(10);
+    const info = await smartGetInformation({ devicefile });
+    expect(info.devicefile).toBe(devicefile);
+    expect(Array.isArray(await smartGetAttributes({ devicefile }))).toBe(true);
+    expect(Array.isArray(await smartGetSelfTestLogs({ devicefile }))).toBe(
+      true,
+    );
+    expect(await smartGetExtendedInformation({ devicefile })).toContain(
+      "=== START OF INFORMATION SECTION ===",
+    );
+    const schedule = await smartGetScheduleList({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+    });
+    expect(schedule.total).toBe(schedule.data.length);
+    expect(await configIsDirty()).toBe(false);
+  });
+
+  it("is told when a disk or settings object it asks for does not exist", async () => {
+    const unknown = { uuid: "00000000-0000-4000-8000-0000000000ff" };
+    for (const read of [
+      () => diskMgmtGetHdParm(unknown),
+      () => smartGetScheduledTest(unknown),
+    ]) {
+      await expect(read()).rejects.toBeInstanceOf(RpcError);
+    }
+    // A disk whose monitoring settings were never saved (none are on the test VM) has none to read.
+    const [disk] = await smartEnumerateMonitoredDevices();
+    if (disk === undefined) {
+      const [any] = await smartEnumerateDevices();
+      await expect(
+        smartGetDeviceSettings({ devicefile: any!.canonicaldevicefile }),
+      ).rejects.toMatchObject({ status: 500 });
     }
   });
 
