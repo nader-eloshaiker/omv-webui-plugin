@@ -516,3 +516,19 @@ Built on `phase-5-disks` to [design/phase-5-disks.md](design/phase-5-disks.md), 
   - shred's progress lines on a secure wipe;
   - the start lines of a self-test on a disk that supports one (the VM's NVMe disk does not);
   - whether a rescan or a settings save wakes a disk.
+
+## 2026-11-21 — The file-systems design, agreed by the owner
+
+The owner agreed the destructive and irreversible points of [design/phase-5-filesystems.md](design/phase-5-filesystems.md), section 18:
+
+- **P1:** what creating a file system erases, and what it refuses. The stricter of OMV's candidate list and the disks slice's disk-use model wins.
+- **P2:** the typed confirmation, with a re-check of the disk (serial included) as the first step. Accepted as a stated risk: two sessions creating on the same disk within about a second, and multi-disk BTRFS, which writes no "being created" marker.
+- **P3:** multi-disk BTRFS defaults to RAID1 (RAID10, RAID0 and single also offered).
+- **P4:** Flow A stops at the mount and hands sharing to the classic interface, saying what to choose there (770, per Q4). The in-app sharing stage (section 8) waits for the shares domain. Its methods are not yet cleared against the private review list: `ShareMgmt.set`/`setPrivileges`/`delete`, `UserMgmt.getUserList`/`getGroupList`, and `SMB.getSettings`/`setSettings`/`getShareList`/`setShare`. That question is asked then.
+- **P5:** grow is irreversible, confirmed without typing.
+- **P6:** unmount cuts access, is refused while anything uses the file system, and is confirmed without typing.
+- **P7:** unmount and remove refuse to start while other changes are pending, then apply what they leave pending without asking again.
+- **P8:** removing a missing file system has a plain confirmation.
+- **P9:** a refusal offers no classic-interface link around it.
+
+The design's other judgement calls are taken as recommended, as for the earlier slices.
