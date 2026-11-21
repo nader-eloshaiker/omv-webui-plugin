@@ -1,0 +1,5 @@
+summary: "Written from the captured MdMgmt.enumerateDevices reply on the test VM without the RAID plugin (OMV 8.6.1): OMV answers every method of a service it does not know with the same 404 (read from its RPC layer), so MdMgmt.getCandidates answers this when openmediavault-md is not installed."
+x-omv-status: 404
+value:
+  code: 0
+  message: "RPC service 'MdMgmt' not found."

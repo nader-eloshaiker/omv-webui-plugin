@@ -2810,7 +2810,7 @@
         "operationId": "mdMgmtGetCandidates",
         "tags": ["MdMgmt"],
         "summary": "Disks that can go into an array",
-        "description": "The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.",
+        "description": "The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 \"RPC service 'MdMgmt' not found.\".",
         "x-omv-rpc": {
           "service": "MdMgmt",
           "method": "getCandidates"
@@ -2831,6 +2831,21 @@
                   },
                   "none": {
                     "$ref": "#/components/examples/mdMgmtGetCandidates.none"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message \"RPC service 'MdMgmt' not found.\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notInstalled": {
+                    "$ref": "#/components/examples/mdMgmtGetCandidates.notInstalled"
                   }
                 }
               }
@@ -11235,6 +11250,14 @@
         "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: every scratch disk is in a RAID6, so none is offered.",
         "x-omv-status": 200,
         "value": []
+      },
+      "mdMgmtGetCandidates.notInstalled": {
+        "summary": "Written from the captured MdMgmt.enumerateDevices reply on the test VM without the RAID plugin (OMV 8.6.1): OMV answers every method of a service it does not know with the same 404 (read from its RPC layer), so MdMgmt.getCandidates answers this when openmediavault-md is not installed.",
+        "x-omv-status": 404,
+        "value": {
+          "code": 0,
+          "message": "RPC service 'MdMgmt' not found."
+        }
       },
       "mdMgmtCreate.mirror": {
         "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc, sent by their by-id names.",

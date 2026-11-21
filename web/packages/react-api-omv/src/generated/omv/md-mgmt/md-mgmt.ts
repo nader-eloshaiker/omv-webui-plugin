@@ -596,7 +596,7 @@ export function useMdMgmtGetSlaves<
 }
 
 /**
- * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.
+ * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
  * @summary Disks that can go into an array
  */
 export const mdMgmtGetCandidates = (
@@ -615,7 +615,7 @@ export const getMdMgmtGetCandidatesQueryKey = () => {
 
 export const getMdMgmtGetCandidatesQueryOptions = <
   TData = Awaited<ReturnType<typeof mdMgmtGetCandidates>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
@@ -644,15 +644,15 @@ export const getMdMgmtGetCandidatesQueryOptions = <
 export type MdMgmtGetCandidatesQueryResult = NonNullable<
   Awaited<ReturnType<typeof mdMgmtGetCandidates>>
 >;
-export type MdMgmtGetCandidatesQueryError = ErrorType<unknown>;
+export type MdMgmtGetCandidatesQueryError = ErrorType<RpcErrorDetail>;
 
 /**
- * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.
+ * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
  * @summary Disks that can go into an array
  */
 export function useMdMgmtGetCandidates<
   TData = Awaited<ReturnType<typeof mdMgmtGetCandidates>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
 >(
   options: {
     query: Partial<
@@ -677,12 +677,12 @@ export function useMdMgmtGetCandidates<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 /**
- * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.
+ * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
  * @summary Disks that can go into an array
  */
 export function useMdMgmtGetCandidates<
   TData = Awaited<ReturnType<typeof mdMgmtGetCandidates>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
 >(
   options?: {
     query?: Partial<
@@ -707,12 +707,12 @@ export function useMdMgmtGetCandidates<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 /**
- * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.
+ * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
  * @summary Disks that can go into an array
  */
 export function useMdMgmtGetCandidates<
   TData = Awaited<ReturnType<typeof mdMgmtGetCandidates>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
 >(
   options?: {
     query?: Partial<
@@ -729,12 +729,12 @@ export function useMdMgmtGetCandidates<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 /**
- * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server may read each unused disk to look for what is on it. Changes nothing.
+ * The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
  * @summary Disks that can go into an array
  */
 export function useMdMgmtGetCandidates<
   TData = Awaited<ReturnType<typeof mdMgmtGetCandidates>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<RpcErrorDetail>,
 >(
   options?: {
     query?: Partial<

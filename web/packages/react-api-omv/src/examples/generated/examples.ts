@@ -4294,6 +4294,13 @@ export const CONTRACT_EXAMPLES = {
       status: 200,
       value: [],
     },
+    notInstalled: {
+      status: 404,
+      value: {
+        code: 0,
+        message: "RPC service 'MdMgmt' not found.",
+      },
+    },
   },
   mdMgmtCreate: {
     mirror: {
