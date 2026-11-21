@@ -331,7 +331,13 @@ function RaidArray({ address }: { address: string | null }) {
           onRetry={() => void refresh()}
           onDeleted={(d) => {
             setDeleted(d);
-            void refresh();
+            // The array is gone: its report and disks are not read again (they would answer 500).
+            void Promise.allSettled([
+              v.arrays.refetch(),
+              v.configured.refetch(),
+              v.detected.refetch(),
+              disks.refetch(),
+            ]);
           }}
           onCut={() => {
             setCut(true);
