@@ -92,7 +92,7 @@ waking read.
 | --- | --- | --- |
 | `DiskMgmt.getList` | No: it asks each disk with "do not wake" (`--nocheck=standby`); the temperature comes only from a reading already cached on the server | On opening a page, Refresh, after a rescan or a wipe |
 | `FileSystemMgmt.getList` | Not known; the owner accepted reading it once per visit (journal, 2026-11-21). **[verify]** | With `DiskMgmt.getList` |
-| `MdMgmt.enumerateDevices` (RAID plugin) | No (reads the kernel's RAID state) **[verify]** | With `DiskMgmt.getList` |
+| `MdMgmt.enumerateDevices` (RAID plugin) | No smartctl (runs mdadm and reads the kernel's RAID state); not observable on the VM, which has no RAID plugin | With `DiskMgmt.getList` |
 | `Smart.getSettings`, `Smart.getDeviceSettings`, `Smart.getScheduleList`, `Smart.getScheduledTest` | No: configuration and udev only **[verify]** | On opening a page |
 | `Smart.getListBg` ("Check disk health") | **Yes, every disk** | Only on "Check disk health" |
 | `Smart.getInformation`, `Smart.getAttributes`, `Smart.getSelfTestLogs` | **Yes, that disk** | Only on "Read health details" |
@@ -207,7 +207,7 @@ Administrators only. Route `/storage/disks`.
 
 - `DiskMgmt.getList` with `start: 0, limit: null, sortfield: "devicename", sortdir: "asc"` (the
   whole-list form observed in the monitoring domain), `FileSystemMgmt.getList` (the same whole-list
-  parameters) and `MdMgmt.enumerateDevices` (0.6), in parallel, on opening the page, on Refresh, after
+  parameters), `FileSystemMgmt.enumerateFilesystems` and `MdMgmt.enumerateDevices` (0.6), in parallel, on opening the page, on Refresh, after
   "Look for new disks" and after a wipe ends. All are foreground reads. Nothing polls.
 - **[verify]** `DiskMgmt.getList` is synchronous and asks each disk once; its time with five disks on
   the VM. If it is slow, the fallback is `DiskMgmt.getListBg` through the task helper, and the owner is
@@ -386,7 +386,8 @@ current while it is open.
 
 All are reads that do not wake the disk (0.4):
 
-- `DiskMgmt.getList`, `FileSystemMgmt.getList`, `MdMgmt.enumerateDevices` (the Disks list's queries,
+- `DiskMgmt.getList`, `FileSystemMgmt.getList`, `FileSystemMgmt.enumerateFilesystems`,
+  `MdMgmt.enumerateDevices` (the Disks list's queries,
   shared and already warm when coming from there);
 - `Smart.getDeviceSettings` with the row's `devicefile` (2.5);
 - `Smart.getSettings` (the NAS-wide monitoring state and limits);
@@ -1940,7 +1941,7 @@ Every method in this slice refuses a normal user ("Invalid context role."). So:
 | `DiskMgmt.wipe` | a disk's page | after the typed confirmation and the re-check | task | New. `x-omv-task`, `x-omv-destructive: data`. Request `{devicefile, secure}`, both required |
 | `DiskMgmt.setHdParm` | a disk's page | Save | foreground | New. `x-omv-dirty: [smartmontools]`. Request schema stricter than OMV's: `apm` 0 to 254 and `spindowntime` 0 to 255 (OMV's request and storage schemas disagree; the storage one is what is enforced) |
 | `FileSystemMgmt.getList` | as `DiskMgmt.getList` | with it | foreground | Exists (monitoring domain) |
-| `MdMgmt.enumerateDevices` | as `DiskMgmt.getList` | with it | foreground | New (RAID plugin). The "service not found" reply is documented as an expected error **[verify]** |
+| `MdMgmt.enumerateDevices` | as `DiskMgmt.getList` | with it | foreground | New (RAID plugin). "Plugin not installed" is HTTP 404 "RPC service 'MdMgmt' not found." (observed); any other error fails closed |
 | `Smart.getListBg` → `Exec.getOutput` | Disks, Overview, a disk's page (via the link), Flow D, dashboard | Check disk health | foreground, task | Exists |
 | `Smart.getSettings` | Overview, Settings, a disk's page, Flow D | open | foreground | New |
 | `Smart.setSettings` | Settings, Flow D | Save, Flow D step 1 | foreground | New. `x-omv-dirty: [smartmontools]`; all five fields required; `tempmax` and `tempdiff` 0 to 255 (the storage schema's limit) |
