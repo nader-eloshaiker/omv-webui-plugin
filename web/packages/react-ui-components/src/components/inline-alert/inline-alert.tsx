@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cva } from "class-variance-authority";
-import { CircleAlert, Info } from "lucide-react";
+import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
 
@@ -30,6 +30,12 @@ interface InlineAlertProps extends Omit<React.ComponentProps<"div">, "title"> {
   title?: React.ReactNode;
   /** What to do, and the server's message as a `ServerMessage` (UI-9). Rendered as given. */
   children?: React.ReactNode;
+  /**
+   * A neutral notice's icon shape, when the default Info shape would say the wrong thing: the
+   * warning shape for a risk the reader is choosing ("This array has no protection"). Drawn in the
+   * neutral ink, never a status colour, since nothing has failed. Critical alerts keep theirs.
+   */
+  icon?: "info" | "warning";
 }
 
 /**
@@ -42,11 +48,16 @@ function InlineAlert({
   tone,
   title,
   children,
+  icon = "info",
   className,
   ...props
 }: InlineAlertProps) {
   const critical = tone === "critical";
-  const Icon = critical ? CircleAlert : Info;
+  const Icon = critical
+    ? CircleAlert
+    : icon === "warning"
+      ? TriangleAlert
+      : Info;
   return (
     <div
       data-slot="inline-alert"

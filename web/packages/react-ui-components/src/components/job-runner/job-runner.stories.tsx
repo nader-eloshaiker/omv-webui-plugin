@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
+import { InlineAlert } from "../inline-alert/inline-alert";
 import type { TaskStatus } from "../status/status-kinds";
 import { TaskLog } from "../task-log/task-log";
 import { Identifier } from "../text/identifier";
@@ -144,6 +145,47 @@ export const SummaryErasesData: Story = {
         }}
         confirmLabel="Erase and continue"
         backLabel="Back"
+        onConfirm={noop}
+        onBack={noop}
+      />
+    </JobRunner>
+  ),
+};
+
+/**
+ * A warning that must stand apart from the list, read last before the typed field: creating a Stripe
+ * array. The notice is already on screen when the step opens, so it is a note, not a live region.
+ */
+export const SummaryWithNotice: Story = {
+  render: () => (
+    <JobRunner title="Create a RAID array">
+      <JobSummary
+        title="Ready to create the array"
+        items={[
+          <React.Fragment key="item-1">
+            Erase 2 disks: <Identifier>/dev/sdb</Identifier> (WDC WD40EFRX, 3.6
+            TiB) and <Identifier>/dev/sdc</Identifier> (WDC WD40EFRX, 3.6 TiB)
+          </React.Fragment>,
+          "Combine them into a new array: Stripe (RAID0). About 7.2 TiB can be used. It cannot lose any disk. If one fails, everything on all of them is lost.",
+          "Then save the array's settings, which applies the changes for it. Nothing else is pending.",
+        ]}
+        notice={
+          <InlineAlert
+            tone="neutral"
+            role="note"
+            title="This array has no protection"
+          >
+            If one disk fails, everything on all 2 disks is lost: every file on
+            the array, not only the files on that disk. Keep a backup of
+            anything you store on it.
+          </InlineAlert>
+        }
+        typedConfirmation={{
+          confirmText: "/dev/sdb /dev/sdc",
+          prompt: "Type /dev/sdb /dev/sdc to confirm.",
+        }}
+        confirmLabel="Erase 2 disks and create array"
+        backLabel="Change choices"
         onConfirm={noop}
         onBack={noop}
       />

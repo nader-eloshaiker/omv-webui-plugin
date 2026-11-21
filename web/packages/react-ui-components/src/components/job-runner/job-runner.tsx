@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { Progress } from "@base-ui/react/progress";
 import { History, OctagonX, X } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button, IconButton } from "../button/button";
 import { buttonRowClass } from "../button/button-class";
+import { ProgressBar } from "../progress-bar/progress-bar";
 import { StatusPill } from "../status/status";
 import type { TaskStatus } from "../status/status-kinds";
 import { ServerMessage } from "../text/server-message";
@@ -169,22 +169,12 @@ function JobProgress({
       className={cn("flex flex-col gap-2", className)}
     >
       {progress ? (
-        <Progress.Root
+        <ProgressBar
+          label={label}
           value={progress.value}
-          max={progress.max ?? 100}
-          getAriaValueText={() => progress.valueText}
-          className="flex flex-col gap-1.5"
-        >
-          <Progress.Label className="text-base font-medium text-foreground">
-            {label}
-          </Progress.Label>
-          <Progress.Track className="h-2 w-full overflow-hidden rounded-full border border-usage-track-edge bg-usage-track">
-            <Progress.Indicator className="h-full rounded-full bg-usage data-indeterminate:w-1/3 data-indeterminate:motion-safe:animate-pulse" />
-          </Progress.Track>
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {progress.valueText}
-          </span>
-        </Progress.Root>
+          max={progress.max}
+          valueText={progress.valueText}
+        />
       ) : (
         <p className="text-base font-medium text-foreground">{label}</p>
       )}
@@ -453,6 +443,11 @@ interface JobSummaryProps {
    * button is red and unavailable until the name matches. One confirmation, not a dialog on top (R2).
    */
   typedConfirmation?: { confirmText: string; prompt: string };
+  /**
+   * A warning that must stand apart from the list and be read before the typed field: "This array
+   * has no protection" as an `InlineAlert`. Rendered after the items and before the typed confirmation.
+   */
+  notice?: React.ReactNode;
   className?: string;
 }
 
@@ -465,6 +460,7 @@ function JobSummary({
   onConfirm,
   onBack,
   typedConfirmation,
+  notice,
   className,
 }: JobSummaryProps) {
   const [typed, setTyped] = React.useState("");
@@ -482,6 +478,7 @@ function JobSummary({
           <li key={`item-${String(position)}`}>{item}</li>
         ))}
       </ul>
+      {notice}
       {typedConfirmation ? (
         <TypeToConfirmField
           confirmText={typedConfirmation.confirmText}
