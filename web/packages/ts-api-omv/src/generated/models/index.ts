@@ -35,6 +35,8 @@ export * from './logFileGetListRequest.ts';
 export * from './logFileGetListRequestSortdir.ts';
 export * from './logRow.ts';
 export * from './logRowList.ts';
+export * from './mdArray.ts';
+export * from './mdArrayList.ts';
 export * from './mountedFilesystem.ts';
 export * from './mountedFilesystemList.ts';
 export * from './networkDevice.ts';

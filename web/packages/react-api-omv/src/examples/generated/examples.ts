@@ -3146,6 +3146,50 @@ export const CONTRACT_EXAMPLES = {
       },
     },
   },
+  mdMgmtEnumerateDevices: {
+    mirrors: {
+      status: 200,
+      value: [
+        {
+          _used: true,
+          name: "nas:0",
+          devicefile: "/dev/md0",
+          uuid: "0a1b2c3d:4e5f6071:8293a4b5:c6d7e8f9",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "4000652656640",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]",
+        },
+        {
+          _used: false,
+          name: "nas:1",
+          devicefile: "/dev/md1",
+          uuid: "1b2c3d4e:5f607182:93a4b5c6:d7e8f90a",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdd"],
+          size: "2000263643136",
+          state: "clean, degraded",
+          syncaction: "idle",
+          description: "Software RAID nas:1 [/dev/md1, raid1, 1.82 TiB]",
+        },
+      ],
+    },
+    none: {
+      status: 200,
+      value: [],
+    },
+    notInstalled: {
+      status: 404,
+      value: {
+        code: 0,
+        message: "RPC service 'MdMgmt' not found.",
+      },
+    },
+  },
 } as const satisfies ContractExampleTable;
 
 export const DEFAULT_EXAMPLE = {
@@ -3202,4 +3246,5 @@ export const DEFAULT_EXAMPLE = {
   smartSetScheduledTest: "created",
   smartDeleteScheduledTest: "deleted",
   smartExecuteScheduledTest: "started",
+  mdMgmtEnumerateDevices: "mirrors",
 } as const satisfies Record<keyof typeof CONTRACT_EXAMPLES, string>;

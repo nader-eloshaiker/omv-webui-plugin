@@ -65,6 +65,9 @@
     },
     {
       "name": "DiskMgmt"
+    },
+    {
+      "name": "MdMgmt"
     }
   ],
   "paths": {
@@ -2483,6 +2486,55 @@
                 "examples": {
                   "noDeviceSettings": {
                     "$ref": "#/components/examples/smartExecuteScheduledTest.noDeviceSettings"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/enumerateDevices": {
+      "post": {
+        "operationId": "mdMgmtEnumerateDevices",
+        "tags": ["MdMgmt"],
+        "summary": "Software RAID arrays",
+        "description": "Every software RAID array with its member devices, from the RAID plugin (openmediavault-md). The server asks mdadm and the kernel's RAID status, and the configuration for whether an array is in use; it does not run smartctl. Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404, code 0 and the message \"RPC service 'MdMgmt' not found.\" (observed on OMV 8.6.1): the transport throws an RpcError with `status` 404, the only reply of this method with that status. Read that as \"no RAID plugin, so no RAID members\"; any other failure means the arrays could not be read.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "enumerateDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdArrayList"
+                },
+                "examples": {
+                  "mirrors": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrors"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.none"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message \"RPC service 'MdMgmt' not found.\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notInstalled": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.notInstalled"
                   }
                 }
               }
@@ -5131,6 +5183,81 @@
           }
         },
         "additionalProperties": false
+      },
+      "MdArray": {
+        "type": "object",
+        "description": "A software RAID array (Linux MD) that the kernel has assembled, as mdadm reports it. Read from the RAID plugin (openmediavault-md).",
+        "required": [
+          "_used",
+          "name",
+          "devicefile",
+          "uuid",
+          "level",
+          "numdevices",
+          "devices",
+          "size",
+          "state",
+          "syncaction",
+          "description"
+        ],
+        "properties": {
+          "_used": {
+            "type": "boolean",
+            "description": "Whether the array holds a file system OMV has set up, or is itself a member of other storage (such as an LVM group)."
+          },
+          "name": {
+            "type": "string",
+            "description": "mdadm's array name, usually the host name and a number, such as \"nas:0\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The array's device file, such as \"/dev/md0\"."
+          },
+          "uuid": {
+            "type": "string",
+            "description": "mdadm's UUID of the array, four groups of eight hex digits joined by colons."
+          },
+          "level": {
+            "type": "string",
+            "description": "The RAID level as mdadm names it, such as \"raid1\", \"raid5\" or \"raid10\"."
+          },
+          "numdevices": {
+            "type": "integer",
+            "description": "How many member devices the array is made for. A degraded array has fewer in `devices`."
+          },
+          "devices": {
+            "type": "array",
+            "description": "The member devices the array has now, as device files under /dev (a whole disk such as \"/dev/sdb\", or a partition such as \"/dev/sdb1\"), in natural order. A failed or removed member is not listed.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "state": {
+            "type": "string",
+            "description": "Display text from mdadm, such as \"clean\", \"active\", \"clean, degraded\" or \"clean, degraded, recovering (12.5% (…) finish=…)\". Open: read it as text, not as a list of values."
+          },
+          "syncaction": {
+            "type": "string",
+            "nullable": true,
+            "description": "What the array is doing now: \"idle\", \"resync\", \"recover\", \"check\", \"repair\", \"reshape\" or \"frozen\". null for a level without redundancy, such as raid0."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]\"."
+          }
+        }
+      },
+      "MdArrayList": {
+        "type": "array",
+        "description": "Every software RAID array the kernel has assembled, in no particular order; empty when there is none.",
+        "items": {
+          "$ref": "#/components/schemas/MdArray"
+        }
       },
       "SmartDevice": {
         "type": "object",
@@ -8252,6 +8379,51 @@
         "value": {
           "code": 0,
           "message": "The XPath query './/services/smart/monitor/device[(devicefile='/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101' or devicefile='/dev/disk/by-diskseq/2' or devicefile='/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101' or devicefile='/dev/disk/by-id/wwn-EXAMPLE-WWN-0101' or devicefile='/dev/disk/by-path/pci-0000:00:17.0-ata-1' or devicefile='/dev/disk/by-path/pci-0000:00:17.0-ata-1.0')]' does not return the requested number of 1 object(s)."
+        }
+      },
+      "mdMgmtEnumerateDevices.mirrors": {
+        "summary": "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. The RAID plugin is not installed on the test VM.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": true,
+            "name": "nas:0",
+            "devicefile": "/dev/md0",
+            "uuid": "0a1b2c3d:4e5f6071:8293a4b5:c6d7e8f9",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "4000652656640",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]"
+          },
+          {
+            "_used": false,
+            "name": "nas:1",
+            "devicefile": "/dev/md1",
+            "uuid": "1b2c3d4e:5f607182:93a4b5c6:d7e8f90a",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdd"],
+            "size": "2000263643136",
+            "state": "clean, degraded",
+            "syncaction": "idle",
+            "description": "Software RAID nas:1 [/dev/md1, raid1, 1.82 TiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.none": {
+        "summary": "Written by hand from the RAID plugin's source (openmediavault-md for OMV 8): the plugin is installed and there is no array. The RAID plugin is not installed on the test VM.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "mdMgmtEnumerateDevices.notInstalled": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the RAID plugin (openmediavault-md) is not installed, so OMV does not know the MdMgmt service.",
+        "x-omv-status": 404,
+        "value": {
+          "code": 0,
+          "message": "RPC service 'MdMgmt' not found."
         }
       }
     }

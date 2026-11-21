@@ -589,6 +589,17 @@ export const OPERATIONS = {
       $ref: "TaskHandle",
     },
   },
+  "/rpc/MdMgmt/enumerateDevices": {
+    operationId: "mdMgmtEnumerateDevices",
+    service: "MdMgmt",
+    method: "enumerateDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MdArrayList",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -1053,6 +1064,68 @@ export const SCHEMAS: SchemaTable = {
           $ref: "LogRow",
         },
       },
+    },
+  },
+  MdArray: {
+    type: "object",
+    required: [
+      "_used",
+      "name",
+      "devicefile",
+      "uuid",
+      "level",
+      "numdevices",
+      "devices",
+      "size",
+      "state",
+      "syncaction",
+      "description",
+    ],
+    properties: {
+      _used: {
+        type: "boolean",
+      },
+      name: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      uuid: {
+        type: "string",
+      },
+      level: {
+        type: "string",
+      },
+      numdevices: {
+        type: "integer",
+      },
+      devices: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      state: {
+        type: "string",
+      },
+      syncaction: {
+        type: "string",
+        nullable: true,
+      },
+      description: {
+        type: "string",
+      },
+    },
+  },
+  MdArrayList: {
+    type: "array",
+    items: {
+      $ref: "MdArray",
     },
   },
   MountedFilesystem: {

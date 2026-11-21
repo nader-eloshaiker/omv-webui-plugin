@@ -31,6 +31,7 @@ tags:
   - name: NFS
   - name: LogFile
   - name: DiskMgmt
+  - name: MdMgmt
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -138,6 +139,8 @@ paths:
     $ref: ./operations/Smart/deleteScheduledTest.yaml
   /rpc/Smart/executeScheduledTest:
     $ref: ./operations/Smart/executeScheduledTest.yaml
+  /rpc/MdMgmt/enumerateDevices:
+    $ref: ./operations/MdMgmt/enumerateDevices.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

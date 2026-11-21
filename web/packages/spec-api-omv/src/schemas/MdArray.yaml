@@ -1,0 +1,66 @@
+type: object
+description: >-
+  A software RAID array (Linux MD) that the kernel has assembled, as mdadm reports it. Read from the
+  RAID plugin (openmediavault-md).
+required:
+  [
+    _used,
+    name,
+    devicefile,
+    uuid,
+    level,
+    numdevices,
+    devices,
+    size,
+    state,
+    syncaction,
+    description,
+  ]
+properties:
+  _used:
+    type: boolean
+    description: >-
+      Whether the array holds a file system OMV has set up, or is itself a member of other storage
+      (such as an LVM group).
+  name:
+    type: string
+    description: mdadm's array name, usually the host name and a number, such as "nas:0".
+  devicefile:
+    type: string
+    description: The array's device file, such as "/dev/md0".
+  uuid:
+    type: string
+    description: mdadm's UUID of the array, four groups of eight hex digits joined by colons.
+  level:
+    type: string
+    description: The RAID level as mdadm names it, such as "raid1", "raid5" or "raid10".
+  numdevices:
+    type: integer
+    description: >-
+      How many member devices the array is made for. A degraded array has fewer in `devices`.
+  devices:
+    type: array
+    description: >-
+      The member devices the array has now, as device files under /dev (a whole disk such as
+      "/dev/sdb", or a partition such as "/dev/sdb1"), in natural order. A failed or removed
+      member is not listed.
+    items:
+      type: string
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  state:
+    type: string
+    description: >-
+      Display text from mdadm, such as "clean", "active", "clean, degraded" or "clean, degraded,
+      recovering (12.5% (…) finish=…)". Open: read it as text, not as a list of values.
+  syncaction:
+    type: string
+    nullable: true
+    description: >-
+      What the array is doing now: "idle", "resync", "recover", "check", "repair", "reshape" or
+      "frozen". null for a level without redundancy, such as raid0.
+  description:
+    type: string
+    description: Display text, such as "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]".

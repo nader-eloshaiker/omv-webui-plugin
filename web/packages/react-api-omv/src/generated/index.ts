@@ -6,6 +6,7 @@ export * from "./omv/exec/exec.ts";
 export * from "./omv/file-system-mgmt/file-system-mgmt.ts";
 export * from "./omv/index.ts";
 export * from "./omv/log-file/log-file.ts";
+export * from "./omv/md-mgmt/md-mgmt.ts";
 export * from "./omv/network/network.ts";
 export * from "./omv/nfs/nfs.ts";
 export * from "./omv/services/services.ts";
