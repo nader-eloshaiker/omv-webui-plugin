@@ -132,6 +132,15 @@ safeguard (journal, 2026-11-21) rests on these rules, which also fill the "Used 
 **Inputs**, read together: `DiskMgmt.getList`, `FileSystemMgmt.getList`, and, when the RAID plugin is
 installed, `MdMgmt.enumerateDevices`.
 
+`FileSystemMgmt.getList` lists only the file systems OMV has a mount entry for (status 1 available,
+3 missing) and those being created (status 2). It does not list the system's own root and boot
+partitions, a file system OMV has not set up (such as one on a disk from another computer), or swap
+(observed on the test VM, 2026-11-21, and read from source: on the VM it listed only the one data file
+system, while the root, the EFI partition and the CD drive's file system were left out). The two rows
+below that need those, "Swap space" and "File system not used on this NAS", therefore need
+`FileSystemMgmt.enumerateFilesystems`, which lists every file system the system detects. It is not
+in the contract yet **[decide]**: add it to this slice, or drop those two rows.
+
 **A disk's names** are its `canonicaldevicefile`, `devicefile` and every entry of `devicelinks`. A
 partition belongs to a disk when, with its trailing partition number removed (`/dev/sdb3` to
 `/dev/sdb`; `/dev/nvme0n1p2` and `/dev/mmcblk0p1` to the part before the final `p` and digits), it is
@@ -143,12 +152,12 @@ list arrive in.
 | **System disk** | `isroot` is true | Refused |
 | **Read-only** | `isreadonly` is true | Refused |
 | **File system in use** | a file-system row with `mounted` true, or `_used` true, whose `parentdevicefile` or any of `devicefiles` belongs to the disk | Refused |
-| **File system set up on this NAS** | a row with a mount entry (status 1 with OMV's own mount point **[verify]** which field tells a configured file system from one that is only detected), belonging to the disk | Refused |
+| **File system set up on this NAS** | any row of `FileSystemMgmt.getList` with status 1 or 3 (every such row has OMV's mount entry), belonging to the disk | Refused |
 | **File system being created** | a row with `status` 2 whose `parentdevicefile` belongs to the disk | Refused |
-| **Swap space** | a row of type `swap` belonging to the disk **[verify]** that an active swap partition is listed | Refused (section 17, P5) |
+| **Swap space** | a file system of type `swap` belonging to the disk in `FileSystemMgmt.enumerateFilesystems` (`getList` never lists swap; the test VM has no swap, so this is inferred from source) | Refused (section 17, P5) |
 | **RAID member** | the disk, or one of its partitions, is in an array's `devices` | Refused |
 | **Being wiped** | a wipe of this disk is running in this session's task registry | Refused |
-| **File system not used on this NAS** | a row belonging to the disk that is none of the above (for example a disk from another computer) | Allowed, named in the confirmation |
+| **File system not used on this NAS** | a file system in `FileSystemMgmt.enumerateFilesystems` belonging to the disk that has no row in `getList` and is none of the above (for example a disk from another computer) | Allowed, named in the confirmation |
 | **Nothing found** | none of the above | Allowed |
 
 **Fail closed.** If `FileSystemMgmt.getList` fails, or the RAID plugin is installed and its read
@@ -2155,7 +2164,9 @@ The destructive-action points of this slice. The design is built only once these
    to refuse every "nothing found" disk while such storage is mounted, which would block wiping a new
    disk on those systems. (0.6, 3.3)
 5. **P5, swap space.** A disk holding a swap partition is refused, because the interface cannot tell
-   whether the NAS is using it. **[verify]** that OMV lists it. (0.6)
+   whether the NAS is using it. `FileSystemMgmt.getList` never lists swap; `enumerateFilesystems`
+   would (inferred from source: `getMountCandidates` filters swap out of its list; the test VM has no
+   swap to observe), and needs adding (0.6, **[decide]**).
 6. **P6, write cache on by default.** When a disk's power settings are first saved, the form starts
    with the write cache **on**, unlike OMV's default of off, because OMV sends every field and "off"
    would silently slow the disk. Not destructive, but it changes what a save does. (2.7.3)
