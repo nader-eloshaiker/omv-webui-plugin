@@ -22,6 +22,20 @@ import {
   wipeOutput,
   type DiskMockState,
 } from "./diskScenarios.ts";
+import {
+  FS_SCENARIO_LABELS,
+  FS_SCENARIOS,
+  fsAnswers,
+  fsApplied,
+  fsReverted,
+  fsStartsPending,
+  fsTaskOutput,
+  fsWipeAsked,
+  fsWiped,
+  newFsMockState,
+  usesFsMock,
+  type FsMockState,
+} from "./fsScenarios.ts";
 
 export const SCENARIOS = [
   "admin",
@@ -69,6 +83,7 @@ export const SCENARIOS = [
   "serviceOutputs",
   "serviceOutputsEmpty",
   ...DISK_SCENARIOS,
+  ...FS_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -122,6 +137,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   serviceOutputs: "Service details: SMB, NFS and SSH in use",
   serviceOutputsEmpty: "Service details: on, nothing to show",
   ...DISK_SCENARIO_LABELS,
+  ...FS_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -592,6 +608,8 @@ export interface MockSession {
   fsDirty: Readonly<Record<string, string>>;
   /** What the disk scenarios remember between calls (diskScenarios.ts). */
   disk: DiskMockState;
+  /** What the file-system answers remember (fsScenarios.ts); made with the scenario's answers. */
+  fs?: FsMockState;
 }
 
 export const newMockSession = (
@@ -770,6 +788,48 @@ export function scenarioAnswers(
       return answer;
     };
   const disk = diskAnswers(name, session.disk);
+  const fsMock = usesFsMock(name);
+  if (fsMock && session.fs === undefined) {
+    session.fs = newFsMockState(name);
+    const starts = fsStartsPending(name);
+    if (starts.length > 0) {
+      session.fsDirty = {
+        ...session.fsDirty,
+        ...Object.fromEntries(
+          starts.map((m) => [m, FS_MODULES[m as FsModule]]),
+        ),
+      };
+    }
+  }
+  const fsState = session.fs;
+  const fsReplies =
+    fsMock && fsState !== undefined
+      ? fsAnswers(name, fsState, {
+          dirty: (modules) => {
+            session.fsDirty = {
+              ...session.fsDirty,
+              ...Object.fromEntries(
+                modules.map((m) => [
+                  m,
+                  m in FS_MODULES ? FS_MODULES[m as FsModule] : "NFS server.",
+                ]),
+              ),
+            };
+          },
+        })
+      : {};
+  /** The remembering file-system answer of an operation, behind the sign-in guard. */
+  const fsRead =
+    (operationId: string) =>
+    ({ params }: { params: unknown }): FixedAnswer => {
+      const reply = fsReplies[operationId];
+      if (reply === undefined) {
+        throw new Error(`No file-system answer for ${operationId}`);
+      }
+      // Only a signed-in call reaches the state.
+      const gate = guarded<never>({ status: 200 })();
+      return gate.status === 200 ? reply({ params }) : gate;
+    };
   /** A disk operation's answer for this scenario, behind the sign-in guard. */
   const diskRead =
     <Op extends OperationId>(operationId: Op) =>
@@ -904,9 +964,23 @@ export function scenarioAnswers(
         )();
       }
       if (filename === WIPE_HANDLE) {
-        return guarded<ExampleName<"execGetOutput">>(
+        const answer = guarded<ExampleName<"execGetOutput">>(
           wipeOutput(name, session.disk),
         )();
+        if (answer === "wipeFinished" && fsState !== undefined) {
+          fsWiped(fsState);
+        }
+        return answer;
+      }
+      if (fsState !== undefined) {
+        const gate = guarded<never>({ status: 200 })();
+        const fsTask =
+          gate.status === 200
+            ? fsTaskOutput(name, fsState, filename)
+            : undefined;
+        if (fsTask !== undefined) {
+          return fsTask;
+        }
       }
       if (filename === SELF_TEST_HANDLE) {
         return guarded<ExampleName<"execGetOutput">>(selfTestOutput(name))();
@@ -919,6 +993,13 @@ export function scenarioAnswers(
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
+      }
+      if (apply && fsState !== undefined && session.signedIn) {
+        if (!fsApplied(name, fsState)) {
+          return guarded("applyFailed")();
+        }
+      } else if (!apply && fsState !== undefined && session.signedIn) {
+        fsReverted(fsState);
       }
       const answer = guarded(apply ? "appliedFinished" : "revertedFinished")();
       if (typeof answer === "string") {
@@ -995,7 +1076,14 @@ export function scenarioAnswers(
     diskMgmtGetList: diskRead("diskMgmtGetList"),
     diskMgmtGetHdParm: guarded("configured"),
     diskMgmtSetHdParm: smartPending("created"),
-    diskMgmtWipe: diskRead("diskMgmtWipe"),
+    diskMgmtWipe: ({ params }) => {
+      if (fsState !== undefined && session.signedIn) {
+        const devicefile = (params as { devicefile?: unknown } | null)
+          ?.devicefile;
+        fsWipeAsked(fsState, typeof devicefile === "string" ? devicefile : "");
+      }
+      return diskRead("diskMgmtWipe")({ params });
+    },
     diskMgmtRescan: guarded("null"),
     smartEnumerateDevices: guarded("vmDisks"),
     smartEnumerateMonitoredDevices: guarded("none"),
@@ -1039,6 +1127,13 @@ export function scenarioAnswers(
     fileSystemMgmtGetDetails: guarded("ext4"),
     fsTabGetByFsName: guarded("entry"),
     fsTabSet: fsPending("saved", ["monit"]),
+    // The remembering file-system answers (fsScenarios.ts), in the default story and the fs scenarios.
+    ...Object.fromEntries(
+      Object.keys(fsReplies).map((operationId) => [
+        operationId,
+        fsRead(operationId),
+      ]),
+    ),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty

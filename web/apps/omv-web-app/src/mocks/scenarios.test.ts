@@ -102,18 +102,6 @@ describe("the mock scenarios", () => {
       handle: CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value,
       want: "selfTestFinished",
     },
-    {
-      handle: CONTRACT_EXAMPLES.fileSystemMgmtGetCandidatesBg.started.value,
-      want: "fsCandidatesFinished",
-    },
-    {
-      handle: CONTRACT_EXAMPLES.fileSystemMgmtCreate.started.value,
-      want: "createExt4Finished",
-    },
-    {
-      handle: CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value,
-      want: "createBtrfsRaid1Finished",
-    },
   ])(
     "execGetOutput for the handle $handle answers $want",
     ({ handle, want }) => {
@@ -138,23 +126,51 @@ describe("the mock scenarios", () => {
     expect(answerOf("admin", session, "configIsDirty")).toBe("dirty");
   });
 
+  // The file-system tasks end with their last poll, the remembering mock's (fsScenarios.ts).
+  it.each([
+    CONTRACT_EXAMPLES.fileSystemMgmtGetCandidatesBg.started.value,
+    CONTRACT_EXAMPLES.fileSystemMgmtCreate.started.value,
+    CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value,
+  ])("execGetOutput for the file-system handle %s ends the task", (handle) => {
+    expect(
+      answerOf("admin", newMockSession(true), "execGetOutput", {
+        filename: handle,
+        pos: 0,
+      }),
+    ).toMatchObject({ status: 200, value: { running: false } });
+  });
+
   // The modules each file-system action leaves dirty on the test VM (UX audit V8).
+  const SDA1 = CONTRACT_EXAMPLES.fileSystemMgmtGetList.configured.value.data[0];
+  const CD =
+    CONTRACT_EXAMPLES.fileSystemMgmtGetMountCandidates.created.value[1];
   it.each([
     {
       operationId: "fileSystemMgmtSetMountPoint",
+      params: { id: CD.devicefile, usagewarnthreshold: 85, comment: "" },
       modules: ["collectd", "fstab", "monit", "quota"],
     },
-    { operationId: "fsTabSet", modules: ["monit"] },
+    {
+      operationId: "fsTabSet",
+      params: {
+        ...CONTRACT_EXAMPLES.fsTabGetByFsName.entry.value,
+        uuid: "00000000-0000-4000-8000-000000000002",
+        fsname: SDA1.devicefile,
+        dir: SDA1.mountpoint,
+      },
+      modules: ["monit"],
+    },
     {
       operationId: "fileSystemMgmtUmountByDir",
+      params: { dir: SDA1.mountpoint },
       modules: ["collectd", "monit", "quota"],
     },
   ] as const)(
     "$operationId leaves $modules pending until an apply",
-    ({ operationId, modules }) => {
+    ({ operationId, params, modules }) => {
       const session = newMockSession(true);
       expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
-      answerOf("admin", session, operationId);
+      answerOf("admin", session, operationId, params);
       expect(answerOf("admin", session, "configIsDirty")).toBe("dirty");
       const info = answerOf(
         "admin",

@@ -49,6 +49,7 @@ import {
 } from "../../dashboard/dashboard.ts";
 import { diskHealth } from "../../dashboard/diskHealth.ts";
 import { usageSamples } from "../../dashboard/usageSamples.ts";
+import { addressIn } from "../../filesystems/fsModel.ts";
 import {
   ALL_CONFIGURED,
   ALL_INTERFACES,
@@ -168,6 +169,7 @@ function AdminDashboard({ username }: { username: string | null }) {
       : storageItems(
           mounted.data,
           missingFileSystems(configured.data?.data ?? []),
+          (fs) => addressIn(configured.data?.data ?? [], fs),
         );
   const rows = attentionRows({
     info: data,

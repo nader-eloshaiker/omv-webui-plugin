@@ -15,6 +15,9 @@ import type { QueryClient } from "@tanstack/react-query";
 import { diskHealth } from "./dashboard/diskHealth.ts";
 import { recordUsage, usageSamples } from "./dashboard/usageSamples.ts";
 import { diskSession } from "./disks/diskSession.ts";
+import { flowStore } from "./filesystems/flowRun.ts";
+import { fsActions } from "./filesystems/fsActions.ts";
+import { fsSession } from "./filesystems/fsSession.ts";
 import { logsView } from "./logs/logsViewStore.ts";
 import { processesView } from "./processes/processesViewStore.ts";
 import { createAppRouter, type AppRouter } from "./router.ts";
@@ -35,6 +38,9 @@ const SESSION_VIEW_STATE = [
   usageSamples,
   diskHealth,
   diskSession,
+  fsSession,
+  flowStore,
+  fsActions,
   logsView,
   processesView,
 ];

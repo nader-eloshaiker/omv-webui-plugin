@@ -136,9 +136,10 @@ describe("the wipe section", () => {
       await user.click(button);
       expect(screen.queryByRole("alertdialog")).toBeNull();
       // No way round a refusal (P3): the only links lead where the blocker can be removed.
+      // The file system's own page carries the unmount or removal, with its own refusals.
       for (const link of within(section).queryAllByRole("link")) {
-        expect(["/#/storage/filesystems", "/#/storage/md"]).toContain(
-          link.getAttribute("href"),
+        expect(link.getAttribute("href")).toMatch(
+          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/ui\/storage\/filesystems\/[0-9a-f-]+)$/,
         );
       }
       expect(wipeCalls()).toHaveLength(0);
@@ -192,10 +193,11 @@ describe("the wipe section", () => {
       { exact: false },
     );
     expect(
-      within(section).getByRole("link", {
-        name: "File systems in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/storage/filesystems");
+      within(section).getByRole("link", { name: "Open file system data" }),
+    ).toHaveAttribute(
+      "href",
+      "/ui/storage/filesystems/00000000-0000-4000-8000-000000000503",
+    );
   });
 
   it("refuses a disk whose file system is set up but not mounted, before Apply (P1)", async () => {
@@ -205,7 +207,7 @@ describe("the wipe section", () => {
     });
     await waitFor(() =>
       expect(section).toHaveTextContent(
-        "It holds the file system ext4 on /dev/sda1, which is set up on this NAS.",
+        "It holds the file system EXT4 on /dev/sda1, which is set up on this NAS.",
       ),
     );
     expect(wipeButton(section)).toHaveAttribute("aria-disabled", "true");
@@ -350,10 +352,8 @@ describe("the wipe dialog", () => {
       await within(section).findByText("/dev/sdb was wiped."),
     ).toBeInTheDocument();
     expect(
-      within(section).getByRole("link", {
-        name: "Create a file system in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/storage/filesystems");
+      within(section).getByRole("link", { name: "Add storage on this disk" }),
+    ).toHaveAttribute("href", "/ui/storage/filesystems/add");
     // When it ends, what the disks hold is read again.
     const listReads = (calls: typeof seenCalls) =>
       calls.filter((c) => c.call === "FileSystemMgmt.enumerateFilesystems")

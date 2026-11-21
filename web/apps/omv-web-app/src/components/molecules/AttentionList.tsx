@@ -69,11 +69,24 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
       {t("dashboard.attention.warning")}
     </StatusPill>
   );
-  const fsLink = (
-    <ExternalLink href={CLASSIC.fileSystems} newTabLabel={newTab}>
-      {t("dashboard.attention.fsLink")}
-    </ExternalLink>
-  );
+  // The file system's page when it has one, else the File systems list (file-systems design 9).
+  const fsLink = (row: {
+    name: Parameters<typeof nameText>[0];
+    address: string | null;
+  }) =>
+    row.address === null ? (
+      <Link to="/storage/filesystems" className={routerLinkClass}>
+        {t("dashboard.storage.link")}
+      </Link>
+    ) : (
+      <Link
+        to="/storage/filesystems/$fs"
+        params={{ fs: row.address }}
+        className={routerLinkClass}
+      >
+        {t("dashboard.storage.openFs", { name: nameText(row.name) })}
+      </Link>
+    );
 
   const render = (row: AttentionRow) => {
     switch (row.kind) {
@@ -84,7 +97,7 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
             sentence={t("dashboard.attention.fsFull", {
               name: nameText(row.name),
             })}
-            action={fsLink}
+            action={fsLink(row)}
           />
         );
       case "fsMissing":
@@ -94,7 +107,7 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
             sentence={t("dashboard.attention.fsMissing", {
               name: nameText(row.name),
             })}
-            action={fsLink}
+            action={fsLink(row)}
           />
         );
       case "fsWarning":
@@ -106,7 +119,7 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
               percent: format.percent(row.percent),
               threshold: `${String(row.threshold)}%`,
             })}
-            action={fsLink}
+            action={fsLink(row)}
           />
         );
       case "diskCritical":

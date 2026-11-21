@@ -13,7 +13,6 @@ import {
   Disclosure,
   DisclosurePanel,
   DisclosureTrigger,
-  ExternalLink,
   JobFailure,
   JobProgress,
   JobResult,
@@ -26,7 +25,7 @@ import type { WipeRecord } from "../../disks/diskSession.ts";
 import { outputLines, wipePanelView } from "../../disks/wipe.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useNow } from "../../hooks/useNow.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
+import { AddStorageLink } from "../atoms/AddStorageLink.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
 function Output({
@@ -63,11 +62,14 @@ function Output({
 
 export function WipePanel({
   record,
+  devicefile,
   headingRef,
   onWipeAgain,
   onDismiss,
 }: {
   record: WipeRecord;
+  /** The disk's stable device file, for "Add storage on this disk"; absent when the disk is gone. */
+  devicefile?: string;
   /** The panel's heading, where focus goes when the wipe starts. */
   headingRef: RefObject<HTMLHeadingElement | null>;
   /** Reopen the checked flow from the start (failed or stopped); absent when the disk is gone. */
@@ -226,14 +228,11 @@ export function WipePanel({
                   : t("wipe.stoppedTitle", { device })}
               </span>
               <span>{done ? t("wipe.doneBody") : t("wipe.stoppedBody")}</span>
-              {done ? (
+              {done && devicefile !== undefined ? (
                 <span>
-                  <ExternalLink
-                    href={CLASSIC.fileSystems}
-                    newTabLabel={t("app.newTab")}
-                  >
+                  <AddStorageLink devicefile={devicefile}>
                     {t("wipe.createFsLink")}
-                  </ExternalLink>
+                  </AddStorageLink>
                 </span>
               ) : null}
             </span>

@@ -50,6 +50,7 @@ export type BuiltRoute =
   | "/storage/shared-folders"
   | "/storage/disks"
   | "/storage/smart"
+  | "/storage/filesystems"
   | "/account/settings"
   | "/diagnostics/system-logs"
   | "/diagnostics/processes"
@@ -172,6 +173,7 @@ export const NAV_PAGES = [
     item: "filesystems",
     labelKey: "nav.items.storage.filesystems",
     classic: "/#/storage/filesystems",
+    route: "/storage/filesystems",
     roles: ADMIN,
   },
   {
@@ -315,7 +317,8 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * the account page (the set-up checklist and stock users know it), so it marks "Your account"; every
  * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services"; a disk's page
  * (`/storage/disks/sdb`) marks "Disks", and every Disk health page (`/storage/smart/overview`, the
- * set-up page) marks "Disk health".
+ * set-up page) marks "Disk health"; a file system's page and the two add-storage flows mark "File
+ * systems".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -324,7 +327,9 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/diagnostics/services" &&
       pathname.startsWith("/diagnostics/services/")) ||
     (route === "/storage/disks" && pathname.startsWith("/storage/disks/")) ||
-    (route === "/storage/smart" && pathname.startsWith("/storage/smart/"))
+    (route === "/storage/smart" && pathname.startsWith("/storage/smart/")) ||
+    (route === "/storage/filesystems" &&
+      pathname.startsWith("/storage/filesystems/"))
   );
 }
 
@@ -351,6 +356,8 @@ export const CLASSIC = {
   notifications: "/#/system/notification/settings",
   networkGeneral: "/#/network/general",
   addSharedFolder: "/#/storage/shared-folders/create",
+  sharedFolders: "/#/storage/shared-folders",
+  smbAddShare: "/#/services/smb/shares/create",
   users: "/#/usermgmt/users",
   fileSystems: "/#/storage/filesystems",
   smartSettings: "/#/storage/smart/settings",

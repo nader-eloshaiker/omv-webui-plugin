@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // What a disk is used for, one line per use, in reading order (phase 5 disks design 1.3.1). A file
-// system's name is its label as text, else "ext4 on /dev/sdb1" with the device in the mono face. Values
+// system's name is its label as text, else "EXT4 on /dev/sdb1" with the device in the mono face. Values
 // from the server are rendered as text: they are placed into the sentence as elements, never passed
 // through markup parsing (UI-2).
 import { Identifier, Skeleton } from "@omv-webui/react-ui-components";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { fsName, SLOT, splitSlots } from "../../disks/disksList.ts";
 import type { DiskUse, FsRef } from "../../disks/diskUse.ts";
 import { useFormat } from "../../format/useFormat.ts";
+import { useFsWords } from "../../hooks/useFsWords.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 
 const DEVICE_TAG = "<device></device>";
 const ARRAY_TAG = "<array></array>";
@@ -34,14 +37,15 @@ function Filled({
   );
 }
 
-/** "ext4 on /dev/sdb1". */
+/** "EXT4 on /dev/sdb1". */
 function FsOnDevice({ type, device }: { type: string; device: string }) {
   const { t } = useTranslation();
+  const { typeWord } = useFsWords();
   return (
     <Filled
       sentence={t("disks.use.fsOnDevice", { type: SLOT })}
       slots={{
-        [SLOT]: <span dir="auto">{type}</span>,
+        [SLOT]: <span dir="auto">{typeWord(type)}</span>,
         [DEVICE_TAG]: <Identifier>{device}</Identifier>,
       }}
     />
@@ -53,20 +57,39 @@ type FsKey = "disks.use.fsInUse" | "disks.use.fsSetUp" | "disks.use.fsUnused";
 /** A use sentence naming a file system: its label as text, else its type and device. */
 export function FsSentence({ i18nKey, fs }: { i18nKey: FsKey; fs: FsRef }) {
   const { t } = useTranslation();
+  const words = useFsWords();
   const name = fsName(fs);
-  if (name.kind === "label") {
-    return (
-      <Filled
-        sentence={t(i18nKey, { name: SLOT })}
-        slots={{ [SLOT]: <span dir="auto">{name.label}</span> }}
-      />
+  const shown =
+    name.kind === "label" ? (
+      <span dir="auto">{name.label}</span>
+    ) : (
+      <FsOnDevice type={name.type} device={name.device} />
     );
-  }
+  // The file system's page, when OMV has it set up (file-systems design 9).
+  const linked =
+    fs.address == null ? (
+      shown
+    ) : (
+      <Link
+        to="/storage/filesystems/$fs"
+        params={{ fs: fs.address }}
+        aria-label={t("filesystems.open", {
+          name:
+            name.kind === "label"
+              ? name.label
+              : words.nameOf({
+                  kind: "onDevice",
+                  type: name.type,
+                  device: name.device,
+                }),
+        })}
+        className={routerLinkClass}
+      >
+        {shown}
+      </Link>
+    );
   return (
-    <Filled
-      sentence={t(i18nKey, { name: SLOT })}
-      slots={{ [SLOT]: <FsOnDevice type={name.type} device={name.device} /> }}
-    />
+    <Filled sentence={t(i18nKey, { name: SLOT })} slots={{ [SLOT]: linked }} />
   );
 }
 

@@ -2,7 +2,10 @@
 import { Field, FieldControl, FieldLabel } from "../field/field";
 
 interface TypeToConfirmFieldProps {
-  /** The exact text to type: the object's name. Case-sensitive; surrounding spaces are ignored. */
+  /**
+   * The exact text to type: the object's name, or several names in order separated by one space.
+   * Case-sensitive; surrounding spaces are ignored and a run of spaces counts as one (`typedMatches`).
+   */
   confirmText: string;
   /**
    * The instruction, one translated sentence containing `confirmText` wherever the language puts it:

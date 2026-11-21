@@ -66,6 +66,7 @@ describe("the table", () => {
     ).toEqual([
       "/storage/disks",
       "/storage/smart",
+      "/storage/filesystems",
       "/storage/shared-folders",
       "/services/ssh",
       "/diagnostics/system-logs",
@@ -85,6 +86,21 @@ describe("the table", () => {
 });
 
 describe("isCurrent", () => {
+  it("marks File systems on a file system's page and on both add-storage flows", () => {
+    for (const path of [
+      "/storage/filesystems",
+      "/storage/filesystems/00000000-0000-4000-8000-000000000001",
+      "/storage/filesystems/add",
+      "/storage/filesystems/add-multi",
+    ]) {
+      expect(isCurrent(path, "/storage/filesystems")).toBe(true);
+    }
+    expect(isCurrent("/storage/disks", "/storage/filesystems")).toBe(false);
+    expect(isCurrent("/storage/filesystemsx", "/storage/filesystems")).toBe(
+      false,
+    );
+  });
+
   it("marks the account item at both of its addresses", () => {
     expect(isCurrent("/account/settings", "/account/settings")).toBe(true);
     expect(isCurrent("/account/password", "/account/settings")).toBe(true);

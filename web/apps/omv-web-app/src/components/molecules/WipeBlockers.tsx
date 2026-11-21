@@ -9,21 +9,25 @@ import {
   ExternalLink,
   ServerMessage,
 } from "@omv-webui/react-ui-components";
+import { Link } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import type { FsRef, WipeBlocker } from "../../disks/diskUse.ts";
 import { inBlockerOrder } from "../../disks/wipe.ts";
+import { useFsWords } from "../../hooks/useFsWords.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
-/** A file system's name: its label as text, else "ext4 on /dev/sdb1" with the device in code type. */
+/** A file system's name: its label as text, else "EXT4 on /dev/sdb1" with the device in code type. */
 export function WipeFsName({ fs }: { fs: FsRef }) {
+  const { typeWord } = useFsWords();
   if (fs.label !== "") {
     return <span dir="auto">{fs.label}</span>;
   }
   return (
     <Trans
       i18nKey="disks.use.fsOnDevice"
-      values={{ type: fs.type }}
+      values={{ type: typeWord(fs.type) }}
       components={{ device: <IdentifierText value={fs.device} /> }}
     />
   );
@@ -50,12 +54,31 @@ function FsSentence({
 
 function Line({ blocker }: { blocker: WipeBlocker }) {
   const { t } = useTranslation();
+  const words = useFsWords();
   const newTab = t("app.newTab");
-  const fsLink = (
-    <ExternalLink href={CLASSIC.fileSystems} newTabLabel={newTab}>
-      {t("wipe.fsLink")}
-    </ExternalLink>
-  );
+  // The file system's page, where its unmount or removal and their own refusals are (file-systems
+  // design 9); the classic list only for one this interface has no page for.
+  const fsLink = (fs: FsRef) =>
+    fs.address == null ? (
+      <ExternalLink href={CLASSIC.fileSystems} newTabLabel={newTab}>
+        {t("wipe.fsLink")}
+      </ExternalLink>
+    ) : (
+      <Link
+        to="/storage/filesystems/$fs"
+        params={{ fs: fs.address }}
+        className={routerLinkClass}
+      >
+        {t("wipe.fsOpen", {
+          name: words.nameText({
+            label: fs.label,
+            type: fs.type,
+            canonicaldevicefile: fs.device,
+            devicefile: fs.device,
+          }),
+        })}
+      </Link>
+    );
   switch (blocker.kind) {
     case "system":
       return <p>{t("wipe.blocked.system")}</p>;
@@ -69,7 +92,7 @@ function Line({ blocker }: { blocker: WipeBlocker }) {
             {blocker.used ? <> {t("disk.fact.useShared")}</> : null}
           </p>
           <p className="text-sm">
-            {t("wipe.blocked.fsInUseDo")} {fsLink}
+            {t("wipe.blocked.fsInUseDo")} {fsLink(blocker.fs)}
           </p>
         </>
       );
@@ -80,7 +103,7 @@ function Line({ blocker }: { blocker: WipeBlocker }) {
             <FsSentence i18nKey="wipe.blocked.fsSetUp" fs={blocker.fs} />
           </p>
           <p className="text-sm">
-            {t("wipe.blocked.fsSetUpDo")} {fsLink}
+            {t("wipe.blocked.fsSetUpDo")} {fsLink(blocker.fs)}
           </p>
         </>
       );

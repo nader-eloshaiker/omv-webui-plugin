@@ -36,6 +36,7 @@ import {
   useSmartSettings,
 } from "../../hooks/useDiskReads.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { AddStorageLink } from "../atoms/AddStorageLink.tsx";
 import { DiskHealthStatus } from "../molecules/DiskHealthStatus.tsx";
 import { DiskUseWords } from "../molecules/DisksUseLines.tsx";
 
@@ -90,6 +91,14 @@ function UsedFor({ disk }: { disk: DiskDevice }) {
           </li>
         ))}
       </ul>
+      {result.uses.every((u) => u.kind === "none" || u.kind === "wiped") &&
+      result.blockers.length === 0 ? (
+        <span className="mt-1 block">
+          <AddStorageLink devicefile={disk.devicefile}>
+            {t("disk.addStorage")}
+          </AddStorageLink>
+        </span>
+      ) : null}
     </FactListValue>
   );
 }

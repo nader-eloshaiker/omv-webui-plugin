@@ -202,7 +202,7 @@ describe("the summary card", () => {
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sda" });
     await waitFor(() =>
       expect(fact("Used for")).toHaveTextContent(
-        "File system ext4 on /dev/sda1, in useShared folders or services use it.",
+        "File system EXT4 on /dev/sda1, in useShared folders or services use it.",
       ),
     );
     expect(fact("Health")).toHaveTextContent(

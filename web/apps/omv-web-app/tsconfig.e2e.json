@@ -6,5 +6,5 @@
     "types": ["node"],
     "resolveJsonModule": true
   },
-  "include": ["e2e"]
+  "include": ["e2e", "../../packages/react-api-omv/src/env.d.ts"]
 }

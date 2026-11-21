@@ -10,13 +10,13 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
   EmptyState,
-  ExternalLink,
   HealthListItem,
   rollUp,
   Skeleton,
   StatusPill,
   type RollUpStatus,
 } from "@omv-webui/react-ui-components";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,7 +26,7 @@ import {
 } from "../../dashboard/dashboard.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { useFormat } from "../../format/useFormat.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 import { FileSystemName } from "../atoms/FileSystemName.tsx";
 import { CardStaleLine } from "../molecules/CardStaleLine.tsx";
 import { DashboardCard } from "../molecules/DashboardCard.tsx";
@@ -38,6 +38,22 @@ const ROLL_UP: Record<FsState, RollUpStatus> = {
   unknown: "unknown",
   below: "ok",
 };
+
+/** The name, a router link to the file system's page when it has one (file-systems design 9). */
+function ItemName({ item }: { item: StorageItem }) {
+  if (item.address === null) {
+    return <FileSystemName name={item.name} />;
+  }
+  return (
+    <Link
+      to="/storage/filesystems/$fs"
+      params={{ fs: item.address }}
+      className={routerLinkClass}
+    >
+      <FileSystemName name={item.name} />
+    </Link>
+  );
+}
 
 function MountedItem({
   item,
@@ -62,18 +78,18 @@ function MountedItem({
           label={
             <span className="flex flex-wrap items-center justify-between gap-2">
               <span>
-                <FileSystemName name={item.name} />
+                <ItemName item={item} />
               </span>
               <StatusPill status="unknown">{t("health.unknown")}</StatusPill>
             </span>
           }
           value={null}
           max={100}
-          valueText={t("dashboard.storage.noReading")}
+          valueText={t("filesystem.usage.unread")}
         />
       ) : (
         <CapacityMeter
-          label={<FileSystemName name={item.name} />}
+          label={<ItemName item={item} />}
           value={fs.percentage}
           max={100}
           threshold={threshold}
@@ -115,9 +131,9 @@ function Item({ item }: { item: StorageItem }) {
         className="py-0"
         status="critical"
         statusLabel={t("health.critical")}
-        name={<FileSystemName name={item.name} />}
+        name={<ItemName item={item} />}
         nameVariant={item.name.kind === "device" ? "identifier" : "text"}
-        reason={t("dashboard.storage.missing")}
+        reason={t("filesystem.reason.missing")}
       />
     );
   }
@@ -146,9 +162,9 @@ export function StorageCard({
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
   const link = (
-    <ExternalLink href={CLASSIC.fileSystems} newTabLabel={t("app.newTab")}>
+    <Link to="/storage/filesystems" className={routerLinkClass}>
       {t("dashboard.storage.link")}
-    </ExternalLink>
+    </Link>
   );
 
   let content;
@@ -183,12 +199,9 @@ export function StorageCard({
       <EmptyState
         className="py-4"
         action={
-          <ExternalLink
-            href={CLASSIC.fileSystems}
-            newTabLabel={t("app.newTab")}
-          >
+          <Link to="/storage/filesystems/add" className={routerLinkClass}>
             {t("dashboard.storage.emptyLink")}
-          </ExternalLink>
+          </Link>
         }
       >
         {t("dashboard.storage.empty")}
