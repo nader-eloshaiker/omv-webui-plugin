@@ -1,0 +1,27 @@
+summary: "Written by hand from smartctl's output format and OMV's parsing (OMV 8.6.1): a hard disk whose latest extended test stopped at a read failure, after earlier tests that passed and one that was interrupted. The status keeps smartctl's column padding. The test VM's NVMe disk keeps no log in this form."
+x-omv-status: 200
+value:
+  - num: "1"
+    description: Extended offline
+    status: "Completed: read failure      "
+    remaining: "90"
+    lifetime: "35010"
+    lbaoffirsterror: "1953524160"
+  - num: "2"
+    description: Short offline
+    status: "Completed without error      "
+    remaining: "00"
+    lifetime: "34842"
+    lbaoffirsterror: "-"
+  - num: "3"
+    description: Extended offline
+    status: "Interrupted (host reset)     "
+    remaining: "60"
+    lifetime: "34530"
+    lbaoffirsterror: "-"
+  - num: "4"
+    description: Short offline
+    status: "Completed without error      "
+    remaining: "00"
+    lifetime: "34506"
+    lbaoffirsterror: "-"

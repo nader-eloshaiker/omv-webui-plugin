@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetAttributes
+  tags:
+    - Smart
+  summary: A disk's S.M.A.R.T. attributes
+  description: >-
+    The S.M.A.R.T. attributes of an ATA disk, each with OMV's assessment. NVMe and SAS disks report
+    their health in another form and answer an empty list (observed for the test VM's NVMe disk), as
+    does a disk without S.M.A.R.T. It runs smartctl on the disk without sparing it when asleep, so
+    it can wake a sleeping disk: the interface reads it only when the user asks. Changes nothing.
+  x-omv-rpc:
+    service: Smart
+    method: getAttributes
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartAttributeList.yaml
+          examples:
+            nvme:
+              $ref: ../../examples/smartGetAttributes.nvme.yaml
+            sata:
+              $ref: ../../examples/smartGetAttributes.sata.yaml
+            ataHealthy:
+              $ref: ../../examples/smartGetAttributes.ataHealthy.yaml
+            ataFailing:
+              $ref: ../../examples/smartGetAttributes.ataFailing.yaml

@@ -62,6 +62,12 @@
     },
     {
       "name": "LogFile"
+    },
+    {
+      "name": "DiskMgmt"
+    },
+    {
+      "name": "MdMgmt"
     }
   ],
   "paths": {
@@ -505,6 +511,12 @@
                   },
                   "smartStatusUnknownFinished": {
                     "$ref": "#/components/examples/execGetOutput.smartStatusUnknownFinished"
+                  },
+                  "wipeFinished": {
+                    "$ref": "#/components/examples/execGetOutput.wipeFinished"
+                  },
+                  "selfTestFinished": {
+                    "$ref": "#/components/examples/execGetOutput.selfTestFinished"
                   }
                 }
               }
@@ -520,6 +532,9 @@
                 "examples": {
                   "applyFailed": {
                     "$ref": "#/components/examples/execGetOutput.applyFailed"
+                  },
+                  "wipeFailed": {
+                    "$ref": "#/components/examples/execGetOutput.wipeFailed"
                   }
                 }
               }
@@ -1153,6 +1168,40 @@
         }
       }
     },
+    "/rpc/FileSystemMgmt/enumerateFilesystems": {
+      "post": {
+        "operationId": "fileSystemMgmtEnumerateFilesystems",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Detected file systems",
+        "description": "Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type \"swap\") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "enumerateFilesystems"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectedFilesystemList"
+                },
+                "examples": {
+                  "vmFilesystems": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.vmFilesystems"
+                  },
+                  "swapAndForeign": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.swapAndForeign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rpc/Smart/getListBg": {
       "post": {
         "operationId": "smartGetListBg",
@@ -1537,6 +1586,989 @@
                 "examples": {
                   "json": {
                     "$ref": "#/components/examples/systemGetTopInfo.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/enumerateDevices": {
+      "post": {
+        "operationId": "diskMgmtEnumerateDevices",
+        "tags": ["DiskMgmt"],
+        "summary": "Disks",
+        "description": "Every disk the system can see, including read-only ones such as an optical drive, as a plain list in no particular order. It asks smartctl not to wake a disk that is in standby (--nocheck=standby), so it spares sleeping disks: such a disk reports its power mode as STANDBY and no temperature. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "enumerateDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiskDevices"
+                },
+                "examples": {
+                  "vmDisks": {
+                    "$ref": "#/components/examples/diskMgmtEnumerateDevices.vmDisks"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/getList": {
+      "post": {
+        "operationId": "diskMgmtGetList",
+        "tags": ["DiskMgmt"],
+        "summary": "Disks with their power settings",
+        "description": "The disks of enumerateDevices, each with its stored power and cache settings (`hdparm`) when it has any, paged and sorted by the backend; `limit` null lists every disk. It answers at once (the stock interface calls it as a background task, getListBg, which this contract does not use). It asks smartctl not to wake a disk that is in standby (--nocheck=standby), so it spares sleeping disks: such a disk reports its power mode as STANDBY and no temperature. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "getList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiskDeviceList"
+                },
+                "examples": {
+                  "vmDisks": {
+                    "$ref": "#/components/examples/diskMgmtGetList.vmDisks"
+                  },
+                  "withHdparm": {
+                    "$ref": "#/components/examples/diskMgmtGetList.withHdparm"
+                  },
+                  "standby": {
+                    "$ref": "#/components/examples/diskMgmtGetList.standby"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/getHdParm": {
+      "post": {
+        "operationId": "diskMgmtGetHdParm",
+        "tags": ["DiskMgmt"],
+        "summary": "A disk's power settings",
+        "description": "One stored power and cache settings object, by its UUID (the `hdparm.uuid` of DiskMgmt.getList). Fails when there is no such object. Read from the configuration; it does not touch the disk.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "getHdParm"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HdParm"
+                },
+                "examples": {
+                  "configured": {
+                    "$ref": "#/components/examples/diskMgmtGetHdParm.configured"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/setHdParm": {
+      "post": {
+        "operationId": "diskMgmtSetHdParm",
+        "tags": ["DiskMgmt"],
+        "summary": "Save a disk's power settings",
+        "description": "Create a disk's power and cache settings (with OMV's placeholder UUID) or change them. The disk must exist; the server stores its /dev/disk/by-id/ link and refuses a second settings object for the same disk. Nothing changes on the system until the pending changes are applied; it marks the smartmontools module dirty. Applying it sets these values on every disk that has settings. Returns the stored settings.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "setHdParm"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.diskmgmt.sethdparm",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiskMgmtSetHdParmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HdParm"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/diskMgmtSetHdParm.created"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/wipe": {
+      "post": {
+        "operationId": "diskMgmtWipe",
+        "tags": ["DiskMgmt"],
+        "summary": "Wipe a disk",
+        "description": "Erase a disk, as a background task. A quick wipe (`secure` false) removes the partition table and the file system, RAID and other signatures at both ends of the disk, in seconds; a secure wipe overwrites the whole disk once and can take hours. Everything on the disk is lost and cannot be recovered. Before calling it the interface itself refuses the system disk, a read-only disk and a disk that holds a mounted file system or a RAID member (journal, 2026-11-21). The task's output is the commands' log text; it has no result. Changes no configuration, so nothing is pending afterwards.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "wipe"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.diskmgmt.wipe",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiskMgmtWipeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/diskMgmtWipe.started"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/DiskMgmt/rescan": {
+      "post": {
+        "operationId": "diskMgmtRescan",
+        "tags": ["DiskMgmt"],
+        "summary": "Look for new disks",
+        "description": "Ask the disk controllers to look for disks added or resized since the system started. Returns null at once; a new disk can take a few seconds to appear in the lists. Changes no configuration and wakes no disk.",
+        "x-omv-rpc": {
+          "service": "DiskMgmt",
+          "method": "rescan"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/Smart/enumerateDevices": {
+      "post": {
+        "operationId": "smartEnumerateDevices",
+        "tags": ["Smart"],
+        "summary": "Disks with S.M.A.R.T.",
+        "description": "Every physical disk OMV can read S.M.A.R.T. data from, with its health, as a plain list in no particular order. OMV counts every ATA, SCSI and NVMe disk, so a disk whose smartctl reports no S.M.A.R.T. support is listed as BAD_STATUS (observed for the test VM's virtual SATA disks). It runs smartctl on every disk without sparing sleeping ones, so it can wake them: the interface reads it only when the user asks. One smartctl runs per disk, so it is slow with many disks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "enumerateDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartEnumeratedDevices"
+                },
+                "examples": {
+                  "vmDisks": {
+                    "$ref": "#/components/examples/smartEnumerateDevices.vmDisks"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/enumerateMonitoredDevices": {
+      "post": {
+        "operationId": "smartEnumerateMonitoredDevices",
+        "tags": ["Smart"],
+        "summary": "Monitored disks",
+        "description": "The disks of Smart.enumerateDevices whose S.M.A.R.T. monitoring is turned on: the disks the stock interface offers for a scheduled self-test. It reads every disk as enumerateDevices does, so it can wake sleeping disks: the interface reads it only when the user asks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "enumerateMonitoredDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartEnumeratedDevices"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/smartEnumerateMonitoredDevices.none"
+                  },
+                  "monitored": {
+                    "$ref": "#/components/examples/smartEnumerateMonitoredDevices.monitored"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getSettings": {
+      "post": {
+        "operationId": "smartGetSettings",
+        "tags": ["Smart"],
+        "summary": "S.M.A.R.T. settings",
+        "description": "The S.M.A.R.T. monitoring settings for every disk. Read from the configuration only; it does not touch the disks.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartSettings"
+                },
+                "examples": {
+                  "defaults": {
+                    "$ref": "#/components/examples/smartGetSettings.defaults"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/setSettings": {
+      "post": {
+        "operationId": "smartSetSettings",
+        "tags": ["Smart"],
+        "summary": "Save S.M.A.R.T. settings",
+        "description": "Save the S.M.A.R.T. monitoring settings for every disk. Nothing changes on the system until the pending changes are applied; it marks the smartmontools module dirty. When applied, the monitoring service starts or stops as `enable` says. Returns the stored settings; the reply also carries `monitor` and `scheduledtests` as empty strings (observed on OMV 8.6.1), which are not settings and are not described here.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "setSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.smart.setsettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartSetSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartSettings"
+                },
+                "examples": {
+                  "saved": {
+                    "$ref": "#/components/examples/smartSetSettings.saved"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getDeviceSettings": {
+      "post": {
+        "operationId": "smartGetDeviceSettings",
+        "tags": ["Smart"],
+        "summary": "A disk's monitoring settings",
+        "description": "One disk's stored S.M.A.R.T. monitoring settings, found by any of the disk's device files, with whether a scheduled self-test refers to the disk. A disk has none until they are first saved, and then this fails with HTTP 500: Smart.getListBg gives such a disk OMV's placeholder UUID, so the interface asks only for a disk whose `uuid` is not the placeholder. Read from the configuration and the system's device list; it does not run smartctl and wakes no disk.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getDeviceSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartDeviceSettings"
+                },
+                "examples": {
+                  "monitored": {
+                    "$ref": "#/components/examples/smartGetDeviceSettings.monitored"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The disk has no stored monitoring settings. The message names the configuration query.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notConfigured": {
+                    "$ref": "#/components/examples/smartGetDeviceSettings.notConfigured"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/setDeviceSettings": {
+      "post": {
+        "operationId": "smartSetDeviceSettings",
+        "tags": ["Smart"],
+        "summary": "Save a disk's monitoring settings",
+        "description": "Create one disk's S.M.A.R.T. monitoring settings (with OMV's placeholder UUID) or change them. The disk must exist and be one OMV reads S.M.A.R.T. data from; the server stores its /dev/disk/by-id/ link and the smartctl device type, and refuses a second settings object for the same disk. The stock interface does not let monitoring be turned off while a scheduled self-test refers to the disk (`_used` of getDeviceSettings). Nothing changes on the system until the pending changes are applied; it marks the smartmontools module dirty. Returns the stored settings.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "setDeviceSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.smart.setdevicesettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartSetDeviceSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartDeviceSettings"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/smartSetDeviceSettings.created"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getInformation": {
+      "post": {
+        "operationId": "smartGetInformation",
+        "tags": ["Smart"],
+        "summary": "A disk's S.M.A.R.T. details",
+        "description": "What smartctl reports about one disk: model, serial number, firmware, capacity, health and the rest of its information section, as display text keyed by name, with the temperature, power cycles and power-on hours where OMV finds them. It runs smartctl on the disk without sparing it when asleep, so it can wake a sleeping disk: the interface reads it only when the user asks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getInformation"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartInformation"
+                },
+                "examples": {
+                  "nvme": {
+                    "$ref": "#/components/examples/smartGetInformation.nvme"
+                  },
+                  "sata": {
+                    "$ref": "#/components/examples/smartGetInformation.sata"
+                  },
+                  "ataFailing": {
+                    "$ref": "#/components/examples/smartGetInformation.ataFailing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getAttributes": {
+      "post": {
+        "operationId": "smartGetAttributes",
+        "tags": ["Smart"],
+        "summary": "A disk's S.M.A.R.T. attributes",
+        "description": "The S.M.A.R.T. attributes of an ATA disk, each with OMV's assessment. NVMe and SAS disks report their health in another form and answer an empty list (observed for the test VM's NVMe disk), as does a disk without S.M.A.R.T. It runs smartctl on the disk without sparing it when asleep, so it can wake a sleeping disk: the interface reads it only when the user asks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getAttributes"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartAttributeList"
+                },
+                "examples": {
+                  "nvme": {
+                    "$ref": "#/components/examples/smartGetAttributes.nvme"
+                  },
+                  "sata": {
+                    "$ref": "#/components/examples/smartGetAttributes.sata"
+                  },
+                  "ataHealthy": {
+                    "$ref": "#/components/examples/smartGetAttributes.ataHealthy"
+                  },
+                  "ataFailing": {
+                    "$ref": "#/components/examples/smartGetAttributes.ataFailing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getSelfTestLogs": {
+      "post": {
+        "operationId": "smartGetSelfTestLogs",
+        "tags": ["Smart"],
+        "summary": "A disk's self-test log",
+        "description": "The short and extended self-tests an ATA disk has run, newest first, with how each ended. NVMe disks answer an empty list (observed on the test VM). It runs smartctl on the disk without sparing it when asleep, so it can wake a sleeping disk: the interface reads it only when the user asks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getSelfTestLogs"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartSelfTestLog"
+                },
+                "examples": {
+                  "nvme": {
+                    "$ref": "#/components/examples/smartGetSelfTestLogs.nvme"
+                  },
+                  "withFailure": {
+                    "$ref": "#/components/examples/smartGetSelfTestLogs.withFailure"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getExtendedInformation": {
+      "post": {
+        "operationId": "smartGetExtendedInformation",
+        "tags": ["Smart"],
+        "summary": "Everything smartctl reports",
+        "description": "The full smartctl report for one disk (its --xall output) as one block of text. It runs smartctl on the disk without sparing it when asleep, so it can wake a sleeping disk: the interface reads it only when the user asks. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getExtendedInformation"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartExtendedInformation"
+                },
+                "examples": {
+                  "nvme": {
+                    "$ref": "#/components/examples/smartGetExtendedInformation.nvme"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getScheduleList": {
+      "post": {
+        "operationId": "smartGetScheduleList",
+        "tags": ["Smart"],
+        "summary": "Scheduled self-tests",
+        "description": "Every scheduled S.M.A.R.T. self-test, each with its disk as the system sees it now, paged and sorted by the backend; `limit` null lists every test. A test whose disk is not present is still listed, with an empty device file. Read from the configuration and the system's device list; it does not run smartctl and wakes no disk.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getScheduleList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartScheduleList"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/smartGetScheduleList.none"
+                  },
+                  "scheduled": {
+                    "$ref": "#/components/examples/smartGetScheduleList.scheduled"
+                  },
+                  "several": {
+                    "$ref": "#/components/examples/smartGetScheduleList.several"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getScheduledTest": {
+      "post": {
+        "operationId": "smartGetScheduledTest",
+        "tags": ["Smart"],
+        "summary": "A scheduled self-test",
+        "description": "One scheduled S.M.A.R.T. self-test, by its UUID, as stored (its disk by the /dev/disk/by-id/ link). Fails when there is no such test. Read from the configuration only.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getScheduledTest"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartScheduledTest"
+                },
+                "examples": {
+                  "configured": {
+                    "$ref": "#/components/examples/smartGetScheduledTest.configured"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/setScheduledTest": {
+      "post": {
+        "operationId": "smartSetScheduledTest",
+        "tags": ["Smart"],
+        "summary": "Save a scheduled self-test",
+        "description": "Create a scheduled S.M.A.R.T. self-test (with OMV's placeholder UUID) or change one. The disk must exist and be one OMV reads S.M.A.R.T. data from; the stock interface offers only monitored disks (enumerateMonitoredDevices). The server stores the disk's /dev/disk/by-id/ link. Nothing changes on the system until the pending changes are applied; it marks the smartmontools module dirty. The test runs on its schedule once applied. Returns the stored test.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "setScheduledTest"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.smart.setscheduledtest",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartSetScheduledTestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartScheduledTest"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/smartSetScheduledTest.created"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/deleteScheduledTest": {
+      "post": {
+        "operationId": "smartDeleteScheduledTest",
+        "tags": ["Smart"],
+        "summary": "Delete a scheduled self-test",
+        "description": "Delete one scheduled S.M.A.R.T. self-test, by its UUID. Only the schedule is removed; the disk and its self-test log are not touched, and discarding the pending changes brings the test back. Nothing changes on the system until the pending changes are applied; it marks the smartmontools module dirty. Returns the deleted test.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "deleteScheduledTest"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmartScheduledTest"
+                },
+                "examples": {
+                  "deleted": {
+                    "$ref": "#/components/examples/smartDeleteScheduledTest.deleted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/executeScheduledTest": {
+      "post": {
+        "operationId": "smartExecuteScheduledTest",
+        "tags": ["Smart"],
+        "summary": "Run a scheduled self-test now",
+        "description": "Start a scheduled test's self-test on its disk now, as a background task. The task ends once smartctl has started the test; the disk then runs it by itself (a short test for minutes, a long one for hours) and records the outcome in its self-test log. It wakes the disk and slows it while the test runs. The task's output is smartctl's text; it has no result. Fails at once with HTTP 500 when the test's disk has no stored monitoring settings. Changes no configuration.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "executeScheduledTest"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/smartExecuteScheduledTest.started"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The test's disk has no stored monitoring settings, or there is no such test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "noDeviceSettings": {
+                    "$ref": "#/components/examples/smartExecuteScheduledTest.noDeviceSettings"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/enumerateDevices": {
+      "post": {
+        "operationId": "mdMgmtEnumerateDevices",
+        "tags": ["MdMgmt"],
+        "summary": "Software RAID arrays",
+        "description": "Every software RAID array with its member devices, from the RAID plugin (openmediavault-md). The server asks mdadm and the kernel's RAID status, and the configuration for whether an array is in use; it does not run smartctl. Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404, code 0 and the message \"RPC service 'MdMgmt' not found.\" (observed on OMV 8.6.1): the transport throws an RpcError with `status` 404, the only reply of this method with that status. Read that as \"no RAID plugin, so no RAID members\"; any other failure means the arrays could not be read.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "enumerateDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdArrayList"
+                },
+                "examples": {
+                  "mirrors": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrors"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.none"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message \"RPC service 'MdMgmt' not found.\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notInstalled": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.notInstalled"
                   }
                 }
               }
@@ -2792,6 +3824,159 @@
           }
         }
       },
+      "DetectedFilesystem": {
+        "type": "object",
+        "description": "A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are \"-1\" and its percentage -1.",
+        "required": [
+          "devicename",
+          "devicefile",
+          "predictabledevicefile",
+          "canonicaldevicefile",
+          "parentdevicefile",
+          "devlinks",
+          "uuid",
+          "label",
+          "type",
+          "blocks",
+          "mounted",
+          "mountpoint",
+          "used",
+          "available",
+          "size",
+          "percentage",
+          "description",
+          "hasmultipledevices",
+          "devicefiles",
+          "comment",
+          "_readonly",
+          "_used"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the partition or device, such as \"sda1\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The device file OMV prefers, usually a /dev/disk/by-uuid/ link."
+          },
+          "predictabledevicefile": {
+            "type": "string"
+          },
+          "canonicaldevicefile": {
+            "type": "string",
+            "description": "The device file under /dev, such as \"/dev/sda1\"."
+          },
+          "parentdevicefile": {
+            "type": "string",
+            "description": "The device the file system is on, under /dev: the disk of a partition (\"/dev/sda\" for \"/dev/sda1\"), or the device itself when it has no partitions."
+          },
+          "devlinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The file system's own identifier: a UUID for most types, a short volume ID for FAT (\"ABCD-1234\" form), a date-like value for an optical disc."
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "The file system type as blkid reports it, such as \"ext4\", \"btrfs\", \"vfat\", \"iso9660\", or \"swap\" for swap space."
+          },
+          "mounted": {
+            "type": "boolean",
+            "description": "Whether it is mounted now. Swap space in use is never reported as mounted."
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "Where it is mounted, such as \"/\" or \"/boot/efi\"; empty when it is not mounted."
+          },
+          "blocks": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Size in 1 KiB blocks. \"-1\" when not mounted."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes. \"-1\" when not mounted."
+          },
+          "available": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes free. \"-1\" when not mounted."
+          },
+          "used": {
+            "type": "string",
+            "description": "Display text, such as \"12.34 GiB\". \"-1\" when not mounted."
+          },
+          "percentage": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 100,
+            "description": "Percent used. -1 when not mounted."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]\"."
+          },
+          "propposixacl": {
+            "type": "boolean"
+          },
+          "propquota": {
+            "type": "boolean"
+          },
+          "propresize": {
+            "type": "boolean"
+          },
+          "propfstab": {
+            "type": "boolean"
+          },
+          "propreadonly": {
+            "type": "boolean"
+          },
+          "propcompress": {
+            "type": "boolean"
+          },
+          "propautodefrag": {
+            "type": "boolean"
+          },
+          "hasmultipledevices": {
+            "type": "boolean",
+            "description": "Whether it spans several devices (btrfs across disks, for one)."
+          },
+          "devicefiles": {
+            "type": "array",
+            "description": "Every device the file system is on, under /dev, such as [\"/dev/sda1\"].",
+            "items": {
+              "type": "string"
+            }
+          },
+          "comment": {
+            "type": "string"
+          },
+          "_readonly": {
+            "type": "boolean",
+            "description": "True for the file system the system runs from."
+          },
+          "_used": {
+            "type": "boolean",
+            "description": "Whether OMV has set it up and something (a shared folder, for one) refers to it; always true for the file system the system runs from."
+          }
+        }
+      },
+      "DetectedFilesystemList": {
+        "type": "array",
+        "description": "Every file system the system detects, in no particular order.",
+        "items": {
+          "$ref": "#/components/schemas/DetectedFilesystem"
+        }
+      },
       "ServiceStatus": {
         "type": "object",
         "description": "One service whose state OMV reports. Plugins add their own services to the list.",
@@ -3345,6 +4530,922 @@
           }
         }
       },
+      "HdParm": {
+        "type": "object",
+        "description": "A disk's stored power and cache settings (conf.system.hdparm). They take effect when the pending changes are applied.",
+        "required": [
+          "uuid",
+          "devicefile",
+          "apm",
+          "aam",
+          "spindowntime",
+          "writecache"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link where it has one, otherwise the device file sent."
+          },
+          "apm": {
+            "type": "integer",
+            "description": "Advanced Power Management; 0 is off."
+          },
+          "aam": {
+            "type": "integer",
+            "description": "Advanced Acoustic Management; 0 is off, 128 quiet, 254 fast."
+          },
+          "spindowntime": {
+            "type": "integer",
+            "description": "The standby timer in the drive's encoding; 0 is never."
+          },
+          "writecache": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DiskDevice": {
+        "type": "object",
+        "description": "A disk the system can see, including read-only ones such as an optical drive. Read without waking a disk that is in standby. `hdparm` is sent by DiskMgmt.getList only, and only for a disk with stored power and cache settings.",
+        "required": [
+          "devicename",
+          "canonicaldevicefile",
+          "devicefile",
+          "devicelinks",
+          "model",
+          "size",
+          "description",
+          "vendor",
+          "serialnumber",
+          "wwn",
+          "israid",
+          "isroot",
+          "isreadonly",
+          "powermode",
+          "temperature",
+          "hotpluggable"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the disk, such as \"sda\"."
+          },
+          "canonicaldevicefile": {
+            "type": "string",
+            "description": "The device file under /dev, such as \"/dev/sda\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link where it has one, otherwise its device file."
+          },
+          "devicelinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]\"."
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "serialnumber": {
+            "type": "string"
+          },
+          "wwn": {
+            "type": "string",
+            "description": "The disk's World Wide Name; the empty string when it has none."
+          },
+          "israid": {
+            "type": "boolean",
+            "description": "Whether this is a hardware RAID device."
+          },
+          "isroot": {
+            "type": "boolean",
+            "description": "Whether the system is installed on this disk."
+          },
+          "isreadonly": {
+            "type": "boolean",
+            "description": "Whether the disk cannot be written to, such as an optical drive."
+          },
+          "powermode": {
+            "type": "string",
+            "description": "As smartctl reports it: \"ACTIVE or IDLE\", \"ACTIVE\", \"IDLE\", \"STANDBY\" (spun down) or \"SLEEP\"; \"UNKNOWN\" for a disk that does not support S.M.A.R.T. or does not report it (observed for an NVMe disk), and \"ERROR\" when it could not be read. Open to other values."
+          },
+          "temperature": {
+            "description": "Degrees Celsius as text, such as \"30\". The empty string when unknown, and always for a disk in standby, which is not woken to read it. Also accepted as a whole number, the form the S.M.A.R.T. list was observed to send.",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "hotpluggable": {
+            "type": "boolean"
+          },
+          "hdparm": {
+            "$ref": "#/components/schemas/HdParm"
+          }
+        }
+      },
+      "DiskDevices": {
+        "type": "array",
+        "description": "Every disk the system can see, in no particular order.",
+        "items": {
+          "$ref": "#/components/schemas/DiskDevice"
+        }
+      },
+      "DiskDeviceList": {
+        "type": "object",
+        "description": "Every disk the system can see, each with its stored power and cache settings when it has any; paged and sorted by the backend.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every disk, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiskDevice"
+            }
+          }
+        }
+      },
+      "ObjectUuid": {
+        "type": "string",
+        "description": "A configuration object's UUID, in OMV's `uuidv4` format. To create an object, send OMV's placeholder for an object not yet saved, fa4b1c66-ef79-11e5-87a0-0002b3a176b4; the server gives the new object its own UUID and returns it.",
+        "x-omv-format": "uuidv4",
+        "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      },
+      "ObjectUuidRequest": {
+        "type": "object",
+        "description": "One configuration object, by its UUID (rpc.common.objectuuid).",
+        "required": ["uuid"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviceFile": {
+        "type": "string",
+        "description": "A device file, in OMV's `devicefile` format: a path under /dev, such as \"/dev/sda\" or a /dev/disk/by-id/ link. The server resolves it to the disk and fails when no such disk exists.",
+        "x-omv-format": "devicefile",
+        "pattern": "^/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+$"
+      },
+      "DiskMgmtSetHdParmRequest": {
+        "type": "object",
+        "description": "A disk's power and cache settings (rpc.diskmgmt.sethdparm). Every field is required. The contract takes the stricter bound of the method's datamodel and the stored object's (conf.system.hdparm), which the server also checks: `apm` at most 254 and `spindowntime` at most 254.",
+        "required": [
+          "uuid",
+          "devicefile",
+          "apm",
+          "aam",
+          "spindowntime",
+          "writecache"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "apm": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 254,
+            "description": "Advanced Power Management, 0 to turn it off, otherwise 1 (lowest power, the disk may spin down) to 254 (highest performance). From 128 up the disk does not spin down. The stock form offers 0, 1, 64, 127, 128, 192 and 254."
+          },
+          "aam": {
+            "type": "integer",
+            "enum": [0, 128, 254],
+            "description": "Advanced Acoustic Management. 0 off, 128 quietest and slowest, 254 loudest and fastest."
+          },
+          "spindowntime": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 254,
+            "description": "The standby timer in the drive's own encoding, 0 for never: 1 to 240 count steps of 5 seconds (60 is 5 minutes, 240 is 20 minutes); 241 to 251 count steps of 30 minutes (241 is 30 minutes, 242 is 1 hour). The stock form offers 0, 60, 120, 240 and from 241 up."
+          },
+          "writecache": {
+            "type": "boolean",
+            "description": "Whether the disk's write cache is on."
+          }
+        },
+        "additionalProperties": false
+      },
+      "DiskMgmtWipeRequest": {
+        "type": "object",
+        "description": "The disk to wipe and how (rpc.diskmgmt.wipe). Both fields are required.",
+        "required": ["devicefile", "secure"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "secure": {
+            "type": "boolean",
+            "description": "false: a quick wipe, which removes the partition table and file system signatures in seconds. true: a secure wipe, which overwrites the whole disk once and can take hours."
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmartEnumeratedDevice": {
+        "type": "object",
+        "description": "A disk that OMV can read S.M.A.R.T. data from, with its health as smartctl reports it. The model and serial number are smartctl's where it gives them.",
+        "required": [
+          "devicename",
+          "canonicaldevicefile",
+          "devicefile",
+          "devicelinks",
+          "model",
+          "size",
+          "temperature",
+          "description",
+          "vendor",
+          "serialnumber",
+          "wwn",
+          "overallstatus"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string"
+          },
+          "canonicaldevicefile": {
+            "type": "string"
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link."
+          },
+          "devicelinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "temperature": {
+            "description": "Degrees Celsius, as text or a whole number; the empty string when unknown.",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text."
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "serialnumber": {
+            "type": "string"
+          },
+          "wwn": {
+            "type": "string"
+          },
+          "overallstatus": {
+            "type": "string",
+            "description": "The disk's health, with the meanings of SmartDevice's `overallstatus`: GOOD, BAD_ATTRIBUTE_IN_THE_PAST, BAD_SECTOR, BAD_ATTRIBUTE_NOW, BAD_SECTOR_MANY or BAD_STATUS. Open to other values."
+          }
+        }
+      },
+      "SmartEnumeratedDevices": {
+        "type": "array",
+        "description": "Disks that OMV can read S.M.A.R.T. data from, in no particular order.",
+        "items": {
+          "$ref": "#/components/schemas/SmartEnumeratedDevice"
+        }
+      },
+      "SmartSettings": {
+        "type": "object",
+        "description": "The S.M.A.R.T. monitoring settings for every disk (conf.service.smartmontools). They take effect when the pending changes are applied.",
+        "required": ["enable", "interval", "powermode", "tempdiff", "tempmax"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "interval": {
+            "type": "integer",
+            "description": "Seconds between checks."
+          },
+          "powermode": {
+            "type": "string",
+            "description": "Which disks a check skips so as not to wake them; never, sleep, standby or idle."
+          },
+          "tempdiff": {
+            "type": "integer",
+            "description": "Report a temperature change of at least this many degrees Celsius; 0 is off."
+          },
+          "tempmax": {
+            "type": "integer",
+            "description": "Report a temperature of at least this many degrees Celsius; 0 is off."
+          }
+        }
+      },
+      "SmartSetSettingsRequest": {
+        "type": "object",
+        "description": "The S.M.A.R.T. monitoring settings for every disk (rpc.smart.setsettings). Every field is required. `tempdiff` and `tempmax` take the stored object's maximum of 255 (conf.service.smartmontools), which the server also checks.",
+        "required": ["enable", "interval", "powermode", "tempdiff", "tempmax"],
+        "properties": {
+          "enable": {
+            "type": "boolean",
+            "description": "Whether S.M.A.R.T. monitoring runs at all."
+          },
+          "interval": {
+            "type": "integer",
+            "minimum": 10,
+            "description": "Seconds between checks."
+          },
+          "powermode": {
+            "type": "string",
+            "enum": ["never", "sleep", "standby", "idle"],
+            "description": "Which disks a check skips so that it does not wake them: never (checks every disk, waking it), sleep (skips disks in sleep mode), standby (skips disks in standby or sleep) or idle (skips disks that are idle, in standby or asleep)."
+          },
+          "tempdiff": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "Report a temperature change of at least this many degrees Celsius. 0 turns it off."
+          },
+          "tempmax": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "Report a temperature of at least this many degrees Celsius. 0 turns it off."
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviceFileRequest": {
+        "type": "object",
+        "description": "One disk, by its device file (rpc.common.devicefile).",
+        "required": ["devicefile"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmartDeviceSettings": {
+        "type": "object",
+        "description": "One disk's stored S.M.A.R.T. monitoring settings (conf.service.smartmontools.device). They take effect when the pending changes are applied.",
+        "required": [
+          "uuid",
+          "enable",
+          "devicefile",
+          "devicetype",
+          "tempdiff",
+          "tempmax"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "Whether this disk is monitored."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link where it has one."
+          },
+          "devicetype": {
+            "type": "string",
+            "description": "The smartctl device type the server chose for the disk, such as \"nvme\"; may be empty."
+          },
+          "tempdiff": {
+            "type": "integer",
+            "description": "0 uses the setting for every disk."
+          },
+          "tempmax": {
+            "type": "integer",
+            "description": "0 uses the setting for every disk."
+          },
+          "_used": {
+            "type": "boolean",
+            "description": "Smart.getDeviceSettings only: whether a scheduled self-test refers to this disk. The stock interface does not let monitoring be turned off while one does."
+          }
+        }
+      },
+      "SmartSetDeviceSettingsRequest": {
+        "type": "object",
+        "description": "One disk's S.M.A.R.T. monitoring settings (rpc.smart.setdevicesettings). The datamodel requires only `devicefile` and `enable` and does not declare `tempdiff` or `tempmax`, but the method reads all three of `uuid`, `tempdiff` and `tempmax` and stores them, so the contract requires them. The temperature limits take the stored object's bounds (conf.service.smartmontools.device).",
+        "required": ["uuid", "devicefile", "enable", "tempdiff", "tempmax"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "Whether this disk is monitored."
+          },
+          "tempdiff": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "Report a temperature change of at least this many degrees Celsius; 0 uses the setting for every disk. The stock form offers 0 to 15."
+          },
+          "tempmax": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "description": "Report a temperature of at least this many degrees Celsius; 0 uses the setting for every disk. The stock form offers 0 and 5 to 80 in steps of 5."
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmartInformation": {
+        "type": "object",
+        "description": "What smartctl reports about one disk, as display text: each \"Name: value\" line of its information and S.M.A.R.T. data sections, keyed by the name in lower case with spaces and hyphens removed (\"Device Model\" becomes `devicemodel`). Which keys appear depends on the disk; the six required ones are always there, possibly empty. When smartctl repeats a name, the last line wins.",
+        "required": [
+          "devicefile",
+          "devicemodel",
+          "serialnumber",
+          "wwn",
+          "firmwareversion",
+          "usercapacity"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "devicefile": {
+            "type": "string"
+          },
+          "devicemodel": {
+            "type": "string"
+          },
+          "serialnumber": {
+            "type": "string"
+          },
+          "wwn": {
+            "type": "string"
+          },
+          "firmwareversion": {
+            "type": "string"
+          },
+          "usercapacity": {
+            "type": "string",
+            "description": "Display text, such as \"8,589,934,592 bytes [8.58 GB]\"; empty for an NVMe disk."
+          },
+          "modelfamily": {
+            "type": "string"
+          },
+          "smartsupportis": {
+            "type": "string",
+            "description": "Display text, such as \"Enabled\", or \"Unavailable - device lacks SMART capability.\" (observed for the test VM's virtual SATA disks)."
+          },
+          "smartoverallhealthselfassessmenttestresult": {
+            "type": "string",
+            "description": "Display text, \"PASSED\" or \"FAILED!\"."
+          },
+          "temperature": {
+            "description": "Degrees Celsius as text, such as \"30\"; absent when unknown.",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "powercycles": {
+            "description": "How often the disk was switched on, as text; absent when unknown.",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "poweronhours": {
+            "description": "Hours switched on, as text; absent when unknown. Some disks add minutes, such as \"1234h+05m\".",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      },
+      "SmartAttribute": {
+        "type": "object",
+        "description": "One S.M.A.R.T. attribute of an ATA disk, with OMV's assessment of it. `value`, `worst` and `threshold` are the drive's normalised values, where lower is worse.",
+        "required": [
+          "id",
+          "attrname",
+          "flags",
+          "value",
+          "worst",
+          "threshold",
+          "whenfailed",
+          "rawvalue",
+          "description",
+          "prefailure",
+          "assessment"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "attrname": {
+            "type": "string",
+            "description": "smartctl's name, such as \"Reallocated_Sector_Ct\"."
+          },
+          "flags": {
+            "type": "string",
+            "description": "smartctl's flag letters, such as \"PO--CK\"; P marks a pre-failure attribute."
+          },
+          "value": {
+            "type": "integer"
+          },
+          "worst": {
+            "type": "integer"
+          },
+          "threshold": {
+            "type": "integer",
+            "description": "0 when the drive gives none."
+          },
+          "whenfailed": {
+            "type": "string",
+            "description": "\"-\" when it never failed; otherwise \"FAILING_NOW\" or \"In_the_past\"."
+          },
+          "rawvalue": {
+            "type": "string",
+            "description": "The raw value as smartctl prints it, such as \"0\" or \"34 (Min/Max 19/46)\"."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text in English, written by the server; empty for an attribute it does not know."
+          },
+          "prefailure": {
+            "type": "boolean",
+            "description": "Whether a failure of this attribute predicts a failing disk."
+          },
+          "assessment": {
+            "type": "string",
+            "description": "OMV's assessment: GOOD, BAD_ATTRIBUTE_NOW (at or below its threshold now, or for Reported_Uncorrect any count), BAD_ATTRIBUTE_IN_THE_PAST (was at or below it) or BAD_SECTOR (reallocated or pending sectors). Open to other values."
+          }
+        }
+      },
+      "SmartAttributeList": {
+        "type": "array",
+        "description": "The disk's S.M.A.R.T. attributes, in smartctl's order. Empty for disks that report none in this form, such as NVMe and SAS disks and disks without S.M.A.R.T.",
+        "items": {
+          "$ref": "#/components/schemas/SmartAttribute"
+        }
+      },
+      "SmartSelfTestLogEntry": {
+        "type": "object",
+        "description": "One entry of an ATA disk's self-test log, newest first. Every field is text as smartctl prints it.",
+        "required": [
+          "num",
+          "description",
+          "status",
+          "remaining",
+          "lifetime",
+          "lbaoffirsterror"
+        ],
+        "properties": {
+          "num": {
+            "type": "string",
+            "description": "The entry's number, \"1\" for the newest."
+          },
+          "description": {
+            "type": "string",
+            "description": "\"Short offline\", \"Extended offline\", \"Short captive\" or \"Extended captive\"."
+          },
+          "status": {
+            "type": "string",
+            "description": "Display text, such as \"Completed without error\" or \"Completed: read failure\". It can end in spaces, which are smartctl's column padding."
+          },
+          "remaining": {
+            "type": "string",
+            "description": "Percent of the test left when it ended, such as \"00\" or \"90\"."
+          },
+          "lifetime": {
+            "type": "string",
+            "description": "The disk's power-on hours when the test ran."
+          },
+          "lbaoffirsterror": {
+            "type": "string",
+            "description": "The first block that failed, or \"-\"."
+          }
+        }
+      },
+      "SmartSelfTestLog": {
+        "type": "array",
+        "description": "The disk's self-test log. Only short and extended tests are listed; conveyance and other tests are left out, and NVMe disks report none in this form.",
+        "items": {
+          "$ref": "#/components/schemas/SmartSelfTestLogEntry"
+        }
+      },
+      "SmartExtendedInformation": {
+        "type": "string",
+        "description": "Everything smartctl reports about the disk (its --xall output), as display text with newlines. Shown as preformatted text, never as markup."
+      },
+      "SmartScheduleEntry": {
+        "type": "object",
+        "description": "A scheduled S.M.A.R.T. self-test with its disk as the system sees it now. When the disk is not present, `devicefile`, `model` and `serialnumber` are empty, `devicelinks` is empty and `size` is \"-1\".",
+        "required": [
+          "uuid",
+          "enable",
+          "devicefile",
+          "type",
+          "hour",
+          "month",
+          "dayofmonth",
+          "dayofweek",
+          "comment",
+          "devicelinks",
+          "model",
+          "serialnumber",
+          "size"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's device file under /dev, such as \"/dev/sda\" (not the stored by-id link that Smart.getScheduledTest returns); empty when the disk is not present."
+          },
+          "type": {
+            "type": "string",
+            "description": "S short, L long, C conveyance, O offline. Open to other values."
+          },
+          "hour": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string"
+          },
+          "dayofmonth": {
+            "type": "string"
+          },
+          "dayofweek": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "devicelinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "serialnumber": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes; \"-1\" when the disk is not present."
+          }
+        }
+      },
+      "SmartScheduleList": {
+        "type": "object",
+        "description": "Every scheduled S.M.A.R.T. self-test, paged and sorted by the backend.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SmartScheduleEntry"
+            }
+          }
+        }
+      },
+      "SmartScheduledTest": {
+        "type": "object",
+        "description": "A stored scheduled S.M.A.R.T. self-test (conf.service.smartmontools.job). It runs on the schedule once the pending changes are applied. The schedule fields are \"*\" or a zero-padded number.",
+        "required": [
+          "uuid",
+          "enable",
+          "devicefile",
+          "type",
+          "hour",
+          "month",
+          "dayofmonth",
+          "dayofweek",
+          "comment"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link where it has one."
+          },
+          "type": {
+            "type": "string",
+            "description": "S short, L long, C conveyance, O offline. Open to other values."
+          },
+          "hour": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string"
+          },
+          "dayofmonth": {
+            "type": "string"
+          },
+          "dayofweek": {
+            "type": "string",
+            "description": "\"*\", or \"1\" (Monday) to \"7\" (Sunday)."
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "SmartSetScheduledTestRequest": {
+        "type": "object",
+        "description": "A scheduled S.M.A.R.T. self-test (rpc.smart.setscheduledtest). Every field is required. The schedule fields use patterns that are anchored, accepting exactly the values the stock form offers: \"*\" for every one, or a zero-padded number.",
+        "required": [
+          "uuid",
+          "enable",
+          "devicefile",
+          "comment",
+          "type",
+          "hour",
+          "month",
+          "dayofmonth",
+          "dayofweek"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "devicefile": {
+            "$ref": "#/components/schemas/DeviceFile"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["S", "L", "C", "O"],
+            "description": "S a short self-test, L a long (extended) one, C a conveyance test (after transport; not every disk supports it), O an immediate offline test."
+          },
+          "hour": {
+            "type": "string",
+            "pattern": "^(?:[*]|[01][0-9]|2[0-3])$",
+            "description": "\"*\" for every hour, or \"00\" to \"23\"."
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^(?:[*]|0[1-9]|1[0-2])$",
+            "description": "\"*\" for every month, or \"01\" (January) to \"12\"."
+          },
+          "dayofmonth": {
+            "type": "string",
+            "pattern": "^(?:[*]|0[1-9]|[12][0-9]|3[01])$",
+            "description": "\"*\" for every day, or \"01\" to \"31\"."
+          },
+          "dayofweek": {
+            "type": "string",
+            "pattern": "^(?:[*]|[1-7])$",
+            "description": "\"*\" for every day, or \"1\" (Monday) to \"7\" (Sunday)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdArray": {
+        "type": "object",
+        "description": "A software RAID array (Linux MD) that the kernel has assembled, as mdadm reports it. Read from the RAID plugin (openmediavault-md).",
+        "required": [
+          "_used",
+          "name",
+          "devicefile",
+          "uuid",
+          "level",
+          "numdevices",
+          "devices",
+          "size",
+          "state",
+          "syncaction",
+          "description"
+        ],
+        "properties": {
+          "_used": {
+            "type": "boolean",
+            "description": "Whether the array holds a file system OMV has set up, or is itself a member of other storage (such as an LVM group)."
+          },
+          "name": {
+            "type": "string",
+            "description": "mdadm's array name, usually the host name and a number, such as \"nas:0\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The array's device file, such as \"/dev/md0\"."
+          },
+          "uuid": {
+            "type": "string",
+            "description": "mdadm's UUID of the array, four groups of eight hex digits joined by colons."
+          },
+          "level": {
+            "type": "string",
+            "description": "The RAID level as mdadm names it, such as \"raid1\", \"raid5\" or \"raid10\"."
+          },
+          "numdevices": {
+            "type": "integer",
+            "description": "How many member devices the array is made for. A degraded array has fewer in `devices`."
+          },
+          "devices": {
+            "type": "array",
+            "description": "The member devices the array has now, as device files under /dev (a whole disk such as \"/dev/sdb\", or a partition such as \"/dev/sdb1\"), in natural order. A failed or removed member is not listed.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "state": {
+            "type": "string",
+            "description": "Display text from mdadm, such as \"clean\", \"active\", \"clean, degraded\" or \"clean, degraded, recovering (12.5% (…) finish=…)\". Open: read it as text, not as a list of values."
+          },
+          "syncaction": {
+            "type": "string",
+            "nullable": true,
+            "description": "What the array is doing now: \"idle\", \"resync\", \"recover\", \"check\", \"repair\", \"reshape\" or \"frozen\". null for a level without redundancy, such as raid0."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]\"."
+          }
+        }
+      },
+      "MdArrayList": {
+        "type": "array",
+        "description": "Every software RAID array the kernel has assembled, in no particular order; empty when there is none.",
+        "items": {
+          "$ref": "#/components/schemas/MdArray"
+        }
+      },
       "SmartDevice": {
         "type": "object",
         "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
@@ -3721,12 +5822,42 @@
           "running": false
         }
       },
+      "execGetOutput.wipeFinished": {
+        "summary": "Written by hand from the source (OMV 8.6.1): the last poll of a quick wipe of a 4 TB disk that had a partition table. sgdisk, then dd over the first and the last 10 MiB, then a reread of the partition table, which prints nothing. Not captured: wiping is not run on the test VM.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusW7pQx2LmVa9cKe4",
+          "pos": 0,
+          "output": "GPT data structures destroyed! You may now partition the disk using fdisk or\nother utilities.\n1+0 records in\n1+0 records out\n10485760 bytes (10 MB, 10 MiB) copied, 0.0412 s, 254 MB/s\n20480+0 records in\n20480+0 records out\n10485760 bytes (10 MB, 10 MiB) copied, 0.3815 s, 27.5 MB/s\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.selfTestFinished": {
+        "summary": "Written by hand from the source and smartctl's output format (OMV 8.6.1): the last poll of a task that started a short self-test on a hard disk. smartctl prints its full report (shortened here to its first lines and the self-test section) and that the test has begun; the disk runs it on its own afterwards. Not captured: self-tests are not started on the test VM.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusT3nRk8YsDf5hJu1",
+          "pos": 0,
+          "output": "smartctl 7.4 2023-08-01 r5530 [x86_64-linux-6.12.57+deb13-amd64] (local build)\nCopyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n\n=== START OF INFORMATION SECTION ===\nModel Family:     Example NAS HDD family\nDevice Model:     Example HDD 4TB\nSerial Number:    EXAMPLE-SERIAL-0101\nLU WWN Device Id: EXAMPLE-WWN-0101\nFirmware Version: 82.00A82\nUser Capacity:    4,000,787,030,016 bytes [4.00 TB]\n\n=== START OF READ SMART DATA SECTION ===\nSMART overall-health self-assessment test result: PASSED\n\n=== START OF OFFLINE IMMEDIATE AND SELF-TEST SECTION ===\nSending command: \"Execute SMART Short self-test routine immediately in off-line mode\".\nDrive command \"Execute SMART Short self-test routine immediately in off-line mode\" successful.\nTesting has begun.\nPlease wait 2 minutes for test to complete.\nTest will complete after Sat Nov 21 05:42:10 2026 UTC\nUse smartctl -X to abort test.\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
       "execGetOutput.applyFailed": {
         "summary": "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only.",
         "x-omv-status": 500,
         "value": {
           "code": 0,
           "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; omv-salt deploy run --no-color ssh 2>&1' with exit code '1': nas:\n----------\n          ID: configure_ssh_sshd_config\n    Function: file.managed\n        Name: /etc/ssh/sshd_config\n      Result: True\n     Comment: File /etc/ssh/sshd_config updated\n----------\n          ID: start_ssh_service\n    Function: service.running\n        Name: ssh\n      Result: False\n     Comment: Job for ssh.service failed because the control process exited with error code.\n\nSummary for nas\n------------\nSucceeded: 1 (changed=1)\nFailed:    1\n------------\nTotal states run:     2"
+        }
+      },
+      "execGetOutput.wipeFailed": {
+        "summary": "Written by hand from the source (OMV 8.6.1): a quick wipe whose last step fails because the disk is still in use (a file system on it is mounted), so the kernel keeps the old partition table. The task fails and getOutput itself answers HTTP 500 with the failing command and its output. Not captured: wiping is not run on the test VM.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; blockdev --rereadpt '/dev/sda' 2>&1' with exit code '1': blockdev: ioctl error on BLKRRPART: Device or resource busy"
         }
       },
       "execIsRunning.running": {
@@ -4375,6 +6506,286 @@
           ]
         }
       },
+      "fileSystemMgmtEnumerateFilesystems.vmFilesystems": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the data file system OMV set up, the system's root (read-only, used), its EFI partition and the cloud-init CD. The VM has no swap.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "2.03 MiB",
+            "available": "8330313728",
+            "size": "8349229056",
+            "percentage": 1,
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/gpt-auto-root"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "20431752",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "1.71 GiB",
+            "available": "18183507968",
+            "size": "20922114048",
+            "percentage": 10,
+            "description": "/dev/nvme0n1p1 [EXT4, 1.71 GiB (10%) used, 16.93 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "_readonly": true,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "sr0",
+            "devicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "predictabledevicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "canonicaldevicefile": "/dev/sr0",
+            "parentdevicefile": "/dev/sr0",
+            "devlinks": [
+              "/dev/cdrom",
+              "/dev/disk/by-diskseq/7",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "/dev/disk/by-label/cidata",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+              "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+            ],
+            "uuid": "2026-11-19-05-53-43-00",
+            "label": "cidata",
+            "type": "iso9660",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sr0 [ISO9660, 900.00 KiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sr0"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": true
+          },
+          {
+            "devicename": "nvme0n1p15",
+            "devicefile": "/dev/disk/by-uuid/0000-0001",
+            "predictabledevicefile": "/dev/disk/by-uuid/0000-0001",
+            "canonicaldevicefile": "/dev/nvme0n1p15",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part15",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part15",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/15",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/0000-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part15",
+              "/dev/disk/by-uuid/0000-0001"
+            ],
+            "uuid": "0000-0001",
+            "label": "",
+            "type": "vfat",
+            "blocks": "129758",
+            "mounted": true,
+            "mountpoint": "/boot/efi",
+            "used": "9.33 MiB",
+            "available": "123086848",
+            "size": "132872192",
+            "percentage": 8,
+            "description": "/dev/nvme0n1p15 [VFAT, 9.33 MiB (8%) used, 117.38 MiB available]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p15"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
+          }
+        ]
+      },
+      "fileSystemMgmtEnumerateFilesystems.swapAndForeign": {
+        "summary": "Written by hand from the vmFilesystems capture and the source (OMV 8.6.1): the system's root, a swap partition on a data disk (swap is never reported as mounted, and has no usage) and an ext4 file system from another computer on a disk OMV has not set up (label \"backup\", not mounted). The test VM has no swap and no such disk.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000301",
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "",
+            "type": "ext4",
+            "blocks": "479597568",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "6.12 GiB",
+            "available": "459203465216",
+            "size": "491107909632",
+            "percentage": 2,
+            "description": "/dev/nvme0n1p1 [EXT4, 6.12 GiB (2%) used, 427.66 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": true,
+            "_used": true
+          },
+          {
+            "devicename": "sdb1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302",
+            "canonicaldevicefile": "/dev/sdb1",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [
+              "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0102-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000302",
+            "devicefiles": ["/dev/sdb1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "",
+            "type": "swap",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sdb1 [SWAP, 8.00 GiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": false,
+            "_used": false
+          },
+          {
+            "devicename": "sdc1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303",
+            "canonicaldevicefile": "/dev/sdc1",
+            "parentdevicefile": "/dev/sdc",
+            "devlinks": [
+              "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0103-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000303",
+            "devicefiles": ["/dev/sdc1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "backup",
+            "type": "ext4",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sdc1 [EXT4, 3.64 TiB]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": false,
+            "_used": false
+          }
+        ]
+      },
       "smartGetListBg.smartDevices": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
         "x-omv-status": 200,
@@ -4997,6 +7408,1489 @@
               "COMMAND": "kworker/R-netns"
             }
           ]
+        }
+      },
+      "diskMgmtEnumerateDevices.vmDisks": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the test VM's disks: the NVMe system disk, four empty virtual SATA disks and the read-only cloud-init CD drive. The NVMe disk reports its power mode as UNKNOWN.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "nvme0n1",
+            "canonicaldevicefile": "/dev/nvme0n1",
+            "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+            ],
+            "model": "VMware Virtual NVMe Disk",
+            "size": "21474836480",
+            "description": "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]",
+            "vendor": "0x15ad",
+            "serialnumber": "EXAMPLE-SERIAL-0001",
+            "wwn": "EXAMPLE-WWN-0001",
+            "israid": false,
+            "isroot": true,
+            "isreadonly": false,
+            "powermode": "UNKNOWN",
+            "temperature": "30",
+            "hotpluggable": false
+          },
+          {
+            "devicename": "sda",
+            "canonicaldevicefile": "/dev/sda",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/2",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0002",
+            "wwn": "EXAMPLE-WWN-0002",
+            "israid": false,
+            "isroot": false,
+            "isreadonly": false,
+            "powermode": "ACTIVE or IDLE",
+            "temperature": "",
+            "hotpluggable": true
+          },
+          {
+            "devicename": "sdb",
+            "canonicaldevicefile": "/dev/sdb",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/3",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0003",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-4",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0003",
+            "wwn": "EXAMPLE-WWN-0003",
+            "israid": false,
+            "isroot": false,
+            "isreadonly": false,
+            "powermode": "ACTIVE or IDLE",
+            "temperature": "",
+            "hotpluggable": true
+          },
+          {
+            "devicename": "sdc",
+            "canonicaldevicefile": "/dev/sdc",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/4",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0004",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-5",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0004",
+            "wwn": "EXAMPLE-WWN-0004",
+            "israid": false,
+            "isroot": false,
+            "isreadonly": false,
+            "powermode": "ACTIVE or IDLE",
+            "temperature": "",
+            "hotpluggable": true
+          },
+          {
+            "devicename": "sdd",
+            "canonicaldevicefile": "/dev/sdd",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/5",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0005",
+            "wwn": "EXAMPLE-WWN-0005",
+            "israid": false,
+            "isroot": false,
+            "isreadonly": false,
+            "powermode": "ACTIVE or IDLE",
+            "temperature": "",
+            "hotpluggable": true
+          },
+          {
+            "devicename": "sr0",
+            "canonicaldevicefile": "/dev/sr0",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+            "devicelinks": [
+              "/dev/cdrom",
+              "/dev/disk/by-diskseq/7",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "/dev/disk/by-label/cidata",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+              "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+            ],
+            "model": "VMware Virtual SATA CDRW Drive",
+            "size": "921600",
+            "description": "VMware Virtual SATA CDRW Drive [/dev/sr0, 900.00 KiB]",
+            "vendor": "NECVMWar",
+            "serialnumber": "EXAMPLE-SERIAL-0006",
+            "wwn": "",
+            "israid": false,
+            "isroot": false,
+            "isreadonly": true,
+            "powermode": "UNKNOWN",
+            "temperature": "",
+            "hotpluggable": false
+          }
+        ]
+      },
+      "diskMgmtGetList.vmDisks": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the test VM's disks, none with power settings.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 6,
+          "data": [
+            {
+              "devicename": "nvme0n1",
+              "canonicaldevicefile": "/dev/nvme0n1",
+              "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/1",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+                "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+                "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+              ],
+              "model": "VMware Virtual NVMe Disk",
+              "size": "21474836480",
+              "description": "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]",
+              "vendor": "0x15ad",
+              "serialnumber": "EXAMPLE-SERIAL-0001",
+              "wwn": "EXAMPLE-WWN-0001",
+              "israid": false,
+              "isroot": true,
+              "isreadonly": false,
+              "powermode": "UNKNOWN",
+              "temperature": "30",
+              "hotpluggable": false
+            },
+            {
+              "devicename": "sda",
+              "canonicaldevicefile": "/dev/sda",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/2",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0002",
+              "wwn": "EXAMPLE-WWN-0002",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sdb",
+              "canonicaldevicefile": "/dev/sdb",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/3",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0003",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-4",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0003",
+              "wwn": "EXAMPLE-WWN-0003",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sdc",
+              "canonicaldevicefile": "/dev/sdc",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/4",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-5",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0004",
+              "wwn": "EXAMPLE-WWN-0004",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sdd",
+              "canonicaldevicefile": "/dev/sdd",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/5",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0005",
+              "wwn": "EXAMPLE-WWN-0005",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sr0",
+              "canonicaldevicefile": "/dev/sr0",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "devicelinks": [
+                "/dev/cdrom",
+                "/dev/disk/by-diskseq/7",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+                "/dev/disk/by-label/cidata",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+                "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+              ],
+              "model": "VMware Virtual SATA CDRW Drive",
+              "size": "921600",
+              "description": "VMware Virtual SATA CDRW Drive [/dev/sr0, 900.00 KiB]",
+              "vendor": "NECVMWar",
+              "serialnumber": "EXAMPLE-SERIAL-0006",
+              "wwn": "",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": true,
+              "powermode": "UNKNOWN",
+              "temperature": "",
+              "hotpluggable": false
+            }
+          ]
+        }
+      },
+      "diskMgmtGetList.withHdparm": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: power settings saved for sdb and not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "total": 6,
+          "data": [
+            {
+              "devicename": "nvme0n1",
+              "canonicaldevicefile": "/dev/nvme0n1",
+              "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/1",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+                "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+                "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+              ],
+              "model": "VMware Virtual NVMe Disk",
+              "size": "21474836480",
+              "description": "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]",
+              "vendor": "0x15ad",
+              "serialnumber": "EXAMPLE-SERIAL-0001",
+              "wwn": "EXAMPLE-WWN-0001",
+              "israid": false,
+              "isroot": true,
+              "isreadonly": false,
+              "powermode": "UNKNOWN",
+              "temperature": "30",
+              "hotpluggable": false
+            },
+            {
+              "devicename": "sda",
+              "canonicaldevicefile": "/dev/sda",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/2",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0002",
+              "wwn": "EXAMPLE-WWN-0002",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sdb",
+              "canonicaldevicefile": "/dev/sdb",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/3",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0003",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-4",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0003",
+              "wwn": "EXAMPLE-WWN-0003",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true,
+              "hdparm": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+                "apm": 127,
+                "aam": 0,
+                "spindowntime": 241,
+                "writecache": true
+              }
+            },
+            {
+              "devicename": "sdc",
+              "canonicaldevicefile": "/dev/sdc",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/4",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0004",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-5",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0004",
+              "wwn": "EXAMPLE-WWN-0004",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sdd",
+              "canonicaldevicefile": "/dev/sdd",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/5",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+              ],
+              "model": "VMware Virtual SATA Hard Drive",
+              "size": "8589934592",
+              "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0005",
+              "wwn": "EXAMPLE-WWN-0005",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "ACTIVE or IDLE",
+              "temperature": "",
+              "hotpluggable": true
+            },
+            {
+              "devicename": "sr0",
+              "canonicaldevicefile": "/dev/sr0",
+              "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "devicelinks": [
+                "/dev/cdrom",
+                "/dev/disk/by-diskseq/7",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+                "/dev/disk/by-label/cidata",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+                "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+              ],
+              "model": "VMware Virtual SATA CDRW Drive",
+              "size": "921600",
+              "description": "VMware Virtual SATA CDRW Drive [/dev/sr0, 900.00 KiB]",
+              "vendor": "NECVMWar",
+              "serialnumber": "EXAMPLE-SERIAL-0006",
+              "wwn": "",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": true,
+              "powermode": "UNKNOWN",
+              "temperature": "",
+              "hotpluggable": false
+            }
+          ]
+        }
+      },
+      "diskMgmtGetList.standby": {
+        "summary": "Written by hand from the vmDisks capture (OMV 8.6.1): a data disk in standby beside the system disk. The read did not wake it, so it reports STANDBY and no temperature. The test VM's virtual disks never spin down.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "devicename": "nvme0n1",
+              "canonicaldevicefile": "/dev/nvme0n1",
+              "devicefile": "/dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/1",
+                "/dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100",
+                "/dev/disk/by-id/nvme-EXAMPLE-WWN-0100",
+                "/dev/disk/by-path/pci-0000:01:00.0-nvme-1"
+              ],
+              "model": "Example SSD 500GB",
+              "size": "500107862016",
+              "description": "Example SSD 500GB [/dev/nvme0n1, 465.76 GiB]",
+              "vendor": "",
+              "serialnumber": "EXAMPLE-SERIAL-0100",
+              "wwn": "EXAMPLE-WWN-0100",
+              "israid": false,
+              "isroot": true,
+              "isreadonly": false,
+              "powermode": "UNKNOWN",
+              "temperature": "38",
+              "hotpluggable": false
+            },
+            {
+              "devicename": "sda",
+              "canonicaldevicefile": "/dev/sda",
+              "devicefile": "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/2",
+                "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0101",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+              ],
+              "model": "Example HDD 4TB",
+              "size": "4000787030016",
+              "description": "Example HDD 4TB [/dev/sda, 3.64 TiB]",
+              "vendor": "ATA",
+              "serialnumber": "EXAMPLE-SERIAL-0101",
+              "wwn": "EXAMPLE-WWN-0101",
+              "israid": false,
+              "isroot": false,
+              "isreadonly": false,
+              "powermode": "STANDBY",
+              "temperature": "",
+              "hotpluggable": false,
+              "hdparm": {
+                "uuid": "00000000-0000-4000-8000-000000000101",
+                "devicefile": "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101",
+                "apm": 1,
+                "aam": 0,
+                "spindowntime": 241,
+                "writecache": true
+              }
+            }
+          ]
+        }
+      },
+      "diskMgmtGetHdParm.configured": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: power settings saved for one SATA disk and not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000002",
+          "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "apm": 127,
+          "aam": 0,
+          "spindowntime": 241,
+          "writecache": true
+        }
+      },
+      "diskMgmtSetHdParm.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: new power settings for one SATA disk, stored under its by-id link; not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000003",
+          "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "apm": 127,
+          "aam": 0,
+          "spindowntime": 241,
+          "writecache": true
+        }
+      },
+      "diskMgmtWipe.started": {
+        "summary": "Written by hand from the source (OMV 8.6.1): the handle of a wipe task. Not captured: wiping is not run on the test VM.",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusW7pQx2LmVa9cKe4"
+      },
+      "smartEnumerateDevices.vmDisks": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk GOOD, the four virtual SATA disks BAD_STATUS (their smartctl reports no S.M.A.R.T. support); the CD drive is not listed.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "nvme0n1",
+            "canonicaldevicefile": "/dev/nvme0n1",
+            "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+            ],
+            "model": "VMware Virtual NVMe Disk",
+            "size": "21474836480",
+            "temperature": "30",
+            "description": "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]",
+            "vendor": "0x15ad",
+            "serialnumber": "EXAMPLE-SERIAL-0001",
+            "wwn": "EXAMPLE-WWN-0001",
+            "overallstatus": "GOOD"
+          },
+          {
+            "devicename": "sda",
+            "canonicaldevicefile": "/dev/sda",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/2",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "temperature": "",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0002",
+            "wwn": "EXAMPLE-WWN-0002",
+            "overallstatus": "BAD_STATUS"
+          },
+          {
+            "devicename": "sdb",
+            "canonicaldevicefile": "/dev/sdb",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/3",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0003",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-4",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "temperature": "",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0003",
+            "wwn": "EXAMPLE-WWN-0003",
+            "overallstatus": "BAD_STATUS"
+          },
+          {
+            "devicename": "sdc",
+            "canonicaldevicefile": "/dev/sdc",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/4",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0004",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-5",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "temperature": "",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0004",
+            "wwn": "EXAMPLE-WWN-0004",
+            "overallstatus": "BAD_STATUS"
+          },
+          {
+            "devicename": "sdd",
+            "canonicaldevicefile": "/dev/sdd",
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/5",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0005",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+            ],
+            "model": "VMware Virtual SATA Hard Drive",
+            "size": "8589934592",
+            "temperature": "",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0005",
+            "wwn": "EXAMPLE-WWN-0005",
+            "overallstatus": "BAD_STATUS"
+          }
+        ]
+      },
+      "smartEnumerateMonitoredDevices.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: no disk is monitored.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "smartEnumerateMonitoredDevices.monitored": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: monitoring saved for the NVMe disk and not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "nvme0n1",
+            "canonicaldevicefile": "/dev/nvme0n1",
+            "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+            "devicelinks": [
+              "/dev/disk/by-diskseq/1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+            ],
+            "model": "VMware Virtual NVMe Disk",
+            "size": "21474836480",
+            "temperature": "30",
+            "description": "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]",
+            "vendor": "0x15ad",
+            "serialnumber": "EXAMPLE-SERIAL-0001",
+            "wwn": "EXAMPLE-WWN-0001",
+            "overallstatus": "GOOD"
+          }
+        ]
+      },
+      "smartGetSettings.defaults": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: OMV's defaults, monitoring off.",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "interval": 1800,
+          "powermode": "never",
+          "tempdiff": 0,
+          "tempmax": 0
+        }
+      },
+      "smartSetSettings.saved": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the settings sent back unchanged (discarded afterwards); the reply carries monitor and scheduledtests as empty strings.",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "interval": 1800,
+          "powermode": "never",
+          "tempdiff": 0,
+          "tempmax": 0,
+          "monitor": "",
+          "scheduledtests": ""
+        }
+      },
+      "smartGetDeviceSettings.monitored": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: monitoring saved for the NVMe disk and not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000004",
+          "enable": true,
+          "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+          "devicetype": "nvme",
+          "tempdiff": 0,
+          "tempmax": 0,
+          "_used": false
+        }
+      },
+      "smartGetDeviceSettings.notConfigured": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk, which has no stored monitoring settings.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The XPath query './/services/smart/monitor/device[(devicefile='/dev/nvme0n1' or devicefile='/dev/disk/by-diskseq/1' or devicefile='/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001' or devicefile='/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1' or devicefile='/dev/disk/by-id/nvme-EXAMPLE-WWN-0001' or devicefile='/dev/disk/by-path/pci-0000:12:00.0-nvme-1')]' does not return the requested number of 1 object(s)."
+        }
+      },
+      "smartSetDeviceSettings.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: new monitoring settings for the NVMe disk; not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "enable": true,
+          "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+          "devicetype": "nvme",
+          "tempdiff": 0,
+          "tempmax": 0
+        }
+      },
+      "smartGetInformation.nvme": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk.",
+        "x-omv-status": 200,
+        "value": {
+          "devicefile": "/dev/nvme0n1",
+          "devicemodel": "VMware Virtual NVMe Disk",
+          "serialnumber": "EXAMPLE-SERIAL-0001",
+          "wwn": "EXAMPLE-WWN-0001",
+          "firmwareversion": "1.4",
+          "usercapacity": "",
+          "modelnumber": "VMware Virtual NVMe Disk",
+          "pcivendor/subsystemid": "0x15ad",
+          "ieeeouiidentifier": "0x565000",
+          "controllerid": "0",
+          "nvmeversion": "1.4",
+          "numberofnamespaces": "64",
+          "namespace1size/capacity": "21,474,836,480 [21.4 GB]",
+          "namespace1formattedlbasize": "512",
+          "localtimeis": "Sat Nov 21 05:14:31 2026 UTC",
+          "smartoverallhealthselfassessmenttestresult": "PASSED",
+          "criticalwarning": "0x00",
+          "temperature": "30",
+          "availablespare": "100%",
+          "availablesparethreshold": "0%",
+          "percentageused": "0%",
+          "dataunitsread": "6 [3.07 MB]",
+          "dataunitswritten": "5 [2.56 MB]",
+          "hostreadcommands": "6,000",
+          "hostwritecommands": "5,000",
+          "controllerbusytime": "5",
+          "powercycles": "10",
+          "poweronhours": "60",
+          "unsafeshutdowns": "0",
+          "mediaanddataintegrityerrors": "0",
+          "errorinformationlogentries": "0"
+        }
+      },
+      "smartGetInformation.sata": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a virtual SATA disk, whose smartctl reports no S.M.A.R.T. support; OMV still answers, with the information section only.",
+        "x-omv-status": 200,
+        "value": {
+          "devicefile": "/dev/sda",
+          "devicemodel": "VMware Virtual SATA Hard Drive",
+          "serialnumber": "EXAMPLE-SERIAL-0002",
+          "wwn": "EXAMPLE-WWN-0002",
+          "firmwareversion": "00000001",
+          "usercapacity": "8,589,934,592 bytes [8.58 GB]",
+          "luwwndeviceid": "EXAMPLE-WWN-0002",
+          "sectorsize": "512 bytes logical/physical",
+          "rotationrate": "Solid State Device",
+          "trimcommand": "Unavailable",
+          "deviceis": "Not in smartctl database 7.3/6293",
+          "ataversionis": "ATA/ATAPI-6 T13/1410D revision 0",
+          "localtimeis": "Sat Nov 21 05:14:32 2026 UTC",
+          "smartsupportis": "Unavailable - device lacks SMART capability.",
+          "amandatorysmartcommandfailed": "exiting. To continue, add one or more '-T permissive' options."
+        }
+      },
+      "smartGetInformation.ataFailing": {
+        "summary": "Written by hand from the nvme and sata captures and smartctl's output format (OMV 8.6.1): a hard disk whose health check fails, with its temperature, power cycles and power-on hours. The test VM's virtual disks cannot fail.",
+        "x-omv-status": 200,
+        "value": {
+          "devicefile": "/dev/sda",
+          "devicemodel": "Example HDD 4TB",
+          "serialnumber": "EXAMPLE-SERIAL-0101",
+          "wwn": "EXAMPLE-WWN-0101",
+          "firmwareversion": "82.00A82",
+          "usercapacity": "4,000,787,030,016 bytes [4.00 TB]",
+          "modelfamily": "Example NAS HDD family",
+          "luwwndeviceid": "EXAMPLE-WWN-0101",
+          "sectorsizes": "512 bytes logical, 4096 bytes physical",
+          "rotationrate": "5400 rpm",
+          "formfactor": "3.5 inches",
+          "deviceis": "In smartctl database 7.3/5528",
+          "ataversionis": "ACS-3 T13/2161-D revision 5",
+          "sataversionis": "SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)",
+          "localtimeis": "Sat Nov 21 05:13:27 2026 UTC",
+          "smartsupportis": "Enabled",
+          "smartoverallhealthselfassessmenttestresult": "FAILED!",
+          "smartattributesdatastructurerevisionnumber": "16",
+          "temperature": "41",
+          "powercycles": "112",
+          "poweronhours": "35021"
+        }
+      },
+      "smartGetAttributes.nvme": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk, which reports no attributes in this form.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "smartGetAttributes.sata": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a virtual SATA disk without S.M.A.R.T. support.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "smartGetAttributes.ataHealthy": {
+        "summary": "Written by hand from smartctl's output format and OMV's assessment rules (OMV 8.6.1): a healthy hard disk. The test VM's disks report no attributes.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "id": 1,
+            "attrname": "Raw_Read_Error_Rate",
+            "flags": "POSR-K",
+            "value": 200,
+            "worst": 200,
+            "threshold": 51,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Frequency of errors while reading raw data from the disk",
+            "prefailure": true,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 3,
+            "attrname": "Spin_Up_Time",
+            "flags": "POS--K",
+            "value": 176,
+            "worst": 172,
+            "threshold": 21,
+            "whenfailed": "-",
+            "rawvalue": "6191",
+            "description": "Time needed to spin up the disk",
+            "prefailure": true,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 4,
+            "attrname": "Start_Stop_Count",
+            "flags": "-O--CK",
+            "value": 100,
+            "worst": 100,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "118",
+            "description": "Number of spindle start/stop cycles",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 5,
+            "attrname": "Reallocated_Sector_Ct",
+            "flags": "PO--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 140,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of remapped sectors",
+            "prefailure": true,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 7,
+            "attrname": "Seek_Error_Rate",
+            "flags": "-OSR-K",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Frequency of errors while positioning",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 9,
+            "attrname": "Power_On_Hours",
+            "flags": "-O--CK",
+            "value": 52,
+            "worst": 52,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "35021",
+            "description": "Number of hours elapsed in the power-on state",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 12,
+            "attrname": "Power_Cycle_Count",
+            "flags": "-O--CK",
+            "value": 100,
+            "worst": 100,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "112",
+            "description": "Number of power-on events",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 193,
+            "attrname": "Load_Cycle_Count",
+            "flags": "-O--CK",
+            "value": 197,
+            "worst": 197,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "9504",
+            "description": "Number of cycles into landing zone position",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 194,
+            "attrname": "Temperature_Celsius",
+            "flags": "-O---K",
+            "value": 111,
+            "worst": 98,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "41 (Min/Max 18/52)",
+            "description": "Current internal temperature of the drive",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 196,
+            "attrname": "Reallocated_Event_Count",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of remapping operations",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 197,
+            "attrname": "Current_Pending_Sector",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of sectors waiting to be remapped",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 198,
+            "attrname": "Offline_Uncorrectable",
+            "flags": "----CK",
+            "value": 100,
+            "worst": 253,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "The total number of uncorrectable errors when reading/writing a sector",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 199,
+            "attrname": "UDMA_CRC_Error_Count",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of CRC errors during UDMA mode",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 200,
+            "attrname": "Multi_Zone_Error_Rate",
+            "flags": "---R--",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of errors found when writing a sector",
+            "prefailure": false,
+            "assessment": "GOOD"
+          }
+        ]
+      },
+      "smartGetAttributes.ataFailing": {
+        "summary": "Written by hand from smartctl's output format and OMV's assessment rules (OMV 8.6.1): a failing hard disk. Reallocated_Sector_Ct is at its threshold now (BAD_ATTRIBUTE_NOW, FAILING_NOW), Raw_Read_Error_Rate fell to its threshold in the past, and 24 sectors are pending. The test VM's disks report no attributes.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "id": 1,
+            "attrname": "Raw_Read_Error_Rate",
+            "flags": "POSR-K",
+            "value": 199,
+            "worst": 51,
+            "threshold": 51,
+            "whenfailed": "In_the_past",
+            "rawvalue": "1630",
+            "description": "Frequency of errors while reading raw data from the disk",
+            "prefailure": true,
+            "assessment": "BAD_ATTRIBUTE_IN_THE_PAST"
+          },
+          {
+            "id": 3,
+            "attrname": "Spin_Up_Time",
+            "flags": "POS--K",
+            "value": 176,
+            "worst": 172,
+            "threshold": 21,
+            "whenfailed": "-",
+            "rawvalue": "6191",
+            "description": "Time needed to spin up the disk",
+            "prefailure": true,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 4,
+            "attrname": "Start_Stop_Count",
+            "flags": "-O--CK",
+            "value": 100,
+            "worst": 100,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "118",
+            "description": "Number of spindle start/stop cycles",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 5,
+            "attrname": "Reallocated_Sector_Ct",
+            "flags": "PO--CK",
+            "value": 140,
+            "worst": 140,
+            "threshold": 140,
+            "whenfailed": "FAILING_NOW",
+            "rawvalue": "1872",
+            "description": "Number of remapped sectors",
+            "prefailure": true,
+            "assessment": "BAD_ATTRIBUTE_NOW"
+          },
+          {
+            "id": 7,
+            "attrname": "Seek_Error_Rate",
+            "flags": "-OSR-K",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Frequency of errors while positioning",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 9,
+            "attrname": "Power_On_Hours",
+            "flags": "-O--CK",
+            "value": 52,
+            "worst": 52,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "35021",
+            "description": "Number of hours elapsed in the power-on state",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 12,
+            "attrname": "Power_Cycle_Count",
+            "flags": "-O--CK",
+            "value": 100,
+            "worst": 100,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "112",
+            "description": "Number of power-on events",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 193,
+            "attrname": "Load_Cycle_Count",
+            "flags": "-O--CK",
+            "value": 197,
+            "worst": 197,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "9504",
+            "description": "Number of cycles into landing zone position",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 194,
+            "attrname": "Temperature_Celsius",
+            "flags": "-O---K",
+            "value": 111,
+            "worst": 98,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "41",
+            "description": "Current internal temperature of the drive",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 196,
+            "attrname": "Reallocated_Event_Count",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of remapping operations",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 197,
+            "attrname": "Current_Pending_Sector",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "24",
+            "description": "Number of sectors waiting to be remapped",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 198,
+            "attrname": "Offline_Uncorrectable",
+            "flags": "----CK",
+            "value": 100,
+            "worst": 253,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "24",
+            "description": "The total number of uncorrectable errors when reading/writing a sector",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 199,
+            "attrname": "UDMA_CRC_Error_Count",
+            "flags": "-O--CK",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of CRC errors during UDMA mode",
+            "prefailure": false,
+            "assessment": "GOOD"
+          },
+          {
+            "id": 200,
+            "attrname": "Multi_Zone_Error_Rate",
+            "flags": "---R--",
+            "value": 200,
+            "worst": 200,
+            "threshold": 0,
+            "whenfailed": "-",
+            "rawvalue": "0",
+            "description": "Number of errors found when writing a sector",
+            "prefailure": false,
+            "assessment": "GOOD"
+          }
+        ]
+      },
+      "smartGetSelfTestLogs.nvme": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk, which keeps no log in this form.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "smartGetSelfTestLogs.withFailure": {
+        "summary": "Written by hand from smartctl's output format and OMV's parsing (OMV 8.6.1): a hard disk whose latest extended test stopped at a read failure, after earlier tests that passed and one that was interrupted. The status keeps smartctl's column padding. The test VM's NVMe disk keeps no log in this form.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "num": "1",
+            "description": "Extended offline",
+            "status": "Completed: read failure      ",
+            "remaining": "90",
+            "lifetime": "35010",
+            "lbaoffirsterror": "1953524160"
+          },
+          {
+            "num": "2",
+            "description": "Short offline",
+            "status": "Completed without error      ",
+            "remaining": "00",
+            "lifetime": "34842",
+            "lbaoffirsterror": "-"
+          },
+          {
+            "num": "3",
+            "description": "Extended offline",
+            "status": "Interrupted (host reset)     ",
+            "remaining": "60",
+            "lifetime": "34530",
+            "lbaoffirsterror": "-"
+          },
+          {
+            "num": "4",
+            "description": "Short offline",
+            "status": "Completed without error      ",
+            "remaining": "00",
+            "lifetime": "34506",
+            "lbaoffirsterror": "-"
+          }
+        ]
+      },
+      "smartGetExtendedInformation.nvme": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk.",
+        "x-omv-status": 200,
+        "value": "smartctl 7.4 2023-08-01 r5530 [aarch64-linux-6.12.117+deb13-arm64] (local build)\nCopyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n\n=== START OF INFORMATION SECTION ===\nModel Number:                       VMware Virtual NVMe Disk\nSerial Number:                      EXAMPLE-SERIAL-0001\nFirmware Version:                   1.4\nPCI Vendor/Subsystem ID:            0x15ad\nIEEE OUI Identifier:                0x565000\nController ID:                      0\nNVMe Version:                       1.4\nNumber of Namespaces:               64\nNamespace 1 Size/Capacity:          21,474,836,480 [21.4 GB]\nNamespace 1 Formatted LBA Size:     512\nLocal Time is:                      Sat Nov 21 05:13:29 2026 UTC\nFirmware Updates (0x03):            1 Slot, Slot 1 R/O\nOptional NVM Commands (0x0008):     Wr_Zero\nMaximum Data Transfer Size:         256 Pages\n\nSupported Power States\nSt Op     Max   Active     Idle   RL RT WL WT  Ent_Lat  Ex_Lat\n 0 +     0.00W       -        -    0  0  0  0        0       0\n\nSupported LBA Sizes (NSID 0x1)\nId Fmt  Data  Metadt  Rel_Perf\n 0 +     512       0         0\n\n=== START OF SMART DATA SECTION ===\nSMART overall-health self-assessment test result: PASSED\n\nSMART/Health Information (NVMe Log 0x02)\nCritical Warning:                   0x00\nTemperature:                        30 Celsius\nAvailable Spare:                    100%\nAvailable Spare Threshold:          0%\nPercentage Used:                    0%\nData Units Read:                    6 [3.07 MB]\nData Units Written:                 5 [2.56 MB]\nHost Read Commands:                 6,000\nHost Write Commands:                5,000\nController Busy Time:               5\nPower Cycles:                       10\nPower On Hours:                     60\nUnsafe Shutdowns:                   0\nMedia and Data Integrity Errors:    0\nError Information Log Entries:      0\n\nError Information (NVMe Log 0x01, 4 of 4 entries)\nNo Errors Logged\n\nSelf-tests not supported\n"
+      },
+      "smartGetScheduleList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: no scheduled tests.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "smartGetScheduleList.scheduled": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: one weekly short test for the NVMe disk, not applied (discarded afterwards); the device file is the disk's /dev name, not the stored by-id link.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "enable": true,
+              "devicefile": "/dev/nvme0n1",
+              "type": "S",
+              "hour": "02",
+              "month": "*",
+              "dayofmonth": "*",
+              "dayofweek": "7",
+              "comment": "Weekly short test",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/1",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+                "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1",
+                "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001",
+                "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+              ],
+              "model": "VMware Virtual NVMe Disk",
+              "serialnumber": "EXAMPLE-SERIAL-0001",
+              "size": "21474836480"
+            }
+          ]
+        }
+      },
+      "smartGetScheduleList.several": {
+        "summary": "Written by hand from the scheduled capture (OMV 8.6.1): a short test every night and a long test on the first of each month for one disk, and a turned-off weekly test for a disk that has been removed, which is listed with an empty device file and size -1. The test VM was given only one test.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000201",
+              "enable": true,
+              "devicefile": "/dev/sda",
+              "type": "S",
+              "hour": "02",
+              "month": "*",
+              "dayofmonth": "*",
+              "dayofweek": "*",
+              "comment": "Nightly short test",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/2",
+                "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0101",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+              ],
+              "model": "Example HDD 4TB",
+              "serialnumber": "EXAMPLE-SERIAL-0101",
+              "size": "4000787030016"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000202",
+              "enable": true,
+              "devicefile": "/dev/sda",
+              "type": "L",
+              "hour": "03",
+              "month": "*",
+              "dayofmonth": "01",
+              "dayofweek": "*",
+              "comment": "Monthly long test",
+              "devicelinks": [
+                "/dev/disk/by-diskseq/2",
+                "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0101",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1",
+                "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+              ],
+              "model": "Example HDD 4TB",
+              "serialnumber": "EXAMPLE-SERIAL-0101",
+              "size": "4000787030016"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000203",
+              "enable": false,
+              "devicefile": "",
+              "type": "S",
+              "hour": "04",
+              "month": "*",
+              "dayofmonth": "*",
+              "dayofweek": "6",
+              "comment": "Old backup disk",
+              "devicelinks": [],
+              "model": "",
+              "serialnumber": "",
+              "size": "-1"
+            }
+          ]
+        }
+      },
+      "smartGetScheduledTest.configured": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a weekly short test for the NVMe disk, not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000007",
+          "enable": true,
+          "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+          "type": "S",
+          "hour": "02",
+          "month": "*",
+          "dayofmonth": "*",
+          "dayofweek": "7",
+          "comment": "Weekly short test"
+        }
+      },
+      "smartSetScheduledTest.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a new weekly short test for the NVMe disk, stored under its by-id link; not applied (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000008",
+          "enable": true,
+          "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+          "type": "S",
+          "hour": "02",
+          "month": "*",
+          "dayofmonth": "*",
+          "dayofweek": "7",
+          "comment": "Weekly short test"
+        }
+      },
+      "smartDeleteScheduledTest.deleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: a test created and deleted again before applying (discarded afterwards).",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000009",
+          "enable": true,
+          "devicefile": "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001",
+          "type": "S",
+          "hour": "02",
+          "month": "*",
+          "dayofmonth": "*",
+          "dayofweek": "7",
+          "comment": "Weekly short test"
+        }
+      },
+      "smartExecuteScheduledTest.started": {
+        "summary": "Written by hand from the source (OMV 8.6.1): the handle of a task that starts a self-test. Not captured: self-tests are not started on the test VM.",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusT3nRk8YsDf5hJu1"
+      },
+      "smartExecuteScheduledTest.noDeviceSettings": {
+        "summary": "Written by hand from the notConfigured capture of Smart.getDeviceSettings (OMV 8.6.1), whose lookup this method shares: the test's disk has no stored monitoring settings. Not captured: self-tests are not started on the test VM.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The XPath query './/services/smart/monitor/device[(devicefile='/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101' or devicefile='/dev/disk/by-diskseq/2' or devicefile='/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101' or devicefile='/dev/disk/by-id/wwn-EXAMPLE-WWN-0101' or devicefile='/dev/disk/by-path/pci-0000:00:17.0-ata-1' or devicefile='/dev/disk/by-path/pci-0000:00:17.0-ata-1.0')]' does not return the requested number of 1 object(s)."
+        }
+      },
+      "mdMgmtEnumerateDevices.mirrors": {
+        "summary": "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. The RAID plugin is not installed on the test VM.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": true,
+            "name": "nas:0",
+            "devicefile": "/dev/md0",
+            "uuid": "0a1b2c3d:4e5f6071:8293a4b5:c6d7e8f9",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "4000652656640",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]"
+          },
+          {
+            "_used": false,
+            "name": "nas:1",
+            "devicefile": "/dev/md1",
+            "uuid": "1b2c3d4e:5f607182:93a4b5c6:d7e8f90a",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdd"],
+            "size": "2000263643136",
+            "state": "clean, degraded",
+            "syncaction": "idle",
+            "description": "Software RAID nas:1 [/dev/md1, raid1, 1.82 TiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.none": {
+        "summary": "Written by hand from the RAID plugin's source (openmediavault-md for OMV 8): the plugin is installed and there is no array. The RAID plugin is not installed on the test VM.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "mdMgmtEnumerateDevices.notInstalled": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the RAID plugin (openmediavault-md) is not installed, so OMV does not know the MdMgmt service.",
+        "x-omv-status": 404,
+        "value": {
+          "code": 0,
+          "message": "RPC service 'MdMgmt' not found."
         }
       }
     }

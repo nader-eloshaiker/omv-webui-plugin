@@ -460,3 +460,59 @@ Built on `phase-5-monitoring` to [design/phase-5-monitoring.md](design/phase-5-m
   - **Re-read after a disk check.** Every finished task makes the app re-read all its queries, so a disk check is followed by one extra read of the dashboard's data. The contract's `x-omv-readonly` cannot tell a read-only task apart, because a task needs a mutation hook. A marker on `x-omv-task` would.
   - **Plugin service names.** It is not yet checked that a plugin's service `name` matches its module in `dirtyModules`.
   - **Log sizes.** A full syslog's size and read time on a busy NAS are not yet known.
+
+## 2026-11-21 — Owner decisions for Phase 5's storage domain
+
+- **The private review list:** none of the storage methods is on it. That covers `DiskMgmt.*`, `Smart.*`, `FileSystemMgmt.*`, `FsTab.getByFsName`/`set`/`delete` and `MdMgmt.*`, as listed to the owner. Where reading the source called for it, the contract's request schemas are stricter than OMV's datamodels, which the contract rules allow.
+- **Storage is built in slices**, each with its own design agreed with the owner before building, because it has destructive actions:
+  1. disks and disk health (S.M.A.R.T.), which is UX-audit Flow D;
+  2. file systems, which is Flow A;
+  3. RAID (`openmediavault-md`);
+  4. ZFS (`openmediavault-zfs`), whose source is not in the OMV tree and is read separately.
+- **The interface enforces its own safeguards for destructive actions** (UI-8). It refuses to wipe a disk that holds a mounted file system or a RAID member, and to unmount a file system that shared folders use. It does not rely on the server to refuse them.
+
+## 2026-11-21 — The disks and disk-health design, agreed by the owner
+
+The owner agreed every destructive-action point of [design/phase-5-disks.md](design/phase-5-disks.md), section 17, and took D1–D23 as recommended:
+
+- **P1, what a wipe refuses:**
+  - the system disk and a read-only disk;
+  - a disk whose file system is mounted, used, set up (even if not yet applied) or being created;
+  - a RAID member, and a disk already being wiped;
+  - every disk, when the safety check could not run.
+- **P2, the confirmation:** one destructive dialog naming device, model, serial number, size and what is on the disk. Quick (the default) or Secure. The reader types the device name. The disk is checked again, serial number included, when the dialog opens and on "Wipe disk".
+- **P3:** a refused wipe offers no classic-interface link around the refusal.
+- **P4:** storage the interface cannot trace to its disks (encryption, LVM, ZFS, RAID made without the plugin) is warned about in the dialog, not refused.
+- **P5:** a disk holding swap space is refused.
+- **P6:** the write cache starts on when power settings are first saved (OMV's form defaults to off).
+- **P7:** a secure wipe keeps running on the NAS after a reload, which the page can no longer show. The dialog says so before it starts.
+- **P8:** a secure wipe can be stopped after a plain confirmation. A quick wipe cannot.
+- **P9:** after a wipe, the disk shows "Empty (wiped at …)" for the session, with a link to create a file system in the classic interface until the file-systems slice exists.
+
+## 2026-11-21 — Phase 5, disks and disk health: built, on the mock and the test VM
+
+Built on `phase-5-disks` to [design/phase-5-disks.md](design/phase-5-disks.md), as agreed by the owner.
+
+- **The contract** gains 24 operations:
+  - the 21 disk and S.M.A.R.T. operations;
+  - `MdMgmt.enumerateDevices`, whose "plugin not installed" reply is HTTP 404 "RPC service 'MdMgmt' not found." (observed);
+  - `FileSystemMgmt.enumerateFilesystems`, *(recommended)* because only it shows swap (P5), and `FileSystemMgmt.getList` calls it itself.
+
+  The S.M.A.R.T. schedule fields use anchored patterns, accepting exactly the values the stock form offers. The capture scrubber now also replaces smartctl's spaced WWN form and FAT volume IDs. Both were caught in drafts that were never committed.
+- **The pages:**
+  - Storage > Disks and a disk's page, with health details read only on request and power settings;
+  - Disk health (Overview, Self-tests, Settings), the Flow D set-up page and scheduled self-tests;
+  - the wipe, with the interface's own safeguards.
+- **The S.M.A.R.T. reads that can wake a disk** are query hooks kept disabled until the reader presses their button. They are never refetched on mount, focus, reconnect or when a task ends. A source test fails if `refetchQueries` or `resetQueries`, which would restart them, appears in the app.
+- **An independent pass on the mock** found no blocker. Every agreed refusal and the confirmation behaved as designed. Its findings are fixed:
+  - server text inside sentences is now isolated, so a right-to-left model name no longer reorders the line;
+  - the tables' sideways scroll regions are named and focusable;
+  - two copy slips are corrected, and two duplicated readings are shown once;
+  - the power form keeps its saved state after Save;
+  - two missing scenarios are added.
+- **On the test VM** (OMV 8.6.1; no RAID plugin), the build was installed as a package. The first run showed no disk as free to wipe. The cause was the wipe section showing its fail-closed "could not check" state while its reads were still loading. It now says it is checking. `pnpm test:browser:vm` with `OMV_WEBUI_VM_WIPE_DISK=sdd` then gave 19 passed and 2 skipped over both HTTP and HTTPS. Those runs included the refusals of the system disk and of the disk with the mounted file system, and a real quick wipe of the empty scratch disk `sdd`. Nothing was left pending.
+- **On the VM, `Smart.getDeviceSettings` answers HTTP 500** for a disk with no saved monitoring settings. Only the waking health check could tell the page in advance, so the page makes the call and treats that reply as "not set". The VM test allows exactly that failure.
+- **Still to check:**
+  - shred's progress lines on a secure wipe;
+  - the start lines of a self-test on a disk that supports one (the VM's NVMe disk does not);
+  - whether a rescan or a settings save wakes a disk.

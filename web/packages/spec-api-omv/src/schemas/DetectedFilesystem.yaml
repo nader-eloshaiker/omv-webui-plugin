@@ -1,0 +1,125 @@
+type: object
+description: >-
+  A file system the system detects on a disk, partition or other block device, whether or not OMV
+  has set it up: the system's own root and boot file systems, swap space, and file systems from
+  another computer included. A file system that is not mounted has no usage: its sizes are "-1"
+  and its percentage -1.
+required:
+  [
+    devicename,
+    devicefile,
+    predictabledevicefile,
+    canonicaldevicefile,
+    parentdevicefile,
+    devlinks,
+    uuid,
+    label,
+    type,
+    blocks,
+    mounted,
+    mountpoint,
+    used,
+    available,
+    size,
+    percentage,
+    description,
+    hasmultipledevices,
+    devicefiles,
+    comment,
+    _readonly,
+    _used,
+  ]
+properties:
+  devicename:
+    type: string
+    description: The kernel's name for the partition or device, such as "sda1".
+  devicefile:
+    type: string
+    description: The device file OMV prefers, usually a /dev/disk/by-uuid/ link.
+  predictabledevicefile:
+    type: string
+  canonicaldevicefile:
+    type: string
+    description: The device file under /dev, such as "/dev/sda1".
+  parentdevicefile:
+    type: string
+    description: >-
+      The device the file system is on, under /dev: the disk of a partition ("/dev/sda" for
+      "/dev/sda1"), or the device itself when it has no partitions.
+  devlinks:
+    type: array
+    items:
+      type: string
+  uuid:
+    type: string
+    description: >-
+      The file system's own identifier: a UUID for most types, a short volume ID for FAT ("ABCD-1234"
+      form), a date-like value for an optical disc.
+  label:
+    type: string
+  type:
+    type: string
+    description: >-
+      The file system type as blkid reports it, such as "ext4", "btrfs", "vfat", "iso9660", or
+      "swap" for swap space.
+  mounted:
+    type: boolean
+    description: Whether it is mounted now. Swap space in use is never reported as mounted.
+  mountpoint:
+    type: string
+    description: Where it is mounted, such as "/" or "/boot/efi"; empty when it is not mounted.
+  blocks:
+    type: string
+    x-omv-int64: true
+    description: Size in 1 KiB blocks. "-1" when not mounted.
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes. "-1" when not mounted.
+  available:
+    type: string
+    x-omv-int64: true
+    description: Bytes free. "-1" when not mounted.
+  used:
+    type: string
+    description: Display text, such as "12.34 GiB". "-1" when not mounted.
+  percentage:
+    type: integer
+    minimum: -1
+    maximum: 100
+    description: Percent used. -1 when not mounted.
+  description:
+    type: string
+    description: Display text, such as "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]".
+  propposixacl:
+    type: boolean
+  propquota:
+    type: boolean
+  propresize:
+    type: boolean
+  propfstab:
+    type: boolean
+  propreadonly:
+    type: boolean
+  propcompress:
+    type: boolean
+  propautodefrag:
+    type: boolean
+  hasmultipledevices:
+    type: boolean
+    description: Whether it spans several devices (btrfs across disks, for one).
+  devicefiles:
+    type: array
+    description: Every device the file system is on, under /dev, such as ["/dev/sda1"].
+    items:
+      type: string
+  comment:
+    type: string
+  _readonly:
+    type: boolean
+    description: True for the file system the system runs from.
+  _used:
+    type: boolean
+    description: >-
+      Whether OMV has set it up and something (a shared folder, for one) refers to it; always true
+      for the file system the system runs from.

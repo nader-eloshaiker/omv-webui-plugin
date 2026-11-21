@@ -14,6 +14,7 @@ import { onSessionEnded } from "@omv-webui/react-api-omv/transport";
 import type { QueryClient } from "@tanstack/react-query";
 import { diskHealth } from "./dashboard/diskHealth.ts";
 import { recordUsage, usageSamples } from "./dashboard/usageSamples.ts";
+import { diskSession } from "./disks/diskSession.ts";
 import { logsView } from "./logs/logsViewStore.ts";
 import { processesView } from "./processes/processesViewStore.ts";
 import { createAppRouter, type AppRouter } from "./router.ts";
@@ -33,6 +34,7 @@ const SESSION_VIEW_STATE = [
   sharedFoldersTable,
   usageSamples,
   diskHealth,
+  diskSession,
   logsView,
   processesView,
 ];

@@ -1,0 +1,52 @@
+type: object
+description: >-
+  One S.M.A.R.T. attribute of an ATA disk, with OMV's assessment of it. `value`, `worst` and
+  `threshold` are the drive's normalised values, where lower is worse.
+required:
+  [
+    id,
+    attrname,
+    flags,
+    value,
+    worst,
+    threshold,
+    whenfailed,
+    rawvalue,
+    description,
+    prefailure,
+    assessment,
+  ]
+properties:
+  id:
+    type: integer
+  attrname:
+    type: string
+    description: smartctl's name, such as "Reallocated_Sector_Ct".
+  flags:
+    type: string
+    description: smartctl's flag letters, such as "PO--CK"; P marks a pre-failure attribute.
+  value:
+    type: integer
+  worst:
+    type: integer
+  threshold:
+    type: integer
+    description: 0 when the drive gives none.
+  whenfailed:
+    type: string
+    description: '"-" when it never failed; otherwise "FAILING_NOW" or "In_the_past".'
+  rawvalue:
+    type: string
+    description: The raw value as smartctl prints it, such as "0" or "34 (Min/Max 19/46)".
+  description:
+    type: string
+    description: Display text in English, written by the server; empty for an attribute it does not know.
+  prefailure:
+    type: boolean
+    description: Whether a failure of this attribute predicts a failing disk.
+  assessment:
+    type: string
+    description: >-
+      OMV's assessment: GOOD, BAD_ATTRIBUTE_NOW (at or below its threshold now, or for
+      Reported_Uncorrect any count), BAD_ATTRIBUTE_IN_THE_PAST (was at or below it) or BAD_SECTOR
+      (reallocated or pending sectors). Open to other values.

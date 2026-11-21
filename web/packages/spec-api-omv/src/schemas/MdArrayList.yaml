@@ -1,0 +1,4 @@
+type: array
+description: Every software RAID array the kernel has assembled, in no particular order; empty when there is none.
+items:
+  $ref: ./MdArray.yaml

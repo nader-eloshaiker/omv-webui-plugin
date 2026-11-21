@@ -1,0 +1,29 @@
+type: object
+description: >-
+  One disk's stored S.M.A.R.T. monitoring settings (conf.service.smartmontools.device). They take
+  effect when the pending changes are applied.
+required: [uuid, enable, devicefile, devicetype, tempdiff, tempmax]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+    description: Whether this disk is monitored.
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link where it has one.
+  devicetype:
+    type: string
+    description: The smartctl device type the server chose for the disk, such as "nvme"; may be empty.
+  tempdiff:
+    type: integer
+    description: 0 uses the setting for every disk.
+  tempmax:
+    type: integer
+    description: 0 uses the setting for every disk.
+  _used:
+    type: boolean
+    description: >-
+      Smart.getDeviceSettings only: whether a scheduled self-test refers to this disk. The stock
+      interface does not let monitoring be turned off while one does.

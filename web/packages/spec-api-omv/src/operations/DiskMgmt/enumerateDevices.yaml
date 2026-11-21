@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: diskMgmtEnumerateDevices
+  tags:
+    - DiskMgmt
+  summary: Disks
+  description: >-
+    Every disk the system can see, including read-only ones such as an optical drive, as a plain
+    list in no particular order. It asks smartctl not to wake a disk that is in standby
+    (--nocheck=standby), so it spares sleeping disks: such a disk reports its power mode as STANDBY
+    and no temperature. Changes nothing.
+  x-omv-rpc:
+    service: DiskMgmt
+    method: enumerateDevices
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/DiskDevices.yaml
+          examples:
+            vmDisks:
+              $ref: ../../examples/diskMgmtEnumerateDevices.vmDisks.yaml

@@ -1,0 +1,26 @@
+type: object
+description: >-
+  One entry of an ATA disk's self-test log, newest first. Every field is text as smartctl prints
+  it.
+required: [num, description, status, remaining, lifetime, lbaoffirsterror]
+properties:
+  num:
+    type: string
+    description: The entry's number, "1" for the newest.
+  description:
+    type: string
+    description: '"Short offline", "Extended offline", "Short captive" or "Extended captive".'
+  status:
+    type: string
+    description: >-
+      Display text, such as "Completed without error" or "Completed: read failure". It can end in
+      spaces, which are smartctl's column padding.
+  remaining:
+    type: string
+    description: Percent of the test left when it ended, such as "00" or "90".
+  lifetime:
+    type: string
+    description: The disk's power-on hours when the test ran.
+  lbaoffirsterror:
+    type: string
+    description: The first block that failed, or "-".

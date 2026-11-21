@@ -56,7 +56,7 @@ export function percentOf(part: number, whole: number): number | null {
   return whole > 0 ? (part / whole) * 100 : null;
 }
 
-export type DurationUnit = "days" | "hours" | "minutes";
+export type DurationUnit = "years" | "days" | "hours" | "minutes";
 
 export type DurationParts =
   | { kind: "underMinute" }
@@ -80,6 +80,28 @@ export function durationParts(seconds: number): DurationParts {
   ];
   const first = all.findIndex((p) => p.count > 0);
   const parts = all.slice(first, first + 2).filter((p) => p.count > 0);
+  return { kind: "parts", parts };
+}
+
+/**
+ * A long duration, such as a disk's power-on time (phase 5 disks design 0.1): the same rule with a
+ * years unit of 365 days added before days. 3 years, 41 days; 41 days, 2 hours.
+ */
+export function longDurationParts(seconds: number): DurationParts {
+  const base = durationParts(seconds);
+  const total = Math.floor(Math.max(0, Number.isFinite(seconds) ? seconds : 0));
+  const days = Math.floor(total / 86_400);
+  if (base.kind === "underMinute" || days < 365) {
+    return base;
+  }
+  const years = Math.floor(days / 365);
+  const rest = days % 365;
+  const parts: { unit: DurationUnit; count: number }[] = [
+    { unit: "years", count: years },
+  ];
+  if (rest > 0) {
+    parts.push({ unit: "days", count: rest });
+  }
   return { kind: "parts", parts };
 }
 

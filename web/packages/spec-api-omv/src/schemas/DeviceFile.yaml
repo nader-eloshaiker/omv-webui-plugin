@@ -1,0 +1,6 @@
+type: string
+description: >-
+  A device file, in OMV's `devicefile` format: a path under /dev, such as "/dev/sda" or a
+  /dev/disk/by-id/ link. The server resolves it to the disk and fails when no such disk exists.
+x-omv-format: devicefile
+pattern: "^/dev(/disk/by-id)?/[a-zA-Z0-9/.:_+-]+$"

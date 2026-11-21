@@ -1,0 +1,6 @@
+type: array
+description: >-
+  The disk's self-test log. Only short and extended tests are listed; conveyance and other tests
+  are left out, and NVMe disks report none in this form.
+items:
+  $ref: ./SmartSelfTestLogEntry.yaml

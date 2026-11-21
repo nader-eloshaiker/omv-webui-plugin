@@ -3,6 +3,7 @@
 // router or an OMV concept beyond the style guide's vocabulary, and no component carries its own words.
 export * from "./components/banner/notice-banner";
 export * from "./components/banner/pending-banner";
+export * from "./components/breadcrumbs/breadcrumbs";
 export * from "./components/button/button";
 export { buttonClass, buttonRowClass } from "./components/button/button-class";
 export * from "./components/capacity-meter/capacity-meter";
@@ -23,7 +24,9 @@ export * from "./components/inline-alert/inline-alert";
 export * from "./components/job-runner/job-runner";
 export * from "./components/line-chart/line-chart";
 export * from "./components/menu/menu";
+export * from "./components/number-field/number-field";
 export * from "./components/page-tabs/page-tabs";
+export * from "./components/radio-group-field/radio-group-field";
 export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";
 export * from "./components/select/select";

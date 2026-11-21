@@ -4,6 +4,7 @@
  */
 import type {
   ConfiguredFilesystemList,
+  DetectedFilesystemList,
   FileSystemMgmtEnumerateMountedFilesystemsRequest,
   GetListRequest,
   MountedFilesystemList,
@@ -424,6 +425,174 @@ export function useFileSystemMgmtGetList<
     getListRequest,
     options,
   );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type "swap") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.
+ * @summary Detected file systems
+ */
+export const fileSystemMgmtEnumerateFilesystems = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<DetectedFilesystemList>(
+    { url: `/rpc/FileSystemMgmt/enumerateFilesystems`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getFileSystemMgmtEnumerateFilesystemsQueryKey = () => {
+  return ["POST", `/rpc/FileSystemMgmt/enumerateFilesystems`] as const;
+};
+
+export const getFileSystemMgmtEnumerateFilesystemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFileSystemMgmtEnumerateFilesystemsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>
+  > = ({ signal }) =>
+    fileSystemMgmtEnumerateFilesystems(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FileSystemMgmtEnumerateFilesystemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>
+>;
+export type FileSystemMgmtEnumerateFilesystemsQueryError = ErrorType<unknown>;
+
+/**
+ * Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type "swap") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.
+ * @summary Detected file systems
+ */
+export function useFileSystemMgmtEnumerateFilesystems<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type "swap") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.
+ * @summary Detected file systems
+ */
+export function useFileSystemMgmtEnumerateFilesystems<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type "swap") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.
+ * @summary Detected file systems
+ */
+export function useFileSystemMgmtEnumerateFilesystems<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type "swap") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.
+ * @summary Detected file systems
+ */
+export function useFileSystemMgmtEnumerateFilesystems<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtEnumerateFilesystems>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getFileSystemMgmtEnumerateFilesystemsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

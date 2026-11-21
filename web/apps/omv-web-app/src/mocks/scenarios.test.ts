@@ -94,6 +94,14 @@ describe("the mock scenarios", () => {
       handle: CONTRACT_EXAMPLES.execGetOutput.appliedFinished.value.filename,
       want: "appliedFinished",
     },
+    {
+      handle: CONTRACT_EXAMPLES.diskMgmtWipe.started.value,
+      want: "wipeFinished",
+    },
+    {
+      handle: CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value,
+      want: "selfTestFinished",
+    },
   ])(
     "execGetOutput for the handle $handle answers $want",
     ({ handle, want }) => {
@@ -105,6 +113,28 @@ describe("the mock scenarios", () => {
       ).toBe(want);
     },
   );
+
+  it.each([
+    "diskMgmtSetHdParm",
+    "smartSetSettings",
+    "smartSetDeviceSettings",
+    "smartSetScheduledTest",
+    "smartDeleteScheduledTest",
+  ] as const)("%s leaves its change pending", (operationId) => {
+    const session = newMockSession(true);
+    answerOf("admin", session, operationId);
+    expect(answerOf("admin", session, "configIsDirty")).toBe("dirty");
+  });
+
+  it.each([
+    "diskMgmtWipe",
+    "diskMgmtRescan",
+    "smartExecuteScheduledTest",
+  ] as const)("%s leaves nothing pending", (operationId) => {
+    const session = newMockSession(true);
+    answerOf("admin", session, operationId);
+    expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
+  });
 
   it.each([
     { dirty: false, want: "noConnections" },

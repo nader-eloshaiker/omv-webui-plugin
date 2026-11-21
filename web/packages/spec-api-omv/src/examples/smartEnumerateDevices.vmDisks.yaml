@@ -1,0 +1,88 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk GOOD, the four virtual SATA disks BAD_STATUS (their smartctl reports no S.M.A.R.T. support); the CD drive is not listed."
+x-omv-status: 200
+value:
+  - devicename: nvme0n1
+    canonicaldevicefile: /dev/nvme0n1
+    devicefile: /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+    devicelinks:
+      - /dev/disk/by-diskseq/1
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1
+      - /dev/disk/by-id/nvme-EXAMPLE-WWN-0001
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+    model: VMware Virtual NVMe Disk
+    size: "21474836480"
+    temperature: "30"
+    description: "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]"
+    vendor: "0x15ad"
+    serialnumber: EXAMPLE-SERIAL-0001
+    wwn: EXAMPLE-WWN-0001
+    overallstatus: GOOD
+  - devicename: sda
+    canonicaldevicefile: /dev/sda
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002
+    devicelinks:
+      - /dev/disk/by-diskseq/2
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0002
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    temperature: ""
+    description: "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0002
+    wwn: EXAMPLE-WWN-0002
+    overallstatus: BAD_STATUS
+  - devicename: sdb
+    canonicaldevicefile: /dev/sdb
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+    devicelinks:
+      - /dev/disk/by-diskseq/3
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0003
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-4"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    temperature: ""
+    description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0003
+    wwn: EXAMPLE-WWN-0003
+    overallstatus: BAD_STATUS
+  - devicename: sdc
+    canonicaldevicefile: /dev/sdc
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+    devicelinks:
+      - /dev/disk/by-diskseq/4
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0004
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-5"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    temperature: ""
+    description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0004
+    wwn: EXAMPLE-WWN-0004
+    overallstatus: BAD_STATUS
+  - devicename: sdd
+    canonicaldevicefile: /dev/sdd
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005
+    devicelinks:
+      - /dev/disk/by-diskseq/5
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0005
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    temperature: ""
+    description: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0005
+    wwn: EXAMPLE-WWN-0005
+    overallstatus: BAD_STATUS

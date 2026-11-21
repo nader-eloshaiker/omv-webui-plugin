@@ -11,13 +11,13 @@ import { Clock } from "lucide-react";
 import { Fragment, useId, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { isCoreService, type AttentionRow } from "../../dashboard/dashboard.ts";
+import { isDiskName } from "../../disks/diskWords.ts";
+import { isolate } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useFileSystemNameText } from "../../hooks/useFileSystemNameText.ts";
 import { CLASSIC, CLASSIC_HOME } from "../../navigation/navigation.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
-
-const routerLinkClass =
-  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline";
 
 const SERVICE_SETTINGS = {
   samba: CLASSIC.smbSettings,
@@ -128,8 +128,8 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
                 <Trans
                   i18nKey={key}
                   values={{
-                    model,
-                    reason: t(`dashboard.disks.reason.${row.reason}`),
+                    model: isolate(model),
+                    reason: t(`diskHealth.reason.${row.reason}`),
                   }}
                   components={{ device: <IdentifierText value={row.device} /> }}
                 />
@@ -140,9 +140,27 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
             }
             action={
               <>
-                <ExternalLink href={CLASSIC.smartDevices} newTabLabel={newTab}>
-                  {t("dashboard.attention.diskLink")}
-                </ExternalLink>
+                {isDiskName(row.devicename) ? (
+                  <Link
+                    to="/storage/disks/$disk"
+                    params={{ disk: row.devicename }}
+                    className={routerLinkClass}
+                  >
+                    <Trans
+                      i18nKey="dashboard.attention.diskLink"
+                      components={{
+                        device: <IdentifierText value={row.device} />,
+                      }}
+                    />
+                  </Link>
+                ) : (
+                  <Link
+                    to="/storage/smart/overview"
+                    className={routerLinkClass}
+                  >
+                    {t("dashboard.disks.link")}
+                  </Link>
+                )}
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {t("dashboard.attention.diskReadAt", {
                     time: format.clock(row.readAt),

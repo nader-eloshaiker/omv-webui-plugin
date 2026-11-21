@@ -165,11 +165,9 @@ test.describe("an administrator", () => {
     const disks = page.getByRole("region", {
       name: copy.dashboard.disks.title,
     });
-    await disks
-      .getByRole("button", { name: copy.dashboard.disks.check })
-      .click();
+    await disks.getByRole("button", { name: copy.diskCheck.check }).click();
     await expect(
-      disks.getByRole("button", { name: copy.dashboard.disks.checkAgain }),
+      disks.getByRole("button", { name: copy.diskCheck.checkAgain }),
     ).toBeVisible({ timeout: 120_000 });
     const list = disks.getByRole("list", {
       name: copy.dashboard.disks.listLabel,

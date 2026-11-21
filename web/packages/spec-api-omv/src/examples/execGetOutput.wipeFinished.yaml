@@ -1,0 +1,8 @@
+summary: "Written by hand from the source (OMV 8.6.1): the last poll of a quick wipe of a 4 TB disk that had a partition table. sgdisk, then dd over the first and the last 10 MiB, then a reread of the partition table, which prints nothing. Not captured: wiping is not run on the test VM."
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusW7pQx2LmVa9cKe4
+  pos: 0
+  output: "GPT data structures destroyed! You may now partition the disk using fdisk or\nother utilities.\n1+0 records in\n1+0 records out\n10485760 bytes (10 MB, 10 MiB) copied, 0.0412 s, 254 MB/s\n20480+0 records in\n20480+0 records out\n10485760 bytes (10 MB, 10 MiB) copied, 0.3815 s, 27.5 MB/s\n"
+  pendingOutput: false
+  running: false

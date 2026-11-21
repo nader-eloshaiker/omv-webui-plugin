@@ -455,6 +455,8 @@ export type AttentionRow =
       kind: "diskCritical" | "diskWarning";
       key: string;
       device: string;
+      /** The disk's kernel name, for the link to its page (used only if it passes the pattern). */
+      devicename: string;
       model: string;
       /** Only a failing or warned disk gets a row, so only those reasons. */
       reason: Exclude<DiskReason, "BAD_STATUS" | "other">;
@@ -534,6 +536,7 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
       const row = {
         key: `disk:${disk.canonicaldevicefile}`,
         device: disk.canonicaldevicefile,
+        devicename: disk.devicename,
         model: disk.model,
         reason,
         monitored: disk.monitor,

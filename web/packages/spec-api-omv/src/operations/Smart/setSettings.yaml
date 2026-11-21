@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartSetSettings
+  tags:
+    - Smart
+  summary: Save S.M.A.R.T. settings
+  description: >-
+    Save the S.M.A.R.T. monitoring settings for every disk. Nothing changes on the system until the
+    pending changes are applied; it marks the smartmontools module dirty. When applied, the
+    monitoring service starts or stops as `enable` says. Returns the stored settings; the reply also
+    carries `monitor` and `scheduledtests` as empty strings (observed on OMV 8.6.1), which are not
+    settings and are not described here.
+  x-omv-rpc:
+    service: Smart
+    method: setSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.smart.setsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SmartSetSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartSettings.yaml
+          examples:
+            saved:
+              $ref: ../../examples/smartSetSettings.saved.yaml

@@ -1,0 +1,23 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: one weekly short test for the NVMe disk, not applied (discarded afterwards); the device file is the disk's /dev name, not the stored by-id link."
+x-omv-status: 200
+value:
+  total: 1
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000006"
+      enable: true
+      devicefile: /dev/nvme0n1
+      type: S
+      hour: "02"
+      month: "*"
+      dayofmonth: "*"
+      dayofweek: "7"
+      comment: Weekly short test
+      devicelinks:
+        - /dev/disk/by-diskseq/1
+        - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+        - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1
+        - /dev/disk/by-id/nvme-EXAMPLE-WWN-0001
+        - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+      model: VMware Virtual NVMe Disk
+      serialnumber: EXAMPLE-SERIAL-0001
+      size: "21474836480"

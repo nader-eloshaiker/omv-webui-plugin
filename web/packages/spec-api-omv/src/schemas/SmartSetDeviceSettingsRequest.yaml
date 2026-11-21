@@ -1,0 +1,30 @@
+type: object
+description: >-
+  One disk's S.M.A.R.T. monitoring settings (rpc.smart.setdevicesettings). The datamodel requires
+  only `devicefile` and `enable` and does not declare `tempdiff` or `tempmax`, but the method reads
+  all three of `uuid`, `tempdiff` and `tempmax` and stores them, so the contract requires them.
+  The temperature limits take the stored object's bounds (conf.service.smartmontools.device).
+required: [uuid, devicefile, enable, tempdiff, tempmax]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  devicefile:
+    $ref: ./DeviceFile.yaml
+  enable:
+    type: boolean
+    description: Whether this disk is monitored.
+  tempdiff:
+    type: integer
+    minimum: 0
+    maximum: 255
+    description: >-
+      Report a temperature change of at least this many degrees Celsius; 0 uses the setting for
+      every disk. The stock form offers 0 to 15.
+  tempmax:
+    type: integer
+    minimum: 0
+    maximum: 255
+    description: >-
+      Report a temperature of at least this many degrees Celsius; 0 uses the setting for every
+      disk. The stock form offers 0 and 5 to 80 in steps of 5.
+additionalProperties: false

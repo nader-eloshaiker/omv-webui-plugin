@@ -265,6 +265,17 @@ export const OPERATIONS = {
       $ref: "ConfiguredFilesystemList",
     },
   },
+  "/rpc/FileSystemMgmt/enumerateFilesystems": {
+    operationId: "fileSystemMgmtEnumerateFilesystems",
+    service: "FileSystemMgmt",
+    method: "enumerateFilesystems",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "DetectedFilesystemList",
+    },
+  },
   "/rpc/Smart/getListBg": {
     operationId: "smartGetListBg",
     service: "Smart",
@@ -355,6 +366,249 @@ export const OPERATIONS = {
     dirty: false,
     response: {
       $ref: "TopInfo",
+    },
+  },
+  "/rpc/DiskMgmt/enumerateDevices": {
+    operationId: "diskMgmtEnumerateDevices",
+    service: "DiskMgmt",
+    method: "enumerateDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "DiskDevices",
+    },
+  },
+  "/rpc/DiskMgmt/getList": {
+    operationId: "diskMgmtGetList",
+    service: "DiskMgmt",
+    method: "getList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "DiskDeviceList",
+    },
+  },
+  "/rpc/DiskMgmt/getHdParm": {
+    operationId: "diskMgmtGetHdParm",
+    service: "DiskMgmt",
+    method: "getHdParm",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "HdParm",
+    },
+  },
+  "/rpc/DiskMgmt/setHdParm": {
+    operationId: "diskMgmtSetHdParm",
+    service: "DiskMgmt",
+    method: "setHdParm",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "HdParm",
+    },
+  },
+  "/rpc/DiskMgmt/wipe": {
+    operationId: "diskMgmtWipe",
+    service: "DiskMgmt",
+    method: "wipe",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/DiskMgmt/rescan": {
+    operationId: "diskMgmtRescan",
+    service: "DiskMgmt",
+    method: "rescan",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/Smart/enumerateDevices": {
+    operationId: "smartEnumerateDevices",
+    service: "Smart",
+    method: "enumerateDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartEnumeratedDevices",
+    },
+  },
+  "/rpc/Smart/enumerateMonitoredDevices": {
+    operationId: "smartEnumerateMonitoredDevices",
+    service: "Smart",
+    method: "enumerateMonitoredDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartEnumeratedDevices",
+    },
+  },
+  "/rpc/Smart/getSettings": {
+    operationId: "smartGetSettings",
+    service: "Smart",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartSettings",
+    },
+  },
+  "/rpc/Smart/setSettings": {
+    operationId: "smartSetSettings",
+    service: "Smart",
+    method: "setSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SmartSettings",
+    },
+  },
+  "/rpc/Smart/getDeviceSettings": {
+    operationId: "smartGetDeviceSettings",
+    service: "Smart",
+    method: "getDeviceSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartDeviceSettings",
+    },
+  },
+  "/rpc/Smart/setDeviceSettings": {
+    operationId: "smartSetDeviceSettings",
+    service: "Smart",
+    method: "setDeviceSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SmartDeviceSettings",
+    },
+  },
+  "/rpc/Smart/getInformation": {
+    operationId: "smartGetInformation",
+    service: "Smart",
+    method: "getInformation",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartInformation",
+    },
+  },
+  "/rpc/Smart/getAttributes": {
+    operationId: "smartGetAttributes",
+    service: "Smart",
+    method: "getAttributes",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartAttributeList",
+    },
+  },
+  "/rpc/Smart/getSelfTestLogs": {
+    operationId: "smartGetSelfTestLogs",
+    service: "Smart",
+    method: "getSelfTestLogs",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartSelfTestLog",
+    },
+  },
+  "/rpc/Smart/getExtendedInformation": {
+    operationId: "smartGetExtendedInformation",
+    service: "Smart",
+    method: "getExtendedInformation",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartExtendedInformation",
+    },
+  },
+  "/rpc/Smart/getScheduleList": {
+    operationId: "smartGetScheduleList",
+    service: "Smart",
+    method: "getScheduleList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartScheduleList",
+    },
+  },
+  "/rpc/Smart/getScheduledTest": {
+    operationId: "smartGetScheduledTest",
+    service: "Smart",
+    method: "getScheduledTest",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmartScheduledTest",
+    },
+  },
+  "/rpc/Smart/setScheduledTest": {
+    operationId: "smartSetScheduledTest",
+    service: "Smart",
+    method: "setScheduledTest",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SmartScheduledTest",
+    },
+  },
+  "/rpc/Smart/deleteScheduledTest": {
+    operationId: "smartDeleteScheduledTest",
+    service: "Smart",
+    method: "deleteScheduledTest",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SmartScheduledTest",
+    },
+  },
+  "/rpc/Smart/executeScheduledTest": {
+    operationId: "smartExecuteScheduledTest",
+    service: "Smart",
+    method: "executeScheduledTest",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/MdMgmt/enumerateDevices": {
+    operationId: "mdMgmtEnumerateDevices",
+    service: "MdMgmt",
+    method: "enumerateDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MdArrayList",
     },
   },
 } as const satisfies OperationTable;
@@ -542,6 +796,245 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  DetectedFilesystem: {
+    type: "object",
+    required: [
+      "devicename",
+      "devicefile",
+      "predictabledevicefile",
+      "canonicaldevicefile",
+      "parentdevicefile",
+      "devlinks",
+      "uuid",
+      "label",
+      "type",
+      "blocks",
+      "mounted",
+      "mountpoint",
+      "used",
+      "available",
+      "size",
+      "percentage",
+      "description",
+      "hasmultipledevices",
+      "devicefiles",
+      "comment",
+      "_readonly",
+      "_used",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      predictabledevicefile: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      parentdevicefile: {
+        type: "string",
+      },
+      devlinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      uuid: {
+        type: "string",
+      },
+      label: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mounted: {
+        type: "boolean",
+      },
+      mountpoint: {
+        type: "string",
+      },
+      blocks: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      available: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      used: {
+        type: "string",
+      },
+      percentage: {
+        type: "integer",
+        minimum: -1,
+        maximum: 100,
+      },
+      description: {
+        type: "string",
+      },
+      propposixacl: {
+        type: "boolean",
+      },
+      propquota: {
+        type: "boolean",
+      },
+      propresize: {
+        type: "boolean",
+      },
+      propfstab: {
+        type: "boolean",
+      },
+      propreadonly: {
+        type: "boolean",
+      },
+      propcompress: {
+        type: "boolean",
+      },
+      propautodefrag: {
+        type: "boolean",
+      },
+      hasmultipledevices: {
+        type: "boolean",
+      },
+      devicefiles: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      comment: {
+        type: "string",
+      },
+      _readonly: {
+        type: "boolean",
+      },
+      _used: {
+        type: "boolean",
+      },
+    },
+  },
+  DetectedFilesystemList: {
+    type: "array",
+    items: {
+      $ref: "DetectedFilesystem",
+    },
+  },
+  DiskDevice: {
+    type: "object",
+    required: [
+      "devicename",
+      "canonicaldevicefile",
+      "devicefile",
+      "devicelinks",
+      "model",
+      "size",
+      "description",
+      "vendor",
+      "serialnumber",
+      "wwn",
+      "israid",
+      "isroot",
+      "isreadonly",
+      "powermode",
+      "temperature",
+      "hotpluggable",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      devicelinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      model: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      description: {
+        type: "string",
+      },
+      vendor: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      wwn: {
+        type: "string",
+      },
+      israid: {
+        type: "boolean",
+      },
+      isroot: {
+        type: "boolean",
+      },
+      isreadonly: {
+        type: "boolean",
+      },
+      powermode: {
+        type: "string",
+      },
+      temperature: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+      hotpluggable: {
+        type: "boolean",
+      },
+      hdparm: {
+        $ref: "HdParm",
+      },
+    },
+  },
+  DiskDeviceList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "DiskDevice",
+        },
+      },
+    },
+  },
+  DiskDevices: {
+    type: "array",
+    items: {
+      $ref: "DiskDevice",
+    },
+  },
   EmailNotificationSettings: {
     type: "object",
     required: [
@@ -621,6 +1114,37 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  HdParm: {
+    type: "object",
+    required: [
+      "uuid",
+      "devicefile",
+      "apm",
+      "aam",
+      "spindowntime",
+      "writecache",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      apm: {
+        type: "integer",
+      },
+      aam: {
+        type: "integer",
+      },
+      spindowntime: {
+        type: "integer",
+      },
+      writecache: {
+        type: "boolean",
+      },
+    },
+  },
   LogRow: {
     type: "object",
     required: ["rownum"],
@@ -684,6 +1208,68 @@ export const SCHEMAS: SchemaTable = {
           $ref: "LogRow",
         },
       },
+    },
+  },
+  MdArray: {
+    type: "object",
+    required: [
+      "_used",
+      "name",
+      "devicefile",
+      "uuid",
+      "level",
+      "numdevices",
+      "devices",
+      "size",
+      "state",
+      "syncaction",
+      "description",
+    ],
+    properties: {
+      _used: {
+        type: "boolean",
+      },
+      name: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      uuid: {
+        type: "string",
+      },
+      level: {
+        type: "string",
+      },
+      numdevices: {
+        type: "integer",
+      },
+      devices: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      state: {
+        type: "string",
+      },
+      syncaction: {
+        type: "string",
+        nullable: true,
+      },
+      description: {
+        type: "string",
+      },
+    },
+  },
+  MdArrayList: {
+    type: "array",
+    items: {
+      $ref: "MdArray",
     },
   },
   MountedFilesystem: {
@@ -1234,6 +1820,63 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  SmartAttribute: {
+    type: "object",
+    required: [
+      "id",
+      "attrname",
+      "flags",
+      "value",
+      "worst",
+      "threshold",
+      "whenfailed",
+      "rawvalue",
+      "description",
+      "prefailure",
+      "assessment",
+    ],
+    properties: {
+      id: {
+        type: "integer",
+      },
+      attrname: {
+        type: "string",
+      },
+      flags: {
+        type: "string",
+      },
+      value: {
+        type: "integer",
+      },
+      worst: {
+        type: "integer",
+      },
+      threshold: {
+        type: "integer",
+      },
+      whenfailed: {
+        type: "string",
+      },
+      rawvalue: {
+        type: "string",
+      },
+      description: {
+        type: "string",
+      },
+      prefailure: {
+        type: "boolean",
+      },
+      assessment: {
+        type: "string",
+      },
+    },
+  },
+  SmartAttributeList: {
+    type: "array",
+    items: {
+      $ref: "SmartAttribute",
+    },
+  },
   SmartDevice: {
     type: "object",
     required: [
@@ -1324,6 +1967,365 @@ export const SCHEMAS: SchemaTable = {
         items: {
           $ref: "SmartDevice",
         },
+      },
+    },
+  },
+  SmartDeviceSettings: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "devicefile",
+      "devicetype",
+      "tempdiff",
+      "tempmax",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      devicefile: {
+        type: "string",
+      },
+      devicetype: {
+        type: "string",
+      },
+      tempdiff: {
+        type: "integer",
+      },
+      tempmax: {
+        type: "integer",
+      },
+      _used: {
+        type: "boolean",
+      },
+    },
+  },
+  SmartEnumeratedDevice: {
+    type: "object",
+    required: [
+      "devicename",
+      "canonicaldevicefile",
+      "devicefile",
+      "devicelinks",
+      "model",
+      "size",
+      "temperature",
+      "description",
+      "vendor",
+      "serialnumber",
+      "wwn",
+      "overallstatus",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      devicelinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      model: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      temperature: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+      description: {
+        type: "string",
+      },
+      vendor: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      wwn: {
+        type: "string",
+      },
+      overallstatus: {
+        type: "string",
+      },
+    },
+  },
+  SmartEnumeratedDevices: {
+    type: "array",
+    items: {
+      $ref: "SmartEnumeratedDevice",
+    },
+  },
+  SmartExtendedInformation: {
+    type: "string",
+  },
+  SmartInformation: {
+    type: "object",
+    required: [
+      "devicefile",
+      "devicemodel",
+      "serialnumber",
+      "wwn",
+      "firmwareversion",
+      "usercapacity",
+    ],
+    properties: {
+      devicefile: {
+        type: "string",
+      },
+      devicemodel: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      wwn: {
+        type: "string",
+      },
+      firmwareversion: {
+        type: "string",
+      },
+      usercapacity: {
+        type: "string",
+      },
+      modelfamily: {
+        type: "string",
+      },
+      smartsupportis: {
+        type: "string",
+      },
+      smartoverallhealthselfassessmenttestresult: {
+        type: "string",
+      },
+      temperature: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+      powercycles: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+      poweronhours: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+    },
+    additionalProperties: true,
+  },
+  SmartScheduleEntry: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "devicefile",
+      "type",
+      "hour",
+      "month",
+      "dayofmonth",
+      "dayofweek",
+      "comment",
+      "devicelinks",
+      "model",
+      "serialnumber",
+      "size",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      devicefile: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      hour: {
+        type: "string",
+      },
+      month: {
+        type: "string",
+      },
+      dayofmonth: {
+        type: "string",
+      },
+      dayofweek: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      devicelinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      model: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+    },
+  },
+  SmartScheduleList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "SmartScheduleEntry",
+        },
+      },
+    },
+  },
+  SmartScheduledTest: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "devicefile",
+      "type",
+      "hour",
+      "month",
+      "dayofmonth",
+      "dayofweek",
+      "comment",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      devicefile: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      hour: {
+        type: "string",
+      },
+      month: {
+        type: "string",
+      },
+      dayofmonth: {
+        type: "string",
+      },
+      dayofweek: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+    },
+  },
+  SmartSelfTestLog: {
+    type: "array",
+    items: {
+      $ref: "SmartSelfTestLogEntry",
+    },
+  },
+  SmartSelfTestLogEntry: {
+    type: "object",
+    required: [
+      "num",
+      "description",
+      "status",
+      "remaining",
+      "lifetime",
+      "lbaoffirsterror",
+    ],
+    properties: {
+      num: {
+        type: "string",
+      },
+      description: {
+        type: "string",
+      },
+      status: {
+        type: "string",
+      },
+      remaining: {
+        type: "string",
+      },
+      lifetime: {
+        type: "string",
+      },
+      lbaoffirsterror: {
+        type: "string",
+      },
+    },
+  },
+  SmartSettings: {
+    type: "object",
+    required: ["enable", "interval", "powermode", "tempdiff", "tempmax"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      interval: {
+        type: "integer",
+      },
+      powermode: {
+        type: "string",
+      },
+      tempdiff: {
+        type: "integer",
+      },
+      tempmax: {
+        type: "integer",
       },
     },
   },

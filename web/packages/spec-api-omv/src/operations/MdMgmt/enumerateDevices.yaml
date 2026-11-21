@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtEnumerateDevices
+  tags:
+    - MdMgmt
+  summary: Software RAID arrays
+  description: >-
+    Every software RAID array with its member devices, from the RAID plugin (openmediavault-md). The
+    server asks mdadm and the kernel's RAID status, and the configuration for whether an array is in
+    use; it does not run smartctl. Changes nothing. When the plugin is not installed, OMV does not
+    know the service and the call fails with HTTP 404, code 0 and the message "RPC service 'MdMgmt'
+    not found." (observed on OMV 8.6.1): the transport throws an RpcError with `status` 404, the only
+    reply of this method with that status. Read that as "no RAID plugin, so no RAID members"; any
+    other failure means the arrays could not be read.
+  x-omv-rpc:
+    service: MdMgmt
+    method: enumerateDevices
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdArrayList.yaml
+          examples:
+            mirrors:
+              $ref: ../../examples/mdMgmtEnumerateDevices.mirrors.yaml
+            none:
+              $ref: ../../examples/mdMgmtEnumerateDevices.none.yaml
+    "404":
+      description: >-
+        The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message "RPC service
+        'MdMgmt' not found.".
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notInstalled:
+              $ref: ../../examples/mdMgmtEnumerateDevices.notInstalled.yaml

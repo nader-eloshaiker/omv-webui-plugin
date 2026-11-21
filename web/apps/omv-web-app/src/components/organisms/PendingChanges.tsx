@@ -117,55 +117,108 @@ export function PendingChanges() {
             : undefined
         }
       />
-      <ConfirmDialog
+      <ApplyChangesDialog
         open={confirming === "apply"}
         onOpenChange={(open) => !open && setConfirming(null)}
-        title={
-          some ? t("pending.applyTitle", { count }) : t("pending.applyTitleAll")
-        }
-        description={t("pending.applyBody")}
-        confirmLabel={applyLabel}
-        cancelLabel={t("pending.cancel")}
+        modules={modules}
         onConfirm={() => start("apply")}
-      >
-        {count > 0 ? (
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">{t("pending.applyAffects")}</p>
-            <ul className="list-disc ps-5">
-              {modules.map((id) => (
-                <li key={id}>
-                  <ModuleName id={id} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {mayCutConnection(modules) ? (
-          <InlineAlert tone="neutral">
-            {t("pending.connectionWarning")}
-          </InlineAlert>
-        ) : null}
-      </ConfirmDialog>
-      <ConfirmDialog
+      />
+      <UndoChangesDialog
         open={confirming === "undo"}
         onOpenChange={(open) => !open && setConfirming(null)}
-        title={
-          some ? t("pending.undoTitle", { count }) : t("pending.undoTitleAll")
-        }
-        description={
-          count > 0 ? (
-            <Trans
-              i18nKey="pending.undoBody"
-              components={{ list: <ModuleNames ids={modules} /> }}
-            />
-          ) : (
-            t("pending.undoBodyAll")
-          )
-        }
-        confirmLabel={undoLabel}
-        cancelLabel={t("pending.cancel")}
+        modules={modules}
         onConfirm={() => start("undo")}
       />
     </div>
+  );
+}
+
+interface ChangesDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** The pending module ids, from System.getInformation's dirtyModules. */
+  modules: readonly string[];
+  onConfirm: () => void;
+}
+
+/**
+ * The band's confirmation before applying: what is applied, and a warning when the connection may
+ * drop. Also used by flows whose pre-flight offers "Apply them now" (UX audit R1).
+ */
+export function ApplyChangesDialog({
+  open,
+  onOpenChange,
+  modules,
+  onConfirm,
+}: ChangesDialogProps) {
+  const { t } = useTranslation();
+  const count = modules.length;
+  const some = count > 0;
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        some ? t("pending.applyTitle", { count }) : t("pending.applyTitleAll")
+      }
+      description={t("pending.applyBody")}
+      confirmLabel={
+        some ? t("pending.apply", { count }) : t("pending.applyAll")
+      }
+      cancelLabel={t("pending.cancel")}
+      onConfirm={onConfirm}
+    >
+      {some ? (
+        <div className="flex flex-col gap-1">
+          <p className="font-medium">{t("pending.applyAffects")}</p>
+          <ul className="list-disc ps-5">
+            {modules.map((id) => (
+              <li key={id}>
+                <ModuleName id={id} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {mayCutConnection(modules) ? (
+        <InlineAlert tone="neutral">
+          {t("pending.connectionWarning")}
+        </InlineAlert>
+      ) : null}
+    </ConfirmDialog>
+  );
+}
+
+/** The band's confirmation before undoing: it names what is lost (UI-8). */
+export function UndoChangesDialog({
+  open,
+  onOpenChange,
+  modules,
+  onConfirm,
+}: ChangesDialogProps) {
+  const { t } = useTranslation();
+  const count = modules.length;
+  const some = count > 0;
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        some ? t("pending.undoTitle", { count }) : t("pending.undoTitleAll")
+      }
+      description={
+        some ? (
+          <Trans
+            i18nKey="pending.undoBody"
+            components={{ list: <ModuleNames ids={modules} /> }}
+          />
+        ) : (
+          t("pending.undoBodyAll")
+        )
+      }
+      confirmLabel={some ? t("pending.undo", { count }) : t("pending.undoAll")}
+      cancelLabel={t("pending.cancel")}
+      onConfirm={onConfirm}
+    />
   );
 }

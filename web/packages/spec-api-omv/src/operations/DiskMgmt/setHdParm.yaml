@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: diskMgmtSetHdParm
+  tags:
+    - DiskMgmt
+  summary: Save a disk's power settings
+  description: >-
+    Create a disk's power and cache settings (with OMV's placeholder UUID) or change them. The disk
+    must exist; the server stores its /dev/disk/by-id/ link and refuses a second settings object for
+    the same disk. Nothing changes on the system until the pending changes are applied; it marks the
+    smartmontools module dirty. Applying it sets these values on every disk that has settings.
+    Returns the stored settings.
+  x-omv-rpc:
+    service: DiskMgmt
+    method: setHdParm
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.diskmgmt.sethdparm
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/DiskMgmtSetHdParmRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/HdParm.yaml
+          examples:
+            created:
+              $ref: ../../examples/diskMgmtSetHdParm.created.yaml

@@ -1,0 +1,23 @@
+type: object
+description: >-
+  A disk's stored power and cache settings (conf.system.hdparm). They take effect when the pending
+  changes are applied.
+required: [uuid, devicefile, apm, aam, spindowntime, writecache]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link where it has one, otherwise the device file sent.
+  apm:
+    type: integer
+    description: Advanced Power Management; 0 is off.
+  aam:
+    type: integer
+    description: Advanced Acoustic Management; 0 is off, 128 quiet, 254 fast.
+  spindowntime:
+    type: integer
+    description: The standby timer in the drive's encoding; 0 is never.
+  writecache:
+    type: boolean

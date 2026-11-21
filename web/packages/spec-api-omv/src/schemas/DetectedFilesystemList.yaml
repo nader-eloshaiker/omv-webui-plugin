@@ -1,0 +1,4 @@
+type: array
+description: Every file system the system detects, in no particular order.
+items:
+  $ref: ./DetectedFilesystem.yaml

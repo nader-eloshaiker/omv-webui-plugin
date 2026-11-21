@@ -1,0 +1,20 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: monitoring saved for the NVMe disk and not applied (discarded afterwards)."
+x-omv-status: 200
+value:
+  - devicename: nvme0n1
+    canonicaldevicefile: /dev/nvme0n1
+    devicefile: /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+    devicelinks:
+      - /dev/disk/by-diskseq/1
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1
+      - /dev/disk/by-id/nvme-EXAMPLE-WWN-0001
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+    model: VMware Virtual NVMe Disk
+    size: "21474836480"
+    temperature: "30"
+    description: "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]"
+    vendor: "0x15ad"
+    serialnumber: EXAMPLE-SERIAL-0001
+    wwn: EXAMPLE-WWN-0001
+    overallstatus: GOOD

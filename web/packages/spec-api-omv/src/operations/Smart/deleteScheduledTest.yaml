@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartDeleteScheduledTest
+  tags:
+    - Smart
+  summary: Delete a scheduled self-test
+  description: >-
+    Delete one scheduled S.M.A.R.T. self-test, by its UUID. Only the schedule is removed; the disk
+    and its self-test log are not touched, and discarding the pending changes brings the test back.
+    Nothing changes on the system until the pending changes are applied; it marks the smartmontools
+    module dirty. Returns the deleted test.
+  x-omv-rpc:
+    service: Smart
+    method: deleteScheduledTest
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartScheduledTest.yaml
+          examples:
+            deleted:
+              $ref: ../../examples/smartDeleteScheduledTest.deleted.yaml

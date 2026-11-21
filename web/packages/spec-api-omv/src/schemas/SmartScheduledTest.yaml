@@ -1,0 +1,29 @@
+type: object
+description: >-
+  A stored scheduled S.M.A.R.T. self-test (conf.service.smartmontools.job). It runs on the schedule
+  once the pending changes are applied. The schedule fields are "*" or a zero-padded number.
+required:
+  [uuid, enable, devicefile, type, hour, month, dayofmonth, dayofweek, comment]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link where it has one.
+  type:
+    type: string
+    description: S short, L long, C conveyance, O offline. Open to other values.
+  hour:
+    type: string
+  month:
+    type: string
+  dayofmonth:
+    type: string
+  dayofweek:
+    type: string
+    description: '"*", or "1" (Monday) to "7" (Sunday).'
+  comment:
+    type: string

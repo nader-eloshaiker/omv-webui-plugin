@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the RAID plugin (openmediavault-md) is not installed, so OMV does not know the MdMgmt service."
+x-omv-status: 404
+value:
+  code: 0
+  message: "RPC service 'MdMgmt' not found."

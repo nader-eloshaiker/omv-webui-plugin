@@ -1,0 +1,4 @@
+type: array
+description: Disks that OMV can read S.M.A.R.T. data from, in no particular order.
+items:
+  $ref: ./SmartEnumeratedDevice.yaml

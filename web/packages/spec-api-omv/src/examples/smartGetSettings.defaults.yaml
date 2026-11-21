@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: OMV's defaults, monitoring off."
+x-omv-status: 200
+value:
+  enable: false
+  interval: 1800
+  powermode: never
+  tempdiff: 0
+  tempmax: 0

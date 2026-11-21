@@ -1,0 +1,131 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the test VM's disks: the NVMe system disk, four empty virtual SATA disks and the read-only cloud-init CD drive. The NVMe disk reports its power mode as UNKNOWN."
+x-omv-status: 200
+value:
+  - devicename: nvme0n1
+    canonicaldevicefile: /dev/nvme0n1
+    devicefile: /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+    devicelinks:
+      - /dev/disk/by-diskseq/1
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1
+      - /dev/disk/by-id/nvme-EXAMPLE-WWN-0001
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1"
+    model: VMware Virtual NVMe Disk
+    size: "21474836480"
+    description: "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]"
+    vendor: "0x15ad"
+    serialnumber: EXAMPLE-SERIAL-0001
+    wwn: EXAMPLE-WWN-0001
+    israid: false
+    isroot: true
+    isreadonly: false
+    powermode: UNKNOWN
+    temperature: "30"
+    hotpluggable: false
+  - devicename: sda
+    canonicaldevicefile: /dev/sda
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002
+    devicelinks:
+      - /dev/disk/by-diskseq/2
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0002
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    description: "VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0002
+    wwn: EXAMPLE-WWN-0002
+    israid: false
+    isroot: false
+    isreadonly: false
+    powermode: ACTIVE or IDLE
+    temperature: ""
+    hotpluggable: true
+  - devicename: sdb
+    canonicaldevicefile: /dev/sdb
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+    devicelinks:
+      - /dev/disk/by-diskseq/3
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0003
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-4"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-4.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0003
+    wwn: EXAMPLE-WWN-0003
+    israid: false
+    isroot: false
+    isreadonly: false
+    powermode: ACTIVE or IDLE
+    temperature: ""
+    hotpluggable: true
+  - devicename: sdc
+    canonicaldevicefile: /dev/sdc
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+    devicelinks:
+      - /dev/disk/by-diskseq/4
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0004
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-5"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-5.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0004
+    wwn: EXAMPLE-WWN-0004
+    israid: false
+    isroot: false
+    isreadonly: false
+    powermode: ACTIVE or IDLE
+    temperature: ""
+    hotpluggable: true
+  - devicename: sdd
+    canonicaldevicefile: /dev/sdd
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005
+    devicelinks:
+      - /dev/disk/by-diskseq/5
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0005
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-6.0"
+    model: VMware Virtual SATA Hard Drive
+    size: "8589934592"
+    description: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0005
+    wwn: EXAMPLE-WWN-0005
+    israid: false
+    isroot: false
+    isreadonly: false
+    powermode: ACTIVE or IDLE
+    temperature: ""
+    hotpluggable: true
+  - devicename: sr0
+    canonicaldevicefile: /dev/sr0
+    devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006
+    devicelinks:
+      - /dev/cdrom
+      - /dev/disk/by-diskseq/7
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006
+      - /dev/disk/by-label/cidata
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-2"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0"
+      - /dev/disk/by-uuid/2026-11-19-05-53-43-00
+    model: VMware Virtual SATA CDRW Drive
+    size: "921600"
+    description: "VMware Virtual SATA CDRW Drive [/dev/sr0, 900.00 KiB]"
+    vendor: NECVMWar
+    serialnumber: EXAMPLE-SERIAL-0006
+    wwn: ""
+    israid: false
+    isroot: false
+    isreadonly: true
+    powermode: UNKNOWN
+    temperature: ""
+    hotpluggable: false

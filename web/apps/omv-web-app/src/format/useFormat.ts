@@ -4,15 +4,16 @@ import { useTranslation } from "react-i18next";
 import {
   durationParts,
   formatEpochSeconds,
+  longDurationParts,
   speedParts,
   wholePercent,
+  type DurationParts,
 } from "./format.ts";
 
 export function useFormat() {
   const { t } = useTranslation();
 
-  const duration = (seconds: number): string => {
-    const result = durationParts(seconds);
+  const words = (result: DurationParts): string => {
     if (result.kind === "underMinute") {
       return t("format.duration.underMinute");
     }
@@ -23,6 +24,19 @@ export function useFormat() {
       ? (first ?? "")
       : t("format.duration.pair", { first, second });
   };
+  const duration = (seconds: number): string => words(durationParts(seconds));
+  /** A long duration with years: "3 years, 41 days" (a disk's power-on time). */
+  const longDuration = (seconds: number): string =>
+    words(longDurationParts(seconds));
+
+  /**
+   * How often something repeats: the duration rule, except that an interval under a minute (the
+   * server allows 10 seconds and up) is said in seconds, never "every less than a minute".
+   */
+  const interval = (seconds: number): string =>
+    seconds > 0 && seconds < 60
+      ? t("format.duration.seconds", { count: Math.round(seconds) })
+      : duration(seconds);
 
   const percent = (value: number): string => {
     const whole = wholePercent(value);
@@ -58,5 +72,15 @@ export function useFormat() {
   const celsius = (degrees: number): string =>
     t("format.celsius", { value: String(Math.round(degrees)) });
 
-  return { duration, percent, clock, count, dateTime, speed, celsius };
+  return {
+    duration,
+    interval,
+    longDuration,
+    percent,
+    clock,
+    count,
+    dateTime,
+    speed,
+    celsius,
+  };
 }

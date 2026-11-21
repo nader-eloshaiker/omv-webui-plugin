@@ -20,6 +20,7 @@ import {
 } from "../generated/omv/config/config.ts";
 import { emailNotificationGet } from "../generated/omv/email-notification/email-notification.ts";
 import { execGetOutput, execStop } from "../generated/omv/exec/exec.ts";
+import { mdMgmtEnumerateDevices } from "../generated/omv/md-mgmt/md-mgmt.ts";
 import { networkEnumerateDevicesList } from "../generated/omv/network/network.ts";
 import { sessionLogin } from "../generated/omv/session/session.ts";
 import { shareMgmtGetList } from "../generated/omv/share-mgmt/share-mgmt.ts";
@@ -169,6 +170,17 @@ describe("errors", () => {
       status,
       message,
       kind,
+    });
+  });
+
+  it("keeps the 404 of a plugin's service that is not installed, as its contract documents", async () => {
+    answer({ mdMgmtEnumerateDevices: "notInstalled" });
+    await expect(mdMgmtEnumerateDevices()).rejects.toMatchObject({
+      status: 404,
+      code: 0,
+      message: "RPC service 'MdMgmt' not found.",
+      operationId: "mdMgmtEnumerateDevices",
+      kind: "failure",
     });
   });
 

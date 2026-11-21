@@ -48,6 +48,8 @@ export interface NavPage {
 export type BuiltRoute =
   | "/services/ssh"
   | "/storage/shared-folders"
+  | "/storage/disks"
+  | "/storage/smart"
   | "/account/settings"
   | "/diagnostics/system-logs"
   | "/diagnostics/processes"
@@ -154,6 +156,7 @@ export const NAV_PAGES = [
     item: "disks",
     labelKey: "nav.items.storage.disks",
     classic: "/#/storage/disks",
+    route: "/storage/disks",
     roles: ADMIN,
   },
   {
@@ -161,6 +164,7 @@ export const NAV_PAGES = [
     item: "smart",
     labelKey: "nav.items.storage.smart",
     classic: "/#/storage/smart",
+    route: "/storage/smart",
     roles: ADMIN,
   },
   {
@@ -309,14 +313,18 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
 /**
  * Whether the menu entry for `route` is the current page. `/account/password` is a second address of
  * the account page (the set-up checklist and stock users know it), so it marks "Your account"; every
- * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services".
+ * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services"; a disk's page
+ * (`/storage/disks/sdb`) marks "Disks", and every Disk health page (`/storage/smart/overview`, the
+ * set-up page) marks "Disk health".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
     pathname === route ||
     (route === "/account/settings" && pathname === "/account/password") ||
     (route === "/diagnostics/services" &&
-      pathname.startsWith("/diagnostics/services/"))
+      pathname.startsWith("/diagnostics/services/")) ||
+    (route === "/storage/disks" && pathname.startsWith("/storage/disks/")) ||
+    (route === "/storage/smart" && pathname.startsWith("/storage/smart/"))
   );
 }
 
@@ -347,6 +355,10 @@ export const CLASSIC = {
   fileSystems: "/#/storage/filesystems",
   smartSettings: "/#/storage/smart/settings",
   smartDevices: "/#/storage/smart/devices",
+  smartTasks: "/#/storage/smart/tasks",
+  disks: "/#/storage/disks",
+  raid: "/#/storage/md",
+  notificationEvents: "/#/system/notification/events",
   networkInterfaces: "/#/network/interfaces",
   smbSettings: "/#/services/smb/settings",
   nfsSettings: "/#/services/nfs/settings",

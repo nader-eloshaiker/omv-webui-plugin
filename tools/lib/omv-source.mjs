@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Reading an openmediavault source tree (or an installed system's /usr/share/openmediavault):
-// datamodels by id, and which methods each RPC service registers.
+// datamodels by id, and which methods each RPC service registers. In a source tree, the plugins
+// built from it (deb/openmediavault-md and the others) count too, as they do once installed.
 import fs from "node:fs";
 import path from "node:path";
 
@@ -20,26 +21,37 @@ export function omvLayout(root) {
   const base = share.endsWith("usr/share/openmediavault")
     ? path.resolve(share, "../../..")
     : root;
+  // The plugins of a source tree: deb/openmediavault-*/usr/share/openmediavault.
+  const deb = path.join(root, "deb");
+  const plugins = fs.existsSync(deb)
+    ? fs
+        .readdirSync(deb)
+        .filter((d) => d.startsWith("openmediavault-"))
+        .sort()
+        .map((d) => path.join(deb, d, "usr/share/openmediavault"))
+    : [];
   const rpcDirs = [
     path.join(share, "engined/rpc"),
     path.join(base, "var/www/openmediavault/rpc"),
+    ...plugins.map((p) => path.join(p, "engined/rpc")),
   ].filter((d) => fs.existsSync(d));
-  return { datamodels: path.join(share, "datamodels"), rpcDirs };
+  const datamodelDirs = [
+    path.join(share, "datamodels"),
+    ...plugins.map((p) => path.join(p, "datamodels")),
+  ].filter((d) => fs.existsSync(d));
+  return { datamodels: path.join(share, "datamodels"), datamodelDirs, rpcDirs };
 }
 
 /** Every datamodel in the tree, by id. A file holds one model or a list of them. */
 export function readDatamodels(root) {
-  const { datamodels } = omvLayout(root);
   const byId = new Map();
-  for (const file of fs
-    .readdirSync(datamodels)
-    .filter((f) => f.endsWith(".json"))) {
-    const parsed = JSON.parse(
-      fs.readFileSync(path.join(datamodels, file), "utf8"),
-    );
-    for (const model of Array.isArray(parsed) ? parsed : [parsed]) {
-      if (model?.id) {
-        byId.set(model.id, { ...model, file });
+  for (const dir of omvLayout(root).datamodelDirs) {
+    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+      const parsed = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+      for (const model of Array.isArray(parsed) ? parsed : [parsed]) {
+        if (model?.id) {
+          byId.set(model.id, { ...model, file });
+        }
       }
     }
   }

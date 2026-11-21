@@ -1,0 +1,5 @@
+summary: "Written by hand from the source (OMV 8.6.1): a quick wipe whose last step fails because the disk is still in use (a file system on it is mounted), so the kernel keeps the old partition table. The task fails and getOutput itself answers HTTP 500 with the failing command and its output. Not captured: wiping is not run on the test VM."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LANG=C.UTF-8; export LANGUAGE=; blockdev --rereadpt '/dev/sda' 2>&1' with exit code '1': blockdev: ioctl error on BLKRRPART: Device or resource busy"

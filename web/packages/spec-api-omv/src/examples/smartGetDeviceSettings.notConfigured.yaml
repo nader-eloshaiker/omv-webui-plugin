@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed: the NVMe disk, which has no stored monitoring settings."
+x-omv-status: 500
+value:
+  code: 0
+  message: "The XPath query './/services/smart/monitor/device[(devicefile='/dev/nvme0n1' or devicefile='/dev/disk/by-diskseq/1' or devicefile='/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001' or devicefile='/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1' or devicefile='/dev/disk/by-id/nvme-EXAMPLE-WWN-0001' or devicefile='/dev/disk/by-path/pci-0000:12:00.0-nvme-1')]' does not return the requested number of 1 object(s)."

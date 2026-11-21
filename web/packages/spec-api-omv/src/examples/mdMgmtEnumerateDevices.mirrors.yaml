@@ -1,0 +1,28 @@
+summary: "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. The RAID plugin is not installed on the test VM."
+x-omv-status: 200
+value:
+  - _used: true
+    name: "nas:0"
+    devicefile: /dev/md0
+    uuid: "0a1b2c3d:4e5f6071:8293a4b5:c6d7e8f9"
+    level: raid1
+    numdevices: 2
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+    size: "4000652656640"
+    state: clean
+    syncaction: idle
+    description: "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]"
+  - _used: false
+    name: "nas:1"
+    devicefile: /dev/md1
+    uuid: "1b2c3d4e:5f607182:93a4b5c6:d7e8f90a"
+    level: raid1
+    numdevices: 2
+    devices:
+      - /dev/sdd
+    size: "2000263643136"
+    state: "clean, degraded"
+    syncaction: idle
+    description: "Software RAID nas:1 [/dev/md1, raid1, 1.82 TiB]"

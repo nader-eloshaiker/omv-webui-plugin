@@ -1,0 +1,53 @@
+summary: "Written by hand from the vmDisks capture (OMV 8.6.1): a data disk in standby beside the system disk. The read did not wake it, so it reports STANDBY and no temperature. The test VM's virtual disks never spin down."
+x-omv-status: 200
+value:
+  total: 2
+  data:
+    - devicename: nvme0n1
+      canonicaldevicefile: /dev/nvme0n1
+      devicefile: /dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100
+      devicelinks:
+        - /dev/disk/by-diskseq/1
+        - /dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100
+        - /dev/disk/by-id/nvme-EXAMPLE-WWN-0100
+        - "/dev/disk/by-path/pci-0000:01:00.0-nvme-1"
+      model: Example SSD 500GB
+      size: "500107862016"
+      description: "Example SSD 500GB [/dev/nvme0n1, 465.76 GiB]"
+      vendor: ""
+      serialnumber: EXAMPLE-SERIAL-0100
+      wwn: EXAMPLE-WWN-0100
+      israid: false
+      isroot: true
+      isreadonly: false
+      powermode: UNKNOWN
+      temperature: "38"
+      hotpluggable: false
+    - devicename: sda
+      canonicaldevicefile: /dev/sda
+      devicefile: /dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101
+      devicelinks:
+        - /dev/disk/by-diskseq/2
+        - /dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101
+        - /dev/disk/by-id/wwn-EXAMPLE-WWN-0101
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1"
+        - "/dev/disk/by-path/pci-0000:00:17.0-ata-1.0"
+      model: Example HDD 4TB
+      size: "4000787030016"
+      description: "Example HDD 4TB [/dev/sda, 3.64 TiB]"
+      vendor: ATA
+      serialnumber: EXAMPLE-SERIAL-0101
+      wwn: EXAMPLE-WWN-0101
+      israid: false
+      isroot: false
+      isreadonly: false
+      powermode: STANDBY
+      temperature: ""
+      hotpluggable: false
+      hdparm:
+        uuid: "00000000-0000-4000-8000-000000000101"
+        devicefile: /dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101
+        apm: 1
+        aam: 0
+        spindowntime: 241
+        writecache: true

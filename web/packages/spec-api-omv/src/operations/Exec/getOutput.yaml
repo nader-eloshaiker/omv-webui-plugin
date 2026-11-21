@@ -37,6 +37,10 @@ post:
               $ref: ../../examples/execGetOutput.smartManyBadSectorsFinished.yaml
             smartStatusUnknownFinished:
               $ref: ../../examples/execGetOutput.smartStatusUnknownFinished.yaml
+            wipeFinished:
+              $ref: ../../examples/execGetOutput.wipeFinished.yaml
+            selfTestFinished:
+              $ref: ../../examples/execGetOutput.selfTestFinished.yaml
     "500":
       description: "The task failed: the message is the task's whole output (for an apply, the Salt log). Also the answer for a handle the server has already deleted (A6)."
       content:
@@ -46,3 +50,5 @@ post:
           examples:
             applyFailed:
               $ref: ../../examples/execGetOutput.applyFailed.yaml
+            wipeFailed:
+              $ref: ../../examples/execGetOutput.wipeFailed.yaml

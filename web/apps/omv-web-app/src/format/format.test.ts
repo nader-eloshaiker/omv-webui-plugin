@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   durationParts,
   formatBytes,
+  longDurationParts,
   naturalCompare,
   parseByteCount,
   parseDecimal,
@@ -96,6 +97,32 @@ describe("durationParts", () => {
     ],
   ])("%d s", (seconds, parts) => {
     expect(durationParts(seconds)).toEqual(parts);
+  });
+});
+
+describe("longDurationParts", () => {
+  const DAY = 86_400;
+  it.each([
+    [
+      (3 * 365 + 41) * DAY + 3600,
+      [
+        { unit: "years", count: 3 },
+        { unit: "days", count: 41 },
+      ],
+    ],
+    [365 * DAY, [{ unit: "years", count: 1 }]],
+    [
+      41 * DAY + 7200,
+      [
+        { unit: "days", count: 41 },
+        { unit: "hours", count: 2 },
+      ],
+    ],
+  ])("%d s", (seconds, parts) => {
+    expect(longDurationParts(seconds)).toEqual({ kind: "parts", parts });
+  });
+  it("keeps the short words under a minute", () => {
+    expect(longDurationParts(30)).toEqual({ kind: "underMinute" });
   });
 });
 

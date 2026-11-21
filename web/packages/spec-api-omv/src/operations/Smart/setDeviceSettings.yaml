@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartSetDeviceSettings
+  tags:
+    - Smart
+  summary: Save a disk's monitoring settings
+  description: >-
+    Create one disk's S.M.A.R.T. monitoring settings (with OMV's placeholder UUID) or change them.
+    The disk must exist and be one OMV reads S.M.A.R.T. data from; the server stores its
+    /dev/disk/by-id/ link and the smartctl device type, and refuses a second settings object for the
+    same disk. The stock interface does not let monitoring be turned off while a scheduled self-test
+    refers to the disk (`_used` of getDeviceSettings). Nothing changes on the system until the
+    pending changes are applied; it marks the smartmontools module dirty. Returns the stored
+    settings.
+  x-omv-rpc:
+    service: Smart
+    method: setDeviceSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.smart.setdevicesettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SmartSetDeviceSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmartDeviceSettings.yaml
+          examples:
+            created:
+              $ref: ../../examples/smartSetDeviceSettings.created.yaml

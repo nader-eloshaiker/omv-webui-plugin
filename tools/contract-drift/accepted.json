@@ -8,5 +8,35 @@
     "where": "logFileGetList (LogFile.getList)",
     "message": "$: has a field search that OMV's datamodel does not declare",
     "reason": "rpc.logfile.getlist does not declare search, but LogFile::getList passes $params['search'] to applyFilter, and validation ignores keys a datamodel does not declare. The contract declares it optional, as text, the type applyFilter searches with."
+  },
+  {
+    "where": "smartSetDeviceSettings (Smart.setDeviceSettings)",
+    "message": "$: has a field tempdiff that OMV's datamodel does not declare",
+    "reason": "rpc.smart.setdevicesettings does not declare tempdiff, but Smart::setDeviceSettings reads $params['tempdiff'] and stores it, and validation ignores keys a datamodel does not declare. The contract requires it, as an integer within the bounds of conf.service.smartmontools.device (0 to 255)."
+  },
+  {
+    "where": "smartSetDeviceSettings (Smart.setDeviceSettings)",
+    "message": "$: has a field tempmax that OMV's datamodel does not declare",
+    "reason": "rpc.smart.setdevicesettings does not declare tempmax, but Smart::setDeviceSettings reads $params['tempmax'] and stores it, and validation ignores keys a datamodel does not declare. The contract requires it, as an integer within the bounds of conf.service.smartmontools.device (0 to 255)."
+  },
+  {
+    "where": "smartSetScheduledTest (Smart.setScheduledTest)",
+    "message": "$.hour: its pattern differs from OMV's",
+    "reason": "The contract's pattern is anchored, accepting exactly the values the stock form offers (\"*\" or \"00\" to \"23\"); each of them also matches OMV's pattern."
+  },
+  {
+    "where": "smartSetScheduledTest (Smart.setScheduledTest)",
+    "message": "$.month: its pattern differs from OMV's",
+    "reason": "The contract's pattern is anchored, accepting exactly the values the stock form offers (\"*\" or \"01\" to \"12\"); each of them also matches OMV's pattern."
+  },
+  {
+    "where": "smartSetScheduledTest (Smart.setScheduledTest)",
+    "message": "$.dayofmonth: its pattern differs from OMV's",
+    "reason": "The contract's pattern is anchored, accepting exactly the values the stock form offers (\"*\" or \"01\" to \"31\"); each of them also matches OMV's pattern."
+  },
+  {
+    "where": "smartSetScheduledTest (Smart.setScheduledTest)",
+    "message": "$.dayofweek: its pattern differs from OMV's",
+    "reason": "The contract's pattern is anchored, accepting exactly the values the stock form offers (\"*\" or \"1\" to \"7\"); each of them also matches OMV's pattern."
   }
 ]

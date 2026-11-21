@@ -6,7 +6,22 @@
 // so that a reload starts at sign-in and the screens of signing in can be walked: every operation
 // outside Session answers 401 until Session.login (or verify) succeeds, and again after logout.
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
-import type { Answers, FixedAnswer } from "@omv-webui/react-api-omv/mocks";
+import type {
+  Answers,
+  ExampleName,
+  FixedAnswer,
+  OperationId,
+} from "@omv-webui/react-api-omv/mocks";
+import {
+  DISK_SCENARIO_LABELS,
+  DISK_SCENARIOS,
+  diskAnswers,
+  diskCheckOutput,
+  newDiskMockState,
+  selfTestOutput,
+  wipeOutput,
+  type DiskMockState,
+} from "./diskScenarios.ts";
 
 export const SCENARIOS = [
   "admin",
@@ -53,6 +68,7 @@ export const SCENARIOS = [
   "processesBusy",
   "serviceOutputs",
   "serviceOutputsEmpty",
+  ...DISK_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -105,6 +121,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   processesBusy: "Processes: stopped, zombie, swap, long command",
   serviceOutputs: "Service details: SMB, NFS and SSH in use",
   serviceOutputsEmpty: "Service details: on, nothing to show",
+  ...DISK_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -569,6 +586,10 @@ export interface MockSession {
   dirty: boolean;
   /** An administrator hid the set-up checklist (WebGui.dismissWelcomeMessage). */
   welcomeDismissed: boolean;
+  /** Disk-health or power settings are saved and not applied: the smartmontools module is dirty. */
+  smartDirty: boolean;
+  /** What the disk scenarios remember between calls (diskScenarios.ts). */
+  disk: DiskMockState;
 }
 
 export const newMockSession = (
@@ -580,6 +601,8 @@ export const newMockSession = (
   expiring: false,
   dirty,
   welcomeDismissed: false,
+  smartDirty: false,
+  disk: newDiskMockState(),
 });
 
 /** Whether a scenario starts with changes pending. */
@@ -592,6 +615,10 @@ export const startsDirty = (name: ScenarioName): boolean =>
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
 // The handle the contract's disk health example returns.
 const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
+// The handles of the contract's wipe and self-test examples.
+const WIPE_HANDLE = CONTRACT_EXAMPLES.diskMgmtWipe.started.value;
+const SELF_TEST_HANDLE =
+  CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value;
 
 /** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
 const CORE_LOGS = new Set([
@@ -696,6 +723,54 @@ export function scenarioAnswers(
       return example;
     };
 
+  /** A disk-health or power setting saved: OMV marks the smartmontools module dirty. */
+  const smartPending =
+    <T extends string>(reply: T) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        session.smartDirty = true;
+      }
+      return answer;
+    };
+  const disk = diskAnswers(name, session.disk);
+  /** A disk operation's answer for this scenario, behind the sign-in guard. */
+  const diskRead =
+    <Op extends OperationId>(operationId: Op) =>
+    ({ params }: { params: unknown }): ExampleName<Op> | FixedAnswer => {
+      const reply = disk[operationId];
+      if (reply === undefined) {
+        throw new Error(`No disk answer for ${operationId}`);
+      }
+      // Each name is one of the operation's examples; scenarios.test.ts checks every answer.
+      return guarded(
+        (typeof reply === "function" ? reply({ params }) : reply) as
+          ExampleName<Op> | FixedAnswer,
+      )();
+    };
+  /** The modules System.getInformation reports, with smartmontools once a disk setting is saved. */
+  const withSmartDirty = (answer: FixedAnswer): FixedAnswer => {
+    if (!session.smartDirty || answer.status !== 200) {
+      return answer;
+    }
+    const value = answer.value as { dirtyModules?: unknown };
+    const before =
+      session.dirty && value.dirtyModules && !Array.isArray(value.dirtyModules)
+        ? (value.dirtyModules as Record<string, string>)
+        : {};
+    return {
+      ...answer,
+      value: {
+        ...value,
+        dirtyModules: {
+          ...before,
+          smartmontools: "S.M.A.R.T. monitoring of disks.",
+          ...(name === "smartAlsoPending" ? { nfs: "NFS server." } : {}),
+        },
+      },
+    };
+  };
+
   return {
     sessionLogin: login(() => {
       switch (name) {
@@ -736,18 +811,20 @@ export function scenarioAnswers(
       name === "servicePending" && session.dirty
         ? guarded<never>(sambaPending())()
         : guarded<never>(
-            information(
-              user
-                ? "user"
-                : session.dirty
-                  ? "adminPendingChanges"
-                  : name === "checklistHidden" || session.welcomeDismissed
-                    ? "adminWelcomeDismissed"
-                    : "admin",
-              {
-                now: name !== "attention",
-                rebootRequired: name === "attention",
-              },
+            withSmartDirty(
+              information(
+                user
+                  ? "user"
+                  : session.dirty
+                    ? "adminPendingChanges"
+                    : name === "checklistHidden" || session.welcomeDismissed
+                      ? "adminWelcomeDismissed"
+                      : "admin",
+                {
+                  now: name !== "attention",
+                  rebootRequired: name === "attention",
+                },
+              ),
             ),
           )(),
     userMgmtGetUserByContext: guarded(
@@ -760,7 +837,8 @@ export function scenarioAnswers(
     webGuiGetAutoLogoutSettings: guarded(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
-    configIsDirty: () => guarded(session.dirty ? "dirty" : "clean")(),
+    configIsDirty: () =>
+      guarded(session.dirty || session.smartDirty ? "dirty" : "clean")(),
     configApplyChangesBg: guarded("applied"),
     configRevertChangesBg: guarded("reverted"),
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
@@ -768,7 +846,19 @@ export function scenarioAnswers(
     execGetOutput: ({ params }) => {
       const filename = (params as { filename?: unknown } | null)?.filename;
       if (filename === SMART_HANDLE) {
-        return guarded(SMART_SCENARIOS[name] ?? "smartDevicesFinished")();
+        return guarded<ExampleName<"execGetOutput">>(
+          diskCheckOutput(name) ??
+            SMART_SCENARIOS[name] ??
+            "smartDevicesFinished",
+        )();
+      }
+      if (filename === WIPE_HANDLE) {
+        return guarded<ExampleName<"execGetOutput">>(
+          wipeOutput(name, session.disk),
+        )();
+      }
+      if (filename === SELF_TEST_HANDLE) {
+        return guarded<ExampleName<"execGetOutput">>(selfTestOutput(name))();
       }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
@@ -777,6 +867,7 @@ export function scenarioAnswers(
       const answer = guarded(apply ? "appliedFinished" : "revertedFinished")();
       if (typeof answer === "string") {
         session.dirty = false;
+        session.smartDirty = false;
       }
       return answer;
     },
@@ -818,9 +909,10 @@ export function scenarioAnswers(
     fileSystemMgmtEnumerateMountedFilesystems: guarded(
       MOUNTED_SCENARIOS[name] ?? "withRoot",
     ),
-    fileSystemMgmtGetList: guarded(
-      name === "storageMissing" ? "missing" : "configured",
-    ),
+    fileSystemMgmtGetList:
+      name === "storageMissing"
+        ? guarded("missing")
+        : diskRead("fileSystemMgmtGetList"),
     smartGetListBg: guarded("smartDevices"),
     servicesGetStatus: guarded(SERVICE_SCENARIOS[name] ?? "sshOnly"),
     networkEnumerateDevicesList: guarded(
@@ -840,6 +932,34 @@ export function scenarioAnswers(
       return guarded(log)();
     },
     systemGetTopInfo: guarded(name === "processesBusy" ? BUSY_TOP : "json"),
+    // Disks and disk health (Phase 5): the test VM as captured. A saved setting is pending, as on
+    // OMV, where each of these marks the smartmontools module dirty.
+    diskMgmtEnumerateDevices: guarded("vmDisks"),
+    diskMgmtGetList: diskRead("diskMgmtGetList"),
+    diskMgmtGetHdParm: guarded("configured"),
+    diskMgmtSetHdParm: smartPending("created"),
+    diskMgmtWipe: diskRead("diskMgmtWipe"),
+    diskMgmtRescan: guarded("null"),
+    smartEnumerateDevices: guarded("vmDisks"),
+    smartEnumerateMonitoredDevices: guarded("none"),
+    smartGetSettings: diskRead("smartGetSettings"),
+    smartSetSettings: smartPending("saved"),
+    smartGetDeviceSettings: diskRead("smartGetDeviceSettings"),
+    smartSetDeviceSettings: smartPending("created"),
+    smartGetInformation: diskRead("smartGetInformation"),
+    smartGetAttributes: diskRead("smartGetAttributes"),
+    smartGetSelfTestLogs: diskRead("smartGetSelfTestLogs"),
+    smartGetExtendedInformation: diskRead("smartGetExtendedInformation"),
+    smartGetScheduleList: diskRead("smartGetScheduleList"),
+    smartGetScheduledTest: guarded("configured"),
+    smartSetScheduledTest: smartPending("created"),
+    smartDeleteScheduledTest: smartPending("deleted"),
+    smartExecuteScheduledTest: guarded("started"),
+    // The RAID plugin is not installed on the test VM: OMV answers the unknown service with 404.
+    mdMgmtEnumerateDevices: diskRead("mdMgmtEnumerateDevices"),
+    fileSystemMgmtEnumerateFilesystems: diskRead(
+      "fileSystemMgmtEnumerateFilesystems",
+    ),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty

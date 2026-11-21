@@ -451,5 +451,335 @@
       "call": "SSH.set",
       "paramsFrom": "SSH.get"
     }
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "enumerateDevices",
+    "name": "vmDisks",
+    "account": "admin"
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "getList",
+    "name": "vmDisks",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    }
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "getList",
+    "name": "withHdparm",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    },
+    "setup": {
+      "call": "DiskMgmt.setHdParm",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "devicefile": "/dev/sdb",
+        "apm": 127,
+        "aam": 0,
+        "spindowntime": 241,
+        "writecache": true
+      }
+    }
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "getHdParm",
+    "name": "configured",
+    "account": "admin",
+    "setup": {
+      "call": "DiskMgmt.setHdParm",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "devicefile": "/dev/sdb",
+        "apm": 127,
+        "aam": 0,
+        "spindowntime": 241,
+        "writecache": true
+      }
+    },
+    "paramsFromSetup": ["uuid"]
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "setHdParm",
+    "name": "created",
+    "account": "admin",
+    "params": {
+      "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+      "devicefile": "/dev/sdb",
+      "apm": 127,
+      "aam": 0,
+      "spindowntime": 241,
+      "writecache": true
+    },
+    "revert": true
+  },
+  {
+    "service": "DiskMgmt",
+    "method": "rescan",
+    "name": "rescanned",
+    "account": "admin",
+    "expect": "null"
+  },
+  {
+    "service": "Smart",
+    "method": "enumerateDevices",
+    "name": "vmDisks",
+    "account": "admin"
+  },
+  {
+    "service": "Smart",
+    "method": "enumerateMonitoredDevices",
+    "name": "none",
+    "account": "admin"
+  },
+  {
+    "service": "Smart",
+    "method": "enumerateMonitoredDevices",
+    "name": "monitored",
+    "account": "admin",
+    "setup": {
+      "call": "Smart.setDeviceSettings",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "devicefile": "/dev/nvme0n1",
+        "enable": true,
+        "tempdiff": 0,
+        "tempmax": 0
+      }
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getSettings",
+    "name": "defaults",
+    "account": "admin"
+  },
+  {
+    "service": "Smart",
+    "method": "setSettings",
+    "name": "saved",
+    "account": "admin",
+    "paramsFrom": "Smart.getSettings",
+    "revert": true
+  },
+  {
+    "service": "Smart",
+    "method": "getDeviceSettings",
+    "name": "monitored",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    },
+    "setup": {
+      "call": "Smart.setDeviceSettings",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "devicefile": "/dev/nvme0n1",
+        "enable": true,
+        "tempdiff": 0,
+        "tempmax": 0
+      }
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getDeviceSettings",
+    "name": "notConfigured",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "setDeviceSettings",
+    "name": "created",
+    "account": "admin",
+    "params": {
+      "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+      "devicefile": "/dev/nvme0n1",
+      "enable": true,
+      "tempdiff": 0,
+      "tempmax": 0
+    },
+    "revert": true
+  },
+  {
+    "service": "Smart",
+    "method": "getInformation",
+    "name": "nvme",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getInformation",
+    "name": "sata",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/sda"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getAttributes",
+    "name": "nvme",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getAttributes",
+    "name": "sata",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/sda"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getSelfTestLogs",
+    "name": "nvme",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getExtendedInformation",
+    "name": "nvme",
+    "account": "admin",
+    "params": {
+      "devicefile": "/dev/nvme0n1"
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getScheduleList",
+    "name": "none",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getScheduleList",
+    "name": "scheduled",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    },
+    "setup": {
+      "call": "Smart.setScheduledTest",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "enable": true,
+        "devicefile": "/dev/nvme0n1",
+        "comment": "Weekly short test",
+        "type": "S",
+        "hour": "02",
+        "month": "*",
+        "dayofmonth": "*",
+        "dayofweek": "7"
+      }
+    }
+  },
+  {
+    "service": "Smart",
+    "method": "getScheduledTest",
+    "name": "configured",
+    "account": "admin",
+    "setup": {
+      "call": "Smart.setScheduledTest",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "enable": true,
+        "devicefile": "/dev/nvme0n1",
+        "comment": "Weekly short test",
+        "type": "S",
+        "hour": "02",
+        "month": "*",
+        "dayofmonth": "*",
+        "dayofweek": "7"
+      }
+    },
+    "paramsFromSetup": ["uuid"]
+  },
+  {
+    "service": "Smart",
+    "method": "setScheduledTest",
+    "name": "created",
+    "account": "admin",
+    "params": {
+      "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+      "enable": true,
+      "devicefile": "/dev/nvme0n1",
+      "comment": "Weekly short test",
+      "type": "S",
+      "hour": "02",
+      "month": "*",
+      "dayofmonth": "*",
+      "dayofweek": "7"
+    },
+    "revert": true
+  },
+  {
+    "service": "Smart",
+    "method": "deleteScheduledTest",
+    "name": "deleted",
+    "account": "admin",
+    "setup": {
+      "call": "Smart.setScheduledTest",
+      "params": {
+        "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+        "enable": true,
+        "devicefile": "/dev/nvme0n1",
+        "comment": "Weekly short test",
+        "type": "S",
+        "hour": "02",
+        "month": "*",
+        "dayofmonth": "*",
+        "dayofweek": "7"
+      }
+    },
+    "paramsFromSetup": ["uuid"]
+  },
+  {
+    "service": "MdMgmt",
+    "method": "enumerateDevices",
+    "name": "notInstalled",
+    "account": "admin",
+    "comment": "The test VM has no RAID plugin: OMV answers an unknown service."
+  },
+  {
+    "service": "FileSystemMgmt",
+    "method": "enumerateFilesystems",
+    "name": "vmFilesystems",
+    "account": "admin"
   }
 ]

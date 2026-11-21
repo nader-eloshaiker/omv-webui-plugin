@@ -2,28 +2,32 @@
 // The one page title per page (style guide 5.1). It names the browser tab, and after a navigation it
 // takes focus, so the reader starts at the top of the new page (pageFocus.ts).
 import { useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { usePageFocus } from "../../shell/pageFocus.ts";
 
-export function PageTitle({
-  children,
-  documentTitle,
-}: {
-  children: string;
-  /** The tab's name when it differs from the heading: "SMB/CIFS – Services". */
-  documentTitle?: string;
-}) {
+/**
+ * A heading that is not plain text (a device set in code type: "Disk /dev/sdb") names the tab through
+ * `documentTitle`, which is then required.
+ */
+type PageTitleProps =
+  | {
+      children: string;
+      /** The tab's name when it differs from the heading: "SMB/CIFS – Services". */
+      documentTitle?: string;
+    }
+  | { children: ReactNode; documentTitle: string };
+
+export function PageTitle({ children, documentTitle }: PageTitleProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLHeadingElement>(null);
   const focus = usePageFocus();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  const page = documentTitle ?? (typeof children === "string" ? children : "");
   useEffect(() => {
-    document.title = t("app.documentTitle", {
-      page: documentTitle ?? children,
-    });
-  }, [children, documentTitle, t]);
+    document.title = t("app.documentTitle", { page });
+  }, [page, t]);
 
   useEffect(() => {
     if (focus.navigated()) {

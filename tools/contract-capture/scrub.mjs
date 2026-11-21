@@ -37,9 +37,13 @@ const RFC4716 =
 const HOST_KEYS = new Set(["hostname", "fqdn"]);
 const DOMAIN_KEYS = new Set(["domainname", "domain"]);
 const SERIAL_KEY = /serial/i;
-const WWN_KEYS = new Set(["wwn"]);
+// A WWN field: OMV's own, and smartctl's "LU WWN Device Id" as Smart.getInformation names it.
+const WWN_KEYS = new Set(["wwn", "luwwndeviceid"]);
 // A /dev/disk/by-id/ name, which udev builds from the disk's model, serial number or WWN.
 const BY_ID = /\/dev\/disk\/by-id\/[^\s"',\]]+/g;
+// smartctl's spelling of a 64-bit WWN: the NAA digit, the 6-digit OUI and the 9-digit vendor part,
+// separated by spaces ("LU WWN Device Id: 5 000c50 0a1b2c3d4").
+const SPACED_WWN = /\b[0-9a-f] [0-9a-f]{6} [0-9a-f]{9}\b/gi;
 // What is left of a by-id name that still carries an identifier: a long run of digits or hex.
 const LONG_ID = /(?:0x)?[0-9a-f]{12,}|\d{8,}/i;
 // An identifier shorter than this is not looked for inside other text: it would match by chance.
@@ -56,6 +60,11 @@ export const KEY_PLACEHOLDERS = {
 };
 
 const DOC_UUID = /^00000000-0000-4000-8000-[0-9a-f]{12}$/i;
+// A FAT or exFAT volume ID, which blkid reports as a file system's UUID ("7674-06C7"), and its
+// documentation form.
+// Not part of a longer run of hex digits and dashes, so a UUID's groups are never taken for one.
+const FAT_ID = /(?<![0-9A-Za-z-])[0-9A-F]{4}-[0-9A-F]{4}(?![0-9A-Za-z-])/g;
+const DOC_FAT_ID = /^0000-[0-9A-F]{4}$/;
 const DOC_MAC = /^00:00:5e:00:53:[0-9a-f]{2}$/i;
 const DOC_SERIAL = /^EXAMPLE-SERIAL-\d{4}$/;
 const DOC_WWN = /^EXAMPLE-WWN-\d{4}$/;
@@ -147,6 +156,7 @@ export function createScrubber(known = {}) {
   const serials = new Map();
   const wwns = new Map();
   const emails = new Map();
+  const fatIds = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -165,7 +175,7 @@ export function createScrubber(known = {}) {
   const wwnOf = (value) =>
     number(
       wwns,
-      value.trim().toLowerCase().replace(/^0x/, ""),
+      value.trim().toLowerCase().replace(/\s+/g, "").replace(/^0x/, ""),
       (n) => `EXAMPLE-WWN-${String(n).padStart(4, "0")}`,
     );
   const docMacOf = (mac) =>
@@ -175,7 +185,7 @@ export function createScrubber(known = {}) {
 
   // Disk identifiers looked for inside other text, longest first, each with its placeholder. The
   // forms udev writes them in: as reported, with other characters as "_", and a WWN in lower case
-  // and without "0x".
+  // and without "0x"; and a 64-bit WWN as smartctl spaces it.
   const identifiers = [];
   const variantsOf = (value, kind) => {
     const v = value.trim();
@@ -184,6 +194,10 @@ export function createScrubber(known = {}) {
       for (const w of [v, v.toLowerCase()]) {
         forms.add(w);
         forms.add(w.replace(/^0x/i, ""));
+      }
+      const hex = v.toLowerCase().replace(/\s+/g, "").replace(/^0x/, "");
+      if (/^[0-9a-f]{16}$/.test(hex)) {
+        forms.add(`${hex[0]} ${hex.slice(1, 7)} ${hex.slice(7)}`);
       }
     }
     return [...forms].filter((f) => f.length >= MIN_IDENTIFIER);
@@ -244,6 +258,11 @@ export function createScrubber(known = {}) {
             m.toLowerCase(),
             (n) => `00000000-0000-4000-8000-${hex(n, 12)}`,
           ),
+    );
+    out = out.replace(FAT_ID, (m) =>
+      DOC_FAT_ID.test(m)
+        ? m
+        : number(fatIds, m, (n) => `0000-${hex(n, 4).toUpperCase()}`),
     );
     out = out.replace(MAC, docMacOf);
     out = out.replace(IPV4, (m) =>
@@ -390,6 +409,10 @@ export function createScrubber(known = {}) {
           failures.push(`a disk serial number or WWN at ${path}`);
         }
       }
+      if (SPACED_WWN.test(s)) {
+        failures.push(`a WWN in smartctl's spelling at ${path}`);
+      }
+      SPACED_WWN.lastIndex = 0;
       for (const m of s.match(BY_ID) ?? []) {
         if (LONG_ID.test(m.replace(DOC_IDENTIFIER, ""))) {
           failures.push(`a disk identifier in a by-id name at ${path}`);
@@ -398,6 +421,11 @@ export function createScrubber(known = {}) {
       for (const m of s.match(UUID) ?? []) {
         if (!DOC_UUID.test(m) && !KEPT_UUIDS.has(m.toLowerCase())) {
           failures.push(`UUID at ${path}`);
+        }
+      }
+      for (const m of s.match(FAT_ID) ?? []) {
+        if (!DOC_FAT_ID.test(m)) {
+          failures.push(`FAT volume ID at ${path}`);
         }
       }
       for (const m of s.match(MAC) ?? []) {
