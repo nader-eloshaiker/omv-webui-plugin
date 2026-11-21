@@ -211,7 +211,9 @@ function PowerForm({
                   ),
                 },
           );
-          void queryClient.invalidateQueries({ queryKey: key });
+          // The reply is the stored object, which DiskMgmt.getList reports from now on (saved and
+          // not applied, as captured); reading the list again here would add nothing, and on the
+          // mock, which keeps nothing, it would undo the form's saved state.
           setDraft(null);
           setSavedNotice(true);
         },
@@ -295,7 +297,7 @@ function PowerForm({
         <InlineAlert tone="neutral" role="note">
           <p>
             {t("disk.power.monitorWakes", {
-              interval: format.duration(settings.data?.interval ?? 0),
+              interval: format.interval(settings.data?.interval ?? 0),
             })}
           </p>
           <p>

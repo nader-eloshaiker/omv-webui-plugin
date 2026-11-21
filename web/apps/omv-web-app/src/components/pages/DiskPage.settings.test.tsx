@@ -301,6 +301,16 @@ describe("a disk's power settings", () => {
         writecache: true,
       },
     ]);
+    // Saved: the form shows the stored settings, with nothing left to save until the next change,
+    // whatever a later read of the (stateless) mock says.
+    await waitFor(() =>
+      expect(
+        within(power()).getByRole("button", { name: "Save" }),
+      ).toHaveAttribute("aria-disabled", "true"),
+    );
+    expect(
+      within(power()).queryByRole("button", { name: "Choose power settings" }),
+    ).toBeNull();
   });
 
   it("offers the spin-down times in groups of minutes and hours", async () => {
