@@ -1,0 +1,3 @@
+summary: "Written by hand in the shape of the noConnections capture (OMV 8.6.1), from the output of who -u and lsof: one user signed in over SSH. Documentation names and addresses only."
+x-omv-status: 200
+value: "Currently logged in users:\nexample-user pts/0        2026-11-21 10:15   .          4321 (192.0.2.10)\n\nConnections:\nCOMMAND  PID         USER   FD   TYPE DEVICE SIZE/OFF NODE NAME\nsshd    4321         root    4u  IPv4  23456      0t0  TCP 192.0.2.1:22->192.0.2.10:51234 (ESTABLISHED)\nsshd    4325 example-user    4u  IPv4  23456      0t0  TCP 192.0.2.1:22->192.0.2.10:51234 (ESTABLISHED)"

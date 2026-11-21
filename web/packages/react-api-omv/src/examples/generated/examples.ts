@@ -752,6 +752,117 @@ export const CONTRACT_EXAMPLES = {
       value: "/tmp/bgstatusc32432tu5o6meLM1Slh",
     },
   },
+  servicesGetStatus: {
+    sshOnly: {
+      status: 200,
+      value: {
+        total: 4,
+        data: [
+          {
+            name: "nfs",
+            title: "NFS",
+            enabled: false,
+            running: false,
+          },
+          {
+            name: "rsyncd",
+            title: "RSync server",
+            enabled: false,
+            running: false,
+          },
+          {
+            name: "samba",
+            title: "SMB/CIFS",
+            enabled: false,
+            running: false,
+          },
+          {
+            name: "ssh",
+            title: "SSH",
+            enabled: true,
+            running: true,
+          },
+        ],
+      },
+    },
+    serviceStopped: {
+      status: 200,
+      value: {
+        total: 4,
+        data: [
+          {
+            name: "nfs",
+            title: "NFS",
+            enabled: false,
+            running: false,
+          },
+          {
+            name: "rsyncd",
+            title: "RSync server",
+            enabled: false,
+            running: false,
+          },
+          {
+            name: "samba",
+            title: "SMB/CIFS",
+            enabled: true,
+            running: true,
+          },
+          {
+            name: "ssh",
+            title: "SSH",
+            enabled: true,
+            running: false,
+          },
+        ],
+      },
+    },
+  },
+  smbGetStats: {
+    disabled: {
+      status: 200,
+      value: "Service disabled",
+    },
+    pendingChanges: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "Please apply the configuration changes first.",
+      },
+    },
+  },
+  nfsGetStats: {
+    disabled: {
+      status: 200,
+      value: "Service disabled",
+    },
+    pendingChanges: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "Please apply the configuration changes first.",
+      },
+    },
+  },
+  sshGetStats: {
+    noConnections: {
+      status: 200,
+      value:
+        "Currently logged in users:\nNo users connected\n\nConnections:\nNo connections",
+    },
+    connected: {
+      status: 200,
+      value:
+        "Currently logged in users:\nexample-user pts/0        2026-11-21 10:15   .          4321 (192.0.2.10)\n\nConnections:\nCOMMAND  PID         USER   FD   TYPE DEVICE SIZE/OFF NODE NAME\nsshd    4321         root    4u  IPv4  23456      0t0  TCP 192.0.2.1:22->192.0.2.10:51234 (ESTABLISHED)\nsshd    4325 example-user    4u  IPv4  23456      0t0  TCP 192.0.2.1:22->192.0.2.10:51234 (ESTABLISHED)",
+    },
+    pendingChanges: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "Please apply the configuration changes first.",
+      },
+    },
+  },
 } as const satisfies ContractExampleTable;
 
 export const DEFAULT_EXAMPLE = {
@@ -779,4 +890,8 @@ export const DEFAULT_EXAMPLE = {
   emailNotificationGet: "notConfigured",
   fileSystemMgmtEnumerateMountedFilesystems: "withRoot",
   smartGetListBg: "smartDevices",
+  servicesGetStatus: "sshOnly",
+  smbGetStats: "disabled",
+  nfsGetStats: "disabled",
+  sshGetStats: "noConnections",
 } as const satisfies Record<keyof typeof CONTRACT_EXAMPLES, string>;

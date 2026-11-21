@@ -1,0 +1,21 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 4
+  data:
+    - name: nfs
+      title: NFS
+      enabled: false
+      running: false
+    - name: rsyncd
+      title: RSync server
+      enabled: false
+      running: false
+    - name: samba
+      title: SMB/CIFS
+      enabled: false
+      running: false
+    - name: ssh
+      title: SSH
+      enabled: true
+      running: true

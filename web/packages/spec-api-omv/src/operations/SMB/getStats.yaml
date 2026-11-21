@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbGetStats
+  tags:
+    - SMB
+  summary: SMB service details
+  description: >-
+    Who is connected to the SMB/CIFS shares and which files they have open (smbstatus). The reply is
+    the commands' text as they print it. It fails while the service's settings have changes not yet
+    applied, because the text would describe the old settings.
+  x-omv-rpc:
+    service: SMB
+    method: getStats
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ServiceStatsText.yaml
+          examples:
+            disabled:
+              $ref: ../../examples/smbGetStats.disabled.yaml
+
+    "500":
+      description: >-
+        The samba module has configuration changes that are not applied yet
+        (ConfigDirtyException): "Please apply the configuration changes first."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            pendingChanges:
+              $ref: ../../examples/smbGetStats.pendingChanges.yaml

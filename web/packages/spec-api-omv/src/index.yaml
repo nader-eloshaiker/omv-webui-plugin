@@ -26,6 +26,9 @@ tags:
   - name: EmailNotification
   - name: FileSystemMgmt
   - name: Smart
+  - name: Services
+  - name: SMB
+  - name: NFS
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -75,6 +78,14 @@ paths:
     $ref: ./operations/FileSystemMgmt/enumerateMountedFilesystems.yaml
   /rpc/Smart/getListBg:
     $ref: ./operations/Smart/getListBg.yaml
+  /rpc/Services/getStatus:
+    $ref: ./operations/Services/getStatus.yaml
+  /rpc/SMB/getStats:
+    $ref: ./operations/SMB/getStats.yaml
+  /rpc/NFS/getStats:
+    $ref: ./operations/NFS/getStats.yaml
+  /rpc/SSH/getStats:
+    $ref: ./operations/SSH/getStats.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.
