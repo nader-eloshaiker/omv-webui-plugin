@@ -334,8 +334,9 @@ const NAS_CONFIGURED = [
   configured(NAS_BACKUP),
 ];
 
-// The VM with swap on sdb, a file system being created on sdc, and a mounted file system on an
-// encrypted device the interface cannot trace to a disk (hand-written).
+// The VM with swap on sdb, a file system being created on sdc, a second file system on sda that is
+// set up but not mounted, and on sdd an encrypted container (crypto_LUKS) whose opened device holds a
+// mounted file system the interface cannot trace to a disk (hand-written).
 const VM_DETECTED = [
   ...CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.vmFilesystems.value,
 ];
@@ -358,6 +359,11 @@ const CREATING = configured(detected("", "/dev/sdc", 13), {
   mountpoint: "",
 });
 const { usagewarnthreshold: _a, mountopts: _b, ...CREATING_ROW } = CREATING;
+const LUKS = detected("/dev/sdd1", "/dev/sdd", 14, { type: "crypto_LUKS" });
+const ARCHIVE = detected("/dev/sda2", "/dev/sda", 15, { label: "archive" });
+const ARCHIVE_SET_UP = configured(ARCHIVE, {
+  mountpoint: "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000515",
+});
 
 // ---- RAID ----------------------------------------------------------------------------------------
 
@@ -761,13 +767,18 @@ export function diskAnswers(
       : onNas || name === "disksHostile" || name === "disksMany"
         ? list(NAS_CONFIGURED)
         : name === "disksSwap"
-          ? list([...VM_CONFIGURED, configured(CRYPT), CREATING_ROW])
+          ? list([
+              ...VM_CONFIGURED,
+              ARCHIVE_SET_UP,
+              configured(CRYPT),
+              CREATING_ROW,
+            ])
           : "configured";
   const detectedFs =
     onNas || name === "disksHostile" || name === "disksMany"
       ? ok(NAS_DETECTED)
       : name === "disksSwap"
-        ? ok([...VM_DETECTED, SWAP, CRYPT])
+        ? ok([...VM_DETECTED, SWAP, ARCHIVE, LUKS, CRYPT])
         : "vmFilesystems";
   const arrays =
     name === "disksRaidFails"

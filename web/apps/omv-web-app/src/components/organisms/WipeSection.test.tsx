@@ -117,6 +117,11 @@ describe("the wipe section", () => {
       "It holds swap space, disk space the NAS can use as extra memory.",
     ],
     ["disksSwap", "sdc", "A file system is being created on it now."],
+    [
+      "disksSwap",
+      "sda",
+      "It holds the file system archive, which is set up on this NAS.",
+    ],
   ] as const)(
     "%s %s: refuses with the blocker in words (P1, P5)",
     async (scenario, name, words) => {
@@ -168,6 +173,16 @@ describe("the wipe section", () => {
       expect(wipeButton(section)).toHaveAttribute("aria-disabled", "false"),
     );
     expect(within(section).queryByText(/^Could not check/)).toBeNull();
+  });
+
+  it("names an encrypted container on the disk, and warns about storage it cannot trace (P4)", async () => {
+    const { section, user } = await diskPage("sdd", { scenario: "disksSwap" });
+    const dialog = await openConfirmation(user, section, "/dev/sdd");
+    expect(dialog).toHaveTextContent("crypto_LUKS");
+    expect(dialog).toHaveTextContent(
+      "This NAS also has storage that this page cannot trace to a disk, such as encrypted disks, LVM or ZFS.",
+    );
+    expect(wipeCalls()).toHaveLength(0);
   });
 
   it("says what to do, with the page where it can be done", async () => {
