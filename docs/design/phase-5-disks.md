@@ -129,17 +129,19 @@ A disk's page is `/storage/disks/$disk`, where `$disk` is the disk's kernel name
 The server does not refuse to wipe a disk that is in use (UX audit B14). The interface's own
 safeguard (journal, 2026-11-21) rests on these rules, which also fill the "Used for" column.
 
-**Inputs**, read together: `DiskMgmt.getList`, `FileSystemMgmt.getList`, and, when the RAID plugin is
-installed, `MdMgmt.enumerateDevices`.
+**Inputs**, read together: `DiskMgmt.getList`, `FileSystemMgmt.getList`,
+`FileSystemMgmt.enumerateFilesystems`, and, when the RAID plugin is installed,
+`MdMgmt.enumerateDevices`.
 
 `FileSystemMgmt.getList` lists only the file systems OMV has a mount entry for (status 1 available,
 3 missing) and those being created (status 2). It does not list the system's own root and boot
 partitions, a file system OMV has not set up (such as one on a disk from another computer), or swap
 (observed on the test VM, 2026-11-21, and read from source: on the VM it listed only the one data file
 system, while the root, the EFI partition and the CD drive's file system were left out). The two rows
-below that need those, "Swap space" and "File system not used on this NAS", therefore need
-`FileSystemMgmt.enumerateFilesystems`, which lists every file system the system detects. It is not
-in the contract yet **[decide]**: add it to this slice, or drop those two rows.
+below that need those, "Swap space" and "File system not used on this NAS", therefore use
+`FileSystemMgmt.enumerateFilesystems`, which lists every file system the system detects, swap (type
+`swap`) included. `getList` calls it itself, so reading both touches the disks no more than
+`getList` alone (read from source).
 
 **A disk's names** are its `canonicaldevicefile`, `devicefile` and every entry of `devicelinks`. A
 partition belongs to a disk when, with its trailing partition number removed (`/dev/sdb3` to
@@ -2166,7 +2168,7 @@ The destructive-action points of this slice. The design is built only once these
 5. **P5, swap space.** A disk holding a swap partition is refused, because the interface cannot tell
    whether the NAS is using it. `FileSystemMgmt.getList` never lists swap; `enumerateFilesystems`
    would (inferred from source: `getMountCandidates` filters swap out of its list; the test VM has no
-   swap to observe), and needs adding (0.6, **[decide]**).
+   swap to observe), so the check reads it (0.6).
 6. **P6, write cache on by default.** When a disk's power settings are first saved, the form starts
    with the write cache **on**, unlike OMV's default of off, because OMV sends every field and "off"
    would silently slow the disk. Not destructive, but it changes what a save does. (2.7.3)
