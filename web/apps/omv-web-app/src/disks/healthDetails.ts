@@ -91,13 +91,20 @@ export interface KeyReading {
   value: ReturnType<typeof attributeValue>;
 }
 
-/** The key readings the disk reports; the temperature is 194, else 190. */
+/**
+ * The key readings the disk reports; the temperature is 194, else 190. A reading already shown under
+ * "About this disk" (time powered on, 9; times switched on, 12) is left out here, so it is shown once.
+ */
 export function keyReadings(
   attributes: readonly SmartAttribute[],
+  shownAbove: ReadonlySet<number> = new Set(),
 ): KeyReading[] {
   const byId = new Map(attributes.map((a) => [a.id, a]));
   const readings: KeyReading[] = [];
   for (const id of KEY_READINGS) {
+    if (shownAbove.has(id)) {
+      continue;
+    }
     const attribute = byId.get(id);
     if (attribute !== undefined) {
       readings.push({

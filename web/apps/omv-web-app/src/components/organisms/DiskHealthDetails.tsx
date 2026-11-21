@@ -227,9 +227,12 @@ function KeyReadingName({ id }: { id: KeyReading["id"] }) {
 function Readings({
   attributes,
   device,
+  shownAbove,
 }: {
   attributes: readonly SmartAttribute[];
   device: string;
+  /** The readings "About this disk" already shows (9, 12). */
+  shownAbove: ReadonlySet<number>;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -239,7 +242,7 @@ function Readings({
   const statuses = attributes.map((a) => assessmentState(a.assessment).status);
   const summary = rollUp(statuses);
   const worst = statuses.find((s) => s === summary.status) ?? "unknown";
-  const readings = keyReadings(attributes);
+  const readings = keyReadings(attributes, shownAbove);
   return (
     <div className="flex flex-col gap-3">
       <p className="flex flex-wrap items-center gap-2">
@@ -524,6 +527,11 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
     information.data === undefined
       ? null
       : hoursOf(information.data.poweronhours);
+  // Shown once: under "About this disk" when the disk's information has them, else as key readings.
+  const shownAbove = new Set<number>([
+    ...(poweronhours === null ? [] : [9]),
+    ...(information.data?.powercycles === undefined ? [] : [12]),
+  ]);
 
   const part = (
     name: PartName,
@@ -654,7 +662,11 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
             attributes,
             () =>
               attributes.data ? (
-                <Readings attributes={attributes.data} device={device} />
+                <Readings
+                  attributes={attributes.data}
+                  device={device}
+                  shownAbove={shownAbove}
+                />
               ) : null,
             5,
           )}

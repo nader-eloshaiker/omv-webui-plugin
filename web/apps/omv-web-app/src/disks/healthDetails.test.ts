@@ -96,6 +96,11 @@ describe("keyReadings", () => {
     expect(readings.at(-1)?.value).toEqual({ kind: "number", value: 34 });
     expect(readings[1]?.value).toEqual({ kind: "number", value: 1234 });
   });
+  it("leaves out what About this disk already shows, so it is shown once", () => {
+    const all = [attr(5, "0"), attr(9, "1234"), attr(12, "84")];
+    expect(keyReadings(all, new Set([9, 12])).map((r) => r.id)).toEqual([5]);
+    expect(keyReadings(all, new Set([9])).map((r) => r.id)).toEqual([5, 12]);
+  });
   it("uses 190 for the temperature when 194 is missing", () => {
     expect(keyReadings([attr(190, "31")]).at(-1)?.attribute.id).toBe(190);
   });
