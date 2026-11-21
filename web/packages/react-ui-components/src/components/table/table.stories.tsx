@@ -273,3 +273,43 @@ export const FilteredEmpty: Story = {
 export const ErrorWithRetry: Story = {
   render: () => <DisksTable state="error" />,
 };
+
+/** A wide table in a narrow column: the frame is a named region, so the keyboard can scroll it. */
+export const ScrollsInsideItsFrame: Story = {
+  decorators: [(Story) => <div className="w-80">{Story()}</div>],
+  render: () => (
+    <Table
+      aria-label="Entries of File access over SMB/CIFS (audit)"
+      frameLabel="Entries of File access over SMB/CIFS (audit)"
+    >
+      <TableHeader>
+        <TableRow>
+          {[
+            "Time",
+            "User",
+            "Computer",
+            "Shared folder",
+            "File",
+            "Action",
+            "Result",
+          ].map((h) => (
+            <TableHead key={h}>{h}</TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell className="whitespace-nowrap">
+            21 Nov 2026, 03:32:00
+          </TableCell>
+          <TableCell>example-user</TableCell>
+          <TableCell mono>192.0.2.10</TableCell>
+          <TableCell>media</TableCell>
+          <TableCell mono>old.jpg</TableCell>
+          <TableCell mono>unlinkat</TableCell>
+          <TableCell>ok</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  ),
+};
