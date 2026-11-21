@@ -431,3 +431,32 @@ Built on `phase-4`, following the owner's spindown plugin for `debian/` and the 
 - **Missing file systems** (owner): `FileSystemMgmt.getList` is not on the private review list and may enter the contract. Only it reports a file system that is configured but missing; `enumerateMountedFilesystems` drops it silently. The dashboard reads it once per visit and on "Try again", never polled, and uses it only for missing rows. Whether it can wake a sleeping disk cannot be observed on the VM, whose virtual disks do not sleep; reading it once per visit keeps that risk to the visit itself.
 - **The monitoring design's judgement calls** D1–D16 ([design/phase-5-monitoring.md](design/phase-5-monitoring.md), section 12) are taken as recommended. D3 is now settled by the owner's answer above.
 - **Examples keep an omitted field** with a documentation value, as [04](04-api-contract.md) says, so the transport tests can prove it is removed. The Wi-Fi example therefore carries a placeholder `wpapsk`. The design's section 9 is corrected to match.
+
+## 2026-11-21 — Phase 5, dashboard and monitoring: built, on the mock and the test VM
+
+Built on `phase-5-monitoring` to [design/phase-5-monitoring.md](design/phase-5-monitoring.md), with the owner's decisions above.
+
+- **The contract** gains the ten operations cleared by the owner, nine reads and the disk-health task, with examples captured from the VM and hand-written ones for the states it cannot show (each says so).
+  - **Rows:** `x-omv-omit` can now name a field of each row (`data[].wpapsk`). Its lint rule follows `$ref`s into row schemas, and the transport strips the field from every row.
+  - **Captures:** the capture tool now scrubs disk serials and WWNs (including the by-id links built from them), Wi-Fi fields, and a background task's JSON output field by field.
+  - **Observed on the VM, against the source:**
+    - `temperature` and `mtu` arrive as numeric strings;
+    - the virtual SATA disks report `BAD_STATUS`;
+    - a whole-list read sends `limit: null`, which the contract's paging schema accepts and OMV answers with every row.
+- **The pages.**
+  - **Dashboard:** Storage, Disk health (read only on "Check disk health"), Services and Network cards, the CPU and memory chart, and the new attention rows.
+  - **Diagnostics:** System logs, Processes, and the SMB, NFS and SSH service details, with their menu items now pointing at the new routes.
+  - **Component library:** `LineChart`, `PageTabs` and `HealthList`, groups in `Select`, and new `TaskLog` options.
+  - **Session state:** chart samples, the disk-health result and each page's view state live in memory and are emptied at sign-out.
+- **An independent pass on the mock** covered both themes, 1280 and 320 px, and the keyboard. It found six defects, all fixed:
+  1. the log message column at 320 px;
+  2. direction-control characters in log lines, now removed as in the service output;
+  3. a log count line that used the reply's `total` instead of the rows received;
+  4. a settings link shown twice;
+  5. a table header shown above the empty and error states;
+  6. an inconsistent mock scenario.
+- **On the test VM** (OMV 8.6.1), the build was installed as a package with `make package-test`, every check passed, and `pnpm test:browser:vm` gave 14 passed and 2 skipped over both HTTP and HTTPS (the same skips as before). A Phase 3 check that a page sends only reads now counts the `enumerate…` methods as reads.
+- **Left open:**
+  - **Re-read after a disk check.** Every finished task makes the app re-read all its queries, so a disk check is followed by one extra read of the dashboard's data. The contract's `x-omv-readonly` cannot tell a read-only task apart, because a task needs a mutation hook. A marker on `x-omv-task` would.
+  - **Plugin service names.** It is not yet checked that a plugin's service `name` matches its module in `dirtyModules`.
+  - **Log sizes.** A full syslog's size and read time on a busy NAS are not yet known.
