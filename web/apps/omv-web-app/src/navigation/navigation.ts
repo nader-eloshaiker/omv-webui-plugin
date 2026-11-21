@@ -46,7 +46,12 @@ export interface NavPage {
 
 /** The routes of the pages built in this interface, more specific than `/$group/$item`. */
 export type BuiltRoute =
-  "/services/ssh" | "/storage/shared-folders" | "/account/settings";
+  | "/services/ssh"
+  | "/storage/shared-folders"
+  | "/account/settings"
+  | "/diagnostics/system-logs"
+  | "/diagnostics/processes"
+  | "/diagnostics/services";
 
 const ADMIN = ["admin"] as const satisfies readonly Role[];
 const EVERYONE = ["admin", "user"] as const satisfies readonly Role[];
@@ -234,7 +239,9 @@ export const NAV_PAGES = [
     group: "diagnostics",
     item: "system-logs",
     labelKey: "nav.items.diagnostics.system-logs",
-    classic: "/#/diagnostics/system-logs",
+    // The stock group page has two sub-pages; the logs one is meant.
+    classic: "/#/diagnostics/system-logs/logs",
+    route: "/diagnostics/system-logs",
     roles: ADMIN,
   },
   {
@@ -242,6 +249,7 @@ export const NAV_PAGES = [
     item: "processes",
     labelKey: "nav.items.diagnostics.processes",
     classic: "/#/diagnostics/processes",
+    route: "/diagnostics/processes",
     roles: ADMIN,
   },
   {
@@ -249,6 +257,7 @@ export const NAV_PAGES = [
     item: "services",
     labelKey: "nav.items.diagnostics.services",
     classic: "/#/diagnostics/services",
+    route: "/diagnostics/services",
     roles: ADMIN,
   },
   {
@@ -299,12 +308,15 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
 
 /**
  * Whether the menu entry for `route` is the current page. `/account/password` is a second address of
- * the account page (the set-up checklist and stock users know it), so it marks "Your account".
+ * the account page (the set-up checklist and stock users know it), so it marks "Your account"; every
+ * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
     pathname === route ||
-    (route === "/account/settings" && pathname === "/account/password")
+    (route === "/account/settings" && pathname === "/account/password") ||
+    (route === "/diagnostics/services" &&
+      pathname.startsWith("/diagnostics/services/"))
   );
 }
 
@@ -332,4 +344,13 @@ export const CLASSIC = {
   networkGeneral: "/#/network/general",
   addSharedFolder: "/#/storage/shared-folders/create",
   users: "/#/usermgmt/users",
+  fileSystems: "/#/storage/filesystems",
+  smartSettings: "/#/storage/smart/settings",
+  smartDevices: "/#/storage/smart/devices",
+  networkInterfaces: "/#/network/interfaces",
+  smbSettings: "/#/services/smb/settings",
+  nfsSettings: "/#/services/nfs/settings",
+  rsyncServerSettings: "/#/services/rsync/server/settings",
+  systemLogs: "/#/diagnostics/system-logs/logs",
+  remoteLogging: "/#/diagnostics/system-logs/remote",
 } as const satisfies Record<string, `/#/${string}`>;

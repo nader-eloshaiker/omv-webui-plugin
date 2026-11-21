@@ -17,8 +17,14 @@ import { Route as SignedInAddOnsRouteImport } from './routes/_signedIn/add-ons'
 import { Route as SignedInGroupItemRouteImport } from './routes/_signedIn/$group/$item'
 import { Route as SignedInAccountPasswordRouteImport } from './routes/_signedIn/account/password'
 import { Route as SignedInAccountSettingsRouteImport } from './routes/_signedIn/account/settings'
+import { Route as SignedInDiagnosticsProcessesRouteImport } from './routes/_signedIn/diagnostics/processes'
+import { Route as SignedInDiagnosticsSystemLogsRouteImport } from './routes/_signedIn/diagnostics/system-logs'
 import { Route as SignedInServicesSshRouteImport } from './routes/_signedIn/services/ssh'
 import { Route as SignedInStorageSharedFoldersRouteImport } from './routes/_signedIn/storage/shared-folders'
+import { Route as SignedInDiagnosticsServicesIndexRouteImport } from './routes/_signedIn/diagnostics/services/index'
+import { Route as SignedInDiagnosticsServicesNfsRouteImport } from './routes/_signedIn/diagnostics/services/nfs'
+import { Route as SignedInDiagnosticsServicesSmbRouteImport } from './routes/_signedIn/diagnostics/services/smb'
+import { Route as SignedInDiagnosticsServicesSshRouteImport } from './routes/_signedIn/diagnostics/services/ssh'
 
 const SignedInRoute = SignedInRouteImport.update({
   id: '/_signedIn',
@@ -59,6 +65,18 @@ const SignedInAccountSettingsRoute = SignedInAccountSettingsRouteImport.update({
   path: '/account/settings',
   getParentRoute: () => SignedInRoute,
 } as any)
+const SignedInDiagnosticsProcessesRoute =
+  SignedInDiagnosticsProcessesRouteImport.update({
+    id: '/diagnostics/processes',
+    path: '/diagnostics/processes',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInDiagnosticsSystemLogsRoute =
+  SignedInDiagnosticsSystemLogsRouteImport.update({
+    id: '/diagnostics/system-logs',
+    path: '/diagnostics/system-logs',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInServicesSshRoute = SignedInServicesSshRouteImport.update({
   id: '/services/ssh',
   path: '/services/ssh',
@@ -70,6 +88,30 @@ const SignedInStorageSharedFoldersRoute =
     path: '/storage/shared-folders',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInDiagnosticsServicesIndexRoute =
+  SignedInDiagnosticsServicesIndexRouteImport.update({
+    id: '/diagnostics/services/',
+    path: '/diagnostics/services/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInDiagnosticsServicesNfsRoute =
+  SignedInDiagnosticsServicesNfsRouteImport.update({
+    id: '/diagnostics/services/nfs',
+    path: '/diagnostics/services/nfs',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInDiagnosticsServicesSmbRoute =
+  SignedInDiagnosticsServicesSmbRouteImport.update({
+    id: '/diagnostics/services/smb',
+    path: '/diagnostics/services/smb',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInDiagnosticsServicesSshRoute =
+  SignedInDiagnosticsServicesSshRouteImport.update({
+    id: '/diagnostics/services/ssh',
+    path: '/diagnostics/services/ssh',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof SignedInIndexRoute
@@ -79,8 +121,14 @@ export interface FileRoutesByFullPath {
   '/$group/$item': typeof SignedInGroupItemRoute
   '/account/password': typeof SignedInAccountPasswordRoute
   '/account/settings': typeof SignedInAccountSettingsRoute
+  '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
+  '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/services/ssh': typeof SignedInServicesSshRoute
   '/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
+  '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
+  '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
+  '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -90,8 +138,14 @@ export interface FileRoutesByTo {
   '/$group/$item': typeof SignedInGroupItemRoute
   '/account/password': typeof SignedInAccountPasswordRoute
   '/account/settings': typeof SignedInAccountSettingsRoute
+  '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
+  '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/services/ssh': typeof SignedInServicesSshRoute
   '/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
+  '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
+  '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
+  '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,8 +157,14 @@ export interface FileRoutesById {
   '/_signedIn/$group/$item': typeof SignedInGroupItemRoute
   '/_signedIn/account/password': typeof SignedInAccountPasswordRoute
   '/_signedIn/account/settings': typeof SignedInAccountSettingsRoute
+  '/_signedIn/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
+  '/_signedIn/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/_signedIn/services/ssh': typeof SignedInServicesSshRoute
   '/_signedIn/storage/shared-folders': typeof SignedInStorageSharedFoldersRoute
+  '/_signedIn/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
+  '/_signedIn/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
+  '/_signedIn/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,8 +176,14 @@ export interface FileRouteTypes {
     | '/$group/$item'
     | '/account/password'
     | '/account/settings'
+    | '/diagnostics/processes'
+    | '/diagnostics/system-logs'
     | '/services/ssh'
     | '/storage/shared-folders'
+    | '/diagnostics/services/nfs'
+    | '/diagnostics/services/smb'
+    | '/diagnostics/services/ssh'
+    | '/diagnostics/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -127,8 +193,14 @@ export interface FileRouteTypes {
     | '/$group/$item'
     | '/account/password'
     | '/account/settings'
+    | '/diagnostics/processes'
+    | '/diagnostics/system-logs'
     | '/services/ssh'
     | '/storage/shared-folders'
+    | '/diagnostics/services/nfs'
+    | '/diagnostics/services/smb'
+    | '/diagnostics/services/ssh'
+    | '/diagnostics/services'
   id:
     | '__root__'
     | '/_signedIn'
@@ -139,8 +211,14 @@ export interface FileRouteTypes {
     | '/_signedIn/$group/$item'
     | '/_signedIn/account/password'
     | '/_signedIn/account/settings'
+    | '/_signedIn/diagnostics/processes'
+    | '/_signedIn/diagnostics/system-logs'
     | '/_signedIn/services/ssh'
     | '/_signedIn/storage/shared-folders'
+    | '/_signedIn/diagnostics/services/nfs'
+    | '/_signedIn/diagnostics/services/smb'
+    | '/_signedIn/diagnostics/services/ssh'
+    | '/_signedIn/diagnostics/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,6 +284,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInAccountSettingsRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/diagnostics/processes': {
+      id: '/_signedIn/diagnostics/processes'
+      path: '/diagnostics/processes'
+      fullPath: '/diagnostics/processes'
+      preLoaderRoute: typeof SignedInDiagnosticsProcessesRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/diagnostics/system-logs': {
+      id: '/_signedIn/diagnostics/system-logs'
+      path: '/diagnostics/system-logs'
+      fullPath: '/diagnostics/system-logs'
+      preLoaderRoute: typeof SignedInDiagnosticsSystemLogsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/services/ssh': {
       id: '/_signedIn/services/ssh'
       path: '/services/ssh'
@@ -220,6 +312,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInStorageSharedFoldersRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/diagnostics/services/': {
+      id: '/_signedIn/diagnostics/services/'
+      path: '/diagnostics/services'
+      fullPath: '/diagnostics/services/'
+      preLoaderRoute: typeof SignedInDiagnosticsServicesIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/diagnostics/services/nfs': {
+      id: '/_signedIn/diagnostics/services/nfs'
+      path: '/diagnostics/services/nfs'
+      fullPath: '/diagnostics/services/nfs'
+      preLoaderRoute: typeof SignedInDiagnosticsServicesNfsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/diagnostics/services/smb': {
+      id: '/_signedIn/diagnostics/services/smb'
+      path: '/diagnostics/services/smb'
+      fullPath: '/diagnostics/services/smb'
+      preLoaderRoute: typeof SignedInDiagnosticsServicesSmbRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/diagnostics/services/ssh': {
+      id: '/_signedIn/diagnostics/services/ssh'
+      path: '/diagnostics/services/ssh'
+      fullPath: '/diagnostics/services/ssh'
+      preLoaderRoute: typeof SignedInDiagnosticsServicesSshRouteImport
+      parentRoute: typeof SignedInRoute
+    }
   }
 }
 
@@ -230,8 +350,14 @@ interface SignedInRouteChildren {
   SignedInGroupItemRoute: typeof SignedInGroupItemRoute
   SignedInAccountPasswordRoute: typeof SignedInAccountPasswordRoute
   SignedInAccountSettingsRoute: typeof SignedInAccountSettingsRoute
+  SignedInDiagnosticsProcessesRoute: typeof SignedInDiagnosticsProcessesRoute
+  SignedInDiagnosticsSystemLogsRoute: typeof SignedInDiagnosticsSystemLogsRoute
   SignedInServicesSshRoute: typeof SignedInServicesSshRoute
   SignedInStorageSharedFoldersRoute: typeof SignedInStorageSharedFoldersRoute
+  SignedInDiagnosticsServicesNfsRoute: typeof SignedInDiagnosticsServicesNfsRoute
+  SignedInDiagnosticsServicesSmbRoute: typeof SignedInDiagnosticsServicesSmbRoute
+  SignedInDiagnosticsServicesSshRoute: typeof SignedInDiagnosticsServicesSshRoute
+  SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
 }
 
 const SignedInRouteChildren: SignedInRouteChildren = {
@@ -241,8 +367,14 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInGroupItemRoute: SignedInGroupItemRoute,
   SignedInAccountPasswordRoute: SignedInAccountPasswordRoute,
   SignedInAccountSettingsRoute: SignedInAccountSettingsRoute,
+  SignedInDiagnosticsProcessesRoute: SignedInDiagnosticsProcessesRoute,
+  SignedInDiagnosticsSystemLogsRoute: SignedInDiagnosticsSystemLogsRoute,
   SignedInServicesSshRoute: SignedInServicesSshRoute,
   SignedInStorageSharedFoldersRoute: SignedInStorageSharedFoldersRoute,
+  SignedInDiagnosticsServicesNfsRoute: SignedInDiagnosticsServicesNfsRoute,
+  SignedInDiagnosticsServicesSmbRoute: SignedInDiagnosticsServicesSmbRoute,
+  SignedInDiagnosticsServicesSshRoute: SignedInDiagnosticsServicesSshRoute,
+  SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
 }
 
 const SignedInRouteWithChildren = SignedInRoute._addFileChildren(

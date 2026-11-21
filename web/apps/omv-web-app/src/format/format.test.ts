@@ -3,8 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   durationParts,
   formatBytes,
+  naturalCompare,
   parseByteCount,
+  parseDecimal,
   percentOf,
+  speedParts,
   wholePercent,
 } from "./format.ts";
 
@@ -93,5 +96,42 @@ describe("durationParts", () => {
     ],
   ])("%d s", (seconds, parts) => {
     expect(durationParts(seconds)).toEqual(parts);
+  });
+});
+
+describe("speedParts", () => {
+  it.each([
+    [100, { unit: "mbit", value: "100" }],
+    [999, { unit: "mbit", value: "999" }],
+    [1000, { unit: "gbit", value: "1" }],
+    [2500, { unit: "gbit", value: "2.5" }],
+    [10000, { unit: "gbit", value: "10" }],
+    [-1, null],
+    [0, null],
+  ])("%d Mbit/s is %j", (mbit, parts) => {
+    expect(speedParts(mbit)).toEqual(parts);
+  });
+});
+
+describe("parseDecimal", () => {
+  it("reads numbers sent as text and refuses anything else", () => {
+    expect(parseDecimal("3914.0")).toBe(3914);
+    expect(parseDecimal(" 0.43 ")).toBe(0.43);
+    expect(parseDecimal(41)).toBe(41);
+    expect(parseDecimal("")).toBeNull();
+    expect(parseDecimal("n/a")).toBeNull();
+    expect(parseDecimal(undefined)).toBeNull();
+    expect(parseDecimal(Number.NaN)).toBeNull();
+  });
+});
+
+describe("naturalCompare", () => {
+  it("orders numbered names as people count", () => {
+    expect(["sdb", "sda10", "sda2", "Sda1"].sort(naturalCompare)).toEqual([
+      "Sda1",
+      "sda2",
+      "sda10",
+      "sdb",
+    ]);
   });
 });

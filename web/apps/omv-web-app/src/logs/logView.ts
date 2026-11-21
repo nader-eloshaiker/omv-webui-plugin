@@ -1,0 +1,199 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The System logs page (phase 5 design 2): the logs offered, how each is laid out, and how the rows
+// of one read are searched, sorted and paged in the browser. LogFile.getList re-reads and re-parses
+// the whole log on every call, so the page reads a log once and does the rest here (owner). Pure, so
+// each rule is tested by itself.
+import type {
+  LogFileGetListRequest,
+  LogRow,
+} from "@omv-webui/react-api-omv/generated";
+import { naturalCompare } from "../format/format.ts";
+
+/** The stock logs, in the picker's two groups (design 2.3). No id ever comes from anywhere else. */
+export const LOG_GROUPS = [
+  {
+    group: "system",
+    ids: ["syslog", "messages", "daemon", "auth", "boot", "dmesg"],
+  },
+  {
+    group: "storage",
+    ids: ["smartd", "smbdaudit", "rsync", "rsyncd", "apt_term"],
+  },
+] as const;
+
+export type LogId = (typeof LOG_GROUPS)[number]["ids"][number];
+export const LOG_IDS: readonly LogId[] = LOG_GROUPS.flatMap((g) => [...g.ids]);
+export const isLogId = (value: unknown): value is LogId =>
+  typeof value === "string" && (LOG_IDS as readonly string[]).includes(value);
+
+/** journal: time and message. timeMessage: the same two columns. message: no times. audit: SMB audit. */
+export type LogLayout = "journal" | "timeMessage" | "message" | "audit";
+
+export function logLayout(id: LogId): LogLayout {
+  switch (id) {
+    case "smartd":
+    case "rsync":
+      return "timeMessage";
+    case "apt_term":
+      return "message";
+    case "smbdaudit":
+      return "audit";
+    default:
+      return "journal";
+  }
+}
+
+/** The one read of a log: every row, newest first; the updates log has no times, so by line. */
+export function logRequest(id: LogId): LogFileGetListRequest {
+  return {
+    id,
+    start: 0,
+    limit: null,
+    sortfield: id === "apt_term" ? "rownum" : "ts",
+    sortdir: "desc",
+  };
+}
+
+/** The server reads at most the last 100,000 lines (OMV_MAX_LOGFILE_LINES). */
+export const SERVER_LINE_LIMIT = 100_000;
+
+export type LogSortField =
+  | "ts"
+  | "rownum"
+  | "username"
+  | "clientipaddr"
+  | "servicename"
+  | "operation"
+  | "result";
+
+/** The sortable columns of a layout. The message is never sortable: alphabetical log lines answer nothing. */
+export function sortableFields(layout: LogLayout): readonly LogSortField[] {
+  switch (layout) {
+    case "audit":
+      return [
+        "ts",
+        "username",
+        "clientipaddr",
+        "servicename",
+        "operation",
+        "result",
+      ];
+    case "message":
+      return ["rownum"];
+    default:
+      return ["ts"];
+  }
+}
+
+export type SortDirection = "asc" | "desc";
+export interface LogSort {
+  field: LogSortField;
+  direction: SortDirection;
+}
+
+/** Newest first: by time, or by line where there are no times. */
+export const defaultSort = (layout: LogLayout): LogSort =>
+  layout === "message"
+    ? { field: "rownum", direction: "desc" }
+    : { field: "ts", direction: "desc" };
+
+/** Pressing a header: that column ascending, or the sorted one reversed. */
+export function nextSort(current: LogSort, field: LogSortField): LogSort {
+  return current.field === field
+    ? { field, direction: current.direction === "asc" ? "desc" : "asc" }
+    : { field, direction: "asc" };
+}
+
+const text = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+const num = (value: unknown): number =>
+  typeof value === "number" && Number.isFinite(value)
+    ? value
+    : Number.NEGATIVE_INFINITY;
+
+/** The rows in the chosen order; ties by line, in the same direction, so a second keeps its order. */
+export function sortRows(rows: readonly LogRow[], sort: LogSort): LogRow[] {
+  const sign = sort.direction === "asc" ? 1 : -1;
+  const compare = (a: LogRow, b: LogRow): number => {
+    switch (sort.field) {
+      case "ts":
+        return num(a.ts) - num(b.ts);
+      case "rownum":
+        return a.rownum - b.rownum;
+      default:
+        return naturalCompare(text(a[sort.field]), text(b[sort.field]));
+    }
+  };
+  return [...rows].sort(
+    (a, b) => sign * (compare(a, b) || a.rownum - b.rownum),
+  );
+}
+
+/** What a search looks at: only the columns shown for the log, the time as it is displayed. */
+export function searchText(
+  row: LogRow,
+  layout: LogLayout,
+  formatTime: (ts: number) => string,
+): string {
+  const time = typeof row.ts === "number" ? formatTime(row.ts) : "";
+  switch (layout) {
+    case "audit":
+      return [
+        time,
+        text(row.username),
+        text(row.clientipaddr),
+        text(row.servicename),
+        text(row.filename),
+        text(row.filepath),
+        text(row.operation),
+        text(row.result),
+      ].join("\n");
+    case "message":
+      return text(row.message);
+    default:
+      return `${time}\n${text(row.message)}`;
+  }
+}
+
+/** Case-insensitive substring search over the shown columns. An empty search keeps every row. */
+export function searchRows(
+  rows: readonly LogRow[],
+  search: string,
+  layout: LogLayout,
+  formatTime: (ts: number) => string,
+): readonly LogRow[] {
+  const needle = search.trim().toLocaleLowerCase();
+  if (needle === "") {
+    return rows;
+  }
+  return rows.filter((row) =>
+    searchText(row, layout, formatTime).toLocaleLowerCase().includes(needle),
+  );
+}
+
+export const LOG_PAGE_SIZES = [25, 50, 100, 200] as const;
+
+/** One page of rows, counted from 0, and the range it shows (1-based, for the words). */
+export function pageOf<T>(
+  rows: readonly T[],
+  page: number,
+  pageSize: number,
+): {
+  rows: readonly T[];
+  page: number;
+  pageCount: number;
+  from: number;
+  to: number;
+} {
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const current = Math.min(Math.max(0, page), pageCount - 1);
+  const start = current * pageSize;
+  const slice = rows.slice(start, start + pageSize);
+  return {
+    rows: slice,
+    page: current,
+    pageCount,
+    from: slice.length === 0 ? 0 : start + 1,
+    to: start + slice.length,
+  };
+}

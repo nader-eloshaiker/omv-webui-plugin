@@ -82,3 +82,63 @@ export function durationParts(seconds: number): DurationParts {
   const parts = all.slice(first, first + 2).filter((p) => p.count > 0);
   return { kind: "parts", parts };
 }
+
+/**
+ * A network speed in Mbit/s as network equipment labels it (phase 5 design 0.1): under 1000 in
+ * Mbit/s, otherwise Gbit/s with at most one decimal, dropped when whole. Null when the speed is not
+ * reported (-1, or anything that is not a positive number).
+ */
+export function speedParts(
+  mbit: number,
+): { unit: "mbit" | "gbit"; value: string } | null {
+  if (!Number.isFinite(mbit) || mbit <= 0) {
+    return null;
+  }
+  if (mbit < 1000) {
+    return { unit: "mbit", value: String(Math.round(mbit)) };
+  }
+  const gbit = Math.round(mbit / 100) / 10;
+  return {
+    unit: "gbit",
+    value: Number.isInteger(gbit) ? String(gbit) : gbit.toFixed(1),
+  };
+}
+
+/**
+ * A number the server sends as text ("3914.0", "0.43", "30") or as a number. Null for anything that
+ * is not a finite number, including the empty string.
+ */
+export function parseDecimal(
+  value: string | number | undefined | null,
+): number | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  const text = value.trim();
+  if (text === "") {
+    return null;
+  }
+  const n = Number(text);
+  return Number.isFinite(n) ? n : null;
+}
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+/** Natural order for names: `sdb` before `sdaa`, `disk2` before `disk10`. */
+export const naturalCompare = (a: string, b: string): number =>
+  collator.compare(a, b);
+
+const LOG_TIME = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+  timeStyle: "medium",
+});
+
+/** A log entry's moment, from epoch seconds, in this computer's locale and time zone (D11). */
+export const formatEpochSeconds = (epochSeconds: number): string =>
+  LOG_TIME.format(epochSeconds * 1000);

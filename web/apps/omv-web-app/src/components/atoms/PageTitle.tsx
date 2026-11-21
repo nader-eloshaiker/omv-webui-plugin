@@ -6,15 +6,24 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePageFocus } from "../../shell/pageFocus.ts";
 
-export function PageTitle({ children }: { children: string }) {
+export function PageTitle({
+  children,
+  documentTitle,
+}: {
+  children: string;
+  /** The tab's name when it differs from the heading: "SMB/CIFS – Services". */
+  documentTitle?: string;
+}) {
   const { t } = useTranslation();
   const ref = useRef<HTMLHeadingElement>(null);
   const focus = usePageFocus();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-    document.title = t("app.documentTitle", { page: children });
-  }, [children, t]);
+    document.title = t("app.documentTitle", {
+      page: documentTitle ?? children,
+    });
+  }, [children, documentTitle, t]);
 
   useEffect(() => {
     if (focus.navigated()) {
