@@ -202,6 +202,37 @@ describe("errors", () => {
     await expect(systemGetInformation()).rejects.toMatchObject({
       status: 502,
       message: "The server sent a reply that could not be read.",
+      code: null,
+      unreadable: true,
+    });
+  });
+
+  it("marks the empty 500 PHP answers when it stops the script (out of memory) as unreadable", async () => {
+    server.use(
+      http.post("*/rpc.php", () => new HttpResponse("", { status: 500 })),
+    );
+    await expect(systemGetInformation()).rejects.toMatchObject({
+      status: 500,
+      code: null,
+      kind: "failure",
+      message: "The server sent a reply that could not be read.",
+      unreadable: true,
+    });
+  });
+
+  it("does not mark a JSON error reply as unreadable", async () => {
+    server.use(
+      http.post("*/rpc.php", () =>
+        HttpResponse.json(
+          { response: null, error: { code: 0, message: "Failed." } },
+          { status: 500 },
+        ),
+      ),
+    );
+    await expect(systemGetInformation()).rejects.toMatchObject({
+      status: 500,
+      message: "Failed.",
+      unreadable: false,
     });
   });
 

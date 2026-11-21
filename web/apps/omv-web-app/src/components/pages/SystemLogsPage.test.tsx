@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Diagnostics > System logs through the whole app on MSW: nothing is read before a log is chosen
 // (D10); a choice reads the whole log once, and search, sort and paging then run in the browser with
-// no further call; each log's layout; the empty, filtered-empty and error states; log lines as text
+// no further call; each log's layout; the empty, filtered-empty, error and too-long states; log lines as text
 // (UI-2); and a normal user kept off the page without a call (UI-4).
 import { screen, waitFor, within } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
@@ -80,37 +80,44 @@ describe("System logs", () => {
     ]);
   });
 
-  it("reads a chosen log once, whole and newest first, and pages, sorts and searches it in the browser", async () => {
+  it("reads the newest 5,000 entries of a chosen log once, says so, and pages, sorts and searches them in the browser", async () => {
+    // The log has 12,000 entries; the server sends the 5,000 asked for, newest line first.
     const { user } = await logs({ scenario: "logsLarge" });
     await choose(user, "All system messages (syslog)");
     expect(await screen.findByText(/^5,000 entries, read at /)).toHaveAttribute(
       "role",
       "status",
     );
+    expect(
+      screen.getByText(
+        "Showing the newest 5,000 of 12,000 entries. Download the log in the classic interface for all of it.",
+      ),
+    ).toBeInTheDocument();
     expect(reads()).toHaveLength(1);
     expect(reads()[0]?.params).toEqual({
       id: "syslog",
       start: 0,
-      limit: null,
-      sortfield: "ts",
+      limit: 5000,
+      sortfield: "rownum",
       sortdir: "desc",
     });
     expect(reads()[0]?.background).toBe(false);
     const rows = within(table()).getAllByRole("row");
     // The header and 50 rows, the newest first.
     expect(rows).toHaveLength(51);
-    expect(rows[1]).toHaveTextContent("entry 4999 of the example log");
+    expect(rows[1]).toHaveTextContent("entry 11999 of the example log");
     expect(screen.getByText("1–50 of 5,000")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Next page" }));
     expect(screen.getByText("51–100 of 5,000")).toBeInTheDocument();
 
+    // Oldest first is the oldest of the entries read, sorted here.
     await user.click(within(table()).getByRole("button", { name: "Time" }));
     expect(
       within(table()).getByRole("columnheader", { name: "Time" }),
     ).toHaveAttribute("aria-sort", "ascending");
     expect(within(table()).getAllByRole("row")[1]).toHaveTextContent(
-      "entry 0 of",
+      "entry 7000 of",
     );
     expect(screen.getByText("Sorted by Time, ascending")).toBeInTheDocument();
     // The message is not sortable.
@@ -120,7 +127,7 @@ describe("System logs", () => {
 
     await user.type(
       screen.getByRole("searchbox", { name: "Search this log" }),
-      "entry 4321 ",
+      "entry 9321 ",
     );
     expect(
       await screen.findByText("1 of 5,000 entries matches."),
@@ -146,17 +153,26 @@ describe("System logs", () => {
     expect(within(table()).getAllByRole("row")).toHaveLength(6);
   });
 
-  it("counts the entries received, so the count line never contradicts the table", async () => {
+  it("counts the entries received, so the count line never contradicts the table, and says when the log has more", async () => {
     const { user } = await logs();
     // The captured syslog reply says total 28,028 for the five lines it carries.
     await choose(user, "All system messages (syslog)");
-    expect(await screen.findByText(/^5 entries, read at /)).toBeInTheDocument();
-    expect(screen.queryByText(/28,028/)).not.toBeInTheDocument();
+    const count = await screen.findByText(/^5 entries, read at /);
+    expect(count).not.toHaveTextContent("28,028");
     expect(within(table()).getAllByRole("row")).toHaveLength(6);
     expect(screen.getByText("1–5 of 5")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Showing the newest 5 of 28,028 entries. Download the log in the classic interface for all of it.",
+      ),
+    ).toBeInTheDocument();
     await choose(user, "Software updates");
     expect(await screen.findByText(/^3 entries, read at /)).toBeInTheDocument();
     expect(within(table()).getAllByRole("row")).toHaveLength(4);
+    // A log read whole says nothing more.
+    await choose(user, "File access over SMB/CIFS (audit)");
+    expect(await screen.findByText(/^2 entries, read at /)).toBeInTheDocument();
+    expect(screen.queryByText(/^Showing the newest/)).not.toBeInTheDocument();
   });
 
   it("reads again only on Refresh, and not when the same log is chosen again", async () => {
@@ -255,6 +271,33 @@ describe("System logs", () => {
     await user.click(within(alert).getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(reads()).toHaveLength(2));
     expect(screen.getByRole("combobox", { name: "Log" })).toBeEnabled();
+  });
+
+  it("says in plain words when a log is too long for the NAS to send, tries again, and reads other logs as usual", async () => {
+    // PHP runs out of memory building the rows and answers 500 with an empty body.
+    const { user } = await logs({ scenario: "logsTooLong" });
+    await choose(user, "All system messages (syslog)");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("This log is too long for the NAS to send");
+    expect(alert).toHaveTextContent(
+      "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit.",
+    );
+    // Neither the ordinary failure's words nor the transport's own message.
+    expect(alert).not.toHaveTextContent("Could not read this log.");
+    expect(alert).not.toHaveTextContent("could not be read");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(reads()).toHaveLength(1);
+
+    await user.click(within(alert).getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(reads()).toHaveLength(2));
+    expect(
+      await screen.findByText("This log is too long for the NAS to send"),
+    ).toBeInTheDocument();
+
+    await choose(user, "Software updates");
+    expect(await screen.findByText(/^3 entries, read at /)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows long, right-to-left and markup-looking lines as text", async () => {

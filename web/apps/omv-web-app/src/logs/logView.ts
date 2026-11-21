@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The System logs page (phase 5 design 2): the logs offered, how each is laid out, and how the rows
 // of one read are searched, sorted and paged in the browser. LogFile.getList re-reads and re-parses
-// the whole log on every call, so the page reads a log once and does the rest here (owner). Pure, so
-// each rule is tested by itself.
+// the whole log on every call, so the page reads a log once, its newest 5,000 entries, and does the
+// rest here (owner). Pure, so each rule is tested by itself.
 import type {
   LogFileGetListRequest,
   LogRow,
 } from "@omv-webui/react-api-omv/generated";
+import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import { stripControl } from "@omv-webui/react-ui-components";
 import { naturalCompare } from "../format/format.ts";
 
@@ -44,19 +45,48 @@ export function logLayout(id: LogId): LogLayout {
   }
 }
 
-/** The one read of a log: every row, newest first; the updates log has no times, so by line. */
+/**
+ * How many entries one read asks for. rpc.php holds every row it sends in PHP's 128 MB of memory, and
+ * a whole journal near OMV's 100,000-line cap runs it out (journal, 2026-11-22); 5,000 entries are
+ * about 1 MB and read in under a second (design 2.1).
+ */
+export const LOG_READ_LIMIT = 5000;
+
+/**
+ * The one read of a log: the newest 5,000 entries, by their line in the log (`rownum`, which counts
+ * up through the file), so the updates log, which has no times, is cut the same way. The page sorts
+ * the rows itself (sortRows), whatever order they arrive in.
+ */
 export function logRequest(id: LogId): LogFileGetListRequest {
   return {
     id,
     start: 0,
-    limit: null,
-    sortfield: id === "apt_term" ? "rownum" : "ts",
+    limit: LOG_READ_LIMIT,
+    sortfield: "rownum",
     sortdir: "desc",
   };
 }
 
-/** The server reads at most the last 100,000 lines (OMV_MAX_LOGFILE_LINES). */
-export const SERVER_LINE_LIMIT = 100_000;
+/** Whether the log has more entries than were read: then the page says only the newest are shown. */
+export const isPartialRead = (received: number, total: unknown): boolean =>
+  typeof total === "number" && Number.isFinite(total) && total > received;
+
+/** PHP's words when a script needs more memory than it is allowed. */
+const MEMORY_EXHAUSTED = /\ballowed memory size\b.*\bexhausted\b/i;
+
+/**
+ * Whether a failed read of a log is the server giving up on a long log: the fallback state, should a
+ * read of LOG_READ_LIMIT entries still be too much. Past its memory limit PHP stops rpc.php, which
+ * answers 500 with an empty body (the transport marks it unreadable). A 500 whose message says the
+ * memory was exhausted is the same limit. Any other failure is an ordinary one.
+ */
+export function isLogTooLong(error: unknown): boolean {
+  return (
+    isRpcError(error) &&
+    error.status === 500 &&
+    (error.unreadable || MEMORY_EXHAUSTED.test(error.message))
+  );
+}
 
 export type LogSortField =
   | "ts"

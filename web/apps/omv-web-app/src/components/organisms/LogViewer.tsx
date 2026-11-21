@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The System logs viewer (phase 5 design 2). No log is read until the reader chooses one (D10); the
-// choice reads it once, whole (LogFile.getList re-reads the entire log on every call), and the rows
-// are then searched, sorted and paged here. Nothing more is asked of the server until "Refresh" or
-// another log. The picker is Base UI's Select, which commits on Enter or a click, so arrowing through
-// it does not read every log in turn. The view lives in memory (logsViewStore.ts), never in the
-// address (UI-4). Every log line is shown as text (UI-2), in its own direction.
+// choice reads it once, its newest 5,000 entries (LogFile.getList re-reads the entire log on every
+// call, and rpc.php cannot send a whole long one), and the rows are then searched, sorted and paged
+// here. Nothing more is asked of the server until "Refresh" or another log. The picker is Base UI's
+// Select, which commits on Enter or a click, so arrowing through it does not read every log in turn.
+// A read the server still cannot send has its own state (isLogTooLong). The view lives in memory
+// (logsViewStore.ts), never in the address (UI-4). Every log line is shown as text (UI-2), in its own
+// direction.
 import type { LogRow } from "@omv-webui/react-api-omv/generated";
 import { useLogFileGetList } from "@omv-webui/react-api-omv/generated";
 import {
@@ -38,6 +40,8 @@ import {
   cleanLogText,
   defaultSort,
   isLogId,
+  isLogTooLong,
+  isPartialRead,
   LOG_GROUPS,
   LOG_IDS,
   LOG_PAGE_SIZES,
@@ -46,7 +50,6 @@ import {
   nextSort,
   pageOf,
   searchRows,
-  SERVER_LINE_LIMIT,
   sortRows,
   type LogLayout,
   type LogSortField,
@@ -272,9 +275,12 @@ export function LogViewer() {
     );
   };
 
-  // The count is the rows received: the whole log is read (limit null), and the count line must
-  // never contradict the table. The reply's `total` is not used.
+  // The count is the rows received, so the count line never contradicts the table. The reply's
+  // `total` (every entry of the part of the log the server read) says only whether there are more
+  // than were sent, and how many.
   const received = all?.length ?? 0;
+  const total = data?.total;
+  const partial = data !== undefined && isPartialRead(received, total);
   let count = "";
   if (firstRead) {
     count = t("logs.reading");
@@ -297,6 +303,26 @@ export function LogViewer() {
   let standalone;
   if (id === undefined) {
     standalone = <EmptyState>{t("logs.nothingChosen")}</EmptyState>;
+  } else if (failed && isLogTooLong(log.error)) {
+    // OMV's own limit, which the classic interface meets too: our words only. The reply holds nothing
+    // the reader can use (an empty body, or PHP's memory figures).
+    standalone = (
+      <EmptyState
+        variant="error"
+        title={t("logs.tooLong.title")}
+        action={
+          <Button
+            variant="neutral"
+            loading={log.isFetching}
+            onClick={() => void log.refetch()}
+          >
+            {t("common.tryAgain")}
+          </Button>
+        }
+      >
+        {t("logs.tooLong.body")}
+      </EmptyState>
+    );
   } else if (failed) {
     standalone = (
       <ReadFailed
@@ -422,8 +448,14 @@ export function LogViewer() {
       <p role="status" className="text-sm tabular-nums empty:hidden">
         {count}
       </p>
-      {data && received >= SERVER_LINE_LIMIT ? (
-        <p className="text-sm text-muted-foreground">{t("logs.limit")}</p>
+      {partial && typeof total === "number" ? (
+        <p className="text-sm text-muted-foreground">
+          {t("logs.limit", {
+            count: total,
+            shown: format.count(received),
+            total: format.count(total),
+          })}
+        </p>
       ) : null}
       {layout === "message" && data ? (
         <p className="text-sm text-muted-foreground">{t("logs.noTimes")}</p>

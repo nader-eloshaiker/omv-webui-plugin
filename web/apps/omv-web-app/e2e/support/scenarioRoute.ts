@@ -94,6 +94,15 @@ export async function answerWithScenario(
       typeof answer === "function"
         ? answer({ params: body?.params, options: body?.options })
         : answer;
+    if (typeof resolved !== "string" && resolved.rawBody !== undefined) {
+      // A body that is not JSON: PHP's empty 500 when it stops a script.
+      await route.fulfill({
+        status: resolved.status,
+        contentType: "text/html; charset=UTF-8",
+        body: resolved.rawBody,
+      });
+      return;
+    }
     const reply = replyOf(operationId, resolved);
     await route.fulfill({
       status: reply.status,

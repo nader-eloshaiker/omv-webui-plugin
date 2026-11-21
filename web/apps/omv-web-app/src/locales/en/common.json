@@ -735,7 +735,8 @@
     "countMatching_one": "{{shown}} of {{total}} entries matches.",
     "countMatching_other": "{{shown}} of {{total}} entries match.",
     "reading": "Reading the log… A long log can take a few seconds.",
-    "limit": "Only the newest 100,000 lines of this log are read. Download the log in the classic interface for all of it.",
+    "limit_one": "Showing the newest {{shown}} of {{total}} entry. Download the log in the classic interface for all of it.",
+    "limit_other": "Showing the newest {{shown}} of {{total}} entries. Download the log in the classic interface for all of it.",
     "tableLabel": "Entries of {{log}}",
     "pages": "Pages of log entries",
     "col": {
@@ -753,6 +754,10 @@
     "newestFirst": "Newest first",
     "nothingChosen": "Choose a log above to read it.",
     "loadFailed": "Could not read this log.",
+    "tooLong": {
+      "title": "This log is too long for the NAS to send",
+      "body": "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit."
+    },
     "empty": "This log is empty.",
     "emptyFor": {
       "smbdaudit": "Nothing is recorded here until auditing is turned on for a shared folder in the SMB/CIFS settings.",

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { LogRow } from "@omv-webui/react-api-omv/generated";
+import { RpcError } from "@omv-webui/react-api-omv/transport";
 import { describe, expect, it } from "vitest";
 import {
   cleanLogText,
   defaultSort,
   isLogId,
+  isLogTooLong,
+  isPartialRead,
   LOG_IDS,
   logLayout,
   logRequest,
@@ -38,15 +41,61 @@ describe("the logs offered", () => {
     expect(logLayout("smbdaudit")).toBe("audit");
   });
 
-  it("is read whole, newest first, by line where there are no times", () => {
-    expect(logRequest("auth")).toEqual({
-      id: "auth",
+  it.each(LOG_IDS)("%s is read as its newest 5,000 entries, by line", (id) => {
+    expect(logRequest(id)).toEqual({
+      id,
       start: 0,
-      limit: null,
-      sortfield: "ts",
+      limit: 5000,
+      sortfield: "rownum",
       sortdir: "desc",
     });
-    expect(logRequest("apt_term").sortfield).toBe("rownum");
+  });
+
+  it.each([
+    { received: 5000, total: 99_986, want: true },
+    { received: 5000, total: 5000, want: false },
+    { received: 5, total: 5, want: false },
+    { received: 0, total: 0, want: false },
+    { received: 5000, total: undefined, want: false },
+    { received: 5000, total: Number.NaN, want: false },
+    { received: 5000, total: "99986", want: false },
+  ])(
+    "$received received of $total: only the newest shown is $want",
+    ({ received, total, want }) => {
+      expect(isPartialRead(received, total)).toBe(want);
+    },
+  );
+});
+
+describe("sorting rows that arrive newest line first", () => {
+  // The server sends the newest lines first (rownum descending); times can tie or run backwards.
+  const rows = [
+    { rownum: 3, ts: 300, message: "d" },
+    { rownum: 2, ts: 300, message: "c" },
+    { rownum: 1, ts: 100, message: "b" },
+    { rownum: 0, ts: 200, message: "a" },
+  ] as unknown as LogRow[];
+  const order = (sorted: LogRow[]) => sorted.map((r) => r.rownum);
+
+  it("orders by time whatever order they arrived in, ties by line", () => {
+    expect(order(sortRows(rows, { field: "ts", direction: "desc" }))).toEqual([
+      3, 2, 0, 1,
+    ]);
+    expect(order(sortRows(rows, { field: "ts", direction: "asc" }))).toEqual([
+      1, 0, 2, 3,
+    ]);
+    expect(
+      order(sortRows([...rows].reverse(), { field: "ts", direction: "desc" })),
+    ).toEqual([3, 2, 0, 1]);
+  });
+
+  it("orders by line in either direction", () => {
+    expect(
+      order(sortRows(rows, { field: "rownum", direction: "asc" })),
+    ).toEqual([0, 1, 2, 3]);
+    expect(
+      order(sortRows(rows, { field: "rownum", direction: "desc" })),
+    ).toEqual([3, 2, 1, 0]);
   });
 });
 
@@ -157,5 +206,70 @@ describe("cleanLogText", () => {
   it("gives the empty string for a field that is not text", () => {
     expect(cleanLogText(undefined)).toBe("");
     expect(cleanLogText(42)).toBe("");
+  });
+});
+
+describe("a log too long for the NAS to send", () => {
+  const error = (init: {
+    status: number;
+    message: string;
+    unreadable?: boolean;
+  }) =>
+    new RpcError({
+      code: init.unreadable ? null : 0,
+      operationId: "logFileGetList",
+      ...init,
+    });
+
+  it.each([
+    {
+      why: "PHP stopped rpc.php: 500 with an empty body",
+      e: error({
+        status: 500,
+        message: "The server sent a reply that could not be read.",
+        unreadable: true,
+      }),
+      want: true,
+    },
+    {
+      why: "a 500 that says the memory was exhausted",
+      e: error({
+        status: 500,
+        message:
+          "Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)",
+      }),
+      want: true,
+    },
+    {
+      why: "an ordinary 500",
+      e: error({
+        status: 500,
+        message:
+          "Failed to execute command 'journalctl --no-pager': exit code '1'.",
+      }),
+      want: false,
+    },
+    {
+      why: "a web server's own page for another status",
+      e: error({
+        status: 502,
+        message: "The server sent a reply that could not be read.",
+        unreadable: true,
+      }),
+      want: false,
+    },
+    {
+      why: "no reply at all",
+      e: error({ status: 0, message: "The server could not be reached." }),
+      want: false,
+    },
+    {
+      why: "not a reply error",
+      e: new Error("Allowed memory size exhausted"),
+      want: false,
+    },
+    { why: "nothing", e: undefined, want: false },
+  ])("$why: $want", ({ e, want }) => {
+    expect(isLogTooLong(e)).toBe(want);
   });
 });

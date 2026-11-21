@@ -70,6 +70,32 @@ function recordCalls(page: Page): SeenCall[] {
   return calls;
 }
 
+/**
+ * Every failed rpc.php reply, as "Service.method status". 401 is the session probe of the first
+ * load, before signing in.
+ */
+function recordFailedReplies(page: Page): string[] {
+  const failed: string[] = [];
+  page.on("response", (response) => {
+    if (
+      !response.url().endsWith("/rpc.php") ||
+      response.status() === 200 ||
+      response.status() === 401
+    ) {
+      return;
+    }
+    let name = "(not a JSON call)";
+    try {
+      const body: unknown = response.request().postDataJSON();
+      name = `${String(field(body, "service"))}.${String(field(body, "method"))}`;
+    } catch {
+      // Not a JSON call: reported as such.
+    }
+    failed.push(`${name} ${String(response.status())}`);
+  });
+  return failed;
+}
+
 /** The last 200 reply of a call, read in the page's own response stream. */
 function recordReplies(page: Page): Map<string, unknown> {
   const replies = new Map<string, unknown>();
@@ -178,54 +204,114 @@ test.describe("an administrator", () => {
     expect(await disks.textContent()).not.toMatch(/serial/i);
   });
 
-  test("reads a log once when it is chosen, and searches it without another read", async ({
-    page,
-    vm,
-  }) => {
-    // A full syslog can take a few seconds to read and parse on the server.
-    test.setTimeout(2 * 60_000);
-    const calls = recordCalls(page);
-    await signIn(page, vm.admin);
-    await navigation(page)
-      .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
-      .click();
-    await expect(
-      page.getByRole("heading", { level: 1, name: copy.logs.title }),
-    ).toBeFocused();
-    expect(calls.map((c) => c.name)).not.toContain("LogFile.getList");
+  // The page reads the newest 5,000 entries of a log. Asking for every row of a journal near OMV's
+  // 100,000-line cap ran rpc.php out of PHP's memory: 500 with an empty body, as the classic
+  // interface does (journal, 2026-11-22); 5,000 entries read in under a second. So the rows are
+  // expected. The page keeps a "too long" state as a fallback should a read of 5,000 still fail that
+  // way; the test accepts it, records it as an annotation so a run shows it, and still asks for
+  // exactly one read with no other failed reply. Chromium logs that 500 as a failed resource without
+  // the method's name, so the console line is allowed for this test only, and every failed reply is
+  // checked to be that read.
+  test.describe("reading a log", () => {
+    test.use({
+      extraAllowances: {
+        list: [
+          {
+            reason:
+              "LogFile.getList answers 500 for a log too long to send, checked below",
+            matches: (message, origin) =>
+              message.location().url === `${origin}/rpc.php` &&
+              message
+                .text()
+                .startsWith(
+                  "Failed to load resource: the server responded with a status of 500",
+                ),
+          },
+        ],
+      },
+    });
 
-    await page.getByRole("combobox", { name: copy.logs.picker }).click();
-    await page.getByRole("option", { name: copy.logs.id.syslog }).click();
-    await expect(page.getByText(/entries, read at /)).toBeVisible({
-      timeout: 60_000,
-    });
-    const reads = () => calls.filter((c) => c.name === "LogFile.getList");
-    expect(reads()).toHaveLength(1);
-    expect(reads()[0]?.params).toMatchObject({
-      id: "syslog",
-      start: 0,
-      limit: null,
-      sortfield: "ts",
-      sortdir: "desc",
-    });
-    expect(reads()[0]?.background).toBe(false);
-    const table = page.getByRole("table", {
-      name: copy.logs.tableLabel.replace("{{log}}", copy.logs.id.syslog),
-    });
-    await expect(table.getByRole("row").nth(1)).toBeVisible();
+    test("reads a log once when it is chosen, and searches it without another read", async ({
+      page,
+      vm,
+    }) => {
+      // The server still re-reads and parses the whole log, which can take a few seconds.
+      test.setTimeout(2 * 60_000);
+      const calls = recordCalls(page);
+      const replies = recordReplies(page);
+      const failed = recordFailedReplies(page);
+      await signIn(page, vm.admin);
+      await navigation(page)
+        .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
+        .click();
+      await expect(
+        page.getByRole("heading", { level: 1, name: copy.logs.title }),
+      ).toBeFocused();
+      expect(calls.map((c) => c.name)).not.toContain("LogFile.getList");
 
-    await page
-      .getByRole("searchbox", { name: copy.logs.search })
-      .fill("no-such-words-in-any-log-0f9e");
-    await expect(
-      page.getByText(
-        copy.logs.filteredEmpty.replace(
-          "{{search}}",
-          "no-such-words-in-any-log-0f9e",
+      await page.getByRole("combobox", { name: copy.logs.picker }).click();
+      await page.getByRole("option", { name: copy.logs.id.syslog }).click();
+      const rowsRead = page.getByText(/entries, read at /);
+      const tooLong = page.getByText(copy.logs.tooLong.title);
+      await expect(rowsRead.or(tooLong)).toBeVisible({ timeout: 60_000 });
+      const reads = () => calls.filter((c) => c.name === "LogFile.getList");
+      expect(reads()).toHaveLength(1);
+      expect(reads()[0]?.params).toEqual({
+        id: "syslog",
+        start: 0,
+        limit: 5000,
+        sortfield: "rownum",
+        sortdir: "desc",
+      });
+      expect(reads()[0]?.background).toBe(false);
+      await expect(page.getByText(copy.logs.loadFailed)).toHaveCount(0);
+
+      if (await tooLong.isVisible()) {
+        // The fallback: even 5,000 entries were too much for the NAS to send. The one failed reply
+        // is that read.
+        test.info().annotations.push({
+          type: "fallback",
+          description:
+            "LogFile.getList for 5,000 entries answered 500; the page showed its too-long state",
+        });
+        expect(failed).toEqual(["LogFile.getList 500"]);
+        await expect(page.getByRole("table")).toHaveCount(0);
+        return;
+      }
+
+      const table = page.getByRole("table", {
+        name: copy.logs.tableLabel.replace("{{log}}", copy.logs.id.syslog),
+      });
+      await expect(table.getByRole("row").nth(1)).toBeVisible();
+      // At most 5,000 entries arrive; when the log has more, the page says only the newest are shown.
+      await expect.poll(() => replies.has("LogFile.getList")).toBe(true);
+      const reply = replies.get("LogFile.getList");
+      const received = field(reply, "data");
+      const total = field(reply, "total");
+      expect(Array.isArray(received)).toBe(true);
+      const count = Array.isArray(received) ? received.length : 0;
+      expect(count).toBeLessThanOrEqual(5000);
+      const partial = page.getByText(/^Showing the newest /);
+      if (typeof total === "number" && total > count) {
+        await expect(partial).toBeVisible();
+      } else {
+        await expect(partial).toHaveCount(0);
+      }
+
+      await page
+        .getByRole("searchbox", { name: copy.logs.search })
+        .fill("no-such-words-in-any-log-0f9e");
+      await expect(
+        page.getByText(
+          copy.logs.filteredEmpty.replace(
+            "{{search}}",
+            "no-such-words-in-any-log-0f9e",
+          ),
         ),
-      ),
-    ).toBeVisible();
-    expect(reads()).toHaveLength(1);
+      ).toBeVisible();
+      expect(reads()).toHaveLength(1);
+      expect(failed).toEqual([]);
+    });
   });
 
   test("sees the processes, polled in the background every 5 s, and pauses them", async ({

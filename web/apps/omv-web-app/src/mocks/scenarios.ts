@@ -80,6 +80,7 @@ export const SCENARIOS = [
   "logsLarge",
   "logsHostile",
   "logsFail",
+  "logsTooLong",
   "processesBusy",
   "serviceOutputs",
   "serviceOutputsEmpty",
@@ -132,9 +133,10 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   networkVirtual: "Network: twelve virtual interfaces",
   networkNoIpv6: "Network: no IPv6, speed not reported",
   networkWifi: "Network: a Wi-Fi interface",
-  logsLarge: "System logs: 5,000 entries",
+  logsLarge: "System logs: 12,000 entries, the newest 5,000 read",
   logsHostile: "System logs: long and markup-looking lines",
   logsFail: "System logs: reading fails",
+  logsTooLong: "System logs: the system log is too long to send",
   processesBusy: "Processes: stopped, zombie, swap, long command",
   serviceOutputs: "Service details: SMB, NFS and SSH in use",
   serviceOutputsEmpty: "Service details: on, nothing to show",
@@ -507,24 +509,37 @@ const SERVICES_LOGGING = [
   "openmediavault-webgui[85363]",
   "monit[702]",
 ];
-/** A syslog of 5,000 entries, newest first, one every 30 seconds. */
-const LARGE_SYSLOG: FixedAnswer = {
-  status: 200,
-  value: {
-    total: 5000,
-    data: Array.from({ length: 5000 }, (_, i) => {
-      const rownum = 4999 - i;
-      const ts = SYSLOG_TS - i * 30;
-      return {
-        rownum,
-        ts,
-        date: SYSLOG_ROW.date,
-        hostname: SYSLOG_ROW.hostname,
-        message: `${SERVICES_LOGGING[rownum % SERVICES_LOGGING.length] ?? ""}: entry ${String(rownum)} of the example log`,
-      };
-    }),
-  },
-};
+/** The entries of the large syslog. */
+const LARGE_SYSLOG_TOTAL = 12_000;
+/** A syslog of 12,000 entries, newest line first, one every 30 seconds. */
+const LARGE_SYSLOG_ROWS = Array.from({ length: LARGE_SYSLOG_TOTAL }, (_, i) => {
+  const rownum = LARGE_SYSLOG_TOTAL - 1 - i;
+  const ts = SYSLOG_TS - i * 30;
+  return {
+    rownum,
+    ts,
+    date: SYSLOG_ROW.date,
+    hostname: SYSLOG_ROW.hostname,
+    message: `${SERVICES_LOGGING[rownum % SERVICES_LOGGING.length] ?? ""}: entry ${String(rownum)} of the example log`,
+  };
+});
+/**
+ * The large syslog as OMV pages it: `total` is every entry, `data` the page asked for (`start`,
+ * `limit`; a null limit is every row). The order is always the newest line first, the order the page
+ * asks for.
+ */
+function largeSyslog(params: unknown): FixedAnswer {
+  const { start, limit } = (params ?? {}) as {
+    start?: unknown;
+    limit?: unknown;
+  };
+  const from = typeof start === "number" && start >= 0 ? start : 0;
+  const rows =
+    typeof limit === "number" && limit >= 0
+      ? LARGE_SYSLOG_ROWS.slice(from, from + limit)
+      : LARGE_SYSLOG_ROWS.slice(from);
+  return { status: 200, value: { total: LARGE_SYSLOG_TOTAL, data: rows } };
+}
 const HOSTILE_SYSLOG: FixedAnswer = {
   status: 200,
   value: {
@@ -560,6 +575,12 @@ const LOG_FAILS: FixedAnswer = {
   status: 500,
   message: "Failed to execute command 'journalctl --no-pager': exit code '1'.",
 };
+/**
+ * A journal of about 100,000 lines on the test VM (journal, 2026-11-22): handling every row runs
+ * rpc.php past PHP's 128 MB memory limit, PHP stops it, and the reply is HTTP 500 with an empty body
+ * (the error goes only to the web server's log).
+ */
+const LOG_TOO_LONG: FixedAnswer = { status: 500, rawBody: "" };
 
 type TopInfo = typeof CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
 const TOP: TopInfo = CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
@@ -1079,13 +1100,16 @@ export function scenarioAnswers(
     logFileGetList: ({ params }) => {
       const log = logFor(params);
       if (log === "syslog" && name === "logsLarge") {
-        return guarded<never>(LARGE_SYSLOG)();
+        return guarded<never>(largeSyslog(params))();
       }
       if (log === "syslog" && name === "logsHostile") {
         return guarded<never>(HOSTILE_SYSLOG)();
       }
       if (log !== "unknownLog" && name === "logsFail") {
         return guarded<never>(LOG_FAILS)();
+      }
+      if (log === "syslog" && name === "logsTooLong") {
+        return guarded<never>(LOG_TOO_LONG)();
       }
       return guarded(log)();
     },

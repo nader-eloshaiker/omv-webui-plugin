@@ -22,6 +22,11 @@ export interface FixedAnswer {
   value?: unknown;
   message?: string;
   code?: number;
+  /**
+   * A body that is not JSON, sent as it is with this status instead of the envelope. PHP answers a
+   * script it stopped (a fatal error such as running out of memory) with 500 and an empty body.
+   */
+  rawBody?: string;
 }
 
 /** What the mock answers for one operation: a named example, a written reply, or a function of the call. */
@@ -66,6 +71,12 @@ function exampleAnswer(operationId: OperationId, name: string): FixedAnswer {
 }
 
 export function replyOf(answer: FixedAnswer) {
+  if (answer.rawBody !== undefined) {
+    return new HttpResponse(answer.rawBody, {
+      status: answer.status,
+      headers: { "Content-Type": "text/html; charset=UTF-8" },
+    });
+  }
   if (answer.status === 200) {
     return HttpResponse.json(
       { response: answer.value ?? null, error: null },
