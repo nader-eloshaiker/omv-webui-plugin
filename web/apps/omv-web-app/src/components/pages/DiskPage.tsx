@@ -23,6 +23,7 @@ import { useSession } from "../../session/sessionContext.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { PageTitle } from "../atoms/PageTitle.tsx";
 import { PendingMark } from "../atoms/PendingMark.tsx";
+import { Slotted } from "../atoms/Slotted.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 import { DiskHealthDetails } from "../organisms/DiskHealthDetails.tsx";
 import { DiskMonitoring } from "../organisms/DiskMonitoring.tsx";
@@ -163,11 +164,14 @@ function DiskSections({ disk }: { disk: DiskDevice }) {
           </PageTitle>
           {pending ? <PendingMark /> : null}
         </div>
-        <p className="text-sm text-muted-foreground" dir="auto">
-          {t("disk.subtitle", {
-            model: model === "" ? t("disks.noModel") : model,
-            size,
-          })}
+        <p className="text-sm text-muted-foreground">
+          <Slotted
+            sentence={(tokens) => t("disk.subtitle", tokens)}
+            values={{
+              model: model === "" ? t("disks.noModel") : model,
+              size,
+            }}
+          />
         </p>
       </div>
       <DiskSummary disk={disk} />

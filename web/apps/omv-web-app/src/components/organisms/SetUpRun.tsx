@@ -33,6 +33,7 @@ import { useFormat } from "../../format/useFormat.ts";
 import type { useSetUpRun } from "../../hooks/useSetUpRun.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { Slotted } from "../atoms/Slotted.tsx";
 import { ModuleNames } from "../molecules/ModuleNames.tsx";
 
 type Run = ReturnType<typeof useSetUpRun>;
@@ -292,7 +293,7 @@ export function SetUpRun({
       (d) =>
         run.steps[`watch:${d.canonicaldevicefile}`]?.status === "succeeded",
     ).length;
-  const intervalText = format.duration(interval);
+  const intervalText = format.interval(interval);
   const testLines: string[] = [];
   if (plan.testDisks.length > 0 && choices.tests !== "none") {
     if (choices.tests === "short" || choices.tests === "both") {
@@ -335,10 +336,15 @@ export function SetUpRun({
             })}
             {testLines.length > 0 ? ` ${testLines.join(" ")}` : ""}
           </span>
-          <span className="block" dir="auto">
-            {emailOn && email
-              ? t("smart.setup.sum.emailOn", { address: email.primaryemail })
-              : t("smart.setup.doneEmailOff")}
+          <span className="block">
+            {emailOn && email ? (
+              <Slotted
+                sentence={(tokens) => t("smart.setup.sum.emailOn", tokens)}
+                values={{ address: email.primaryemail }}
+              />
+            ) : (
+              t("smart.setup.doneEmailOff")
+            )}
           </span>
         </>
       ),

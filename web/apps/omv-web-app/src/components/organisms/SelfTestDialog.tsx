@@ -52,6 +52,7 @@ import {
   type TestDraft,
 } from "../../disks/schedule.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
+import { isolate } from "../../format/isolate.ts";
 import { ALL_TESTS } from "../../hooks/useDiskReads.ts";
 import { hourText, monthText, weekdayText } from "../../hooks/useSmartWords.ts";
 import {
@@ -147,7 +148,7 @@ function DialogForm({
     const size = parseByteCount(disk.size);
     const label = t("smart.tests.dialog.diskOption", {
       device: disk.canonicaldevicefile,
-      model: disk.model.trim() || t("disks.noModel"),
+      model: isolate(disk.model.trim() || t("disks.noModel")),
       size: size === null ? "" : formatBytes(size),
     });
     return {

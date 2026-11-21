@@ -12,6 +12,7 @@ import { Fragment, useId, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { isCoreService, type AttentionRow } from "../../dashboard/dashboard.ts";
 import { isDiskName } from "../../disks/diskWords.ts";
+import { isolate } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useFileSystemNameText } from "../../hooks/useFileSystemNameText.ts";
 import { CLASSIC, CLASSIC_HOME } from "../../navigation/navigation.ts";
@@ -127,7 +128,7 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
                 <Trans
                   i18nKey={key}
                   values={{
-                    model,
+                    model: isolate(model),
                     reason: t(`diskHealth.reason.${row.reason}`),
                   }}
                   components={{ device: <IdentifierText value={row.device} /> }}

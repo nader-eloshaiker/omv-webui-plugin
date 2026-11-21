@@ -29,6 +29,15 @@ export function useFormat() {
   const longDuration = (seconds: number): string =>
     words(longDurationParts(seconds));
 
+  /**
+   * How often something repeats: the duration rule, except that an interval under a minute (the
+   * server allows 10 seconds and up) is said in seconds, never "every less than a minute".
+   */
+  const interval = (seconds: number): string =>
+    seconds > 0 && seconds < 60
+      ? t("format.duration.seconds", { count: Math.round(seconds) })
+      : duration(seconds);
+
   const percent = (value: number): string => {
     const whole = wholePercent(value);
     return whole === "under1" ? t("format.percentUnder1") : `${String(whole)}%`;
@@ -65,6 +74,7 @@ export function useFormat() {
 
   return {
     duration,
+    interval,
     longDuration,
     percent,
     clock,

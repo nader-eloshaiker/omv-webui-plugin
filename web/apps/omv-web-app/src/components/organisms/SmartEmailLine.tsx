@@ -7,6 +7,7 @@ import { ExternalLink, Skeleton } from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
 import { emailSetUp } from "../../disks/smartSettingsForm.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
+import { Slotted } from "../atoms/Slotted.tsx";
 
 export interface SmartEmailLineProps {
   /** EmailNotification.get's reply, once read. */
@@ -38,11 +39,10 @@ export function SmartEmailLine({ email, failed }: SmartEmailLineProps) {
     <div className="flex flex-col gap-1">
       <p>
         {emailSetUp(email) ? (
-          <span dir="auto">
-            {t("smart.overview.emailOn", {
-              address: email.primaryemail.trim(),
-            })}
-          </span>
+          <Slotted
+            sentence={(tokens) => t("smart.overview.emailOn", tokens)}
+            values={{ address: email.primaryemail.trim() }}
+          />
         ) : (
           t("smart.overview.emailOff")
         )}

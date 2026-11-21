@@ -130,6 +130,15 @@ describe("Disk health overview", () => {
     );
   });
 
+  it("says an interval under a minute in seconds", async () => {
+    await overview({ scenario: "smartOddInterval" });
+    expect(
+      await within(card()).findByText(
+        /^Watched disks are checked every 45 seconds\./,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("counts the watched disks, says how often and what happens to a sleeping disk", async () => {
     await overview({ scenario: "disksNas" });
     expect(
@@ -205,9 +214,13 @@ describe("Disk health overview", () => {
 
   it("names the email address as text", async () => {
     await overview({ scenario: "alertsConfigured" });
-    expect(
-      await within(card()).findByText(/^Problems are emailed to .+@.+\.$/),
-    ).toHaveAttribute("dir", "auto");
+    // The address is server text in our sentence: isolated in a <bdi>, so it keeps its direction.
+    const line = await within(card()).findByText(
+      (_, element) =>
+        element?.tagName === "P" &&
+        /^Problems are emailed to .+@.+\.$/.test(element.textContent),
+    );
+    expect(line.querySelector("bdi")?.textContent).toMatch(/^.+@.+$/);
   });
 
   it("shows each read failure in its own place", async () => {

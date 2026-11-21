@@ -7,6 +7,7 @@ import { ExternalLink } from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
 import { emailConfigured } from "../../disks/setupPlan.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
+import { Slotted } from "../atoms/Slotted.tsx";
 
 export function SetUpEmailLine({
   email,
@@ -27,9 +28,10 @@ export function SetUpEmailLine({
         {failed ? (
           t("smart.overview.emailFailed")
         ) : on && email ? (
-          <span dir="auto">
-            {t("smart.overview.emailOn", { address: email.primaryemail })}
-          </span>
+          <Slotted
+            sentence={(tokens) => t("smart.overview.emailOn", tokens)}
+            values={{ address: email.primaryemail }}
+          />
         ) : (
           t("smart.overview.emailOff")
         )}

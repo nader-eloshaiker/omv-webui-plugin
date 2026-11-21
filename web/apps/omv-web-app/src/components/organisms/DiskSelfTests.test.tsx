@@ -53,7 +53,8 @@ describe("a disk's scheduled self-tests", () => {
     });
     expect(
       within(dialog).getByRole("combobox", { name: "Disk" }),
-    ).toHaveTextContent(/^\/dev\/sdb, Example HDD 4TB/);
+      // The model is isolated (FSI … PDI) inside the option's words.
+    ).toHaveTextContent(/^\/dev\/sdb, \u2068Example HDD 4TB\u2069/);
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
     await waitFor(() =>
       expect(

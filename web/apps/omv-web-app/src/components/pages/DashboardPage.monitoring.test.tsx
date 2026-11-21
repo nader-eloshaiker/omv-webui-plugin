@@ -295,7 +295,7 @@ describe("the Disk health card", () => {
     const rows = within(await attention()).getAllByRole("listitem");
     const text = rows.map((r) => r.textContent ?? "");
     expect(text[0]).toMatch(
-      /^CriticalDisk \/dev\/sdc \(Example HDD 4TB\) may fail soon: Many damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. Monitoring is off for this disk, so the NAS will not email you about it\.Open disk \/dev\/sdcRead at /,
+      /^CriticalDisk \/dev\/sdc \(\u2068Example HDD 4TB\u2069\) may fail soon: Many damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. Monitoring is off for this disk, so the NAS will not email you about it\.Open disk \/dev\/sdcRead at /,
     );
     expect(
       within(rows[0] as HTMLElement).getByRole("link", {
@@ -303,13 +303,13 @@ describe("the Disk health card", () => {
       }),
     ).toHaveAttribute("href", "/ui/storage/disks/sdc");
     expect(text[1]).toMatch(
-      /^CriticalDisk \/dev\/sdd \(Example HDD 4TB\) may fail soon: It is working outside its safe limits now\./,
+      /^CriticalDisk \/dev\/sdd \(\u2068Example HDD 4TB\u2069\) may fail soon: It is working outside its safe limits now\./,
     );
     expect(text[2]).toMatch(
-      /^WarningDisk \/dev\/sda \(Example HDD 4TB\): A few damaged areas/,
+      /^WarningDisk \/dev\/sda \(\u2068Example HDD 4TB\u2069\): A few damaged areas/,
     );
     expect(text[3]).toMatch(
-      /^WarningDisk \/dev\/sdb \(Example HDD 4TB\): It was once used outside its safe limits/,
+      /^WarningDisk \/dev\/sdb \(\u2068Example HDD 4TB\u2069\): It was once used outside its safe limits/,
     );
     for (const device of within(rows[0]!).getAllByText("/dev/sdc")) {
       expect(device.tagName).toBe("CODE");

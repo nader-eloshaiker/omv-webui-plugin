@@ -116,7 +116,7 @@ export function SmartMonitoringCard({
         {settings.enable ? (
           <p>
             {t("smart.overview.interval", {
-              interval: format.duration(settings.interval),
+              interval: format.interval(settings.interval),
               sleeping: t(`smart.settings.modeShort.${mode}`),
             })}
           </p>

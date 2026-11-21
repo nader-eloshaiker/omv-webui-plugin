@@ -32,6 +32,7 @@ import { useDiskCheck } from "../../hooks/useDiskCheck.ts";
 import { useDiskRollUp } from "../../hooks/useDiskRollUp.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { DiskLink } from "../atoms/DiskLink.tsx";
+import { Slotted } from "../atoms/Slotted.tsx";
 import { DashboardCard } from "../molecules/DashboardCard.tsx";
 import { DiskReason } from "../molecules/DiskHealthStatus.tsx";
 
@@ -43,18 +44,30 @@ function DiskItem({ disk }: { disk: SmartDevice }) {
   const sizeText = size === null ? "" : formatBytes(size);
   const model = disk.model.trim();
   const temperature = diskTemperature(disk.temperature);
+  // The model is server text inside our "{{model}}, {{size}}": isolated, so a right-to-left model
+  // keeps its direction without reordering the rest.
   const modelSize =
-    model === ""
-      ? sizeText
-      : sizeText === ""
-        ? model
-        : t("dashboard.disks.modelSize", { model, size: sizeText });
-  const detail = [
-    modelSize,
-    temperature === null ? "" : format.celsius(temperature),
-  ]
-    .filter((part) => part !== "")
-    .join(" · ");
+    model === "" ? (
+      sizeText
+    ) : sizeText === "" ? (
+      <bdi>{model}</bdi>
+    ) : (
+      <Slotted
+        sentence={(tokens) => t("dashboard.disks.modelSize", tokens)}
+        values={{ model, size: sizeText }}
+      />
+    );
+  const temperatureText =
+    temperature === null ? "" : format.celsius(temperature);
+  const detail =
+    model === "" && sizeText === "" ? (
+      temperatureText
+    ) : (
+      <>
+        {modelSize}
+        {temperatureText === "" ? null : ` · ${temperatureText}`}
+      </>
+    );
   return (
     <HealthListItem
       status={state.status}
@@ -66,7 +79,7 @@ function DiskItem({ disk }: { disk: SmartDevice }) {
         />
       }
       nameVariant="identifier"
-      detail={detail === "" ? undefined : <span dir="auto">{detail}</span>}
+      detail={detail === "" ? undefined : detail}
       reason={
         state.reason === null ? undefined : (
           <DiskReason overallstatus={disk.overallstatus} />

@@ -17,6 +17,7 @@ import {
   JobSummary,
   PreflightNotice,
 } from "@omv-webui/react-ui-components";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ALERT_MARGIN } from "../../disks/diskWords.ts";
@@ -46,6 +47,7 @@ import {
 import { useSetUpRun } from "../../hooks/useSetUpRun.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
 import { pendingModules } from "../../pending/modules.ts";
+import { Slotted } from "../atoms/Slotted.tsx";
 import { ModuleNames } from "../molecules/ModuleNames.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 import { ApplyChangesDialog, UndoChangesDialog } from "./PendingChanges.tsx";
@@ -114,10 +116,10 @@ function useSummaryItems(
   choices: SetUpChoices,
   settings: SmartSettings,
   email: EmailNotificationSettings | undefined,
-): string[] {
+): ReactNode[] {
   const { t } = useTranslation();
   const format = useFormat();
-  const items: string[] = [];
+  const items: ReactNode[] = [];
   if (!settings.enable) {
     items.push(t("smart.setup.sum.globalOn"));
   }
@@ -177,13 +179,19 @@ function useSummaryItems(
       : t("smart.setup.sum.tempOff"),
   );
   items.push(
-    emailConfigured(email) && email
-      ? t("smart.setup.sum.emailOn", { address: email.primaryemail })
-      : t("smart.setup.sum.emailOff"),
+    emailConfigured(email) && email ? (
+      <Slotted
+        key="email"
+        sentence={(tokens) => t("smart.setup.sum.emailOn", tokens)}
+        values={{ address: email.primaryemail }}
+      />
+    ) : (
+      t("smart.setup.sum.emailOff")
+    ),
   );
   items.push(
     t("smart.setup.sum.interval", {
-      interval: format.duration(settings.interval),
+      interval: format.interval(settings.interval),
     }),
   );
   items.push(t("smart.setup.sum.apply"));

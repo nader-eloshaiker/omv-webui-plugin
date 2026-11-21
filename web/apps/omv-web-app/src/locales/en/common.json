@@ -43,7 +43,9 @@
       "pair": "{{first}}, {{second}}",
       "underMinute": "less than a minute",
       "years_one": "{{count}} year",
-      "years_other": "{{count}} years"
+      "years_other": "{{count}} years",
+      "seconds_one": "{{count}} second",
+      "seconds_other": "{{count}} seconds"
     },
     "percentUnder1": "<1%",
     "speedMbit": "{{value}} Mbit/s",
@@ -1418,9 +1420,9 @@
       "runTaskLabel": "Self-test of {{device}}",
       "runStarting": "Starting the test on {{device}}…",
       "runFailed": "The test could not be started on {{device}}.",
-      "runStarted": "{{device}} started a {{test}}. The disk runs it by itself; the result appears in its health details when it finishes, in about {{duration}}.",
-      "durationShort": "a few minutes",
-      "durationLong": "several hours",
+      "runStarted": "{{device}} started a {{test}}. The disk runs it by itself; the result appears in its health details when it finishes, {{duration}}.",
+      "durationShort": "in a few minutes",
+      "durationLong": "in several hours",
       "runUnclear": "The NAS sent the test to {{device}}, but the disk's reply does not say it started. Read the output for the reason.",
       "openDisk": "Open the disk",
       "showOutput": "Show the output",

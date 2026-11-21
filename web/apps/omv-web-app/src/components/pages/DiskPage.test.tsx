@@ -44,6 +44,17 @@ function fact(label: string): HTMLElement {
 }
 
 describe("a disk's page", () => {
+  it("keeps a right-to-left model in its own isolate in the subtitle", async () => {
+    await diskPage("sdd", { scenario: "disksHostile" });
+    await screen.findByRole("heading", { level: 1, name: "Disk /dev/sdd" });
+    const subtitle = screen.getByText(
+      (_, element) =>
+        element?.tagName === "P" &&
+        /^قرص تخزين خارجي, 3\.6\sTiB$/.test(element.textContent),
+    );
+    expect(within(subtitle).getByText("قرص تخزين خارجي").tagName).toBe("BDI");
+  });
+
   it("names the disk by its device, with breadcrumbs, and calls with the row's stable device file", async () => {
     await diskPage("sdb");
     const title = await screen.findByRole("heading", {
@@ -60,7 +71,13 @@ describe("a disk's page", () => {
     expect(current).toHaveAttribute("aria-current", "page");
     expect(current.closest("a")).toBeNull();
     expect(
-      screen.getByText("VMware Virtual SATA Hard Drive, 8.0 GiB"),
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          /^VMware Virtual SATA Hard Drive, 8\.0\sGiB$/.test(
+            element.textContent,
+          ),
+      ),
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(document.title).toBe("/dev/sdb – Disks – openmediavault"),
