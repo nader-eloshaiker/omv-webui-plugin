@@ -3,7 +3,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { TaskStatus } from "../status/status-kinds";
-import { JobResult, JobStepList, JobSummary, type JobStep } from "./job-runner";
+import {
+  JobProgress,
+  JobResult,
+  JobStepList,
+  JobSummary,
+  type JobStep,
+} from "./job-runner";
 
 const WORDS: Record<TaskStatus, string> = {
   waiting: "Waiting",
@@ -97,5 +103,66 @@ describe("JobSummary with a typed confirmation", () => {
     );
     await user.click(confirm);
     expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("JobProgress", () => {
+  it("draws its progress as a ProgressBar named by the step, with the figures as text", () => {
+    render(
+      <JobProgress
+        label="Creating the file system"
+        elapsed="Elapsed: 1 min 42 s"
+        progress={{
+          value: 31,
+          max: 50,
+          valueText: "Writing group tables: 62%",
+        }}
+      />,
+    );
+    const bar = screen.getByRole("progressbar", {
+      name: "Creating the file system",
+    });
+    expect(bar).toHaveAttribute("data-slot", "progress-bar");
+    expect(bar).toHaveAttribute("aria-valuemax", "50");
+    expect(bar).toHaveAttribute("aria-valuetext", "Writing group tables: 62%");
+    expect(screen.getByText("Writing group tables: 62%")).toBeVisible();
+  });
+
+  it("shows the label without a bar when the task reports no progress", () => {
+    render(<JobProgress label="Applying the changes" elapsed="Elapsed: 4 s" />);
+    expect(screen.queryByRole("progressbar")).toBeNull();
+    expect(screen.getByText("Applying the changes")).toBeVisible();
+  });
+});
+
+describe("JobSummary with a notice", () => {
+  it("renders the notice after the list and before the typed confirmation", () => {
+    render(
+      <JobSummary
+        title="Ready to create the array"
+        items={["Erase 2 disks", "Combine them into a new array"]}
+        notice={<div role="note">This array has no protection</div>}
+        typedConfirmation={{
+          confirmText: "/dev/sdb /dev/sdc",
+          prompt: "Type /dev/sdb /dev/sdc to confirm.",
+        }}
+        confirmLabel="Erase 2 disks and create array"
+        backLabel="Change choices"
+        onConfirm={() => undefined}
+        onBack={() => undefined}
+      />,
+    );
+    const list = screen.getByRole("list");
+    const notice = screen.getByRole("note");
+    const field = screen.getByRole("textbox", {
+      name: "Type /dev/sdb /dev/sdc to confirm.",
+    });
+    expect(
+      list.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      notice.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(list).not.toContainElement(notice);
   });
 });

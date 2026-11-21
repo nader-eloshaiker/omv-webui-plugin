@@ -1,0 +1,11 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdd added to a healthy mirror, where it becomes a spare."
+x-omv-status: 200
+value:
+  name: ""
+  devicefile: /dev/md0
+  level: raid1
+  numdevices: 3
+  devices:
+    - /dev/sdb
+    - /dev/sdc
+    - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005

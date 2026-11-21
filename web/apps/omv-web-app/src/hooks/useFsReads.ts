@@ -9,7 +9,6 @@ import {
   getFileSystemMgmtEnumerateMountedFilesystemsQueryOptions,
   getFileSystemMgmtGetListQueryOptions,
   getFileSystemMgmtGetMountCandidatesQueryOptions,
-  getMdMgmtEnumerateDevicesQueryOptions,
   getShareMgmtGetListQueryOptions,
   useFileSystemMgmtEnumerateMountedFilesystems,
   useFileSystemMgmtGetDetails,
@@ -55,8 +54,9 @@ export const useFsDetails = (devicefile: string) =>
 
 /**
  * Read the list page's inputs again, as foreground reads, and wait for them: the configured, detected
- * and mounted file systems, the mount candidates, the disks and the RAID arrays. Each read is named by
- * its own options, so nothing here can reach a read that wakes a disk.
+ * and mounted file systems, the mount candidates and the disks. Each read is named by its own options,
+ * so nothing here can reach a read that wakes a disk. The RAID arrays are not read here: reading them
+ * reads a member's superblock (journal, 2026-11-21), so only the pages about arrays or disks do.
  */
 export function useReadFileSystemsAgain() {
   const read = useForegroundRead();
@@ -71,7 +71,6 @@ export function useReadFileSystemsAgain() {
       ),
       read(getFileSystemMgmtEnumerateFilesystemsQueryOptions()),
       read(getDiskMgmtGetListQueryOptions(ALL_DISKS)),
-      read({ ...getMdMgmtEnumerateDevicesQueryOptions(), retry: false }),
       ...(withShares ? [read(getShareMgmtGetListQueryOptions(ALL_ROWS))] : []),
     ]).then(() => undefined);
 }

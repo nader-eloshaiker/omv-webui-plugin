@@ -43,5 +43,40 @@
     "where": "fsTabSet (FsTab.set)",
     "message": "$: has a field hidden that OMV's datamodel does not declare",
     "reason": "rpc.fstab.set does not declare hidden, but FsTab::set passes the whole params to ConfigObject::setAssoc, which accepts every property of conf.system.filesystem.mountpoint, hidden among them (a boolean, default false), and validation ignores keys a datamodel does not declare. The classic edit form sends it back as FsTab.getByFsName returned it. The contract declares it optional, as a boolean."
+  },
+  {
+    "where": "mdMgmtGetDetail (MdMgmt.getDetail)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtGetSlaves (MdMgmt.getSlaves)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtAdd (MdMgmt.add)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtGrow (MdMgmt.grow)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtRemove (MdMgmt.remove)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtDelete (MdMgmt.delete)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "mdMgmtSetSyncAction (MdMgmt.setSyncAction)",
+    "message": "$.devicefile: its pattern differs from OMV's",
+    "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
   }
 ]

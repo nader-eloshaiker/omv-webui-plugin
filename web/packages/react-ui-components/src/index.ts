@@ -27,6 +27,7 @@ export * from "./components/line-chart/line-chart";
 export * from "./components/menu/menu";
 export * from "./components/number-field/number-field";
 export * from "./components/page-tabs/page-tabs";
+export * from "./components/progress-bar/progress-bar";
 export * from "./components/radio-group-field/radio-group-field";
 export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";

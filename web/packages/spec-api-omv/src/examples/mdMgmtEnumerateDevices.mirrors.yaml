@@ -1,4 +1,4 @@
-summary: "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. The RAID plugin is not installed on the test VM."
+summary: "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. Written before the RAID plugin was installed on the test VM."
 x-omv-status: 200
 value:
   - _used: true

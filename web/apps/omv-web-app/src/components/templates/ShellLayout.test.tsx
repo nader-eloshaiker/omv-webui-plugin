@@ -20,6 +20,8 @@ const READS = new Set([
   "UserMgmt.getUserByContext",
   "WebGui.getAutoLogoutSettings",
   "Config.isDirty",
+  // The menu's one probe of the RAID plugin (RAID design 0.10): it reads no array member.
+  "MdMgmt.getCandidates",
 ]);
 
 async function shell(options: Parameters<typeof renderApp>[0] = {}) {
@@ -149,6 +151,51 @@ describe("not found", () => {
     expect(
       await screen.findByRole("heading", { name: "Sign in" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("the RAID menu item (RAID design 0.10, D1)", () => {
+  const storageItems = () => {
+    const group = within(nav())
+      .getAllByRole("group")
+      .find(
+        (g) =>
+          document.getElementById(g.getAttribute("aria-labelledby") ?? "")
+            ?.textContent === "Storage",
+      );
+    return within(group as HTMLElement)
+      .getAllByRole("link")
+      .map((l) => l.textContent);
+  };
+
+  it("appears between Disk health and File systems once the plugin is known to be installed", async () => {
+    await shell({ scenario: "raidMirror" });
+    await waitFor(() => expect(storageItems()).toContain("RAID"));
+    const items = storageItems();
+    expect(items.indexOf("RAID")).toBe(items.indexOf("File systems") - 1);
+    // Decided by getCandidates, which reads no array member; never by enumerateDevices.
+    expect(callNames()).toContain("MdMgmt.getCandidates");
+    expect(callNames()).not.toContain("MdMgmt.enumerateDevices");
+  });
+
+  it("is not shown without the plugin, and nothing else asks about RAID", async () => {
+    await shell({ scenario: "raidNoPlugin" });
+    await waitFor(() =>
+      expect(seenCalls.some((c) => c.call === "MdMgmt.getCandidates")).toBe(
+        true,
+      ),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(storageItems()).not.toContain("RAID");
+    expect(new Set(callNames().filter((c) => c.startsWith("MdMgmt.")))).toEqual(
+      new Set(["MdMgmt.getCandidates"]),
+    );
+  });
+
+  it("is not shown, and RAID is never asked about, for a normal user", async () => {
+    await shell({ scenario: "user" });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(callNames().filter((c) => c.startsWith("MdMgmt."))).toEqual([]);
   });
 });
 

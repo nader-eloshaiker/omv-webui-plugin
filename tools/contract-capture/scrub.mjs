@@ -3,7 +3,9 @@
 // addresses, e-mail addresses, serial numbers, WWNs, UUIDs, user names, passwords and keys are
 // replaced with fixed documentation values, consistently within one capture run, so a UUID
 // referenced twice stays the same UUID. A disk's serial number and WWN are also replaced where they
-// appear inside other text, such as its /dev/disk/by-id/ links.
+// appear inside other text, such as its /dev/disk/by-id/ links. For software RAID (mdadm), the array's
+// UUID, the host part of its "host:name" and the dates of mdadm's report become documentation values
+// too.
 //
 // After scrubbing, verify() checks that nothing it should have caught is left. A capture that fails
 // it is not written. Its errors name the rule and the location, never the value.
@@ -11,6 +13,8 @@ import { isIPv4, isIPv6 } from "node:net";
 
 export const DOC = {
   hostname: "nas",
+  // The date every mdadm report is given, in mdadm's own spelling.
+  mdadmDate: "Sat Nov 21 12:00:00 2026",
   domain: "example.org",
   fqdn: "nas.example.org",
   sshKey:
@@ -50,6 +54,24 @@ const LONG_ID = /(?:0x)?[0-9a-f]{12,}|\d{8,}/i;
 const MIN_IDENTIFIER = 6;
 const DROP_KEYS = new Set(["trace"]);
 const SESSION_KEYS = new Set(["sessionid"]);
+/** Where mdadm's layouts carry a host part that is not the documentation one; for verify. */
+function mdHostLeft(s) {
+  for (const re of [...MD_HOST_IN_TEXT, MD_LOCAL_HOST]) {
+    for (const m of s.matchAll(re)) {
+      if (m[2] !== DOC.hostname) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+/** An MdMgmt row or change record: an object whose `devicefile` is an array's. */
+const isMdObject = (value) =>
+  !Array.isArray(value) &&
+  typeof value.devicefile === "string" &&
+  MD_DEVICEFILE.test(value.devicefile);
+/** An array's `name` ("host:name") with the documentation host; a name without one is unchanged. */
+const withoutMdHost = (name) => name.replace(/^[^:\s]+:/, `${DOC.hostname}:`);
 // Fields whose whole value is replaced when it is not empty, whatever it looks like. A capture entry
 // may add its own (an SMTP user name is a name the scrubber cannot otherwise recognise).
 export const KEY_PLACEHOLDERS = {
@@ -65,6 +87,28 @@ const DOC_UUID = /^00000000-0000-4000-8000-[0-9a-f]{12}$/i;
 // Not part of a longer run of hex digits and dashes, so a UUID's groups are never taken for one.
 const FAT_ID = /(?<![0-9A-Za-z-])[0-9A-F]{4}-[0-9A-F]{4}(?![0-9A-Za-z-])/g;
 const DOC_FAT_ID = /^0000-[0-9A-F]{4}$/;
+// mdadm's array UUID: four groups of eight hex digits joined by colons ("UUID : 0a1b2c3d:…", the
+// `uuid` of MdMgmt.enumerateDevices, /dev/disk/by-id/md-uuid-…), and its documentation form.
+const MD_UUID =
+  /(?<![0-9A-Za-z:])[0-9a-f]{8}(?::[0-9a-f]{8}){3}(?![0-9A-Za-z:])/gi;
+const DOC_MD_UUID = /^00000000:00000000:00000000:[0-9a-f]{8}$/i;
+const DOC_MD_UUIDS = /00000000:00000000:00000000:[0-9a-f]{8}/gi;
+// mdadm names an array "<host>:<name>", where <host> is the name of the computer that made it (not
+// always this one). The host part is replaced wherever mdadm's own layouts carry it: the report's
+// "Name : host:0  (local to host host)" line, the server's "Software RAID host:0 [...]" description,
+// mdadm's "name=host:0" (its brief form and mdadm.conf), and udev's /dev/disk/by-id/md-name-host:0.
+// Each captures what precedes the host, the host, and the colon after it.
+const MD_HOST_IN_TEXT = [
+  /^(\s*Name : )([^\s:]+)(:)/gm,
+  /(Software RAID )([^\s:[\]]+)(:)/g,
+  /(\bname=)([^\s:,]+)(:)/g,
+  /(\bmd-name-)([^\s:/"',]+)(:)/g,
+];
+const MD_LOCAL_HOST = /(\(local to host )([^)\s]+)(\))/g;
+// The dates of mdadm's report, which say when the array was made and last written.
+const MD_DATE = /^(\s*(?:Creation|Update) Time : )(.+)$/gm;
+// A device file of an array, on the object that carries its `name` (MdMgmt rows and change records).
+const MD_DEVICEFILE = /^\/dev\/md/;
 const DOC_MAC = /^00:00:5e:00:53:[0-9a-f]{2}$/i;
 const DOC_SERIAL = /^EXAMPLE-SERIAL-\d{4}$/;
 const DOC_WWN = /^EXAMPLE-WWN-\d{4}$/;
@@ -157,6 +201,7 @@ export function createScrubber(known = {}) {
   const wwns = new Map();
   const emails = new Map();
   const fatIds = new Map();
+  const mdUuids = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -259,6 +304,20 @@ export function createScrubber(known = {}) {
             (n) => `00000000-0000-4000-8000-${hex(n, 12)}`,
           ),
     );
+    out = out.replace(MD_UUID, (m) =>
+      DOC_MD_UUID.test(m)
+        ? m
+        : number(
+            mdUuids,
+            m.toLowerCase(),
+            (n) => `00000000:00000000:00000000:${hex(n, 8)}`,
+          ),
+    );
+    for (const re of MD_HOST_IN_TEXT) {
+      out = out.replace(re, `$1${DOC.hostname}$3`);
+    }
+    out = out.replace(MD_LOCAL_HOST, `$1${DOC.hostname}$3`);
+    out = out.replace(MD_DATE, `$1${DOC.mdadmDate}`);
     out = out.replace(FAT_ID, (m) =>
       DOC_FAT_ID.test(m)
         ? m
@@ -297,11 +356,15 @@ export function createScrubber(known = {}) {
     }
     if (value && typeof value === "object") {
       const out = {};
+      const array = isMdObject(value);
       for (const [k, v] of Object.entries(value)) {
         if (DROP_KEYS.has(k)) {
           continue;
         }
-        out[scrubString(k)] = walk(v, k, keys);
+        out[scrubString(k)] =
+          array && k === "name" && typeof v === "string"
+            ? scrubString(withoutMdHost(v))
+            : walk(v, k, keys);
       }
       return out;
     }
@@ -350,9 +413,18 @@ export function createScrubber(known = {}) {
         return;
       }
       if (v && typeof v === "object") {
+        const array = isMdObject(v);
         for (const [k, item] of Object.entries(v)) {
           checkString(k, `${path} (key)`);
           visit(item, `${path}.${k}`, k);
+          if (
+            array &&
+            k === "name" &&
+            typeof item === "string" &&
+            withoutMdHost(item) !== item
+          ) {
+            failures.push(`an array's host name at ${path}.${k}`);
+          }
         }
         return;
       }
@@ -414,13 +486,28 @@ export function createScrubber(known = {}) {
       }
       SPACED_WWN.lastIndex = 0;
       for (const m of s.match(BY_ID) ?? []) {
-        if (LONG_ID.test(m.replace(DOC_IDENTIFIER, ""))) {
+        if (
+          LONG_ID.test(m.replace(DOC_IDENTIFIER, "").replace(DOC_MD_UUIDS, ""))
+        ) {
           failures.push(`a disk identifier in a by-id name at ${path}`);
         }
       }
       for (const m of s.match(UUID) ?? []) {
         if (!DOC_UUID.test(m) && !KEPT_UUIDS.has(m.toLowerCase())) {
           failures.push(`UUID at ${path}`);
+        }
+      }
+      for (const m of s.match(MD_UUID) ?? []) {
+        if (!DOC_MD_UUID.test(m)) {
+          failures.push(`mdadm UUID at ${path}`);
+        }
+      }
+      if (mdHostLeft(s)) {
+        failures.push(`an array's host name at ${path}`);
+      }
+      for (const m of s.matchAll(MD_DATE)) {
+        if (m[2] !== DOC.mdadmDate) {
+          failures.push(`an mdadm date at ${path}`);
         }
       }
       for (const m of s.match(FAT_ID) ?? []) {

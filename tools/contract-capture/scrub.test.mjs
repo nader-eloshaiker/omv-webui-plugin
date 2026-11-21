@@ -387,3 +387,182 @@ test("a FAT volume ID is replaced consistently, and verify reports one left in p
   assert.ok(text.includes("FAT volume ID at $.a"), text);
   assert.ok(!text.includes("1A2B"), "a failure must not repeat the value");
 });
+
+// ---- Software RAID (mdadm) ----------------------------------------------------------------------
+
+// An mdadm report as MdMgmt.getDetail returns it, from an invented host.
+const MD_REPORT = [
+  "           Version : 1.2",
+  "     Creation Time : Fri Nov 20 09:14:07 2026",
+  "        Raid Level : raid1",
+  "             State : clean, resyncing ",
+  "     Update Time : Fri Nov 20 09:15:31 2026",
+  "              Name : box17:0  (local to host box17)",
+  "              UUID : 9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3",
+  "            Events : 37",
+  "",
+  "    Number   Major   Minor   RaidDevice State",
+  "       0       8       16        0      active sync   /dev/sdb",
+].join("\n");
+
+test("an mdadm report loses its host, UUID and dates, and keeps the rest", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({ report: MD_REPORT }).report;
+  assert.deepEqual(verify({ report: out }), []);
+  assert.equal(
+    out,
+    [
+      "           Version : 1.2",
+      `     Creation Time : ${DOC.mdadmDate}`,
+      "        Raid Level : raid1",
+      "             State : clean, resyncing ",
+      `     Update Time : ${DOC.mdadmDate}`,
+      "              Name : nas:0  (local to host nas)",
+      "              UUID : 00000000:00000000:00000000:00000001",
+      "            Events : 37",
+      "",
+      "    Number   Major   Minor   RaidDevice State",
+      "       0       8       16        0      active sync   /dev/sdb",
+    ].join("\n"),
+  );
+});
+
+const MD_HOST_CASES = [
+  {
+    name: "a host the scrubber does not know (an array from another computer)",
+    raw: "              Name : oldnas:media",
+    want: "              Name : nas:media",
+  },
+  {
+    name: "the product's own name, which the general rule keeps",
+    raw: "              Name : openmediavault:0  (local to host openmediavault)",
+    want: "              Name : nas:0  (local to host nas)",
+  },
+  {
+    name: "the server's description",
+    raw: "Software RAID oldnas:0 [/dev/md0, raid1, 7.99 GiB]",
+    want: "Software RAID nas:0 [/dev/md0, raid1, 7.99 GiB]",
+  },
+  {
+    name: "mdadm's brief form",
+    raw: "ARRAY /dev/md0 metadata=1.2 name=oldnas:0 UUID=9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3",
+    want: "ARRAY /dev/md0 metadata=1.2 name=nas:0 UUID=00000000:00000000:00000000:00000001",
+  },
+  {
+    name: "udev's md-name and md-uuid links",
+    raw: "/dev/disk/by-id/md-name-oldnas:0 /dev/disk/by-id/md-uuid-9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3",
+    want: "/dev/disk/by-id/md-name-nas:0 /dev/disk/by-id/md-uuid-00000000:00000000:00000000:00000001",
+  },
+];
+for (const { name, raw, want } of MD_HOST_CASES) {
+  test(`an array's host part is replaced: ${name}`, () => {
+    const { scrub, verify } = createScrubber(known);
+    const out = scrub({ text: raw });
+    assert.equal(out.text, want);
+    assert.deepEqual(verify(out), []);
+  });
+}
+
+test("an array's name field loses its host part; other names with a colon do not", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    arrays: [
+      {
+        name: "oldnas:0",
+        devicefile: "/dev/md0",
+        uuid: "9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3",
+      },
+      { name: "openmediavault:media", devicefile: "/dev/md127" },
+      { name: "", devicefile: "/dev/md1" },
+      { name: "0", devicefile: "/dev/md2" },
+    ],
+    other: { name: "12:30", devicefile: "/dev/sdb" },
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(
+    out.arrays.map((a) => a.name),
+    ["nas:0", "nas:media", "", "0"],
+  );
+  assert.equal(out.arrays[0].uuid, "00000000:00000000:00000000:00000001");
+  assert.equal(out.other.name, "12:30", "not an array: left alone");
+});
+
+test("the same mdadm UUID gets the same placeholder in a field and in text, whatever its case", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    uuid: "9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3",
+    report: "UUID : 9D85A4F6:AFFF2CB6:B8A5F4DC:75F3CFD3",
+    other: "1b2c3d4e:5f607182:93a4b5c6:d7e8f90a",
+    time: "21:58:20",
+    mac: "00:00:5e:00:53:01",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.equal(out.uuid, "00000000:00000000:00000000:00000001");
+  assert.equal(out.report, "UUID : 00000000:00000000:00000000:00000001");
+  assert.equal(out.other, "00000000:00000000:00000000:00000002");
+  assert.equal(out.time, "21:58:20");
+  assert.equal(out.mac, "00:00:5e:00:53:01");
+});
+
+const MD_LEFT_CASES = [
+  {
+    name: "an mdadm UUID",
+    value: { uuid: "9d85a4f6:afff2cb6:b8a5f4dc:75f3cfd3" },
+    want: "mdadm UUID at $.uuid",
+    secret: "9d85a4f6",
+  },
+  {
+    name: "a host on the report's Name line",
+    value: { r: "              Name : oldnas:0" },
+    want: "an array's host name at $.r",
+    secret: "oldnas",
+  },
+  {
+    name: "a host in (local to host …)",
+    value: { r: "Name : nas:0  (local to host oldnas)" },
+    want: "an array's host name at $.r",
+    secret: "oldnas",
+  },
+  {
+    name: "a host in the description",
+    value: { description: "Software RAID oldnas:0 [/dev/md0, raid1, 1 GiB]" },
+    want: "an array's host name at $.description",
+    secret: "oldnas",
+  },
+  {
+    name: "a host in an array's name field",
+    value: { a: { name: "oldnas:0", devicefile: "/dev/md0" } },
+    want: "an array's host name at $.a.name",
+    secret: "oldnas",
+  },
+  {
+    name: "a host in an md-name link",
+    value: { l: "/dev/disk/by-id/md-name-oldnas:0" },
+    want: "an array's host name at $.l",
+    secret: "oldnas",
+  },
+  {
+    name: "a date in the report",
+    value: { r: "     Creation Time : Fri Nov 20 09:14:07 2026" },
+    want: "an mdadm date at $.r",
+    secret: "09:14:07",
+  },
+];
+for (const { name, value, want, secret } of MD_LEFT_CASES) {
+  test(`verify reports ${name} left in place, never the value`, () => {
+    const { verify } = createScrubber(known);
+    const text = verify(value).join("\n");
+    assert.ok(text.includes(want), `missing "${want}" in:\n${text}`);
+    assert.ok(!text.includes(secret), "a failure must not repeat the value");
+  });
+}
+
+test("a documentation mdadm UUID in a by-id link is not taken for a disk identifier", () => {
+  const { verify } = createScrubber(known);
+  assert.deepEqual(
+    verify({
+      l: "/dev/disk/by-id/md-uuid-00000000:00000000:00000000:00000001",
+    }),
+    [],
+  );
+});

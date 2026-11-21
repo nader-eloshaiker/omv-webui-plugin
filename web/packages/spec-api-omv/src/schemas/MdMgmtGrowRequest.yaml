@@ -1,0 +1,17 @@
+type: object
+description: >-
+  The array to make bigger and the disks to add to it (rpc.mdmgmt.grow). Stricter than OMV: each
+  disk once.
+required: [devicefile, devices]
+properties:
+  devicefile:
+    $ref: ./MdArrayDeviceFile.yaml
+  devices:
+    type: array
+    description: >-
+      The disks to erase and add, by their stable /dev/disk/by-id/ names, one or more, each once.
+    minItems: 1
+    uniqueItems: true
+    items:
+      $ref: ./DeviceFile.yaml
+additionalProperties: false

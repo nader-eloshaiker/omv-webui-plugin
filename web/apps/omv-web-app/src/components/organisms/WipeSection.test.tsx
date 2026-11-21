@@ -109,7 +109,7 @@ describe("the wipe section", () => {
     [
       "disksNas",
       "sde",
-      "It is part of the RAID array nas:0. Wiping it would damage the array.",
+      "It is part of the RAID array /dev/md0. Wiping it would damage the array.",
     ],
     [
       "disksSwap",
@@ -136,10 +136,11 @@ describe("the wipe section", () => {
       await user.click(button);
       expect(screen.queryByRole("alertdialog")).toBeNull();
       // No way round a refusal (P3): the only links lead where the blocker can be removed.
-      // The file system's own page carries the unmount or removal, with its own refusals.
+      // The file system's own page carries the unmount or removal, and the array's page taking a
+      // disk out or deleting the array, each with its own refusals.
       for (const link of within(section).queryAllByRole("link")) {
         expect(link.getAttribute("href")).toMatch(
-          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/ui\/storage\/filesystems\/[0-9a-f-]+)$/,
+          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/ui\/storage\/filesystems\/[0-9a-f-]+|\/ui\/storage\/md\/md[0-9]+)$/,
         );
       }
       expect(wipeCalls()).toHaveLength(0);

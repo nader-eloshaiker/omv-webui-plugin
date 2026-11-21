@@ -1,0 +1,13 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the two disks of a mirror."
+x-omv-status: 200
+value:
+  - devicefile: /dev/sdb
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0003
+    description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+  - devicefile: /dev/sdc
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0004
+    description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"

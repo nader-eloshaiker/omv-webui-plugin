@@ -7,6 +7,7 @@ import { SideNavGroup, SideNavItem } from "@omv-webui/react-ui-components";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Puzzle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
 import { builtRoute, isCurrent, navFor } from "../../navigation/navigation.ts";
 
 export function MainNav({
@@ -20,6 +21,9 @@ export function MainNav({
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const classic = { label: t("nav.classic") };
+  // The RAID item is shown only once the plugin is known to be installed (0.10); a normal user's shell
+  // makes no RAID call (10).
+  const raidPlugin = useRaidPlugin(role === "admin") === "installed";
   return (
     <>
       <ul className="flex flex-col gap-0.5">
@@ -31,7 +35,7 @@ export function MainNav({
           {t("nav.dashboard")}
         </SideNavItem>
       </ul>
-      {navFor(role).map(({ group, pages }) => (
+      {navFor(role, { raidPlugin }).map(({ group, pages }) => (
         <SideNavGroup key={group} label={t(`nav.groups.${group}`)}>
           {pages.map((page) => {
             const built = builtRoute(page);

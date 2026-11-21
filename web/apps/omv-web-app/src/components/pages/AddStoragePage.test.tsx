@@ -120,7 +120,7 @@ describe("Flow A: Add storage", () => {
     ).toHaveTextContent("85%");
     expect(
       screen.getByText(
-        "To combine several disks into one file system, use Combine disks (BTRFS).",
+        "To combine several disks, use Combine disks (BTRFS), or create a RAID array under RAID. RAID makes the disks act as one disk, with any file system on it.",
         { exact: false },
       ),
     ).toBeVisible();
@@ -560,7 +560,11 @@ describe("Flow A: Add storage", () => {
       { name: /^RAID \/dev\/md0/ },
       LONG,
     );
-    expect(array).toHaveAccessibleName(/RAID \/dev\/md0 \(raid1, 2 disks\)/);
+    // The level in words, and never mdadm's "host:name" (RAID design 0.1, 9.3).
+    expect(array).toHaveAccessibleName(
+      /RAID \/dev\/md0 \(Mirror \(RAID1\), 2 disks\)/,
+    );
+    expect(array).not.toHaveAccessibleName(/nas:0/);
     expect(
       screen.queryByRole("radio", { name: /^\/dev\/sdb\s?, / }),
     ).toBeNull();

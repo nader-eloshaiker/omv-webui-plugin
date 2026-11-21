@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtDelete
+  tags:
+    - MdMgmt
+  summary: Delete an array
+  description: >-
+    Stop an array and erase the array's marks from its member disks, at once. Everything stored on
+    the array is lost and cannot be recovered. The server checks nothing about what is stored on it
+    or what uses it; the interface itself refuses while a file system on it is set up, mounted, used
+    or being created, or other storage uses it (`_used`). The system refuses to stop an array whose
+    file system is mounted (HTTP 500, with mdadm's words). Marks the mdadm and initramfs modules
+    dirty (observed on the test VM). Returns the plugin's change record.
+  x-omv-rpc:
+    service: MdMgmt
+    method: delete
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdDeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdChange.yaml
+          examples:
+            deleted:
+              $ref: ../../examples/mdMgmtDelete.deleted.yaml
+    "500":
+      description: The array could not be stopped, such as while its file system is mounted.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            mounted:
+              $ref: ../../examples/mdMgmtDelete.mounted.yaml

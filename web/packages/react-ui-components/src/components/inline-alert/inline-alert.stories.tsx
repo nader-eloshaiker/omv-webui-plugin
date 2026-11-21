@@ -59,6 +59,23 @@ export const NeutralWithTitle: Story = {
   },
 };
 
+/** A risk the reader is choosing (the RAID create summary's Stripe warning): neutral, the warning shape. */
+export const NeutralWarningShape: Story = {
+  args: {
+    tone: "neutral",
+    icon: "warning",
+    role: "note",
+    title: "This array has no protection",
+    children: (
+      <p>
+        If one disk fails, everything on all 2 disks is lost: every file on the
+        array, not only the files on that disk. Keep a backup of anything you
+        store on it.
+      </p>
+    ),
+  },
+};
+
 /** A warning about the current values, under the fields it concerns: neutral, never blocking. */
 export const FieldGroupWarning: Story = {
   args: {

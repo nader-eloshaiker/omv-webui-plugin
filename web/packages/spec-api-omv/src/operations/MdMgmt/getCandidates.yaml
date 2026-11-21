@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtGetCandidates
+  tags:
+    - MdMgmt
+  summary: Disks that can go into an array
+  description: >-
+    The disks the RAID plugin offers for a new array or for adding to one: not read-only, not
+    connected by USB, not named by another service's settings, not in use, and with nothing found
+    on them (no partition table, file system, or RAID or other signature). A disk taken out of an
+    array keeps the array's marks and is not offered until it is erased. The server asks the
+    system's device information and the configuration; it reads no array member's superblock
+    (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the
+    plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV
+    does not know the service and the call fails with HTTP 404 "RPC service 'MdMgmt' not found.".
+  x-omv-rpc:
+    service: MdMgmt
+    method: getCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdDiskList.yaml
+          examples:
+            vmScratch:
+              $ref: ../../examples/mdMgmtGetCandidates.vmScratch.yaml
+            none:
+              $ref: ../../examples/mdMgmtGetCandidates.none.yaml
+    "404":
+      description: >-
+        The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message "RPC service
+        'MdMgmt' not found.".
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notInstalled:
+              $ref: ../../examples/mdMgmtGetCandidates.notInstalled.yaml

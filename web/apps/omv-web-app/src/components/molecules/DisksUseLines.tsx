@@ -12,6 +12,7 @@ import type { DiskUse, FsRef } from "../../disks/diskUse.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { ArrayLink } from "../atoms/ArrayLink.tsx";
 
 const DEVICE_TAG = "<device></device>";
 const ARRAY_TAG = "<array></array>";
@@ -115,10 +116,9 @@ export function DiskUseWords({ use }: { use: DiskUse }) {
         <Filled
           sentence={t("disks.use.raid")}
           slots={{
+            // The array's page (RAID design 9.2), named by its device: never mdadm's "host:name".
             [ARRAY_TAG]: (
-              <Identifier>
-                {use.array.name === "" ? use.array.devicefile : use.array.name}
-              </Identifier>
+              <ArrayLink devicefile={use.array.devicefile} deviceOnly />
             ),
           }}
         />

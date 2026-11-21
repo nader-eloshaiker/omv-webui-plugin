@@ -1,0 +1,26 @@
+type: object
+description: >-
+  A disk as the RAID plugin lists it: a candidate for a new array (MdMgmt.getCandidates) or a member
+  of one (MdMgmt.getSlaves).
+required: [devicefile, size, vendor, serialnumber, description]
+properties:
+  devicefile:
+    type: string
+    description: >-
+      The disk's device file, such as "/dev/sdb" (a candidate) or the member's name as mdadm lists
+      it (a member). Not the stable /dev/disk/by-id/ name: match it to DiskMgmt.getList by
+      `canonicaldevicefile`.
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  vendor:
+    type: string
+    description: The vendor the disk reports, such as "ATA"; may be empty.
+  serialnumber:
+    type: string
+    description: The serial number the disk reports; may be empty.
+  description:
+    type: string
+    description: >-
+      Server display text in English, such as "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]".

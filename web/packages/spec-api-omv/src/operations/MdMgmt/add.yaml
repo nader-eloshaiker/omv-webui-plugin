@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtAdd
+  tags:
+    - MdMgmt
+  summary: Add a disk to an array
+  description: >-
+    Erase a disk and add it to an array, at once. Added to an array that is short of a disk, it
+    replaces the missing one and the kernel rebuilds onto it for minutes or hours; added to an array
+    that has all its disks, it becomes a spare, which takes over by itself when a disk fails. The
+    array does not get bigger (MdMgmt.grow does that). What was on the disk is lost, and the server
+    checks nothing about it, not even that it is as large as the array's disks: the interface
+    itself refuses every disk its candidate list and the disk-use model do not both allow. Marks the
+    mdadm and initramfs modules dirty (observed on the test VM). Returns the plugin's change record.
+  x-omv-rpc:
+    service: MdMgmt
+    method: add
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.mdmgmt.add
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdMgmtAddRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdChange.yaml
+          examples:
+            spare:
+              $ref: ../../examples/mdMgmtAdd.spare.yaml
+            replacement:
+              $ref: ../../examples/mdMgmtAdd.replacement.yaml

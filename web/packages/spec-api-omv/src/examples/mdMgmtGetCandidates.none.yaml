@@ -1,0 +1,3 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: every scratch disk is in a RAID6, so none is offered."
+x-omv-status: 200
+value: []

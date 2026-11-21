@@ -144,6 +144,24 @@ paths:
     $ref: ./operations/Smart/executeScheduledTest.yaml
   /rpc/MdMgmt/enumerateDevices:
     $ref: ./operations/MdMgmt/enumerateDevices.yaml
+  /rpc/MdMgmt/getDetail:
+    $ref: ./operations/MdMgmt/getDetail.yaml
+  /rpc/MdMgmt/getSlaves:
+    $ref: ./operations/MdMgmt/getSlaves.yaml
+  /rpc/MdMgmt/getCandidates:
+    $ref: ./operations/MdMgmt/getCandidates.yaml
+  /rpc/MdMgmt/create:
+    $ref: ./operations/MdMgmt/create.yaml
+  /rpc/MdMgmt/add:
+    $ref: ./operations/MdMgmt/add.yaml
+  /rpc/MdMgmt/grow:
+    $ref: ./operations/MdMgmt/grow.yaml
+  /rpc/MdMgmt/remove:
+    $ref: ./operations/MdMgmt/remove.yaml
+  /rpc/MdMgmt/delete:
+    $ref: ./operations/MdMgmt/delete.yaml
+  /rpc/MdMgmt/setSyncAction:
+    $ref: ./operations/MdMgmt/setSyncAction.yaml
   /rpc/FileSystemMgmt/getMountCandidates:
     $ref: ./operations/FileSystemMgmt/getMountCandidates.yaml
   /rpc/FileSystemMgmt/getCandidatesBg:

@@ -1,0 +1,10 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc deleted, after its file system was unmounted."
+x-omv-status: 200
+value:
+  name: ""
+  devicefile: /dev/md0
+  level: raid1
+  numdevices: 2
+  devices:
+    - /dev/sdb
+    - /dev/sdc

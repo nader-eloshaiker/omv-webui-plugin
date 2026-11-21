@@ -188,11 +188,51 @@ describe("the mock scenarios", () => {
     },
   );
 
+  // Every change to an array marks mdadm and initramfs dirty on the test VM; a check marks nothing.
+  it.each([
+    "mdMgmtCreate",
+    "mdMgmtAdd",
+    "mdMgmtGrow",
+    "mdMgmtRemove",
+    "mdMgmtDelete",
+  ] as const)(
+    "%s leaves mdadm and initramfs pending until an apply",
+    (operationId) => {
+      const session = newMockSession(true);
+      const params = {
+        mdMgmtCreate: {
+          devices: ["/dev/sdd", "/dev/sde"],
+          name: "",
+          level: "mirror",
+        },
+        mdMgmtAdd: { devicefile: "/dev/md0", devices: ["/dev/sdd"] },
+        mdMgmtGrow: { devicefile: "/dev/md0", devices: ["/dev/sdd"] },
+        mdMgmtRemove: { devicefile: "/dev/md0", devices: ["/dev/sdb"] },
+        mdMgmtDelete: { devicefile: "/dev/md0" },
+      }[operationId];
+      answerOf("raidMirror", session, operationId, params);
+      const info = answerOf(
+        "raidMirror",
+        session,
+        "systemGetInformation",
+      ) as FixedAnswer;
+      const dirty = (info.value as { dirtyModules: object }).dirtyModules;
+      expect(Object.keys(dirty).sort()).toEqual(["initramfs", "mdadm"]);
+      answerOf("raidMirror", session, "execGetOutput", {
+        filename:
+          CONTRACT_EXAMPLES.execGetOutput.appliedFinished.value.filename,
+        pos: 0,
+      });
+      expect(answerOf("raidMirror", session, "configIsDirty")).toBe("clean");
+    },
+  );
+
   it.each([
     "fileSystemMgmtCreate",
     "fileSystemMgmtCreateBtrfs",
     "fileSystemMgmtGrow",
     "fileSystemMgmtGetCandidatesBg",
+    "mdMgmtSetSyncAction",
   ] as const)("%s leaves nothing pending", (operationId) => {
     const session = newMockSession(true);
     answerOf("admin", session, operationId);

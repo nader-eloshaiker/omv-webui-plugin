@@ -1,0 +1,11 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of sdb, sdc and sdd."
+x-omv-status: 200
+value:
+  name: ""
+  devicefile: /dev/md0
+  level: raid5
+  numdevices: 3
+  devices:
+    - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+    - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+    - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005

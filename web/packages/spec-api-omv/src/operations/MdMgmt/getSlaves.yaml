@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtGetSlaves
+  tags:
+    - MdMgmt
+  summary: The disks of an array
+  description: >-
+    The disks an array lists as its members, with their sizes and serial numbers, from the system's
+    device information. A member that is no longer present is left out. It says nothing of what
+    each member is doing: MdMgmt.getDetail does. Changes nothing. An array that does not exist fails
+    with HTTP 500.
+  x-omv-rpc:
+    service: MdMgmt
+    method: getSlaves
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdDeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdDiskList.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/mdMgmtGetSlaves.mirror.yaml

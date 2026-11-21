@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The disk or disks a file system is on (phase 5 file-systems design 1.3, column "On"): each a router
 // link to the disk's page when it is in DiskMgmt.getList and its kernel name passes the address pattern,
-// a RAID array as text, anything else as text. A missing file system: "Disk not connected".
+// a RAID array as a link to its page (as text without the plugin), anything else as text. A missing file system: "Disk not connected".
 import type { DiskDevice } from "@omv-webui/react-api-omv/generated";
 import { Identifier } from "@omv-webui/react-ui-components";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { belongsTo, diskNames } from "../../disks/diskUse.ts";
 import { placesOf, type Placed } from "../../filesystems/storageChoices.ts";
+import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
+import { ArrayLink } from "../atoms/ArrayLink.tsx";
 import { DiskLink } from "../atoms/DiskLink.tsx";
-import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
 export function FsOnDisks({
   fs,
@@ -21,6 +22,7 @@ export function FsOnDisks({
   perLine?: boolean;
 }) {
   const { t } = useTranslation();
+  const raidPlugin = useRaidPlugin(true) === "installed";
   const places = placesOf(fs);
   if (fs.status === 3 || places.length === 0) {
     return (
@@ -43,10 +45,8 @@ export function FsOnDisks({
                 device={disk.canonicaldevicefile}
               />
             ) : /^\/dev\/md\d+$/.test(device) ? (
-              <Trans
-                i18nKey="filesystems.raidOn"
-                components={{ device: <IdentifierText value={device} /> }}
-              />
+              // The array's page when the plugin is known to be installed (RAID design 9.2).
+              <ArrayLink devicefile={device} linked={raidPlugin} />
             ) : (
               <Identifier>{device}</Identifier>
             )}

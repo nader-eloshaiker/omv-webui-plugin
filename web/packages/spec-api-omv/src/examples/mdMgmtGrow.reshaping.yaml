@@ -1,0 +1,12 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sde added to a RAID5 of three, which starts reshaping to four."
+x-omv-status: 200
+value:
+  name: ""
+  devicefile: /dev/md0
+  level: raid5
+  numdevices: 4
+  devices:
+    - /dev/sdb
+    - /dev/sdc
+    - /dev/sdd
+    - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006

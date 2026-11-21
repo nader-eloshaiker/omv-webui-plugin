@@ -20,6 +20,7 @@ export const KNOWN_MODULES = [
   "initramfs",
   "iptables",
   "issue",
+  "mdadm",
   "monit",
   "nfs",
   "nginx",

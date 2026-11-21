@@ -242,9 +242,23 @@ function valibotOf(schema, contract, seen = []) {
       case "boolean":
         expr = "v.boolean()";
         break;
-      case "array":
-        expr = `v.array(${valibotOf(schema.items, contract, seen)})`;
+      case "array": {
+        const pipe = [];
+        if (schema.minItems !== undefined) {
+          pipe.push(`v.minLength(${schema.minItems})`);
+        }
+        if (schema.maxItems !== undefined) {
+          pipe.push(`v.maxLength(${schema.maxItems})`);
+        }
+        if (schema.uniqueItems === true) {
+          pipe.push(
+            `v.check((items) => new Set(items).size === items.length, "Each item may appear only once.")`,
+          );
+        }
+        const array = `v.array(${valibotOf(schema.items, contract, seen)})`;
+        expr = pipe.length ? `v.pipe(${array}, ${pipe.join(", ")})` : array;
         break;
+      }
       case "object": {
         const required = new Set(schema.required ?? []);
         const fields = Object.entries(schema.properties ?? {}).map(([k, s]) => {

@@ -82,17 +82,19 @@ test("the system disk and a RAID member are refused in words, with no way round"
   await page.goto("/ui/storage/disks/sdb");
   await expect(
     section(page).getByText(
-      "It is part of the RAID array nas:0. Wiping it would damage the array.",
+      // Named by its device, never mdadm's "host:name" (RAID design 0.1).
+      "It is part of the RAID array /dev/md0. Wiping it would damage the array.",
     ),
   ).toBeVisible();
   await expect(
     section(page).getByRole("button", { name: copy.wipe.open }),
   ).toHaveAttribute("aria-disabled", "true");
-  // The only link leads to where the array is managed, never to a wipe without these checks (P3).
+  // The only link leads to the array's page, where taking the disk out or deleting the array have
+  // their own refusals; never to a wipe without these checks (P3; RAID design 9.2).
   for (const href of await section(page)
     .getByRole("link")
     .evaluateAll((links) => links.map((l) => l.getAttribute("href")))) {
-    expect(href).toBe("/#/storage/md");
+    expect(href).toBe("/ui/storage/md/md0");
   }
   expect(rpc.calls).not.toContain("DiskMgmt.wipe");
 });

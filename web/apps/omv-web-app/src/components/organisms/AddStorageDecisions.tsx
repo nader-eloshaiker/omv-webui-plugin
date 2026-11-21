@@ -5,6 +5,7 @@
 // combine disks, the way (RAID1 by default); the tags and the warning level. Then one summary in plain
 // words and one typed confirmation: the device name, or every device name for several disks. Nothing is
 // chosen from the address; a disk handed over from its page is chosen only if it is still offered.
+import type { MdArray } from "@omv-webui/react-api-omv/generated";
 import {
   Button,
   CheckboxField,
@@ -57,9 +58,18 @@ import {
 import { formatBytes } from "../../format/format.ts";
 import { useFlowWords } from "../../hooks/useFlowWords.tsx";
 import { useFsApi } from "../../hooks/useFsApi.ts";
+import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
+import { useRaidWords } from "../../hooks/useRaidWords.tsx";
 import { useStorageChoices } from "../../hooks/useStorageChoices.ts";
+import {
+  arrayAddress,
+  arrayState,
+  levelKey,
+  type ArrayState,
+} from "../../raid/raidModel.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
+import { Slotted } from "../atoms/Slotted.tsx";
 import { LevelField, TagsField } from "../molecules/FsSettingFields.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 import { WipeBlockers } from "../molecules/WipeBlockers.tsx";
@@ -89,6 +99,27 @@ const targetOf = (choice: StorageChoice): Target =>
       }
     : { kind: "raid", array: choice.array };
 
+/** An offered array's second line: still synchronising, or no protection (RAID design 9.3). */
+function ArrayHint({ array }: { array: MdArray }) {
+  const { t } = useTranslation();
+  const state = arrayState(array);
+  return (
+    <>
+      {state.kind === "resyncing" ||
+      state.kind === "resyncPending" ||
+      state.kind === "resyncDelayed" ||
+      state.kind === "reshaping" ? (
+        <span className="block text-sm">{t("addStorage.raidSyncing")}</span>
+      ) : null}
+      {levelKey(array.level) === "raid0" ? (
+        <span className="block text-sm text-foreground">
+          {t("addStorage.raidNoProtection")}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 function DiskHint({ choice }: { choice: DiskChoice }) {
   const words = useFlowWords();
   const serial = choice.disk.serialnumber.trim();
@@ -107,6 +138,30 @@ function DiskHint({ choice }: { choice: DiskChoice }) {
           {words.holdsText(choice.holds).join(" ")}
         </span>
       ) : null}
+    </>
+  );
+}
+
+/** An array that cannot hold new storage now (RAID design 9.3): its state's reason, and its page. */
+function ArrayCannot({ array, state }: { array: MdArray; state: ArrayState }) {
+  const { t } = useTranslation();
+  const raidWords = useRaidWords();
+  const address = arrayAddress(array);
+  return (
+    <>
+      <p className="font-medium">{raidWords.arrayName(array.devicefile)}</p>
+      <p>{raidWords.stateReason(array, state)}</p>
+      {address === null ? null : (
+        <p>
+          <Link
+            to="/storage/md/$array"
+            params={{ array: address }}
+            className={routerLinkClass}
+          >
+            {t("addStorage.raidCannotOpen", { device: array.devicefile })}
+          </Link>
+        </p>
+      )}
     </>
   );
 }
@@ -133,21 +188,35 @@ function CannotUse({
         <ul className="flex flex-col gap-3">
           {choices.unusable.map((u) => (
             <li
-              key={u.kind === "disk" ? u.disk.devicefile : u.device}
+              key={
+                u.kind === "disk"
+                  ? u.disk.devicefile
+                  : u.kind === "array"
+                    ? u.array.devicefile
+                    : u.device
+              }
               className="flex flex-col gap-1"
             >
-              <p className="font-medium">
-                <Identifier>
-                  {u.kind === "disk" ? u.disk.canonicaldevicefile : u.device}
-                </Identifier>
-                {u.kind === "disk" && u.disk.model.trim() !== "" ? (
-                  <span dir="auto">, {u.disk.model.trim()}</span>
-                ) : null}
-              </p>
-              {u.kind === "disk" ? (
-                <WipeBlockers blockers={u.blockers} />
+              {u.kind === "array" ? (
+                <ArrayCannot array={u.array} state={u.state} />
               ) : (
-                <p>{t("addStorage.cannotPlace")}</p>
+                <>
+                  <p className="font-medium">
+                    <Identifier>
+                      {u.kind === "disk"
+                        ? u.disk.canonicaldevicefile
+                        : u.device}
+                    </Identifier>
+                    {u.kind === "disk" && u.disk.model.trim() !== "" ? (
+                      <span dir="auto">, {u.disk.model.trim()}</span>
+                    ) : null}
+                  </p>
+                  {u.kind === "disk" ? (
+                    <WipeBlockers blockers={u.blockers} />
+                  ) : (
+                    <p>{t("addStorage.cannotPlace")}</p>
+                  )}
+                </>
               )}
             </li>
           ))}
@@ -160,8 +229,10 @@ function CannotUse({
 export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
   const { t } = useTranslation();
   const words = useFlowWords();
+  const raidWords = useRaidWords();
   const api = useFsApi();
   const { choices, retry, rescan, rescanning } = useStorageChoices();
+  const raidPlugin = useRaidPlugin(true) === "installed";
   const [draft, setDraft] = useState<FlowDraft>(() => initialDraft(kind));
   const [stage, setStage] = useState<"form" | "summary">("form");
   const [fixed, setFixed] = useState<FlowChoices | null>(null);
@@ -390,18 +461,21 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
                 key={choiceKey(choice)}
                 value={choiceKey(choice)}
                 label={
-                  <Trans
-                    i18nKey="addStorage.raidOption"
+                  <Slotted
+                    sentence={(tokens) =>
+                      t("addStorage.raidOption", {
+                        ...tokens,
+                        level: raidWords.levelWord(choice.array.level),
+                        count: choice.array.numdevices,
+                        size: words.sizes(choice.array.size).size,
+                      })
+                    }
                     values={{
-                      level: choice.array.level,
-                      count: choice.array.devices.length,
-                      size: words.sizes(choice.array.size).size,
-                    }}
-                    components={{
-                      device: <IdentifierText value={choiceDevice(choice)} />,
+                      device: <Identifier>{choiceDevice(choice)}</Identifier>,
                     }}
                   />
                 }
+                hint={<ArrayHint array={choice.array} />}
               />
             ))}
           </RadioOptionGroup>
@@ -441,12 +515,30 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
       {deviceField}
       <CannotUse choices={choices} defaultOpen={false} />
       {!multi && offeredDisks >= 2 ? (
-        <p className="text-sm">
-          {t("addStorage.combineHint")}{" "}
-          <Link to="/storage/filesystems/add-multi" className={routerLinkClass}>
-            {t("addStorage.combineLink")}
-          </Link>
-        </p>
+        raidPlugin ? (
+          <p className="text-sm">
+            {t("addStorage.combineHintRaid")}{" "}
+            <Link
+              to="/storage/filesystems/add-multi"
+              className={routerLinkClass}
+            >
+              {t("addStorage.combineLink")}
+            </Link>{" "}
+            <Link to="/storage/md/create" className={routerLinkClass}>
+              {t("addStorage.combineRaidLink")}
+            </Link>
+          </p>
+        ) : (
+          <p className="text-sm">
+            {t("addStorage.combineHint")}{" "}
+            <Link
+              to="/storage/filesystems/add-multi"
+              className={routerLinkClass}
+            >
+              {t("addStorage.combineLink")}
+            </Link>
+          </p>
+        )
       ) : null}
       {multi ? (
         <RadioGroupField

@@ -17,6 +17,30 @@ export {
 } from "./fileSystemMgmtUmountByDir.ts";
 export { FsTabSetRequestSchema, type FsTabSetFormValues } from "./fsTabSet.ts";
 export {
+  MdMgmtAddRequestSchema,
+  type MdMgmtAddFormValues,
+} from "./mdMgmtAdd.ts";
+export {
+  MdMgmtCreateRequestSchema,
+  type MdMgmtCreateFormValues,
+} from "./mdMgmtCreate.ts";
+export {
+  MdMgmtDeleteRequestSchema,
+  type MdMgmtDeleteFormValues,
+} from "./mdMgmtDelete.ts";
+export {
+  MdMgmtGrowRequestSchema,
+  type MdMgmtGrowFormValues,
+} from "./mdMgmtGrow.ts";
+export {
+  MdMgmtRemoveRequestSchema,
+  type MdMgmtRemoveFormValues,
+} from "./mdMgmtRemove.ts";
+export {
+  MdMgmtSetSyncActionRequestSchema,
+  type MdMgmtSetSyncActionFormValues,
+} from "./mdMgmtSetSyncAction.ts";
+export {
   SessionLoginRequestSchema,
   type SessionLoginFormValues,
 } from "./sessionLogin.ts";

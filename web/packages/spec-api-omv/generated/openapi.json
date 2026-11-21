@@ -2563,7 +2563,7 @@
         "operationId": "mdMgmtEnumerateDevices",
         "tags": ["MdMgmt"],
         "summary": "Software RAID arrays",
-        "description": "Every software RAID array with its member devices, from the RAID plugin (openmediavault-md). The server asks mdadm and the kernel's RAID status, and the configuration for whether an array is in use; it does not run smartctl. Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404, code 0 and the message \"RPC service 'MdMgmt' not found.\" (observed on OMV 8.6.1): the transport throws an RpcError with `status` 404, the only reply of this method with that status. Read that as \"no RAID plugin, so no RAID members\"; any other failure means the arrays could not be read.",
+        "description": "Every software RAID array with its member devices, from the RAID plugin (openmediavault-md). The server asks mdadm and the kernel's RAID status, and the configuration for whether an array is in use; it does not run smartctl. Changes nothing. A member's role (working, spare, rebuilding, failed) is not here: `devices` lists failed members and spares alike, and MdMgmt.getDetail says which is which. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404, code 0 and the message \"RPC service 'MdMgmt' not found.\" (observed on OMV 8.6.1): the transport throws an RpcError with `status` 404, the only reply of this method with that status. Read that as \"no RAID plugin, so no RAID members\"; any other failure means the arrays could not be read.",
         "x-omv-rpc": {
           "service": "MdMgmt",
           "method": "enumerateDevices"
@@ -2584,6 +2584,57 @@
                   },
                   "none": {
                     "$ref": "#/components/examples/mdMgmtEnumerateDevices.none"
+                  },
+                  "mirror": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirror"
+                  },
+                  "mirrorSyncing": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorSyncing"
+                  },
+                  "mirrorWithSpare": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorWithSpare"
+                  },
+                  "mirrorRebuilding": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorRebuilding"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorReplacing"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorChecking"
+                  },
+                  "mirrorInUse": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.mirrorInUse"
+                  },
+                  "raid5Syncing": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid5Syncing"
+                  },
+                  "raid5": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid5"
+                  },
+                  "raid5Reshaping": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid5Reshaping"
+                  },
+                  "raid5Grown": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid5Grown"
+                  },
+                  "raid6Syncing": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid6Syncing"
+                  },
+                  "raid6OneFailed": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid6OneFailed"
+                  },
+                  "raid6TwoFailed": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid6TwoFailed"
+                  },
+                  "raid10Syncing": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.raid10Syncing"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/mdMgmtEnumerateDevices.stripe"
                   }
                 }
               }
@@ -2599,6 +2650,521 @@
                 "examples": {
                   "notInstalled": {
                     "$ref": "#/components/examples/mdMgmtEnumerateDevices.notInstalled"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/getDetail": {
+      "post": {
+        "operationId": "mdMgmtGetDetail",
+        "tags": ["MdMgmt"],
+        "summary": "An array's report from mdadm",
+        "description": "mdadm's report on one array, as display text: its facts, then one line per member with what that member is doing (working, spare, rebuilding, failed, missing). It is the only reply that says what each member is doing. The server asks mdadm, which reads the kernel's state; it does not run smartctl. Changes nothing. An array that does not exist fails with HTTP 500.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "getDetail"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdDeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdDetailText"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirror"
+                  },
+                  "mirrorSyncing": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorSyncing"
+                  },
+                  "mirrorWithSpare": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorWithSpare"
+                  },
+                  "mirrorRebuilding": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorRebuilding"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorReplacing"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.mirrorChecking"
+                  },
+                  "raid5Syncing": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid5Syncing"
+                  },
+                  "raid5": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid5"
+                  },
+                  "raid5Reshaping": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid5Reshaping"
+                  },
+                  "raid6Syncing": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid6Syncing"
+                  },
+                  "raid6OneFailed": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid6OneFailed"
+                  },
+                  "raid6TwoFailed": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid6TwoFailed"
+                  },
+                  "raid10Syncing": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.raid10Syncing"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.stripe"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "There is no such array.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notFound": {
+                    "$ref": "#/components/examples/mdMgmtGetDetail.notFound"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/getSlaves": {
+      "post": {
+        "operationId": "mdMgmtGetSlaves",
+        "tags": ["MdMgmt"],
+        "summary": "The disks of an array",
+        "description": "The disks an array lists as its members, with their sizes and serial numbers, from the system's device information. A member that is no longer present is left out. It says nothing of what each member is doing: MdMgmt.getDetail does. Changes nothing. An array that does not exist fails with HTTP 500.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "getSlaves"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdDeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdDiskList"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/mdMgmtGetSlaves.mirror"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/getCandidates": {
+      "post": {
+        "operationId": "mdMgmtGetCandidates",
+        "tags": ["MdMgmt"],
+        "summary": "Disks that can go into an array",
+        "description": "The disks the RAID plugin offers for a new array or for adding to one: not read-only, not connected by USB, not named by another service's settings, not in use, and with nothing found on them (no partition table, file system, or RAID or other signature). A disk taken out of an array keeps the array's marks and is not offered until it is erased. The server asks the system's device information and the configuration; it reads no array member's superblock (unlike enumerateDevices, getDetail and getSlaves), so the interface uses it to learn whether the plugin is installed (journal, 2026-11-21). Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 \"RPC service 'MdMgmt' not found.\".",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "getCandidates"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdDiskList"
+                },
+                "examples": {
+                  "vmScratch": {
+                    "$ref": "#/components/examples/mdMgmtGetCandidates.vmScratch"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/mdMgmtGetCandidates.none"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The RAID plugin is not installed: OMV knows no MdMgmt service. Code 0, message \"RPC service 'MdMgmt' not found.\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notInstalled": {
+                    "$ref": "#/components/examples/mdMgmtGetCandidates.notInstalled"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/create": {
+      "post": {
+        "operationId": "mdMgmtCreate",
+        "tags": ["MdMgmt"],
+        "summary": "Create a software RAID array",
+        "description": "Erase the disks given and make them into a new array at the next free /dev/mdN, at once. Every disk is overwritten and what was on it is lost; the server checks nothing about the disks first, not that they are candidates, empty or not the system disk, so the interface itself refuses every disk its candidate list and the disk-use model do not both allow (journal, 2026-11-21). A \"stripe\" (RAID0) has no protection: if one disk fails, everything on all of them is lost. The request returns as soon as mdadm has made the array; a mirror, RAID5, RAID6 or RAID10 then synchronises its disks in the kernel for minutes or hours (MdMgmt.enumerateDevices shows it), and can be used meanwhile. Marks the mdadm and initramfs modules dirty (observed on the test VM): applying them writes the arrays down so the NAS starts them under the same names, and rebuilds the start-up image. Returns the plugin's change record.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "create"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.mdmgmt.create",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdMgmtCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdChange"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/mdMgmtCreate.mirror"
+                  },
+                  "raid5": {
+                    "$ref": "#/components/examples/mdMgmtCreate.raid5"
+                  },
+                  "raid6": {
+                    "$ref": "#/components/examples/mdMgmtCreate.raid6"
+                  },
+                  "raid10": {
+                    "$ref": "#/components/examples/mdMgmtCreate.raid10"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/mdMgmtCreate.stripe"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/add": {
+      "post": {
+        "operationId": "mdMgmtAdd",
+        "tags": ["MdMgmt"],
+        "summary": "Add a disk to an array",
+        "description": "Erase a disk and add it to an array, at once. Added to an array that is short of a disk, it replaces the missing one and the kernel rebuilds onto it for minutes or hours; added to an array that has all its disks, it becomes a spare, which takes over by itself when a disk fails. The array does not get bigger (MdMgmt.grow does that). What was on the disk is lost, and the server checks nothing about it, not even that it is as large as the array's disks: the interface itself refuses every disk its candidate list and the disk-use model do not both allow. Marks the mdadm and initramfs modules dirty (observed on the test VM). Returns the plugin's change record.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "add"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.mdmgmt.add",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdMgmtAddRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdChange"
+                },
+                "examples": {
+                  "spare": {
+                    "$ref": "#/components/examples/mdMgmtAdd.spare"
+                  },
+                  "replacement": {
+                    "$ref": "#/components/examples/mdMgmtAdd.replacement"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/grow": {
+      "post": {
+        "operationId": "mdMgmtGrow",
+        "tags": ["MdMgmt"],
+        "summary": "Make an array bigger with more disks",
+        "description": "Erase the disks given, add them to an array, and make the array use them: the server adds them first (as spares), then tells mdadm to use every disk. This cannot be undone: an array is never made smaller again. The request returns at once; the kernel then reshapes the array for hours, often a day or more on large disks, and the NAS must not be turned off meanwhile (MdMgmt.enumerateDevices shows it). The array's size grows when the reshape ends; the file system on it is grown afterwards on its own (FileSystemMgmt.grow). What was on the disks is lost, and the server checks nothing about them or the level: the interface offers this only for RAID5 and RAID6 arrays that are healthy and idle. Marks the mdadm and initramfs modules dirty (observed on the test VM). Returns the plugin's change record.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "grow"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.mdmgmt.grow",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdMgmtGrowRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdChange"
+                },
+                "examples": {
+                  "reshaping": {
+                    "$ref": "#/components/examples/mdMgmtGrow.reshaping"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/remove": {
+      "post": {
+        "operationId": "mdMgmtRemove",
+        "tags": ["MdMgmt"],
+        "summary": "Take a disk out of an array",
+        "description": "Mark a member failed and take it out of the array, at once. Taking out a failed member or a spare loses nothing. Taking out a working member leaves the array with less protection, or none, and the server checks nothing about what is left: the interface itself refuses it while the array is short of a disk or busy, and for a level without copies. Nothing is erased: the disk keeps the array's marks, so it is not a candidate for anything until it is erased (DiskMgmt.wipe). Marks the mdadm and initramfs modules dirty (observed on the test VM). Returns the plugin's change record, whose `numdevices` is not the array's new count.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "remove"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.mdmgmt.remove",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdMgmtRemoveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdChange"
+                },
+                "examples": {
+                  "failed": {
+                    "$ref": "#/components/examples/mdMgmtRemove.failed"
+                  },
+                  "working": {
+                    "$ref": "#/components/examples/mdMgmtRemove.working"
+                  },
+                  "spare": {
+                    "$ref": "#/components/examples/mdMgmtRemove.spare"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/delete": {
+      "post": {
+        "operationId": "mdMgmtDelete",
+        "tags": ["MdMgmt"],
+        "summary": "Delete an array",
+        "description": "Stop an array and erase the array's marks from its member disks, at once. Everything stored on the array is lost and cannot be recovered. The server checks nothing about what is stored on it or what uses it; the interface itself refuses while a file system on it is set up, mounted, used or being created, or other storage uses it (`_used`). The system refuses to stop an array whose file system is mounted (HTTP 500, with mdadm's words). Marks the mdadm and initramfs modules dirty (observed on the test VM). Returns the plugin's change record.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "delete"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.common.devicefile",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdDeviceFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MdChange"
+                },
+                "examples": {
+                  "deleted": {
+                    "$ref": "#/components/examples/mdMgmtDelete.deleted"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The array could not be stopped, such as while its file system is mounted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "mounted": {
+                    "$ref": "#/components/examples/mdMgmtDelete.mounted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/MdMgmt/setSyncAction": {
+      "post": {
+        "operationId": "mdMgmtSetSyncAction",
+        "tags": ["MdMgmt"],
+        "summary": "Start or stop checking an array",
+        "description": "Tell the kernel to check an array (\"check\": read every disk and compare the copies, for hours, changing nothing) or to stop a check (\"idle\"). Returns null at once; MdMgmt.enumerateDevices shows the check while it runs. A check wakes every disk of the array and keeps them busy. A level without copies (stripe) has nothing to check, and the call fails with HTTP 500. Changes no configuration, so nothing is pending afterwards.",
+        "x-omv-rpc": {
+          "service": "MdMgmt",
+          "method": "setSyncAction"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.mdmgmt.setsyncaction",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MdMgmtSetSyncActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "The array has no copies to check, or there is no such array.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "noCopies": {
+                    "$ref": "#/components/examples/mdMgmtSetSyncAction.noCopies"
                   }
                 }
               }
@@ -5911,7 +6477,7 @@
           },
           "name": {
             "type": "string",
-            "description": "mdadm's array name, usually the host name and a number, such as \"nas:0\"."
+            "description": "mdadm's array name, \"host:name\", as its brief report gives it. Empty for an array made on this NAS (mdadm 4.4 leaves the name out of that report for its own host's arrays, observed on the test VM); an array made on another computer has that computer's name before the colon."
           },
           "devicefile": {
             "type": "string",
@@ -5931,7 +6497,7 @@
           },
           "devices": {
             "type": "array",
-            "description": "The member devices the array has now, as device files under /dev (a whole disk such as \"/dev/sdb\", or a partition such as \"/dev/sdb1\"), in natural order. A failed or removed member is not listed.",
+            "description": "The member devices the array has now, as device files under /dev (a whole disk such as \"/dev/sdb\", or a partition such as \"/dev/sdb1\"), in natural order. A failed member is still listed until it is taken out, and spares are listed too (observed on the test VM), so this says nothing about what each one is doing: MdMgmt.getDetail does. A missing member is not listed.",
             "items": {
               "type": "string"
             }
@@ -5942,8 +6508,16 @@
             "description": "Bytes."
           },
           "state": {
-            "type": "string",
-            "description": "Display text from mdadm, such as \"clean\", \"active\", \"clean, degraded\" or \"clean, degraded, recovering (12.5% (…) finish=…)\". Open: read it as text, not as a list of values."
+            "description": "Display text from mdadm, such as \"clean\", \"active\", \"clean, degraded\" or \"clean, degraded, recovering (12.5% (…) finish=…)\", with the kernel's progress of a resync, rebuild or reshape appended in brackets. Open: read it as text, not as a list of values. The boolean false when the kernel's RAID status does not list the array (read from the plugin's source).",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean",
+                "enum": [false]
+              }
+            ]
           },
           "syncaction": {
             "type": "string",
@@ -5952,7 +6526,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Display text, such as \"Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]\"."
+            "description": "Display text, \"Software RAID\", the name and the device, level and size in brackets, such as \"Software RAID  [/dev/md0, raid1, 7.99 GiB]\" (an empty name leaves two spaces)."
           }
         }
       },
@@ -5962,6 +6536,201 @@
         "items": {
           "$ref": "#/components/schemas/MdArray"
         }
+      },
+      "MdArrayDeviceFile": {
+        "type": "string",
+        "description": "A software RAID array by its kernel device file, \"/dev/md\" and its number, such as \"/dev/md0\". Stricter than OMV's `devicefile` format, which takes any path under /dev: the interface names an array only by the `devicefile` that MdMgmt.enumerateDevices reported for it, and OMV numbers new arrays from 0.",
+        "x-omv-format": "devicefile",
+        "pattern": "^/dev/md[0-9]{1,3}$"
+      },
+      "MdDeviceFileRequest": {
+        "type": "object",
+        "description": "One software RAID array, by its device file (rpc.common.devicefile).",
+        "required": ["devicefile"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/MdArrayDeviceFile"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdDetailText": {
+        "type": "string",
+        "description": "mdadm's report on the array (`mdadm --detail` without its first line), as display text in English: one \"Key : value\" line per fact (Raid Level, Array Size, State, Name, UUID and others), then a table with one line per member: its number, major and minor numbers, its slot in the array (RaidDevice, \"-\" for a spare or failed member), its state in mdadm's words (\"active sync\", \"spare\", \"spare rebuilding\", \"faulty\", \"removed\") and its device file (none for \"removed\"). Lines such as \"Resync Status : 45% complete\" or \"Reshape Status\" appear only while that work runs. Read it as text: the layout is mdadm's, not OMV's."
+      },
+      "MdDisk": {
+        "type": "object",
+        "description": "A disk as the RAID plugin lists it: a candidate for a new array (MdMgmt.getCandidates) or a member of one (MdMgmt.getSlaves).",
+        "required": [
+          "devicefile",
+          "size",
+          "vendor",
+          "serialnumber",
+          "description"
+        ],
+        "properties": {
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's device file, such as \"/dev/sdb\" (a candidate) or the member's name as mdadm lists it (a member). Not the stable /dev/disk/by-id/ name: match it to DiskMgmt.getList by `canonicaldevicefile`."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "vendor": {
+            "type": "string",
+            "description": "The vendor the disk reports, such as \"ATA\"; may be empty."
+          },
+          "serialnumber": {
+            "type": "string",
+            "description": "The serial number the disk reports; may be empty."
+          },
+          "description": {
+            "type": "string",
+            "description": "Server display text in English, such as \"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]\"."
+          }
+        }
+      },
+      "MdDiskList": {
+        "type": "array",
+        "description": "Disks as the RAID plugin lists them, in no particular order; empty when there is none.",
+        "items": {
+          "$ref": "#/components/schemas/MdDisk"
+        }
+      },
+      "MdMgmtCreateRequest": {
+        "type": "object",
+        "description": "The disks of a new array and its level (rpc.mdmgmt.create). The server erases and uses every disk it is given; it checks neither that a disk is a candidate nor that it is empty. Stricter than OMV: at least two disks, each once, and no array name.",
+        "required": ["devices", "name", "level"],
+        "properties": {
+          "devices": {
+            "type": "array",
+            "description": "The disks to erase and make into the array, by their stable /dev/disk/by-id/ names (the `devicefile` of DiskMgmt.getList), each once. mdadm accepts these names and the array then lists its members by their kernel names (observed on the test VM). The level sets the least number the array can be made of: 2 for mirror and stripe, 3 for raid5, 4 for raid6 and raid10 (the plugin's own form); the interface checks this before calling.",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/DeviceFile"
+            }
+          },
+          "name": {
+            "type": "string",
+            "description": "The array's own name. Accepted only empty: the interface gives arrays no name, as the stock form never does, and mdadm then names the array after the host and its number.",
+            "enum": [""]
+          },
+          "level": {
+            "type": "string",
+            "description": "The RAID level, in the plugin's words: \"mirror\" (RAID1), \"raid5\", \"raid6\", \"raid10\", or \"stripe\" (RAID0). A stripe has no protection at all: if one of its disks fails, everything on all of them is lost.",
+            "enum": ["mirror", "raid5", "raid6", "raid10", "stripe"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdChange": {
+        "type": "object",
+        "description": "The record of a change the RAID plugin sends to OMV's configuration (conf.system.mdadm.device), returned as the method's reply. It is not stored: OMV writes its arrays down again from mdadm when the mdadm module is applied. Read `devicefile` from it; the other fields describe the request more than the array.",
+        "required": ["name", "devicefile", "level", "numdevices", "devices"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "For create, the name sent (empty); for the other methods, mdadm's \"host:name\" of the array."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The array's device file, such as \"/dev/md0\"."
+          },
+          "level": {
+            "type": "string",
+            "description": "For create, the level sent (\"mirror\", \"raid5\", …); for the other methods, mdadm's (\"raid1\", \"raid5\", …)."
+          },
+          "numdevices": {
+            "type": "integer",
+            "description": "The number of disks the server computed: for create, the disks sent; for add and grow, the array's count before plus the disks sent; for delete, the array's count. For remove it is the count before plus the disks taken out (the plugin adds where it should subtract), so it is not the array's new count; read MdMgmt.enumerateDevices for that."
+          },
+          "devices": {
+            "type": "array",
+            "description": "For create, the disks as sent; for add, grow and remove, the members mdadm listed before the call with the disks sent added or taken away; for delete, the members mdadm listed.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MdMgmtAddRequest": {
+        "type": "object",
+        "description": "The array and the disk to add to it (rpc.mdmgmt.add). Stricter than OMV, which takes several disks at once: one disk at a time.",
+        "required": ["devicefile", "devices"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/MdArrayDeviceFile"
+          },
+          "devices": {
+            "type": "array",
+            "description": "The disk to erase and add, by its stable /dev/disk/by-id/ name; exactly one. The server checks nothing about it, not even that it is as large as the array's disks.",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/DeviceFile"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdMgmtGrowRequest": {
+        "type": "object",
+        "description": "The array to make bigger and the disks to add to it (rpc.mdmgmt.grow). Stricter than OMV: each disk once.",
+        "required": ["devicefile", "devices"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/MdArrayDeviceFile"
+          },
+          "devices": {
+            "type": "array",
+            "description": "The disks to erase and add, by their stable /dev/disk/by-id/ names, one or more, each once.",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/DeviceFile"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdMgmtRemoveRequest": {
+        "type": "object",
+        "description": "The array and the member to take out of it (rpc.mdmgmt.remove). Stricter than OMV, which takes several members at once: one at a time.",
+        "required": ["devicefile", "devices"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/MdArrayDeviceFile"
+          },
+          "devices": {
+            "type": "array",
+            "description": "The member to take out, as the array lists it in MdMgmt.enumerateDevices `devices` (a kernel name such as \"/dev/sdb\"); exactly one. The server checks nothing about what is left.",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/DeviceFile"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MdMgmtSetSyncActionRequest": {
+        "type": "object",
+        "description": "The array and what its disks should do now (rpc.mdmgmt.setsyncaction). Stricter than OMV, which also takes \"repair\": the interface offers no repair, because it rewrites one copy from another where they differ, and which copy is right cannot be known from the page.",
+        "required": ["devicefile", "action"],
+        "properties": {
+          "devicefile": {
+            "$ref": "#/components/schemas/MdArrayDeviceFile"
+          },
+          "action": {
+            "type": "string",
+            "description": "\"check\": read every disk of the array and compare the copies, which takes hours and changes nothing. \"idle\": stop a check that is running.",
+            "enum": ["check", "idle"]
+          }
+        },
+        "additionalProperties": false
       },
       "FileSystemMgmtCreateRequest": {
         "type": "object",
@@ -9973,7 +10742,7 @@
         }
       },
       "mdMgmtEnumerateDevices.mirrors": {
-        "summary": "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. The RAID plugin is not installed on the test VM.",
+        "summary": "Written by hand from the RAID plugin's source and mdadm's output format (openmediavault-md for OMV 8): a healthy RAID1 mirror of two disks that holds a file system, and a degraded RAID1 mirror made for two disks with one left, which is rebuilding nothing. Written before the RAID plugin was installed on the test VM.",
         "x-omv-status": 200,
         "value": [
           {
@@ -10005,9 +10774,332 @@
         ]
       },
       "mdMgmtEnumerateDevices.none": {
-        "summary": "Written by hand from the RAID plugin's source (openmediavault-md for OMV 8): the plugin is installed and there is no array. The RAID plugin is not installed on the test VM.",
+        "summary": "Written by hand from the RAID plugin's source (openmediavault-md for OMV 8): the plugin is installed and there is no array. Written before the RAID plugin was installed on the test VM.",
         "x-omv-status": 200,
         "value": []
+      },
+      "mdMgmtEnumerateDevices.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc, synchronised and idle.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorSyncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc just created, synchronising its disks.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean, resyncing (2.4% (201728/8379392) finish=0.6min speed=201728K/sec)",
+            "syncaction": "resync",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorWithSpare": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a healthy mirror with sdd as a spare.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+            "size": "8580497408",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorRebuilding": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdb failed (by a test-only mdadm command) and the mirror rebuilding onto the spare sdd; the failed disk is still listed.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+            "size": "8580497408",
+            "state": "clean, degraded, recovering (4.7% (401792/8379392) finish=0.3min speed=401792K/sec)",
+            "syncaction": "recover",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror with its working member sdd taken out: short of a disk, nothing rebuilding.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean, degraded",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror short of a disk, rebuilding onto the replacement sdb.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean, degraded, recovering (2.4% (201856/8379392) finish=0.6min speed=201856K/sec)",
+            "syncaction": "recover",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror being checked; the state has no progress, the report has.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean, checking",
+            "syncaction": "check",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.mirrorInUse": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror holding a mounted EXT4 file system.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": true,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000001",
+            "level": "raid1",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "8580497408",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid1, 7.99 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid5Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of sdb, sdc and sdd just created, synchronising.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000002",
+            "level": "raid5",
+            "numdevices": 3,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+            "size": "17160994816",
+            "state": "clean, resyncing (2.7% (227968/8379392) finish=0.5min speed=227968K/sec)",
+            "syncaction": "resync",
+            "description": "Software RAID  [/dev/md0, raid5, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid5": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of three, synchronised and idle.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000002",
+            "level": "raid5",
+            "numdevices": 3,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+            "size": "17160994816",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid5, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid5Reshaping": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 reshaping from three disks to four after sde was added; the state has no progress, the report has.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000002",
+            "level": "raid5",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "17160994816",
+            "state": "clean, reshaping",
+            "syncaction": "reshape",
+            "description": "Software RAID  [/dev/md0, raid5, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid5Grown": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the RAID5 after its reshape to four disks, with its larger size.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000002",
+            "level": "raid5",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "25741492224",
+            "state": "clean",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid5, 23.97 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid6Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID6 of sdb to sde just created, synchronising.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000003",
+            "level": "raid6",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "17160994816",
+            "state": "clean, resyncing (2.5% (217984/8379392) finish=0.6min speed=217984K/sec)",
+            "syncaction": "resync",
+            "description": "Software RAID  [/dev/md0, raid6, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid6OneFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a synchronised RAID6 with sdb failed (by a test-only mdadm command).",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000003",
+            "level": "raid6",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "17160994816",
+            "state": "clean, degraded",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid6, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid6TwoFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the RAID6 with sdb and then sdc failed.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000003",
+            "level": "raid6",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "17160994816",
+            "state": "clean, degraded",
+            "syncaction": "idle",
+            "description": "Software RAID  [/dev/md0, raid6, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.raid10Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID10 of sdb to sde just created, synchronising.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000004",
+            "level": "raid10",
+            "numdevices": 4,
+            "devices": ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+            "size": "17160994816",
+            "state": "clean, resyncing (1.3% (232704/16758784) finish=1.1min speed=232704K/sec)",
+            "syncaction": "resync",
+            "description": "Software RAID  [/dev/md0, raid10, 15.98 GiB]"
+          }
+        ]
+      },
+      "mdMgmtEnumerateDevices.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a stripe (RAID0) of sdb and sdc, which never synchronises.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "_used": false,
+            "name": "",
+            "devicefile": "/dev/md0",
+            "uuid": "00000000:00000000:00000000:00000005",
+            "level": "raid0",
+            "numdevices": 2,
+            "devices": ["/dev/sdb", "/dev/sdc"],
+            "size": "17160994816",
+            "state": "clean",
+            "syncaction": null,
+            "description": "Software RAID  [/dev/md0, raid0, 15.98 GiB]"
+          }
+        ]
       },
       "mdMgmtEnumerateDevices.notInstalled": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the RAID plugin (openmediavault-md) is not installed, so OMV does not know the MdMgmt service.",
@@ -10015,6 +11107,336 @@
         "value": {
           "code": 0,
           "message": "RPC service 'MdMgmt' not found."
+        }
+      },
+      "mdMgmtGetDetail.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc, synchronised and idle.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 18\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.mirrorSyncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc just created, synchronising its disks.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 1\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.mirrorWithSpare": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a healthy mirror with sdd as a spare.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 19\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n\n       2       8       48        -      spare   /dev/sdd"
+      },
+      "mdMgmtGetDetail.mirrorRebuilding": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdb failed (by a test-only mdadm command) and the mirror rebuilding onto the spare sdd; the failed disk is still listed.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded, recovering\n    Active Devices : 1\n   Working Devices : 2\n    Failed Devices : 1\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n    Rebuild Status : 4% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 21\n\n    Number   Major   Minor   RaidDevice State\n       2       8       48        0      spare rebuilding   /dev/sdd\n       1       8       32        1      active sync   /dev/sdc\n\n       0       8       16        -      faulty   /dev/sdb"
+      },
+      "mdMgmtGetDetail.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror with its working member sdd taken out: short of a disk, nothing rebuilding.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 1\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 1\n   Working Devices : 1\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 42\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror short of a disk, rebuilding onto the replacement sdb.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded, recovering\n    Active Devices : 1\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n    Rebuild Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 44\n\n    Number   Major   Minor   RaidDevice State\n       2       8       16        0      spare rebuilding   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror being checked; the state has no progress, the report has.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, checking\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n      Check Status : 7% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 65\n\n    Number   Major   Minor   RaidDevice State\n       2       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.raid5Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of sdb, sdc and sdd just created, synchronising.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 3\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 4\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd"
+      },
+      "mdMgmtGetDetail.raid5": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of three, synchronised and idle.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 3\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 21\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd"
+      },
+      "mdMgmtGetDetail.raid5Reshaping": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 reshaping from three disks to four after sde was added; the state has no progress, the report has.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, reshaping\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n    Reshape Status : 6% complete\n     Delta Devices : 1, (3->4)\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 43\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde"
+      },
+      "mdMgmtGetDetail.raid6Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID6 of sdb to sde just created, synchronising.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 5\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde"
+      },
+      "mdMgmtGetDetail.raid6OneFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a synchronised RAID6 with sdb failed (by a test-only mdadm command).",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 1\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 24\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde\n\n       0       8       16        -      faulty   /dev/sdb"
+      },
+      "mdMgmtGetDetail.raid6TwoFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the RAID6 with sdb and then sdc failed.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 2\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 26\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       -       0        0        1      removed\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde\n\n       0       8       16        -      faulty   /dev/sdb\n       1       8       32        -      faulty   /dev/sdc"
+      },
+      "mdMgmtGetDetail.raid10Syncing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID10 of sdb to sde just created, synchronising.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid10\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : near=2\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 1% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000004\n            Events : 1\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync set-A   /dev/sdb\n       1       8       32        1      active sync set-B   /dev/sdc\n       2       8       48        2      active sync set-A   /dev/sdd\n       3       8       64        3      active sync set-B   /dev/sde"
+      },
+      "mdMgmtGetDetail.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a stripe (RAID0) of sdb and sdc, which never synchronises.",
+        "x-omv-status": 200,
+        "value": "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid0\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : original\n        Chunk Size : 512K\n\nConsistency Policy : none\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000005\n            Events : 0\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc"
+      },
+      "mdMgmtGetDetail.notFound": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the report of an array that does not exist.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Device '/dev/md99' does not exist."
+        }
+      },
+      "mdMgmtGetSlaves.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the two disks of a mirror.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/sdb",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0003",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+          },
+          {
+            "devicefile": "/dev/sdc",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0004",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+          }
+        ]
+      },
+      "mdMgmtGetCandidates.vmScratch": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the four empty 8 GiB scratch disks sdb to sde.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/sdb",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0003",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+          },
+          {
+            "devicefile": "/dev/sdc",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0004",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+          },
+          {
+            "devicefile": "/dev/sdd",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0005",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"
+          },
+          {
+            "devicefile": "/dev/sde",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0006",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]"
+          }
+        ]
+      },
+      "mdMgmtGetCandidates.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: every scratch disk is in a RAID6, so none is offered.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "mdMgmtGetCandidates.notInstalled": {
+        "summary": "Written from the captured MdMgmt.enumerateDevices reply on the test VM without the RAID plugin (OMV 8.6.1): OMV answers every method of a service it does not know with the same 404 (read from its RPC layer), so MdMgmt.getCandidates answers this when openmediavault-md is not installed.",
+        "x-omv-status": 404,
+        "value": {
+          "code": 0,
+          "message": "RPC service 'MdMgmt' not found."
+        }
+      },
+      "mdMgmtCreate.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc, sent by their by-id names.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "mirror",
+          "numdevices": 2,
+          "devices": [
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004"
+          ]
+        }
+      },
+      "mdMgmtCreate.raid5": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 of sdb, sdc and sdd.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid5",
+          "numdevices": 3,
+          "devices": [
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005"
+          ]
+        }
+      },
+      "mdMgmtCreate.raid6": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID6 of sdb to sde.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid6",
+          "numdevices": 4,
+          "devices": [
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006"
+          ]
+        }
+      },
+      "mdMgmtCreate.raid10": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID10 of sdb to sde.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid10",
+          "numdevices": 4,
+          "devices": [
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006"
+          ]
+        }
+      },
+      "mdMgmtCreate.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a stripe (RAID0) of sdb and sdc.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "stripe",
+          "numdevices": 2,
+          "devices": [
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004"
+          ]
+        }
+      },
+      "mdMgmtAdd.spare": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdd added to a healthy mirror, where it becomes a spare.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 3,
+          "devices": [
+            "/dev/sdb",
+            "/dev/sdc",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005"
+          ]
+        }
+      },
+      "mdMgmtAdd.replacement": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdb, erased, added to a mirror short of a disk, which rebuilds onto it.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 3,
+          "devices": [
+            "/dev/sdc",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003"
+          ]
+        }
+      },
+      "mdMgmtGrow.reshaping": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sde added to a RAID5 of three, which starts reshaping to four.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid5",
+          "numdevices": 4,
+          "devices": [
+            "/dev/sdb",
+            "/dev/sdc",
+            "/dev/sdd",
+            "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006"
+          ]
+        }
+      },
+      "mdMgmtRemove.failed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the failed member sdb taken out of a mirror rebuilding onto its spare; numdevices is the plugin's count, not the array's.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 3,
+          "devices": ["/dev/sdc", "/dev/sdd"]
+        }
+      },
+      "mdMgmtRemove.working": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the working member sdd taken out of a healthy mirror, leaving it short of a disk.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 3,
+          "devices": ["/dev/sdc"]
+        }
+      },
+      "mdMgmtRemove.spare": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the spare sdd taken out of a healthy mirror.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 3,
+          "devices": ["/dev/sdb", "/dev/sdc"]
+        }
+      },
+      "mdMgmtDelete.deleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror of sdb and sdc deleted, after its file system was unmounted.",
+        "x-omv-status": 200,
+        "value": {
+          "name": "",
+          "devicefile": "/dev/md0",
+          "level": "raid1",
+          "numdevices": 2,
+          "devices": ["/dev/sdb", "/dev/sdc"]
+        }
+      },
+      "mdMgmtDelete.mounted": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the system refuses to stop a mirror whose file system is mounted; nothing changed and nothing is pending.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; omv-rmraid '/dev/md0' 2>&1' with exit code '1': mdadm: Cannot get exclusive access to /dev/md0:Perhaps a running process, mounted filesystem or active volume group?"
+        }
+      },
+      "mdMgmtSetSyncAction.noCopies": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a check asked of a stripe, which has no copies to compare.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to set sync_action to 'check' for device /dev/md0: File '/sys/class/block/md0/md/sync_action' does not exist or is not writable."
         }
       },
       "fileSystemMgmtGetMountCandidates.created": {

@@ -19,6 +19,7 @@ import {
 import { fsName, splitTags } from "../filesystems/fsModel.ts";
 import { btrfsUsable, diskBytes } from "../filesystems/storageChoices.ts";
 import { formatBytes, parseByteCount } from "../format/format.ts";
+import { levelKey } from "../raid/raidModel.ts";
 import { useFsWords } from "./useFsWords.ts";
 
 export function useFlowWords() {
@@ -161,14 +162,14 @@ export function useFlowWords() {
             t(`addStorage.sum.createOnRaid.${choices.format}`, tokens)
           }
           values={{
-            name: (
-              <Identifier>
-                {target.array.name.trim() || target.array.devicefile}
-              </Identifier>
-            ),
+            // The device, never mdadm's "host:name" (RAID design 0.1, D3).
+            name: <Identifier>{target.array.devicefile}</Identifier>,
           }}
         />,
       );
+      if (levelKey(target.array.level) === "raid0") {
+        items.push(t("addStorage.raidNoProtection"));
+      }
     } else if (target !== undefined) {
       items.push(diskLine(target));
       items.push(t(`addStorage.sum.create.${choices.format}`));

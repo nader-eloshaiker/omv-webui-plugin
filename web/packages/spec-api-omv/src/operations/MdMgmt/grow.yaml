@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtGrow
+  tags:
+    - MdMgmt
+  summary: Make an array bigger with more disks
+  description: >-
+    Erase the disks given, add them to an array, and make the array use them: the server adds them
+    first (as spares), then tells mdadm to use every disk. This cannot be undone: an array is never
+    made smaller again. The request returns at once; the kernel then reshapes the array for hours,
+    often a day or more on large disks, and the NAS must not be turned off meanwhile
+    (MdMgmt.enumerateDevices shows it). The array's size grows when the reshape ends; the file
+    system on it is grown afterwards on its own (FileSystemMgmt.grow). What was on the disks is
+    lost, and the server checks nothing about them or the level: the interface offers this only for
+    RAID5 and RAID6 arrays that are healthy and idle. Marks the mdadm and initramfs modules dirty
+    (observed on the test VM). Returns the plugin's change record.
+  x-omv-rpc:
+    service: MdMgmt
+    method: grow
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.mdmgmt.grow
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdMgmtGrowRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdChange.yaml
+          examples:
+            reshaping:
+              $ref: ../../examples/mdMgmtGrow.reshaping.yaml

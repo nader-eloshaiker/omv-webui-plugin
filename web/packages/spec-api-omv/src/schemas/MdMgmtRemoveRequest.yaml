@@ -1,0 +1,18 @@
+type: object
+description: >-
+  The array and the member to take out of it (rpc.mdmgmt.remove). Stricter than OMV, which takes
+  several members at once: one at a time.
+required: [devicefile, devices]
+properties:
+  devicefile:
+    $ref: ./MdArrayDeviceFile.yaml
+  devices:
+    type: array
+    description: >-
+      The member to take out, as the array lists it in MdMgmt.enumerateDevices `devices` (a kernel
+      name such as "/dev/sdb"); exactly one. The server checks nothing about what is left.
+    minItems: 1
+    maxItems: 1
+    items:
+      $ref: ./DeviceFile.yaml
+additionalProperties: false

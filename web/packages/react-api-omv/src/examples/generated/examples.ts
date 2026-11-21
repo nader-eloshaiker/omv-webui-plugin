@@ -3831,12 +3831,659 @@ export const CONTRACT_EXAMPLES = {
       status: 200,
       value: [],
     },
+    mirror: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "8580497408",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorSyncing: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "8580497408",
+          state:
+            "clean, resyncing (2.4% (201728/8379392) finish=0.6min speed=201728K/sec)",
+          syncaction: "resync",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorWithSpare: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+          size: "8580497408",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorRebuilding: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+          size: "8580497408",
+          state:
+            "clean, degraded, recovering (4.7% (401792/8379392) finish=0.3min speed=401792K/sec)",
+          syncaction: "recover",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorDegraded: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdc"],
+          size: "8580497408",
+          state: "clean, degraded",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorReplacing: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "8580497408",
+          state:
+            "clean, degraded, recovering (2.4% (201856/8379392) finish=0.6min speed=201856K/sec)",
+          syncaction: "recover",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorChecking: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "8580497408",
+          state: "clean, checking",
+          syncaction: "check",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    mirrorInUse: {
+      status: 200,
+      value: [
+        {
+          _used: true,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000001",
+          level: "raid1",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "8580497408",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]",
+        },
+      ],
+    },
+    raid5Syncing: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000002",
+          level: "raid5",
+          numdevices: 3,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+          size: "17160994816",
+          state:
+            "clean, resyncing (2.7% (227968/8379392) finish=0.5min speed=227968K/sec)",
+          syncaction: "resync",
+          description: "Software RAID  [/dev/md0, raid5, 15.98 GiB]",
+        },
+      ],
+    },
+    raid5: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000002",
+          level: "raid5",
+          numdevices: 3,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd"],
+          size: "17160994816",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid5, 15.98 GiB]",
+        },
+      ],
+    },
+    raid5Reshaping: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000002",
+          level: "raid5",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "17160994816",
+          state: "clean, reshaping",
+          syncaction: "reshape",
+          description: "Software RAID  [/dev/md0, raid5, 15.98 GiB]",
+        },
+      ],
+    },
+    raid5Grown: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000002",
+          level: "raid5",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "25741492224",
+          state: "clean",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid5, 23.97 GiB]",
+        },
+      ],
+    },
+    raid6Syncing: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000003",
+          level: "raid6",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "17160994816",
+          state:
+            "clean, resyncing (2.5% (217984/8379392) finish=0.6min speed=217984K/sec)",
+          syncaction: "resync",
+          description: "Software RAID  [/dev/md0, raid6, 15.98 GiB]",
+        },
+      ],
+    },
+    raid6OneFailed: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000003",
+          level: "raid6",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "17160994816",
+          state: "clean, degraded",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid6, 15.98 GiB]",
+        },
+      ],
+    },
+    raid6TwoFailed: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000003",
+          level: "raid6",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "17160994816",
+          state: "clean, degraded",
+          syncaction: "idle",
+          description: "Software RAID  [/dev/md0, raid6, 15.98 GiB]",
+        },
+      ],
+    },
+    raid10Syncing: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000004",
+          level: "raid10",
+          numdevices: 4,
+          devices: ["/dev/sdb", "/dev/sdc", "/dev/sdd", "/dev/sde"],
+          size: "17160994816",
+          state:
+            "clean, resyncing (1.3% (232704/16758784) finish=1.1min speed=232704K/sec)",
+          syncaction: "resync",
+          description: "Software RAID  [/dev/md0, raid10, 15.98 GiB]",
+        },
+      ],
+    },
+    stripe: {
+      status: 200,
+      value: [
+        {
+          _used: false,
+          name: "",
+          devicefile: "/dev/md0",
+          uuid: "00000000:00000000:00000000:00000005",
+          level: "raid0",
+          numdevices: 2,
+          devices: ["/dev/sdb", "/dev/sdc"],
+          size: "17160994816",
+          state: "clean",
+          syncaction: null,
+          description: "Software RAID  [/dev/md0, raid0, 15.98 GiB]",
+        },
+      ],
+    },
     notInstalled: {
       status: 404,
       value: {
         code: 0,
         message: "RPC service 'MdMgmt' not found.",
       },
+    },
+  },
+  mdMgmtGetDetail: {
+    mirror: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 18\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    mirrorSyncing: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 1\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    mirrorWithSpare: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 19\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n\n       2       8       48        -      spare   /dev/sdd",
+    },
+    mirrorRebuilding: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded, recovering\n    Active Devices : 1\n   Working Devices : 2\n    Failed Devices : 1\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n    Rebuild Status : 4% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 21\n\n    Number   Major   Minor   RaidDevice State\n       2       8       48        0      spare rebuilding   /dev/sdd\n       1       8       32        1      active sync   /dev/sdc\n\n       0       8       16        -      faulty   /dev/sdb",
+    },
+    mirrorDegraded: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 1\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 1\n   Working Devices : 1\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 42\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    mirrorReplacing: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded, recovering\n    Active Devices : 1\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 1\n\nConsistency Policy : resync\n\n    Rebuild Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 44\n\n    Number   Major   Minor   RaidDevice State\n       2       8       16        0      spare rebuilding   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    mirrorChecking: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid1\n        Array Size : 8379392 (7.99 GiB 8.58 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, checking\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\nConsistency Policy : resync\n\n      Check Status : 7% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000001\n            Events : 65\n\n    Number   Major   Minor   RaidDevice State\n       2       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    raid5Syncing: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 3\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 4\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd",
+    },
+    raid5: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 3\n     Total Devices : 3\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 21\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd",
+    },
+    raid5Reshaping: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid5\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, reshaping\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n    Reshape Status : 6% complete\n     Delta Devices : 1, (3->4)\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000002\n            Events : 43\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde",
+    },
+    raid6Syncing: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 2% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 5\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde",
+    },
+    raid6OneFailed: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 3\n   Working Devices : 3\n    Failed Devices : 1\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 24\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       1       8       32        1      active sync   /dev/sdc\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde\n\n       0       8       16        -      faulty   /dev/sdb",
+    },
+    raid6TwoFailed: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid6\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, degraded\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 2\n     Spare Devices : 0\n\n            Layout : left-symmetric\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000003\n            Events : 26\n\n    Number   Major   Minor   RaidDevice State\n       -       0        0        0      removed\n       -       0        0        1      removed\n       2       8       48        2      active sync   /dev/sdd\n       3       8       64        3      active sync   /dev/sde\n\n       0       8       16        -      faulty   /dev/sdb\n       1       8       32        -      faulty   /dev/sdc",
+    },
+    raid10Syncing: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid10\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n     Used Dev Size : 8379392 (7.99 GiB 8.58 GB)\n      Raid Devices : 4\n     Total Devices : 4\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean, resyncing\n    Active Devices : 4\n   Working Devices : 4\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : near=2\n        Chunk Size : 512K\n\nConsistency Policy : resync\n\n     Resync Status : 1% complete\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000004\n            Events : 1\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync set-A   /dev/sdb\n       1       8       32        1      active sync set-B   /dev/sdc\n       2       8       48        2      active sync set-A   /dev/sdd\n       3       8       64        3      active sync set-B   /dev/sde",
+    },
+    stripe: {
+      status: 200,
+      value:
+        "           Version : 1.2\n     Creation Time : Sat Nov 21 12:00:00 2026\n        Raid Level : raid0\n        Array Size : 16758784 (15.98 GiB 17.16 GB)\n      Raid Devices : 2\n     Total Devices : 2\n       Persistence : Superblock is persistent\n\n       Update Time : Sat Nov 21 12:00:00 2026\n             State : clean\n    Active Devices : 2\n   Working Devices : 2\n    Failed Devices : 0\n     Spare Devices : 0\n\n            Layout : original\n        Chunk Size : 512K\n\nConsistency Policy : none\n\n              Name : nas:0  (local to host nas)\n              UUID : 00000000:00000000:00000000:00000005\n            Events : 0\n\n    Number   Major   Minor   RaidDevice State\n       0       8       16        0      active sync   /dev/sdb\n       1       8       32        1      active sync   /dev/sdc",
+    },
+    notFound: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "Device '/dev/md99' does not exist.",
+      },
+    },
+  },
+  mdMgmtGetSlaves: {
+    mirror: {
+      status: 200,
+      value: [
+        {
+          devicefile: "/dev/sdb",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0003",
+          description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+        },
+        {
+          devicefile: "/dev/sdc",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0004",
+          description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+        },
+      ],
+    },
+  },
+  mdMgmtGetCandidates: {
+    vmScratch: {
+      status: 200,
+      value: [
+        {
+          devicefile: "/dev/sdb",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0003",
+          description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+        },
+        {
+          devicefile: "/dev/sdc",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0004",
+          description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+        },
+        {
+          devicefile: "/dev/sdd",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0005",
+          description: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+        },
+        {
+          devicefile: "/dev/sde",
+          size: "8589934592",
+          vendor: "ATA",
+          serialnumber: "EXAMPLE-SERIAL-0006",
+          description: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]",
+        },
+      ],
+    },
+    none: {
+      status: 200,
+      value: [],
+    },
+    notInstalled: {
+      status: 404,
+      value: {
+        code: 0,
+        message: "RPC service 'MdMgmt' not found.",
+      },
+    },
+  },
+  mdMgmtCreate: {
+    mirror: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "mirror",
+        numdevices: 2,
+        devices: [
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+        ],
+      },
+    },
+    raid5: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid5",
+        numdevices: 3,
+        devices: [
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+        ],
+      },
+    },
+    raid6: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid6",
+        numdevices: 4,
+        devices: [
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+        ],
+      },
+    },
+    raid10: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid10",
+        numdevices: 4,
+        devices: [
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+        ],
+      },
+    },
+    stripe: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "stripe",
+        numdevices: 2,
+        devices: [
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+        ],
+      },
+    },
+  },
+  mdMgmtAdd: {
+    spare: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 3,
+        devices: [
+          "/dev/sdb",
+          "/dev/sdc",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+        ],
+      },
+    },
+    replacement: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 3,
+        devices: [
+          "/dev/sdc",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+        ],
+      },
+    },
+  },
+  mdMgmtGrow: {
+    reshaping: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid5",
+        numdevices: 4,
+        devices: [
+          "/dev/sdb",
+          "/dev/sdc",
+          "/dev/sdd",
+          "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+        ],
+      },
+    },
+  },
+  mdMgmtRemove: {
+    failed: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 3,
+        devices: ["/dev/sdc", "/dev/sdd"],
+      },
+    },
+    working: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 3,
+        devices: ["/dev/sdc"],
+      },
+    },
+    spare: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 3,
+        devices: ["/dev/sdb", "/dev/sdc"],
+      },
+    },
+  },
+  mdMgmtDelete: {
+    deleted: {
+      status: 200,
+      value: {
+        name: "",
+        devicefile: "/dev/md0",
+        level: "raid1",
+        numdevices: 2,
+        devices: ["/dev/sdb", "/dev/sdc"],
+      },
+    },
+    mounted: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; omv-rmraid '/dev/md0' 2>&1' with exit code '1': mdadm: Cannot get exclusive access to /dev/md0:Perhaps a running process, mounted filesystem or active volume group?",
+      },
+    },
+  },
+  mdMgmtSetSyncAction: {
+    noCopies: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to set sync_action to 'check' for device /dev/md0: File '/sys/class/block/md0/md/sync_action' does not exist or is not writable.",
+      },
+    },
+    null: {
+      status: 200,
+      value: null,
     },
   },
   fileSystemMgmtGetMountCandidates: {
@@ -4121,6 +4768,15 @@ export const DEFAULT_EXAMPLE = {
   smartDeleteScheduledTest: "deleted",
   smartExecuteScheduledTest: "started",
   mdMgmtEnumerateDevices: "mirrors",
+  mdMgmtGetDetail: "mirror",
+  mdMgmtGetSlaves: "mirror",
+  mdMgmtGetCandidates: "vmScratch",
+  mdMgmtCreate: "mirror",
+  mdMgmtAdd: "spare",
+  mdMgmtGrow: "reshaping",
+  mdMgmtRemove: "failed",
+  mdMgmtDelete: "deleted",
+  mdMgmtSetSyncAction: "null",
   fileSystemMgmtGetMountCandidates: "created",
   fileSystemMgmtGetCandidatesBg: "started",
   fileSystemMgmtCreate: "started",

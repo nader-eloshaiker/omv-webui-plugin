@@ -30,4 +30,22 @@ describe("InlineAlert", () => {
     notice.focus();
     expect(notice).toHaveFocus();
   });
+
+  it("draws a neutral notice with the warning shape when asked, never in a status colour", () => {
+    const { container } = render(
+      <InlineAlert
+        tone="neutral"
+        icon="warning"
+        role="note"
+        title="This array has no protection"
+      >
+        If one disk fails, everything on both disks is lost.
+      </InlineAlert>,
+    );
+    const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("This array has no protection");
+    const icon = container.querySelector("svg");
+    expect(icon?.getAttribute("class")).toContain("lucide-triangle-alert");
+    expect(icon?.getAttribute("class")).toContain("text-muted-foreground");
+  });
 });

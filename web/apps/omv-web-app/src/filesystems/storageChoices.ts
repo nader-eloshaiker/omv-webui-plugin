@@ -23,6 +23,7 @@ import {
   type WipeBlocker,
 } from "../disks/diskUse.ts";
 import { parseByteCount } from "../format/format.ts";
+import { arrayState, type ArrayState } from "../raid/raidModel.ts";
 
 /** A disk offered for new storage. */
 export interface DiskChoice {
@@ -47,7 +48,9 @@ export type StorageChoice = DiskChoice | ArrayChoice;
 /** A device that is not offered, with why. */
 export type Unusable =
   | { kind: "disk"; disk: DiskDevice; blockers: WipeBlocker[] }
-  | { kind: "unplaced"; device: string };
+  | { kind: "unplaced"; device: string }
+  /** An array short of a disk, not running or in an Unknown state (RAID design 9.3, D16). */
+  | { kind: "array"; array: MdArray; state: ArrayState };
 
 export type StorageChoices =
   | { state: "loading" }
@@ -144,7 +147,12 @@ export function storageChoices(
         fs.parentdevicefile === array.devicefile ||
         partitionParent(fs.canonicaldevicefile) === array.devicefile,
     );
-    if (!holdsFs && !array._used) {
+    // The RAID slice's stricter rule (its 9.3, D16): an array short of a disk, not running or in a
+    // state this page cannot read is not offered; one that is synchronising or reshaping is.
+    const state = arrayState(array);
+    if (state.status === "critical" || state.status === "unknown") {
+      unusable.push({ kind: "array", array, state });
+    } else if (!holdsFs && !array._used) {
       raid.push({ kind: "raid", group: "raid", array });
     } else {
       unusable.push({ kind: "unplaced", device: array.devicefile });

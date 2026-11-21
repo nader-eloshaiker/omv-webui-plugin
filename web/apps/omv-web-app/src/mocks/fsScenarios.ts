@@ -21,6 +21,13 @@ import type {
   MountEntry,
 } from "@omv-webui/react-api-omv/generated";
 import type { FixedAnswer } from "@omv-webui/react-api-omv/mocks";
+import {
+  isRaidScenario,
+  newRaidMockState,
+  raidAnswers,
+  raidWiped,
+  type RaidMockState,
+} from "./raidScenarios.ts";
 
 export const FS_SCENARIOS = [
   "fsReuse",
@@ -73,9 +80,12 @@ export const FS_SCENARIO_LABELS: Record<FsScenarioName, string> = {
 export const isFsScenario = (name: string): name is FsScenarioName =>
   (FS_SCENARIOS as readonly string[]).includes(name);
 
-/** Whether the remembering file-system answers apply: the default story and every fs scenario. */
+/**
+ * Whether the remembering file-system answers apply: the default story, every fs scenario and every
+ * RAID scenario (the RAID mock shares their disks and file systems).
+ */
 export const usesFsMock = (name: string): boolean =>
-  name === "admin" || isFsScenario(name);
+  name === "admin" || isFsScenario(name) || isRaidScenario(name);
 
 const ok = (value: unknown): FixedAnswer => ({ status: 200, value });
 const fail = (status: number, message: string): FixedAnswer => ({
@@ -131,6 +141,8 @@ const listEntryUuid = (n: number) =>
   `00000000-0000-4000-8000-0000000004${pad2(10 + n)}`;
 /** The size the mock gives a file system made on one 8 GiB scratch disk, as the VM's df reported it. */
 const ONE_DISK_FS = 8349229056;
+/** About what df reports for EXT4 on the VM's mirror (written by hand from ONE_DISK_FS). */
+const UNIT_FS = 8338000000;
 
 /** A file system on `disk`'s first partition (or the device itself), as getMountCandidates lists it. */
 function detectedOn(
@@ -377,6 +389,8 @@ export interface FsMockState {
   wiping: string | null;
   /** How many tasks this mock has started: each gets its own handle, as the server's do. */
   tasks: number;
+  /** What the RAID answers remember (raidScenarios.ts). */
+  md: RaidMockState;
 }
 
 export function newFsMockState(name: string): FsMockState {
@@ -393,6 +407,7 @@ export function newFsMockState(name: string): FsMockState {
     applyFailures: name === "fsApplyFails" ? 1 : 0,
     wiping: null,
     tasks: 0,
+    md: newRaidMockState(name),
   };
   switch (name) {
     case "fsReuse": {
@@ -407,6 +422,25 @@ export function newFsMockState(name: string): FsMockState {
       state.detected.push(old);
       state.candidates.push(old);
       state.free = state.free.filter((c) => c.devicefile !== "/dev/sdd");
+      break;
+    }
+    case "raidInUse": {
+      // An EXT4 file system on the mirror, mounted (the RAID mock's md0).
+      const fs = detectedOn("/dev/md0", 3, {
+        mounted: true,
+        mountpoint: `/srv/dev-disk-by-uuid-${uuidFor(3)}`,
+      });
+      const row = configuredOf(fs, {
+        label: "array",
+        ...mountedFigures(UNIT_FS, 5),
+      });
+      fs.label = "array";
+      state.configured.push(row);
+      state.detected.push(fs);
+      state.entries[row.devicefile] = entryOf(row, uuidFor(93));
+      state.free = state.free.filter(
+        (c) => c.devicefile !== "/dev/sdb" && c.devicefile !== "/dev/sdc",
+      );
       break;
     }
     case "fsRaid":
@@ -462,6 +496,26 @@ export function newFsMockState(name: string): FsMockState {
     }
     default:
       break;
+  }
+  // An array with nothing on it is a file-system candidate (observed: at once, while it synchronises).
+  for (const array of state.md.arrays) {
+    const holds = state.configured.some(
+      (row) =>
+        row.canonicaldevicefile === array.devicefile ||
+        row.parentdevicefile === array.devicefile,
+    );
+    if (
+      !holds &&
+      !array.used &&
+      /^\/dev\/md\d+$/.test(array.devicefile) &&
+      !state.free.some((c) => c.devicefile === array.devicefile)
+    ) {
+      state.free.push({
+        devicefile: array.devicefile,
+        size: String(array.size),
+        description: `Software RAID  [${array.devicefile}, ${(array.size / GIB).toFixed(2)} GiB]`,
+      });
+    }
   }
   return state;
 }
@@ -715,22 +769,35 @@ export function fsAnswers(
       hooks.dirty(["monit"]);
       return ok(entry);
     },
-    ...(name === "fsRaid"
-      ? {
-          mdMgmtEnumerateDevices: () =>
-            ok([
-              {
-                ...clone(
-                  CONTRACT_EXAMPLES.mdMgmtEnumerateDevices.mirrors.value[0],
-                ),
-                devicefile: "/dev/md0",
-                devices: ["/dev/sdb", "/dev/sdc"],
-                size: "8580497408",
-                _used: false,
-              },
-            ]),
+    // The RAID plugin's answers, remembering creates, adds, removals, checks and deletes.
+    ...raidAnswers(name, state.md, {
+      dirty: hooks.dirty,
+      offerForFs: (devicefile, size, on) => {
+        state.free = state.free.filter((c) => c.devicefile !== devicefile);
+        if (on && name === "raidLeftoverFs") {
+          // The disks held an earlier array with a file system at the same place (observed on the
+          // VM): the new array shows it, and is not offered until it is wiped.
+          state.detected.push(
+            detectedOn(devicefile, 94, { label: "earlier", mounted: false }),
+          );
+          return;
         }
-      : {}),
+        if (on) {
+          state.free.push({
+            devicefile,
+            size: String(size),
+            description: `Software RAID  [${devicefile}, ${(size / GIB).toFixed(2)} GiB]`,
+          });
+        }
+      },
+      mounted: (devicefile) =>
+        state.configured.some(
+          (row) =>
+            row.mounted &&
+            (row.canonicaldevicefile === devicefile ||
+              row.parentdevicefile === devicefile),
+        ),
+    }),
     ...(name === "fsShared"
       ? {
           shareMgmtGetList: () => {
@@ -921,6 +988,7 @@ export function fsWiped(state: FsMockState): void {
     return;
   }
   state.wiping = null;
+  raidWiped(state.md, device);
   const on = (fs: DetectedFilesystem) =>
     fs.parentdevicefile === device || fs.canonicaldevicefile.startsWith(device);
   state.detected = state.detected.filter((fs) => !on(fs));

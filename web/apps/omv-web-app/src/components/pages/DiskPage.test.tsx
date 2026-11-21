@@ -125,7 +125,8 @@ describe("a disk's page", () => {
             c.startsWith("DiskMgmt.") ||
             c.startsWith("Smart.") ||
             c.startsWith("FileSystemMgmt.") ||
-            c.startsWith("MdMgmt."),
+            // The shell's one probe of the RAID plugin for the menu is not about this disk.
+            (c.startsWith("MdMgmt.") && c !== "MdMgmt.getCandidates"),
         ),
       ).toEqual([]);
     },

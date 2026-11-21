@@ -20,6 +20,8 @@ import { fsActions } from "./filesystems/fsActions.ts";
 import { fsSession } from "./filesystems/fsSession.ts";
 import { logsView } from "./logs/logsViewStore.ts";
 import { processesView } from "./processes/processesViewStore.ts";
+import { raidFlowStore } from "./raid/raidRun.ts";
+import { raidSession } from "./raid/raidSession.ts";
 import { createAppRouter, type AppRouter } from "./router.ts";
 import {
   createActivityClock,
@@ -41,6 +43,8 @@ const SESSION_VIEW_STATE = [
   fsSession,
   flowStore,
   fsActions,
+  raidSession,
+  raidFlowStore,
   logsView,
   processesView,
 ];

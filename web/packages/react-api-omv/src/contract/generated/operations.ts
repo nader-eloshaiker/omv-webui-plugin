@@ -611,6 +611,108 @@ export const OPERATIONS = {
       $ref: "MdArrayList",
     },
   },
+  "/rpc/MdMgmt/getDetail": {
+    operationId: "mdMgmtGetDetail",
+    service: "MdMgmt",
+    method: "getDetail",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MdDetailText",
+    },
+  },
+  "/rpc/MdMgmt/getSlaves": {
+    operationId: "mdMgmtGetSlaves",
+    service: "MdMgmt",
+    method: "getSlaves",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MdDiskList",
+    },
+  },
+  "/rpc/MdMgmt/getCandidates": {
+    operationId: "mdMgmtGetCandidates",
+    service: "MdMgmt",
+    method: "getCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MdDiskList",
+    },
+  },
+  "/rpc/MdMgmt/create": {
+    operationId: "mdMgmtCreate",
+    service: "MdMgmt",
+    method: "create",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "MdChange",
+    },
+  },
+  "/rpc/MdMgmt/add": {
+    operationId: "mdMgmtAdd",
+    service: "MdMgmt",
+    method: "add",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "MdChange",
+    },
+  },
+  "/rpc/MdMgmt/grow": {
+    operationId: "mdMgmtGrow",
+    service: "MdMgmt",
+    method: "grow",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "MdChange",
+    },
+  },
+  "/rpc/MdMgmt/remove": {
+    operationId: "mdMgmtRemove",
+    service: "MdMgmt",
+    method: "remove",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "MdChange",
+    },
+  },
+  "/rpc/MdMgmt/delete": {
+    operationId: "mdMgmtDelete",
+    service: "MdMgmt",
+    method: "delete",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "MdChange",
+    },
+  },
+  "/rpc/MdMgmt/setSyncAction": {
+    operationId: "mdMgmtSetSyncAction",
+    service: "MdMgmt",
+    method: "setSyncAction",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
   "/rpc/FileSystemMgmt/getMountCandidates": {
     operationId: "fileSystemMgmtGetMountCandidates",
     service: "FileSystemMgmt",
@@ -1406,7 +1508,15 @@ export const SCHEMAS: SchemaTable = {
         "x-omv-int64": true,
       },
       state: {
-        type: "string",
+        oneOf: [
+          {
+            type: "string",
+          },
+          {
+            type: "boolean",
+            enum: [false],
+          },
+        ],
       },
       syncaction: {
         type: "string",
@@ -1421,6 +1531,61 @@ export const SCHEMAS: SchemaTable = {
     type: "array",
     items: {
       $ref: "MdArray",
+    },
+  },
+  MdChange: {
+    type: "object",
+    required: ["name", "devicefile", "level", "numdevices", "devices"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      level: {
+        type: "string",
+      },
+      numdevices: {
+        type: "integer",
+      },
+      devices: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+    },
+  },
+  MdDetailText: {
+    type: "string",
+  },
+  MdDisk: {
+    type: "object",
+    required: ["devicefile", "size", "vendor", "serialnumber", "description"],
+    properties: {
+      devicefile: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      vendor: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      description: {
+        type: "string",
+      },
+    },
+  },
+  MdDiskList: {
+    type: "array",
+    items: {
+      $ref: "MdDisk",
     },
   },
   MountEntry: {

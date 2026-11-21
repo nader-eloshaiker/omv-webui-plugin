@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a check asked of a stripe, which has no copies to compare."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to set sync_action to 'check' for device /dev/md0: File '/sys/class/block/md0/md/sync_action' does not exist or is not writable."
