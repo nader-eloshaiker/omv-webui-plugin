@@ -10,6 +10,12 @@ interface TableProps extends React.ComponentProps<"table"> {
   busyLabel?: string;
   /** Classes for the scrolling frame around the table. */
   frameClassName?: string;
+  /**
+   * Names the scrolling frame and makes it a focusable region, so a keyboard can scroll a wide table
+   * sideways inside it: "Entries of All system messages (syslog)". Use it where columns can outgrow a
+   * narrow screen.
+   */
+  frameLabel?: string;
 }
 
 /**
@@ -20,12 +26,16 @@ function Table({
   busy,
   busyLabel,
   frameClassName,
+  frameLabel,
   className,
   ...props
 }: TableProps) {
   return (
     <div
       data-slot="table-frame"
+      role={frameLabel === undefined ? undefined : "region"}
+      aria-label={frameLabel}
+      tabIndex={frameLabel === undefined ? undefined : 0}
       className={cn(
         // `relative` keeps absolutely placed text inside (a visually hidden label would otherwise
         // widen the page); `@container` lets a state row measure the visible width (TableStateRow).

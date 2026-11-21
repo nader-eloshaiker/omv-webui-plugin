@@ -40,4 +40,27 @@ describe("Table", () => {
     expect(health).not.toHaveAttribute("aria-sort");
     expect(screen.getByRole("button", { name: "Device" })).toBeInTheDocument();
   });
+
+  it("makes the scrolling frame a named, focusable region when asked", () => {
+    const { rerender } = render(
+      <Table aria-label="Processes" frameLabel="Processes, scrolls sideways">
+        <TableBody>
+          <TableRow>
+            <TableCell>systemd</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+    const frame = screen.getByRole("region", {
+      name: "Processes, scrolls sideways",
+    });
+    expect(frame).toHaveAttribute("tabindex", "0");
+    expect(frame).toHaveAttribute("data-slot", "table-frame");
+    rerender(
+      <Table aria-label="Processes">
+        <TableBody />
+      </Table>,
+    );
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+  });
 });
