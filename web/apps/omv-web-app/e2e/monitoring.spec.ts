@@ -65,14 +65,14 @@ test("the dashboard's new cards, and disk health only when asked", async ({
   expect(rpc.calls).not.toContain("Smart.getListBg");
 
   const disks = page.getByRole("region", { name: copy.dashboard.disks.title });
-  const check = disks.getByRole("button", { name: copy.dashboard.disks.check });
+  const check = disks.getByRole("button", { name: copy.diskCheck.check });
   await check.focus();
   await page.keyboard.press("Enter");
   await expect(
     disks.getByText("4 of 5 disks: Unknown", { exact: true }),
   ).toBeVisible();
   await expect(
-    disks.getByRole("button", { name: copy.dashboard.disks.checkAgain }),
+    disks.getByRole("button", { name: copy.diskCheck.checkAgain }),
   ).toBeFocused();
   expect(rpc.calls.filter((c) => c === "Smart.getListBg")).toHaveLength(1);
   await expectNoSidewaysScroll(page);

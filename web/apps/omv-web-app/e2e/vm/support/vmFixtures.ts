@@ -126,6 +126,12 @@ interface WorkerFixtures {
 interface TestFixtures {
   rpcLog: RpcLog;
   observed: Observed;
+  /**
+   * Console errors a spec expects on top of VM_ALLOWANCES, each with its reason (`test.use`). Chromium
+   * logs a 4xx or 5xx reply without saying which method it answered, so a spec that allows one also
+   * checks the replies themselves (the disks pages: the RAID plugin's 404, the "no settings" 500).
+   */
+  extraAllowances: readonly ConsoleAllowance[];
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -148,9 +154,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { auto: true },
   ],
 
+  extraAllowances: [[], { option: true }],
+
   observed: [
-    async ({ page, vm }, provide) => {
-      const observed = await observe(page, vm.origin, VM_ALLOWANCES);
+    async ({ page, vm, extraAllowances }, provide) => {
+      const observed = await observe(page, vm.origin, [
+        ...VM_ALLOWANCES,
+        ...extraAllowances,
+      ]);
       await provide(observed);
       expectNothingObserved(observed);
     },
