@@ -362,6 +362,9 @@ describe("what uses it, and unmounting it (5)", () => {
                       ...CONTRACT_EXAMPLES.shareMgmtGetList.populated.value
                         .data[0],
                       name: "late-folder",
+                      // A shared folder names the mount entry it is on, as OMV records it: media's
+                      // entry in the hand-written list (fsScenarios.ts, listEntries).
+                      mntentref: "00000000-0000-4000-8000-000000000411",
                       mntent: {
                         dir: "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000710",
                       },
@@ -467,6 +470,24 @@ describe("the warning level and tags (2.6)", () => {
         screen.getByRole("heading", { level: 1 }).parentElement,
       ).toHaveTextContent("Not applied yet"),
     );
+  });
+
+  it("shows a hand-written file system's own level and tags, as its row has them", async () => {
+    await page(MEDIA, { scenario: "fsVariety" });
+    const form = await screen.findByRole("form", {
+      name: "Warning level and tags",
+    });
+    expect(
+      await within(form).findByRole("textbox", { name: "Tags" }),
+    ).toHaveValue("Media, Photos");
+    expect(
+      within(form).getByRole("combobox", { name: "Warn when it is this full" }),
+    ).toHaveTextContent("85%");
+    expect(
+      screen.queryByText(
+        "This file system is not set up on this NAS any more.",
+      ),
+    ).toBeNull();
   });
 
   it("saves nothing when the file system was removed meanwhile", async () => {

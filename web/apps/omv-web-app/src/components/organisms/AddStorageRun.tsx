@@ -40,6 +40,7 @@ import { useFlowWords } from "../../hooks/useFlowWords.tsx";
 import { useFsWords } from "../../hooks/useFsWords.ts";
 import { useNow } from "../../hooks/useNow.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { emptyOutputKey } from "../../shell/taskView.ts";
 import { ModuleNames } from "../molecules/ModuleNames.tsx";
 import { WipeBlockers } from "../molecules/WipeBlockers.tsx";
 import { SharingHandover } from "./SharingHandover.tsx";
@@ -95,7 +96,7 @@ function StepTask({
             copyLabel={t("tasks.copy")}
             copiedLabel={t("tasks.copied")}
             selectedLabel={t("tasks.selected")}
-            emptyLabel={running ? t("tasks.waiting") : t("tasks.noOutput")}
+            emptyLabel={t(emptyOutputKey(task))}
           />
         </DisclosurePanel>
       </Disclosure>
@@ -404,6 +405,10 @@ export function AddStorageRun({ run }: { run: FlowRun }) {
     const name = fsName(phase.row);
     const tags = splitTags(phase.row.comment);
     const free = parseByteCount(phase.row.available);
+    const shownName =
+      tags.length > 0
+        ? `${fsWords.nameOf(name)} (${tags.join(", ")})`
+        : fsWords.nameOf(name);
     result = {
       status: "succeeded" as const,
       statusLabel: t("addStorage.state.succeeded"),
@@ -413,15 +418,12 @@ export function AddStorageRun({ run }: { run: FlowRun }) {
             {t("addStorage.doneTitle")}
           </span>
           <span className="block">
-            {t("addStorage.doneBody", {
-              name:
-                tags.length > 0
-                  ? `${fsWords.nameOf(name)} (${tags.join(", ")})`
-                  : fsWords.nameOf(name),
-              device:
-                phase.row.parentdevicefile || phase.row.canonicaldevicefile,
-              size: free === null ? "" : formatBytes(free),
-            })}
+            {free === null
+              ? t("addStorage.doneBodyNoSize", { name: shownName })
+              : t("addStorage.doneBody", {
+                  name: shownName,
+                  size: formatBytes(free),
+                })}
           </span>
         </>
       ),

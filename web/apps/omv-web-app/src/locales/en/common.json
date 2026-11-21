@@ -462,6 +462,8 @@
     "download": "Download output",
     "waiting": "Waiting for output…",
     "noOutput": "This task wrote no output.",
+    "outputUnread": "The output of this task could not be read.",
+    "notStarted": "This task did not start, so it has no output.",
     "endDone": "The task finished.",
     "endFailed": "The task failed. The server's account of what happened is above.",
     "endStopped": "The task was cancelled.",
@@ -1888,8 +1890,18 @@
       "erase": "Erase {{device}} ({{model}}, serial number {{serial}}, {{size}} ({{label}} on the label)). Everything on it is lost: {{what}}",
       "useWhole": "Use the whole of {{device}} ({{model}}, serial number {{serial}}, {{size}} ({{label}} on the label)). Anything on it is overwritten.",
       "useWholeRaid": "Use the whole of the RAID array {{device}} ({{size}}). Anything on it is overwritten.",
-      "create": "Create a {{format}} file system on it.",
-      "createOnRaid": "Create a {{format}} file system on the RAID array {{name}}, which keeps its disks as they are.",
+      "create": {
+        "ext4": "Create an EXT4 file system on it.",
+        "xfs": "Create an XFS file system on it.",
+        "btrfs": "Create a BTRFS file system on it.",
+        "f2fs": "Create an F2FS file system on it."
+      },
+      "createOnRaid": {
+        "ext4": "Create an EXT4 file system on the RAID array {{name}}, which keeps its disks as they are.",
+        "xfs": "Create an XFS file system on the RAID array {{name}}, which keeps its disks as they are.",
+        "btrfs": "Create a BTRFS file system on the RAID array {{name}}, which keeps its disks as they are.",
+        "f2fs": "Create an F2FS file system on the RAID array {{name}}, which keeps its disks as they are."
+      },
       "tags": "Tag it {{tags}}.",
       "level": "Warn when it is {{level}} full.",
       "noLevel": "No warning when it fills up.",
@@ -1965,7 +1977,8 @@
     "toList": "Go to File systems",
     "dismiss": "Dismiss",
     "doneTitle": "The new storage is ready.",
-    "doneBody": "{{name}} is mounted on {{device}}, with {{size}} free.",
+    "doneBody": "{{name}} is mounted and ready, with {{size}} free.",
+    "doneBodyNoSize": "{{name}} is mounted and ready.",
     "openFs": "Open the file system",
     "handover": {
       "title": "Next: share a folder on it",
@@ -1998,12 +2011,22 @@
       "way": "How to combine them",
       "raid1": "Mirror (RAID1), recommended",
       "raid1Hint": "Every file is kept on two disks, so one disk can fail without losing anything. You can use about half the total space: about {{usable}}.",
+      "raid1HintNoSize": "Every file is kept on two disks, so one disk can fail without losing anything. You can use about half the total space.",
       "raid10": "Mirror and stripe (RAID10)",
       "raid10Hint": "Like a mirror, and faster with many disks. One disk can fail. About {{usable}}.",
+      "raid10HintNoSize": "Like a mirror, and faster with many disks. One disk can fail.",
       "raid0": "Stripe (RAID0)",
       "raid0Hint": "Uses all the space and is fast, but if any one disk fails, everything on all of them is lost. About {{usable}}.",
+      "raid0HintNoSize": "Uses all the space and is fast, but if any one disk fails, everything on all of them is lost.",
       "single": "Join (single)",
       "singleHint": "Uses all the space, filling one disk after another. If any one disk fails, files on it are lost, and the file system may not open. About {{usable}}.",
+      "singleHintNoSize": "Uses all the space, filling one disk after another. If any one disk fails, files on it are lost, and the file system may not open.",
+      "wayName": {
+        "raid1": "Mirror (RAID1)",
+        "raid10": "Mirror and stripe (RAID10)",
+        "raid0": "Stripe (RAID0)",
+        "single": "Join (single)"
+      },
       "sum": {
         "erase_one": "Erase {{count}} disk:",
         "erase_other": "Erase {{count}} disks:",

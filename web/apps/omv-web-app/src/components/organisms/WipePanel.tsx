@@ -25,6 +25,7 @@ import type { WipeRecord } from "../../disks/diskSession.ts";
 import { outputLines, wipePanelView } from "../../disks/wipe.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useNow } from "../../hooks/useNow.ts";
+import { emptyOutputKey } from "../../shell/taskView.ts";
 import { AddStorageLink } from "../atoms/AddStorageLink.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
@@ -51,9 +52,7 @@ function Output({
           copyLabel={t("tasks.copy")}
           copiedLabel={t("tasks.copied")}
           selectedLabel={t("tasks.selected")}
-          emptyLabel={
-            task.state === "running" ? t("tasks.waiting") : t("tasks.noOutput")
-          }
+          emptyLabel={t(emptyOutputKey(task))}
         />
       </DisclosurePanel>
     </Disclosure>

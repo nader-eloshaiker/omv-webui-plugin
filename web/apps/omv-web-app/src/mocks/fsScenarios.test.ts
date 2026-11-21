@@ -56,9 +56,36 @@ function createOnSdd(name: ScenarioName, session: MockSession) {
     call(name, session, "fileSystemMgmtGetList"),
   ).data;
   expect(creating.some((r) => r.status === 2)).toBe(true);
-  call(name, session, "execGetOutput", { filename: FS_HANDLES.create });
+  finish(name, session, FS_HANDLES.create);
   return value<Rows>(call(name, session, "fileSystemMgmtGetMountCandidates"));
 }
+
+interface Poll {
+  running: boolean;
+  output: string;
+}
+/** Poll a task as the task helper does, until it ends; every answer, in order. */
+function finish(
+  name: ScenarioName,
+  session: MockSession,
+  filename: string,
+): (string | FixedAnswer)[] {
+  const answers: (string | FixedAnswer)[] = [];
+  for (let i = 0; i < 10; i += 1) {
+    const answer = call(name, session, "execGetOutput", { filename });
+    answers.push(answer);
+    if (
+      typeof answer === "string" ||
+      answer.status !== 200 ||
+      !(answer.value as Poll).running
+    ) {
+      return answers;
+    }
+  }
+  throw new Error("the task never ended");
+}
+
+const SDB = CONTRACT_EXAMPLES.diskMgmtGetList.vmDisks.value.data[2];
 
 describe("the remembering file-system mock", () => {
   it("tells Flow A's story: create, set up, apply, then unmount", () => {
@@ -74,7 +101,7 @@ describe("the remembering file-system mock", () => {
       ),
     ).toEqual(["/dev/sdb", "/dev/sdc", "/dev/sdd"]);
     const candidates = createOnSdd("admin", session);
-    const made = candidates.find((c) => c.devicefile.includes("0701"));
+    const made = candidates.find((c) => c.devicefile.includes("0761"));
     expect(made).toBeDefined();
     call("admin", session, "fileSystemMgmtSetMountPoint", {
       id: made?.devicefile,
@@ -122,7 +149,7 @@ describe("the remembering file-system mock", () => {
   it("forgets a mount that was set up and undone, and finds it on the disk again", () => {
     const session = newMockSession(true);
     const made = createOnSdd("admin", session).find((c) =>
-      c.devicefile.includes("0701"),
+      c.devicefile.includes("0761"),
     );
     call("admin", session, "fileSystemMgmtSetMountPoint", {
       id: made?.devicefile,
@@ -143,7 +170,7 @@ describe("the remembering file-system mock", () => {
   it("fails the first apply in fsApplyFails, and mounts on the second", () => {
     const session = newMockSession(true);
     const made = createOnSdd("fsApplyFails", session).find((c) =>
-      c.devicefile.includes("0701"),
+      c.devicefile.includes("0761"),
     );
     call("fsApplyFails", session, "fileSystemMgmtSetMountPoint", {
       id: made?.devicefile,
@@ -181,4 +208,108 @@ describe("the remembering file-system mock", () => {
       status: 401,
     });
   });
+
+  it("writes the partition first and fails the create on a later poll in fsCreateFails, as OMV does", () => {
+    const session = newMockSession(true);
+    call("fsCreateFails", session, "fileSystemMgmtCreate", {
+      devicefile: SDD?.devicefile,
+      type: "ext4",
+    });
+    const [first, last, ...rest] = finish(
+      "fsCreateFails",
+      session,
+      FS_HANDLES.create,
+    );
+    expect(rest).toEqual([]);
+    expect(first).toMatchObject({ status: 200, value: { running: true } });
+    expect(((first as FixedAnswer).value as Poll).output).toMatch(
+      /^Creating new GPT entries in memory\.\nDisk \/dev\/sdd: 16777216 sectors, 8\.0 GiB\n/,
+    );
+    expect(last).toMatchObject({
+      status: 500,
+      message:
+        "Device '/dev/sdd1' is not available after a waiting period of 10 seconds.",
+    });
+    // Nothing was made, and the row being created is gone.
+    expect(
+      value<{ data: { status: number }[] }>(
+        call("fsCreateFails", session, "fileSystemMgmtGetList"),
+      ).data.some((r) => r.status === 2),
+    ).toBe(false);
+  });
+
+  it("fails a BTRFS create with mkfs.btrfs's words for the chosen disks in fsCreateFails", () => {
+    const session = newMockSession(true);
+    call("fsCreateFails", session, "fileSystemMgmtCreateBtrfs", {
+      profile: "raid0",
+      devicefiles: `${String(SDB?.devicefile)},${String(SDD?.devicefile)}`,
+    });
+    const answers = finish("fsCreateFails", session, FS_HANDLES.createBtrfs);
+    expect(answers).toHaveLength(2);
+    expect((answers[1] as FixedAnswer).message).toMatch(
+      /mkfs\.btrfs --force --data 'raid0' --metadata 'raid0' \/dev\/sdb \/dev\/sdd 2>&1'.*ERROR: unable to open \/dev\/sdd: Device or resource busy$/s,
+    );
+  });
+
+  it.each([
+    ["raid1", 8589934592],
+    ["raid0", 2 * 8589934592],
+    ["single", 2 * 8589934592],
+  ])(
+    "mounts a BTRFS %s of two 8 GiB disks with the size that profile holds",
+    (profile, holds) => {
+      const session = newMockSession(true);
+      call("admin", session, "fileSystemMgmtCreateBtrfs", {
+        profile,
+        devicefiles: `${String(SDB?.devicefile)},${String(SDD?.devicefile)}`,
+      });
+      finish("admin", session, FS_HANDLES.createBtrfs);
+      const made = value<Rows>(
+        call("admin", session, "fileSystemMgmtGetMountCandidates"),
+      ).find((c) => c.uuid.endsWith("0761"));
+      expect(made).toBeDefined();
+      call("admin", session, "fileSystemMgmtSetMountPoint", {
+        id: made?.devicefile,
+      });
+      call("admin", session, "execGetOutput", { filename: APPLY });
+      const row = value<{ data: (Rows[number] & { size: string })[] }>(
+        call("admin", session, "fileSystemMgmtGetList"),
+      ).data.find((r) => r.uuid === made?.uuid);
+      expect(row?.mounted).toBe(true);
+      expect(Number(row?.size)).toBe(Math.round(holds * 0.98));
+    },
+  );
+
+  it.each(["fsVariety", "fsMany"] as const)(
+    "gives every file system with a page in %s its mount entry, with the row's level and tags",
+    (name) => {
+      const session = newMockSession(true);
+      const rows = value<{
+        data: {
+          devicefile: string;
+          mountpoint: string;
+          status: number;
+          usagewarnthreshold: number;
+          comment: string;
+        }[];
+      }>(call(name, session, "fileSystemMgmtGetList")).data.filter(
+        (r) => r.mountpoint !== "/",
+      );
+      expect(rows.length).toBeGreaterThan(5);
+      const uuids = new Set<string>();
+      for (const row of rows) {
+        const entry = value<{
+          uuid: string;
+          usagewarnthreshold: number;
+          comment: string;
+        }>(call(name, session, "fsTabGetByFsName", { fsname: row.devicefile }));
+        expect(entry).toMatchObject({
+          usagewarnthreshold: row.usagewarnthreshold,
+          comment: row.comment,
+        });
+        uuids.add(entry.uuid);
+      }
+      expect(uuids.size).toBe(rows.length);
+    },
+  );
 });

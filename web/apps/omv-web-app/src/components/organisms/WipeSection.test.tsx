@@ -236,7 +236,9 @@ describe("the wipe section", () => {
   );
 
   it("takes the RAID plugin's 404 for 'not installed', not for a failure", async () => {
-    const { section } = await diskPage("sdb");
+    const { section } = await diskPage("sdb", {
+      scenario: "disksNoRaidPlugin",
+    });
     await settled(section);
     await waitFor(() =>
       expect(wipeButton(section)).toHaveAttribute("aria-disabled", "false"),
@@ -699,6 +701,15 @@ describe("a running wipe", () => {
     );
     expect(failure).toHaveTextContent("Device or resource busy");
     expect(failure).not.toHaveTextContent("mock trace");
+    // OMV answered the first poll with the failure, so no output was read: the open output says so,
+    // and does not claim the wipe wrote nothing.
+    const output = within(section).getByRole("region", {
+      name: "Output of the wipe of /dev/sdc",
+    });
+    expect(output).toHaveTextContent(
+      "The output of this task could not be read.",
+    );
+    expect(output).not.toHaveTextContent("This task wrote no output.");
     expect(wipeCalls()).toHaveLength(1);
     const reads = seenCalls.filter(
       (c) => c.call === "MdMgmt.enumerateDevices",

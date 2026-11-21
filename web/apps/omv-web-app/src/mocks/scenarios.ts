@@ -1100,7 +1100,8 @@ export function scenarioAnswers(
     smartSetScheduledTest: smartPending("created"),
     smartDeleteScheduledTest: smartPending("deleted"),
     smartExecuteScheduledTest: guarded("started"),
-    // The RAID plugin is not installed on the test VM: OMV answers the unknown service with 404.
+    // The RAID plugin's arrays: none in the default story; the test VM's 404 (the plugin is not
+    // installed) in disksNoRaidPlugin; a mirror on the NAS stories and fsRaid.
     mdMgmtEnumerateDevices: diskRead("mdMgmtEnumerateDevices"),
     fileSystemMgmtEnumerateFilesystems: diskRead(
       "fileSystemMgmtEnumerateFilesystems",

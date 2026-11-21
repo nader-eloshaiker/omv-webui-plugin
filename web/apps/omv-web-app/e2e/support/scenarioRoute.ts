@@ -78,19 +78,6 @@ export async function answerWithScenario(
       return;
     }
     calls.push(call);
-    // The mocked VM has no RAID plugin (a 404, which the browser logs as a failed resource): this
-    // test answers "no arrays" instead, which is what the disk-use model reads the same way.
-    if (call === "MdMgmt.enumerateDevices") {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          response: CONTRACT_EXAMPLES.mdMgmtEnumerateDevices.none.value,
-          error: null,
-        }),
-      });
-      return;
-    }
     const operationId = operationIdOf(body?.service ?? "", body?.method ?? "");
     const answers = scenarioAnswers(scenario, session) as Record<
       string,

@@ -89,7 +89,7 @@ describe("Storage > Disks", () => {
   });
 
   it("shows the test VM's disks with what each holds, the RAID plugin not installed being no failure", async () => {
-    await disks();
+    await disks({ scenario: "disksNoRaidPlugin" });
     const all = await rows();
     expect(all).toHaveLength(6);
     expect(await rowOf("/dev/nvme0n1")).toHaveTextContent(

@@ -87,6 +87,8 @@ describe("Flow A: Add storage", () => {
   it("offers the empty disks, lists every disk that cannot be used with why, and defaults to EXT4 at 85%", async () => {
     const { user } = await flow();
     const sdb = await option("/dev/sdb");
+    // Said only while it looks.
+    expect(screen.queryByText(/^Looking for disks/)).toBeNull();
     expect(sdb).toHaveAccessibleName(
       /^\/dev\/sdb\s?, VMware Virtual SATA Hard Drive\s?, 8\.0\sGiB$/,
     );
@@ -153,7 +155,7 @@ describe("Flow A: Add storage", () => {
     expect(summary).toHaveTextContent(
       "Use the whole of /dev/sdd (VMware Virtual SATA Hard Drive, serial number EXAMPLE-SERIAL-0005, 8.0 GiB (8.6 GB on the label)). Anything on it is overwritten.",
     );
-    expect(summary).toHaveTextContent("Create a EXT4 file system on it.");
+    expect(summary).toHaveTextContent("Create an EXT4 file system on it.");
     expect(summary).toHaveTextContent("Warn when it is 85% full.");
     expect(summary).toHaveTextContent(
       "Then mount it, which applies the changes for it. Nothing else is pending.",
@@ -200,7 +202,7 @@ describe("Flow A: Add storage", () => {
       type: "ext4",
     });
     expect(calls("FileSystemMgmt.setMountPoint")[0]?.params).toEqual({
-      id: "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000701",
+      id: "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000761",
       usagewarnthreshold: 85,
       comment: "",
     });
@@ -214,17 +216,36 @@ describe("Flow A: Add storage", () => {
     ]) {
       expect(steps()).toHaveTextContent(`Succeeded${label}`);
     }
-    expect(screen.getByText(/is mounted on \/dev\/sdd, with/)).toBeVisible();
+    expect(
+      screen.getByText(
+        /^EXT4 on \/dev\/sdd1 is mounted and ready, with 7\.7\sGiB free\.$/,
+      ),
+    ).toBeVisible();
     expect(
       screen.getByRole("link", { name: "Open the file system" }),
     ).toHaveAttribute(
       "href",
-      "/ui/storage/filesystems/00000000-0000-4000-8000-000000000701",
+      "/ui/storage/filesystems/00000000-0000-4000-8000-000000000761",
     );
     const handover = await screen.findByRole("region", {
       name: "Next: share a folder on it",
     });
     expect(handover).toHaveTextContent("Choose the file system /dev/sdd1.");
+  }, 30_000);
+
+  it("reads the RAID plugin's 404 as no arrays, and adds the storage all the same", async () => {
+    const { user } = await flow({
+      answers: { mdMgmtEnumerateDevices: "notInstalled" },
+    });
+    await toSummary(user, "/dev/sdb");
+    expect(screen.queryByText(/^Could not check/)).toBeNull();
+    await confirm(user, "/dev/sdb");
+    expect(
+      await screen.findByText("The new storage is ready.", {}, LONG),
+    ).toBeInTheDocument();
+    // Read on opening and again by step 1, answered 404 each time.
+    expect(calls("MdMgmt.enumerateDevices").length).toBeGreaterThanOrEqual(2);
+    expect(steps()).toHaveTextContent("SucceededCheck /dev/sdb again");
   }, 30_000);
 
   it("stops before anything is erased when the disk changed (6.7)", async () => {
@@ -472,6 +493,16 @@ describe("Flow A: Add storage", () => {
     expect(
       screen.getByText(/is not available after a waiting period of 10 seconds/),
     ).toBeVisible();
+    // The output read before the task failed is open: sgdisk made the partition, which then did not
+    // appear. It never claims the task wrote nothing.
+    const output = screen.getByRole("region", {
+      name: "Output of Create the EXT4 file system",
+    });
+    expect(output).toHaveTextContent("Creating new GPT entries in memory.");
+    expect(output).toHaveTextContent(
+      "The operation has completed successfully.",
+    );
+    expect(output).not.toHaveTextContent("This task wrote no output.");
     expect(calls("FileSystemMgmt.create")).toHaveLength(1);
     expect(
       screen.getByRole("button", { name: "Try this step again" }),
@@ -566,7 +597,15 @@ describe("Combine disks (BTRFS)", () => {
         LONG,
       ),
     ).toBeChecked();
+    // No size until enough disks are ticked for the way.
+    expect(screen.queryByText(/About 0/i)).toBeNull();
+    expect(
+      screen.getByText(
+        "Every file is kept on two disks, so one disk can fail without losing anything. You can use about half the total space.",
+      ),
+    ).toBeVisible();
     await user.click(await box("/dev/sdb"));
+    expect(screen.queryByText(/about \d/i)).toBeNull();
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       screen.getAllByText("Choose at least 2 disks.").length,
@@ -574,6 +613,15 @@ describe("Combine disks (BTRFS)", () => {
     await user.click(await box("/dev/sdc"));
     expect(
       screen.getByText(/about half the total space: about 8\.0\sGiB\.$/),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/^Uses all the space and is fast.*About 16\.0\sGiB\.$/),
+    ).toBeVisible();
+    // A mirror and stripe needs four.
+    expect(
+      screen.getByText(
+        "Like a mirror, and faster with many disks. One disk can fail.",
+      ),
     ).toBeVisible();
     await user.click(
       screen.getByRole("radio", { name: "Mirror and stripe (RAID10)" }),
@@ -596,7 +644,7 @@ describe("Combine disks (BTRFS)", () => {
       .parentElement as HTMLElement;
     expect(summary).toHaveTextContent("Erase 2 disks:");
     expect(summary).toHaveTextContent(
-      "Combine them into one BTRFS file system: Mirror (RAID1), recommended. About 8.0 GiB can be used.",
+      "Combine them into one BTRFS file system: Mirror (RAID1). About 8.0 GiB can be used.",
     );
     const button = screen.getByRole("button", {
       name: "Erase 2 disks and create file system",
@@ -619,5 +667,15 @@ describe("Combine disks (BTRFS)", () => {
     });
     expect(steps()).toHaveTextContent("SucceededCheck the disks again");
     expect(steps()).toHaveTextContent("SucceededCreate the BTRFS file system");
+    // The mirror of two 8 GiB disks holds about 8 GiB, as the summary said; the link opens it.
+    expect(
+      screen.getByText(/is mounted and ready, with 7\.8\sGiB free\.$/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Open the file system" }),
+    ).toHaveAttribute(
+      "href",
+      "/ui/storage/filesystems/00000000-0000-4000-8000-000000000761",
+    );
   }, 30_000);
 });

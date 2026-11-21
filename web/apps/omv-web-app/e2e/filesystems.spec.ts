@@ -70,6 +70,15 @@ test("the File systems list from the menu, with what is found and the mount dial
   expect(calls).not.toContain("FileSystemMgmt.setMountPoint");
   expect(calls).not.toContain("FileSystemMgmt.getCandidatesBg");
   expect(calls).not.toContain("FileSystemMgmt.getDetails");
+  // At a phone's width a device name stays whole: "/dev/sr0" is one line, not a character per line.
+  await page.setViewportSize({ width: 390, height: 800 });
+  const sr0 = found.getByText("/dev/sr0", { exact: true });
+  const box = await sr0.boundingBox();
+  const fontSize = await sr0.evaluate((el) =>
+    Number.parseFloat(getComputedStyle(el).fontSize),
+  );
+  expect(box?.height ?? Infinity, "/dev/sr0 wraps").toBeLessThan(fontSize * 2);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expectNoSidewaysScroll(page);
 });
 

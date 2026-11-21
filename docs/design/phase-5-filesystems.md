@@ -1040,8 +1040,9 @@ words, in the order they run:
   6.4.
 - Empty disk: "Use the whole of {{device}} ({{model}}, serial number {{serial}}, {{size}} ({{label}}
   on the label)). Anything on it is overwritten."
-- "Create a {{format}} file system on it." (for a RAID array: "…on the RAID array {{name}}, which keeps
-  its disks as they are.")
+- "Create an EXT4 file system on it." (for a RAID array: "…on the RAID array {{name}}, which keeps
+  its disks as they are."). One sentence per format, so that each language words its article with the
+  type ("an EXT4", "an XFS", "a BTRFS", "an F2FS").
 - "Tag it {{tags}}." (only with tags)
 - "Warn when it is {{level}} full." / "No warning when it fills up."
 - "Then mount it, which applies the changes for it. Nothing else is pending."
@@ -1077,6 +1078,13 @@ terminal pair, following the tail. The tasks are in the top bar's Tasks menu: "E
 "Create file system on {{device}}", "Apply changes". Leaving the page does not stop them; coming back
 shows the step list again from the registry. A reload ends the flow view (R8; 1.6 takes over).
 
+When a task fails, OMV answers the next output read with the failure and gives no more output
+(`Exec.getOutput` fails with the task's error). The output block keeps what was read before, and the
+failure's message is shown with the failure (6.7). An empty block then says "The output of this task
+could not be read." (or, when the call that starts the task failed, "This task did not start, so it
+has no output."), never "This task wrote no output.", which is kept for a task that ended without
+failing.
+
 No step can be cancelled: a half-made file system helps nothing, and the quick wipe takes seconds.
 
 ### 6.7 Failures (R6, R7, R10)
@@ -1105,8 +1113,9 @@ The flow stops at the failed step, never retries by itself (UI-14), and says wha
 `JobResult` succeeded, announced politely:
 
 - Title: "The new storage is ready."
-- "{{name}} is mounted on {{device}}, with {{size}} free." (`{{name}}` is the file system's name from
-  0.1, with its tags when it has them.)
+- "{{name}} is mounted and ready, with {{size}} free." (`{{name}}` is the file system's name from
+  0.1, with its tags when it has them; without a size, "{{name}} is mounted and ready."). A file system
+  is mounted on a folder, not on a disk, and its name already says which device it is on.
 - Router link "Open the file system" → its page.
 
 Then a card **"Next: share a folder on it"** (`h3`), the handover. It is honest that these steps are in
@@ -1168,7 +1177,7 @@ handover is an ordered list; each link says it opens a new tab.
 | `addStorage.preflightBody` | Apply or undo them before you add storage, so that only these changes are applied at the end. |
 | `addStorage.applyThem` | Apply them now |
 | `addStorage.undoThem` | Undo them |
-| `addStorage.looking` | Looking for disks that can hold new storage… This reads the disks, which wakes any that have gone to sleep. |
+| `addStorage.looking` | Looking for disks that can hold new storage… This reads the disks, which wakes any that have gone to sleep. (Shown only while it looks.) |
 | `addStorage.checkFailed` | Could not check which disks can be used. |
 | `addStorage.disk` | Disk |
 | `addStorage.group.empty` | Empty disks |
@@ -1201,8 +1210,11 @@ handover is an ordered list; each link says it opens a new tab.
 | `addStorage.summaryTitle` | Ready to add storage |
 | `addStorage.sum.erase` | Erase {{device}} ({{model}}, serial number {{serial}}, {{size}} ({{label}} on the label)). Everything on it is lost: {{what}} |
 | `addStorage.sum.useWhole` | Use the whole of {{device}} ({{model}}, serial number {{serial}}, {{size}} ({{label}} on the label)). Anything on it is overwritten. |
-| `addStorage.sum.create` | Create a {{format}} file system on it. |
-| `addStorage.sum.createOnRaid` | Create a {{format}} file system on the RAID array {{name}}, which keeps its disks as they are. |
+| `addStorage.sum.create.ext4` | Create an EXT4 file system on it. |
+| `addStorage.sum.create.xfs` | Create an XFS file system on it. |
+| `addStorage.sum.create.btrfs` | Create a BTRFS file system on it. |
+| `addStorage.sum.create.f2fs` | Create an F2FS file system on it. |
+| `addStorage.sum.createOnRaid.ext4` | Create an EXT4 file system on the RAID array {{name}}, which keeps its disks as they are. (and `.xfs`, `.btrfs`, `.f2fs` with their articles) |
 | `addStorage.sum.tags` | Tag it {{tags}}. |
 | `addStorage.sum.level` | Warn when it is {{level}} full. |
 | `addStorage.sum.noLevel` | No warning when it fills up. |
@@ -1223,6 +1235,8 @@ handover is an ordered list; each link says it opens a new tab.
 | `addStorage.step.verify` | Check that it is mounted |
 | `addStorage.runningFor` | Running for {{duration}} |
 | `addStorage.showOutput` | Show the output |
+| `tasks.outputUnread` | The output of this task could not be read. |
+| `tasks.notStarted` | This task did not start, so it has no output. |
 | `addStorage.hideOutput` | Hide the output |
 | `addStorage.task.erase` | Erase disk {{device}} |
 | `addStorage.task.create` | Create file system on {{device}} |
@@ -1253,7 +1267,8 @@ handover is an ordered list; each link says it opens a new tab.
 | `addStorage.tryApply` | Try applying again |
 | `addStorage.continueAnyway` | Continue |
 | `addStorage.doneTitle` | The new storage is ready. |
-| `addStorage.doneBody` | {{name}} is mounted on {{device}}, with {{size}} free. |
+| `addStorage.doneBody` | {{name}} is mounted and ready, with {{size}} free. |
+| `addStorage.doneBodyNoSize` | {{name}} is mounted and ready. |
 | `addStorage.openFs` | Open the file system |
 | `addStorage.handover.title` | Next: share a folder on it |
 | `addStorage.handover.folder` | Add a shared folder. |
@@ -1292,7 +1307,8 @@ on each tick. More than nine offered: "Select all" and "Select none".
 
 **B2. How to combine them** (`RadioGroupField`, four options; each hint ends with the usable space for
 the ticked disks, computed in the browser and said with "about", **[verify]** against what the NAS
-reports after creation on the VM):
+reports after creation on the VM. Until enough disks are ticked for a way, its hint has no size: the
+sentence ends before "about {{usable}}"):
 
 1. **"Mirror (RAID1), recommended"** (default). "Every file is kept on two disks, so one disk can fail
    without losing anything. You can use about half the total space: about {{usable}}." At least 2.
@@ -1312,7 +1328,8 @@ reports after creation on the VM):
 ### 7.2 Summary and confirmation
 
 - "Erase {{count}} disks:" then one line per disk, each as 6.5's erase or use-whole line.
-- "Combine them into one BTRFS file system: {{way}}. About {{usable}} can be used."
+- "Combine them into one BTRFS file system: {{way}}. About {{usable}} can be used." `{{way}}` is the
+  way's name without the option's "recommended" ("Mirror (RAID1)").
 - The tags, level, mount and sharing lines of 6.5.
 - **Typed confirmation**: "Type {{devices}} to confirm." where `{{devices}}` is every chosen device
   name, separated by single spaces, in the order listed (for example `/dev/sdb /dev/sdc`). The match is
@@ -1349,12 +1366,20 @@ registry entry blocks a second flow in the same session; across sessions, see 16
 | `addStorage.multi.way` | How to combine them |
 | `addStorage.multi.raid1` | Mirror (RAID1), recommended |
 | `addStorage.multi.raid1Hint` | Every file is kept on two disks, so one disk can fail without losing anything. You can use about half the total space: about {{usable}}. |
+| `addStorage.multi.raid1HintNoSize` | Every file is kept on two disks, so one disk can fail without losing anything. You can use about half the total space. |
 | `addStorage.multi.raid10` | Mirror and stripe (RAID10) |
 | `addStorage.multi.raid10Hint` | Like a mirror, and faster with many disks. One disk can fail. About {{usable}}. |
+| `addStorage.multi.raid10HintNoSize` | Like a mirror, and faster with many disks. One disk can fail. |
 | `addStorage.multi.raid0` | Stripe (RAID0) |
 | `addStorage.multi.raid0Hint` | Uses all the space and is fast, but if any one disk fails, everything on all of them is lost. About {{usable}}. |
+| `addStorage.multi.raid0HintNoSize` | Uses all the space and is fast, but if any one disk fails, everything on all of them is lost. |
 | `addStorage.multi.single` | Join (single) |
 | `addStorage.multi.singleHint` | Uses all the space, filling one disk after another. If any one disk fails, files on it are lost, and the file system may not open. About {{usable}}. |
+| `addStorage.multi.singleHintNoSize` | Uses all the space, filling one disk after another. If any one disk fails, files on it are lost, and the file system may not open. |
+| `addStorage.multi.wayName.raid1` | Mirror (RAID1) |
+| `addStorage.multi.wayName.raid10` | Mirror and stripe (RAID10) |
+| `addStorage.multi.wayName.raid0` | Stripe (RAID0) |
+| `addStorage.multi.wayName.single` | Join (single) |
 | `addStorage.multi.sum.erase_other` | Erase {{count}} disks: |
 | `addStorage.multi.sum.combine` | Combine them into one BTRFS file system: {{way}}. About {{usable}} can be used. |
 | `addStorage.multi.typePrompt` | Type {{devices}} to confirm. |

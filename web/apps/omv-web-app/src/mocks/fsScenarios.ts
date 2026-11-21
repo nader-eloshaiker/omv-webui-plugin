@@ -119,16 +119,26 @@ export const FS_HANDLES = {
 } as const;
 
 const GIB = 1024 ** 3;
-const uuidFor = (n: number) =>
-  `00000000-0000-4000-8000-0000000007${String(n).padStart(2, "0")}`;
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const uuidFor = (n: number) => `00000000-0000-4000-8000-0000000007${pad2(n)}`;
+/**
+ * The file systems this mock creates: their own numbers (…0761 onwards), so a new one never shares a
+ * UUID with one a scenario starts with, and "Open the file system" opens the one just made.
+ */
+const madeUuid = (made: number) => uuidFor(60 + made);
+/** The mount entries the hand-written lists start with (…0410 onwards). */
+const listEntryUuid = (n: number) =>
+  `00000000-0000-4000-8000-0000000004${pad2(10 + n)}`;
+/** The size the mock gives a file system made on one 8 GiB scratch disk, as the VM's df reported it. */
+const ONE_DISK_FS = 8349229056;
 
 /** A file system on `disk`'s first partition (or the device itself), as getMountCandidates lists it. */
 function detectedOn(
   device: string,
-  n: number,
+  id: number | string,
   over: Partial<DetectedFilesystem> = {},
 ): DetectedFilesystem {
-  const uuid = uuidFor(n);
+  const uuid = typeof id === "string" ? id : uuidFor(id);
   const part = /\d$/.test(device) ? `${device}p1` : `${device}1`;
   const partition = device.startsWith("/dev/md") ? device : part;
   return {
@@ -196,6 +206,28 @@ const entryOf = (row: ConfiguredFilesystem, uuid: string): MountEntry => ({
 const SDA1_ENTRY = entryOf(SDA1, "00000000-0000-4000-8000-000000000002");
 
 // ---- Hand-written lists --------------------------------------------------------------------------
+
+/**
+ * The mount entries of a hand-written list, so each row's page finds the entry its warning level and
+ * tags come from, as on OMV, where every configured file system (missing ones too) has one. The system
+ * drive has none: it has no page here.
+ */
+function listEntries(
+  rows: readonly ConfiguredFilesystem[],
+  entries: Record<string, MountEntry>,
+): Record<string, MountEntry> {
+  const all = { ...entries };
+  rows.forEach((row, i) => {
+    if (
+      row.mountpoint !== "/" &&
+      row.status !== 2 &&
+      !(row.devicefile in all)
+    ) {
+      all[row.devicefile] = entryOf(row, listEntryUuid(i));
+    }
+  });
+  return all;
+}
 
 function varietyRows(): ConfiguredFilesystem[] {
   const n = (i: number, device: string, over: Partial<ConfiguredFilesystem>) =>
@@ -327,10 +359,18 @@ export interface FsMockState {
   entries: Record<string, MountEntry>;
   /** The UUIDs of file systems whose mount is set up and not applied yet. */
   pending: string[];
-  /** The last create asked for, finished on its last poll. */
-  creating: { devices: string[]; type: string } | null;
+  /** The last create asked for, finished on its last poll; `polls` counts its Exec.getOutput polls. */
+  creating: {
+    devices: string[];
+    type: string;
+    /** The BTRFS profile, for Combine disks. */
+    profile: string | null;
+    polls: number;
+  } | null;
   /** How many file systems this mock has made. */
   made: number;
+  /** The size of each file system this mock made, by UUID, which the apply mounts it with. */
+  madeSizes: Record<string, number>;
   /** An apply that is still to fail (fsApplyFails fails once). */
   applyFailures: number;
   /** The disk a wipe was asked for, cleaned on the wipe's last poll. */
@@ -349,6 +389,7 @@ export function newFsMockState(name: string): FsMockState {
     pending: [],
     creating: null,
     made: 0,
+    madeSizes: {},
     applyFailures: name === "fsApplyFails" ? 1 : 0,
     wiping: null,
     tasks: 0,
@@ -383,6 +424,7 @@ export function newFsMockState(name: string): FsMockState {
       break;
     case "fsVariety":
       state.configured = varietyRows();
+      state.entries = listEntries(state.configured, state.entries);
       break;
     case "fsBusy":
     case "fsShared": {
@@ -394,7 +436,7 @@ export function newFsMockState(name: string): FsMockState {
       const row = configuredOf(fs, {
         label: "scratch",
         usagewarnthreshold: 85,
-        ...mountedFigures(8349229056, 1),
+        ...mountedFigures(ONE_DISK_FS, 1),
         _used: name === "fsShared",
       });
       fs.label = "scratch";
@@ -406,6 +448,7 @@ export function newFsMockState(name: string): FsMockState {
     }
     case "fsMany":
       state.configured = manyRows();
+      state.entries = listEntries(state.configured, state.entries);
       break;
     case "fsMountPending": {
       const fs = detectedOn("/dev/sdd", 1);
@@ -445,6 +488,70 @@ const param = (params: unknown, key: string): unknown =>
     ? (params as Record<string, unknown>)[key]
     : undefined;
 
+// ---- What a create writes -------------------------------------------------------------------------
+
+const diskBytesOf = (device: string): number =>
+  Number(
+    VM_DISKS.find((d) => d.canonicaldevicefile === device)?.size ?? 8589934592,
+  );
+const rawBytes = (devices: readonly string[]): number =>
+  devices.reduce((sum, d) => sum + diskBytesOf(d), 0);
+
+/**
+ * What `sgdisk --new=1:0:0 --typecode=1:8300 --print` writes for an empty disk, the first thing the
+ * create task writes to its output (FileSystemMgmt::create, OMV 8.6.1). Written by hand from sgdisk's
+ * format; the disk identifier is a documentation value.
+ */
+function partitionOutput(device: string): string {
+  const disk = VM_DISKS.find((d) => d.canonicaldevicefile === device);
+  const sectors = Math.floor(diskBytesOf(device) / 512);
+  const gib = (diskBytesOf(device) / GIB).toFixed(1);
+  return [
+    "Creating new GPT entries in memory.",
+    `Disk ${device}: ${String(sectors)} sectors, ${gib} GiB`,
+    `Model: ${disk?.model.trim() ?? "Disk"}`,
+    "Sector size (logical/physical): 512/512 bytes",
+    "Disk identifier (GUID): 00000000-0000-4000-8000-0000000000AA",
+    "Partition table holds up to 128 entries",
+    "Main partition table begins at sector 2 and ends at sector 33",
+    `First usable sector is 34, last usable sector is ${String(sectors - 34)}`,
+    "Partitions will be aligned on 2048-sector boundaries",
+    "Total free space is 2014 sectors (1007.0 KiB)",
+    "",
+    "Number  Start (sector)    End (sector)  Size       Code  Name",
+    `   1            2048        ${String(sectors - 34)}   ${gib} GiB     8300  `,
+    "The operation has completed successfully.",
+    "",
+  ].join("\n");
+}
+
+const BTRFS_HEAD =
+  "btrfs-progs v6.14\nSee https://btrfs.readthedocs.io for more information.\n\n";
+
+/** mkfs.btrfs refusing because the last disk is still in use, in the createBtrfsFailed example's form. */
+function btrfsFailure(devices: readonly string[], profile: string): string {
+  const busy = devices.at(-1) ?? "/dev/sdx";
+  return `Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; mkfs.btrfs --force --data '${profile}' --metadata '${profile}' ${devices.join(" ")} 2>&1' with exit code '1': ${BTRFS_HEAD}ERROR: unable to open ${busy}: Device or resource busy`;
+}
+
+/**
+ * The size df reports for a BTRFS file system across `devices` with `profile`: what the profile can
+ * store, less about 2% for BTRFS's own records. Hand-written; the VM showed only a RAID1 of two equal
+ * disks.
+ */
+function btrfsSize(devices: readonly string[], profile: string): number {
+  const sizes = devices.map(diskBytesOf);
+  const total = sizes.reduce((a, b) => a + b, 0);
+  const largest = Math.max(...sizes);
+  const usable =
+    profile === "raid1" || profile === "raid10"
+      ? Math.min(total / 2, total - largest)
+      : profile === "raid0"
+        ? total - Math.max(0, largest - (total - largest))
+        : total;
+  return Math.round(usable * 0.98);
+}
+
 // ---- The answers ---------------------------------------------------------------------------------
 
 export interface FsHooks {
@@ -473,6 +580,8 @@ export function fsAnswers(
       state.creating = {
         devices: [deviceOf(devicefile)],
         type: String(param(params, "type") ?? "ext4"),
+        profile: null,
+        polls: 0,
       };
       // While it runs, getList shows it as being created (status 2), as OMV writes it.
       const device = deviceOf(devicefile);
@@ -493,7 +602,12 @@ export function fsAnswers(
     },
     fileSystemMgmtCreateBtrfs: ({ params }) => {
       const files = String(param(params, "devicefiles") ?? "").split(",");
-      state.creating = { devices: files.map(deviceOf), type: "btrfs" };
+      state.creating = {
+        devices: files.map(deviceOf),
+        type: "btrfs",
+        profile: String(param(params, "profile") ?? "raid1"),
+        polls: 0,
+      };
       state.free = state.free.filter(
         (c) => !state.creating?.devices.includes(c.devicefile),
       );
@@ -686,36 +800,64 @@ export function fsTaskOutput(
     });
   }
   if (filename === FS_HANDLES.create || filename === FS_HANDLES.createBtrfs) {
+    const btrfs = filename === FS_HANDLES.createBtrfs;
     const creating = state.creating;
-    state.configured = state.configured.filter((r) => r.status !== 2);
     if (creating === null) {
+      state.configured = state.configured.filter((r) => r.status !== 2);
       return ok({ ...CREATE_FINISHED, filename: handle });
     }
+    creating.polls += 1;
+    // The first poll finds the task still running, with what it has written so far: sgdisk's
+    // partition table for one disk (the mke2fs lines come with the last poll), or mkfs.btrfs's first
+    // lines when it is about to fail. While it runs, getList still shows the row being created.
+    if (creating.polls === 1 && (!btrfs || name === "fsCreateFails")) {
+      const output = btrfs
+        ? BTRFS_HEAD
+        : partitionOutput(creating.devices[0] ?? "/dev/sdx");
+      return ok({
+        filename: handle,
+        pos: output.length,
+        output,
+        pendingOutput: false,
+        running: true,
+      });
+    }
+    state.configured = state.configured.filter((r) => r.status !== 2);
     state.creating = null;
     if (name === "fsCreateFails") {
-      return fail(
-        500,
-        `Device '${creating.devices[0] ?? ""}1' is not available after a waiting period of 10 seconds.`,
-      );
+      // Once the task has failed, OMV answers getOutput with the task's error (HTTP 500) and no more
+      // output: for one disk, the partition that did not appear (the createFailed example); for
+      // BTRFS, mkfs.btrfs's refusal with its whole output (the createBtrfsFailed example's form).
+      return btrfs
+        ? fail(500, btrfsFailure(creating.devices, creating.profile ?? "raid1"))
+        : fail(
+            500,
+            `Device '${creating.devices[0] ?? ""}1' is not available after a waiting period of 10 seconds.`,
+          );
     }
     if (name !== "fsNotFound") {
       state.made += 1;
       const first = creating.devices[0] ?? "/dev/sdx";
+      const uuid = madeUuid(state.made);
       const fs =
         creating.devices.length > 1
-          ? detectedOn(first, state.made, {
+          ? detectedOn(first, uuid, {
               type: "btrfs",
               devicename: first.replace("/dev/", ""),
               canonicaldevicefile: first,
               devicefiles: [...creating.devices],
               hasmultipledevices: true,
-              description: `${first} [BTRFS, 15.99 GiB]`,
+              description: `${first} [BTRFS, ${(rawBytes(creating.devices) / GIB).toFixed(2)} GiB]`,
             })
-          : detectedOn(first, state.made, { type: creating.type });
+          : detectedOn(first, uuid, { type: creating.type });
+      state.madeSizes[uuid] =
+        creating.devices.length > 1
+          ? btrfsSize(creating.devices, creating.profile ?? "raid1")
+          : ONE_DISK_FS;
       state.detected.push(fs);
       state.candidates.push(fs);
     }
-    return filename === FS_HANDLES.createBtrfs
+    return btrfs
       ? ok({
           ...CONTRACT_EXAMPLES.execGetOutput.createBtrfsRaid1Finished.value,
           filename: handle,
@@ -734,7 +876,10 @@ export function fsApplied(name: string, state: FsMockState): boolean {
   for (const uuid of state.pending) {
     const row = state.configured.find(byUuid(uuid));
     if (row !== undefined && name !== "fsNotMounted") {
-      Object.assign(row, mountedFigures(8349229056, 1));
+      Object.assign(
+        row,
+        mountedFigures(state.madeSizes[row.uuid] ?? ONE_DISK_FS, 1),
+      );
       const fs = state.detected.find(byUuid(uuid));
       if (fs !== undefined) {
         fs.mounted = true;

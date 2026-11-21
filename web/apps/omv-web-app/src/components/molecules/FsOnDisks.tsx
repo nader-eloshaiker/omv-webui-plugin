@@ -34,7 +34,9 @@ export function FsOnDisks({
       {places.map((device) => {
         const disk = disks?.find((d) => belongsTo(device, diskNames(d)));
         return (
-          <span key={device}>
+          // A device name never breaks inside itself: in a narrow table "/dev/sr0" would otherwise
+          // stack one character per line. Several devices still wrap between names.
+          <span key={device} className="whitespace-nowrap">
             {disk !== undefined ? (
               <DiskLink
                 devicename={disk.devicename}

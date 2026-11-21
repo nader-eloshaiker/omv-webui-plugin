@@ -27,6 +27,7 @@ export const DISK_SCENARIOS = [
   "disksReadFails",
   "disksUseFails",
   "disksRaidFails",
+  "disksNoRaidPlugin",
   "disksSwap",
   "smartOddInterval",
   "smartDetailsFail",
@@ -47,6 +48,8 @@ export const DISK_SCENARIO_LABELS: Record<DiskScenarioName, string> = {
   disksReadFails: "Disks: the list cannot be read",
   disksUseFails: "Disks: what the disks hold cannot be checked",
   disksRaidFails: "Disks: the RAID plugin's read fails",
+  disksNoRaidPlugin:
+    "Disks: the RAID plugin is not installed (OMV answers 404, as on the test VM)",
   disksSwap: "Disks: swap, a file system being created, encrypted storage",
   smartOddInterval: "Disk health: checked every 45 seconds, set elsewhere",
   smartDetailsFail: "Disk health: a disk's details cannot be read",
@@ -788,7 +791,11 @@ export function diskAnswers(
         )
       : onNas || name === "disksHostile" || name === "disksMany"
         ? ok(NAS_ARRAYS)
-        : "notInstalled";
+        : // The plugin is optional. The other stories have it with no array, so a mock session does
+          // not log a failed request on every storage page; disksNoRaidPlugin keeps the test VM's 404.
+          name === "disksNoRaidPlugin"
+          ? "notInstalled"
+          : "none";
   const settings =
     name === "smartOddInterval"
       ? ok({

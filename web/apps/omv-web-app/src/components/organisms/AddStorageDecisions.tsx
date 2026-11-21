@@ -428,14 +428,16 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
   const sizes = chosenChoices.map((c) =>
     c.kind === "disk" ? diskBytes(c.disk) : 0,
   );
-  const usable = (profile: BtrfsProfile) =>
-    formatBytes(btrfsUsable(sizes, profile));
+  // Each way's hint says the usable space only once enough disks are ticked for it.
+  const wayHint = (profile: BtrfsProfile) =>
+    chosenChoices.length >= minDisks(profile)
+      ? t(`addStorage.multi.${profile}Hint`, {
+          usable: formatBytes(btrfsUsable(sizes, profile)),
+        })
+      : t(`addStorage.multi.${profile}HintNoSize`);
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="max-w-prose text-sm text-muted-foreground">
-        {t("addStorage.looking")}
-      </p>
       {deviceField}
       <CannotUse choices={choices} defaultOpen={false} />
       {!multi && offeredDisks >= 2 ? (
@@ -462,9 +464,7 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
               key={profile}
               value={profile}
               label={t(`addStorage.multi.${profile}`)}
-              hint={t(`addStorage.multi.${profile}Hint`, {
-                usable: usable(profile),
-              })}
+              hint={wayHint(profile)}
             />
           ))}
         </RadioGroupField>

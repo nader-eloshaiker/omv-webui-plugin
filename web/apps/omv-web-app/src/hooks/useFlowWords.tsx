@@ -109,8 +109,9 @@ export function useFlowWords() {
 
   const formatWord = (choices: FlowChoices) => words.typeWord(choices.format);
 
+  /** The way's name in a sentence: "Mirror (RAID1)", without the option's "recommended". */
   const wayWord = (choices: FlowChoices) =>
-    t(`addStorage.multi.${choices.profile ?? "raid1"}`);
+    t(`addStorage.multi.wayName.${choices.profile ?? "raid1"}`);
 
   /** 6.5, 7.2: one item per action, in the order they run. */
   const summaryItems = (choices: FlowChoices): ReactNode[] => {
@@ -155,11 +156,9 @@ export function useFlowWords() {
       );
       items.push(
         <Slotted
+          // One sentence per format, so each language words its article and the type together.
           sentence={(tokens) =>
-            t("addStorage.sum.createOnRaid", {
-              ...tokens,
-              format: formatWord(choices),
-            })
+            t(`addStorage.sum.createOnRaid.${choices.format}`, tokens)
           }
           values={{
             name: (
@@ -172,7 +171,7 @@ export function useFlowWords() {
       );
     } else if (target !== undefined) {
       items.push(diskLine(target));
-      items.push(t("addStorage.sum.create", { format: formatWord(choices) }));
+      items.push(t(`addStorage.sum.create.${choices.format}`));
     }
     const tags = splitTags(choices.tags);
     if (tags.length > 0) {
