@@ -5,11 +5,14 @@
 // - `observed` (per test, automatic): every CSP violation (enforced or report-only), console error,
 //   uncaught page error and request to another origin (support/observer.ts, shared with the VM
 //   test). Any of them fails the test.
+// - `extraAllowances` (option): console errors a test's own failing replies cause, each with its
+//   reason; none by default.
 import { test as base, expect } from "@playwright/test";
 import {
   expectNothingObserved,
   observe,
   RPC_401,
+  type ConsoleAllowance,
   type Observed,
 } from "./observer.ts";
 import { RpcMock } from "./rpcMock.ts";
@@ -28,6 +31,7 @@ interface WorkerFixtures {
 interface TestFixtures {
   rpc: RpcMock;
   observed: Observed;
+  extraAllowances: { list: readonly ConsoleAllowance[] };
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -51,9 +55,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     expect.soft(rpc.problems, "requests to rpc.php").toEqual([]);
   },
 
+  extraAllowances: [{ list: [] }, { option: true }],
+
   observed: [
-    async ({ page, server }, provide) => {
-      const observed = await observe(page, server.origin, [RPC_401]);
+    async ({ page, server, extraAllowances }, provide) => {
+      const observed = await observe(page, server.origin, [
+        RPC_401,
+        ...extraAllowances.list,
+      ]);
       await provide(observed);
       expectNothingObserved(observed);
     },

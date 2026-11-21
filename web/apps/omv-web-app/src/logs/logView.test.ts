@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { LogRow } from "@omv-webui/react-api-omv/generated";
+import { RpcError } from "@omv-webui/react-api-omv/transport";
 import { describe, expect, it } from "vitest";
 import {
   cleanLogText,
   defaultSort,
   isLogId,
+  isLogTooLong,
   LOG_IDS,
   logLayout,
   logRequest,
@@ -157,5 +159,70 @@ describe("cleanLogText", () => {
   it("gives the empty string for a field that is not text", () => {
     expect(cleanLogText(undefined)).toBe("");
     expect(cleanLogText(42)).toBe("");
+  });
+});
+
+describe("a log too long for the NAS to send", () => {
+  const error = (init: {
+    status: number;
+    message: string;
+    unreadable?: boolean;
+  }) =>
+    new RpcError({
+      code: init.unreadable ? null : 0,
+      operationId: "logFileGetList",
+      ...init,
+    });
+
+  it.each([
+    {
+      why: "PHP stopped rpc.php: 500 with an empty body",
+      e: error({
+        status: 500,
+        message: "The server sent a reply that could not be read.",
+        unreadable: true,
+      }),
+      want: true,
+    },
+    {
+      why: "a 500 that says the memory was exhausted",
+      e: error({
+        status: 500,
+        message:
+          "Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)",
+      }),
+      want: true,
+    },
+    {
+      why: "an ordinary 500",
+      e: error({
+        status: 500,
+        message:
+          "Failed to execute command 'journalctl --no-pager': exit code '1'.",
+      }),
+      want: false,
+    },
+    {
+      why: "a web server's own page for another status",
+      e: error({
+        status: 502,
+        message: "The server sent a reply that could not be read.",
+        unreadable: true,
+      }),
+      want: false,
+    },
+    {
+      why: "no reply at all",
+      e: error({ status: 0, message: "The server could not be reached." }),
+      want: false,
+    },
+    {
+      why: "not a reply error",
+      e: new Error("Allowed memory size exhausted"),
+      want: false,
+    },
+    { why: "nothing", e: undefined, want: false },
+  ])("$why: $want", ({ e, want }) => {
+    expect(isLogTooLong(e)).toBe(want);
   });
 });

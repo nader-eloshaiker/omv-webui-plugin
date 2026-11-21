@@ -830,6 +830,7 @@ focusable or selectable (there is nothing to open). Copying a message is ordinar
 | Reading (first read of a log) | Header row and `TableSkeletonRows` (10); the count line reads "Reading the log… A long log can take a few seconds."; `aria-busy` on the table. The picker stays usable: choosing another log abandons this read (the query is cancelled in the browser; the server finishes its work anyway) |
 | Reading again (Refresh) | The current rows stay, with `aria-busy`; "Refresh" shows its loading state "Refreshing…"; afterwards the count line is announced: "4,215 entries, read at 10:14:30." The search and sort are kept; the page goes to 1 (new entries arrive at the top) |
 | Error | In the table body: `EmptyState variant="error"`: "Could not read this log." + server message + "Try again" (a foreground read of the same log). The picker stays usable |
+| Too long to send | When the read answers 500 with a body that is not JSON (PHP stopped `rpc.php`; the transport's `unreadable`), or a 500 whose message says the memory size was exhausted: `EmptyState variant="error"` with the title "This log is too long for the NAS to send", "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit." and "Try again". No server message: the reply holds nothing the reader can use. Every other failure is the Error state (journal, 2026-11-22) |
 | Empty log | `EmptyState variant="empty"`: "This log is empty." For `smbdaudit`: "Nothing is recorded here until auditing is turned on for a shared folder in the SMB/CIFS settings." For `rsync`: "Nothing is recorded here until an rsync job has run." |
 | Filtered empty | 2.5 |
 | At the server's limit | When the count is 100,000 or more **[verify]** the exact cap in entries: a line under the count, `text-sm muted-foreground`: "Only the newest 100,000 lines of this log are read. Download the log in the classic interface for all of it." |
@@ -887,6 +888,8 @@ focus stays on Refresh.
 | `logs.newestFirst` | Newest first |
 | `logs.nothingChosen` | Choose a log above to read it. |
 | `logs.loadFailed` | Could not read this log. |
+| `logs.tooLong.title` | This log is too long for the NAS to send |
+| `logs.tooLong.body` | The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit. |
 | `logs.empty` | This log is empty. |
 | `logs.empty.smbdaudit` | Nothing is recorded here until auditing is turned on for a shared folder in the SMB/CIFS settings. |
 | `logs.empty.rsync` | Nothing is recorded here until an rsync job has run. |

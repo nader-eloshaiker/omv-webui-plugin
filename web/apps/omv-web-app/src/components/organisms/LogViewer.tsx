@@ -3,7 +3,8 @@
 // choice reads it once, whole (LogFile.getList re-reads the entire log on every call), and the rows
 // are then searched, sorted and paged here. Nothing more is asked of the server until "Refresh" or
 // another log. The picker is Base UI's Select, which commits on Enter or a click, so arrowing through
-// it does not read every log in turn. The view lives in memory (logsViewStore.ts), never in the
+// it does not read every log in turn. A log too long for the server to send has its own state
+// (isLogTooLong). The view lives in memory (logsViewStore.ts), never in the
 // address (UI-4). Every log line is shown as text (UI-2), in its own direction.
 import type { LogRow } from "@omv-webui/react-api-omv/generated";
 import { useLogFileGetList } from "@omv-webui/react-api-omv/generated";
@@ -38,6 +39,7 @@ import {
   cleanLogText,
   defaultSort,
   isLogId,
+  isLogTooLong,
   LOG_GROUPS,
   LOG_IDS,
   LOG_PAGE_SIZES,
@@ -297,6 +299,26 @@ export function LogViewer() {
   let standalone;
   if (id === undefined) {
     standalone = <EmptyState>{t("logs.nothingChosen")}</EmptyState>;
+  } else if (failed && isLogTooLong(log.error)) {
+    // OMV's own limit, which the classic interface meets too: our words only. The reply holds nothing
+    // the reader can use (an empty body, or PHP's memory figures).
+    standalone = (
+      <EmptyState
+        variant="error"
+        title={t("logs.tooLong.title")}
+        action={
+          <Button
+            variant="neutral"
+            loading={log.isFetching}
+            onClick={() => void log.refetch()}
+          >
+            {t("common.tryAgain")}
+          </Button>
+        }
+      >
+        {t("logs.tooLong.body")}
+      </EmptyState>
+    );
   } else if (failed) {
     standalone = (
       <ReadFailed

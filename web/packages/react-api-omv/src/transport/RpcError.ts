@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The one error type the transport throws (docs/03, "Replies"). It carries the HTTP status, the
-// backend's numeric code and message, and the operation. The backend's stack trace never reaches it
-// (UI-9).
+// backend's numeric code and message, the operation, and whether the reply could be read at all. The
+// backend's stack trace never reaches it (UI-9).
 
 /** What a failure means to the interface, from the HTTP status and, for one case, the message. */
 export type RpcErrorKind =
@@ -24,18 +24,26 @@ export class RpcError extends Error {
   readonly code: number | null;
   readonly operationId: string;
   readonly kind: RpcErrorKind;
+  /**
+   * The reply's body was not JSON, so the message is the transport's own. rpc.php always answers
+   * JSON, except when PHP itself stops the script (a fatal error such as running out of memory):
+   * then it answers 500 with an empty body. A web server's own error page is the other case.
+   */
+  readonly unreadable: boolean;
 
   constructor(init: {
     status: number;
     code: number | null;
     message: string;
     operationId: string;
+    unreadable?: boolean;
   }) {
     super(init.message);
     this.status = init.status;
     this.code = init.code;
     this.operationId = init.operationId;
     this.kind = kindOf(init.status, init.message);
+    this.unreadable = init.unreadable ?? false;
   }
 }
 

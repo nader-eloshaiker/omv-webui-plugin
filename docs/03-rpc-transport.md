@@ -38,11 +38,12 @@ class RpcError extends Error {
   code: number | null; // backend's numeric code
   message: string; // backend's message, shown as text
   operationId: string;
+  unreadable: boolean; // the body was not JSON (a PHP fatal error, or a web server's page)
 }
 ```
 
 - `trace` is discarded immediately. It is never stored, logged to the console in production, or shown (UI-9).
-- A reply that is not JSON, or not of this shape, becomes an `RpcError` with a generic message.
+- A reply that is not JSON, or not of this shape, becomes an `RpcError` with a generic message. One that is not JSON at all is marked `unreadable`: rpc.php answers JSON except when PHP itself stops the script (a fatal error such as running out of memory), and then answers 500 with an empty body.
 - Network failure and timeouts become an `RpcError` with status 0.
 
 | Status  | Meaning to the application                                                                                        |

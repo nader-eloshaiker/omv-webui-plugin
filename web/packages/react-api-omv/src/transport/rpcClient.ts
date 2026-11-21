@@ -255,11 +255,13 @@ export const rpcClient = async <T>(
     if (e instanceof DOMException && e.name === "AbortError") {
       throw e;
     }
-    throw failure(
-      entry,
-      response.status === 200 ? 0 : response.status,
-      GENERIC_BAD_REPLY,
-    );
+    throw new RpcError({
+      status: response.status === 200 ? 0 : response.status,
+      code: null,
+      message: GENERIC_BAD_REPLY,
+      operationId: entry.operationId,
+      unreadable: true,
+    });
   }
 
   const envelope =

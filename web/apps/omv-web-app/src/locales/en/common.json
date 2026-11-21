@@ -753,6 +753,10 @@
     "newestFirst": "Newest first",
     "nothingChosen": "Choose a log above to read it.",
     "loadFailed": "Could not read this log.",
+    "tooLong": {
+      "title": "This log is too long for the NAS to send",
+      "body": "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit."
+    },
     "empty": "This log is empty.",
     "emptyFor": {
       "smbdaudit": "Nothing is recorded here until auditing is turned on for a shared folder in the SMB/CIFS settings.",

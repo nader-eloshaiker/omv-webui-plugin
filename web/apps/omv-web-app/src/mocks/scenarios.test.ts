@@ -306,4 +306,14 @@ describe("the mock scenarios", () => {
     expect(value.total).toBe(5000);
     expect(value.data[0]?.rownum).toBe(4999);
   });
+
+  it("logsTooLong answers the syslog as PHP does when it runs out of memory, and the other logs as usual", () => {
+    const session = newMockSession(true);
+    expect(
+      answerOf("logsTooLong", session, "logFileGetList", { id: "syslog" }),
+    ).toEqual({ status: 500, rawBody: "" });
+    expect(
+      answerOf("logsTooLong", session, "logFileGetList", { id: "apt_term" }),
+    ).toBe("updates");
+  });
 });

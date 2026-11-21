@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The Phase 5 dashboard and Diagnostics pages in the production build, under the snippet's headers
 // (UI-1, Trusted Types enforced), on the contract's examples: the four new dashboard cards and a disk
-// check on request, a log read and searched by keyboard, the process list paused, and the service
-// tabs. Any CSP or Trusted Types violation, console error, page error or request to another origin
+// check on request, a log read and searched by keyboard, a log too long for the NAS to send, the
+// process list paused, and the service tabs. Any CSP or Trusted Types violation, console error, page error or request to another origin
 // fails a test (support/fixtures.ts). Each page is also shown at 320 CSS px without sideways scroll.
 import type { Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
+import { answerWithScenario } from "./support/scenarioRoute.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -128,6 +129,58 @@ test("an administrator chooses a log by keyboard, searches it, and reads it only
   expect(width, "the message column at 320px").toBeGreaterThanOrEqual(280);
   await page.setViewportSize({ width: 1280, height: 720 });
   await expectNoSidewaysScroll(page);
+});
+
+test.describe("a log too long for the NAS to send", () => {
+  // PHP runs out of memory building the rows of a long journal and answers 500 with an empty body
+  // (journal, 2026-11-22). Chromium logs that reply as a failed resource; it is the only 500 here.
+  test.use({
+    extraAllowances: {
+      list: [
+        {
+          reason: "LogFile.getList answers 500 for a log too long to send",
+          matches: (message, origin) =>
+            message.location().url === `${origin}/rpc.php` &&
+            message
+              .text()
+              .startsWith(
+                "Failed to load resource: the server responded with a status of 500",
+              ),
+        },
+      ],
+    },
+  });
+
+  test("says so in plain words, and tries again by keyboard", async ({
+    page,
+    rpc,
+  }) => {
+    rpc.loginWith("authenticated");
+    const reads = await answerWithScenario(
+      page,
+      "logsTooLong",
+      (call) => call === "LogFile.getList",
+    );
+    await signIn(page);
+    await navigation(page)
+      .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
+      .click();
+    await page.getByRole("combobox", { name: copy.logs.picker }).click();
+    await page.getByRole("option", { name: copy.logs.id.syslog }).click();
+    const alert = page.getByRole("alert");
+    await expect(alert).toContainText(copy.logs.tooLong.title);
+    await expect(alert).toContainText(copy.logs.tooLong.body);
+    await expect(alert).not.toContainText(copy.logs.loadFailed);
+    await expect(page.getByRole("table")).toHaveCount(0);
+    expect(reads).toHaveLength(1);
+
+    const again = alert.getByRole("button", { name: copy.common.tryAgain });
+    await again.focus();
+    await page.keyboard.press("Enter");
+    await expect.poll(() => reads.length).toBe(2);
+    await expect(alert).toContainText(copy.logs.tooLong.title);
+    await expectNoSidewaysScroll(page);
+  });
 });
 
 test("the process list, paused and resumed", async ({ page, rpc }) => {

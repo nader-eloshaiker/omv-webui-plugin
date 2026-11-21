@@ -80,6 +80,7 @@ export const SCENARIOS = [
   "logsLarge",
   "logsHostile",
   "logsFail",
+  "logsTooLong",
   "processesBusy",
   "serviceOutputs",
   "serviceOutputsEmpty",
@@ -135,6 +136,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   logsLarge: "System logs: 5,000 entries",
   logsHostile: "System logs: long and markup-looking lines",
   logsFail: "System logs: reading fails",
+  logsTooLong: "System logs: the system log is too long to send",
   processesBusy: "Processes: stopped, zombie, swap, long command",
   serviceOutputs: "Service details: SMB, NFS and SSH in use",
   serviceOutputsEmpty: "Service details: on, nothing to show",
@@ -560,6 +562,12 @@ const LOG_FAILS: FixedAnswer = {
   status: 500,
   message: "Failed to execute command 'journalctl --no-pager': exit code '1'.",
 };
+/**
+ * A journal of about 100,000 lines on the test VM (journal, 2026-11-22): handling every row runs
+ * rpc.php past PHP's 128 MB memory limit, PHP stops it, and the reply is HTTP 500 with an empty body
+ * (the error goes only to the web server's log).
+ */
+const LOG_TOO_LONG: FixedAnswer = { status: 500, rawBody: "" };
 
 type TopInfo = typeof CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
 const TOP: TopInfo = CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
@@ -1086,6 +1094,9 @@ export function scenarioAnswers(
       }
       if (log !== "unknownLog" && name === "logsFail") {
         return guarded<never>(LOG_FAILS)();
+      }
+      if (log === "syslog" && name === "logsTooLong") {
+        return guarded<never>(LOG_TOO_LONG)();
       }
       return guarded(log)();
     },

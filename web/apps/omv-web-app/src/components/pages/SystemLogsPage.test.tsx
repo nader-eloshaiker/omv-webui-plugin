@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Diagnostics > System logs through the whole app on MSW: nothing is read before a log is chosen
 // (D10); a choice reads the whole log once, and search, sort and paging then run in the browser with
-// no further call; each log's layout; the empty, filtered-empty and error states; log lines as text
+// no further call; each log's layout; the empty, filtered-empty, error and too-long states; log lines as text
 // (UI-2); and a normal user kept off the page without a call (UI-4).
 import { screen, waitFor, within } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
@@ -255,6 +255,33 @@ describe("System logs", () => {
     await user.click(within(alert).getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(reads()).toHaveLength(2));
     expect(screen.getByRole("combobox", { name: "Log" })).toBeEnabled();
+  });
+
+  it("says in plain words when a log is too long for the NAS to send, tries again, and reads other logs as usual", async () => {
+    // PHP runs out of memory building the rows and answers 500 with an empty body.
+    const { user } = await logs({ scenario: "logsTooLong" });
+    await choose(user, "All system messages (syslog)");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("This log is too long for the NAS to send");
+    expect(alert).toHaveTextContent(
+      "The NAS could not read this log, probably because it has grown very long. The classic interface has the same limit.",
+    );
+    // Neither the ordinary failure's words nor the transport's own message.
+    expect(alert).not.toHaveTextContent("Could not read this log.");
+    expect(alert).not.toHaveTextContent("could not be read");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(reads()).toHaveLength(1);
+
+    await user.click(within(alert).getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(reads()).toHaveLength(2));
+    expect(
+      await screen.findByText("This log is too long for the NAS to send"),
+    ).toBeInTheDocument();
+
+    await choose(user, "Software updates");
+    expect(await screen.findByText(/^3 entries, read at /)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows long, right-to-left and markup-looking lines as text", async () => {

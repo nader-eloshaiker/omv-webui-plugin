@@ -7,6 +7,7 @@ import type {
   LogFileGetListRequest,
   LogRow,
 } from "@omv-webui/react-api-omv/generated";
+import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import { stripControl } from "@omv-webui/react-ui-components";
 import { naturalCompare } from "../format/format.ts";
 
@@ -57,6 +58,23 @@ export function logRequest(id: LogId): LogFileGetListRequest {
 
 /** The server reads at most the last 100,000 lines (OMV_MAX_LOGFILE_LINES). */
 export const SERVER_LINE_LIMIT = 100_000;
+
+/** PHP's words when a script needs more memory than it is allowed. */
+const MEMORY_EXHAUSTED = /\ballowed memory size\b.*\bexhausted\b/i;
+
+/**
+ * Whether a failed read of a log is the server giving up on a long log. rpc.php handles every row of
+ * up to 100,000 lines in PHP's memory; past its limit PHP stops rpc.php, which answers 500 with an
+ * empty body (the transport marks it unreadable). A 500 whose message says the memory was exhausted is
+ * the same limit. Any other failure is an ordinary one.
+ */
+export function isLogTooLong(error: unknown): boolean {
+  return (
+    isRpcError(error) &&
+    error.status === 500 &&
+    (error.unreadable || MEMORY_EXHAUSTED.test(error.message))
+  );
+}
 
 export type LogSortField =
   | "ts"
