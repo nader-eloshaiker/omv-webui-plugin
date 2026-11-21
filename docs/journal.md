@@ -425,3 +425,6 @@ Built on `phase-4`, following the owner's spindown plugin for `debian/` and the 
   - **Diagnostics** gains a System logs viewer, Processes and the service details.
   - **Left in the classic interface:** clearing a log (destructive) and the diagnostic report (a download).
 - **Charts** are a small SVG line chart of our own in the component library, drawn with SVG attributes: no new runtime dependency. They show only what the open page has sampled (A7).
+- **Disk health is read only when asked** (owner). `Smart.getListBg` runs `smartctl` on every disk without `--nocheck`, so it can wake sleeping disks; the stock dashboard does it every 60 s. The Disk health card has a "Check disk health" button that says so. The result is kept for the session, feeds the attention list, and nothing reads S.M.A.R.T. on its own.
+- **The log viewer reads a log once and pages it in the browser** *(recommended)*. `LogFile.getList` re-reads and re-parses the whole log or journal on every call, whatever page is asked for (read from source), so paging, sorting and searching on the server would repeat that work on each keystroke.
+- **The Wi-Fi pre-shared key** (`wpapsk`) is part of `Network.enumerateDevicesList`'s reply for a configured Wi-Fi interface. The contract omits it (`x-omv-omit`, UI-6), as it does the mail password.
