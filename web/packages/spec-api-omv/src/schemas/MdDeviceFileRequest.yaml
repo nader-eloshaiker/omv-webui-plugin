@@ -1,0 +1,7 @@
+type: object
+description: One software RAID array, by its device file (rpc.common.devicefile).
+required: [devicefile]
+properties:
+  devicefile:
+    $ref: ./MdArrayDeviceFile.yaml
+additionalProperties: false

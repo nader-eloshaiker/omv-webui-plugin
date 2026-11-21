@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror holding a mounted EXT4 file system."
+x-omv-status: 200
+value:
+  - _used: true
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000001"
+    level: raid1
+    numdevices: 2
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+    size: "8580497408"
+    state: clean
+    syncaction: idle
+    description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]"

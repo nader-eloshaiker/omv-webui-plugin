@@ -1,0 +1,8 @@
+type: string
+description: >-
+  A software RAID array by its kernel device file, "/dev/md" and its number, such as "/dev/md0".
+  Stricter than OMV's `devicefile` format, which takes any path under /dev: the interface names an
+  array only by the `devicefile` that MdMgmt.enumerateDevices reported for it, and OMV numbers new
+  arrays from 0.
+x-omv-format: devicefile
+pattern: "^/dev/md[0-9]{1,3}$"

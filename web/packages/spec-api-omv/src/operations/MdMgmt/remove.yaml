@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtRemove
+  tags:
+    - MdMgmt
+  summary: Take a disk out of an array
+  description: >-
+    Mark a member failed and take it out of the array, at once. Taking out a failed member or a
+    spare loses nothing. Taking out a working member leaves the array with less protection, or none,
+    and the server checks nothing about what is left: the interface itself refuses it while the
+    array is short of a disk or busy, and for a level without copies. Nothing is erased: the disk
+    keeps the array's marks, so it is not a candidate for anything until it is erased
+    (DiskMgmt.wipe). Marks the mdadm and initramfs modules dirty (observed on the test VM). Returns
+    the plugin's change record, whose `numdevices` is not the array's new count.
+  x-omv-rpc:
+    service: MdMgmt
+    method: remove
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.mdmgmt.remove
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdMgmtRemoveRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdChange.yaml
+          examples:
+            failed:
+              $ref: ../../examples/mdMgmtRemove.failed.yaml
+            working:
+              $ref: ../../examples/mdMgmtRemove.working.yaml
+            spare:
+              $ref: ../../examples/mdMgmtRemove.spare.yaml

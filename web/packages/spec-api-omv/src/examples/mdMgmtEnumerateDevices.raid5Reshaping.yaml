@@ -1,0 +1,18 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a RAID5 reshaping from three disks to four after sde was added; the state has no progress, the report has."
+x-omv-status: 200
+value:
+  - _used: false
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000002"
+    level: raid5
+    numdevices: 4
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+    size: "17160994816"
+    state: "clean, reshaping"
+    syncaction: reshape
+    description: "Software RAID  [/dev/md0, raid5, 15.98 GiB]"

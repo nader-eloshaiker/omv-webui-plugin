@@ -1,0 +1,18 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the RAID6 with sdb and then sdc failed."
+x-omv-status: 200
+value:
+  - _used: false
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000003"
+    level: raid6
+    numdevices: 4
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+    size: "17160994816"
+    state: "clean, degraded"
+    syncaction: idle
+    description: "Software RAID  [/dev/md0, raid6, 15.98 GiB]"

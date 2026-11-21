@@ -1,0 +1,10 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the failed member sdb taken out of a mirror rebuilding onto its spare; numdevices is the plugin's count, not the array's."
+x-omv-status: 200
+value:
+  name: ""
+  devicefile: /dev/md0
+  level: raid1
+  numdevices: 3
+  devices:
+    - /dev/sdc
+    - /dev/sdd

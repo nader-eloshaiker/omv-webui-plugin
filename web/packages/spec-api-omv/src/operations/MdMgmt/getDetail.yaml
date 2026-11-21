@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtGetDetail
+  tags:
+    - MdMgmt
+  summary: An array's report from mdadm
+  description: >-
+    mdadm's report on one array, as display text: its facts, then one line per member with what
+    that member is doing (working, spare, rebuilding, failed, missing). It is the only reply that
+    says what each member is doing. The server asks mdadm, which reads the kernel's state; it does
+    not run smartctl. Changes nothing. An array that does not exist fails with HTTP 500.
+  x-omv-rpc:
+    service: MdMgmt
+    method: getDetail
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.devicefile
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdDeviceFileRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdDetailText.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/mdMgmtGetDetail.mirror.yaml
+            mirrorSyncing:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorSyncing.yaml
+            mirrorWithSpare:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorWithSpare.yaml
+            mirrorRebuilding:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorRebuilding.yaml
+            mirrorDegraded:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorDegraded.yaml
+            mirrorReplacing:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorReplacing.yaml
+            mirrorChecking:
+              $ref: ../../examples/mdMgmtGetDetail.mirrorChecking.yaml
+            raid5Syncing:
+              $ref: ../../examples/mdMgmtGetDetail.raid5Syncing.yaml
+            raid5:
+              $ref: ../../examples/mdMgmtGetDetail.raid5.yaml
+            raid5Reshaping:
+              $ref: ../../examples/mdMgmtGetDetail.raid5Reshaping.yaml
+            raid6Syncing:
+              $ref: ../../examples/mdMgmtGetDetail.raid6Syncing.yaml
+            raid6OneFailed:
+              $ref: ../../examples/mdMgmtGetDetail.raid6OneFailed.yaml
+            raid6TwoFailed:
+              $ref: ../../examples/mdMgmtGetDetail.raid6TwoFailed.yaml
+            raid10Syncing:
+              $ref: ../../examples/mdMgmtGetDetail.raid10Syncing.yaml
+            stripe:
+              $ref: ../../examples/mdMgmtGetDetail.stripe.yaml
+    "500":
+      description: There is no such array.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notFound:
+              $ref: ../../examples/mdMgmtGetDetail.notFound.yaml

@@ -604,7 +604,7 @@ export interface MockSession {
   welcomeDismissed: boolean;
   /** Disk-health or power settings are saved and not applied: the smartmontools module is dirty. */
   smartDirty: boolean;
-  /** The modules a file-system action left dirty, with OMV's descriptions of them. */
+  /** The modules a file-system or RAID action left dirty, with OMV's descriptions of them. */
   fsDirty: Readonly<Record<string, string>>;
   /** What the disk scenarios remember between calls (diskScenarios.ts). */
   disk: DiskMockState;
@@ -660,6 +660,8 @@ const FS_MODULES = {
   quota: "",
 } as const;
 type FsModule = keyof typeof FS_MODULES;
+/** The modules every change to an array marks dirty (observed on the test VM); OMV describes neither. */
+const MD_MODULES = { mdadm: "", initramfs: "" } as const;
 
 /** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
 const CORE_LOGS = new Set([
@@ -784,6 +786,16 @@ export function scenarioAnswers(
           ...session.fsDirty,
           ...Object.fromEntries(modules.map((m) => [m, FS_MODULES[m]])),
         };
+      }
+      return answer;
+    };
+  /** A change to an array made: OMV marks the mdadm and initramfs modules dirty (observed). */
+  const mdPending =
+    <T extends string>(reply: T) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        session.fsDirty = { ...session.fsDirty, ...MD_MODULES };
       }
       return answer;
     };
@@ -1103,6 +1115,18 @@ export function scenarioAnswers(
     // The RAID plugin's arrays: none in the default story; the test VM's 404 (the plugin is not
     // installed) in disksNoRaidPlugin; a mirror on the NAS stories and fsRaid.
     mdMgmtEnumerateDevices: diskRead("mdMgmtEnumerateDevices"),
+    // The rest of the RAID plugin (phase 5 RAID design 12), from the test VM as captured. They hold
+    // no state: a change answers its example and marks mdadm and initramfs pending, and the reads
+    // answer a mirror of sdb and sdc whatever the arrays above say.
+    mdMgmtGetDetail: guarded("mirror"),
+    mdMgmtGetSlaves: guarded("mirror"),
+    mdMgmtGetCandidates: guarded("vmScratch"),
+    mdMgmtCreate: mdPending("mirror"),
+    mdMgmtAdd: mdPending("spare"),
+    mdMgmtGrow: mdPending("reshaping"),
+    mdMgmtRemove: mdPending("failed"),
+    mdMgmtDelete: mdPending("deleted"),
+    mdMgmtSetSyncAction: guarded("null"),
     fileSystemMgmtEnumerateFilesystems: diskRead(
       "fileSystemMgmtEnumerateFilesystems",
     ),

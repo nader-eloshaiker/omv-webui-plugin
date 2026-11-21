@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a stripe (RAID0) of sdb and sdc, which never synchronises."
+x-omv-status: 200
+value:
+  - _used: false
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000005"
+    level: raid0
+    numdevices: 2
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+    size: "17160994816"
+    state: clean
+    syncaction: null
+    description: "Software RAID  [/dev/md0, raid0, 15.98 GiB]"

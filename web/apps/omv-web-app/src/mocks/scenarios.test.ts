@@ -188,11 +188,40 @@ describe("the mock scenarios", () => {
     },
   );
 
+  // Every change to an array marks mdadm and initramfs dirty on the test VM; a check marks nothing.
+  it.each([
+    "mdMgmtCreate",
+    "mdMgmtAdd",
+    "mdMgmtGrow",
+    "mdMgmtRemove",
+    "mdMgmtDelete",
+  ] as const)(
+    "%s leaves mdadm and initramfs pending until an apply",
+    (operationId) => {
+      const session = newMockSession(true);
+      answerOf("admin", session, operationId);
+      const info = answerOf(
+        "admin",
+        session,
+        "systemGetInformation",
+      ) as FixedAnswer;
+      const dirty = (info.value as { dirtyModules: object }).dirtyModules;
+      expect(Object.keys(dirty).sort()).toEqual(["initramfs", "mdadm"]);
+      answerOf("admin", session, "execGetOutput", {
+        filename:
+          CONTRACT_EXAMPLES.execGetOutput.appliedFinished.value.filename,
+        pos: 0,
+      });
+      expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
+    },
+  );
+
   it.each([
     "fileSystemMgmtCreate",
     "fileSystemMgmtCreateBtrfs",
     "fileSystemMgmtGrow",
     "fileSystemMgmtGetCandidatesBg",
+    "mdMgmtSetSyncAction",
   ] as const)("%s leaves nothing pending", (operationId) => {
     const session = newMockSession(true);
     answerOf("admin", session, operationId);

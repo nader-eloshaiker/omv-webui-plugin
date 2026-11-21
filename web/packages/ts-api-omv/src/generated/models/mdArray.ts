@@ -9,7 +9,7 @@
 export interface MdArray {
   /** Whether the array holds a file system OMV has set up, or is itself a member of other storage (such as an LVM group). */
   _used: boolean;
-  /** mdadm's array name, usually the host name and a number, such as "nas:0". */
+  /** mdadm's array name, "host:name", as its brief report gives it. Empty for an array made on this NAS (mdadm 4.4 leaves the name out of that report for its own host's arrays, observed on the test VM); an array made on another computer has that computer's name before the colon. */
   name: string;
   /** The array's device file, such as "/dev/md0". */
   devicefile: string;
@@ -19,17 +19,17 @@ export interface MdArray {
   level: string;
   /** How many member devices the array is made for. A degraded array has fewer in `devices`. */
   numdevices: number;
-  /** The member devices the array has now, as device files under /dev (a whole disk such as "/dev/sdb", or a partition such as "/dev/sdb1"), in natural order. A failed or removed member is not listed. */
+  /** The member devices the array has now, as device files under /dev (a whole disk such as "/dev/sdb", or a partition such as "/dev/sdb1"), in natural order. A failed member is still listed until it is taken out, and spares are listed too (observed on the test VM), so this says nothing about what each one is doing: MdMgmt.getDetail does. A missing member is not listed. */
   devices: string[];
   /** Bytes. */
   size: string;
-  /** Display text from mdadm, such as "clean", "active", "clean, degraded" or "clean, degraded, recovering (12.5% (…) finish=…)". Open: read it as text, not as a list of values. */
-  state: string;
+  /** Display text from mdadm, such as "clean", "active", "clean, degraded" or "clean, degraded, recovering (12.5% (…) finish=…)", with the kernel's progress of a resync, rebuild or reshape appended in brackets. Open: read it as text, not as a list of values. The boolean false when the kernel's RAID status does not list the array (read from the plugin's source). */
+  state: string | false;
   /**
      * What the array is doing now: "idle", "resync", "recover", "check", "repair", "reshape" or "frozen". null for a level without redundancy, such as raid0.
      * @nullable
      */
   syncaction: string | null;
-  /** Display text, such as "Software RAID nas:0 [/dev/md0, raid1, 3.64 TiB]". */
+  /** Display text, "Software RAID", the name and the device, level and size in brackets, such as "Software RAID  [/dev/md0, raid1, 7.99 GiB]" (an empty name leaves two spaces). */
   description: string;
 }

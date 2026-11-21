@@ -1,0 +1,17 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: sdb failed (by a test-only mdadm command) and the mirror rebuilding onto the spare sdd; the failed disk is still listed."
+x-omv-status: 200
+value:
+  - _used: false
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000001"
+    level: raid1
+    numdevices: 2
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+    size: "8580497408"
+    state: "clean, degraded, recovering (4.7% (401792/8379392) finish=0.3min speed=401792K/sec)"
+    syncaction: recover
+    description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]"

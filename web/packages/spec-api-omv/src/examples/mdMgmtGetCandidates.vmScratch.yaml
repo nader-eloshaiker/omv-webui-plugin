@@ -1,0 +1,23 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the four empty 8 GiB scratch disks sdb to sde."
+x-omv-status: 200
+value:
+  - devicefile: /dev/sdb
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0003
+    description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+  - devicefile: /dev/sdc
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0004
+    description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+  - devicefile: /dev/sdd
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0005
+    description: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"
+  - devicefile: /dev/sde
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0006
+    description: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]"

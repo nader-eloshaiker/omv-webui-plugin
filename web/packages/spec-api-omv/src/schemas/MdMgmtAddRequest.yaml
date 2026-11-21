@@ -1,0 +1,18 @@
+type: object
+description: >-
+  The array and the disk to add to it (rpc.mdmgmt.add). Stricter than OMV, which takes several
+  disks at once: one disk at a time.
+required: [devicefile, devices]
+properties:
+  devicefile:
+    $ref: ./MdArrayDeviceFile.yaml
+  devices:
+    type: array
+    description: >-
+      The disk to erase and add, by its stable /dev/disk/by-id/ name; exactly one. The server checks
+      nothing about it, not even that it is as large as the array's disks.
+    minItems: 1
+    maxItems: 1
+    items:
+      $ref: ./DeviceFile.yaml
+additionalProperties: false

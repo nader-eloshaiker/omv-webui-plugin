@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtCreate
+  tags:
+    - MdMgmt
+  summary: Create a software RAID array
+  description: >-
+    Erase the disks given and make them into a new array at the next free /dev/mdN, at once. Every
+    disk is overwritten and what was on it is lost; the server checks nothing about the disks first,
+    not that they are candidates, empty or not the system disk, so the interface itself refuses
+    every disk its candidate list and the disk-use model do not both allow (journal, 2026-11-21).
+    A "stripe" (RAID0) has no protection: if one disk fails, everything on all of them is lost.
+    The request returns as soon as mdadm has made the array; a mirror, RAID5, RAID6 or RAID10 then
+    synchronises its disks in the kernel for minutes or hours (MdMgmt.enumerateDevices shows it),
+    and can be used meanwhile. Marks the mdadm and initramfs modules dirty (observed on the test VM):
+    applying them writes the arrays down so the NAS starts them under the same names, and rebuilds
+    the start-up image. Returns the plugin's change record.
+  x-omv-rpc:
+    service: MdMgmt
+    method: create
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.mdmgmt.create
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdMgmtCreateRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdChange.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/mdMgmtCreate.mirror.yaml
+            raid5:
+              $ref: ../../examples/mdMgmtCreate.raid5.yaml
+            raid6:
+              $ref: ../../examples/mdMgmtCreate.raid6.yaml
+            raid10:
+              $ref: ../../examples/mdMgmtCreate.raid10.yaml
+            stripe:
+              $ref: ../../examples/mdMgmtCreate.stripe.yaml

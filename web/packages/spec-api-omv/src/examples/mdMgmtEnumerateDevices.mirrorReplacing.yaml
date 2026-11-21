@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: a mirror short of a disk, rebuilding onto the replacement sdb."
+x-omv-status: 200
+value:
+  - _used: false
+    name: ""
+    devicefile: /dev/md0
+    uuid: "00000000:00000000:00000000:00000001"
+    level: raid1
+    numdevices: 2
+    devices:
+      - /dev/sdb
+      - /dev/sdc
+    size: "8580497408"
+    state: "clean, degraded, recovering (2.4% (201856/8379392) finish=0.6min speed=201856K/sec)"
+    syncaction: recover
+    description: "Software RAID  [/dev/md0, raid1, 7.99 GiB]"

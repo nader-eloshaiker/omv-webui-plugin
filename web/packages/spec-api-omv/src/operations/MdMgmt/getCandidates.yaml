@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtGetCandidates
+  tags:
+    - MdMgmt
+  summary: Disks that can go into an array
+  description: >-
+    The disks the RAID plugin offers for a new array or for adding to one: not read-only, not
+    connected by USB, not named by another service's settings, not in use, and with nothing found
+    on them (no partition table, file system, or RAID or other signature). A disk taken out of an
+    array keeps the array's marks and is not offered until it is erased. The server may read each
+    unused disk to look for what is on it. Changes nothing.
+  x-omv-rpc:
+    service: MdMgmt
+    method: getCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MdDiskList.yaml
+          examples:
+            vmScratch:
+              $ref: ../../examples/mdMgmtGetCandidates.vmScratch.yaml
+            none:
+              $ref: ../../examples/mdMgmtGetCandidates.none.yaml

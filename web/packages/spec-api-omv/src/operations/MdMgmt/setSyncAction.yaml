@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: mdMgmtSetSyncAction
+  tags:
+    - MdMgmt
+  summary: Start or stop checking an array
+  description: >-
+    Tell the kernel to check an array ("check": read every disk and compare the copies, for hours,
+    changing nothing) or to stop a check ("idle"). Returns null at once; MdMgmt.enumerateDevices
+    shows the check while it runs. A check wakes every disk of the array and keeps them busy. A level
+    without copies (stripe) has nothing to check, and the call fails with HTTP 500. Changes no
+    configuration, so nothing is pending afterwards.
+  x-omv-rpc:
+    service: MdMgmt
+    method: setSyncAction
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.mdmgmt.setsyncaction
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/MdMgmtSetSyncActionRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: The array has no copies to check, or there is no such array.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noCopies:
+              $ref: ../../examples/mdMgmtSetSyncAction.noCopies.yaml

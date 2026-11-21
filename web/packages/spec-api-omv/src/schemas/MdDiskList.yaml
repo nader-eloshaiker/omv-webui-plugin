@@ -1,0 +1,4 @@
+type: array
+description: Disks as the RAID plugin lists them, in no particular order; empty when there is none.
+items:
+  $ref: ./MdDisk.yaml

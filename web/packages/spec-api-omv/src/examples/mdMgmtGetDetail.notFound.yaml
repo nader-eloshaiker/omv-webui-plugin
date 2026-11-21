@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-md 8.1.6), scrubbed: the report of an array that does not exist."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Device '/dev/md99' does not exist."
