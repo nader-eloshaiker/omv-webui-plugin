@@ -163,7 +163,8 @@ with the value text "Could not read how full it is" and an Unknown pill. `size` 
 (logs, containers, a stuck update) the NAS stops working properly, and the stock dashboard does not
 show it. The server already supplies a warning level for it (85% unless changed), so it is treated
 exactly like any other file system. If the `sharerootfs` plugin is installed, the server does not add
-it twice. **[verify]** the root row's fields on the VM (label, device file).
+it twice. Observed on the VM: the root row has `mountpoint` `/`, an empty `label`, a
+`canonicaldevicefile` of the system partition, and `usagewarnthreshold` 85.
 
 #### 1.2.3 State of one file system
 
@@ -274,7 +275,7 @@ Each disk item:
 | Pill | `overallstatus` | 1.3.4 |
 | Device | `canonicaldevicefile` | `Identifier`, e.g. `/dev/sda`. This is what the classic interface and the attention row call it |
 | Model and size | `model`, `size` (byte string) | "{{model}}, {{size}}", the model as text. Empty model: the size alone |
-| Temperature | `temperature` (number, or `""`) | "34 °C", tabular. `""`: nothing is shown (not every disk reports it; a "Not reported" on every USB disk is noise) |
+| Temperature | `temperature` (a numeric string such as `"30"`, or `""`) | "34 °C", tabular. `""`: nothing is shown (not every disk reports it; a "Not reported" on every USB disk is noise) |
 | Reason | `overallstatus` | For anything but OK, the sentence of 1.3.4, as text beside the pill, never in a tooltip |
 | Monitoring | `monitor` | When false: "Monitoring off" in `muted-foreground`. When true: nothing (it is the normal state once set up) |
 
@@ -331,8 +332,10 @@ is the entry point Flow D (UX audit 4.5) will replace when it is built.
 | Empty (`total` 0) | `EmptyState variant="empty"`: "No disk reported its health. Some USB enclosures and virtual disks do not pass health readings through." |
 | Populated | 1.3.3 |
 
-**[verify]** on the VM what its virtual disks report (`BAD_STATUS` or `GOOD`), and the reply shape
-from `Exec.getOutput` once the task ends.
+Observed on the VM: of its five virtual disks, the NVMe disk reports `GOOD` with a temperature and
+the four SATA disks report `BAD_STATUS` with none, and monitoring is off for all five. So the VM shows
+the "Unknown" items and the "off for every disk" alert as they are designed. The result arrives as
+JSON text in `Exec.getOutput`'s `output` once the task ends; the task helper parses it.
 
 ### 1.4 Services card
 
@@ -907,9 +910,10 @@ the processor or the memory (nothing on the page acts on a process).
 
 Administrators only. Route `/diagnostics/processes`. Data: `System.getTopInfo` with
 `{ format: "json" }`, polled every **5 s** in the background (the stock page's rate), with a pause
-control. Each read takes about a second on the server. **[verify]** every key name and value type by
-capture: the reply is the parsed output of `top`, values arrive as strings, and `VIRT`, `RES`, `SHR`
-are byte strings.
+control. Each read takes about a second on the server. The capture from the VM confirms the key
+names used here: every value is a string (`mem_total` `"3914.0"` in MiB, `swap_total` `"0.0"`,
+`%CPU` `"0.0"`), `VIRT`, `RES`, `SHR` are byte strings, and `S` is one letter. Parse each number;
+an unparsable value is "Not reported".
 
 ### 3.1 Why 5 s, and the pause
 
@@ -934,7 +938,7 @@ stops while the tab is hidden (0.4). Searching, sorting and paging do not pause 
 | --- | --- | --- |
 | Processes | `tasks_total`, `tasks_running`, `tasks_sleeping`, `tasks_stopped`, `tasks_zombie` | "142: 1 running, 141 sleeping". Stopped and zombie are added only when above 0: ", 1 stopped", ", 2 finished but not cleared away (zombie)" |
 | Memory | `mem_total`, `mem_used`, `mem_buff_cache` (MiB) | `CapacityMeter`: "{{used}} of {{total}} in use ({{percent}})". Under it, `text-sm muted-foreground`: "Another {{cache}} holds recently used files and is freed when programs need it." |
-| Swap | `swap_total`, `swap_used` (MiB) | `CapacityMeter`: "{{used}} of {{total}} in use ({{percent}})", with the hint "Disk space used as extra memory when memory runs short." `swap_total` 0: "No swap space is set up." and no meter |
+| Swap | `swap_total`, `swap_used` (MiB) | `CapacityMeter`: "{{used}} of {{total}} in use ({{percent}})", with the hint "Disk space used as extra memory when memory runs short." `swap_total` parsed to 0 (the VM sends `"0.0"`): "No swap space is set up." and no meter |
 | Average load | `load_1m`, `load_5m`, `load_15m` | As the dashboard: "1 min 0.42 · 5 min 0.38 · 15 min 0.30" |
 
 **"Processes", not "Tasks".** `top` calls them tasks, but "Tasks" in this interface is the top bar's
@@ -1244,11 +1248,11 @@ Every method in this document refuses a normal user ("Invalid context role."). S
 | --- | --- | --- | --- | --- |
 | `FileSystemMgmt.enumerateMountedFilesystems` `{includeroot: true}` | Storage card | 20 s, focus | background | Plain list reply; `size`, `available`, `blocks` byte strings; `used` formatted text (not used); `percentage` int, -1 no reading |
 | `FileSystemMgmt.getList` **[owner]** | Storage card, missing rows | dashboard open, "Try again" | background / foreground | Only if agreed (1.2.5) |
-| `Smart.getListBg` → `Exec.getOutput` | Disk health card | on "Check disk health" | foreground, task | `x-omv-task`; `serialnumber` and `wwn` scrubbed in captures and never shown; `temperature` number or `""` |
+| `Smart.getListBg` → `Exec.getOutput` | Disk health card | on "Check disk health" | foreground, task | `x-omv-task`; `serialnumber` and `wwn` scrubbed in captures and never shown; `temperature` numeric string or `""` |
 | `Services.getStatus` | Services card, Services page | 20 s, focus | background | `title` is server-translated text |
 | `Network.enumerateDevicesList` | Network card | 20 s, focus | background | `wpapsk` omitted (`x-omv-omit`, UI-6); `stats` may be `{}` or `[]`; addresses and MAC scrubbed in captures |
 | `LogFile.getList` | System logs | on choosing a log, Refresh, Try again | foreground | `id` from the fixed list only; `search` is not sent |
-| `System.getTopInfo` `{format: "json"}` | Processes | 5 s while not paused and visible; Resume, Try again | background (poll), foreground (Resume, Try again) | Key names and types **[verify]** |
+| `System.getTopInfo` `{format: "json"}` | Processes | 5 s while not paused and visible; Resume, Try again | background (poll), foreground (Resume, Try again) | Every value a string; keys as captured |
 | `SMB.getStats`, `NFS.getStats`, `SSH.getStats` | Services page | on opening the tab, Refresh, Try again; once after the module is applied | foreground (background for the after-apply read) | Plain string reply; user names and addresses scrubbed in captures |
 | `System.getInformation` (existing) | shell, chart, pending checks | 20 s | background | unchanged |
 
