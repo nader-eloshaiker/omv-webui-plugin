@@ -49,24 +49,39 @@ const NO_SETTINGS =
 function recordUnexpectedFailures(page: Page): string[] {
   const unexpected: string[] = [];
   page.on("response", async (response) => {
-    if (!response.url().endsWith("/rpc.php") || response.status() === 200) {
+    // 401 is the session probe of the first load, before signing in.
+    if (
+      !response.url().endsWith("/rpc.php") ||
+      response.status() === 200 ||
+      response.status() === 401
+    ) {
       return;
     }
     let name = "";
     try {
       const body: unknown = response.request().postDataJSON();
       name = `${String(field(body, "service"))}.${String(field(body, "method"))}`;
-      const message = field(field(await response.json(), "error"), "message");
-      if (
-        name === "Smart.getDeviceSettings" &&
-        response.status() === 500 &&
-        typeof message === "string" &&
-        NO_SETTINGS.test(message)
-      ) {
+    } catch {
+      // Not a JSON call: unexpected.
+    }
+    const expectedCall =
+      name === "Smart.getDeviceSettings" && response.status() === 500;
+    let message: unknown;
+    try {
+      message = field(field(await response.json(), "error"), "message");
+    } catch {
+      // The tab moved to another page before this reply's body was read. The method and status are
+      // known; only an expected call is let through unread.
+      if (expectedCall) {
         return;
       }
-    } catch {
-      // Fall through: a failure whose reply could not be read is unexpected too.
+    }
+    if (
+      expectedCall &&
+      typeof message === "string" &&
+      NO_SETTINGS.test(message)
+    ) {
+      return;
     }
     unexpected.push(`${name} ${String(response.status())}`);
   });

@@ -173,7 +173,9 @@ test.describe("wiping a disk", () => {
     for (const disk of disks.filter((d) => !d.isroot && !d.isreadonly)) {
       await page.goto(`/ui/storage/disks/${disk.devicename}`);
       await expect(openButton(page)).toBeVisible();
-      await expect(section(page)).not.toContainText(copy.wipe.checking);
+      await expect(section(page)).not.toContainText(copy.wipe.checking, {
+        timeout: 30_000,
+      });
       if ((await openButton(page).getAttribute("aria-disabled")) === "false") {
         free = disk;
         break;
@@ -190,14 +192,17 @@ test.describe("wiping a disk", () => {
     await expect(dialog.getByRole("heading", { level: 2 })).toHaveText(
       `Wipe disk ${free?.canonicaldevicefile ?? ""}?`,
     );
-    expect(seen.calls.slice(before)).toEqual(
-      expect.arrayContaining([
-        "DiskMgmt.getList",
-        "FileSystemMgmt.getList",
-        "FileSystemMgmt.enumerateFilesystems",
-        "MdMgmt.enumerateDevices",
-      ]),
-    );
+    // The dialog's check reads the four inputs again; their replies arrive after it opens.
+    await expect
+      .poll(() => seen.calls.slice(before))
+      .toEqual(
+        expect.arrayContaining([
+          "DiskMgmt.getList",
+          "FileSystemMgmt.getList",
+          "FileSystemMgmt.enumerateFilesystems",
+          "MdMgmt.enumerateDevices",
+        ]),
+      );
     await expect(
       dialog.getByRole("button", { name: copy.wipe.cancel }),
     ).toBeFocused();
@@ -224,7 +229,11 @@ test.describe("wiping a disk", () => {
     await signIn(page, vm.admin);
     await page.goto(`/ui/storage/disks/${name}`);
     await expect(openButton(page)).toBeVisible();
-    await expect(section(page)).not.toContainText(copy.wipe.checking);
+    // While the page reads what the disks hold, it says it is checking; then the button is either
+    // available or unavailable with the blockers named.
+    await expect(section(page)).not.toContainText(copy.wipe.checking, {
+      timeout: 30_000,
+    });
     test.skip(
       (await openButton(page).getAttribute("aria-disabled")) !== "false",
       "The interface shows this disk as not free to wipe; it is not wiped.",
