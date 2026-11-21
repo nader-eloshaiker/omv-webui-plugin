@@ -38,7 +38,7 @@ const ROOT = path.resolve(
 );
 const EXAMPLES = path.join(ROOT, "web/packages/spec-api-omv/src/examples");
 const DRAFTS = path.join(ROOT, "scratch/captures");
-const ENV_PATH =
+export const ENV_PATH =
   process.env.OMV_WEBUI_ENV ??
   path.join(os.homedir(), ".config/omv-webui/test.env");
 
@@ -61,7 +61,7 @@ const PRODUCT_NAME = "openmediavault";
 // The throw-away account of the tempUser flow, created and deleted within one entry.
 const TEMP_USER = "webui-capture-tmp";
 
-function loadEnv(file) {
+export function loadEnv(file) {
   const env = {};
   for (const line of fs.readFileSync(file, "utf8").split("\n")) {
     const m = /^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
@@ -94,7 +94,7 @@ function totp(secretBase32, at = Date.now()) {
   return String((h.readUInt32BE(o) & 0x7fffffff) % 1e6).padStart(6, "0");
 }
 
-class Session {
+export class Session {
   constructor(base) {
     this.base = base;
     this.cookies = new Map();
@@ -134,7 +134,7 @@ class Session {
   }
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** The reply of a read, or with `pick` only those fields of it. */
 async function paramsFrom(session, spec, pick, merge) {
@@ -169,19 +169,16 @@ async function discardChanges(admin, what) {
   }
 }
 
-async function main() {
-  const env = loadEnv(ENV_PATH);
+/**
+ * Sign in once to learn the VM's own names (version, host name, disks' serial numbers and WWNs) so
+ * the scrubber knows them, and return a recorder that scrubs, verifies and writes each reply.
+ * Nothing raw is written; credentials and host are never printed.
+ */
+export async function openCapture(env) {
   if (!env.NAS_HOST) {
     throw new Error(`NAS_HOST is not set in ${ENV_PATH}`);
   }
   const base = `http://${env.NAS_HOST}`;
-  const only = new Set(process.argv.slice(2));
-  const plan = JSON.parse(
-    fs.readFileSync(
-      path.join(path.dirname(fileURLToPath(import.meta.url)), "captures.json"),
-      "utf8",
-    ),
-  );
 
   // Learn the VM's own names first, so the scrubber knows them.
   const probe = new Session(base);
@@ -220,6 +217,10 @@ async function main() {
   const { scrub, verify } = createScrubber({ names, literals, serials, wwns });
 
   const results = [];
+  /**
+   * Scrub, verify and write one reply. `shape.keepFirst` shortens lists, `shape.jsonOutput` scrubs
+   * a task's JSON output as data, and `shape.note` is added to the summary.
+   */
   const record = (operationId, name, status, reply, keys = {}, shape = {}) => {
     let value =
       status === 200
@@ -235,6 +236,9 @@ async function main() {
         value = { ...value, [field]: list.slice(0, n) };
         notes.push(`${field} shortened to its first ${n} of ${list.length}`);
       }
+    }
+    if (shape.note) {
+      notes.push(shape.note);
     }
     const failures = [];
     if (shape.jsonOutput && status === 200) {
@@ -271,6 +275,57 @@ async function main() {
       `${same ? "same " : "DIFF "} ${file}: committed example kept; draft in scratch/captures/`,
     );
   };
+  return { base, version, record, results };
+}
+
+/**
+ * Follow a started task to its end with Exec.getOutput, recording the last poll as
+ * `execGetOutput.<name>Finished` (or `<name>Failed` when the task failed). With `resultJson`, every
+ * poll asks for the output from the start, so the last one carries all of it. Returns the last
+ * reply.
+ */
+export async function followTask(
+  s,
+  handle,
+  name,
+  record,
+  keys = {},
+  opts = {},
+) {
+  let pos = 0;
+  const tries = opts.tries ?? 120;
+  for (let i = 0; i < tries; i++) {
+    await sleep(500);
+    const r = await s.call("Exec", "getOutput", {
+      filename: handle,
+      pos: opts.resultJson ? 0 : pos,
+    });
+    if (r.status !== 200) {
+      record("execGetOutput", `${name}Failed`, r.status, r.body, keys, opts);
+      return r;
+    }
+    pos = r.body.response.pos;
+    if (!r.body.response.running && !r.body.response.pendingOutput) {
+      record("execGetOutput", `${name}Finished`, r.status, r.body, keys, {
+        ...opts,
+        jsonOutput: opts.resultJson === true,
+      });
+      return r;
+    }
+  }
+  throw new Error(`the task ${name} did not finish in time`);
+}
+
+async function main() {
+  const env = loadEnv(ENV_PATH);
+  const { base, record, results } = await openCapture(env);
+  const only = new Set(process.argv.slice(2));
+  const plan = JSON.parse(
+    fs.readFileSync(
+      path.join(path.dirname(fileURLToPath(import.meta.url)), "captures.json"),
+      "utf8",
+    ),
+  );
 
   for (const entry of plan) {
     const operationId = operationIdOf(entry.service, entry.method);
@@ -329,37 +384,10 @@ async function main() {
         entry.params ?? {},
       );
       record(operationId, entry.name, started.status, started.body, keys);
-      let pos = 0;
-      for (let i = 0; i < 120 && started.status === 200; i++) {
-        await sleep(500);
-        const r = await s.call("Exec", "getOutput", {
-          filename: started.body.response,
-          pos: entry.resultJson ? 0 : pos,
+      if (started.status === 200) {
+        await followTask(s, started.body.response, entry.name, record, keys, {
+          resultJson: entry.resultJson === true,
         });
-        if (r.status !== 200) {
-          record(
-            "execGetOutput",
-            `${entry.name}Failed`,
-            r.status,
-            r.body,
-            keys,
-          );
-          break;
-        }
-        pos = r.body.response.pos;
-        if (!r.body.response.running && !r.body.response.pendingOutput) {
-          record(
-            "execGetOutput",
-            `${entry.name}Finished`,
-            r.status,
-            r.body,
-            keys,
-            {
-              jsonOutput: entry.resultJson === true,
-            },
-          );
-          break;
-        }
       }
     } else if (entry.flow === "tempUser") {
       // A throw-away account whose password exists only in this process, deleted again below.

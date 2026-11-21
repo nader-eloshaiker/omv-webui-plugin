@@ -38,5 +38,10 @@
     "where": "smartSetScheduledTest (Smart.setScheduledTest)",
     "message": "$.dayofweek: its pattern differs from OMV's",
     "reason": "The contract's pattern is anchored, accepting exactly the values the stock form offers (\"*\" or \"1\" to \"7\"); each of them also matches OMV's pattern."
+  },
+  {
+    "where": "fsTabSet (FsTab.set)",
+    "message": "$: has a field hidden that OMV's datamodel does not declare",
+    "reason": "rpc.fstab.set does not declare hidden, but FsTab::set passes the whole params to ConfigObject::setAssoc, which accepts every property of conf.system.filesystem.mountpoint, hidden among them (a boolean, default false), and validation ignores keys a datamodel does not declare. The classic edit form sends it back as FsTab.getByFsName returned it. The contract declares it optional, as a boolean."
   }
 ]
