@@ -9,6 +9,7 @@ import type {
   SmartDeviceList,
 } from "@omv-webui/react-api-omv/generated";
 import { describe, expect, it } from "vitest";
+import { addressIn } from "../filesystems/fsModel.ts";
 import {
   addressWithPrefix,
   addSample,
@@ -236,6 +237,52 @@ describe("storageItems", () => {
       kind: "device",
       text: missing[0]?.devicefile,
     });
+  });
+
+  it("shows ZFS file systems with their usage and no page, and the others' pages past them", () => {
+    // The captured ZFS mirror (uuid null), with its sizes as the transport hands them over: strings.
+    const received = <
+      T extends { blocks: unknown; size: unknown; available: unknown },
+    >(
+      rows: readonly T[],
+    ): T[] =>
+      rows.map((r) => ({
+        ...r,
+        blocks: String(r.blocks),
+        size: String(r.size),
+        available: String(r.available),
+      }));
+    const mounted = received(
+      CONTRACT_EXAMPLES.fileSystemMgmtEnumerateMountedFilesystems.zfs
+        .value as unknown as MountedFilesystem[],
+    );
+    const configured = received(
+      CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value
+        .data as unknown as ConfiguredFilesystem[],
+    );
+    const items = storageItems([...mounted, ROOT_FS], [], (f) =>
+      addressIn(configured, f),
+    );
+    const shown = items.map((i) =>
+      i.kind === "mounted"
+        ? [
+            i.name.kind === "systemDrive" ? "/" : i.name.text,
+            i.state,
+            i.address,
+          ]
+        : i.kind,
+    );
+    expect(shown).toEqual(
+      expect.arrayContaining([
+        ["tank", "below", null],
+        ["tank/media", "below", null],
+        ["/", "below", null],
+        ["/dev/sda1", "below", "00000000-0000-4000-8000-000000000001"],
+      ]),
+    );
+    expect(shown).toHaveLength(4);
+    // Each one keyed apart, though neither ZFS row has a UUID.
+    expect(new Set(items.map((i) => i.key)).size).toBe(4);
   });
 
   it("finds nothing missing in a set-up where every file system is there", () => {

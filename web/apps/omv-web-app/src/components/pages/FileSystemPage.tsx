@@ -22,6 +22,7 @@ import {
   findFsRow,
   fsName,
   fsState,
+  sameUuid,
   SETTINGS_MODULE,
   usedBy,
 } from "../../filesystems/fsModel.ts";
@@ -205,9 +206,7 @@ function Sections({
     state === "setUpPending" ||
     (pending.includes(SETTINGS_MODULE) &&
       memory.settingsSaved.includes(address));
-  const created = memory.created.some(
-    (u) => u.toLowerCase() === fs.uuid.toLowerCase(),
-  );
+  const created = memory.created.some((u) => sameUuid(u, fs.uuid));
   const section = endSection(fs, pending);
   const disk = disks.data?.data.find((d) =>
     belongsTo(fs.parentdevicefile, diskNames(d)),

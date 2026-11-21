@@ -17,15 +17,19 @@ import {
   fsUsage,
   growBlockers,
   isFsAddress,
+  isZfs,
   levelChoices,
   listRows,
   otherModules,
+  ownUuid,
   rowStatus,
+  sameUuid,
   splitTags,
   tagsToSave,
   tagsTooLong,
   unmountBlockers,
   usedBy,
+  zfsPool,
   type UsedBy,
 } from "./fsModel.ts";
 
@@ -37,8 +41,24 @@ const row = (
   ...SDA1,
   ...over,
 });
+const SDA1_UUID = "00000000-0000-4000-8000-000000000001";
 const FOLDER = CONTRACT_EXAMPLES.shareMgmtGetList.populated.value
   .data[0] as unknown as SharedFolder;
+// The captured list with a ZFS mirror (sda1, then the pool's own folder tank and tank/media): no UUID.
+const ZFS_ROWS = CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value
+  .data as unknown as ConfiguredFilesystem[];
+const [ZFS_SDA1, TANK, MEDIA] = ZFS_ROWS as [
+  ConfiguredFilesystem,
+  ConfiguredFilesystem,
+  ConfiguredFilesystem,
+];
+
+it("reads the captured rows these tests rest on", () => {
+  expect(SDA1.uuid).toBe(SDA1_UUID);
+  expect(ZFS_SDA1.uuid).toBe(SDA1_UUID);
+  expect([TANK.uuid, MEDIA.uuid]).toEqual([null, null]);
+  expect([TANK.type, MEDIA.type]).toEqual(["zfs", "zfs"]);
+});
 
 describe("addresses (0.5)", () => {
   it.each([
@@ -63,7 +83,7 @@ describe("addresses (0.5)", () => {
       devicefile: "/dev/disk/by-uuid/00000000-0000-4000-8000-0000000000aa",
     });
     const rows = [SDA1, missing];
-    expect(findFsRow(rows, SDA1.uuid.toUpperCase())).toBe(SDA1);
+    expect(findFsRow(rows, SDA1_UUID.toUpperCase())).toBe(SDA1);
     expect(findFsRow(rows, "00000000-0000-4000-8000-0000000000AA")).toBe(
       missing,
     );
@@ -85,7 +105,7 @@ describe("addresses (0.5)", () => {
         }),
       ),
     ).toBe(null);
-    expect(findFsRow([row({ status: 2 })], SDA1.uuid)).toBe(undefined);
+    expect(findFsRow([row({ status: 2 })], SDA1_UUID)).toBe(undefined);
   });
 
   it("finds another read's file system in the list, for the dashboard's links (9)", () => {
@@ -96,6 +116,54 @@ describe("addresses (0.5)", () => {
       SDA1.uuid,
     );
     expect(addressIn([], { uuid: SDA1.uuid, devicefile: "" })).toBe(null);
+  });
+});
+
+describe("a file system without a UUID: ZFS (ZFS design 10.3)", () => {
+  it("treats a null UUID as none: it matches nothing, not even another null", () => {
+    expect(ownUuid(TANK)).toBe("");
+    expect(ownUuid(SDA1)).toBe(SDA1_UUID);
+    expect(sameUuid(null, null)).toBe(false);
+    expect(sameUuid("", "")).toBe(false);
+    expect(sameUuid(null, SDA1_UUID)).toBe(false);
+    expect(sameUuid(SDA1_UUID, "")).toBe(false);
+    expect(sameUuid(SDA1_UUID.toUpperCase(), SDA1_UUID)).toBe(true);
+  });
+
+  it("finds a row by its address past ZFS rows listed before it", () => {
+    expect(findFsRow([TANK, MEDIA, ZFS_SDA1], SDA1_UUID)).toBe(ZFS_SDA1);
+    expect(findFsRow([TANK, MEDIA], SDA1_UUID)).toBe(undefined);
+  });
+
+  it("gives a ZFS file system no page, from its own row or another read's", () => {
+    expect(fsAddress(TANK)).toBe(null);
+    expect(fsAddress(MEDIA)).toBe(null);
+    // Even with a UUID, a ZFS file system is managed with its pool, not here.
+    expect(fsAddress({ ...MEDIA, uuid: SDA1_UUID })).toBe(null);
+    expect(addressIn(ZFS_ROWS, { uuid: null, devicefile: "tank/media" })).toBe(
+      null,
+    );
+    // A null UUID never picks the first row with none.
+    expect(addressIn(ZFS_ROWS, { uuid: null, devicefile: "" })).toBe(null);
+    expect(addressIn(ZFS_ROWS, { uuid: SDA1_UUID, devicefile: "" })).toBe(
+      SDA1_UUID,
+    );
+  });
+
+  it("names its pool and its type", () => {
+    expect(isZfs(MEDIA)).toBe(true);
+    expect(isZfs(SDA1)).toBe(false);
+    expect(zfsPool(TANK)).toBe("tank");
+    expect(zfsPool(MEDIA)).toBe("tank");
+    expect(zfsPool({ devicefile: "", devicename: "pool2/a/b" })).toBe("pool2");
+    expect(fsName(MEDIA)).toEqual({ kind: "label", text: "tank/media" });
+  });
+
+  it("never offers grow or unmount for a ZFS row", () => {
+    expect(growBlockers(MEDIA, false)).toContain("multi");
+    expect(
+      unmountBlockers(MEDIA, { kind: "none" }, false, "unmount"),
+    ).toContainEqual({ kind: "noFstab" });
   });
 });
 

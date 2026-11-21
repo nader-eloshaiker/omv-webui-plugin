@@ -107,6 +107,29 @@ describe("raidChoices", () => {
     ]);
   });
 
+  it("never offers a ZFS pool's disks for an array (ZFS design 10.2)", () => {
+    const c = known(
+      raidChoices(
+        inputs({
+          configured: clone<ConfiguredFilesystem[]>(
+            CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value.data,
+          ),
+          detected: clone<DetectedFilesystem[]>(
+            CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.zfs.value,
+          ),
+        }),
+        none,
+      ),
+    );
+    expect(names(c.empty)).toEqual(["/dev/sdd"]);
+    for (const name of ["sdb", "sdc"]) {
+      const member = c.unusable.find((u) => u.disk.devicename === name);
+      expect(member?.kind === "blocked" && member.blockers).toEqual([
+        { kind: "zfs", pool: "tank" },
+      ]);
+    }
+  });
+
   it("says a disk smaller than the array's is too small, when adding", () => {
     const c = known(raidChoices(inputs(), none, undefined, 9_000_000_000));
     expect(c.empty).toEqual([]);

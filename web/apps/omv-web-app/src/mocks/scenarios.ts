@@ -314,6 +314,11 @@ const mounted = (...rows: unknown[]): FixedAnswer => ({
 const MOUNTED_SCENARIOS: Partial<
   Record<ScenarioName, FixedAnswer | "nearlyFull" | "empty">
 > = {
+  // The ZFS capture was read without the system drive; the dashboard asks for it too.
+  fsZfs: mounted(
+    ...CONTRACT_EXAMPLES.fileSystemMgmtEnumerateMountedFilesystems.zfs.value,
+    ROOT_FS,
+  ),
   storageWarning: "nearlyFull",
   storageFull: mounted(dataFs(1, "backups", 100, 0), DATA_FS, ROOT_FS),
   storageNoReading: mounted(dataFs(1, "usb-disk", -1, 85), DATA_FS, ROOT_FS),

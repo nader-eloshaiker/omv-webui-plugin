@@ -1130,6 +1130,9 @@
                   },
                   "empty": {
                     "$ref": "#/components/examples/fileSystemMgmtEnumerateMountedFilesystems.empty"
+                  },
+                  "zfs": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateMountedFilesystems.zfs"
                   }
                 }
               }
@@ -1190,6 +1193,9 @@
                   },
                   "withTags": {
                     "$ref": "#/components/examples/fileSystemMgmtGetList.withTags"
+                  },
+                  "zfs": {
+                    "$ref": "#/components/examples/fileSystemMgmtGetList.zfs"
                   }
                 }
               }
@@ -1224,6 +1230,9 @@
                   },
                   "swapAndForeign": {
                     "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.swapAndForeign"
+                  },
+                  "zfs": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.zfs"
                   }
                 }
               }
@@ -4577,7 +4586,7 @@
       },
       "MountedFilesystem": {
         "type": "object",
-        "description": "A file system that is configured and mounted now. A configured file system whose disk is missing or that is not mounted is left out of the list without a word; bind mounts are left out too.",
+        "description": "A file system that is configured and mounted now. A configured file system whose disk is missing or that is not mounted is left out of the list without a word; bind mounts are left out too. A ZFS file system (type \"zfs\", from the openmediavault-zfs plugin) has its full name (\"tank/media\") as its device files and label, no UUID (null) and no devlinks, and its sizes as JSON numbers (observed on the test VM).",
         "required": [
           "devicename",
           "devicefile",
@@ -4625,7 +4634,8 @@
           },
           "uuid": {
             "type": "string",
-            "description": "The file system's own UUID (not a configuration object's)."
+            "nullable": true,
+            "description": "The file system's own UUID (not a configuration object's). Null for a ZFS file system, which has none (observed on the test VM)."
           },
           "label": {
             "type": "string"
@@ -4644,17 +4654,17 @@
           "blocks": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Size in 1 KiB blocks. \"-1\" when the server could not read the usage."
+            "description": "Size in 1 KiB blocks. \"-1\" when the server could not read the usage. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string."
           },
           "size": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes. \"-1\" when the server could not read the usage."
+            "description": "Bytes. \"-1\" when the server could not read the usage. A ZFS file system sends a JSON number, which the transport turns into its decimal string."
           },
           "available": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes free. \"-1\" when the server could not read the usage."
+            "description": "Bytes free. \"-1\" when the server could not read the usage. A ZFS file system sends a JSON number, which the transport turns into its decimal string; it is the pool's free space, shared with the other file systems on the pool."
           },
           "used": {
             "type": "string",
@@ -4726,7 +4736,7 @@
       },
       "ConfiguredFilesystem": {
         "type": "object",
-        "description": "A file system configured in OMV, or one being created, with its state in `status`. A configured file system that is not detected (status 3) or still being created (status 2) has no usage: its sizes are \"-1\", its percentage -1 and most device fields empty.",
+        "description": "A file system configured in OMV, or one being created, with its state in `status`. A configured file system that is not detected (status 3) or still being created (status 2) has no usage: its sizes are \"-1\", its percentage -1 and most device fields empty. A ZFS file system (type \"zfs\", from the openmediavault-zfs plugin) has its full name (\"tank/media\") as devicename, devicefile, predictabledevicefile, canonicaldevicefile and label, no UUID (null), no devlinks, its pool's disks as devicefiles and the first of them as parentdevicefile, and its sizes as JSON numbers (observed on the test VM).",
         "required": [
           "devicename",
           "devicefile",
@@ -4783,7 +4793,8 @@
           },
           "uuid": {
             "type": "string",
-            "description": "The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file."
+            "nullable": true,
+            "description": "The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file. Null for a ZFS file system, which has none (observed on the test VM)."
           },
           "label": {
             "type": "string",
@@ -4804,17 +4815,17 @@
           "blocks": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Size in 1 KiB blocks. \"-1\" when there is no reading."
+            "description": "Size in 1 KiB blocks. \"-1\" when there is no reading. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string."
           },
           "size": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes. \"-1\" when there is no reading."
+            "description": "Bytes. \"-1\" when there is no reading. A ZFS file system sends a JSON number (used plus available), which the transport turns into its decimal string."
           },
           "available": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes free. \"-1\" when there is no reading."
+            "description": "Bytes free. \"-1\" when there is no reading. A ZFS file system sends a JSON number, which the transport turns into its decimal string; it is the pool's free space, shared with the other file systems on the pool."
           },
           "used": {
             "type": "string",
@@ -4909,7 +4920,7 @@
       },
       "DetectedFilesystem": {
         "type": "object",
-        "description": "A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are \"-1\" and its percentage -1.",
+        "description": "A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are \"-1\" and its percentage -1. A ZFS file system (type \"zfs\", from the openmediavault-zfs plugin) is found by the plugin, not by blkid: its full name (\"tank/media\") stands for its device files and label, it has no UUID (null) and no devlinks, its pool's disks are its devicefiles, and its sizes are JSON numbers (observed on the test VM).",
         "required": [
           "devicename",
           "devicefile",
@@ -4962,7 +4973,8 @@
           },
           "uuid": {
             "type": "string",
-            "description": "The file system's own identifier: a UUID for most types, a short volume ID for FAT (\"ABCD-1234\" form), a date-like value for an optical disc."
+            "nullable": true,
+            "description": "The file system's own identifier: a UUID for most types, a short volume ID for FAT (\"ABCD-1234\" form), a date-like value for an optical disc. Null for a ZFS file system, which has none (observed on the test VM)."
           },
           "label": {
             "type": "string"
@@ -4982,17 +4994,17 @@
           "blocks": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Size in 1 KiB blocks. \"-1\" when not mounted."
+            "description": "Size in 1 KiB blocks. \"-1\" when not mounted. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string."
           },
           "size": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes. \"-1\" when not mounted."
+            "description": "Bytes. \"-1\" when not mounted. A ZFS file system sends a JSON number, which the transport turns into its decimal string."
           },
           "available": {
             "type": "string",
             "x-omv-int64": true,
-            "description": "Bytes free. \"-1\" when not mounted."
+            "description": "Bytes free. \"-1\" when not mounted. A ZFS file system sends a JSON number, which the transport turns into its decimal string."
           },
           "used": {
             "type": "string",
@@ -7885,6 +7897,119 @@
         "x-omv-status": 200,
         "value": []
       },
+      "fileSystemMgmtEnumerateMountedFilesystems.zfs": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: sda1 and, from the mirror tank, tank and tank/media: no UUID (null), sizes as numbers.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "2.03 MiB",
+            "available": "8330313728",
+            "size": "8349229056",
+            "percentage": 1,
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 0
+          },
+          {
+            "devicename": "tank",
+            "devicefile": "tank",
+            "predictabledevicefile": "tank",
+            "canonicaldevicefile": "tank",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [],
+            "uuid": null,
+            "label": "tank",
+            "type": "zfs",
+            "blocks": 7618560,
+            "mounted": true,
+            "mountpoint": "/tank",
+            "used": "528.00 KiB",
+            "available": 7800864768,
+            "size": 7801405440,
+            "percentage": 0,
+            "description": "tank [528.00 KiB (0%) used, 7.26 GiB available]",
+            "propposixacl": true,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": true,
+            "devicefiles": ["/dev/sdb", "/dev/sdc"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 0
+          },
+          {
+            "devicename": "tank/media",
+            "devicefile": "tank/media",
+            "predictabledevicefile": "tank/media",
+            "canonicaldevicefile": "tank/media",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [],
+            "uuid": null,
+            "label": "tank/media",
+            "type": "zfs",
+            "blocks": 7618128,
+            "mounted": true,
+            "mountpoint": "/tank/media",
+            "used": "96.00 KiB",
+            "available": 7800864768,
+            "size": 7800963072,
+            "percentage": 0,
+            "description": "tank/media [96.00 KiB (0%) used, 7.26 GiB available]",
+            "propposixacl": true,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": true,
+            "devicefiles": ["/dev/sdb", "/dev/sdc"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 0
+          }
+        ]
+      },
       "fileSystemMgmtGetList.configured": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
         "x-omv-status": 200,
@@ -8399,6 +8524,128 @@
           ]
         }
       },
+      "fileSystemMgmtGetList.zfs": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the data file system sda1 and, from the mirror tank, its own folder tank and the file system tank/media: no UUID (null), sizes as numbers.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "devicename": "sda1",
+              "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+              "canonicaldevicefile": "/dev/sda1",
+              "parentdevicefile": "/dev/sda",
+              "devlinks": [
+                "/dev/disk/by-diskseq/2-part1",
+                "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+                "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+                "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+                "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+                "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+              ],
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "label": "",
+              "type": "ext4",
+              "blocks": "8153544",
+              "mounted": true,
+              "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+              "used": "2.03 MiB",
+              "available": "8330313728",
+              "size": "8349229056",
+              "percentage": 1,
+              "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+              "propposixacl": true,
+              "propquota": true,
+              "propresize": true,
+              "propfstab": true,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": false,
+              "devicefiles": ["/dev/sda1"],
+              "comment": "",
+              "_readonly": false,
+              "_used": true,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "defaults,nofail,user_xattr,usrquota,grpquota,acl",
+              "status": 1
+            },
+            {
+              "devicename": "tank",
+              "devicefile": "tank",
+              "predictabledevicefile": "tank",
+              "canonicaldevicefile": "tank",
+              "parentdevicefile": "/dev/sdb",
+              "devlinks": [],
+              "uuid": null,
+              "label": "tank",
+              "type": "zfs",
+              "blocks": 7618560,
+              "mounted": true,
+              "mountpoint": "/tank",
+              "used": "528.00 KiB",
+              "available": 7800864768,
+              "size": 7801405440,
+              "percentage": 0,
+              "description": "tank [528.00 KiB (0%) used, 7.26 GiB available]",
+              "propposixacl": true,
+              "propquota": false,
+              "propresize": false,
+              "propfstab": false,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": true,
+              "devicefiles": ["/dev/sdb", "/dev/sdc"],
+              "comment": "",
+              "_readonly": false,
+              "_used": false,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "",
+              "status": 1
+            },
+            {
+              "devicename": "tank/media",
+              "devicefile": "tank/media",
+              "predictabledevicefile": "tank/media",
+              "canonicaldevicefile": "tank/media",
+              "parentdevicefile": "/dev/sdb",
+              "devlinks": [],
+              "uuid": null,
+              "label": "tank/media",
+              "type": "zfs",
+              "blocks": 7618128,
+              "mounted": true,
+              "mountpoint": "/tank/media",
+              "used": "96.00 KiB",
+              "available": 7800864768,
+              "size": 7800963072,
+              "percentage": 0,
+              "description": "tank/media [96.00 KiB (0%) used, 7.26 GiB available]",
+              "propposixacl": true,
+              "propquota": false,
+              "propresize": false,
+              "propfstab": false,
+              "propcompress": false,
+              "propautodefrag": false,
+              "hasmultipledevices": true,
+              "devicefiles": ["/dev/sdb", "/dev/sdc"],
+              "comment": "",
+              "_readonly": false,
+              "_used": false,
+              "propreadonly": false,
+              "usagewarnthreshold": 0,
+              "mountopts": "",
+              "status": 1
+            }
+          ]
+        }
+      },
       "fileSystemMgmtEnumerateFilesystems.vmFilesystems": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the data file system OMV set up, the system's root (read-only, used), its EFI partition and the cloud-init CD. The VM has no swap.",
         "x-omv-status": 200,
@@ -8676,6 +8923,240 @@
             "propreadonly": false,
             "_readonly": false,
             "_used": false
+          }
+        ]
+      },
+      "fileSystemMgmtEnumerateFilesystems.zfs": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the VM's file systems and, from the mirror tank, tank and tank/media: no UUID (null), sizes as numbers.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "2.03 MiB",
+            "available": "8330313728",
+            "size": "8349229056",
+            "percentage": 1,
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/gpt-auto-root"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "20431752",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "2.22 GiB",
+            "available": "17633386496",
+            "size": "20922114048",
+            "percentage": 12,
+            "description": "/dev/nvme0n1p1 [EXT4, 2.22 GiB (12%) used, 16.42 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "_readonly": true,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "sr0",
+            "devicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "predictabledevicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "canonicaldevicefile": "/dev/sr0",
+            "parentdevicefile": "/dev/sr0",
+            "devlinks": [
+              "/dev/cdrom",
+              "/dev/disk/by-diskseq/8",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0007",
+              "/dev/disk/by-label/cidata",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+              "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+            ],
+            "uuid": "2026-11-19-05-53-43-00",
+            "label": "cidata",
+            "type": "iso9660",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sr0 [ISO9660, 900.00 KiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sr0"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": true
+          },
+          {
+            "devicename": "nvme0n1p15",
+            "devicefile": "/dev/disk/by-uuid/0000-0001",
+            "predictabledevicefile": "/dev/disk/by-uuid/0000-0001",
+            "canonicaldevicefile": "/dev/nvme0n1p15",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part15",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part15",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/15",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/0000-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part15",
+              "/dev/disk/by-uuid/0000-0001"
+            ],
+            "uuid": "0000-0001",
+            "label": "",
+            "type": "vfat",
+            "blocks": "129758",
+            "mounted": true,
+            "mountpoint": "/boot/efi",
+            "used": "9.33 MiB",
+            "available": "123086848",
+            "size": "132872192",
+            "percentage": 8,
+            "description": "/dev/nvme0n1p15 [VFAT, 9.33 MiB (8%) used, 117.38 MiB available]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p15"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
+          },
+          {
+            "devicename": "tank",
+            "devicefile": "tank",
+            "predictabledevicefile": "tank",
+            "canonicaldevicefile": "tank",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [],
+            "uuid": null,
+            "label": "tank",
+            "type": "zfs",
+            "blocks": 7618560,
+            "mounted": true,
+            "mountpoint": "/tank",
+            "used": "528.00 KiB",
+            "available": 7800864768,
+            "size": 7801405440,
+            "percentage": 0,
+            "description": "tank [528.00 KiB (0%) used, 7.26 GiB available]",
+            "propposixacl": true,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": true,
+            "devicefiles": ["/dev/sdb", "/dev/sdc"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
+          },
+          {
+            "devicename": "tank/media",
+            "devicefile": "tank/media",
+            "predictabledevicefile": "tank/media",
+            "canonicaldevicefile": "tank/media",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [],
+            "uuid": null,
+            "label": "tank/media",
+            "type": "zfs",
+            "blocks": 7618128,
+            "mounted": true,
+            "mountpoint": "/tank/media",
+            "used": "96.00 KiB",
+            "available": 7800864768,
+            "size": 7800963072,
+            "percentage": 0,
+            "description": "tank/media [96.00 KiB (0%) used, 7.26 GiB available]",
+            "propposixacl": true,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": true,
+            "devicefiles": ["/dev/sdb", "/dev/sdc"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
           }
         ]
       },

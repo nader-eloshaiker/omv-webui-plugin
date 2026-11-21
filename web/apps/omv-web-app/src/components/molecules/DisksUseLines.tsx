@@ -123,6 +123,9 @@ export function DiskUseWords({ use }: { use: DiskUse }) {
           }}
         />
       );
+    case "zfs":
+      // The pool's name as text; its page comes with the ZFS slice.
+      return <>{t("disks.use.zfs", { pool: use.pool })}</>;
     case "wiping":
       return <>{t("disks.use.wiping")}</>;
     case "wiped":

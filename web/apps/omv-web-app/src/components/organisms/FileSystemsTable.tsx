@@ -36,7 +36,9 @@ import {
   fsName,
   fsState,
   fsUsage,
+  isZfs,
   splitTags,
+  zfsPool,
 } from "../../filesystems/fsModel.ts";
 import { naturalCompare } from "../../format/format.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
@@ -149,7 +151,12 @@ function FsRow({
             {tags.join(", ")}
           </span>
         ) : null}
-        {address === null && state !== "creating" ? (
+        {isZfs(fs) ? (
+          // Managed with its pool: no page, grow, unmount or remove here (ZFS design 10.3).
+          <span className="block text-xs text-muted-foreground">
+            {t("filesystems.zfsLine", { pool: zfsPool(fs) })}
+          </span>
+        ) : address === null && state !== "creating" ? (
           <span className="block text-xs text-muted-foreground">
             {t("filesystems.noId")}
           </span>

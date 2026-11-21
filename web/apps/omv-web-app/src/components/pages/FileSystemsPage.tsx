@@ -23,8 +23,10 @@ import {
   fsAddress,
   fsState,
   fsUsage,
+  isZfs,
   listRows,
   rowStatus,
+  sameUuid,
   usedBy,
 } from "../../filesystems/fsModel.ts";
 import { fsSession } from "../../filesystems/fsSession.ts";
@@ -83,6 +85,9 @@ function FileSystems() {
   const rows = configured.data ? listRows(configured.data.data) : undefined;
   const system = mounted.data?.find((fs) => fs.mountpoint === "/");
   const diskRows = disks.data?.data;
+  // ZFS file systems are never offered for mounting through OMV's settings (ZFS design 10.3): the
+  // server's candidates leave them out today, and so does this page whatever it is sent.
+  const found = candidates.data?.filter((fs) => !isZfs(fs));
 
   const refresh = async () => {
     if (refreshing) {
@@ -109,7 +114,7 @@ function FileSystems() {
 
   // 1.6: what this session started and did not finish.
   const createdOn = new Set(memory.createdOn);
-  const notMounted = (candidates.data ?? []).filter((fs) =>
+  const notMounted = (found ?? []).filter((fs) =>
     [fs.parentdevicefile, fs.canonicaldevicefile].some(
       (d) => d !== "" && (createdOn.has(d) || belongsTo(d, createdOn)),
     ),
@@ -118,7 +123,7 @@ function FileSystems() {
     (fs) =>
       fs.status === 1 &&
       fs.mounted &&
-      memory.created.some((u) => u.toLowerCase() === fs.uuid.toLowerCase()) &&
+      memory.created.some((u) => sameUuid(u, fs.uuid)) &&
       ["none", "other"].includes(
         usedBy(fs, undefined, {
           data: shares.data?.data,
@@ -239,7 +244,7 @@ function FileSystems() {
       />
 
       <FoundFileSystems
-        found={candidates.data}
+        found={found}
         failed={candidates.isError}
         error={candidates.error}
         retrying={candidates.isFetching}

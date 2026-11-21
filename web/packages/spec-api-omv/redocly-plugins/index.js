@@ -3,6 +3,7 @@
 // functions in checks.js; this file adapts them to Redocly's visitors.
 import {
   acceptEmptyArrayForObject,
+  acceptIntegerForInt64,
   checkExampleCoverage,
   checkOmit,
   checkPathItem,
@@ -108,11 +109,24 @@ function EmptyObjectAsArray() {
   };
 }
 
+function Int64AsNumber() {
+  return {
+    Schema: {
+      leave(schema) {
+        acceptIntegerForInt64(schema);
+      },
+    },
+  };
+}
+
 export default function omvPlugin() {
   return {
     id: "omv",
     preprocessors: {
-      oas3: { "empty-object-as-array": EmptyObjectAsArray },
+      oas3: {
+        "empty-object-as-array": EmptyObjectAsArray,
+        "int64-as-number": Int64AsNumber,
+      },
     },
     rules: {
       oas3: {

@@ -106,6 +106,7 @@ export const BLOCKER_ORDER: readonly WipeBlocker["kind"][] = [
   "fsCreating",
   "swap",
   "raid",
+  "zfs",
   "wiping",
   "unchecked",
 ];

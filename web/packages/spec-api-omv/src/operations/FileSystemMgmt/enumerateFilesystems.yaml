@@ -27,3 +27,5 @@ post:
               $ref: ../../examples/fileSystemMgmtEnumerateFilesystems.vmFilesystems.yaml
             swapAndForeign:
               $ref: ../../examples/fileSystemMgmtEnumerateFilesystems.swapAndForeign.yaml
+            zfs:
+              $ref: ../../examples/fileSystemMgmtEnumerateFilesystems.zfs.yaml

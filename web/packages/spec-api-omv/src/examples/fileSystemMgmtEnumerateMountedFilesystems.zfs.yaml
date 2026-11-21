@@ -1,0 +1,108 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: sda1 and, from the mirror tank, tank and tank/media: no UUID (null), sizes as numbers."
+x-omv-status: 200
+value:
+  - devicename: sda1
+    devicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    predictabledevicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    canonicaldevicefile: /dev/sda1
+    parentdevicefile: /dev/sda
+    devlinks:
+      - /dev/disk/by-diskseq/2-part1
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1
+      - /dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1"
+      - /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    uuid: "00000000-0000-4000-8000-000000000001"
+    label: ""
+    type: ext4
+    blocks: "8153544"
+    mounted: true
+    mountpoint: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001
+    used: "2.03 MiB"
+    available: "8330313728"
+    size: "8349229056"
+    percentage: 1
+    description: "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]"
+    propposixacl: true
+    propquota: true
+    propresize: true
+    propfstab: true
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: false
+    devicefiles:
+      - /dev/sda1
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+    usagewarnthreshold: 0
+  - devicename: tank
+    devicefile: tank
+    predictabledevicefile: tank
+    canonicaldevicefile: tank
+    parentdevicefile: /dev/sdb
+    devlinks: []
+    uuid: null
+    label: tank
+    type: zfs
+    blocks: 7618560
+    mounted: true
+    mountpoint: /tank
+    used: "528.00 KiB"
+    available: 7800864768
+    size: 7801405440
+    percentage: 0
+    description: "tank [528.00 KiB (0%) used, 7.26 GiB available]"
+    propposixacl: true
+    propquota: false
+    propresize: false
+    propfstab: false
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: true
+    devicefiles:
+      - /dev/sdb
+      - /dev/sdc
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+    usagewarnthreshold: 0
+  - devicename: tank/media
+    devicefile: tank/media
+    predictabledevicefile: tank/media
+    canonicaldevicefile: tank/media
+    parentdevicefile: /dev/sdb
+    devlinks: []
+    uuid: null
+    label: tank/media
+    type: zfs
+    blocks: 7618128
+    mounted: true
+    mountpoint: /tank/media
+    used: "96.00 KiB"
+    available: 7800864768
+    size: 7800963072
+    percentage: 0
+    description: "tank/media [96.00 KiB (0%) used, 7.26 GiB available]"
+    propposixacl: true
+    propquota: false
+    propresize: false
+    propfstab: false
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: true
+    devicefiles:
+      - /dev/sdb
+      - /dev/sdc
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+    usagewarnthreshold: 0

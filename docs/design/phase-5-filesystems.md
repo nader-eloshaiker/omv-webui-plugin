@@ -42,7 +42,7 @@ adds only what is new.
 | What | Rule | Example |
 | --- | --- | --- |
 | A file system's name (`{{name}}`) | The disks slice's rule, unchanged: `label` as text when it is not empty, else "{{type}} on {{device}}" with the device in `Identifier`. The device is `canonicaldevicefile`, else `devicefile` (a missing file system has only the stable path) | `media`, `EXT4 on /dev/sdb1` |
-| File-system type | A shared word list: `ext4` "EXT4", `xfs` "XFS", `btrfs` "BTRFS", `f2fs` "F2FS", `jfs` "JFS", `vfat` "FAT", `exfat` "exFAT", `ntfs` "NTFS", `iso9660` "CD or DVD"; anything else as received, in `Identifier`. The disks slice's "Used for" lines adopt the same words (its English keys are unchanged; only the value passed changes) | `EXT4` |
+| File-system type | A shared word list: `ext4` "EXT4", `xfs` "XFS", `btrfs` "BTRFS", `f2fs` "F2FS", `jfs` "JFS", `vfat` "FAT", `exfat` "exFAT", `ntfs` "NTFS", `iso9660` "CD or DVD", `zfs` "ZFS"; anything else as received, in `Identifier`. The disks slice's "Used for" lines adopt the same words (its English keys are unchanged; only the value passed changes) | `EXT4` |
 | Tags | `comment` of the mount entry, which the classic interface edits as tags separated by commas **[verify]** the separator it writes. Shown as text joined with ", ", `dir="auto"`. Empty: nothing | `Media, Photos` |
 | Folder on the NAS | `mountpoint`, in `Identifier`, breaks anywhere, with a `CopyButton` on a file system's page | `/srv/dev-disk-by-uuid-…` |
 | Warning level | `usagewarnthreshold`: 1 to 100 as "{{percent}}"; 0 as "Off" | `85%` |
@@ -383,7 +383,7 @@ After Refresh, focus stays on Refresh.
 | `filesystem.usage.full` | Full. Nothing more can be written to it. |
 | `filesystem.usage.overLevel` | At or above its warning level of {{level}} |
 | `filesystem.usage.unread` | Could not read how full it is |
-| `fsType.ext4` … `fsType.iso9660` | EXT4, XFS, BTRFS, F2FS, JFS, FAT, exFAT, NTFS, CD or DVD |
+| `fsType.ext4` … `fsType.zfs` | EXT4, XFS, BTRFS, F2FS, JFS, FAT, exFAT, NTFS, CD or DVD, ZFS |
 | `fsName.onDevice` | {{type}} on <device></device> |
 
 `filesystem.reason.missing`, `filesystem.usage.*` move from the dashboard's `dashboard.storage.*`

@@ -438,3 +438,29 @@ export function acceptEmptyArrayForObject(schema) {
   schema["x-omv-lint-restated"] = true;
   return true;
 }
+
+/**
+ * Lint only: restate an x-omv-int64 string so it also accepts a JSON integer. Some backends send a
+ * 64-bit value as a number (the ZFS plugin's file-system sizes), JSON.parse reads it as one, and the
+ * transport turns a safe integer into its decimal string wherever the schema says x-omv-int64
+ * (docs/03), so lint validates the raw examples as the transport will see them. The bundle skips
+ * this. Mutates the schema in place; returns true if it changed.
+ */
+export function acceptIntegerForInt64(schema) {
+  if (
+    !schema ||
+    typeof schema !== "object" ||
+    schema.type !== "string" ||
+    schema["x-omv-int64"] !== true ||
+    schema["x-omv-lint-restated"]
+  ) {
+    return false;
+  }
+  const original = { ...schema };
+  for (const key of Object.keys(schema)) {
+    delete schema[key];
+  }
+  schema.anyOf = [original, { type: "integer" }];
+  schema["x-omv-lint-restated"] = true;
+  return true;
+}

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The wipe safeguard's rules (phase 5 disks design 0.6; owner, P1 to P5), one by one.
+import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type {
   ConfiguredFilesystem,
   DetectedFilesystem,
@@ -95,6 +96,24 @@ const array = (over: Partial<MdArray> = {}): MdArray => ({
 });
 
 const nothing: UseInputs = { configured: [], detected: [], arrays: null };
+
+// The VM with the mirror tank on sdb and sdc, as both lists reported it: tank and tank/media, uuid null.
+const ZFS_CONFIGURED = CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value
+  .data as unknown as ConfiguredFilesystem[];
+const ZFS_DETECTED = CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.zfs
+  .value as unknown as DetectedFilesystem[];
+const zfsInputs: UseInputs = {
+  configured: ZFS_CONFIGURED,
+  detected: ZFS_DETECTED,
+  arrays: null,
+};
+const vmDisk = (name: string) =>
+  disk({
+    devicename: name,
+    canonicaldevicefile: `/dev/${name}`,
+    devicefile: `/dev/disk/by-id/ata-Example_HDD_${name}`,
+    devicelinks: [`/dev/disk/by-id/ata-Example_HDD_${name}`],
+  });
 
 describe("partitionParent", () => {
   it.each([
@@ -350,6 +369,146 @@ describe("diskUse", () => {
   });
 });
 
+describe("diskUse with a ZFS pool (ZFS design 10.2)", () => {
+  it.each(["sdb", "sdc"])(
+    "makes %s, a member of the captured mirror, part of the pool, and refuses it",
+    (name) => {
+      const result = diskUse(vmDisk(name), zfsInputs);
+      expect(result.known).toBe(true);
+      // Once for the pool, not once per ZFS file system, and not as a file system on the disk.
+      expect(result.uses).toEqual([{ kind: "zfs", pool: "tank" }]);
+      expect(result.blockers).toEqual([{ kind: "zfs", pool: "tank" }]);
+      expect(result.unused).toEqual([]);
+    },
+  );
+
+  it("leaves a disk outside the pool as it was", () => {
+    const result = diskUse(vmDisk("sdd"), zfsInputs);
+    expect(result.uses).toEqual([{ kind: "none" }]);
+    expect(result.blockers).toEqual([]);
+  });
+
+  it("refuses a member even when nothing of the pool is mounted, or only one list names it", () => {
+    const unmounted = ZFS_DETECTED.map((fs) => ({
+      ...fs,
+      mounted: false,
+      mountpoint: "",
+    }));
+    expect(
+      diskUse(vmDisk("sdb"), { ...nothing, detected: unmounted }).blockers,
+    ).toEqual([{ kind: "zfs", pool: "tank" }]);
+    expect(
+      diskUse(vmDisk("sdc"), { ...nothing, configured: ZFS_CONFIGURED })
+        .blockers,
+    ).toEqual([{ kind: "zfs", pool: "tank" }]);
+  });
+
+  it("finds a member named by a partition, as parentdevicefile alone, or by a stable link", () => {
+    const pool = (over: Partial<DetectedFilesystem>) =>
+      detected({ type: "zfs", uuid: null, devicefile: "pool2", ...over });
+    expect(
+      diskUse(vmDisk("sdd"), {
+        ...nothing,
+        detected: [pool({ parentdevicefile: "", devicefiles: ["/dev/sdd1"] })],
+      }).blockers,
+    ).toEqual([{ kind: "zfs", pool: "pool2" }]);
+    expect(
+      diskUse(vmDisk("sdd"), {
+        ...nothing,
+        detected: [pool({ parentdevicefile: "/dev/sdd", devicefiles: [] })],
+      }).blockers,
+    ).toEqual([{ kind: "zfs", pool: "pool2" }]);
+    expect(
+      diskUse(vmDisk("sdd"), {
+        ...nothing,
+        detected: [
+          pool({
+            parentdevicefile: "",
+            devicefiles: ["/dev/disk/by-id/ata-Example_HDD_sdd-part1"],
+          }),
+        ],
+      }).blockers,
+    ).toEqual([{ kind: "zfs", pool: "pool2" }]);
+  });
+
+  it("names each pool once when a disk is in two (a partition each)", () => {
+    const result = diskUse(vmDisk("sdd"), {
+      ...nothing,
+      detected: [
+        detected({
+          type: "zfs",
+          uuid: null,
+          devicefile: "a",
+          devicefiles: ["/dev/sdd1"],
+        }),
+        detected({
+          type: "zfs",
+          uuid: null,
+          devicefile: "a/x",
+          devicefiles: ["/dev/sdd1"],
+        }),
+        detected({
+          type: "zfs",
+          uuid: null,
+          devicefile: "b",
+          devicefiles: ["/dev/sdd2"],
+        }),
+      ],
+    });
+    expect(result.uses).toEqual([
+      { kind: "zfs", pool: "a" },
+      { kind: "zfs", pool: "b" },
+    ]);
+  });
+
+  it("fails closed when a ZFS file system names none of its pool's disks", () => {
+    const result = diskUse(vmDisk("sdd"), {
+      ...nothing,
+      detected: [
+        detected({
+          type: "zfs",
+          uuid: null,
+          devicefile: "tank",
+          parentdevicefile: "",
+          devicefiles: [],
+        }),
+      ],
+    });
+    expect(result.known).toBe(false);
+    expect(result.uses).toEqual([{ kind: "unknown" }]);
+    expect(result.blockers).toEqual([{ kind: "unchecked" }]);
+  });
+
+  it("never takes a detected file system for a configured one because both have no UUID", () => {
+    // Before, null === null matched: an ext4 file system reported without a UUID beside a configured
+    // ZFS row was skipped as "set up", and the disk looked empty.
+    const result = diskUse(vmDisk("sdd"), {
+      ...nothing,
+      configured: ZFS_CONFIGURED,
+      detected: [
+        detected({
+          uuid: null,
+          devicefile: "/dev/sdd1",
+          canonicaldevicefile: "/dev/sdd1",
+          parentdevicefile: "/dev/sdd",
+          devicefiles: ["/dev/sdd1"],
+          label: "old",
+        }),
+      ],
+    });
+    expect(result.uses.map((u) => u.kind)).toEqual(["fsUnused"]);
+    expect(result.unused.map((f) => f.label)).toEqual(["old"]);
+  });
+
+  it("lists the pool after RAID, in the page's order", () => {
+    const result = diskUse(vmDisk("sdb"), {
+      ...zfsInputs,
+      arrays: [array({ devices: ["/dev/sdb3"] })],
+    });
+    expect(result.blockers.map((b) => b.kind)).toEqual(["raid", "zfs"]);
+  });
+});
+
 describe("hasUntraceableStorage", () => {
   const disks = [disk()];
 
@@ -427,6 +586,18 @@ describe("hasUntraceableStorage", () => {
         arrays: null,
       }),
     ).toBe(false);
+  });
+
+  it("traces a ZFS pool's file systems to its disks", () => {
+    expect(
+      hasUntraceableStorage(
+        ["nvme0n1", "sda", "sdb", "sdc"].map(vmDisk),
+        zfsInputs,
+      ),
+    ).toBe(false);
+    expect(
+      hasUntraceableStorage(["nvme0n1", "sda"].map(vmDisk), zfsInputs),
+    ).toBe(true);
   });
 
   it("is false while an input is missing (the wipe is refused then anyway)", () => {

@@ -2,7 +2,11 @@ type: object
 description: >-
   A file system configured in OMV, or one being created, with its state in `status`. A configured
   file system that is not detected (status 3) or still being created (status 2) has no usage: its
-  sizes are "-1", its percentage -1 and most device fields empty.
+  sizes are "-1", its percentage -1 and most device fields empty. A ZFS file system (type "zfs",
+  from the openmediavault-zfs plugin) has its full name ("tank/media") as devicename, devicefile,
+  predictabledevicefile, canonicaldevicefile and label, no UUID (null), no devlinks, its pool's
+  disks as devicefiles and the first of them as parentdevicefile, and its sizes as JSON numbers
+  (observed on the test VM).
 required:
   [
     devicename,
@@ -56,9 +60,11 @@ properties:
       type: string
   uuid:
     type: string
+    nullable: true
     description: >-
       The file system's own UUID. For a missing file system, the configured UUID, or empty when it
-      was configured by device file.
+      was configured by device file. Null for a ZFS file system, which has none (observed on the
+      test VM).
   label:
     type: string
     nullable: true
@@ -74,15 +80,23 @@ properties:
   blocks:
     type: string
     x-omv-int64: true
-    description: Size in 1 KiB blocks. "-1" when there is no reading.
+    description: >-
+      Size in 1 KiB blocks. "-1" when there is no reading. A ZFS file system sends a JSON number,
+      its size divided by 1024, which may have a fraction (read from the plugin's source); the
+      transport turns a whole number into its decimal string.
   size:
     type: string
     x-omv-int64: true
-    description: Bytes. "-1" when there is no reading.
+    description: >-
+      Bytes. "-1" when there is no reading. A ZFS file system sends a JSON number (used plus
+      available), which the transport turns into its decimal string.
   available:
     type: string
     x-omv-int64: true
-    description: Bytes free. "-1" when there is no reading.
+    description: >-
+      Bytes free. "-1" when there is no reading. A ZFS file system sends a JSON number, which the
+      transport turns into its decimal string; it is the pool's free space, shared with the other
+      file systems on the pool.
   used:
     type: string
     description: Display text, such as "12.34 GiB". "-1" when there is no reading.

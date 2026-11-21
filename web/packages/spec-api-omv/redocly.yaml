@@ -11,6 +11,9 @@ preprocessors:
   # Lint only (the build skips it): an object schema also accepts `[]`, the way PHP sends an empty
   # map, so the raw captured examples validate as the transport will normalise them.
   omv/empty-object-as-array: on
+  # Lint only (the build skips it): an x-omv-int64 string also accepts a JSON integer, which the
+  # transport turns into the decimal string (the ZFS plugin sends its file-system sizes as numbers).
+  omv/int64-as-number: on
 
 extends:
   - recommended

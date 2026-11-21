@@ -393,6 +393,7 @@ export const CLASSIC = {
   smartTasks: "/#/storage/smart/tasks",
   disks: "/#/storage/disks",
   raid: "/#/storage/md",
+  zfs: "/#/storage/zfs/pools",
   notificationEvents: "/#/system/notification/events",
   networkInterfaces: "/#/network/interfaces",
   smbSettings: "/#/services/smb/settings",

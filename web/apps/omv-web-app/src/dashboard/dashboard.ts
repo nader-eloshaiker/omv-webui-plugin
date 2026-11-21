@@ -182,8 +182,10 @@ export function storageItems(
   mounted: readonly MountedFilesystem[],
   missing: readonly ConfiguredFilesystem[] = [],
   /** The page of a file system, when it has one; none by default. */
-  addressOf: (fs: { uuid: string; devicefile: string }) => string | null = () =>
-    null,
+  addressOf: (fs: {
+    uuid: string | null;
+    devicefile: string;
+  }) => string | null = () => null,
 ): StorageItem[] {
   const items: StorageItem[] = [
     ...mounted.map((fs): StorageItem => ({
