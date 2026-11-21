@@ -45,7 +45,11 @@ export function WipeSection({ disk }: { disk: DiskDevice }) {
 
   const use = inventory.uses.get(disk.devicename);
   const loading = inventory.useState === "loading" || use === undefined;
-  const blockers = use?.blockers ?? [];
+  // While the inputs are still being read, nothing is known yet: the button waits, and the section
+  // says it is checking, not that the check failed (the system and read-only refusals show at once).
+  const blockers = (use?.blockers ?? []).filter(
+    (b) => !(loading && b.kind === "unchecked"),
+  );
   const blocked = loading || blockers.length > 0;
 
   const dismiss = () => {

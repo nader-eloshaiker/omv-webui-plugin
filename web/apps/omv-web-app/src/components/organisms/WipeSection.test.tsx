@@ -7,6 +7,7 @@
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { Answers, FixedAnswer } from "@omv-webui/react-api-omv/mocks";
 import { act, screen, waitFor, within } from "@testing-library/react";
+import { http } from "msw";
 import { describe, expect, it } from "vitest";
 import {
   scenarioAnswers,
@@ -14,7 +15,7 @@ import {
   type ScenarioName,
 } from "../../mocks/scenarios.ts";
 import { renderApp } from "../../test/renderApp.tsx";
-import { answer, callNames, seenCalls } from "../../test/server.ts";
+import { answer, callNames, seenCalls, server } from "../../test/server.ts";
 
 const VM_DISKS = CONTRACT_EXAMPLES.diskMgmtGetList.vmDisks.value.data;
 const SDB = VM_DISKS[2];
@@ -138,6 +139,36 @@ describe("the wipe section", () => {
       expect(wipeCalls()).toHaveLength(0);
     },
   );
+
+  it("says it is checking while what the disk holds is still being read, not that the check failed", async () => {
+    // Hold the detected file systems' reply until the test lets it go (seen on the VM: the page
+    // first said "Could not check" and kept the button unavailable while the reads were running).
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.post("*/rpc.php", async ({ request }) => {
+        const body = (await request.clone().json()) as { method?: unknown };
+        if (body.method === "enumerateFilesystems") {
+          await held;
+        }
+        return undefined;
+      }),
+    );
+    const { section } = await diskPage("sdd");
+    expect(
+      within(section).getByText("Checking what is on this disk…"),
+    ).toBeInTheDocument();
+    expect(within(section).queryByText(/^Could not check/)).toBeNull();
+    expect(wipeButton(section)).toHaveAttribute("aria-disabled", "true");
+    release();
+    await settled(section);
+    await waitFor(() =>
+      expect(wipeButton(section)).toHaveAttribute("aria-disabled", "false"),
+    );
+    expect(within(section).queryByText(/^Could not check/)).toBeNull();
+  });
 
   it("says what to do, with the page where it can be done", async () => {
     const { section } = await diskPage("sda", { scenario: "disksNas" });
