@@ -24,6 +24,8 @@ tags:
   - name: WebGui
   - name: Network
   - name: EmailNotification
+  - name: FileSystemMgmt
+  - name: Smart
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -69,8 +71,14 @@ paths:
     $ref: ./operations/System/getTimeSettings.yaml
   /rpc/EmailNotification/get:
     $ref: ./operations/EmailNotification/get.yaml
+  /rpc/FileSystemMgmt/enumerateMountedFilesystems:
+    $ref: ./operations/FileSystemMgmt/enumerateMountedFilesystems.yaml
+  /rpc/Smart/getListBg:
+    $ref: ./operations/Smart/getListBg.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.
     ConfigAppliedModules:
       $ref: ./schemas/ConfigAppliedModules.yaml
+    SmartDeviceList:
+      $ref: ./schemas/SmartDeviceList.yaml

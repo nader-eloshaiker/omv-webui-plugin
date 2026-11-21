@@ -1,0 +1,113 @@
+type: object
+description: >-
+  A file system that is configured and mounted now. A configured file system whose disk is missing
+  or that is not mounted is left out of the list without a word; bind mounts are left out too.
+required:
+  [
+    devicename,
+    devicefile,
+    canonicaldevicefile,
+    devlinks,
+    uuid,
+    label,
+    type,
+    mounted,
+    mountpoint,
+    blocks,
+    size,
+    available,
+    used,
+    percentage,
+    description,
+    comment,
+    usagewarnthreshold,
+  ]
+properties:
+  devicename:
+    type: string
+    description: The kernel's name for the partition or device, such as "sda1".
+  devicefile:
+    type: string
+    description: The device file OMV prefers, usually a /dev/disk/by-uuid/ link.
+  predictabledevicefile:
+    type: string
+  canonicaldevicefile:
+    type: string
+    description: The device file under /dev, such as "/dev/sda1".
+  parentdevicefile:
+    type: string
+    description: The disk the file system is on, such as "/dev/sda".
+  devlinks:
+    type: array
+    items:
+      type: string
+  uuid:
+    type: string
+    description: The file system's own UUID (not a configuration object's).
+  label:
+    type: string
+  type:
+    type: string
+    description: The file system type, such as "ext4" or "btrfs".
+  mounted:
+    type: boolean
+  mountpoint:
+    type: string
+    description: The configured mount point, such as "/srv/dev-disk-by-uuid-...".
+  blocks:
+    type: string
+    x-omv-int64: true
+    description: Size in 1 KiB blocks. "-1" when the server could not read the usage.
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes. "-1" when the server could not read the usage.
+  available:
+    type: string
+    x-omv-int64: true
+    description: Bytes free. "-1" when the server could not read the usage.
+  used:
+    type: string
+    description: >-
+      Display text, such as "12.34 GiB": the server formats it, unlike size and available, which
+      are bytes. "-1" when the server could not read the usage.
+  percentage:
+    type: integer
+    minimum: -1
+    maximum: 100
+    description: Percent used. -1 when the server could not read the usage.
+  description:
+    type: string
+    description: Display text, such as "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]".
+  propposixacl:
+    type: boolean
+  propquota:
+    type: boolean
+  propresize:
+    type: boolean
+  propfstab:
+    type: boolean
+  propreadonly:
+    type: boolean
+  propcompress:
+    type: boolean
+  propautodefrag:
+    type: boolean
+  hasmultipledevices:
+    type: boolean
+  devicefiles:
+    type: array
+    items:
+      type: string
+  comment:
+    type: string
+  usagewarnthreshold:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: >-
+      Percent used at which OMV warns about this file system. 0 means it never warns.
+  _readonly:
+    type: boolean
+  _used:
+    type: boolean

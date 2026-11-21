@@ -243,6 +243,31 @@ export const OPERATIONS = {
       $ref: "EmailNotificationSettings",
     },
   },
+  "/rpc/FileSystemMgmt/enumerateMountedFilesystems": {
+    operationId: "fileSystemMgmtEnumerateMountedFilesystems",
+    service: "FileSystemMgmt",
+    method: "enumerateMountedFilesystems",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "MountedFilesystemList",
+    },
+  },
+  "/rpc/Smart/getListBg": {
+    operationId: "smartGetListBg",
+    service: "Smart",
+    method: "getListBg",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {
+      result: "SmartDeviceList",
+    },
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -342,6 +367,139 @@ export const SCHEMAS: SchemaTable = {
       running: {
         type: "boolean",
       },
+    },
+  },
+  MountedFilesystem: {
+    type: "object",
+    required: [
+      "devicename",
+      "devicefile",
+      "canonicaldevicefile",
+      "devlinks",
+      "uuid",
+      "label",
+      "type",
+      "mounted",
+      "mountpoint",
+      "blocks",
+      "size",
+      "available",
+      "used",
+      "percentage",
+      "description",
+      "comment",
+      "usagewarnthreshold",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      predictabledevicefile: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      parentdevicefile: {
+        type: "string",
+      },
+      devlinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      uuid: {
+        type: "string",
+      },
+      label: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mounted: {
+        type: "boolean",
+      },
+      mountpoint: {
+        type: "string",
+      },
+      blocks: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      available: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      used: {
+        type: "string",
+      },
+      percentage: {
+        type: "integer",
+        minimum: -1,
+        maximum: 100,
+      },
+      description: {
+        type: "string",
+      },
+      propposixacl: {
+        type: "boolean",
+      },
+      propquota: {
+        type: "boolean",
+      },
+      propresize: {
+        type: "boolean",
+      },
+      propfstab: {
+        type: "boolean",
+      },
+      propreadonly: {
+        type: "boolean",
+      },
+      propcompress: {
+        type: "boolean",
+      },
+      propautodefrag: {
+        type: "boolean",
+      },
+      hasmultipledevices: {
+        type: "boolean",
+      },
+      devicefiles: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      comment: {
+        type: "string",
+      },
+      usagewarnthreshold: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+      },
+      _readonly: {
+        type: "boolean",
+      },
+      _used: {
+        type: "boolean",
+      },
+    },
+  },
+  MountedFilesystemList: {
+    type: "array",
+    items: {
+      $ref: "MountedFilesystem",
     },
   },
   NetworkGeneralSettings: {
@@ -543,6 +701,99 @@ export const SCHEMAS: SchemaTable = {
       perms: {
         type: "integer",
         enum: [0, 5, 7],
+      },
+    },
+  },
+  SmartDevice: {
+    type: "object",
+    required: [
+      "devicename",
+      "canonicaldevicefile",
+      "devicefile",
+      "devicelinks",
+      "model",
+      "size",
+      "temperature",
+      "description",
+      "vendor",
+      "serialnumber",
+      "wwn",
+      "overallstatus",
+      "uuid",
+      "monitor",
+      "_used",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      devicelinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      model: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      temperature: {
+        oneOf: [
+          {
+            type: "integer",
+          },
+          {
+            type: "string",
+          },
+        ],
+      },
+      description: {
+        type: "string",
+      },
+      vendor: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      wwn: {
+        type: "string",
+      },
+      overallstatus: {
+        type: "string",
+      },
+      uuid: {
+        type: "string",
+      },
+      monitor: {
+        type: "boolean",
+      },
+      _used: {
+        type: "boolean",
+      },
+    },
+  },
+  SmartDeviceList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "SmartDevice",
+        },
       },
     },
   },

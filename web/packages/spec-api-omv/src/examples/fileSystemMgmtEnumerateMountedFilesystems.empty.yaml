@@ -1,0 +1,3 @@
+summary: "Written by hand: no data file system is mounted and the root file system was not asked for (a fresh install, or every data disk missing). The reply is an empty list."
+x-omv-status: 200
+value: []

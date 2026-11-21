@@ -1,0 +1,13 @@
+type: object
+description: >-
+  The result of the S.M.A.R.T. list task (its final output, parsed as JSON): the disks that support
+  S.M.A.R.T., paged, sorted and searched by the backend.
+required: [total, data]
+properties:
+  total:
+    type: integer
+    description: Every matching disk, before paging.
+  data:
+    type: array
+    items:
+      $ref: ./SmartDevice.yaml
