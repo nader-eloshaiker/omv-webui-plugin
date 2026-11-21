@@ -20,6 +20,7 @@ export * from "./components/fact-list/fact-list";
 export * from "./components/field/field";
 export * from "./components/inline-alert/inline-alert";
 export * from "./components/job-runner/job-runner";
+export * from "./components/line-chart/line-chart";
 export * from "./components/menu/menu";
 export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";
