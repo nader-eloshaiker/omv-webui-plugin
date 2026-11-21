@@ -28,6 +28,7 @@ import {
   execIsRunning,
   execStop,
   fileSystemMgmtEnumerateMountedFilesystems,
+  fileSystemMgmtGetList,
   logFileGetList,
   networkEnumerateDevicesList,
   networkGetGeneralSettings,
@@ -163,11 +164,21 @@ describe("as an administrator", () => {
     expect(email).not.toHaveProperty("password");
   });
 
-  it("reads file systems, disk health, services, network interfaces, logs, processes and service details", async () => {
+  it("reads mounted and configured file systems, disk health, services, network interfaces, logs, processes and service details", async () => {
     const filesystems = await fileSystemMgmtEnumerateMountedFilesystems({
       includeroot: true,
     });
     expect(filesystems.some((fs) => fs.mountpoint === "/")).toBe(true);
+    const configured = await fileSystemMgmtGetList({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+    });
+    expect(configured.total).toBe(configured.data.length);
+    expect(configured.data.every((fs) => [1, 2, 3].includes(fs.status))).toBe(
+      true,
+    );
     const registry = createTaskRegistry();
     const id = registry.start("Checking disk health", () =>
       smartGetListBg({ start: 0, limit: null }),
