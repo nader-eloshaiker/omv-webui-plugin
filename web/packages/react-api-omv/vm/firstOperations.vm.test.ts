@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Phase 1 acceptance (docs/07): each first operation succeeds against the test VM through the
 // generated client, with development-build response validation reporting no mismatch. The reads
-// Phase 3 added are checked the same way.
+// Phases 3 and 5 added are checked the same way.
 //
 // Credentials come from $OMV_WEBUI_ENV and are never printed. The only writes send the SSH
 // settings back unchanged, then apply or revert them, and force a redeploy of one harmless module
 // to have a task that runs long enough to stop.
+import type { SmartDeviceList } from "@omv-webui/ts-api-omv";
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -26,15 +27,24 @@ import {
   emailNotificationGet,
   execIsRunning,
   execStop,
+  fileSystemMgmtEnumerateMountedFilesystems,
+  logFileGetList,
+  networkEnumerateDevicesList,
   networkGetGeneralSettings,
+  nfsGetStats,
+  servicesGetStatus,
   sessionLogin,
   sessionLogout,
   sessionVerify,
   shareMgmtGetList,
+  smartGetListBg,
+  smbGetStats,
   sshGet,
+  sshGetStats,
   sshSet,
   systemGetInformation,
   systemGetTimeSettings,
+  systemGetTopInfo,
   userMgmtGetUserByContext,
   webGuiGetAutoLogoutSettings,
   webGuiGetSettings,
@@ -151,6 +161,47 @@ describe("as an administrator", () => {
     expect(typeof email.enable).toBe("boolean");
     // The server sends the SMTP password; the transport removes it (x-omv-omit, UI-6).
     expect(email).not.toHaveProperty("password");
+  });
+
+  it("reads file systems, disk health, services, network interfaces, logs, processes and service details", async () => {
+    const filesystems = await fileSystemMgmtEnumerateMountedFilesystems({
+      includeroot: true,
+    });
+    expect(filesystems.some((fs) => fs.mountpoint === "/")).toBe(true);
+    const registry = createTaskRegistry();
+    const id = registry.start("Checking disk health", () =>
+      smartGetListBg({ start: 0, limit: null }),
+    );
+    const task = await settled(registry, id);
+    expect(task.state).toBe("done");
+    const disks = task.result as SmartDeviceList;
+    expect(disks.total).toBe(disks.data.length);
+    const services = await servicesGetStatus();
+    expect(services.data.map((s) => s.name)).toEqual(
+      expect.arrayContaining(["nfs", "samba", "ssh"]),
+    );
+    const network = await networkEnumerateDevicesList({
+      start: 0,
+      limit: null,
+    });
+    expect(network.data.map((d) => d.devicename)).toContain("lo");
+    for (const device of network.data) {
+      // A configured Wi-Fi interface's key is removed (x-omv-omit, UI-6).
+      expect(device).not.toHaveProperty("wpapsk");
+    }
+    const log = await logFileGetList({
+      start: 0,
+      limit: 5,
+      sortfield: "rownum",
+      sortdir: "desc",
+      id: "syslog",
+    });
+    expect(log.data.length).toBeLessThanOrEqual(5);
+    const top = await systemGetTopInfo({ format: "json" });
+    expect(top.processes.length).toBeGreaterThan(0);
+    for (const stats of [smbGetStats, nfsGetStats, sshGetStats]) {
+      expect(typeof (await stats())).toBe("string");
+    }
   });
 
   it("saves SSH settings, sees the change pending, and applies it as a task", async () => {
