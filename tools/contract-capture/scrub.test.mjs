@@ -363,3 +363,27 @@ test("verify reports a WWN left in smartctl's spelling, never the value", () => 
   assert.ok(!text.includes("$.ok"), text);
   assert.ok(!text.includes("0a1b2c3d4"), "a failure must not repeat the value");
 });
+
+test("a FAT volume ID is replaced consistently, and verify reports one left in place", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    uuid: "1A2B-3C4D",
+    devicefile: "/dev/disk/by-uuid/1A2B-3C4D",
+    other: "/dev/disk/by-uuid/5E6F-7A8B",
+    date: "2026-11-19-05-53-43-00",
+    upper: "3F2B1C4E-9A8D-4E7F-B6C5-1D2E3F4A5B6C",
+    path: "/dev/disk/by-path/pci-0000:12:00.0-nvme-1",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(out, {
+    uuid: "0000-0001",
+    devicefile: "/dev/disk/by-uuid/0000-0001",
+    other: "/dev/disk/by-uuid/0000-0002",
+    date: "2026-11-19-05-53-43-00",
+    upper: "00000000-0000-4000-8000-000000000001",
+    path: "/dev/disk/by-path/pci-0000:12:00.0-nvme-1",
+  });
+  const text = verify({ a: "/dev/disk/by-uuid/1A2B-3C4D" }).join("\n");
+  assert.ok(text.includes("FAT volume ID at $.a"), text);
+  assert.ok(!text.includes("1A2B"), "a failure must not repeat the value");
+});

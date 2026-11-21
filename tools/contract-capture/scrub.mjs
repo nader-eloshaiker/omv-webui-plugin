@@ -60,6 +60,11 @@ export const KEY_PLACEHOLDERS = {
 };
 
 const DOC_UUID = /^00000000-0000-4000-8000-[0-9a-f]{12}$/i;
+// A FAT or exFAT volume ID, which blkid reports as a file system's UUID ("7674-06C7"), and its
+// documentation form.
+// Not part of a longer run of hex digits and dashes, so a UUID's groups are never taken for one.
+const FAT_ID = /(?<![0-9A-Za-z-])[0-9A-F]{4}-[0-9A-F]{4}(?![0-9A-Za-z-])/g;
+const DOC_FAT_ID = /^0000-[0-9A-F]{4}$/;
 const DOC_MAC = /^00:00:5e:00:53:[0-9a-f]{2}$/i;
 const DOC_SERIAL = /^EXAMPLE-SERIAL-\d{4}$/;
 const DOC_WWN = /^EXAMPLE-WWN-\d{4}$/;
@@ -151,6 +156,7 @@ export function createScrubber(known = {}) {
   const serials = new Map();
   const wwns = new Map();
   const emails = new Map();
+  const fatIds = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -252,6 +258,11 @@ export function createScrubber(known = {}) {
             m.toLowerCase(),
             (n) => `00000000-0000-4000-8000-${hex(n, 12)}`,
           ),
+    );
+    out = out.replace(FAT_ID, (m) =>
+      DOC_FAT_ID.test(m)
+        ? m
+        : number(fatIds, m, (n) => `0000-${hex(n, 4).toUpperCase()}`),
     );
     out = out.replace(MAC, docMacOf);
     out = out.replace(IPV4, (m) =>
@@ -410,6 +421,11 @@ export function createScrubber(known = {}) {
       for (const m of s.match(UUID) ?? []) {
         if (!DOC_UUID.test(m) && !KEPT_UUIDS.has(m.toLowerCase())) {
           failures.push(`UUID at ${path}`);
+        }
+      }
+      for (const m of s.match(FAT_ID) ?? []) {
+        if (!DOC_FAT_ID.test(m)) {
+          failures.push(`FAT volume ID at ${path}`);
         }
       }
       for (const m of s.match(MAC) ?? []) {
