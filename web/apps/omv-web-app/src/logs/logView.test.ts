@@ -3,6 +3,7 @@ import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { LogRow } from "@omv-webui/react-api-omv/generated";
 import { describe, expect, it } from "vitest";
 import {
+  cleanLogText,
   defaultSort,
   isLogId,
   LOG_IDS,
@@ -120,5 +121,41 @@ describe("pageOf", () => {
       from: 0,
       to: 0,
     });
+  });
+});
+
+describe("cleanLogText", () => {
+  it("removes bidirectional controls, so a line cannot reverse part of itself", () => {
+    // The logsHostile scenario's line, and every embedding, override, isolate and mark.
+    expect(
+      cleanLogText("\u202eright-to-left override, then javascript:alert(3)"),
+    ).toBe("right-to-left override, then javascript:alert(3)");
+    expect(
+      cleanLogText(
+        "a\u202ab\u202bc\u202cd\u202de\u2066f\u2067g\u2068h\u2069i\u200ej\u200fk\u061cl",
+      ),
+    ).toBe("abcdefghijkl");
+  });
+
+  it("removes terminal escapes and keeps the text, line breaks and tabs", () => {
+    expect(cleanLogText("\u001b[31mE:\u001b[0m failed")).toBe("E: failed");
+    expect(cleanLogText("first\nsecond\tcolumn")).toBe("first\nsecond\tcolumn");
+    expect(cleanLogText("שלום from a right-to-left message")).toBe(
+      "שלום from a right-to-left message",
+    );
+  });
+
+  it("drops a carriage return at the end of a line, as the updates log has", () => {
+    expect(cleanLogText("Updating workbench configuration files ...\r")).toBe(
+      "Updating workbench configuration files ...",
+    );
+    expect(cleanLogText("Progress: 10%\rProgress: 100%")).toBe(
+      "Progress: 100%",
+    );
+  });
+
+  it("gives the empty string for a field that is not text", () => {
+    expect(cleanLogText(undefined)).toBe("");
+    expect(cleanLogText(42)).toBe("");
   });
 });

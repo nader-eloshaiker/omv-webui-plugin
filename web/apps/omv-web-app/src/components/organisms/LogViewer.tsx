@@ -35,6 +35,7 @@ import { formatEpochSeconds } from "../../format/format.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { logsView } from "../../logs/logsViewStore.ts";
 import {
+  cleanLogText,
   defaultSort,
   isLogId,
   LOG_GROUPS,
@@ -85,8 +86,8 @@ function columnsOf(layout: LogLayout): Column[] {
   }
 }
 
-const str = (value: unknown): string =>
-  typeof value === "string" ? value : "";
+/** Every field of a log line is cleaned before it is shown (logView.ts). */
+const str = cleanLogText;
 
 function TimeCell({ ts }: { ts: LogRow["ts"] }) {
   const { t } = useTranslation();
@@ -103,12 +104,16 @@ function TimeCell({ ts }: { ts: LogRow["ts"] }) {
 }
 
 function MessageCell({ message }: { message: unknown }) {
+  // A table cell ignores min-width, so the block inside holds the column at a readable width; on a
+  // narrow screen the frame scrolls sideways instead of squeezing a line into a tall strip.
   return (
-    <TableCell
-      dir="auto"
-      className="min-w-64 py-2 align-top font-mono text-[13px] whitespace-pre-wrap [overflow-wrap:anywhere]"
-    >
-      {str(message)}
+    <TableCell className="py-2 align-top">
+      <div
+        dir="auto"
+        className="min-w-72 font-mono text-[13px] whitespace-pre-wrap [overflow-wrap:anywhere]"
+      >
+        {str(message)}
+      </div>
     </TableCell>
   );
 }
@@ -267,6 +272,9 @@ export function LogViewer() {
     );
   };
 
+  // The count is the rows received: the whole log is read (limit null), and the count line must
+  // never contradict the table. The reply's `total` is not used.
+  const received = all?.length ?? 0;
   let count = "";
   if (firstRead) {
     count = t("logs.reading");
@@ -275,37 +283,36 @@ export function LogViewer() {
       ? t("logs.countMatching", {
           count: matching.length,
           shown: format.count(matching.length),
-          total: format.count(data.total),
+          total: format.count(received),
         })
       : t("logs.count", {
-          count: data.total,
-          shown: format.count(data.total),
+          count: received,
+          shown: format.count(received),
           time: format.clock(log.dataUpdatedAt),
         });
   }
 
-  let body;
+  // Nothing chosen, or the read failed: the state stands in the table's place, with no empty frame
+  // and no column headers above it.
+  let standalone;
   if (id === undefined) {
-    body = (
-      <TableStateRow colSpan={columns.length}>
-        <EmptyState>{t("logs.nothingChosen")}</EmptyState>
-      </TableStateRow>
-    );
-  } else if (firstRead) {
-    body = <TableSkeletonRows rows={10} columns={columns.length} />;
+    standalone = <EmptyState>{t("logs.nothingChosen")}</EmptyState>;
   } else if (failed) {
-    body = (
-      <TableStateRow colSpan={columns.length}>
-        <ReadFailed
-          error={log.error}
-          onRetry={() => void log.refetch()}
-          retrying={log.isFetching}
-        >
-          {t("logs.loadFailed")}
-        </ReadFailed>
-      </TableStateRow>
+    standalone = (
+      <ReadFailed
+        error={log.error}
+        onRetry={() => void log.refetch()}
+        retrying={log.isFetching}
+      >
+        {t("logs.loadFailed")}
+      </ReadFailed>
     );
-  } else if (data && data.total === 0) {
+  }
+
+  let body;
+  if (firstRead) {
+    body = <TableSkeletonRows rows={10} columns={columns.length} />;
+  } else if (data && received === 0) {
     body = (
       <TableStateRow colSpan={columns.length}>
         <EmptyState>
@@ -415,89 +422,89 @@ export function LogViewer() {
       <p role="status" className="text-sm tabular-nums empty:hidden">
         {count}
       </p>
-      {data && data.total >= SERVER_LINE_LIMIT ? (
+      {data && received >= SERVER_LINE_LIMIT ? (
         <p className="text-sm text-muted-foreground">{t("logs.limit")}</p>
       ) : null}
       {layout === "message" && data ? (
         <p className="text-sm text-muted-foreground">{t("logs.noTimes")}</p>
       ) : null}
 
-      <div>
-        <Table
-          aria-label={
-            id === undefined
-              ? t("logs.title")
-              : t("logs.tableLabel", { log: logName })
-          }
-          frameLabel={
-            id === undefined
-              ? undefined
-              : t("logs.tableLabel", { log: logName })
-          }
-          busy={firstRead || refreshing}
-          busyLabel={t("logs.reading")}
-        >
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => {
-                const label = t(column.label as "logs.col.time");
-                const field = column.field;
-                // Sortable once there are rows to sort.
-                const sortable =
-                  field !== null && layout !== "message" && data !== undefined;
-                return (
-                  <TableHead
-                    key={column.key}
-                    sort={
-                      sortable
-                        ? state.sort.field === field
-                          ? state.sort.direction === "asc"
-                            ? "ascending"
-                            : "descending"
-                          : "none"
-                        : undefined
-                    }
-                    onSort={
-                      sortable && data ? () => sortBy(field, label) : undefined
-                    }
-                  >
-                    {label}
-                  </TableHead>
-                );
+      {standalone ?? (
+        <div>
+          <Table
+            aria-label={t("logs.tableLabel", { log: logName })}
+            frameLabel={t("logs.tableLabel", { log: logName })}
+            busy={firstRead || refreshing}
+            busyLabel={t("logs.reading")}
+          >
+            <TableHeader>
+              <TableRow>
+                {columns.map((column) => {
+                  const label = t(column.label as "logs.col.time");
+                  const field = column.field;
+                  // Sortable once there are rows to sort.
+                  const sortable =
+                    field !== null &&
+                    layout !== "message" &&
+                    data !== undefined;
+                  return (
+                    <TableHead
+                      key={column.key}
+                      sort={
+                        sortable
+                          ? state.sort.field === field
+                            ? state.sort.direction === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : "none"
+                          : undefined
+                      }
+                      onSort={
+                        sortable && data
+                          ? () => sortBy(field, label)
+                          : undefined
+                      }
+                    >
+                      {label}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+          </Table>
+          <p role="status" className="sr-only">
+            {announcement}
+          </p>
+          {data && matching.length > 0 ? (
+            <TablePagination
+              aria-label={t("logs.pages")}
+              page={page.page}
+              pageCount={page.pageCount}
+              onPageChange={(next) => logsView.set({ page: next })}
+              range={t(searching ? "table.rangeMatching" : "table.range", {
+                from: format.count(page.from),
+                to: format.count(page.to),
+                total: format.count(matching.length),
               })}
-            </TableRow>
-          </TableHeader>
-          <TableBody>{body}</TableBody>
-        </Table>
-        <p role="status" className="sr-only">
-          {announcement}
-        </p>
-        {data && matching.length > 0 ? (
-          <TablePagination
-            aria-label={t("logs.pages")}
-            page={page.page}
-            pageCount={page.pageCount}
-            onPageChange={(next) => logsView.set({ page: next })}
-            range={t(searching ? "table.rangeMatching" : "table.range", {
-              from: format.count(page.from),
-              to: format.count(page.to),
-              total: format.count(matching.length),
-            })}
-            pageSize={state.pageSize}
-            pageSizeOptions={LOG_PAGE_SIZES}
-            onPageSizeChange={(pageSize) => logsView.set({ pageSize, page: 0 })}
-            pageSizeLabel={t("table.pageSize")}
-            previous={{
-              label: t("table.previous"),
-              unavailableReason: t("table.firstPageReason"),
-            }}
-            next={{
-              label: t("table.next"),
-              unavailableReason: t("table.lastPageReason"),
-            }}
-          />
-        ) : null}
-      </div>
+              pageSize={state.pageSize}
+              pageSizeOptions={LOG_PAGE_SIZES}
+              onPageSizeChange={(pageSize) =>
+                logsView.set({ pageSize, page: 0 })
+              }
+              pageSizeLabel={t("table.pageSize")}
+              previous={{
+                label: t("table.previous"),
+                unavailableReason: t("table.firstPageReason"),
+              }}
+              next={{
+                label: t("table.next"),
+                unavailableReason: t("table.lastPageReason"),
+              }}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

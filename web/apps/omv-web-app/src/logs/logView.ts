@@ -7,6 +7,7 @@ import type {
   LogFileGetListRequest,
   LogRow,
 } from "@omv-webui/react-api-omv/generated";
+import { stripControl } from "@omv-webui/react-ui-components";
 import { naturalCompare } from "../format/format.ts";
 
 /** The stock logs, in the picker's two groups (design 2.3). No id ever comes from anywhere else. */
@@ -104,8 +105,24 @@ export function nextSort(current: LogSort, field: LogSortField): LogSort {
     : { field, direction: "asc" };
 }
 
-const text = (value: unknown): string =>
-  typeof value === "string" ? value : "";
+/**
+ * A field of a log line as it is shown and searched: terminal escape sequences, other control
+ * characters and the bidirectional embeddings, overrides, isolates and marks removed (as the service
+ * output is, style guide 5.7), so a line cannot reverse or hide part of itself. Line breaks inside a
+ * message stay; a carriage return at the end of a line (the updates log has them) is dropped, and one
+ * inside keeps what was written last, as a terminal would.
+ */
+export function cleanLogText(value: unknown): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value
+    .split("\n")
+    .map((line) => stripControl(line.replace(/\r+$/, "")))
+    .join("\n");
+}
+
+const text = cleanLogText;
 const num = (value: unknown): number =>
   typeof value === "number" && Number.isFinite(value)
     ? value
