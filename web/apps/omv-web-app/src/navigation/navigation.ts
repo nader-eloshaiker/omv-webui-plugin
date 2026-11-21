@@ -41,6 +41,11 @@ export interface NavPage {
   classic: `/#/${string}`;
   /** The page's own route in this interface, once it is built here. */
   route?: BuiltRoute;
+  /**
+   * Shown only when something known at run time says so: "raidPlugin", only when the RAID plugin is
+   * installed (phase 5 RAID design 0.10, D1; Q8).
+   */
+  when?: "raidPlugin";
   roles: readonly Role[];
 }
 
@@ -50,6 +55,7 @@ export type BuiltRoute =
   | "/storage/shared-folders"
   | "/storage/disks"
   | "/storage/smart"
+  | "/storage/md"
   | "/storage/filesystems"
   | "/account/settings"
   | "/diagnostics/system-logs"
@@ -167,6 +173,15 @@ export const NAV_PAGES = [
     classic: "/#/storage/smart",
     route: "/storage/smart",
     roles: ADMIN,
+  },
+  {
+    group: "storage",
+    item: "md",
+    labelKey: "nav.items.storage.md",
+    classic: "/#/storage/md",
+    route: "/storage/md",
+    roles: ADMIN,
+    when: "raidPlugin",
   },
   {
     group: "storage",
@@ -318,7 +333,7 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services"; a disk's page
  * (`/storage/disks/sdb`) marks "Disks", and every Disk health page (`/storage/smart/overview`, the
  * set-up page) marks "Disk health"; a file system's page and the two add-storage flows mark "File
- * systems".
+ * systems"; an array's page and the RAID flows mark "RAID".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -329,17 +344,30 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/storage/disks" && pathname.startsWith("/storage/disks/")) ||
     (route === "/storage/smart" && pathname.startsWith("/storage/smart/")) ||
     (route === "/storage/filesystems" &&
-      pathname.startsWith("/storage/filesystems/"))
+      pathname.startsWith("/storage/filesystems/")) ||
+    (route === "/storage/md" && pathname.startsWith("/storage/md/"))
   );
 }
+
+/** What is known at run time about the items with a condition. */
+export interface NavConditions {
+  /** The RAID plugin is known to be installed (not while that is still being checked). */
+  raidPlugin: boolean;
+}
+
+const shownBy = (page: NavPage, conditions: NavConditions): boolean =>
+  page.when === undefined || conditions[page.when];
 
 /** The groups and their items a role sees, in order; empty groups are left out. */
 export function navFor(
   role: Role,
+  conditions: NavConditions = { raidPlugin: false },
 ): { group: NavGroup; pages: NavPageEntry[] }[] {
   return NAV_GROUPS.map((group) => ({
     group,
-    pages: NAV_PAGES.filter((p) => p.group === group && mayOpen(p, role)),
+    pages: NAV_PAGES.filter(
+      (p) => p.group === group && mayOpen(p, role) && shownBy(p, conditions),
+    ),
   })).filter((g) => g.pages.length > 0);
 }
 

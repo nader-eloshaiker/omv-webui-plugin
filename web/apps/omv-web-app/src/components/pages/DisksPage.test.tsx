@@ -129,8 +129,14 @@ describe("Storage > Disks", () => {
     expect(await rowOf("/dev/sdd")).toHaveTextContent(
       "File system old-pc, not used on this NAS",
     );
-    expect(await rowOf("/dev/sde")).toHaveTextContent("Part of RAID nas:0");
-    expect(await rowOf("/dev/sdf")).toHaveTextContent("Part of RAID nas:0");
+    // Named by its device, never mdadm's "host:name", and linked to the array's page (RAID 9.2).
+    expect(await rowOf("/dev/sde")).toHaveTextContent("Part of RAID /dev/md0");
+    expect(await rowOf("/dev/sdf")).toHaveTextContent("Part of RAID /dev/md0");
+    expect(
+      within(await rowOf("/dev/sde")).getByRole("link", {
+        name: "Open RAID /dev/md0",
+      }),
+    ).toHaveAttribute("href", "/ui/storage/md/md0");
     const system = await rowOf("/dev/nvme0n1");
     expect(within(system).getAllByRole("listitem")[0]).toHaveTextContent(
       "System disk (openmediavault runs from it)",

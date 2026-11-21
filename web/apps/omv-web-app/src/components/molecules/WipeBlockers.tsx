@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Why a disk cannot be wiped, in words (phase 5 disks design 3.1; owner, P1, P3, P5): each blocker on
 // its own line in the page's order, with what to do. The only links are to the pages where the reader
-// can remove what blocks the wipe (File systems, RAID management); none leads to a wipe that skips
-// these checks (P3).
+// can remove what blocks the wipe (a file system's page, an array's page); none leads to a wipe that
+// skips these checks (P3).
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
@@ -15,6 +15,7 @@ import type { FsRef, WipeBlocker } from "../../disks/diskUse.ts";
 import { inBlockerOrder } from "../../disks/wipe.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
+import { arrayAddress } from "../../raid/raidModel.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
@@ -111,33 +112,39 @@ function Line({ blocker }: { blocker: WipeBlocker }) {
       return <p>{t("wipe.blocked.fsCreating")}</p>;
     case "swap":
       return <p>{t("wipe.blocked.swap")}</p>;
-    case "raid":
+    case "raid": {
+      // The array's page, where taking a disk out and deleting the array have their own refusals
+      // (RAID design 9.2). Named by its device, never mdadm's "host:name".
+      const address = arrayAddress(blocker.array);
       return (
         <>
           <p>
             <Trans
               i18nKey="wipe.blocked.raid"
               components={{
-                array: (
-                  <IdentifierText
-                    value={
-                      blocker.array.name === ""
-                        ? blocker.array.devicefile
-                        : blocker.array.name
-                    }
-                  />
-                ),
+                array: <IdentifierText value={blocker.array.devicefile} />,
               }}
             />
           </p>
           <p className="text-sm">
             {t("wipe.blocked.raidDo")}{" "}
-            <ExternalLink href={CLASSIC.raid} newTabLabel={newTab}>
-              {t("wipe.raidLink")}
-            </ExternalLink>
+            {address === null ? (
+              <ExternalLink href={CLASSIC.raid} newTabLabel={newTab}>
+                {t("raid.classicLink")}
+              </ExternalLink>
+            ) : (
+              <Link
+                to="/storage/md/$array"
+                params={{ array: address }}
+                className={routerLinkClass}
+              >
+                {t("wipe.raidLink", { array: blocker.array.devicefile })}
+              </Link>
+            )}
           </p>
         </>
       );
+    }
     case "wiping":
       return <p>{t("wipe.blocked.wiping")}</p>;
     case "unchecked":

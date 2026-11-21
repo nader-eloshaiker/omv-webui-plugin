@@ -5,24 +5,19 @@
 // other changes became pending (R10); and the result with the sharing handover. The run lives in memory
 // for the session (flowRun.ts), so this view shows it again when the reader comes back.
 import type { ConfiguredFilesystem } from "@omv-webui/react-api-omv/generated";
-import { useTask } from "@omv-webui/react-api-omv/tasks";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   AlsoPendingNotice,
   AlsoPendingPrompt,
   Button,
-  Disclosure,
-  DisclosurePanel,
-  DisclosureTrigger,
   JobFailure,
   JobResult,
   JobStepList,
-  TaskLog,
   type JobStep,
   type TaskStatus,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   clearFlow,
@@ -33,15 +28,12 @@ import {
   type FlowRun,
 } from "../../filesystems/flowRun.ts";
 import { fsAddress, fsName, splitTags } from "../../filesystems/fsModel.ts";
-import { taskLines } from "../../filesystems/terminal.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
-import { useFormat } from "../../format/useFormat.ts";
 import { useFlowWords } from "../../hooks/useFlowWords.tsx";
 import { useFsWords } from "../../hooks/useFsWords.ts";
-import { useNow } from "../../hooks/useNow.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
-import { emptyOutputKey } from "../../shell/taskView.ts";
 import { ModuleNames } from "../molecules/ModuleNames.tsx";
+import { StepTask } from "../molecules/StepTask.tsx";
 import { WipeBlockers } from "../molecules/WipeBlockers.tsx";
 import { SharingHandover } from "./SharingHandover.tsx";
 
@@ -52,57 +44,6 @@ const STATES: readonly TaskStatus[] = [
   "failed",
   "cancelled",
 ];
-
-/** A task step's time and output: "Running for 12 s", then its output behind a disclosure. */
-function StepTask({
-  taskId,
-  label,
-  failed,
-}: {
-  taskId: number;
-  label: string;
-  failed: boolean;
-}) {
-  const { t } = useTranslation();
-  const format = useFormat();
-  const { task } = useTask(taskId);
-  const running = task?.state === "running";
-  const now = useNow(running ? 1000 : null);
-  const [open, setOpen] = useState(failed);
-  if (task === undefined) {
-    return null;
-  }
-  const elapsed = Math.max(
-    0,
-    Math.floor(((task.endedAt ?? now) - task.startedAt) / 1000),
-  );
-  return (
-    <div className="flex flex-col gap-1">
-      {running ? (
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {t("addStorage.runningFor", { duration: format.duration(elapsed) })}
-        </span>
-      ) : null}
-      <Disclosure open={open || failed} onOpenChange={setOpen}>
-        <DisclosureTrigger>
-          {open || failed
-            ? t("addStorage.hideOutput")
-            : t("addStorage.showOutput")}
-        </DisclosureTrigger>
-        <DisclosurePanel>
-          <TaskLog
-            lines={taskLines(task.output)}
-            label={t("addStorage.outputLabel", { step: label })}
-            copyLabel={t("tasks.copy")}
-            copiedLabel={t("tasks.copied")}
-            selectedLabel={t("tasks.selected")}
-            emptyLabel={t(emptyOutputKey(task))}
-          />
-        </DisclosurePanel>
-      </Disclosure>
-    </div>
-  );
-}
 
 export function AddStorageRun({ run }: { run: FlowRun }) {
   const { t } = useTranslation();

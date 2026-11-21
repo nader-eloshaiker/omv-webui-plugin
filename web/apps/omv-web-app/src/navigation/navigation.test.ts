@@ -26,6 +26,35 @@ describe("navFor", () => {
     expect(nav.at(-1)?.pages.map((p) => p.item)).toEqual(["settings"]);
   });
 
+  it("shows RAID only when the plugin is known to be installed, between Disk health and File systems", () => {
+    const storage = (raidPlugin: boolean) =>
+      navFor("admin", { raidPlugin })
+        .find((g) => g.group === "storage")
+        ?.pages.map((p) => p.item);
+    expect(storage(false)).toEqual([
+      "disks",
+      "smart",
+      "filesystems",
+      "shared-folders",
+    ]);
+    expect(storage(true)).toEqual([
+      "disks",
+      "smart",
+      "md",
+      "filesystems",
+      "shared-folders",
+    ]);
+    expect(navFor("user", { raidPlugin: true })).toHaveLength(1);
+  });
+
+  it("marks RAID current on an array's page and the RAID flows", () => {
+    expect(isCurrent("/storage/md", "/storage/md")).toBe(true);
+    expect(isCurrent("/storage/md/md0", "/storage/md")).toBe(true);
+    expect(isCurrent("/storage/md/create", "/storage/md")).toBe(true);
+    expect(isCurrent("/storage/md/md0/add", "/storage/md")).toBe(true);
+    expect(isCurrent("/storage/mdx", "/storage/md")).toBe(false);
+  });
+
   it("gives a normal user only their account", () => {
     const nav = navFor("user");
     expect(nav).toHaveLength(1);
@@ -66,6 +95,7 @@ describe("the table", () => {
     ).toEqual([
       "/storage/disks",
       "/storage/smart",
+      "/storage/md",
       "/storage/filesystems",
       "/storage/shared-folders",
       "/services/ssh",

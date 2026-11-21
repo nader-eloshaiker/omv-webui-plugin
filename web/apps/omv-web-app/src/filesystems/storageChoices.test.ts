@@ -61,7 +61,11 @@ describe("storageChoices (6.3)", () => {
     expect(result.reuse).toEqual([]);
     expect(
       result.unusable.map((u) =>
-        u.kind === "disk" ? u.disk.devicename : u.device,
+        u.kind === "disk"
+          ? u.disk.devicename
+          : u.kind === "array"
+            ? u.array.devicefile
+            : u.device,
       ),
     ).toEqual(["nvme0n1", "sda", "sr0"]);
     const system = result.unusable[0];
@@ -177,6 +181,45 @@ describe("storageChoices (6.3)", () => {
     }
     expect(result.raid.map((c) => c.array.devicefile)).toEqual(["/dev/md0"]);
     expect(result.empty.map((c) => c.disk.devicename)).toEqual(["sdd"]);
+  });
+
+  it.each([
+    ["short of a disk", "mirrorDegraded"],
+    ["rebuilding", "mirrorRebuilding"],
+  ] as const)(
+    "does not offer an array %s, and says why (RAID design 9.3, D16)",
+    (_, example) => {
+      const array = CONTRACT_EXAMPLES.mdMgmtEnumerateDevices[example]
+        .value[0] as unknown as MdArray;
+      const result = storageChoices(
+        inputs({
+          arrays: [array],
+          candidates: [{ devicefile: "/dev/md0", size: "1", description: "" }],
+        }),
+        noMarks,
+      );
+      if (result.state !== "known") {
+        throw new Error(result.state);
+      }
+      expect(result.raid).toEqual([]);
+      const refused = result.unusable.find((u) => u.kind === "array");
+      expect(refused?.kind === "array" && refused.state.status).toBe(
+        "critical",
+      );
+    },
+  );
+
+  it("offers a synchronising array", () => {
+    const array = CONTRACT_EXAMPLES.mdMgmtEnumerateDevices.mirrorSyncing
+      .value[0] as unknown as MdArray;
+    const result = storageChoices(
+      inputs({
+        arrays: [array],
+        candidates: [{ devicefile: "/dev/md0", size: "1", description: "" }],
+      }),
+      noMarks,
+    );
+    expect(result.state === "known" && result.raid).toHaveLength(1);
   });
 
   it.each([

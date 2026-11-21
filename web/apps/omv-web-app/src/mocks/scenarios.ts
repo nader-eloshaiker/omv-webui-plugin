@@ -36,6 +36,7 @@ import {
   usesFsMock,
   type FsMockState,
 } from "./fsScenarios.ts";
+import { RAID_SCENARIO_LABELS, RAID_SCENARIOS } from "./raidScenarios.ts";
 
 export const SCENARIOS = [
   "admin",
@@ -84,6 +85,7 @@ export const SCENARIOS = [
   "serviceOutputsEmpty",
   ...DISK_SCENARIOS,
   ...FS_SCENARIOS,
+  ...RAID_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -138,6 +140,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   serviceOutputsEmpty: "Service details: on, nothing to show",
   ...DISK_SCENARIO_LABELS,
   ...FS_SCENARIO_LABELS,
+  ...RAID_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -1115,12 +1118,16 @@ export function scenarioAnswers(
     // The RAID plugin's arrays: none in the default story; the test VM's 404 (the plugin is not
     // installed) in disksNoRaidPlugin; a mirror on the NAS stories and fsRaid.
     mdMgmtEnumerateDevices: diskRead("mdMgmtEnumerateDevices"),
-    // The rest of the RAID plugin (phase 5 RAID design 12), from the test VM as captured. They hold
-    // no state: a change answers its example and marks mdadm and initramfs pending, and the reads
-    // answer a mirror of sdb and sdc whatever the arrays above say.
+    // The rest of the RAID plugin (phase 5 RAID design 12), from the test VM as captured, for the
+    // stories without the remembering mock (the default story and the fs and RAID scenarios have it,
+    // in fsScenarios.ts and raidScenarios.ts). They hold no state: a change answers its example and
+    // marks mdadm and initramfs pending, and the reads answer a mirror of sdb and sdc. The menu's
+    // probe (getCandidates) answers the 404 where the arrays do.
     mdMgmtGetDetail: guarded("mirror"),
     mdMgmtGetSlaves: guarded("mirror"),
-    mdMgmtGetCandidates: guarded("vmScratch"),
+    mdMgmtGetCandidates: guarded(
+      name === "disksNoRaidPlugin" ? "notInstalled" : "vmScratch",
+    ),
     mdMgmtCreate: mdPending("mirror"),
     mdMgmtAdd: mdPending("spare"),
     mdMgmtGrow: mdPending("reshaping"),

@@ -6,18 +6,11 @@
 // form, whichever of the two addresses is opened: one run at a time (7.3). A normal user gets the "only
 // administrators" page, and nothing is called first (UI-4).
 import {
-  useConfigApplyChangesBg,
-  useConfigRevertChangesBg,
-} from "@omv-webui/react-api-omv/generated";
-import { taskRegistry, useTasks } from "@omv-webui/react-api-omv/tasks";
-import {
   BreadcrumbItem,
   Breadcrumbs,
   JobRunner,
-  PreflightNotice,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { flowStore, type FlowKind } from "../../filesystems/flowRun.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
@@ -25,13 +18,9 @@ import { pendingModules } from "../../pending/modules.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { useMemoryStore } from "../../shell/memoryStore.ts";
 import { PageTitle } from "../atoms/PageTitle.tsx";
-import { ModuleNames } from "../molecules/ModuleNames.tsx";
 import { AddStorageDecisions } from "../organisms/AddStorageDecisions.tsx";
 import { AddStorageRun } from "../organisms/AddStorageRun.tsx";
-import {
-  ApplyChangesDialog,
-  UndoChangesDialog,
-} from "../organisms/PendingChanges.tsx";
+import { FlowPreflight } from "../organisms/FlowPreflight.tsx";
 import { AdminOnlyPage } from "./AdminOnlyPage.tsx";
 
 /** The route /storage/filesystems/add. */
@@ -56,62 +45,6 @@ export function AddStoragePage({ kind }: { kind: FlowKind }) {
   return <AddStorage kind={kind} />;
 }
 
-/** R1: pending changes from elsewhere stop the flow before its first decision. */
-function Preflight({ modules }: { modules: readonly string[] }) {
-  const { t } = useTranslation();
-  const tasks = useTasks();
-  const apply = useConfigApplyChangesBg();
-  const undo = useConfigRevertChangesBg();
-  const [confirming, setConfirming] = useState<"apply" | "undo" | null>(null);
-  const [last, setLast] = useState<{
-    id: number;
-    action: "apply" | "undo";
-  } | null>(null);
-  const running =
-    last !== null && tasks.find((x) => x.id === last.id)?.state === "running";
-  const start = (action: "apply" | "undo") => {
-    setConfirming(null);
-    const id = taskRegistry.start(
-      t(action === "apply" ? "pending.applyTask" : "pending.undoTask"),
-      () =>
-        action === "apply"
-          ? apply.mutateAsync({ data: { modules: [], force: false } })
-          : undo.mutateAsync({ data: { filename: "" } }),
-    );
-    setLast({ id, action });
-  };
-  return (
-    <>
-      <PreflightNotice
-        title={t("addStorage.preflightTitle")}
-        applyLabel={t("addStorage.applyThem")}
-        undoLabel={t("addStorage.undoThem")}
-        onApply={() => setConfirming("apply")}
-        onUndo={() => setConfirming("undo")}
-        busy={running ? last.action : undefined}
-      >
-        <p>
-          {t("pending.message", { count: modules.length })}{" "}
-          <ModuleNames ids={modules} />
-        </p>
-        <p>{t("addStorage.preflightBody")}</p>
-      </PreflightNotice>
-      <ApplyChangesDialog
-        open={confirming === "apply"}
-        onOpenChange={(open) => !open && setConfirming(null)}
-        modules={modules}
-        onConfirm={() => start("apply")}
-      />
-      <UndoChangesDialog
-        open={confirming === "undo"}
-        onOpenChange={(open) => !open && setConfirming(null)}
-        modules={modules}
-        onConfirm={() => start("undo")}
-      />
-    </>
-  );
-}
-
 function AddStorage({ kind: requested }: { kind: FlowKind }) {
   const { t } = useTranslation();
   const info = useSystemInformation("admin");
@@ -130,7 +63,9 @@ function AddStorage({ kind: requested }: { kind: FlowKind }) {
       </p>
     );
   } else if (pending.length > 0 || info.data.configDirty === true) {
-    content = <Preflight modules={pending} />;
+    content = (
+      <FlowPreflight modules={pending} body={t("addStorage.preflightBody")} />
+    );
   } else {
     content = <AddStorageDecisions key={kind} kind={kind} />;
   }

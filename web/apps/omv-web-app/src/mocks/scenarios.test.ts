@@ -199,20 +199,31 @@ describe("the mock scenarios", () => {
     "%s leaves mdadm and initramfs pending until an apply",
     (operationId) => {
       const session = newMockSession(true);
-      answerOf("admin", session, operationId);
+      const params = {
+        mdMgmtCreate: {
+          devices: ["/dev/sdd", "/dev/sde"],
+          name: "",
+          level: "mirror",
+        },
+        mdMgmtAdd: { devicefile: "/dev/md0", devices: ["/dev/sdd"] },
+        mdMgmtGrow: { devicefile: "/dev/md0", devices: ["/dev/sdd"] },
+        mdMgmtRemove: { devicefile: "/dev/md0", devices: ["/dev/sdb"] },
+        mdMgmtDelete: { devicefile: "/dev/md0" },
+      }[operationId];
+      answerOf("raidMirror", session, operationId, params);
       const info = answerOf(
-        "admin",
+        "raidMirror",
         session,
         "systemGetInformation",
       ) as FixedAnswer;
       const dirty = (info.value as { dirtyModules: object }).dirtyModules;
       expect(Object.keys(dirty).sort()).toEqual(["initramfs", "mdadm"]);
-      answerOf("admin", session, "execGetOutput", {
+      answerOf("raidMirror", session, "execGetOutput", {
         filename:
           CONTRACT_EXAMPLES.execGetOutput.appliedFinished.value.filename,
         pos: 0,
       });
-      expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
+      expect(answerOf("raidMirror", session, "configIsDirty")).toBe("clean");
     },
   );
 
