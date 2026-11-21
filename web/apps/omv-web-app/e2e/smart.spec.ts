@@ -104,6 +104,8 @@ test("the Disk health pages, tab by tab with the keyboard, without waking a disk
     page.getByRole("menuitem", { name: copy.smart.tests.edit }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
+  // The menu's popup leaves the page before the width is measured.
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await expectNoSidewaysScroll(page);
 
   await tabs.getByRole("link", { name: copy.smart.tab.selfTests }).focus();
