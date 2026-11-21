@@ -254,6 +254,17 @@ export const OPERATIONS = {
       $ref: "MountedFilesystemList",
     },
   },
+  "/rpc/FileSystemMgmt/getList": {
+    operationId: "fileSystemMgmtGetList",
+    service: "FileSystemMgmt",
+    method: "getList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ConfiguredFilesystemList",
+    },
+  },
   "/rpc/Smart/getListBg": {
     operationId: "smartGetListBg",
     service: "Smart",
@@ -366,6 +377,169 @@ export const SCHEMAS: SchemaTable = {
     type: "array",
     items: {
       type: "string",
+    },
+  },
+  ConfiguredFilesystem: {
+    type: "object",
+    required: [
+      "devicename",
+      "devicefile",
+      "predictabledevicefile",
+      "canonicaldevicefile",
+      "parentdevicefile",
+      "devlinks",
+      "uuid",
+      "label",
+      "type",
+      "blocks",
+      "mounted",
+      "mountpoint",
+      "used",
+      "available",
+      "size",
+      "percentage",
+      "description",
+      "hasmultipledevices",
+      "devicefiles",
+      "comment",
+      "_readonly",
+      "_used",
+      "status",
+    ],
+    properties: {
+      status: {
+        type: "integer",
+        enum: [1, 2, 3],
+      },
+      devicename: {
+        type: "string",
+      },
+      devicefile: {
+        type: "string",
+      },
+      predictabledevicefile: {
+        type: "string",
+      },
+      canonicaldevicefile: {
+        type: "string",
+      },
+      parentdevicefile: {
+        type: "string",
+      },
+      devlinks: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      uuid: {
+        type: "string",
+      },
+      label: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mounted: {
+        type: "boolean",
+      },
+      mountpoint: {
+        type: "string",
+      },
+      blocks: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      available: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      used: {
+        type: "string",
+      },
+      percentage: {
+        type: "integer",
+        minimum: -1,
+        maximum: 100,
+      },
+      description: {
+        type: "string",
+      },
+      propposixacl: {
+        type: "boolean",
+      },
+      propquota: {
+        type: "boolean",
+      },
+      propresize: {
+        type: "boolean",
+      },
+      propfstab: {
+        type: "boolean",
+      },
+      propreadonly: {
+        type: "boolean",
+      },
+      propcompress: {
+        type: "boolean",
+      },
+      propautodefrag: {
+        type: "boolean",
+      },
+      hasmultipledevices: {
+        oneOf: [
+          {
+            type: "boolean",
+          },
+          {
+            type: "string",
+            enum: [""],
+          },
+        ],
+      },
+      devicefiles: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      comment: {
+        type: "string",
+      },
+      usagewarnthreshold: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+      },
+      mountopts: {
+        type: "string",
+      },
+      _readonly: {
+        type: "boolean",
+      },
+      _used: {
+        type: "boolean",
+      },
+    },
+  },
+  ConfiguredFilesystemList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "ConfiguredFilesystem",
+        },
+      },
     },
   },
   EmailNotificationSettings: {

@@ -297,6 +297,18 @@
     }
   },
   {
+    "service": "FileSystemMgmt",
+    "method": "getList",
+    "name": "configured",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null
+    }
+  },
+  {
     "service": "Smart",
     "method": "getListBg",
     "name": "smartDevices",

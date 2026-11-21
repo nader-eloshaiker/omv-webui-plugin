@@ -3,7 +3,9 @@
  * openmediavault-webui contract
  */
 import type {
+  ConfiguredFilesystemList,
   FileSystemMgmtEnumerateMountedFilesystemsRequest,
+  GetListRequest,
   MountedFilesystemList,
 } from "@omv-webui/ts-api-omv";
 
@@ -234,6 +236,192 @@ export function useFileSystemMgmtEnumerateMountedFilesystems<
 } {
   const queryOptions = getFileSystemMgmtEnumerateMountedFilesystemsQueryOptions(
     fileSystemMgmtEnumerateMountedFilesystemsRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Every file system configured in OMV, with whether it is available, being created or missing, paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file system whose disk is gone (status 3). The server looks for every file system on every disk and measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists every row.
+ * @summary Configured file systems
+ */
+export const fileSystemMgmtGetList = (
+  getListRequest: BodyType<GetListRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<ConfiguredFilesystemList>(
+    {
+      url: `/rpc/FileSystemMgmt/getList`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: getListRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getFileSystemMgmtGetListQueryKey = (
+  getListRequest?: BodyType<GetListRequest>,
+) => {
+  return ["POST", `/rpc/FileSystemMgmt/getList`, getListRequest] as const;
+};
+
+export const getFileSystemMgmtGetListQueryOptions = <
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFileSystemMgmtGetListQueryKey(getListRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof fileSystemMgmtGetList>>
+  > = ({ signal }) =>
+    fileSystemMgmtGetList(getListRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FileSystemMgmtGetListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof fileSystemMgmtGetList>>
+>;
+export type FileSystemMgmtGetListQueryError = ErrorType<unknown>;
+
+/**
+ * Every file system configured in OMV, with whether it is available, being created or missing, paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file system whose disk is gone (status 3). The server looks for every file system on every disk and measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists every row.
+ * @summary Configured file systems
+ */
+export function useFileSystemMgmtGetList<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system configured in OMV, with whether it is available, being created or missing, paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file system whose disk is gone (status 3). The server looks for every file system on every disk and measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists every row.
+ * @summary Configured file systems
+ */
+export function useFileSystemMgmtGetList<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+          TError,
+          Awaited<ReturnType<typeof fileSystemMgmtGetList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system configured in OMV, with whether it is available, being created or missing, paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file system whose disk is gone (status 3). The server looks for every file system on every disk and measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists every row.
+ * @summary Configured file systems
+ */
+export function useFileSystemMgmtGetList<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Every file system configured in OMV, with whether it is available, being created or missing, paged and sorted by the backend. Unlike enumerateMountedFilesystems, it lists a configured file system whose disk is gone (status 3). The server looks for every file system on every disk and measures the mounted ones as it answers, so it is heavier than that method; `limit` null lists every row.
+ * @summary Configured file systems
+ */
+export function useFileSystemMgmtGetList<
+  TData = Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof fileSystemMgmtGetList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getFileSystemMgmtGetListQueryOptions(
+    getListRequest,
     options,
   );
 

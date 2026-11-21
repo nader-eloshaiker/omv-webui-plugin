@@ -1,0 +1,135 @@
+type: object
+description: >-
+  A file system configured in OMV, or one being created, with its state in `status`. A configured
+  file system that is not detected (status 3) or still being created (status 2) has no usage: its
+  sizes are "-1", its percentage -1 and most device fields empty.
+required:
+  [
+    devicename,
+    devicefile,
+    predictabledevicefile,
+    canonicaldevicefile,
+    parentdevicefile,
+    devlinks,
+    uuid,
+    label,
+    type,
+    blocks,
+    mounted,
+    mountpoint,
+    used,
+    available,
+    size,
+    percentage,
+    description,
+    hasmultipledevices,
+    devicefiles,
+    comment,
+    _readonly,
+    _used,
+    status,
+  ]
+properties:
+  status:
+    type: integer
+    enum: [1, 2, 3]
+    description: >-
+      1 available (detected, and online when mounted), 2 being created, 3 missing (configured but
+      not detected: its disk may be disconnected or have failed).
+  devicename:
+    type: string
+    description: The kernel's name for the partition or device, such as "sda1"; empty unless available.
+  devicefile:
+    type: string
+    description: >-
+      The device file OMV prefers. For a missing file system, the configured device file, or empty
+      when it was configured by UUID.
+  predictabledevicefile:
+    type: string
+  canonicaldevicefile:
+    type: string
+  parentdevicefile:
+    type: string
+  devlinks:
+    type: array
+    items:
+      type: string
+  uuid:
+    type: string
+    description: >-
+      The file system's own UUID. For a missing file system, the configured UUID, or empty when it
+      was configured by device file.
+  label:
+    type: string
+  type:
+    type: string
+    description: The file system type, such as "ext4" or "btrfs".
+  mounted:
+    type: boolean
+  mountpoint:
+    type: string
+    description: The configured mount point; empty for a file system being created.
+  blocks:
+    type: string
+    x-omv-int64: true
+    description: Size in 1 KiB blocks. "-1" when there is no reading.
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes. "-1" when there is no reading.
+  available:
+    type: string
+    x-omv-int64: true
+    description: Bytes free. "-1" when there is no reading.
+  used:
+    type: string
+    description: Display text, such as "12.34 GiB". "-1" when there is no reading.
+  percentage:
+    type: integer
+    minimum: -1
+    maximum: 100
+    description: Percent used. -1 when there is no reading.
+  description:
+    type: string
+    description: Display text; empty unless available.
+  propposixacl:
+    type: boolean
+  propquota:
+    type: boolean
+  propresize:
+    type: boolean
+  propfstab:
+    type: boolean
+  propreadonly:
+    type: boolean
+  propcompress:
+    type: boolean
+  propautodefrag:
+    type: boolean
+  hasmultipledevices:
+    description: Whether it spans several devices; the empty string unless available (read from source).
+    oneOf:
+      - type: boolean
+      - type: string
+        enum: [""]
+  devicefiles:
+    type: array
+    items:
+      type: string
+  comment:
+    type: string
+  usagewarnthreshold:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: >-
+      Percent used at which OMV warns; 0 means it never warns. Absent for a file system being
+      created.
+  mountopts:
+    type: string
+    description: The configured mount options. Absent for a file system being created.
+  _readonly:
+    type: boolean
+  _used:
+    type: boolean
+    description: Whether something (a shared folder, for one) refers to this file system.
