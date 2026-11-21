@@ -470,3 +470,21 @@ Built on `phase-5-monitoring` to [design/phase-5-monitoring.md](design/phase-5-m
   3. RAID (`openmediavault-md`);
   4. ZFS (`openmediavault-zfs`), whose source is not in the OMV tree and is read separately.
 - **The interface enforces its own safeguards for destructive actions** (UI-8). It refuses to wipe a disk that holds a mounted file system or a RAID member, and to unmount a file system that shared folders use. It does not rely on the server to refuse them.
+
+## 2026-11-21 — The disks and disk-health design, agreed by the owner
+
+The owner agreed every destructive-action point of [design/phase-5-disks.md](design/phase-5-disks.md), section 17, and took D1–D23 as recommended:
+
+- **P1, what a wipe refuses:**
+  - the system disk and a read-only disk;
+  - a disk whose file system is mounted, used, set up (even if not yet applied) or being created;
+  - a RAID member, and a disk already being wiped;
+  - every disk, when the safety check could not run.
+- **P2, the confirmation:** one destructive dialog naming device, model, serial number, size and what is on the disk. Quick (the default) or Secure. The reader types the device name. The disk is checked again, serial number included, when the dialog opens and on "Wipe disk".
+- **P3:** a refused wipe offers no classic-interface link around the refusal.
+- **P4:** storage the interface cannot trace to its disks (encryption, LVM, ZFS, RAID made without the plugin) is warned about in the dialog, not refused.
+- **P5:** a disk holding swap space is refused.
+- **P6:** the write cache starts on when power settings are first saved (OMV's form defaults to off).
+- **P7:** a secure wipe keeps running on the NAS after a reload, which the page can no longer show. The dialog says so before it starts.
+- **P8:** a secure wipe can be stopped after a plain confirmation. A quick wipe cannot.
+- **P9:** after a wipe, the disk shows "Empty (wiped at …)" for the session, with a link to create a file system in the classic interface until the file-systems slice exists.
