@@ -1,0 +1,32 @@
+type: object
+description: A snapshot. The reply does not say when it was taken; a snapshot taken here is named by it.
+required: [id, parent, name, type, icon, path, used, refer, encryption]
+properties:
+  id:
+    type: string
+    description: The plugin's tree id; not a ZFS name.
+  parent:
+    type: string
+    description: The full name of the file system or volume it is a snapshot of.
+  name:
+    type: string
+    description: >-
+      Its own name, the part after "@". Zfs.quickSnapshot names it by the NAS's date and time,
+      "YYYY-MM-DD_hh-mm-ss".
+  type:
+    type: string
+    description: '"Snapshot".'
+  icon:
+    type: string
+  path:
+    type: string
+    description: Its full name ("tank/media@…"), the one name every other method takes.
+  used:
+    type: integer
+    description: Bytes only this snapshot holds, which deleting it frees.
+  refer:
+    type: integer
+    description: Bytes of the file system as the snapshot keeps it.
+  encryption:
+    type: string
+    description: The encryption, in capitals ("OFF").

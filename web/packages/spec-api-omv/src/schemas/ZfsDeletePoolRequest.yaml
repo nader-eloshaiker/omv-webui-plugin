@@ -1,0 +1,18 @@
+type: object
+description: >-
+  A pool to delete, by its name and the folder its own folder is mounted on. The plugin refuses
+  while it holds any file system or volume.
+required: [type, name, mp, recursive]
+properties:
+  type:
+    type: string
+    enum: [Pool]
+  name:
+    $ref: ./ZfsPoolName.yaml
+  mp:
+    $ref: ./ZfsMountFolder.yaml
+  recursive:
+    type: boolean
+    description: Accepted only false.
+    enum: [false]
+additionalProperties: false

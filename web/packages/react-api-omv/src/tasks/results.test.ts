@@ -31,6 +31,9 @@ const FINISHES = {
   fsCandidatesNoneFinished: "fileSystemMgmtGetCandidatesBg",
   createExt4Finished: "fileSystemMgmtCreate",
   createBtrfsRaid1Finished: "fileSystemMgmtCreateBtrfs",
+  zfsDeleteSnapshotFinished: "zfsDeleteObjectBg",
+  zfsDeleteFilesystemFinished: "zfsDeleteObjectBg",
+  zfsDeletePoolFinished: "zfsDeleteObjectBg",
 } as const satisfies Partial<Record<PollExample, string>>;
 
 /** Tasks with no result whose output is a log to show: the commands' text, never parsed. */

@@ -1,0 +1,21 @@
+type: object
+description: >-
+  A new file system at the top of a pool (rpc.zfs.addobject). Stricter than the plugin, which also
+  makes snapshots, volumes and clones with this method: only a file system, on an existing pool,
+  in its default folder, with no property of its own (it inherits the pool's compression).
+required: [type, path, name, mountpoint]
+properties:
+  type:
+    type: string
+    description: What to create. Accepted only "filesystem".
+    enum: [filesystem]
+  path:
+    $ref: ./ZfsPoolName.yaml
+  name:
+    $ref: ./ZfsNewFilesystemName.yaml
+  mountpoint:
+    type: string
+    description: >-
+      The file system's folder. Accepted only empty: ZFS's default, /<pool>/<name> (D13).
+    enum: [""]
+additionalProperties: false

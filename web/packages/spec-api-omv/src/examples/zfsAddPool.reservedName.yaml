@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a pool named mirror1 asked for on sde: ZFS keeps the name for itself. It still left a partition table on sde."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool create -o ashift=12 -o failmode=continue -o autoexpand=on -O atime=off -O acltype=posix -O xattr=sa -O casesensitivity='sensitive' 'mirror1' '/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006' 2>&1' with exit code '1': cannot create 'mirror1': name is reserved\npool name may have been omitted"

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsRollbackSnapshot
+  tags:
+    - Zfs
+  summary: Roll a file system back to a snapshot
+  description: >-
+    Put a file system back as it was when the snapshot was taken, at once. Every change made
+    since is lost and cannot be recovered. ZFS refuses when newer snapshots exist (HTTP 500),
+    and then nothing changes; the contract has no way to ask it to delete them. Marks nothing
+    dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: rollbackSnapshot
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.zfs.name
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsSnapshotRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        ZFS refused, such as a snapshot with newer snapshots after it.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            newerSnapshots:
+              $ref: ../../examples/zfsRollbackSnapshot.newerSnapshots.yaml

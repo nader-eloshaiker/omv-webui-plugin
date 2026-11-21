@@ -1,0 +1,7 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started."
+x-omv-status: 200
+value:
+  - name: tank
+    state: ONLINE
+    status: OK
+    capacity: 66

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsGetEmptyCandidates
+  tags:
+    - Zfs
+  summary: Disks that can go into a pool
+  description: >-
+    The disks the plugin offers for a new pool or as a replacement: not read-only, not connected
+    by USB, not named by another service's settings, not in use, and with no file system or
+    partition table found on them, each by its stable /dev/disk/by-id/ name. The disks of a
+    deleted pool keep ZFS's partition table and are not offered until they are wiped (observed
+    on the test VM). The server asks the system's device information and the configuration; on
+    the test VM it read no pool's disk (journal). Changes nothing.
+  x-omv-rpc:
+    service: Zfs
+    method: getEmptyCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsCandidateList.yaml
+          examples:
+            vmScratch:
+              $ref: ../../examples/zfsGetEmptyCandidates.vmScratch.yaml
+            afterMirror:
+              $ref: ../../examples/zfsGetEmptyCandidates.afterMirror.yaml
+            afterPoolDeleted:
+              $ref: ../../examples/zfsGetEmptyCandidates.afterPoolDeleted.yaml

@@ -1,0 +1,14 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: one snapshot of tank/media, taken with Zfs.quickSnapshot."
+x-omv-status: 200
+value:
+  total: 1
+  data:
+    - id: "root/pool-tank/media@2026-11-21_12-00-00"
+      parent: tank/media
+      name: "2026-11-21_12-00-00"
+      type: Snapshot
+      icon: images/zfs_snap.png
+      path: "tank/media@2026-11-21_12-00-00"
+      used: 0
+      refer: 5372420096
+      encryption: "OFF"

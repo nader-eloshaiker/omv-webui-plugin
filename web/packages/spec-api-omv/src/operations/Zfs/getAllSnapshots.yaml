@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsGetAllSnapshots
+  tags:
+    - Zfs
+  summary: Every snapshot
+  description: >-
+    Every snapshot on every pool, with what it holds; not when it was taken. The server runs
+    ZFS's listing command for every snapshot; on the test VM no member disk was read while it
+    ran (journal). Changes nothing.
+  x-omv-rpc:
+    service: Zfs
+    method: getAllSnapshots
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsSnapshotList.yaml
+          examples:
+            several:
+              $ref: ../../examples/zfsGetAllSnapshots.several.yaml
+            one:
+              $ref: ../../examples/zfsGetAllSnapshots.one.yaml
+            none:
+              $ref: ../../examples/zfsGetAllSnapshots.none.yaml

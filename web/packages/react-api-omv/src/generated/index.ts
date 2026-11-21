@@ -19,3 +19,4 @@ export * from "./omv/ssh/ssh.ts";
 export * from "./omv/system/system.ts";
 export * from "./omv/user-mgmt/user-mgmt.ts";
 export * from "./omv/web-gui/web-gui.ts";
+export * from "./omv/zfs/zfs.ts";

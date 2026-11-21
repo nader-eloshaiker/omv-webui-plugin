@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsGetPoolStatus
+  tags:
+    - Zfs
+  summary: Every pool's state
+  description: >-
+    Every pool's name, state, error status and how full it is, from ZFS's status and list
+    commands only (no file system is listed). On the test VM no member disk was read while it
+    ran, also first after the pool was imported, so it may be read where no page about pools is
+    open (design phase-5-zfs P14; journal). Changes nothing. An empty list means no pool, or
+    that ZFS could not be asked; the plugin answers both the same way.
+  x-omv-rpc:
+    service: Zfs
+    method: getPoolStatus
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsPoolStatusList.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/zfsGetPoolStatus.mirror.yaml
+            none:
+              $ref: ../../examples/zfsGetPoolStatus.none.yaml
+            mirrorChecking:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorChecking.yaml
+            mirrorCheckStopped:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorCheckStopped.yaml
+            mirrorCheckPaused:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorCheckPaused.yaml
+            mirrorChecked:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorChecked.yaml
+            mirrorDegraded:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorDegraded.yaml
+            mirrorReplacing:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorReplacing.yaml
+            mirrorReplaced:
+              $ref: ../../examples/zfsGetPoolStatus.mirrorReplaced.yaml
+            raidz1:
+              $ref: ../../examples/zfsGetPoolStatus.raidz1.yaml
+            raidz2:
+              $ref: ../../examples/zfsGetPoolStatus.raidz2.yaml
+            stripe:
+              $ref: ../../examples/zfsGetPoolStatus.stripe.yaml
+            single:
+              $ref: ../../examples/zfsGetPoolStatus.single.yaml

@@ -204,7 +204,17 @@ function valibotOf(schema, contract, seen = []) {
   if (schema.oneOf || schema.anyOf) {
     expr = `v.union([${(schema.oneOf ?? schema.anyOf).map((s) => valibotOf(s, contract, seen)).join(", ")}])`;
   } else if (schema.enum) {
-    expr = `v.picklist(${JSON.stringify(schema.enum)})`;
+    // valibot's picklist takes strings and numbers; a boolean enum ("only false") is a literal.
+    const literals = schema.enum.map(
+      (value) => `v.literal(${JSON.stringify(value)})`,
+    );
+    expr = schema.enum.every(
+      (value) => typeof value === "string" || typeof value === "number",
+    )
+      ? `v.picklist(${JSON.stringify(schema.enum)})`
+      : literals.length === 1
+        ? literals[0]
+        : `v.union([${literals.join(", ")}])`;
   } else {
     switch (schema.type) {
       case "string": {

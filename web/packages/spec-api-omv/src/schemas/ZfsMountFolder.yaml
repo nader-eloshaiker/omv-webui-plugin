@@ -1,0 +1,8 @@
+type: string
+description: >-
+  The folder a pool or file system is mounted on, as Zfs.listPools gives it in `mountpoint`
+  ("/tank/media"): an absolute path of letters, digits, "_", ".", ":", "+" and "-", with no "."
+  or ".." part, and never "/" itself. The interface sends the folder Zfs.listPools gave for the
+  object it deletes, after its own check of what uses it (design phase-5-zfs 0.10).
+maxLength: 4096
+pattern: "^(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9_.:+-]+)+$"

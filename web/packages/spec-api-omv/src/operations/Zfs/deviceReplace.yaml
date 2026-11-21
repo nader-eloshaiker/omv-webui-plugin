@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsDeviceReplace
+  tags:
+    - Zfs
+  summary: Replace a disk of a pool
+  description: >-
+    Put a new disk in place of a disk of the pool, at once: ZFS erases the new disk and rebuilds
+    onto it (resilvering) in the background, and takes the old disk out of the pool when the
+    rebuild ends. Everything on the new disk is lost. The old disk keeps ZFS's marks and is not
+    offered as a candidate until it is wiped (observed on the test VM). The rebuild runs in ZFS,
+    not as a task; getObjectDetails shows it. Marks nothing dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: deviceReplace
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.zfs.pooltwodevices
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsDeviceReplaceRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

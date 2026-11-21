@@ -78,5 +78,25 @@
     "where": "mdMgmtSetSyncAction (MdMgmt.setSyncAction)",
     "message": "$.devicefile: its pattern differs from OMV's",
     "reason": "The contract names an array only as /dev/md followed by its number (^/dev/md[0-9]{1,3}$), the devicefile MdMgmt.enumerateDevices reports for it; every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "zfsAddPool (Zfs.addPool)",
+    "message": "$.devices[]: its pattern differs from OMV's",
+    "reason": "The contract takes a disk only by its stable /dev/disk/by-id/ name, a letter or digit first and no further \"/\" (ZfsDiskById), as Zfs.getEmptyCandidates gives it (design phase-5-zfs 0.8, D12); every such value also matches OMV's devicefile format."
+  },
+  {
+    "where": "zfsAddPool (Zfs.addPool)",
+    "message": "$: has a field compress that OMV's datamodel does not declare",
+    "reason": "rpc.zfs.addpool does not declare compress, but OMVRpcServiceZFS::addPool reads $params['compress'] and turns compression on when it is true, and validation ignores keys a datamodel does not declare. The contract requires it, as true only (design phase-5-zfs D11)."
+  },
+  {
+    "where": "zfsAddPool (Zfs.addPool)",
+    "message": "$: has a field compresstype that OMV's datamodel does not declare",
+    "reason": "rpc.zfs.addpool does not declare compresstype, but OMVRpcServiceZFS::addPool passes $params['compresstype'] to zfs set compression when compress is true, and validation ignores keys a datamodel does not declare. The contract requires it, as \"lz4\" only (design phase-5-zfs D11)."
+  },
+  {
+    "where": "zfsSetProperties (Zfs.setProperties)",
+    "message": "$.properties[]: has a field modified that OMV's datamodel does not declare",
+    "reason": "rpc.zfs.setproperties does not declare modified on a property, but OMVRpcServiceZFS::setProperties skips every property whose modified is not true, and validation ignores keys a datamodel does not declare. The contract requires it, as true only, on both of its kinds of property (size limit and compression)."
   }
 ]

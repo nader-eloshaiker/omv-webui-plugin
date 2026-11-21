@@ -1,0 +1,8 @@
+type: string
+description: >-
+  The name of a new file system at the top of a pool, without the pool's name (design phase-5-zfs
+  0.7): 1 to 64 letters, digits, "-", "_" or ".", a letter or digit first (so never "." or ".."),
+  and no "/", because the plugin creates every missing parent ("zfs create -p"). Stricter than the
+  plugin, which refuses only a space. The plugin does not refuse a name that is taken: it answers
+  as if it had created it (observed on the test VM), so that is the interface's own check.
+pattern: "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"

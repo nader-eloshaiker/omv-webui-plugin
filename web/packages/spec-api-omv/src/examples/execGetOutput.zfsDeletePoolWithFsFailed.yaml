@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting the pool tank while tank/media is on it: the plugin refuses."
+x-omv-status: 500
+value:
+  code: 0
+  message: 'Cannot delete pool "tank": it has datasets. Delete them first.'

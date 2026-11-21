@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsGetPoolDevices
+  tags:
+    - Zfs
+  summary: The disks of a pool
+  description: >-
+    Every disk of one pool from ZFS's structured status report, with its path, its state and the
+    group it is in. The paths are those ZFS opened the disks by; the report (getObjectDetails)
+    prints only their last part. The server runs ZFS's status command for the pool; on the test
+    VM no member disk was read while it ran (journal). Changes nothing. A pool that does not
+    exist, and a failure to ask ZFS, both answer an empty list, so the interface treats an empty
+    list for a pool it has listed as a failed read (design phase-5-zfs 0.8, D10).
+  x-omv-rpc:
+    service: Zfs
+    method: getPoolDevices
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.zfs.name
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsPoolDeviceList.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/zfsGetPoolDevices.mirror.yaml
+            mirrorChecking:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorChecking.yaml
+            mirrorCheckStopped:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorCheckStopped.yaml
+            mirrorCheckPaused:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorCheckPaused.yaml
+            mirrorChecked:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorChecked.yaml
+            mirrorDegraded:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorDegraded.yaml
+            mirrorReplacing:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorReplacing.yaml
+            mirrorReplaced:
+              $ref: ../../examples/zfsGetPoolDevices.mirrorReplaced.yaml
+            raidz1:
+              $ref: ../../examples/zfsGetPoolDevices.raidz1.yaml
+            raidz2:
+              $ref: ../../examples/zfsGetPoolDevices.raidz2.yaml
+            stripe:
+              $ref: ../../examples/zfsGetPoolDevices.stripe.yaml
+            single:
+              $ref: ../../examples/zfsGetPoolDevices.single.yaml

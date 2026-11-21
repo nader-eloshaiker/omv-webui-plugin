@@ -1,0 +1,3 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting tank/media."
+x-omv-status: 200
+value: /tmp/bgstatusnpep004qsv01dmia4Ua

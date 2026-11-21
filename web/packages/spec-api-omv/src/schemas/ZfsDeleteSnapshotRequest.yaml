@@ -1,0 +1,17 @@
+type: object
+description: A snapshot to delete. It has no folder of its own, so mp is empty.
+required: [type, name, mp, recursive]
+properties:
+  type:
+    type: string
+    enum: [Snapshot]
+  name:
+    $ref: ./ZfsSnapshotPath.yaml
+  mp:
+    type: string
+    enum: [""]
+  recursive:
+    type: boolean
+    description: Accepted only false.
+    enum: [false]
+additionalProperties: false

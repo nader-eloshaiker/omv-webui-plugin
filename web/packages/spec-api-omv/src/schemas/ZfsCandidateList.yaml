@@ -1,0 +1,8 @@
+type: array
+description: >-
+  The disks the plugin offers: not read-only, not connected by USB, not named by another service's
+  settings, not in use, and with no file system or partition table found on them. A disk of a
+  deleted pool keeps ZFS's partition table and is not offered until it is wiped (observed on the
+  test VM).
+items:
+  $ref: ./ZfsCandidate.yaml

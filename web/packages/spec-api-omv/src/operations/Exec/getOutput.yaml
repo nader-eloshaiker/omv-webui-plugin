@@ -49,6 +49,12 @@ post:
               $ref: ../../examples/execGetOutput.createExt4Finished.yaml
             createBtrfsRaid1Finished:
               $ref: ../../examples/execGetOutput.createBtrfsRaid1Finished.yaml
+            zfsDeleteSnapshotFinished:
+              $ref: ../../examples/execGetOutput.zfsDeleteSnapshotFinished.yaml
+            zfsDeleteFilesystemFinished:
+              $ref: ../../examples/execGetOutput.zfsDeleteFilesystemFinished.yaml
+            zfsDeletePoolFinished:
+              $ref: ../../examples/execGetOutput.zfsDeletePoolFinished.yaml
     "500":
       description: "The task failed: the message is the task's whole output (for an apply, the Salt log). Also the answer for a handle the server has already deleted (A6)."
       content:
@@ -64,3 +70,5 @@ post:
               $ref: ../../examples/execGetOutput.createFailed.yaml
             createBtrfsFailed:
               $ref: ../../examples/execGetOutput.createBtrfsFailed.yaml
+            zfsDeletePoolWithFsFailed:
+              $ref: ../../examples/execGetOutput.zfsDeletePoolWithFsFailed.yaml

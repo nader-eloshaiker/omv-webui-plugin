@@ -33,6 +33,7 @@ tags:
   - name: DiskMgmt
   - name: MdMgmt
   - name: FsTab
+  - name: Zfs
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -182,6 +183,44 @@ paths:
     $ref: ./operations/FsTab/getByFsName.yaml
   /rpc/FsTab/set:
     $ref: ./operations/FsTab/set.yaml
+  /rpc/Zfs/listCompressionTypes:
+    $ref: ./operations/Zfs/listCompressionTypes.yaml
+  /rpc/Zfs/listPools:
+    $ref: ./operations/Zfs/listPools.yaml
+  /rpc/Zfs/getObjectDetails:
+    $ref: ./operations/Zfs/getObjectDetails.yaml
+  /rpc/Zfs/getPoolDevices:
+    $ref: ./operations/Zfs/getPoolDevices.yaml
+  /rpc/Zfs/getPoolStatus:
+    $ref: ./operations/Zfs/getPoolStatus.yaml
+  /rpc/Zfs/getAllSnapshots:
+    $ref: ./operations/Zfs/getAllSnapshots.yaml
+  /rpc/Zfs/getEmptyCandidates:
+    $ref: ./operations/Zfs/getEmptyCandidates.yaml
+  /rpc/Zfs/addPool:
+    $ref: ./operations/Zfs/addPool.yaml
+  /rpc/Zfs/addObject:
+    $ref: ./operations/Zfs/addObject.yaml
+  /rpc/Zfs/setProperties:
+    $ref: ./operations/Zfs/setProperties.yaml
+  /rpc/Zfs/quickSnapshot:
+    $ref: ./operations/Zfs/quickSnapshot.yaml
+  /rpc/Zfs/rollbackSnapshot:
+    $ref: ./operations/Zfs/rollbackSnapshot.yaml
+  /rpc/Zfs/deleteObjectBg:
+    $ref: ./operations/Zfs/deleteObjectBg.yaml
+  /rpc/Zfs/scrubPool:
+    $ref: ./operations/Zfs/scrubPool.yaml
+  /rpc/Zfs/stopScrub:
+    $ref: ./operations/Zfs/stopScrub.yaml
+  /rpc/Zfs/deviceReplace:
+    $ref: ./operations/Zfs/deviceReplace.yaml
+  /rpc/Zfs/deviceOffline:
+    $ref: ./operations/Zfs/deviceOffline.yaml
+  /rpc/Zfs/deviceOnline:
+    $ref: ./operations/Zfs/deviceOnline.yaml
+  /rpc/Zfs/clearPool:
+    $ref: ./operations/Zfs/clearPool.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsClearPool
+  tags:
+    - Zfs
+  summary: Clear a pool's error counts
+  description: >-
+    Set the read, write and checksum error counts of a pool's disks back to zero, and let ZFS
+    try a failed disk again. Nothing on the pool changes, but the record of the errors is gone.
+    Marks nothing dirty.
+  x-omv-rpc:
+    service: Zfs
+    method: clearPool
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.zfs.name
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolNameRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

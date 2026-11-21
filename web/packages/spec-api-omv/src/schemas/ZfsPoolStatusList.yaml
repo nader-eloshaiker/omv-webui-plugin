@@ -1,0 +1,6 @@
+type: array
+description: >-
+  Every pool, by name. Empty when there is none, and also when ZFS could not be asked (the plugin
+  answers both the same way).
+items:
+  $ref: ./ZfsPoolStatus.yaml

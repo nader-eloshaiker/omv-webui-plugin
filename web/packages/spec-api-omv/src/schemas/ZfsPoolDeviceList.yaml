@@ -1,0 +1,6 @@
+type: array
+description: >-
+  The disks of one pool. Empty when the pool does not exist or ZFS could not be asked (the plugin
+  answers both with an empty list, not an error).
+items:
+  $ref: ./ZfsPoolDevice.yaml

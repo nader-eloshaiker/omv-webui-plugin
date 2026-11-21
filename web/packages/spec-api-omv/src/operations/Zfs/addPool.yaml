@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsAddPool
+  tags:
+    - Zfs
+  summary: Create a pool
+  description: >-
+    Erase the disks given and make them into a new pool of one group, at once, then turn its
+    compression on and register its own folder (/<name>) with OMV as a file system. Every disk
+    is overwritten and what was on it is lost; the server checks nothing about the disks itself,
+    and ZFS refuses only a disk that holds a pool or a file system (HTTP 500), so the interface
+    itself refuses every disk its candidate list and the disk-use model do not both allow
+    (design phase-5-zfs 0.8). A "basic" pool has no protection: if one of its disks fails,
+    everything on it is lost. A create ZFS refuses may still have written a partition table to
+    the disks (observed on the test VM for a reserved name). Marks the fstab, collectd, monit
+    and quota modules dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: addPool
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.zfs.addpool
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsAddPoolRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        ZFS refused: a disk is in use, or the name is one ZFS keeps for itself.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            diskInUse:
+              $ref: ../../examples/zfsAddPool.diskInUse.yaml
+            reservedName:
+              $ref: ../../examples/zfsAddPool.reservedName.yaml

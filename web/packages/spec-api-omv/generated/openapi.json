@@ -71,6 +71,9 @@
     },
     {
       "name": "FsTab"
+    },
+    {
+      "name": "Zfs"
     }
   ],
   "paths": {
@@ -532,6 +535,15 @@
                   },
                   "createBtrfsRaid1Finished": {
                     "$ref": "#/components/examples/execGetOutput.createBtrfsRaid1Finished"
+                  },
+                  "zfsDeleteSnapshotFinished": {
+                    "$ref": "#/components/examples/execGetOutput.zfsDeleteSnapshotFinished"
+                  },
+                  "zfsDeleteFilesystemFinished": {
+                    "$ref": "#/components/examples/execGetOutput.zfsDeleteFilesystemFinished"
+                  },
+                  "zfsDeletePoolFinished": {
+                    "$ref": "#/components/examples/execGetOutput.zfsDeletePoolFinished"
                   }
                 }
               }
@@ -556,6 +568,9 @@
                   },
                   "createBtrfsFailed": {
                     "$ref": "#/components/examples/execGetOutput.createBtrfsFailed"
+                  },
+                  "zfsDeletePoolWithFsFailed": {
+                    "$ref": "#/components/examples/execGetOutput.zfsDeletePoolWithFsFailed"
                   }
                 }
               }
@@ -3656,6 +3671,988 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/listCompressionTypes": {
+      "post": {
+        "operationId": "zfsListCompressionTypes",
+        "tags": ["Zfs"],
+        "summary": "The compression names the plugin knows",
+        "description": "A fixed list of compression names, from the plugin's source: it runs no command and reads nothing on the NAS, so the interface reads it once after an administrator signs in to learn whether the ZFS plugin is installed (design phase-5-zfs 0.11, P14); the list itself is not used. Changes nothing. When the plugin is not installed, OMV does not know the service and the call fails with HTTP 404 \"RPC service 'Zfs' not found.\".",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "listCompressionTypes"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsCompressionTypeList"
+                },
+                "examples": {
+                  "list": {
+                    "$ref": "#/components/examples/zfsListCompressionTypes.list"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The ZFS plugin is not installed: OMV knows no Zfs service. Code 0, message \"RPC service 'Zfs' not found.\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notInstalled": {
+                    "$ref": "#/components/examples/zfsListCompressionTypes.notInstalled"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/listPools": {
+      "post": {
+        "operationId": "zfsListPools",
+        "tags": ["Zfs"],
+        "summary": "Pools, file systems and volumes",
+        "description": "Every pool, file system and volume in one flat list (ZfsObject), each pool twice: its pool row and its own folder. The server runs ZFS's status and list commands for every pool and its listing command for every file system and volume, and reads OMV's shared folders; on the test VM no member disk was read while it ran, also first after the pool was imported (journal). Changes nothing. The plugin does not check the paging parameters itself; it passes them to the backend's paging as getAllSnapshots does after checking them against rpc.common.getlist, so the contract holds them to that datamodel.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "listPools"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsObjectList"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/zfsListPools.mirror"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/zfsListPools.none"
+                  },
+                  "mirrorWithFs": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorWithFs"
+                  },
+                  "mirrorFsSettings": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorFsSettings"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorChecking"
+                  },
+                  "mirrorCheckStopped": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorCheckStopped"
+                  },
+                  "mirrorCheckPaused": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorCheckPaused"
+                  },
+                  "mirrorChecked": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorChecked"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorReplacing"
+                  },
+                  "mirrorReplaced": {
+                    "$ref": "#/components/examples/zfsListPools.mirrorReplaced"
+                  },
+                  "raidz1": {
+                    "$ref": "#/components/examples/zfsListPools.raidz1"
+                  },
+                  "raidz2": {
+                    "$ref": "#/components/examples/zfsListPools.raidz2"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/zfsListPools.stripe"
+                  },
+                  "single": {
+                    "$ref": "#/components/examples/zfsListPools.single"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/getObjectDetails": {
+      "post": {
+        "operationId": "zfsGetObjectDetails",
+        "tags": ["Zfs"],
+        "summary": "ZFS's report on a pool or a file system",
+        "description": "ZFS's own report as display text (ZfsReport): for a pool, zpool status with its device tree, error counts, the scan line of the last or running check or rebuild, and the damaged files; for a file system, its zfs list line and every property. It is the only reply that says what each disk is doing and how far a check or rebuild has got. The server runs ZFS's status or listing command; on the test VM no member disk was read while it ran (journal). Changes nothing. A pool or file system that does not exist fails with HTTP 500 and ZFS's words.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "getObjectDetails"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.objectdetails",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsGetObjectDetailsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsReport"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirror"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorChecking"
+                  },
+                  "mirrorCheckStopped": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorCheckStopped"
+                  },
+                  "mirrorCheckPaused": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorCheckPaused"
+                  },
+                  "mirrorChecked": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorChecked"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorReplacing"
+                  },
+                  "mirrorReplaced": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.mirrorReplaced"
+                  },
+                  "raidz1": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.raidz1"
+                  },
+                  "raidz2": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.raidz2"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.stripe"
+                  },
+                  "single": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.single"
+                  },
+                  "filesystem": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.filesystem"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "There is no such pool or file system.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notFound": {
+                    "$ref": "#/components/examples/zfsGetObjectDetails.notFound"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/getPoolDevices": {
+      "post": {
+        "operationId": "zfsGetPoolDevices",
+        "tags": ["Zfs"],
+        "summary": "The disks of a pool",
+        "description": "Every disk of one pool from ZFS's structured status report, with its path, its state and the group it is in. The paths are those ZFS opened the disks by; the report (getObjectDetails) prints only their last part. The server runs ZFS's status command for the pool; on the test VM no member disk was read while it ran (journal). Changes nothing. A pool that does not exist, and a failure to ask ZFS, both answer an empty list, so the interface treats an empty list for a pool it has listed as a failed read (design phase-5-zfs 0.8, D10).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "getPoolDevices"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.name",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsPoolDeviceList"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirror"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorChecking"
+                  },
+                  "mirrorCheckStopped": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorCheckStopped"
+                  },
+                  "mirrorCheckPaused": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorCheckPaused"
+                  },
+                  "mirrorChecked": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorChecked"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorReplacing"
+                  },
+                  "mirrorReplaced": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.mirrorReplaced"
+                  },
+                  "raidz1": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.raidz1"
+                  },
+                  "raidz2": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.raidz2"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.stripe"
+                  },
+                  "single": {
+                    "$ref": "#/components/examples/zfsGetPoolDevices.single"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/getPoolStatus": {
+      "post": {
+        "operationId": "zfsGetPoolStatus",
+        "tags": ["Zfs"],
+        "summary": "Every pool's state",
+        "description": "Every pool's name, state, error status and how full it is, from ZFS's status and list commands only (no file system is listed). On the test VM no member disk was read while it ran, also first after the pool was imported, so it may be read where no page about pools is open (design phase-5-zfs P14; journal). Changes nothing. An empty list means no pool, or that ZFS could not be asked; the plugin answers both the same way.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "getPoolStatus"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsPoolStatusList"
+                },
+                "examples": {
+                  "mirror": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirror"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.none"
+                  },
+                  "mirrorChecking": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorChecking"
+                  },
+                  "mirrorCheckStopped": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorCheckStopped"
+                  },
+                  "mirrorCheckPaused": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorCheckPaused"
+                  },
+                  "mirrorChecked": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorChecked"
+                  },
+                  "mirrorDegraded": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorDegraded"
+                  },
+                  "mirrorReplacing": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorReplacing"
+                  },
+                  "mirrorReplaced": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.mirrorReplaced"
+                  },
+                  "raidz1": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.raidz1"
+                  },
+                  "raidz2": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.raidz2"
+                  },
+                  "stripe": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.stripe"
+                  },
+                  "single": {
+                    "$ref": "#/components/examples/zfsGetPoolStatus.single"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/getAllSnapshots": {
+      "post": {
+        "operationId": "zfsGetAllSnapshots",
+        "tags": ["Zfs"],
+        "summary": "Every snapshot",
+        "description": "Every snapshot on every pool, with what it holds; not when it was taken. The server runs ZFS's listing command for every snapshot; on the test VM no member disk was read while it ran (journal). Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "getAllSnapshots"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsSnapshotList"
+                },
+                "examples": {
+                  "several": {
+                    "$ref": "#/components/examples/zfsGetAllSnapshots.several"
+                  },
+                  "one": {
+                    "$ref": "#/components/examples/zfsGetAllSnapshots.one"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/zfsGetAllSnapshots.none"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/getEmptyCandidates": {
+      "post": {
+        "operationId": "zfsGetEmptyCandidates",
+        "tags": ["Zfs"],
+        "summary": "Disks that can go into a pool",
+        "description": "The disks the plugin offers for a new pool or as a replacement: not read-only, not connected by USB, not named by another service's settings, not in use, and with no file system or partition table found on them, each by its stable /dev/disk/by-id/ name. The disks of a deleted pool keep ZFS's partition table and are not offered until they are wiped (observed on the test VM). The server asks the system's device information and the configuration; on the test VM it read no pool's disk (journal). Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "getEmptyCandidates"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZfsCandidateList"
+                },
+                "examples": {
+                  "vmScratch": {
+                    "$ref": "#/components/examples/zfsGetEmptyCandidates.vmScratch"
+                  },
+                  "afterMirror": {
+                    "$ref": "#/components/examples/zfsGetEmptyCandidates.afterMirror"
+                  },
+                  "afterPoolDeleted": {
+                    "$ref": "#/components/examples/zfsGetEmptyCandidates.afterPoolDeleted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/addPool": {
+      "post": {
+        "operationId": "zfsAddPool",
+        "tags": ["Zfs"],
+        "summary": "Create a pool",
+        "description": "Erase the disks given and make them into a new pool of one group, at once, then turn its compression on and register its own folder (/<name>) with OMV as a file system. Every disk is overwritten and what was on it is lost; the server checks nothing about the disks itself, and ZFS refuses only a disk that holds a pool or a file system (HTTP 500), so the interface itself refuses every disk its candidate list and the disk-use model do not both allow (design phase-5-zfs 0.8). A \"basic\" pool has no protection: if one of its disks fails, everything on it is lost. A create ZFS refuses may still have written a partition table to the disks (observed on the test VM for a reserved name). Marks the fstab, collectd, monit and quota modules dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "addPool"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.addpool",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsAddPoolRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "ZFS refused: a disk is in use, or the name is one ZFS keeps for itself.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "diskInUse": {
+                    "$ref": "#/components/examples/zfsAddPool.diskInUse"
+                  },
+                  "reservedName": {
+                    "$ref": "#/components/examples/zfsAddPool.reservedName"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/addObject": {
+      "post": {
+        "operationId": "zfsAddObject",
+        "tags": ["Zfs"],
+        "summary": "Create a file system on a pool",
+        "description": "Create a file system at the top of a pool, in its default folder (/<pool>/<name>), mount it and register it with OMV as a file system. It inherits the pool's compression. The plugin does not refuse a name that is taken: it answers as if it had created it and changes nothing (observed on the test VM), so the interface checks the name itself. Marks the fstab, collectd, monit and quota modules dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "addObject"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.addobject",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsAddObjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/setProperties": {
+      "post": {
+        "operationId": "zfsSetProperties",
+        "tags": ["Zfs"],
+        "summary": "Set a file system's size limit or compression",
+        "description": "Set a file system's size limit (quota) or compression, at once. A new compression applies to what is written from then on. ZFS refuses a limit below what the file system holds (HTTP 500), and then nothing changes. Marks the collectd, monit and quota modules dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "setProperties"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.setproperties",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsSetPropertiesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "ZFS refused the value, such as a size limit below what the file system holds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "belowUsed": {
+                    "$ref": "#/components/examples/zfsSetProperties.belowUsed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/quickSnapshot": {
+      "post": {
+        "operationId": "zfsQuickSnapshot",
+        "tags": ["Zfs"],
+        "summary": "Take a snapshot now",
+        "description": "Take a snapshot of a file system (with recursive, of the file systems inside it too), named by the NAS's date and time to the second (\"YYYY-MM-DD_hh-mm-ss\"). A second snapshot of the same file system in the same second is refused (HTTP 500), as its name is taken. Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "quickSnapshot"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.quicksnapshot",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsQuickSnapshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "ZFS refused, such as a second snapshot in the same second.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "sameSecond": {
+                    "$ref": "#/components/examples/zfsQuickSnapshot.sameSecond"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/rollbackSnapshot": {
+      "post": {
+        "operationId": "zfsRollbackSnapshot",
+        "tags": ["Zfs"],
+        "summary": "Roll a file system back to a snapshot",
+        "description": "Put a file system back as it was when the snapshot was taken, at once. Every change made since is lost and cannot be recovered. ZFS refuses when newer snapshots exist (HTTP 500), and then nothing changes; the contract has no way to ask it to delete them. Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "rollbackSnapshot"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.name",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsSnapshotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "ZFS refused, such as a snapshot with newer snapshots after it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "newerSnapshots": {
+                    "$ref": "#/components/examples/zfsRollbackSnapshot.newerSnapshots"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/deleteObjectBg": {
+      "post": {
+        "operationId": "zfsDeleteObjectBg",
+        "tags": ["Zfs"],
+        "summary": "Delete a snapshot, a file system or a pool",
+        "description": "Delete, as a background task: a snapshot; a file system with everything in it, all its snapshots and its mount entry; or a pool, destroying it and clearing ZFS's marks from its partitions (the disks keep ZFS's partition table). Everything deleted is lost and cannot be recovered. Also removes the plugin's scheduled jobs that name it. The plugin refuses (the task fails with HTTP 500 and its words) a file system with file systems inside it, a pool that holds any file system or volume, and either while a shared folder uses it; the interface checks all of these itself first (design phase-5-zfs 0.10). The task's output is empty; it has no result. Marks the fstab, collectd, monit and quota modules dirty, for a snapshot too (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "deleteObjectBg"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.deleteobject",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsDeleteObjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "snapshot": {
+                    "$ref": "#/components/examples/zfsDeleteObjectBg.snapshot"
+                  },
+                  "filesystem": {
+                    "$ref": "#/components/examples/zfsDeleteObjectBg.filesystem"
+                  },
+                  "pool": {
+                    "$ref": "#/components/examples/zfsDeleteObjectBg.pool"
+                  },
+                  "poolWithFs": {
+                    "$ref": "#/components/examples/zfsDeleteObjectBg.poolWithFs"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/scrubPool": {
+      "post": {
+        "operationId": "zfsScrubPool",
+        "tags": ["Zfs"],
+        "summary": "Check a pool",
+        "description": "Start a check (scrub) of a pool, or continue a paused one: ZFS reads every disk of the pool in full and repairs what it can from a copy: seconds on the test VM's small disks, hours on large ones. The check runs in ZFS, not as a task; getObjectDetails shows how far it has got. Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "scrubPool"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.name",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/stopScrub": {
+      "post": {
+        "operationId": "zfsStopScrub",
+        "tags": ["Zfs"],
+        "summary": "Stop checking a pool",
+        "description": "Stop a pool's check, running or paused. Nothing on the pool changes; a later check starts from the beginning. With no check in progress ZFS refuses (HTTP 500). Marks nothing dirty.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "stopScrub"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.name",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "There is no check to stop.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "notChecking": {
+                    "$ref": "#/components/examples/zfsStopScrub.notChecking"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/deviceReplace": {
+      "post": {
+        "operationId": "zfsDeviceReplace",
+        "tags": ["Zfs"],
+        "summary": "Replace a disk of a pool",
+        "description": "Put a new disk in place of a disk of the pool, at once: ZFS erases the new disk and rebuilds onto it (resilvering) in the background, and takes the old disk out of the pool when the rebuild ends. Everything on the new disk is lost. The old disk keeps ZFS's marks and is not offered as a candidate until it is wiped (observed on the test VM). The rebuild runs in ZFS, not as a task; getObjectDetails shows it. Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "deviceReplace"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.pooltwodevices",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsDeviceReplaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/deviceOffline": {
+      "post": {
+        "operationId": "zfsDeviceOffline",
+        "tags": ["Zfs"],
+        "summary": "Take a disk of a pool offline",
+        "description": "Make ZFS stop using a disk until it is brought back, at once: the pool keeps working on its other disks, without the protection that disk gave (DEGRADED). ZFS refuses when no copy of the data would be left (HTTP 500). Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "deviceOffline"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.pooldevice",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          },
+          "500": {
+            "description": "ZFS refused, such as the last disk that holds a copy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "noReplicas": {
+                    "$ref": "#/components/examples/zfsDeviceOffline.noReplicas"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/deviceOnline": {
+      "post": {
+        "operationId": "zfsDeviceOnline",
+        "tags": ["Zfs"],
+        "summary": "Bring an offline disk back",
+        "description": "Bring a disk taken offline back into use; ZFS copies onto it what changed meanwhile. The plugin hands ZFS the whole disk for a partition path it is given. Marks nothing dirty (observed on the test VM).",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "deviceOnline"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.pooldevice",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
+          }
+        }
+      }
+    },
+    "/rpc/Zfs/clearPool": {
+      "post": {
+        "operationId": "zfsClearPool",
+        "tags": ["Zfs"],
+        "summary": "Clear a pool's error counts",
+        "description": "Set the read, write and checksum error counts of a pool's disks back to zero, and let ZFS try a failed disk again. Nothing on the pool changes, but the record of the errors is gone. Marks nothing dirty.",
+        "x-omv-rpc": {
+          "service": "Zfs",
+          "method": "clearPool"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-source": {
+          "datamodel": "rpc.zfs.name",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZfsPoolNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method returns null."
           }
         }
       }
@@ -6987,6 +7984,816 @@
         },
         "additionalProperties": false
       },
+      "ZfsCompressionTypeList": {
+        "type": "array",
+        "description": "The compression names the plugin's classic forms offer (\"gzip\", \"gzip-1\" … \"zstd-fast-1000\"), a fixed list in its source. \"off\", \"on\" and \"lz4\" are not all among them; the interface does not use the list.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "ZfsObject": {
+        "type": "object",
+        "description": "One row of the plugin's flat list of pools, file systems and volumes. Each pool comes twice: as its pool row (type \"Pool\", with the pool's state and its disks' raw space, parity included for RAID-Z) and as the pool's own folder (type \"Filesystem\", poolroot true, with the space for files). A field that does not apply to a row's type holds \"n/a\" (observed on the test VM). Sizes are bytes as JSON numbers.",
+        "required": [
+          "id",
+          "parentid",
+          "name",
+          "type",
+          "icon",
+          "expanded",
+          "path",
+          "origin",
+          "size",
+          "used",
+          "usedpercent",
+          "available",
+          "mountpoint",
+          "lastscrub",
+          "state",
+          "status",
+          "scrubstate",
+          "scrubactive",
+          "encryption",
+          "keystatus",
+          "autounlock",
+          "hasshares",
+          "haschildren"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The plugin's tree id (\"root/pool-tank/media\"); not a ZFS name."
+          },
+          "parentid": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "A pool's name, the pool's own folder's name (the pool's), or the last part of a file system's or volume's full name (\"media\")."
+          },
+          "type": {
+            "type": "string",
+            "description": "\"Pool\", \"Filesystem\" or \"Volume\"."
+          },
+          "icon": {
+            "type": "string",
+            "description": "An image of the classic interface; not used."
+          },
+          "expanded": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string",
+            "description": "The full ZFS name (\"tank\", \"tank/media\"); the one name every other method takes."
+          },
+          "pool": {
+            "type": "string",
+            "description": "The pool a file system or volume is on. Absent on a pool row."
+          },
+          "origin": {
+            "type": "string",
+            "description": "The snapshot a clone was made from (\"tank/media@…\"), or \"n/a\" for anything that is not a clone."
+          },
+          "size": {
+            "type": "integer",
+            "nullable": true,
+            "description": "A pool row: the disks' raw space, parity included for RAID-Z (not space for files). A file system: its size limit (quota), or null with none. A volume: its size."
+          },
+          "used": {
+            "type": "integer",
+            "description": "Bytes in use: a pool row, the disks' raw space allocated (parity included); a file system, what it and everything inside it hold."
+          },
+          "usedpercent": {
+            "type": "number",
+            "description": "The plugin's percentage of used, with a fraction. Not used by the interface."
+          },
+          "available": {
+            "type": "integer",
+            "description": "Bytes free: a pool row, the disks' raw space free; a file system, the pool's free space it may use, or what is left under its size limit."
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "The folder it is mounted on (\"/tank/media\"); empty when it has none, \"n/a\" for a volume."
+          },
+          "lastscrub": {
+            "type": "string",
+            "description": "A pool row: the plugin's words for the last check: \"Never\", \"in progress since <date>\", \"paused (started <date>)\", \"canceled on <date>\", or the date it ended, which may be the end of a rebuild rather than of a check. \"n/a\" on other rows. Display text in English."
+          },
+          "state": {
+            "type": "string",
+            "description": "A pool row: ZFS's word for the pool (\"ONLINE\", \"DEGRADED\", \"FAULTED\", \"SUSPENDED\", \"UNAVAIL\", \"REMOVED\", \"OFFLINE\"), or \"UNKNOWN\" when the plugin could not read it. \"n/a\" on other rows."
+          },
+          "status": {
+            "type": "string",
+            "description": "A pool row: \"OK\", or \"Error\" when ZFS counts damaged data. \"n/a\" on other rows."
+          },
+          "scrubstate": {
+            "type": "string",
+            "description": "A pool row: \"none\", \"running\", \"paused\", \"stopped\" or \"completed\" (the last check or rebuild). \"n/a\" on other rows."
+          },
+          "scrubactive": {
+            "type": "boolean",
+            "description": "Whether a check is running or paused on the pool."
+          },
+          "removalstate": {
+            "type": "string",
+            "description": "A pool row only."
+          },
+          "removalactive": {
+            "type": "boolean",
+            "description": "A pool row only: whether data is being moved off a disk group that is being removed."
+          },
+          "encryption": {
+            "type": "string",
+            "description": "The encryption, in capitals (\"OFF\", \"AES-256-GCM\")."
+          },
+          "keystatus": {
+            "type": "string",
+            "description": "\"available\", \"unavailable\" (locked), or \"-\" when not encrypted."
+          },
+          "autounlock": {
+            "type": "boolean"
+          },
+          "isencryptionroot": {
+            "type": "boolean",
+            "description": "Not on a pool row."
+          },
+          "hasshares": {
+            "type": "boolean",
+            "description": "Whether a shared folder uses its mount entry."
+          },
+          "fragmentation": {
+            "type": "number",
+            "description": "A pool row only."
+          },
+          "dedup": {
+            "type": "string",
+            "description": "A pool row only. The deduplication ratio, \"1.00\" for none (no \"x\")."
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "A pool row only: whole percent of the disks' raw space in use. ZFS slows down and refuses writes by this figure."
+          },
+          "devices": {
+            "type": "string",
+            "description": "A pool row only: the disks' paths joined with a markup line break. Not used (UI-2); the disks come from Zfs.getPoolDevices."
+          },
+          "compression": {
+            "type": "string",
+            "description": "Not on a pool row: the compression in effect (\"lz4\", \"off\", \"zstd\", …), inherited or its own."
+          },
+          "compressratio": {
+            "type": "string",
+            "description": "Not on a pool row. The compression ratio, \"1.00\" for none (no \"x\")."
+          },
+          "refer": {
+            "type": "integer",
+            "description": "Not on a pool row. Bytes it refers to itself, without what is inside it."
+          },
+          "mounted": {
+            "type": "boolean",
+            "description": "Not on a pool row."
+          },
+          "poolroot": {
+            "type": "boolean",
+            "description": "A file system row only. True for the pool's own folder."
+          },
+          "haschildren": {
+            "type": "boolean",
+            "description": "Whether file systems, volumes or snapshots are inside it."
+          }
+        }
+      },
+      "ZfsObjectList": {
+        "type": "object",
+        "description": "Every pool, file system and volume, in the plugin's order (each pool, then its own folder, then what is inside it), paged by the backend.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZfsObject"
+            }
+          }
+        }
+      },
+      "ZfsPoolName": {
+        "type": "string",
+        "description": "An existing pool's name, as Zfs.listPools gives it in `name` (design phase-5-zfs 0.7): a letter first, then up to 63 letters, digits, \"_\", \".\", \":\" or \"-\". Stricter than the plugin, which checks nothing. A pool whose name is outside this has no page in the interface and is managed in the classic one.",
+        "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,63}$"
+      },
+      "ZfsPoolDetailsRequest": {
+        "type": "object",
+        "description": "A pool's report.",
+        "required": ["type", "name"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Pool"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsDatasetName": {
+        "type": "string",
+        "description": "An existing pool or file system by its full name, as Zfs.listPools gives it in `path` (\"tank\", \"tank/media\"; design phase-5-zfs 0.7): the pool's name, then up to 8 parts after \"/\", each a letter or digit first and then up to 63 letters, digits, \"_\", \".\", \":\" or \"-\" (so never \".\" or \"..\"), 255 characters in all. Stricter than the plugin, which checks nothing.",
+        "maxLength": 255,
+        "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,63}(?:/[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}){0,8}$"
+      },
+      "ZfsFilesystemDetailsRequest": {
+        "type": "object",
+        "description": "A file system's report, the pool's own folder included.",
+        "required": ["type", "name"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Filesystem"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsDatasetName"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsGetObjectDetailsRequest": {
+        "description": "Which report (rpc.zfs.objectdetails): a pool's, by its name, or a file system's, by its full name. Stricter than the plugin, which also reports on volumes and snapshots and checks no name.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ZfsPoolDetailsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ZfsFilesystemDetailsRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "Pool": "#/components/schemas/ZfsPoolDetailsRequest",
+            "Filesystem": "#/components/schemas/ZfsFilesystemDetailsRequest"
+          }
+        }
+      },
+      "ZfsReport": {
+        "type": "string",
+        "description": "ZFS's own report, as display text, lines joined by a line feed and a carriage return: for a pool, \"Pool status (zpool status -v):\" then zpool status's report (its state, the scan line of the last or running check or rebuild, the device tree with each device's state and error counts, and the errors line, with damaged files' paths when there are any); for a file system, \"Filesystem status (zfs list):\", one zfs list line, and every property from zfs get all, which includes the file system's GUID. Shown as preformatted text, never as markup."
+      },
+      "ZfsPoolNameRequest": {
+        "type": "object",
+        "description": "One pool by its name (rpc.zfs.name). Stricter than the plugin: the name is an existing pool's, in the form ZfsPoolName allows.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsPoolDevice": {
+        "type": "object",
+        "description": "A disk of a pool, from zpool status's structured report: data disks, spares, read caches, write logs and metadata disks alike.",
+        "required": ["devicefile", "state", "vdev", "label"],
+        "properties": {
+          "devicefile": {
+            "type": "string",
+            "description": "The path ZFS opened it by, such as \"/dev/disk/by-id/ata-…-part1\" for a whole disk ZFS partitioned. A disk that is missing keeps the path it was last seen at."
+          },
+          "state": {
+            "type": "string",
+            "description": "ZFS's word for the disk in capitals: \"ONLINE\", \"DEGRADED\", \"FAULTED\", \"UNAVAIL\", \"REMOVED\", \"OFFLINE\", or for a spare \"AVAIL\" or \"INUSE\"."
+          },
+          "vdev": {
+            "type": "string",
+            "description": "The group it is in (\"mirror-0\", \"raidz1-0\", \"replacing-1\" while it is being replaced), or empty for a disk directly under the pool (a single disk or a stripe)."
+          },
+          "label": {
+            "type": "string",
+            "description": "Display text in English for the classic interface; not shown."
+          }
+        }
+      },
+      "ZfsPoolDeviceList": {
+        "type": "array",
+        "description": "The disks of one pool. Empty when the pool does not exist or ZFS could not be asked (the plugin answers both with an empty list, not an error).",
+        "items": {
+          "$ref": "#/components/schemas/ZfsPoolDevice"
+        }
+      },
+      "ZfsPoolStatus": {
+        "type": "object",
+        "description": "One pool's state and how full it is.",
+        "required": ["name", "state", "status", "capacity"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "description": "ZFS's word for the pool: \"ONLINE\", \"DEGRADED\", \"FAULTED\", \"SUSPENDED\", \"UNAVAIL\", \"REMOVED\" or \"OFFLINE\"."
+          },
+          "status": {
+            "type": "string",
+            "description": "\"OK\", or \"Error\" when ZFS counts damaged data."
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Whole percent of the disks' raw space in use."
+          }
+        }
+      },
+      "ZfsPoolStatusList": {
+        "type": "array",
+        "description": "Every pool, by name. Empty when there is none, and also when ZFS could not be asked (the plugin answers both the same way).",
+        "items": {
+          "$ref": "#/components/schemas/ZfsPoolStatus"
+        }
+      },
+      "ZfsSnapshot": {
+        "type": "object",
+        "description": "A snapshot. The reply does not say when it was taken; a snapshot taken here is named by it.",
+        "required": [
+          "id",
+          "parent",
+          "name",
+          "type",
+          "icon",
+          "path",
+          "used",
+          "refer",
+          "encryption"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The plugin's tree id; not a ZFS name."
+          },
+          "parent": {
+            "type": "string",
+            "description": "The full name of the file system or volume it is a snapshot of."
+          },
+          "name": {
+            "type": "string",
+            "description": "Its own name, the part after \"@\". Zfs.quickSnapshot names it by the NAS's date and time, \"YYYY-MM-DD_hh-mm-ss\"."
+          },
+          "type": {
+            "type": "string",
+            "description": "\"Snapshot\"."
+          },
+          "icon": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Its full name (\"tank/media@…\"), the one name every other method takes."
+          },
+          "used": {
+            "type": "integer",
+            "description": "Bytes only this snapshot holds, which deleting it frees."
+          },
+          "refer": {
+            "type": "integer",
+            "description": "Bytes of the file system as the snapshot keeps it."
+          },
+          "encryption": {
+            "type": "string",
+            "description": "The encryption, in capitals (\"OFF\")."
+          }
+        }
+      },
+      "ZfsSnapshotList": {
+        "type": "object",
+        "description": "Every snapshot on every pool, in name order, paged by the backend.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ZfsSnapshot"
+            }
+          }
+        }
+      },
+      "ZfsCandidate": {
+        "type": "object",
+        "description": "A disk the plugin offers for a new pool or as a replacement.",
+        "required": [
+          "devicefile",
+          "size",
+          "vendor",
+          "serialnumber",
+          "description",
+          "label"
+        ],
+        "properties": {
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's stable /dev/disk/by-id/ name, the one to send to Zfs.addPool and Zfs.deviceReplace; its kernel name only when it has no by-id link."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "vendor": {
+            "type": "string",
+            "description": "The vendor the disk reports, such as \"ATA\"; may be empty."
+          },
+          "serialnumber": {
+            "type": "string",
+            "description": "The serial number the disk reports; may be empty."
+          },
+          "description": {
+            "type": "string",
+            "description": "Server display text in English, such as \"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]\"."
+          },
+          "label": {
+            "type": "string",
+            "description": "The description with the serial number, display text in English; not shown."
+          }
+        }
+      },
+      "ZfsCandidateList": {
+        "type": "array",
+        "description": "The disks the plugin offers: not read-only, not connected by USB, not named by another service's settings, not in use, and with no file system or partition table found on them. A disk of a deleted pool keeps ZFS's partition table and is not offered until it is wiped (observed on the test VM).",
+        "items": {
+          "$ref": "#/components/schemas/ZfsCandidate"
+        }
+      },
+      "ZfsNewPoolName": {
+        "type": "string",
+        "description": "The name of a new pool (design phase-5-zfs 0.7): 1 to 32 letters, digits, \"-\" or \"_\", a letter first; not a word ZFS keeps for itself (a name starting with mirror, raidz, draid or spare, or \"log\"), and not the name of a folder the system uses at the top of the disk (bin, boot, dev, etc, home, lib, lib32, lib64, media, mnt, opt, proc, root, run, sbin, srv, sys, tmp, usr, var), case ignored, because the pool's folder is /<name>. Stricter than the plugin, which refuses only a space, and than ZFS. Whether a pool of the name exists already is the interface's own check.",
+        "pattern": "^(?!(?:[Mm][Ii][Rr][Rr][Oo][Rr]|[Rr][Aa][Ii][Dd][Zz]|[Dd][Rr][Aa][Ii][Dd]|[Ss][Pp][Aa][Rr][Ee]))(?!(?:[Ll][Oo][Gg]|[Bb][Ii][Nn]|[Bb][Oo][Oo][Tt]|[Dd][Ee][Vv]|[Ee][Tt][Cc]|[Hh][Oo][Mm][Ee]|[Ll][Ii][Bb]|[Ll][Ii][Bb]32|[Ll][Ii][Bb]64|[Mm][Ee][Dd][Ii][Aa]|[Mm][Nn][Tt]|[Oo][Pp][Tt]|[Pp][Rr][Oo][Cc]|[Rr][Oo][Oo][Tt]|[Rr][Uu][Nn]|[Ss][Bb][Ii][Nn]|[Ss][Rr][Vv]|[Ss][Yy][Ss]|[Tt][Mm][Pp]|[Uu][Ss][Rr]|[Vv][Aa][Rr])$)[A-Za-z][A-Za-z0-9_-]{0,31}$"
+      },
+      "ZfsDiskById": {
+        "type": "string",
+        "description": "A disk, or a partition ZFS made on one, by its stable /dev/disk/by-id/ name: as Zfs.getEmptyCandidates gives it for a new disk, and as Zfs.getPoolDevices gives it for a disk in a pool (\"…-part1\" for a whole disk ZFS partitioned). A letter or digit first, then letters, digits, \".\", \"_\", \":\", \"+\" or \"-\", and no \"/\". Stricter than OMV's device-file format and than the plugin, which checks nothing for a disk already in a pool: a disk renamed between a read and the call is never hit by mistake, and a pool whose disks ZFS names otherwise (by kernel name or by path) is not changed through this contract.",
+        "x-omv-format": "devicefile",
+        "pattern": "^/dev/disk/by-id/[A-Za-z0-9][A-Za-z0-9._:+-]*$"
+      },
+      "ZfsAddPoolRequest": {
+        "type": "object",
+        "description": "A new pool of one group of disks (rpc.zfs.addpool), with the interface's fixed settings (design phase-5-zfs 12.1, D11 to D13). Stricter than the plugin: every setting but the layout, the name and the disks has the one value the interface sends; the disks are by their stable by-id names; and compress and compresstype, which the plugin reads though its datamodel does not declare them, are required as \"on, LZ4\".",
+        "required": [
+          "pooltype",
+          "force",
+          "mountpoint",
+          "name",
+          "devices",
+          "devalias",
+          "ashift",
+          "ashiftval",
+          "casesensitivity",
+          "compress",
+          "compresstype"
+        ],
+        "properties": {
+          "pooltype": {
+            "type": "string",
+            "description": "How the disks are arranged, in the plugin's words: \"mirror\" (every disk a copy), \"raidz1\", \"raidz2\" and \"raidz3\" (one, two or three disks' worth of parity), or \"basic\" (one disk, or several striped: no protection at all; if one disk fails, everything on the pool is lost). The least number of disks is 2 for mirror, 3, 4 and 5 for raidz1 to raidz3, and 1 for basic; ZFS refuses fewer, and the interface checks it before calling.",
+            "enum": ["mirror", "raidz1", "raidz2", "raidz3", "basic"]
+          },
+          "force": {
+            "type": "boolean",
+            "description": "Whether ZFS may overwrite a disk that looks in use. Accepted only false: the interface never forces (D12), so ZFS refuses a disk that holds a pool or a file system.",
+            "enum": [false]
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "The pool's folder. Accepted only empty: ZFS's default, /<name> (D13).",
+            "enum": [""]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsNewPoolName"
+          },
+          "devices": {
+            "type": "array",
+            "description": "The disks to erase and make into the pool, by the by-id names Zfs.getEmptyCandidates gives, each once.",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/ZfsDiskById"
+            }
+          },
+          "devalias": {
+            "type": "string",
+            "description": "How ZFS is to name the disks. Accepted only \"id\": by their stable by-id names (D12).",
+            "enum": ["id"]
+          },
+          "ashift": {
+            "type": "boolean",
+            "description": "Whether ashiftval is set. Accepted only true (D12).",
+            "enum": [true]
+          },
+          "ashiftval": {
+            "type": "integer",
+            "description": "The block size as a power of two. Accepted only 12, 4 KiB blocks (D12).",
+            "enum": [12]
+          },
+          "casesensitivity": {
+            "type": "string",
+            "description": "Whether file names differ by case. Accepted only \"sensitive\" (D12).",
+            "enum": ["sensitive"]
+          },
+          "compress": {
+            "type": "boolean",
+            "description": "Whether compression is turned on after the pool is made. Read by the plugin though its datamodel does not declare it. Accepted only true (D11).",
+            "enum": [true]
+          },
+          "compresstype": {
+            "type": "string",
+            "description": "The compression, when compress is true. Read by the plugin though its datamodel does not declare it. Accepted only \"lz4\" (D11).",
+            "enum": ["lz4"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsNewFilesystemName": {
+        "type": "string",
+        "description": "The name of a new file system at the top of a pool, without the pool's name (design phase-5-zfs 0.7): 1 to 64 letters, digits, \"-\", \"_\" or \".\", a letter or digit first (so never \".\" or \"..\"), and no \"/\", because the plugin creates every missing parent (\"zfs create -p\"). Stricter than the plugin, which refuses only a space. The plugin does not refuse a name that is taken: it answers as if it had created it (observed on the test VM), so that is the interface's own check.",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+      },
+      "ZfsAddObjectRequest": {
+        "type": "object",
+        "description": "A new file system at the top of a pool (rpc.zfs.addobject). Stricter than the plugin, which also makes snapshots, volumes and clones with this method: only a file system, on an existing pool, in its default folder, with no property of its own (it inherits the pool's compression).",
+        "required": ["type", "path", "name", "mountpoint"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "What to create. Accepted only \"filesystem\".",
+            "enum": ["filesystem"]
+          },
+          "path": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsNewFilesystemName"
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "The file system's folder. Accepted only empty: ZFS's default, /<pool>/<name> (D13).",
+            "enum": [""]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsQuotaProperty": {
+        "type": "object",
+        "description": "A file system's size limit: \"none\" for no limit, or a whole number of GiB or TiB (\"500G\", \"2T\"). ZFS refuses a limit below what the file system holds (HTTP 500, observed on the test VM); the interface checks it first.",
+        "required": ["property", "value", "modified"],
+        "properties": {
+          "property": {
+            "type": "string",
+            "enum": ["quota"]
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(?:none|[1-9][0-9]{0,5}[GT])$"
+          },
+          "modified": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsCompressionProperty": {
+        "type": "object",
+        "description": "A file system's compression, on (\"lz4\") or off.",
+        "required": ["property", "value", "modified"],
+        "properties": {
+          "property": {
+            "type": "string",
+            "enum": ["compression"]
+          },
+          "value": {
+            "type": "string",
+            "enum": ["lz4", "off"]
+          },
+          "modified": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsSetPropertiesRequest": {
+        "type": "object",
+        "description": "New values for a file system's properties (rpc.zfs.setproperties). Stricter than the plugin, which sets any property of a pool, file system, volume or snapshot: only a file system's size limit and compression, one of each at most, each marked modified, which the plugin requires though its datamodel does not declare it (an item not marked is skipped).",
+        "required": ["type", "name", "properties"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Filesystem"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsDatasetName"
+          },
+          "properties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ZfsQuotaProperty"
+                },
+                {
+                  "$ref": "#/components/schemas/ZfsCompressionProperty"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "property",
+                "mapping": {
+                  "quota": "#/components/schemas/ZfsQuotaProperty",
+                  "compression": "#/components/schemas/ZfsCompressionProperty"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsQuickSnapshotRequest": {
+        "type": "object",
+        "description": "A file system to take a snapshot of now (rpc.zfs.quicksnapshot). Stricter than the plugin: the name is an existing pool's or file system's, and recursive is always sent.",
+        "required": ["name", "recursive"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ZfsDatasetName"
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Whether the file systems inside it are snapshotted too, at the same moment."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsSnapshotPath": {
+        "type": "string",
+        "description": "A snapshot by its full name, as Zfs.getAllSnapshots gives it in `path` (\"tank/media@<name>\"): a ZfsDatasetName, \"@\", and the snapshot's own name, a letter or digit first and then up to 63 letters, digits, \"_\", \".\", \":\" or \"-\". Stricter than the plugin, which checks nothing.",
+        "maxLength": 255,
+        "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,63}(?:/[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}){0,8}@[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$"
+      },
+      "ZfsSnapshotRequest": {
+        "type": "object",
+        "description": "One snapshot by its full name (rpc.zfs.name). Stricter than the plugin: only a snapshot's full name, in the form ZfsSnapshotPath allows.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ZfsSnapshotPath"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsDeleteSnapshotRequest": {
+        "type": "object",
+        "description": "A snapshot to delete. It has no folder of its own, so mp is empty.",
+        "required": ["type", "name", "mp", "recursive"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Snapshot"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsSnapshotPath"
+          },
+          "mp": {
+            "type": "string",
+            "enum": [""]
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Accepted only false.",
+            "enum": [false]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsFilesystemName": {
+        "type": "string",
+        "description": "An existing file system on a pool, not the pool's own folder, by its full name (\"tank/media\"): as ZfsDatasetName, with at least one part after the pool's name.",
+        "maxLength": 255,
+        "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,63}(?:/[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}){1,8}$"
+      },
+      "ZfsMountFolder": {
+        "type": "string",
+        "description": "The folder a pool or file system is mounted on, as Zfs.listPools gives it in `mountpoint` (\"/tank/media\"): an absolute path of letters, digits, \"_\", \".\", \":\", \"+\" and \"-\", with no \".\" or \"..\" part, and never \"/\" itself. The interface sends the folder Zfs.listPools gave for the object it deletes, after its own check of what uses it (design phase-5-zfs 0.10).",
+        "maxLength": 4096,
+        "pattern": "^(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9_.:+-]+)+$"
+      },
+      "ZfsDeleteFilesystemRequest": {
+        "type": "object",
+        "description": "A file system to delete, with everything in it and all its snapshots, by its full name and the folder it is mounted on.",
+        "required": ["type", "name", "mp", "recursive"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Filesystem"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsFilesystemName"
+          },
+          "mp": {
+            "$ref": "#/components/schemas/ZfsMountFolder"
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Accepted only false.",
+            "enum": [false]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsDeletePoolRequest": {
+        "type": "object",
+        "description": "A pool to delete, by its name and the folder its own folder is mounted on. The plugin refuses while it holds any file system or volume.",
+        "required": ["type", "name", "mp", "recursive"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Pool"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          },
+          "mp": {
+            "$ref": "#/components/schemas/ZfsMountFolder"
+          },
+          "recursive": {
+            "type": "boolean",
+            "description": "Accepted only false.",
+            "enum": [false]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsDeleteObjectRequest": {
+        "description": "What to delete (rpc.zfs.deleteobject): a snapshot, a file system other than a pool's own folder, or a pool. Stricter than the plugin, which also deletes volumes and deletes recursively: never a volume, never recursive, and each name in the form of its kind.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ZfsDeleteSnapshotRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ZfsDeleteFilesystemRequest"
+          },
+          {
+            "$ref": "#/components/schemas/ZfsDeletePoolRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "Snapshot": "#/components/schemas/ZfsDeleteSnapshotRequest",
+            "Filesystem": "#/components/schemas/ZfsDeleteFilesystemRequest",
+            "Pool": "#/components/schemas/ZfsDeletePoolRequest"
+          }
+        }
+      },
+      "ZfsDeviceReplaceRequest": {
+        "type": "object",
+        "description": "A disk of a pool and the disk to put in its place (rpc.zfs.pooltwodevices). Stricter than the plugin, which checks nothing: the old disk by the by-id name Zfs.getPoolDevices gives for it, the new one by the by-id name Zfs.getEmptyCandidates gives.",
+        "required": ["pool", "olddevice", "newdevice"],
+        "properties": {
+          "pool": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          },
+          "olddevice": {
+            "$ref": "#/components/schemas/ZfsDiskById"
+          },
+          "newdevice": {
+            "$ref": "#/components/schemas/ZfsDiskById"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ZfsPoolDeviceRequest": {
+        "type": "object",
+        "description": "One disk of a pool (rpc.zfs.pooldevice). Stricter than the plugin, which checks nothing: the pool by its name and the disk by the by-id name Zfs.getPoolDevices gives for it.",
+        "required": ["pool", "device"],
+        "properties": {
+          "pool": {
+            "$ref": "#/components/schemas/ZfsPoolName"
+          },
+          "device": {
+            "$ref": "#/components/schemas/ZfsDiskById"
+          }
+        },
+        "additionalProperties": false
+      },
       "SmartDevice": {
         "type": "object",
         "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
@@ -7449,6 +9256,39 @@
           "running": false
         }
       },
+      "execGetOutput.zfsDeleteSnapshotFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting a snapshot: no output.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusf3nq3ctb7ngsaCPtMMI",
+          "pos": 0,
+          "output": "",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.zfsDeleteFilesystemFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting tank/media: no output.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusnpep004qsv01dmia4Ua",
+          "pos": 0,
+          "output": "",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.zfsDeletePoolFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting the pool tank: no output.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusabm9ft8u724c9KgZzrF",
+          "pos": 0,
+          "output": "",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
       "execGetOutput.applyFailed": {
         "summary": "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only.",
         "x-omv-status": 500,
@@ -7479,6 +9319,14 @@
         "value": {
           "code": 0,
           "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; mkfs.btrfs --force --data 'raid1' --metadata 'raid1' /dev/sdb /dev/sdc 2>&1' with exit code '1': btrfs-progs v6.14\nSee https://btrfs.readthedocs.io for more information.\n\nERROR: unable to open /dev/sdc: Device or resource busy"
+        }
+      },
+      "execGetOutput.zfsDeletePoolWithFsFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting the pool tank while tank/media is on it: the plugin refuses.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Cannot delete pool \"tank\": it has datasets. Delete them first."
         }
       },
       "execIsRunning.running": {
@@ -12123,6 +13971,2044 @@
           "hidden": false,
           "usagewarnthreshold": 90,
           "comment": "Media,Photos,Backups"
+        }
+      },
+      "zfsListCompressionTypes.list": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the fixed list of compression names.",
+        "x-omv-status": 200,
+        "value": [
+          "gzip",
+          "gzip-1",
+          "gzip-2",
+          "gzip-3",
+          "gzip-4",
+          "gzip-5",
+          "gzip-6",
+          "gzip-7",
+          "gzip-8",
+          "gzip-9",
+          "lz4",
+          "lzjb",
+          "zle",
+          "zstd",
+          "zstd-1",
+          "zstd-2",
+          "zstd-3",
+          "zstd-4",
+          "zstd-5",
+          "zstd-6",
+          "zstd-7",
+          "zstd-8",
+          "zstd-9",
+          "zstd-10",
+          "zstd-11",
+          "zstd-12",
+          "zstd-13",
+          "zstd-14",
+          "zstd-15",
+          "zstd-16",
+          "zstd-17",
+          "zstd-18",
+          "zstd-19",
+          "zstd-fast",
+          "zstd-fast-1",
+          "zstd-fast-2",
+          "zstd-fast-3",
+          "zstd-fast-4",
+          "zstd-fast-5",
+          "zstd-fast-6",
+          "zstd-fast-7",
+          "zstd-fast-8",
+          "zstd-fast-9",
+          "zstd-fast-10",
+          "zstd-fast-20",
+          "zstd-fast-30",
+          "zstd-fast-40",
+          "zstd-fast-50",
+          "zstd-fast-60",
+          "zstd-fast-70",
+          "zstd-fast-80",
+          "zstd-fast-90",
+          "zstd-fast-100",
+          "zstd-fast-500",
+          "zstd-fast-1000"
+        ]
+      },
+      "zfsListCompressionTypes.notInstalled": {
+        "summary": "Written from OMV's reply for a service it does not know (read from its RPC layer, and captured for MdMgmt on the test VM without the RAID plugin): every method of the Zfs service answers this when openmediavault-zfs is not installed.",
+        "x-omv-status": 404,
+        "value": {
+          "code": 0,
+          "message": "RPC service 'Zfs' not found."
+        }
+      },
+      "zfsListPools.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new mirror of sdb and sdc, pool tank, healthy, never checked.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 540672,
+              "usedpercent": 0.006713867187500001,
+              "available": 8052523008,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 0,
+              "dedup": "1.00",
+              "capacity": 0,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": false
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 417792,
+              "usedpercent": 0.005355342741935484,
+              "available": 7800987648,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: no pool.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "zfsListPools.mirrorWithFs": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror with the file system tank/media, holding 5 GiB.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373280256,
+              "usedpercent": 66.72342936197917,
+              "available": 2679783424,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373059072,
+              "usedpercent": 68.87296286962365,
+              "available": 2428346368,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5372420096,
+              "usedpercent": 68.87041319328489,
+              "available": 2428346368,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorFsSettings": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, with tank/media's size limit set to 6 GiB and its compression off.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373497344,
+              "usedpercent": 66.7261250813802,
+              "available": 2679566336,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373046784,
+              "usedpercent": 68.87280535954301,
+              "available": 2428358656,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372420096,
+              "usedpercent": 83.39093526204428,
+              "available": 1070030848,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373534208,
+              "usedpercent": 66.72658284505208,
+              "available": 2679529472,
+              "mountpoint": "/tank",
+              "lastscrub": "in progress since Sat Nov 21 12:00:00 UTC 2026",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "running",
+              "scrubactive": true,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373177856,
+              "usedpercent": 68.87448546706989,
+              "available": 2428227584,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorCheckStopped": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, its check stopped.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373534208,
+              "usedpercent": 66.72658284505208,
+              "available": 2679529472,
+              "mountpoint": "/tank",
+              "lastscrub": "canceled on Sat Nov 21 12:00:00 UTC 2026",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "stopped",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373177856,
+              "usedpercent": 68.87448546706989,
+              "available": 2428227584,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorCheckPaused": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check paused (paused with zpool scrub -p, the classic interface's pause).",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373534208,
+              "usedpercent": 66.72658284505208,
+              "available": 2679529472,
+              "mountpoint": "/tank",
+              "lastscrub": "paused (started Sat Nov 21 12:00:00 UTC 2026)",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "paused",
+              "scrubactive": true,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373202432,
+              "usedpercent": 68.87480048723118,
+              "available": 2428203008,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorChecked": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check finished with nothing repaired.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373509632,
+              "usedpercent": 66.72627766927083,
+              "available": 2679554048,
+              "mountpoint": "/tank",
+              "lastscrub": "Sat Nov 21 12:00:00 UTC 2026",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "completed",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373153280,
+              "usedpercent": 68.87417044690861,
+              "available": 2428252160,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror with sdc taken offline (Zfs.deviceOffline): DEGRADED.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373153280,
+              "usedpercent": 66.72185262044272,
+              "available": 2679910400,
+              "mountpoint": "/tank",
+              "lastscrub": "Sat Nov 21 12:00:00 UTC 2026",
+              "state": "DEGRADED",
+              "status": "OK",
+              "scrubstate": "completed",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373153280,
+              "usedpercent": 68.87417044690861,
+              "available": 2428252160,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, sdc being replaced by sdd (Zfs.deviceReplace), rebuilding.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373349888,
+              "usedpercent": 66.7242940266927,
+              "available": 2679713792,
+              "mountpoint": "/tank",
+              "lastscrub": "in progress since Sat Nov 21 12:00:00 UTC 2026",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "running",
+              "scrubactive": true,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373153280,
+              "usedpercent": 68.87417044690861,
+              "available": 2428252160,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.mirrorReplaced": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror of sdb and sdd after sdc was replaced, the rebuild finished.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 5373472768,
+              "usedpercent": 66.72581990559895,
+              "available": 2679590912,
+              "mountpoint": "/tank",
+              "lastscrub": "Sat Nov 21 12:00:00 UTC 2026",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "completed",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 1,
+              "dedup": "1.00",
+              "capacity": 66,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+              "haschildren": true
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 5373153280,
+              "usedpercent": 68.87417044690861,
+              "available": 2428252160,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": true
+            },
+            {
+              "id": "root/pool-tank/media",
+              "parentid": "root/pool-tank",
+              "name": "media",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank/media",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": 6442450944,
+              "used": 5372428288,
+              "usedpercent": 83.39106241861978,
+              "available": 1070022656,
+              "mountpoint": "/tank/media",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "off",
+              "compressratio": "1.00",
+              "refer": 5372420096,
+              "mounted": true,
+              "poolroot": false,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.raidz1": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z1 of sdb, sdc and sdd.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 25232932864,
+              "used": 1327104,
+              "usedpercent": 0.005259412400265957,
+              "available": 25231605760,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 0,
+              "dedup": "1.00",
+              "capacity": 0,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+              "haschildren": false
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 556512,
+              "usedpercent": 0.00341830387783116,
+              "available": 16279798304,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 130944,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.raidz2": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z2 of sdb, sdc, sdd and sde.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 33822867456,
+              "used": 1769472,
+              "usedpercent": 0.005231584821428571,
+              "available": 33821097984,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 0,
+              "dedup": "1.00",
+              "capacity": 0,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006-part1",
+              "haschildren": false
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 571392,
+              "usedpercent": 0.003600230414746544,
+              "available": 15870412800,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 142848,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new stripe of sdb and sdc (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 16106127360,
+              "used": 663552,
+              "usedpercent": 0.004119873046875,
+              "available": 16105463808,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 0,
+              "dedup": "1.00",
+              "capacity": 0,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+              "haschildren": false
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 430080,
+              "usedpercent": 0.0027564264112903223,
+              "available": 15602380800,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsListPools.single": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new pool of the single disk sdb (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Pool",
+              "icon": "images/raid.png",
+              "expanded": true,
+              "path": "tank",
+              "origin": "n/a",
+              "size": 8053063680,
+              "used": 663552,
+              "usedpercent": 0.00823974609375,
+              "available": 8052400128,
+              "mountpoint": "/tank",
+              "lastscrub": "Never",
+              "state": "ONLINE",
+              "status": "OK",
+              "scrubstate": "none",
+              "scrubactive": false,
+              "removalstate": "none",
+              "removalactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "hasshares": false,
+              "fragmentation": 0,
+              "dedup": "1.00",
+              "capacity": 0,
+              "devices": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+              "haschildren": false
+            },
+            {
+              "id": "root/poolfs-tank",
+              "parentid": "root",
+              "name": "tank",
+              "type": "Filesystem",
+              "icon": "images/filesystem.png",
+              "path": "tank",
+              "pool": "tank",
+              "expanded": true,
+              "origin": "n/a",
+              "size": null,
+              "used": 417792,
+              "usedpercent": 0.005355342741935484,
+              "available": 7800987648,
+              "mountpoint": "/tank",
+              "lastscrub": "n/a",
+              "state": "n/a",
+              "status": "n/a",
+              "scrubstate": "n/a",
+              "scrubactive": false,
+              "encryption": "OFF",
+              "keystatus": "-",
+              "autounlock": false,
+              "isencryptionroot": false,
+              "hasshares": false,
+              "compression": "lz4",
+              "compressratio": "1.00",
+              "refer": 98304,
+              "mounted": true,
+              "poolroot": true,
+              "haschildren": false
+            }
+          ]
+        }
+      },
+      "zfsGetObjectDetails.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new mirror of sdb and sdc, pool tank, healthy, never checked.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\r  scan: scrub in progress since Sat Nov 21 12:00:00 2026\n\r\t5.00G / 5.00G scanned, 53.2M / 5.00G issued at 53.2M/s\n\r\t0B repaired, 1.04% done, 00:01:35 to go\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorCheckStopped": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, its check stopped.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\r  scan: scrub canceled on Sat Nov 21 12:00:00 2026\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorCheckPaused": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check paused (paused with zpool scrub -p, the classic interface's pause).",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\r  scan: scrub paused since Sat Nov 21 12:00:00 2026\n\r\tscrub started on Sat Nov 21 12:00:00 2026\n\r\t5.00G / 5.00G scanned, 1.52G / 5.00G issued\n\r\t0B repaired, 30.41% done\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorChecked": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check finished with nothing repaired.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\r  scan: scrub repaired 0B in 00:00:03 with 0 errors on Sat Nov 21 12:00:00 2026\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror with sdc taken offline (Zfs.deviceOffline): DEGRADED.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: DEGRADED\n\rstatus: One or more devices has been taken offline by the administrator.\n\r\tSufficient replicas exist for the pool to continue functioning in a\n\r\tdegraded state.\n\raction: Online the device using 'zpool online' or replace the device with\n\r\t'zpool replace'.\n\r  scan: scrub repaired 0B in 00:00:03 with 0 errors on Sat Nov 21 12:00:00 2026\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         DEGRADED     0     0     0\n\r\t  mirror-0                                                   DEGRADED     0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  OFFLINE      0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, sdc being replaced by sdd (Zfs.deviceReplace), rebuilding.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rstatus: One or more devices is currently being resilvered.  The pool will\n\r\tcontinue to function, possibly in a degraded state.\n\raction: Wait for the resilver to complete.\n\r  scan: resilver in progress since Sat Nov 21 12:00:00 2026\n\r\t5.00G / 5.00G scanned, 738M / 5.00G issued at 738M/s\n\r\t724M resilvered, 14.40% done, 00:00:05 to go\n\rconfig:\n\r\n\r\tNAME                                                           STATE     READ WRITE CKSUM\n\r\ttank                                                           ONLINE       0     0     0\n\r\t  mirror-0                                                     ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003    ONLINE       0     0     0\n\r\t    replacing-1                                                ONLINE       0     0     0\n\r\t      ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\t      ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005  ONLINE       0     0     0  (resilvering)\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.mirrorReplaced": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror of sdb and sdd after sdc was replaced, the rebuild finished.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\r  scan: resilvered 5.01G in 00:00:07 with 0 errors on Sat Nov 21 12:00:00 2026\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  mirror-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.raidz1": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z1 of sdb, sdc and sdd.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  raidz1-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.raidz2": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z2 of sdb, sdc, sdd and sde.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rconfig:\n\r\n\r\tNAME                                                         STATE     READ WRITE CKSUM\n\r\ttank                                                         ONLINE       0     0     0\n\r\t  raidz2-0                                                   ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005  ONLINE       0     0     0\n\r\t    ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new stripe of sdb and sdc (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rconfig:\n\r\n\r\tNAME                                                       STATE     READ WRITE CKSUM\n\r\ttank                                                       ONLINE       0     0     0\n\r\t  ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\t  ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.single": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new pool of the single disk sdb (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": "Pool status (zpool status -v):\n\r\n\r  pool: tank\n\r state: ONLINE\n\rconfig:\n\r\n\r\tNAME                                                       STATE     READ WRITE CKSUM\n\r\ttank                                                       ONLINE       0     0     0\n\r\t  ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003  ONLINE       0     0     0\n\r\n\rerrors: No known data errors"
+      },
+      "zfsGetObjectDetails.filesystem": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the report of the file system tank/media on the mirror, with its size limit of 6 GiB and compression off.",
+        "x-omv-status": 200,
+        "value": "Filesystem status (zfs list):\n\r\n\rNAME        TYPE         USED  AVAIL  REFER  MOUNTPOINT   COMPRESS        RATIO  ENCRYPTION\n\rtank/media  filesystem  5.00G  1020M  5.00G  /tank/media  off             1.00x  off\n\r\n\rFilesystem details (zfs get all):\n\r\n\rNAME        TYPE         USED  AVAIL  REFER  MOUNTPOINT   COMPRESS        RATIO  ENCRYPTION\n\rtank/media  filesystem  5.00G  1020M  5.00G  /tank/media  off             1.00x  off\n\rNAME        PROPERTY                VALUE                                 SOURCE\n\rtank/media  type                    filesystem                            -\n\rtank/media  creation                Sat Nov 21 12:00 2026                 -\n\rtank/media  used                    5.00G                                 -\n\rtank/media  available               1020M                                 -\n\rtank/media  referenced              5.00G                                 -\n\rtank/media  compressratio           1.00x                                 -\n\rtank/media  mounted                 yes                                   -\n\rtank/media  quota                   6G                                    local\n\rtank/media  reservation             none                                  default\n\rtank/media  recordsize              128K                                  default\n\rtank/media  mountpoint              /tank/media                           default\n\rtank/media  sharenfs                off                                   default\n\rtank/media  checksum                on                                    default\n\rtank/media  compression             off                                   local\n\rtank/media  atime                   off                                   inherited from tank\n\rtank/media  devices                 on                                    default\n\rtank/media  exec                    on                                    default\n\rtank/media  setuid                  on                                    default\n\rtank/media  readonly                off                                   default\n\rtank/media  zoned                   off                                   default\n\rtank/media  snapdir                 hidden                                default\n\rtank/media  aclmode                 discard                               default\n\rtank/media  aclinherit              restricted                            default\n\rtank/media  createtxg               13                                    -\n\rtank/media  canmount                on                                    default\n\rtank/media  xattr                   sa                                    inherited from tank\n\rtank/media  copies                  1                                     default\n\rtank/media  version                 5                                     -\n\rtank/media  utf8only                off                                   -\n\rtank/media  normalization           none                                  -\n\rtank/media  casesensitivity         sensitive                             -\n\rtank/media  vscan                   off                                   default\n\rtank/media  nbmand                  off                                   default\n\rtank/media  sharesmb                off                                   default\n\rtank/media  refquota                none                                  default\n\rtank/media  refreservation          none                                  default\n\rtank/media  guid                    1000000000000000001                  -\n\rtank/media  primarycache            all                                   default\n\rtank/media  secondarycache          all                                   default\n\rtank/media  usedbysnapshots         0B                                    -\n\rtank/media  usedbydataset           5.00G                                 -\n\rtank/media  usedbychildren          0B                                    -\n\rtank/media  usedbyrefreservation    0B                                    -\n\rtank/media  logbias                 latency                               default\n\rtank/media  objsetid                73                                    -\n\rtank/media  dedup                   off                                   default\n\rtank/media  mlslabel                none                                  default\n\rtank/media  sync                    standard                              default\n\rtank/media  dnodesize               legacy                                default\n\rtank/media  refcompressratio        1.00x                                 -\n\rtank/media  written                 5.00G                                 -\n\rtank/media  logicalused             5.00G                                 -\n\rtank/media  logicalreferenced       5.00G                                 -\n\rtank/media  volmode                 default                               default\n\rtank/media  filesystem_limit        none                                  default\n\rtank/media  snapshot_limit          none                                  default\n\rtank/media  filesystem_count        none                                  default\n\rtank/media  snapshot_count          none                                  default\n\rtank/media  snapdev                 hidden                                default\n\rtank/media  acltype                 posix                                 inherited from tank\n\rtank/media  context                 none                                  default\n\rtank/media  fscontext               none                                  default\n\rtank/media  defcontext              none                                  default\n\rtank/media  rootcontext             none                                  default\n\rtank/media  relatime                on                                    default\n\rtank/media  redundant_metadata      all                                   default\n\rtank/media  overlay                 on                                    default\n\rtank/media  encryption              off                                   default\n\rtank/media  keylocation             none                                  default\n\rtank/media  keyformat               none                                  default\n\rtank/media  pbkdf2iters             0                                     default\n\rtank/media  special_small_blocks    0                                     default\n\rtank/media  prefetch                all                                   default\n\rtank/media  direct                  standard                              default\n\rtank/media  longname                off                                   default\n\rtank/media  defaultuserquota        0                                     -\n\rtank/media  defaultgroupquota       0                                     -\n\rtank/media  defaultprojectquota     0                                     -\n\rtank/media  defaultuserobjquota     0                                     -\n\rtank/media  defaultgroupobjquota    0                                     -\n\rtank/media  defaultprojectobjquota  0                                     -\n\rtank/media  omvzfsplugin:uuid       00000000-0000-4000-8000-000000000006  local"
+      },
+      "zfsGetObjectDetails.notFound": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the report of a pool that does not exist.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool status -v 'nosuchpool'' with exit code '1': "
+        }
+      },
+      "zfsGetPoolDevices.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new mirror of sdb and sdc, pool tank, healthy, never checked.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorCheckStopped": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, its check stopped.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorCheckPaused": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check paused (paused with zpool scrub -p, the classic interface's pause).",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorChecked": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check finished with nothing repaired.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror with sdc taken offline (Zfs.deviceOffline): DEGRADED.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "OFFLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [OFFLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, sdc being replaced by sdd (Zfs.deviceReplace), rebuilding.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "replacing-1",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [replacing-1] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+            "state": "ONLINE",
+            "vdev": "replacing-1",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1  [replacing-1] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.mirrorReplaced": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror of sdb and sdd after sdc was replaced, the rebuild finished.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+            "state": "ONLINE",
+            "vdev": "mirror-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1  [mirror-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.raidz1": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z1 of sdb, sdc and sdd.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "raidz1-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [raidz1-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "raidz1-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [raidz1-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+            "state": "ONLINE",
+            "vdev": "raidz1-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1  [raidz1-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.raidz2": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z2 of sdb, sdc, sdd and sde.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "raidz2-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [raidz2-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "raidz2-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [raidz2-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1",
+            "state": "ONLINE",
+            "vdev": "raidz2-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1  [raidz2-0] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006-part1",
+            "state": "ONLINE",
+            "vdev": "raidz2-0",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006-part1  [raidz2-0] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new stripe of sdb and sdc (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [stripe] [ONLINE]"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1",
+            "state": "ONLINE",
+            "vdev": "",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [stripe] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolDevices.single": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new pool of the single disk sdb (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1",
+            "state": "ONLINE",
+            "vdev": "",
+            "label": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [stripe] [ONLINE]"
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new mirror of sdb and sdc, pool tank, healthy, never checked.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 0
+          }
+        ]
+      },
+      "zfsGetPoolStatus.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: no pool.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "zfsGetPoolStatus.mirrorChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorCheckStopped": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, its check stopped.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorCheckPaused": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check paused (paused with zpool scrub -p, the classic interface's pause).",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorChecked": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check finished with nothing repaired.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorDegraded": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror with sdc taken offline (Zfs.deviceOffline): DEGRADED.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "DEGRADED",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorReplacing": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, sdc being replaced by sdd (Zfs.deviceReplace), rebuilding.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.mirrorReplaced": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror of sdb and sdd after sdc was replaced, the rebuild finished.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 66
+          }
+        ]
+      },
+      "zfsGetPoolStatus.raidz1": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z1 of sdb, sdc and sdd.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 0
+          }
+        ]
+      },
+      "zfsGetPoolStatus.raidz2": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z2 of sdb, sdc, sdd and sde.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 0
+          }
+        ]
+      },
+      "zfsGetPoolStatus.stripe": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new stripe of sdb and sdc (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 0
+          }
+        ]
+      },
+      "zfsGetPoolStatus.single": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new pool of the single disk sdb (pooltype basic): no protection.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "name": "tank",
+            "state": "ONLINE",
+            "status": "OK",
+            "capacity": 0
+          }
+        ]
+      },
+      "zfsGetAllSnapshots.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: two snapshots of tank/media, taken with Zfs.quickSnapshot, oldest first.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "id": "root/pool-tank/media@2026-11-21_12-00-00",
+              "parent": "tank/media",
+              "name": "2026-11-21_12-00-00",
+              "type": "Snapshot",
+              "icon": "images/zfs_snap.png",
+              "path": "tank/media@2026-11-21_12-00-00",
+              "used": 0,
+              "refer": 5372420096,
+              "encryption": "OFF"
+            },
+            {
+              "id": "root/pool-tank/media@2026-11-21_12-00-01",
+              "parent": "tank/media",
+              "name": "2026-11-21_12-00-01",
+              "type": "Snapshot",
+              "icon": "images/zfs_snap.png",
+              "path": "tank/media@2026-11-21_12-00-01",
+              "used": 0,
+              "refer": 5372420096,
+              "encryption": "OFF"
+            }
+          ]
+        }
+      },
+      "zfsGetAllSnapshots.one": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: one snapshot of tank/media, taken with Zfs.quickSnapshot.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "id": "root/pool-tank/media@2026-11-21_12-00-00",
+              "parent": "tank/media",
+              "name": "2026-11-21_12-00-00",
+              "type": "Snapshot",
+              "icon": "images/zfs_snap.png",
+              "path": "tank/media@2026-11-21_12-00-00",
+              "used": 0,
+              "refer": 5372420096,
+              "encryption": "OFF"
+            }
+          ]
+        }
+      },
+      "zfsGetAllSnapshots.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: no snapshot.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "zfsGetEmptyCandidates.vmScratch": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the four empty 8 GiB scratch disks sdb to sde.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0003",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB], S/N: EXAMPLE-SERIAL-0003"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0004",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB], S/N: EXAMPLE-SERIAL-0004"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0005",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB], S/N: EXAMPLE-SERIAL-0005"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0006",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB], S/N: EXAMPLE-SERIAL-0006"
+          }
+        ]
+      },
+      "zfsGetEmptyCandidates.afterMirror": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: with the mirror of sdb and sdc made, sdd and sde.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0005",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB], S/N: EXAMPLE-SERIAL-0005"
+          },
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0006",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB], S/N: EXAMPLE-SERIAL-0006"
+          }
+        ]
+      },
+      "zfsGetEmptyCandidates.afterPoolDeleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: after the mirror (sdb and sdd, with sdc replaced out of it) was deleted: only sde; the deleted pool's disks and the replaced disk keep ZFS's partition table.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicefile": "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006",
+            "size": "8589934592",
+            "vendor": "ATA",
+            "serialnumber": "EXAMPLE-SERIAL-0006",
+            "description": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]",
+            "label": "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB], S/N: EXAMPLE-SERIAL-0006"
+          }
+        ]
+      },
+      "zfsAddPool.diskInUse": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a pool asked for on sdb while sdb is in the mirror.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool create -o ashift=12 -o failmode=continue -o autoexpand=on -O atime=off -O acltype=posix -O xattr=sa -O casesensitivity='sensitive' 'other' '/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003' 2>&1' with exit code '1': /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003 is in use and contains a unknown filesystem."
+        }
+      },
+      "zfsAddPool.reservedName": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a pool named mirror1 asked for on sde: ZFS keeps the name for itself. It still left a partition table on sde.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool create -o ashift=12 -o failmode=continue -o autoexpand=on -O atime=off -O acltype=posix -O xattr=sa -O casesensitivity='sensitive' 'mirror1' '/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006' 2>&1' with exit code '1': cannot create 'mirror1': name is reserved\npool name may have been omitted"
+        }
+      },
+      "zfsSetProperties.belowUsed": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a size limit of 1 GiB asked for on tank/media, which holds 5 GiB.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zfs set 'quota'='1G' 'tank/media' 2>&1' with exit code '255': cannot set property for 'tank/media': size is less than current used or reserved space"
+        }
+      },
+      "zfsQuickSnapshot.sameSecond": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a second snapshot of tank/media in the same second.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zfs snapshot 'tank/media@2026-11-21_12-00-01' 2>&1' with exit code '1': cannot create snapshot 'tank/media@2026-11-21_12-00-01': dataset already exists"
+        }
+      },
+      "zfsRollbackSnapshot.newerSnapshots": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a roll-back to the older of two snapshots.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zfs rollback 'tank/media@2026-11-21_12-00-00' 2>&1' with exit code '1': cannot rollback to 'tank/media@2026-11-21_12-00-00': more recent snapshots or bookmarks exist\nuse '-r' to force deletion of the following snapshots and bookmarks:\ntank/media@2026-11-21_12-00-01"
+        }
+      },
+      "zfsDeleteObjectBg.snapshot": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting a snapshot of tank/media.",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusf3nq3ctb7ngsaCPtMMI"
+      },
+      "zfsDeleteObjectBg.filesystem": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting tank/media.",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusnpep004qsv01dmia4Ua"
+      },
+      "zfsDeleteObjectBg.pool": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting the pool tank, with only its own folder left.",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusabm9ft8u724c9KgZzrF"
+      },
+      "zfsDeleteObjectBg.poolWithFs": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting the pool tank while tank/media is on it (the task then fails).",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatus2l6j2kcfihsseF7POy4"
+      },
+      "zfsStopScrub.notChecking": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: stopping a check when none is in progress.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool scrub -s 'tank' 2>&1' with exit code '1': cannot cancel scrubbing tank: there is no active scrub"
+        }
+      },
+      "zfsDeviceOffline.noReplicas": {
+        "summary": "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: taking sdb offline while sdc is already offline: no copy would be left.",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool offline 'tank' '/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1' 2>&1' with exit code '1': cannot offline /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1: no valid replicas"
         }
       }
     }

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsQuickSnapshot
+  tags:
+    - Zfs
+  summary: Take a snapshot now
+  description: >-
+    Take a snapshot of a file system (with recursive, of the file systems inside it too), named
+    by the NAS's date and time to the second ("YYYY-MM-DD_hh-mm-ss"). A second snapshot of the
+    same file system in the same second is refused (HTTP 500), as its name is taken. Marks
+    nothing dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: quickSnapshot
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.zfs.quicksnapshot
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsQuickSnapshotRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        ZFS refused, such as a second snapshot in the same second.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            sameSecond:
+              $ref: ../../examples/zfsQuickSnapshot.sameSecond.yaml

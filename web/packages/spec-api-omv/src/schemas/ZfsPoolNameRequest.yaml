@@ -1,0 +1,9 @@
+type: object
+description: >-
+  One pool by its name (rpc.zfs.name). Stricter than the plugin: the name is an existing pool's,
+  in the form ZfsPoolName allows.
+required: [name]
+properties:
+  name:
+    $ref: ./ZfsPoolName.yaml
+additionalProperties: false

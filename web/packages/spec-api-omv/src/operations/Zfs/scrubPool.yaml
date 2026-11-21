@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsScrubPool
+  tags:
+    - Zfs
+  summary: Check a pool
+  description: >-
+    Start a check (scrub) of a pool, or continue a paused one: ZFS reads every disk of the pool
+    in full and repairs what it can from a copy: seconds on the test VM's small disks, hours on
+    large ones. The check runs in ZFS, not as a task; getObjectDetails shows how far it has got.
+    Marks nothing dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: scrubPool
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.zfs.name
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolNameRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

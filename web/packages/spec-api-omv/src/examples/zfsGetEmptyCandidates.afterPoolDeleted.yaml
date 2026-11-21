@@ -1,0 +1,9 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: after the mirror (sdb and sdd, with sdc replaced out of it) was deleted: only sde; the deleted pool's disks and the replaced disk keep ZFS's partition table."
+x-omv-status: 200
+value:
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0006
+    description: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]"
+    label: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB], S/N: EXAMPLE-SERIAL-0006"

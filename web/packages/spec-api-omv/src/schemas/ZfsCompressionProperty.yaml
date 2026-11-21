@@ -1,0 +1,14 @@
+type: object
+description: A file system's compression, on ("lz4") or off.
+required: [property, value, modified]
+properties:
+  property:
+    type: string
+    enum: [compression]
+  value:
+    type: string
+    enum: [lz4, "off"]
+  modified:
+    type: boolean
+    enum: [true]
+additionalProperties: false

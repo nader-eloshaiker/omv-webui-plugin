@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsDeleteObjectBg
+  tags:
+    - Zfs
+  summary: Delete a snapshot, a file system or a pool
+  description: >-
+    Delete, as a background task: a snapshot; a file system with everything in it, all its
+    snapshots and its mount entry; or a pool, destroying it and clearing ZFS's marks from its
+    partitions (the disks keep ZFS's partition table). Everything deleted is lost and cannot be
+    recovered. Also removes the plugin's scheduled jobs that name it. The plugin refuses (the
+    task fails with HTTP 500 and its words) a file system with file systems inside it, a pool
+    that holds any file system or volume, and either while a shared folder uses it; the
+    interface checks all of these itself first (design phase-5-zfs 0.10). The task's output is
+    empty; it has no result. Marks the fstab, collectd, monit and quota modules dirty, for a
+    snapshot too (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: deleteObjectBg
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.zfs.deleteobject
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsDeleteObjectRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            snapshot:
+              $ref: ../../examples/zfsDeleteObjectBg.snapshot.yaml
+            filesystem:
+              $ref: ../../examples/zfsDeleteObjectBg.filesystem.yaml
+            pool:
+              $ref: ../../examples/zfsDeleteObjectBg.pool.yaml
+            poolWithFs:
+              $ref: ../../examples/zfsDeleteObjectBg.poolWithFs.yaml

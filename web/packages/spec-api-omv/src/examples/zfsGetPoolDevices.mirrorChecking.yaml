@@ -1,0 +1,11 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror holding 5 GiB, a check just started."
+x-omv-status: 200
+value:
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1
+    state: ONLINE
+    vdev: mirror-0
+    label: "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1  [mirror-0] [ONLINE]"
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1
+    state: ONLINE
+    vdev: mirror-0
+    label: "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1  [mirror-0] [ONLINE]"

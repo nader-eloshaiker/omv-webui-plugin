@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsAddObject
+  tags:
+    - Zfs
+  summary: Create a file system on a pool
+  description: >-
+    Create a file system at the top of a pool, in its default folder (/<pool>/<name>), mount it
+    and register it with OMV as a file system. It inherits the pool's compression. The plugin
+    does not refuse a name that is taken: it answers as if it had created it and changes nothing
+    (observed on the test VM), so the interface checks the name itself. Marks the fstab,
+    collectd, monit and quota modules dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: addObject
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.zfs.addobject
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsAddObjectRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

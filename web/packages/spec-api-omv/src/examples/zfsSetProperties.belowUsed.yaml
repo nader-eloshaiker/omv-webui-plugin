@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a size limit of 1 GiB asked for on tank/media, which holds 5 GiB."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zfs set 'quota'='1G' 'tank/media' 2>&1' with exit code '255': cannot set property for 'tank/media': size is less than current used or reserved space"

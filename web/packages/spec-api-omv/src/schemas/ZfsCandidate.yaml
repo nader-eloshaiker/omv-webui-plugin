@@ -1,0 +1,26 @@
+type: object
+description: A disk the plugin offers for a new pool or as a replacement.
+required: [devicefile, size, vendor, serialnumber, description, label]
+properties:
+  devicefile:
+    type: string
+    description: >-
+      The disk's stable /dev/disk/by-id/ name, the one to send to Zfs.addPool and
+      Zfs.deviceReplace; its kernel name only when it has no by-id link.
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  vendor:
+    type: string
+    description: The vendor the disk reports, such as "ATA"; may be empty.
+  serialnumber:
+    type: string
+    description: The serial number the disk reports; may be empty.
+  description:
+    type: string
+    description: >-
+      Server display text in English, such as "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]".
+  label:
+    type: string
+    description: The description with the serial number, display text in English; not shown.

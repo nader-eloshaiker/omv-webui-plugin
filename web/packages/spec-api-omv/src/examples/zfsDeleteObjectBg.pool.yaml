@@ -1,0 +1,3 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the handle of deleting the pool tank, with only its own folder left."
+x-omv-status: 200
+value: /tmp/bgstatusabm9ft8u724c9KgZzrF
