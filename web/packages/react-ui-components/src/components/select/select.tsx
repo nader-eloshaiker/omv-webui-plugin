@@ -114,5 +114,51 @@ function SelectItem({
   );
 }
 
-export { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger };
+/**
+ * A named group of items, for a list long enough to need grouping (more than seven choices). The
+ * group is labelled by its `SelectGroupLabel`, so assistive technology hears the group's name when
+ * focus enters it. Arrow keys move through every group in order.
+ */
+function SelectGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof BaseSelect.Group>) {
+  return (
+    <BaseSelect.Group
+      data-slot="select-group"
+      className={cn(
+        "flex flex-col not-first:mt-1 not-first:border-t not-first:border-border not-first:pt-1",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/** A group's heading: 12px capitals in the quiet ink, like a side-navigation group (4.1). */
+function SelectGroupLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof BaseSelect.GroupLabel>) {
+  return (
+    <BaseSelect.GroupLabel
+      data-slot="select-group-label"
+      className={cn(
+        "px-2 pt-1.5 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase select-none",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectGroupLabel,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+};
 export type { SelectTriggerProps };

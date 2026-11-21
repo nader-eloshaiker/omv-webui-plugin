@@ -132,4 +132,48 @@ describe("TaskLog notices", () => {
     expect(clicked).toEqual(["install-updates.log"]);
     vi.unstubAllGlobals();
   });
+
+  it("keeps column output on one line per row and scrolls it inside its own frame", () => {
+    const line =
+      "PID     Username     Group        Machine    Protocol Version  Encryption";
+    render(
+      <TaskLog
+        {...labels}
+        lines={[line]}
+        wrap={false}
+        size="page"
+        follow={false}
+      />,
+    );
+    const region = screen.getByRole("region", { name: labels.label });
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(region).toHaveAttribute("data-wrap", "false");
+    expect(region.className).toContain("whitespace-pre");
+    expect(region.className).not.toContain("whitespace-pre-wrap");
+    expect(region.className).toContain("max-h-[70vh]");
+    // The spaces that align the columns are kept, not collapsed.
+    expect(region).toHaveTextContent(line, { normalizeWhitespace: false });
+  });
+
+  it("opens a snapshot at its first line when it does not follow", () => {
+    const lines = Array.from({ length: 50 }, (_, i) => `line ${String(i)}`);
+    const { rerender } = render(
+      <TaskLog {...labels} lines={lines} follow={false} />,
+    );
+    const region = screen.getByRole("region", { name: labels.label });
+    Object.defineProperty(region, "scrollHeight", {
+      value: 2000,
+      configurable: true,
+    });
+    rerender(<TaskLog {...labels} lines={[...lines]} follow={false} />);
+    expect(region.scrollTop).toBe(0);
+  });
+
+  it("marks the region busy while a refresh is under way", () => {
+    render(<TaskLog {...labels} lines={["kept"]} busy />);
+    expect(screen.getByRole("region", { name: labels.label })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+  });
 });
