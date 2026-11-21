@@ -1066,6 +1066,11 @@ export const CONTRACT_EXAMPLES = {
       status: 200,
       value: "Service disabled",
     },
+    connected: {
+      status: 200,
+      value:
+        "\nSamba version 4.22.4-Debian-4.22.4+dfsg-1~deb13u1\nPID     Username     Group        Machine                                   Protocol Version  Encryption           Signing              \n----------------------------------------------------------------------------------------------------------------------------------------\n4321    example-user example-user 192.0.2.10 (ipv4:192.0.2.10:51234)       SMB3_11           -                    partial(AES-128-GMAC)\n\nService      pid     Machine       Connected at                     Encryption   Signing     \n---------------------------------------------------------------------------------------------\nmedia        4321    192.0.2.10    Sat Nov 21 10:15:02 AM 2026 UTC  -            -           \n\nLocked files:\nPid          User(ID)   DenyMode   Access      R/W        Oplock           SharePath   Name   Time\n--------------------------------------------------------------------------------------------------\n4321         1000       DENY_NONE  0x120089    RDONLY     LEASE(RWH)       /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001/media   photos/holiday.jpg   Sat Nov 21 10:16:40 2026\n",
+    },
     pendingChanges: {
       status: 500,
       value: {
@@ -1078,6 +1083,11 @@ export const CONTRACT_EXAMPLES = {
     disabled: {
       status: 200,
       value: "Service disabled",
+    },
+    exports: {
+      status: 200,
+      value:
+        "/export/media \t192.0.2.0/24(sync,wdelay,hide,no_subtree_check,fsid=1,sec=sys,rw,secure,root_squash,no_all_squash)\n/export \t192.0.2.0/24(sync,wdelay,hide,crossmnt,no_subtree_check,fsid=0,sec=sys,ro,secure,root_squash,no_all_squash)",
     },
     pendingChanges: {
       status: 500,
