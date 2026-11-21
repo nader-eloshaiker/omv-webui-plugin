@@ -31,6 +31,7 @@ import {
   emailNotificationGet,
   execIsRunning,
   execStop,
+  fileSystemMgmtEnumerateFilesystems,
   fileSystemMgmtEnumerateMountedFilesystems,
   fileSystemMgmtGetList,
   logFileGetList,
@@ -271,6 +272,24 @@ describe("as an administrator", () => {
     });
     expect(schedule.total).toBe(schedule.data.length);
     expect(await configIsDirty()).toBe(false);
+  });
+
+  it("reads every detected file system, the root and those OMV has not set up included", async () => {
+    const detected = await fileSystemMgmtEnumerateFilesystems();
+    const root = detected.find((fs) => fs.mountpoint === "/");
+    expect(root).toMatchObject({ mounted: true, _readonly: true, _used: true });
+    const configured = await fileSystemMgmtGetList({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+    });
+    // getList lists only what OMV set up; every one of those is detected here too.
+    const names = detected.map((fs) => fs.canonicaldevicefile);
+    for (const fs of configured.data.filter((f) => f.status === 1)) {
+      expect(names).toContain(fs.canonicaldevicefile);
+    }
+    expect(detected.length).toBeGreaterThan(configured.total);
   });
 
   it("is told the RAID plugin is not installed by HTTP 404", async () => {
