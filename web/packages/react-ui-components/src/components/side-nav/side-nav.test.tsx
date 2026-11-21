@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The drawer opens with focus on the current item, not on the close button (whose tooltip would take
 // the first Escape), so one Escape closes it and focus goes back to the toggle.
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it } from "vitest";
@@ -47,5 +47,28 @@ describe("SideNavDrawer", () => {
     expect(
       screen.getByRole("button", { name: "Open navigation" }),
     ).toHaveFocus();
+  });
+
+  it.each([
+    ["Tab", false],
+    ["Shift+Tab", true],
+  ])("keeps %s inside the drawer, at every step", async (_, shift) => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
+    const current = await screen.findByRole("link", { name: "Shared folders" });
+    await waitFor(() => expect(current).toHaveFocus());
+    const drawer = screen.getByRole("dialog", { name: "Navigation" });
+    for (let step = 0; step < 6; step += 1) {
+      await user.tab({ shift });
+      expect(drawer).toContainElement(document.activeElement as HTMLElement);
+      await act(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => resolve()),
+          ),
+      );
+      expect(drawer).toContainElement(document.activeElement as HTMLElement);
+    }
   });
 });

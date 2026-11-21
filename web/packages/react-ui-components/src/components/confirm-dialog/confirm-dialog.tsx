@@ -6,6 +6,7 @@ import { cn } from "../../utils";
 import { Button } from "../button/button";
 import { buttonRowClass } from "../button/button-class";
 import { backdropClass, popupClass } from "../dialog/dialog-classes";
+import { keepTabInside } from "../dialog/keep-tab-inside";
 import { TypeToConfirmField } from "../type-to-confirm/type-to-confirm-field";
 import { typedMatches } from "../type-to-confirm/typed-matches";
 
@@ -43,7 +44,8 @@ interface ConfirmDialogProps {
 /**
  * A confirmation, on Base UI's AlertDialog (`role="alertdialog"`; Escape and Cancel close it; the
  * scrim does not). There is no form, so Enter never confirms: only the confirm button does. Focus
- * starts on Cancel (style guide 5.4, UI-8; the owner's decision for Undo).
+ * starts on Cancel (style guide 5.4, UI-8; the owner's decision for Undo), and Tab and Shift+Tab
+ * cycle inside the dialog (`keepTabInside`).
  */
 function ConfirmDialog({
   open,
@@ -70,6 +72,7 @@ function ConfirmDialog({
           data-slot="confirm-dialog"
           data-variant={variant}
           initialFocus={cancelRef}
+          onKeyDown={keepTabInside}
           className={cn(popupClass, className)}
         >
           <div className="flex items-start gap-3">

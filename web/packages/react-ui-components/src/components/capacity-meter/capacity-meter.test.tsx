@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CapacityMeter } from "./capacity-meter";
 
@@ -108,4 +108,34 @@ describe("CapacityMeter compact", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
+});
+
+describe("CapacityMeter text", () => {
+  it.each([
+    ["default", ["File system: data", "Warning", "2.2 TiB of 3.6 TiB (62%)"]],
+    ["compact", ["File system: data", "2.2 TiB of 3.6 TiB (62%)", "Warning"]],
+  ] as const)(
+    "holds no text but its label, figure and pill (%s)",
+    (variant, parts) => {
+      render(
+        <CapacityMeter
+          variant={variant}
+          label="File system: data"
+          value={2.2}
+          max={3.6}
+          valueText="2.2 TiB of 3.6 TiB (62%)"
+          threshold={{ status: "warning", label: "Warning" }}
+        />,
+      );
+      const meter = screen.getByRole("meter", { name: "File system: data" });
+      // Base UI's NVDA workaround appends a hidden "x" to the meter, read out and in its text.
+      expect(within(meter).queryByText("x")).toBeNull();
+      expect(meter.textContent).toBe(parts.join(""));
+      expect(meter).toHaveAttribute("aria-valuenow", "2.2");
+      expect(meter).toHaveAttribute(
+        "aria-valuetext",
+        "2.2 TiB of 3.6 TiB (62%)",
+      );
+    },
+  );
 });

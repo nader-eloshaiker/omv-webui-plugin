@@ -132,15 +132,8 @@ function CapacityMeter({
   const figure = (
     <p className="text-sm text-muted-foreground tabular-nums">{valueText}</p>
   );
-  return (
-    <Meter.Root
-      data-slot="capacity-meter"
-      data-variant={variant}
-      value={value}
-      max={max}
-      getAriaValueText={() => valueText}
-      className={cn(rootClass({ variant }), className)}
-    >
+  const content = (
+    <>
       {compact ? (
         <Meter.Label className={labelClass({ variant })}>{label}</Meter.Label>
       ) : (
@@ -167,7 +160,23 @@ function CapacityMeter({
       ) : (
         figure
       )}
-    </Meter.Root>
+    </>
+  );
+  return (
+    <Meter.Root
+      data-slot="capacity-meter"
+      data-variant={variant}
+      value={value}
+      max={max}
+      getAriaValueText={() => valueText}
+      className={cn(rootClass({ variant }), className)}
+      // Base UI appends a visually hidden `<span role="presentation">x</span>` after the children so
+      // that NVDA announces the label of a meter holding no visible text of its own. This meter always
+      // holds visible text that is not its label (the figure), so the span only adds an "x" to the
+      // accessibility tree and to the text content. Rendering the element with these children, and
+      // not the ones Base UI composed, keeps every ARIA attribute and drops the span.
+      render={(props) => <div {...props}>{content}</div>}
+    />
   );
 }
 
