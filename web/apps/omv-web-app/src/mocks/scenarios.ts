@@ -588,6 +588,8 @@ export interface MockSession {
   welcomeDismissed: boolean;
   /** Disk-health or power settings are saved and not applied: the smartmontools module is dirty. */
   smartDirty: boolean;
+  /** The modules a file-system action left dirty, with OMV's descriptions of them. */
+  fsDirty: Readonly<Record<string, string>>;
   /** What the disk scenarios remember between calls (diskScenarios.ts). */
   disk: DiskMockState;
 }
@@ -602,6 +604,7 @@ export const newMockSession = (
   dirty,
   welcomeDismissed: false,
   smartDirty: false,
+  fsDirty: {},
   disk: newDiskMockState(),
 });
 
@@ -619,6 +622,26 @@ const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
 const WIPE_HANDLE = CONTRACT_EXAMPLES.diskMgmtWipe.started.value;
 const SELF_TEST_HANDLE =
   CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value;
+// The file-system tasks' handles, and the last poll each answers with.
+const FS_TASK_OUTPUTS: Readonly<Record<string, ExampleName<"execGetOutput">>> =
+  {
+    [CONTRACT_EXAMPLES.fileSystemMgmtGetCandidatesBg.started.value]:
+      "fsCandidatesFinished",
+    [CONTRACT_EXAMPLES.fileSystemMgmtCreate.started.value]:
+      "createExt4Finished",
+    [CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value]:
+      "createBtrfsRaid1Finished",
+  };
+
+// OMV's descriptions of the modules the file-system actions mark dirty (engined/module/*.inc,
+// OMV 8.6.1): monit has collectd's words, and quota has none.
+const FS_MODULES = {
+  fstab: "Management of the file systems to be mounted.",
+  collectd: "Statistics collection and monitoring daemon.",
+  monit: "Statistics collection and monitoring daemon.",
+  quota: "",
+} as const;
+type FsModule = keyof typeof FS_MODULES;
 
 /** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
 const CORE_LOGS = new Set([
@@ -733,6 +756,19 @@ export function scenarioAnswers(
       }
       return answer;
     };
+  /** A file-system action saved: OMV marks these modules dirty (observed on the test VM). */
+  const fsPending =
+    <T extends string>(reply: T, modules: readonly FsModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        session.fsDirty = {
+          ...session.fsDirty,
+          ...Object.fromEntries(modules.map((m) => [m, FS_MODULES[m]])),
+        };
+      }
+      return answer;
+    };
   const disk = diskAnswers(name, session.disk);
   /** A disk operation's answer for this scenario, behind the sign-in guard. */
   const diskRead =
@@ -750,7 +786,11 @@ export function scenarioAnswers(
     };
   /** The modules System.getInformation reports, with smartmontools once a disk setting is saved. */
   const withSmartDirty = (answer: FixedAnswer): FixedAnswer => {
-    if (!session.smartDirty || answer.status !== 200) {
+    const fs = session.fsDirty;
+    if (
+      (!session.smartDirty && Object.keys(fs).length === 0) ||
+      answer.status !== 200
+    ) {
       return answer;
     }
     const value = answer.value as { dirtyModules?: unknown };
@@ -764,8 +804,13 @@ export function scenarioAnswers(
         ...value,
         dirtyModules: {
           ...before,
-          smartmontools: "S.M.A.R.T. monitoring of disks.",
-          ...(name === "smartAlsoPending" ? { nfs: "NFS server." } : {}),
+          ...fs,
+          ...(session.smartDirty && {
+            smartmontools: "S.M.A.R.T. monitoring of disks.",
+          }),
+          ...(session.smartDirty && name === "smartAlsoPending"
+            ? { nfs: "NFS server." }
+            : {}),
         },
       },
     };
@@ -838,7 +883,13 @@ export function scenarioAnswers(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
     configIsDirty: () =>
-      guarded(session.dirty || session.smartDirty ? "dirty" : "clean")(),
+      guarded(
+        session.dirty ||
+          session.smartDirty ||
+          Object.keys(session.fsDirty).length > 0
+          ? "dirty"
+          : "clean",
+      )(),
     configApplyChangesBg: guarded("applied"),
     configRevertChangesBg: guarded("reverted"),
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
@@ -860,6 +911,11 @@ export function scenarioAnswers(
       if (filename === SELF_TEST_HANDLE) {
         return guarded<ExampleName<"execGetOutput">>(selfTestOutput(name))();
       }
+      const fsTask =
+        typeof filename === "string" ? FS_TASK_OUTPUTS[filename] : undefined;
+      if (fsTask !== undefined) {
+        return guarded(fsTask)();
+      }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
@@ -868,6 +924,7 @@ export function scenarioAnswers(
       if (typeof answer === "string") {
         session.dirty = false;
         session.smartDirty = false;
+        session.fsDirty = {};
       }
       return answer;
     },
@@ -960,6 +1017,28 @@ export function scenarioAnswers(
     fileSystemMgmtEnumerateFilesystems: diskRead(
       "fileSystemMgmtEnumerateFilesystems",
     ),
+    // File systems (Phase 5): the test VM as captured, with EXT4 just created on its scratch disk
+    // and not yet set up. Each task answers its captured last poll through execGetOutput.
+    fileSystemMgmtGetMountCandidates: guarded("created"),
+    fileSystemMgmtGetCandidatesBg: guarded("started"),
+    fileSystemMgmtCreate: guarded("started"),
+    fileSystemMgmtCreateBtrfs: guarded("started"),
+    fileSystemMgmtSetMountPoint: fsPending("saved", [
+      "fstab",
+      "collectd",
+      "monit",
+      "quota",
+    ]),
+    fileSystemMgmtGrow: guarded("null"),
+    // The server applies fstab itself and leaves the other three pending.
+    fileSystemMgmtUmountByDir: fsPending("null", [
+      "collectd",
+      "monit",
+      "quota",
+    ]),
+    fileSystemMgmtGetDetails: guarded("ext4"),
+    fsTabGetByFsName: guarded("entry"),
+    fsTabSet: fsPending("saved", ["monit"]),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty

@@ -107,17 +107,18 @@ export type FsName =
   | { kind: "label"; text: string }
   | { kind: "device"; text: string };
 
+// A configured file system still being created reports a null label (FileSystemMgmt.getList).
 type Named = Pick<
   MountedFilesystem,
-  "label" | "canonicaldevicefile" | "devicefile" | "mountpoint"
->;
+  "canonicaldevicefile" | "devicefile" | "mountpoint"
+> & { label: string | null };
 
 /** `label`, else `canonicaldevicefile`, else `devicefile`; the root row is "System drive" whatever its label. */
 export function fileSystemName(fs: Named): FsName {
   if (fs.mountpoint === "/") {
     return { kind: "systemDrive" };
   }
-  if (fs.label.trim() !== "") {
+  if (fs.label !== null && fs.label.trim() !== "") {
     return { kind: "label", text: fs.label };
   }
   return {

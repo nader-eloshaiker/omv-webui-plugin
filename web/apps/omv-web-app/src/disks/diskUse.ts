@@ -148,12 +148,15 @@ const onDisk = (fs: FsRow, names: ReadonlySet<string>) =>
 function fsRef(
   fs: Pick<
     DetectedFilesystem,
-    "label" | "type" | "canonicaldevicefile" | "devicefile" | "size"
-  >,
+    "type" | "canonicaldevicefile" | "devicefile" | "size"
+  > & {
+    // FileSystemMgmt.getList reports null for a file system still being created.
+    label: string | null;
+  },
 ): FsRef {
   const size = parseByteCount(fs.size);
   return {
-    label: fs.label.trim(),
+    label: (fs.label ?? "").trim(),
     type: fs.type,
     device: fs.canonicaldevicefile || fs.devicefile,
     size: size !== null && size > 0 ? size : null,

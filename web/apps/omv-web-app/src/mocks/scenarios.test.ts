@@ -102,6 +102,18 @@ describe("the mock scenarios", () => {
       handle: CONTRACT_EXAMPLES.smartExecuteScheduledTest.started.value,
       want: "selfTestFinished",
     },
+    {
+      handle: CONTRACT_EXAMPLES.fileSystemMgmtGetCandidatesBg.started.value,
+      want: "fsCandidatesFinished",
+    },
+    {
+      handle: CONTRACT_EXAMPLES.fileSystemMgmtCreate.started.value,
+      want: "createExt4Finished",
+    },
+    {
+      handle: CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value,
+      want: "createBtrfsRaid1Finished",
+    },
   ])(
     "execGetOutput for the handle $handle answers $want",
     ({ handle, want }) => {
@@ -124,6 +136,51 @@ describe("the mock scenarios", () => {
     const session = newMockSession(true);
     answerOf("admin", session, operationId);
     expect(answerOf("admin", session, "configIsDirty")).toBe("dirty");
+  });
+
+  // The modules each file-system action leaves dirty on the test VM (UX audit V8).
+  it.each([
+    {
+      operationId: "fileSystemMgmtSetMountPoint",
+      modules: ["collectd", "fstab", "monit", "quota"],
+    },
+    { operationId: "fsTabSet", modules: ["monit"] },
+    {
+      operationId: "fileSystemMgmtUmountByDir",
+      modules: ["collectd", "monit", "quota"],
+    },
+  ] as const)(
+    "$operationId leaves $modules pending until an apply",
+    ({ operationId, modules }) => {
+      const session = newMockSession(true);
+      expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
+      answerOf("admin", session, operationId);
+      expect(answerOf("admin", session, "configIsDirty")).toBe("dirty");
+      const info = answerOf(
+        "admin",
+        session,
+        "systemGetInformation",
+      ) as FixedAnswer;
+      const dirty = (info.value as { dirtyModules: object }).dirtyModules;
+      expect(Object.keys(dirty).sort()).toEqual([...modules]);
+      answerOf("admin", session, "execGetOutput", {
+        filename:
+          CONTRACT_EXAMPLES.execGetOutput.appliedFinished.value.filename,
+        pos: 0,
+      });
+      expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
+    },
+  );
+
+  it.each([
+    "fileSystemMgmtCreate",
+    "fileSystemMgmtCreateBtrfs",
+    "fileSystemMgmtGrow",
+    "fileSystemMgmtGetCandidatesBg",
+  ] as const)("%s leaves nothing pending", (operationId) => {
+    const session = newMockSession(true);
+    answerOf("admin", session, operationId);
+    expect(answerOf("admin", session, "configIsDirty")).toBe("clean");
   });
 
   it.each([
