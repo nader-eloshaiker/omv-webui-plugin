@@ -52,7 +52,10 @@ test("the File systems list from the menu, with what is found and the mount dial
   await expect(
     page.getByRole("heading", { level: 1, name: copy.filesystems.title }),
   ).toBeVisible();
-  const table = page.getByRole("table", { name: copy.filesystems.tableLabel });
+  const table = page.getByRole("table", {
+    name: copy.filesystems.tableLabel,
+    exact: true,
+  });
   await expect(table.getByText(copy.filesystems.system.line)).toBeVisible();
   await expect(
     table.getByRole("link", { name: "Open file system EXT4 on /dev/sda1" }),

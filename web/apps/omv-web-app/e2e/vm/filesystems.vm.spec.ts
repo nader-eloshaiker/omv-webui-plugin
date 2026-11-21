@@ -119,6 +119,7 @@ test.describe("file systems on the VM", () => {
     await page.goto("/ui/storage/filesystems");
     const table = page.getByRole("table", {
       name: copy.filesystems.tableLabel,
+      exact: true,
     });
     await expect(table.getByText(copy.filesystems.system.line)).toBeVisible();
     await expect(
@@ -141,7 +142,7 @@ test.describe("file systems on the VM", () => {
     await signIn(page, vm.admin);
     await page.goto("/ui/storage/filesystems");
     const link = page
-      .getByRole("table", { name: copy.filesystems.tableLabel })
+      .getByRole("table", { name: copy.filesystems.tableLabel, exact: true })
       .getByRole("link", { name: /^Open file system / })
       .first();
     await link.click();
@@ -309,7 +310,10 @@ test.describe("file systems on the VM", () => {
     // D. Nothing is left pending.
     await page.goto("/ui/storage/filesystems");
     await expect(
-      page.getByRole("table", { name: copy.filesystems.tableLabel }),
+      page.getByRole("table", {
+        name: copy.filesystems.tableLabel,
+        exact: true,
+      }),
     ).toBeVisible();
     await expect
       .poll(
