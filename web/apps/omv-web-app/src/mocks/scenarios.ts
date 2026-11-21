@@ -27,6 +27,32 @@ export const SCENARIOS = [
   "noSharedFolders",
   "folderProblems",
   "readOnlyAccount",
+  "storageWarning",
+  "storageFull",
+  "storageNoReading",
+  "storageRootOnly",
+  "storageMany",
+  "storageMissing",
+  "storageEmpty",
+  "disksAllGood",
+  "disksMixed",
+  "disksEmpty",
+  "disksFail",
+  "disksUnrecognised",
+  "serviceDown",
+  "servicesNoneOn",
+  "servicePlugin",
+  "servicePending",
+  "networkTwoPorts",
+  "networkVirtual",
+  "networkNoIpv6",
+  "networkWifi",
+  "logsLarge",
+  "logsHostile",
+  "logsFail",
+  "processesBusy",
+  "serviceOutputs",
+  "serviceOutputsEmpty",
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -53,6 +79,32 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   noSharedFolders: "Administrator, no shared folders",
   folderProblems: "Administrator, shared folders that cannot be reached",
   readOnlyAccount: "Normal user, account locked",
+  storageWarning: "Dashboard: a file system past its warning level",
+  storageFull: "Dashboard: a file system full",
+  storageNoReading: "Dashboard: a file system with no reading",
+  storageRootOnly: "Dashboard: only the system drive",
+  storageMany: "Dashboard: more than six file systems",
+  storageMissing: "Dashboard: a file system missing",
+  storageEmpty: "Dashboard: no file systems",
+  disksAllGood: "Disk health: all good, all monitored",
+  disksMixed: "Disk health: one of each state",
+  disksEmpty: "Disk health: no disk reports",
+  disksFail: "Disk health: the check fails",
+  disksUnrecognised: "Disk health: an unrecognised reading",
+  serviceDown: "Services: one on but not running",
+  servicesNoneOn: "Services: none on",
+  servicePlugin: "Services: a plugin's service",
+  servicePending: "Services: SMB/CIFS saved, not applied",
+  networkTwoPorts: "Network: two ports, one unplugged",
+  networkVirtual: "Network: twelve virtual interfaces",
+  networkNoIpv6: "Network: no IPv6, speed not reported",
+  networkWifi: "Network: a Wi-Fi interface",
+  logsLarge: "System logs: 5,000 entries",
+  logsHostile: "System logs: long and markup-looking lines",
+  logsFail: "System logs: reading fails",
+  processesBusy: "Processes: stopped, zombie, swap, long command",
+  serviceOutputs: "Service details: SMB, NFS and SSH in use",
+  serviceOutputsEmpty: "Service details: on, nothing to show",
 };
 
 /** The scenarios signed in as a normal user. */
@@ -182,6 +234,331 @@ function folderSearch(params: unknown): "populated" | "searchNoMatch" {
     : "searchNoMatch";
 }
 
+// ---- Phase 5: dashboard and monitoring. Replies written from the captured examples for states the
+// test VM does not show; each changes only what its scenario is about.
+
+type Mounted =
+  (typeof CONTRACT_EXAMPLES.fileSystemMgmtEnumerateMountedFilesystems.withRoot.value)[number];
+const MOUNTED =
+  CONTRACT_EXAMPLES.fileSystemMgmtEnumerateMountedFilesystems.withRoot.value;
+const DATA_FS: Mounted = MOUNTED[0];
+const ROOT_FS: Mounted = MOUNTED[1];
+const GIB = 1024 ** 3;
+
+/** A data file system like the captured one, with its own name, size and fill. */
+function dataFs(
+  n: number,
+  label: string,
+  percent: number,
+  threshold: number,
+): Record<string, unknown> {
+  const size = 100 * GIB;
+  const available = percent < 0 ? -1 : Math.round(size * (1 - percent / 100));
+  const id = `00000000-0000-4000-8000-0000000001${String(n).padStart(2, "0")}`;
+  return {
+    ...DATA_FS,
+    devicename: `sd${String.fromCharCode(97 + n)}1`,
+    canonicaldevicefile: `/dev/sd${String.fromCharCode(97 + n)}1`,
+    devicefile: `/dev/disk/by-uuid/${id}`,
+    uuid: id,
+    label,
+    mountpoint: `/srv/dev-disk-by-uuid-${id}`,
+    size: percent < 0 ? "-1" : String(size),
+    available: String(available),
+    used: percent < 0 ? "-1" : `${String(percent)}.00 GiB`,
+    percentage: percent,
+    usagewarnthreshold: threshold,
+  };
+}
+
+const mounted = (...rows: unknown[]): FixedAnswer => ({
+  status: 200,
+  value: rows,
+});
+const MOUNTED_SCENARIOS: Partial<
+  Record<ScenarioName, FixedAnswer | "nearlyFull" | "empty">
+> = {
+  storageWarning: "nearlyFull",
+  storageFull: mounted(dataFs(1, "backups", 100, 0), DATA_FS, ROOT_FS),
+  storageNoReading: mounted(dataFs(1, "usb-disk", -1, 85), DATA_FS, ROOT_FS),
+  storageRootOnly: mounted(ROOT_FS),
+  storageEmpty: "empty",
+  storageMany: mounted(
+    ROOT_FS,
+    ...Array.from({ length: 13 }, (_, i) =>
+      dataFs(i + 1, `disk${String(i + 1)}`, 10 + i * 6, i % 2 === 0 ? 85 : 0),
+    ),
+  ),
+};
+
+type SmartDevice = Record<string, unknown> & {
+  overallstatus: string;
+  monitor: boolean;
+};
+const SMART_DEVICES = (
+  JSON.parse(
+    CONTRACT_EXAMPLES.execGetOutput.smartDevicesFinished.value.output,
+  ) as {
+    data: SmartDevice[];
+  }
+).data;
+const SMART_FINISHED =
+  CONTRACT_EXAMPLES.execGetOutput.smartDevicesFinished.value;
+const smartHdd = (
+  n: number,
+  status: string,
+  monitor: boolean,
+  temperature: string | number,
+) => ({
+  ...SMART_DEVICES[1],
+  devicename: `sd${String.fromCharCode(97 + n)}`,
+  canonicaldevicefile: `/dev/sd${String.fromCharCode(97 + n)}`,
+  model: "Example HDD 4TB",
+  size: "4000787030016",
+  temperature,
+  overallstatus: status,
+  monitor,
+});
+/** The last poll of a disk-health task whose result is `devices`. */
+function smartFinished(devices: readonly unknown[]): FixedAnswer {
+  const output = JSON.stringify({ total: devices.length, data: devices });
+  return {
+    status: 200,
+    value: { ...SMART_FINISHED, output, pos: output.length },
+  };
+}
+const SMART_SCENARIOS: Partial<
+  Record<ScenarioName, FixedAnswer | "smartManyBadSectorsFinished">
+> = {
+  disksAllGood: smartFinished([
+    { ...SMART_DEVICES[0], monitor: true },
+    smartHdd(0, "GOOD", true, "34"),
+    smartHdd(1, "GOOD", true, 36),
+  ]),
+  disksMixed: smartFinished([
+    { ...SMART_DEVICES[0], monitor: true },
+    smartHdd(0, "BAD_SECTOR", true, "38"),
+    smartHdd(1, "BAD_ATTRIBUTE_IN_THE_PAST", false, "41"),
+    smartHdd(2, "BAD_SECTOR_MANY", false, 44),
+    smartHdd(3, "BAD_ATTRIBUTE_NOW", true, "61"),
+    smartHdd(4, "BAD_STATUS", true, ""),
+  ]),
+  disksEmpty: smartFinished([]),
+  disksUnrecognised: smartFinished([
+    { ...SMART_DEVICES[0], monitor: true },
+    smartHdd(0, "<b>SOMETHING_NEW</b>", true, ""),
+  ]),
+  // A disk-health task that fails: the last poll is refused, as a failed task's is (A6).
+  disksFail: {
+    status: 500,
+    message:
+      "Failed to execute command 'smartctl --xall --json /dev/sda': exit code '2'.",
+  },
+};
+
+interface Service {
+  name: string;
+  title: string;
+  enabled: boolean;
+  running: boolean;
+}
+const SERVICES = CONTRACT_EXAMPLES.servicesGetStatus.sshOnly.value
+  .data as unknown as Service[];
+const services = (
+  change: Record<string, Partial<Service>>,
+  extra: Service[] = [],
+): FixedAnswer => {
+  const data = [
+    ...SERVICES.map((s) => ({ ...s, ...change[s.name] })),
+    ...extra,
+  ];
+  return { status: 200, value: { total: data.length, data } };
+};
+const SERVICE_SCENARIOS: Partial<
+  Record<ScenarioName, FixedAnswer | "serviceStopped">
+> = {
+  serviceDown: "serviceStopped",
+  servicesNoneOn: services({ ssh: { enabled: false, running: false } }),
+  servicePlugin: services({}, [
+    { name: "minidlna", title: "DLNA", enabled: true, running: false },
+  ]),
+  servicePending: services({ samba: { enabled: true, running: false } }),
+  serviceOutputs: services({
+    samba: { enabled: true, running: true },
+    nfs: { enabled: true, running: true },
+  }),
+  serviceOutputsEmpty: services({
+    samba: { enabled: true, running: true },
+    nfs: { enabled: true, running: true },
+  }),
+};
+
+/** System.getInformation with SMB/CIFS saved and not applied. */
+function sambaPending(): FixedAnswer {
+  const { value } = INFO.adminPendingChanges;
+  return {
+    status: 200,
+    value: {
+      ...value,
+      ts: Math.floor(Date.now() / 1000),
+      dirtyModules: { samba: "SMB/CIFS file sharing." },
+    },
+  };
+}
+
+type Device =
+  (typeof CONTRACT_EXAMPLES.networkEnumerateDevicesList.ethernetAndLoopback.value.data)[number];
+const DEVICES =
+  CONTRACT_EXAMPLES.networkEnumerateDevicesList.ethernetAndLoopback.value.data;
+const ETH: Device = DEVICES[0];
+const devices = (...rows: unknown[]): FixedAnswer => ({
+  status: 200,
+  value: { total: rows.length, data: rows },
+});
+const NETWORK_SCENARIOS: Partial<Record<ScenarioName, FixedAnswer | "wifi">> = {
+  networkTwoPorts: devices(...DEVICES, {
+    ...ETH,
+    uuid: "00000000-0000-4000-8000-000000000007",
+    devicename: "enp3s0",
+    address: "",
+    prefix: -1,
+    address6: "",
+    prefix6: -1,
+    ether: "00:00:5e:00:53:03",
+    state: "DOWN",
+    link: false,
+    speed: -1,
+    description: "enp3s0 [00:00:5e:00:53:03]",
+  }),
+  networkVirtual: devices(
+    ...DEVICES,
+    ...Array.from({ length: 12 }, (_, i) => ({
+      ...DEVICES[1],
+      devicename: `veth${String(i).padStart(4, "0")}a`,
+      type: "virtual",
+      state: "UP",
+      speed: 10000,
+    })),
+  ),
+  networkNoIpv6: devices(
+    {
+      ...ETH,
+      address6: "",
+      prefix6: -1,
+      speed: -1,
+      type: "bond",
+      devicename: "bond0",
+    },
+    DEVICES[1],
+  ),
+  networkWifi: "wifi",
+};
+
+type LogRow =
+  (typeof CONTRACT_EXAMPLES.logFileGetList.syslog.value.data)[number];
+const SYSLOG_ROW: LogRow =
+  CONTRACT_EXAMPLES.logFileGetList.syslog.value.data[0];
+const SYSLOG_TS = SYSLOG_ROW.ts;
+const SERVICES_LOGGING = [
+  "sshd[812]",
+  "systemd[1]",
+  "smartd[640]",
+  "openmediavault-webgui[85363]",
+  "monit[702]",
+];
+/** A syslog of 5,000 entries, newest first, one every 30 seconds. */
+const LARGE_SYSLOG: FixedAnswer = {
+  status: 200,
+  value: {
+    total: 5000,
+    data: Array.from({ length: 5000 }, (_, i) => {
+      const rownum = 4999 - i;
+      const ts = SYSLOG_TS - i * 30;
+      return {
+        rownum,
+        ts,
+        date: SYSLOG_ROW.date,
+        hostname: SYSLOG_ROW.hostname,
+        message: `${SERVICES_LOGGING[rownum % SERVICES_LOGGING.length] ?? ""}: entry ${String(rownum)} of the example log`,
+      };
+    }),
+  },
+};
+const HOSTILE_SYSLOG: FixedAnswer = {
+  status: 200,
+  value: {
+    total: 4,
+    data: [
+      {
+        ...SYSLOG_ROW,
+        rownum: 3,
+        message: `kernel: ${"a very long line ".repeat(125)}end`,
+      },
+      {
+        ...SYSLOG_ROW,
+        rownum: 2,
+        ts: SYSLOG_TS - 1,
+        message: '<img src=x onerror="alert(1)"> <script>alert(2)</script>',
+      },
+      {
+        ...SYSLOG_ROW,
+        rownum: 1,
+        ts: SYSLOG_TS - 2,
+        message: "‮right-to-left override, then javascript:alert(3)",
+      },
+      {
+        ...SYSLOG_ROW,
+        rownum: 0,
+        ts: SYSLOG_TS - 3,
+        message: "שלום from a right-to-left message",
+      },
+    ],
+  },
+};
+const LOG_FAILS: FixedAnswer = {
+  status: 500,
+  message: "Failed to execute command 'journalctl --no-pager': exit code '1'.",
+};
+
+type TopInfo = typeof CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
+const TOP: TopInfo = CONTRACT_EXAMPLES.systemGetTopInfo.json.value;
+const BUSY_TOP: FixedAnswer = {
+  status: 200,
+  value: {
+    ...TOP,
+    tasks_total: "176",
+    tasks_running: "2",
+    tasks_sleeping: "171",
+    tasks_stopped: "1",
+    tasks_zombie: "2",
+    swap_total: "1024.0",
+    swap_used: "256.0",
+    swap_free: "768.0",
+    processes: [
+      {
+        ...TOP.processes[0],
+        PID: "4242",
+        USER: "example-user",
+        "%CPU": "87.3",
+        RES: "1073741824",
+        S: "R",
+        "TIME+": "123:45.67",
+        COMMAND: `/usr/bin/python3 ${"--option=value ".repeat(32)}<b>end</b>`,
+      },
+      { ...TOP.processes[1], PID: "4243", S: "Z", COMMAND: "defunct-child" },
+      { ...TOP.processes[1], PID: "4244", S: "Z", COMMAND: "another-defunct" },
+      {
+        ...TOP.processes[1],
+        PID: "4245",
+        S: "T",
+        "%CPU": "0.3",
+        COMMAND: "paused-job",
+      },
+      ...TOP.processes,
+    ],
+  },
+};
+
 export interface MockSession {
   signedIn: boolean;
   /** A password was accepted and a second factor is awaited (A10). */
@@ -207,7 +584,9 @@ export const newMockSession = (
 
 /** Whether a scenario starts with changes pending. */
 export const startsDirty = (name: ScenarioName): boolean =>
-  name === "pendingChanges" || name === "applyFails";
+  name === "pendingChanges" ||
+  name === "applyFails" ||
+  name === "servicePending";
 
 // The handle the contract's apply example returns.
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
@@ -249,6 +628,9 @@ function logFor(
         : "unknownLog";
   }
 }
+
+/** A service that is on but has nothing to report: only whitespace. */
+const EMPTY_OUTPUT: FixedAnswer = { status: 200, value: "\n" };
 
 const SIGNED_IN_EXAMPLES = new Set(["authenticated", "authenticatedUser"]);
 
@@ -351,21 +733,23 @@ export function scenarioAnswers(
       return "null";
     },
     systemGetInformation: () =>
-      guarded<never>(
-        information(
-          user
-            ? "user"
-            : session.dirty
-              ? "adminPendingChanges"
-              : name === "checklistHidden" || session.welcomeDismissed
-                ? "adminWelcomeDismissed"
-                : "admin",
-          {
-            now: name !== "attention",
-            rebootRequired: name === "attention",
-          },
-        ),
-      )(),
+      name === "servicePending" && session.dirty
+        ? guarded<never>(sambaPending())()
+        : guarded<never>(
+            information(
+              user
+                ? "user"
+                : session.dirty
+                  ? "adminPendingChanges"
+                  : name === "checklistHidden" || session.welcomeDismissed
+                    ? "adminWelcomeDismissed"
+                    : "admin",
+              {
+                now: name !== "attention",
+                rebootRequired: name === "attention",
+              },
+            ),
+          )(),
     userMgmtGetUserByContext: guarded(
       name === "builtInAdmin"
         ? BUILT_IN_ADMIN_ACCOUNT
@@ -384,7 +768,7 @@ export function scenarioAnswers(
     execGetOutput: ({ params }) => {
       const filename = (params as { filename?: unknown } | null)?.filename;
       if (filename === SMART_HANDLE) {
-        return guarded("smartDevicesFinished")();
+        return guarded(SMART_SCENARIOS[name] ?? "smartDevicesFinished")();
       }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
@@ -431,18 +815,57 @@ export function scenarioAnswers(
     userMgmtSetUserByContext: guarded("saved"),
     userMgmtSetPasswordByContext: guarded("null"),
     // Dashboard and monitoring (Phase 5): the test VM as captured.
-    fileSystemMgmtEnumerateMountedFilesystems: guarded("withRoot"),
-    fileSystemMgmtGetList: guarded("configured"),
+    fileSystemMgmtEnumerateMountedFilesystems: guarded(
+      MOUNTED_SCENARIOS[name] ?? "withRoot",
+    ),
+    fileSystemMgmtGetList: guarded(
+      name === "storageMissing" ? "missing" : "configured",
+    ),
     smartGetListBg: guarded("smartDevices"),
-    servicesGetStatus: guarded("sshOnly"),
-    networkEnumerateDevicesList: guarded("ethernetAndLoopback"),
-    logFileGetList: ({ params }) => guarded(logFor(params))(),
-    systemGetTopInfo: guarded("json"),
-    smbGetStats: guarded("disabled"),
-    nfsGetStats: guarded("disabled"),
+    servicesGetStatus: guarded(SERVICE_SCENARIOS[name] ?? "sshOnly"),
+    networkEnumerateDevicesList: guarded(
+      NETWORK_SCENARIOS[name] ?? "ethernetAndLoopback",
+    ),
+    logFileGetList: ({ params }) => {
+      const log = logFor(params);
+      if (log === "syslog" && name === "logsLarge") {
+        return guarded<never>(LARGE_SYSLOG)();
+      }
+      if (log === "syslog" && name === "logsHostile") {
+        return guarded<never>(HOSTILE_SYSLOG)();
+      }
+      if (log !== "unknownLog" && name === "logsFail") {
+        return guarded<never>(LOG_FAILS)();
+      }
+      return guarded(log)();
+    },
+    systemGetTopInfo: guarded(name === "processesBusy" ? BUSY_TOP : "json"),
+    smbGetStats: () =>
+      guarded(
+        name === "servicePending" && session.dirty
+          ? "pendingChanges"
+          : name === "serviceOutputs"
+            ? "connected"
+            : name === "serviceOutputsEmpty"
+              ? EMPTY_OUTPUT
+              : "disabled",
+      )(),
+    nfsGetStats: guarded(
+      name === "serviceOutputs"
+        ? "exports"
+        : name === "serviceOutputsEmpty"
+          ? EMPTY_OUTPUT
+          : "disabled",
+    ),
     // The pending changes of the mock are the ssh and avahi modules (adminPendingChanges), so only
     // SSH's details wait for them, as on OMV.
     sshGetStats: () =>
-      guarded(session.dirty ? "pendingChanges" : "noConnections")(),
+      guarded(
+        session.dirty && name !== "servicePending"
+          ? "pendingChanges"
+          : name === "serviceOutputs"
+            ? "connected"
+            : "noConnections",
+      )(),
   };
 }

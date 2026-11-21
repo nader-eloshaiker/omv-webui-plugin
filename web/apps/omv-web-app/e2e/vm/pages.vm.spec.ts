@@ -255,7 +255,7 @@ test.describe("an administrator", () => {
       await expect(table.locator("tbody tr")).toHaveCount(first.rows);
       await expect(
         page.getByText(
-          copy.sharedFolders.range
+          copy.table.range
             .replace("{{from}}", "1")
             .replace("{{to}}", String(Math.min(25, first.total)))
             .replace("{{total}}", String(first.total)),
@@ -278,9 +278,7 @@ test.describe("an administrator", () => {
         .toEqual({ start: 0, limit: 25, sortfield: "status", sortdir: "desc" });
 
       // Ten rows a page: the size goes to the backend, and the table shows that many at most.
-      await page
-        .getByRole("combobox", { name: copy.sharedFolders.pageSize })
-        .click();
+      await page.getByRole("combobox", { name: copy.table.pageSize }).click();
       await page.getByRole("option", { name: "10", exact: true }).click();
       await expect
         .poll(() => lastPage()?.params)
@@ -289,9 +287,7 @@ test.describe("an administrator", () => {
         Math.min(10, first.total),
       );
       if (first.total > 10) {
-        await page
-          .getByRole("button", { name: copy.sharedFolders.next })
-          .click();
+        await page.getByRole("button", { name: copy.table.next }).click();
         await expect
           .poll(() => lastPage()?.params)
           .toMatchObject({ start: 10, limit: 10 });

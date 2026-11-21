@@ -199,12 +199,10 @@ export function SharedFoldersTable() {
     const sort = nextSort(state.sort, field);
     store.set({ sort, page: 0 });
     setAnnouncement(
-      t("sharedFolders.sorted", {
+      t("table.sorted", {
         column: label,
         direction: t(
-          sort.direction === "asc"
-            ? "sharedFolders.ascending"
-            : "sharedFolders.descending",
+          sort.direction === "asc" ? "table.ascending" : "table.descending",
         ),
       }),
     );
@@ -300,9 +298,9 @@ export function SharedFoldersTable() {
                 page: 0,
               });
               setAnnouncement(
-                t("sharedFolders.sorted", {
+                t("table.sorted", {
                   column: t("sharedFolders.col.status"),
-                  direction: t("sharedFolders.ascending"),
+                  direction: t("table.ascending"),
                 }),
               );
             }}
@@ -392,25 +390,22 @@ export function SharedFoldersTable() {
             page={state.page}
             pageCount={pageCount(data.total, state.pageSize)}
             onPageChange={(page) => store.set({ page })}
-            range={t(
-              searching ? "sharedFolders.rangeMatching" : "sharedFolders.range",
-              {
-                from: range.from,
-                to: range.to,
-                total: range.total,
-              },
-            )}
+            range={t(searching ? "table.rangeMatching" : "table.range", {
+              from: range.from,
+              to: range.to,
+              total: range.total,
+            })}
             pageSize={state.pageSize}
             pageSizeOptions={PAGE_SIZES}
             onPageSizeChange={(pageSize) => store.set({ pageSize, page: 0 })}
-            pageSizeLabel={t("sharedFolders.pageSize")}
+            pageSizeLabel={t("table.pageSize")}
             previous={{
-              label: t("sharedFolders.previous"),
-              unavailableReason: t("sharedFolders.firstPageReason"),
+              label: t("table.previous"),
+              unavailableReason: t("table.firstPageReason"),
             }}
             next={{
-              label: t("sharedFolders.next"),
-              unavailableReason: t("sharedFolders.lastPageReason"),
+              label: t("table.next"),
+              unavailableReason: t("table.lastPageReason"),
             }}
           />
         ) : null}

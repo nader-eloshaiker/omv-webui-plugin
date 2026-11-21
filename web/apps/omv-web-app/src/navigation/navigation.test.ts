@@ -47,7 +47,12 @@ describe("findNavPage", () => {
 describe("the table", () => {
   it("names each classic page in the hash form the classic interface routes by", () => {
     for (const page of NAV_PAGES) {
-      expect(page.classic).toBe(`/#/${page.group}/${page.item}`);
+      // System logs names its "Logs" sub-page: the stock group page has two.
+      expect(page.classic).toBe(
+        page.item === "system-logs"
+          ? "/#/diagnostics/system-logs/logs"
+          : `/#/${page.group}/${page.item}`,
+      );
       expect(page.labelKey).toBe(`nav.items.${page.group}.${page.item}`);
     }
   });
@@ -61,6 +66,9 @@ describe("the table", () => {
     ).toEqual([
       "/storage/shared-folders",
       "/services/ssh",
+      "/diagnostics/system-logs",
+      "/diagnostics/processes",
+      "/diagnostics/services",
       "/account/settings",
     ]);
   });
@@ -80,5 +88,22 @@ describe("isCurrent", () => {
     expect(isCurrent("/account/password", "/account/settings")).toBe(true);
     expect(isCurrent("/services/ssh", "/account/settings")).toBe(false);
     expect(isCurrent("/services/ssh", "/services/ssh")).toBe(true);
+  });
+
+  it("marks Services on every one of its tabs, and nothing else under Diagnostics", () => {
+    for (const tab of ["smb", "nfs", "ssh"]) {
+      expect(
+        isCurrent(`/diagnostics/services/${tab}`, "/diagnostics/services"),
+      ).toBe(true);
+    }
+    expect(isCurrent("/diagnostics/services", "/diagnostics/services")).toBe(
+      true,
+    );
+    expect(isCurrent("/diagnostics/services-x", "/diagnostics/services")).toBe(
+      false,
+    );
+    expect(isCurrent("/diagnostics/processes", "/diagnostics/services")).toBe(
+      false,
+    );
   });
 });
