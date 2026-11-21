@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The transport against the mock: request shape (UI-10), unknown operations (UI-4), errors and
 // traces (UI-9), the session ending, normalisation, the Session fields it drops (UI-3, UI-6), and the
-// fields the contract omits (x-omv-omit, UI-6).
+// fields the contract omits (x-omv-omit, UI-6), at the top level and in every row.
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
@@ -20,6 +20,7 @@ import {
 } from "../generated/omv/config/config.ts";
 import { emailNotificationGet } from "../generated/omv/email-notification/email-notification.ts";
 import { execGetOutput, execStop } from "../generated/omv/exec/exec.ts";
+import { networkEnumerateDevicesList } from "../generated/omv/network/network.ts";
 import { sessionLogin } from "../generated/omv/session/session.ts";
 import { shareMgmtGetList } from "../generated/omv/share-mgmt/share-mgmt.ts";
 import { sshSet } from "../generated/omv/ssh/ssh.ts";
@@ -456,6 +457,53 @@ describe("fields the contract omits (x-omv-omit, UI-6)", () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
     answer({ emailNotificationGet: { status: 200, value } });
     expect(await emailNotificationGet()).toEqual(want);
+  });
+
+  it.each([
+    { name: "the captured interfaces", example: "ethernetAndLoopback" },
+    { name: "a configured Wi-Fi interface", example: "wifi" },
+  ] as const)(
+    "Network.enumerateDevicesList, $name: no row keeps the Wi-Fi key",
+    async ({ example }) => {
+      const raw = CONTRACT_EXAMPLES.networkEnumerateDevicesList[example].value;
+      answer({ networkEnumerateDevicesList: example });
+      const value = await networkEnumerateDevicesList({
+        start: 0,
+        limit: null,
+      });
+      expect(value.data).toHaveLength(raw.data.length);
+      for (const [i, row] of value.data.entries()) {
+        expect(row).not.toHaveProperty("wpapsk");
+        const { wpapsk: _dropped, ...rest } = raw.data[i] as Record<
+          string,
+          unknown
+        >;
+        expect(row).toEqual({
+          ...rest,
+          // The transport normalises PHP's [] for an empty map.
+          ...(Array.isArray(rest.stats) && { stats: {} }),
+        });
+      }
+    },
+  );
+
+  it("removes the Wi-Fi key from every row, whatever its value", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const rows = CONTRACT_EXAMPLES.networkEnumerateDevicesList.wifi.value.data;
+    answer({
+      networkEnumerateDevicesList: {
+        status: 200,
+        value: {
+          total: rows.length,
+          // A wrong type elsewhere, so the mismatch report runs and is checked too.
+          data: rows.map((row) => ({ ...row, wpapsk: SECRET, speed: "fast" })),
+        },
+      },
+    });
+    const value = await networkEnumerateDevicesList({ start: 0, limit: null });
+    expect(warn).toHaveBeenCalled();
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(SECRET);
+    expect(JSON.stringify(value)).not.toContain(SECRET);
   });
 
   it("leaves a field of that name alone where the contract does not omit it", async () => {

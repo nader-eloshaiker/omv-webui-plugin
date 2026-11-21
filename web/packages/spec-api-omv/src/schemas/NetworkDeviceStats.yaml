@@ -1,0 +1,31 @@
+type: object
+description: >-
+  The interface's counters since the system started, from /proc/net/dev, each a whole number as
+  text. The server sends [] (PHP's empty map) when it cannot read them.
+properties:
+  rx_bytes:
+    type: string
+    x-omv-int64: true
+  rx_packets:
+    type: string
+    x-omv-int64: true
+  rx_errors:
+    type: string
+    x-omv-int64: true
+  rx_dropped:
+    type: string
+    x-omv-int64: true
+  tx_bytes:
+    type: string
+    x-omv-int64: true
+  tx_packets:
+    type: string
+    x-omv-int64: true
+  tx_errors:
+    type: string
+    x-omv-int64: true
+  tx_dropped:
+    type: string
+    x-omv-int64: true
+additionalProperties:
+  type: string

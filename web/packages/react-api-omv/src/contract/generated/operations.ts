@@ -312,6 +312,18 @@ export const OPERATIONS = {
       $ref: "ServiceStatsText",
     },
   },
+  "/rpc/Network/enumerateDevicesList": {
+    operationId: "networkEnumerateDevicesList",
+    service: "Network",
+    method: "enumerateDevicesList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    omit: ["data[].wpapsk"],
+    response: {
+      $ref: "NetworkDeviceList",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -544,6 +556,183 @@ export const SCHEMAS: SchemaTable = {
     type: "array",
     items: {
       $ref: "MountedFilesystem",
+    },
+  },
+  NetworkDevice: {
+    type: "object",
+    required: [
+      "uuid",
+      "comment",
+      "_used",
+      "_readonly",
+      "devicename",
+      "gateway",
+      "gateway6",
+      "address",
+      "address6",
+      "prefix",
+      "prefix6",
+      "netmask",
+      "netmask6",
+      "ether",
+      "mtu",
+      "state",
+      "link",
+      "vlan",
+      "vlanid",
+      "speed",
+      "description",
+      "stats",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      _used: {
+        type: "boolean",
+      },
+      _readonly: {
+        type: "boolean",
+      },
+      devicename: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      method: {
+        type: "string",
+      },
+      method6: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
+      netmask: {
+        type: "string",
+      },
+      prefix: {
+        type: "integer",
+      },
+      gateway: {
+        type: "string",
+      },
+      address6: {
+        type: "string",
+      },
+      netmask6: {
+        type: "string",
+      },
+      prefix6: {
+        type: "integer",
+      },
+      gateway6: {
+        type: "string",
+      },
+      dnsnameservers: {
+        type: "string",
+      },
+      dnssearch: {
+        type: "string",
+      },
+      ether: {
+        type: "string",
+      },
+      mtu: {
+        type: "string",
+      },
+      state: {
+        type: "string",
+      },
+      link: {
+        type: "boolean",
+      },
+      vlan: {
+        type: "boolean",
+      },
+      vlanid: {
+        type: "integer",
+      },
+      speed: {
+        type: "integer",
+      },
+      description: {
+        type: "string",
+      },
+      stats: {
+        $ref: "NetworkDeviceStats",
+      },
+      wol: {
+        type: "boolean",
+      },
+      slaves: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      wpassid: {
+        type: "string",
+      },
+    },
+  },
+  NetworkDeviceList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "NetworkDevice",
+        },
+      },
+    },
+  },
+  NetworkDeviceStats: {
+    type: "object",
+    properties: {
+      rx_bytes: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      rx_packets: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      rx_errors: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      rx_dropped: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      tx_bytes: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      tx_packets: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      tx_errors: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      tx_dropped: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+    },
+    additionalProperties: {
+      type: "string",
     },
   },
   NetworkGeneralSettings: {
