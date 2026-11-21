@@ -44,3 +44,5 @@ post:
               $ref: ../../examples/fileSystemMgmtGetList.mountPending.yaml
             withTags:
               $ref: ../../examples/fileSystemMgmtGetList.withTags.yaml
+            zfs:
+              $ref: ../../examples/fileSystemMgmtGetList.zfs.yaml

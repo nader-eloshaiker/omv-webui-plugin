@@ -36,3 +36,5 @@ post:
               $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.nearlyFull.yaml
             empty:
               $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.empty.yaml
+            zfs:
+              $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.zfs.yaml

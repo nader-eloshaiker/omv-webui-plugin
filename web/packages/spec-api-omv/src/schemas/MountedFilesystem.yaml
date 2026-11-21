@@ -1,7 +1,10 @@
 type: object
 description: >-
   A file system that is configured and mounted now. A configured file system whose disk is missing
-  or that is not mounted is left out of the list without a word; bind mounts are left out too.
+  or that is not mounted is left out of the list without a word; bind mounts are left out too. A
+  ZFS file system (type "zfs", from the openmediavault-zfs plugin) has its full name ("tank/media")
+  as its device files and label, no UUID (null) and no devlinks, and its sizes as JSON numbers
+  (observed on the test VM).
 required:
   [
     devicename,
@@ -43,7 +46,10 @@ properties:
       type: string
   uuid:
     type: string
-    description: The file system's own UUID (not a configuration object's).
+    nullable: true
+    description: >-
+      The file system's own UUID (not a configuration object's). Null for a ZFS file system, which
+      has none (observed on the test VM).
   label:
     type: string
   type:
@@ -57,15 +63,23 @@ properties:
   blocks:
     type: string
     x-omv-int64: true
-    description: Size in 1 KiB blocks. "-1" when the server could not read the usage.
+    description: >-
+      Size in 1 KiB blocks. "-1" when the server could not read the usage. A ZFS file system sends a
+      JSON number, its size divided by 1024, which may have a fraction (read from the plugin's
+      source); the transport turns a whole number into its decimal string.
   size:
     type: string
     x-omv-int64: true
-    description: Bytes. "-1" when the server could not read the usage.
+    description: >-
+      Bytes. "-1" when the server could not read the usage. A ZFS file system sends a JSON number,
+      which the transport turns into its decimal string.
   available:
     type: string
     x-omv-int64: true
-    description: Bytes free. "-1" when the server could not read the usage.
+    description: >-
+      Bytes free. "-1" when the server could not read the usage. A ZFS file system sends a JSON
+      number, which the transport turns into its decimal string; it is the pool's free space,
+      shared with the other file systems on the pool.
   used:
     type: string
     description: >-

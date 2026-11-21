@@ -5,7 +5,7 @@
 import type { ConfiguredFilesystemStatus } from './configuredFilesystemStatus.ts';
 
 /**
- * A file system configured in OMV, or one being created, with its state in `status`. A configured file system that is not detected (status 3) or still being created (status 2) has no usage: its sizes are "-1", its percentage -1 and most device fields empty.
+ * A file system configured in OMV, or one being created, with its state in `status`. A configured file system that is not detected (status 3) or still being created (status 2) has no usage: its sizes are "-1", its percentage -1 and most device fields empty. A ZFS file system (type "zfs", from the openmediavault-zfs plugin) has its full name ("tank/media") as devicename, devicefile, predictabledevicefile, canonicaldevicefile and label, no UUID (null), no devlinks, its pool's disks as devicefiles and the first of them as parentdevicefile, and its sizes as JSON numbers (observed on the test VM).
  */
 export interface ConfiguredFilesystem {
   /** 1 available (detected, and online when mounted), 2 being created, 3 missing (configured but not detected: its disk may be disconnected or have failed). */
@@ -18,8 +18,11 @@ export interface ConfiguredFilesystem {
   canonicaldevicefile: string;
   parentdevicefile: string;
   devlinks: string[];
-  /** The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file. */
-  uuid: string;
+  /**
+     * The file system's own UUID. For a missing file system, the configured UUID, or empty when it was configured by device file. Null for a ZFS file system, which has none (observed on the test VM).
+     * @nullable
+     */
+  uuid: string | null;
   /**
      * The file system's label; empty when it has none, null for one being created (observed).
      * @nullable
@@ -30,11 +33,11 @@ export interface ConfiguredFilesystem {
   mounted: boolean;
   /** The configured mount point; empty for a file system being created. */
   mountpoint: string;
-  /** Size in 1 KiB blocks. "-1" when there is no reading. */
+  /** Size in 1 KiB blocks. "-1" when there is no reading. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string. */
   blocks: string;
-  /** Bytes. "-1" when there is no reading. */
+  /** Bytes. "-1" when there is no reading. A ZFS file system sends a JSON number (used plus available), which the transport turns into its decimal string. */
   size: string;
-  /** Bytes free. "-1" when there is no reading. */
+  /** Bytes free. "-1" when there is no reading. A ZFS file system sends a JSON number, which the transport turns into its decimal string; it is the pool's free space, shared with the other file systems on the pool. */
   available: string;
   /** Display text, such as "12.34 GiB". "-1" when there is no reading. */
   used: string;

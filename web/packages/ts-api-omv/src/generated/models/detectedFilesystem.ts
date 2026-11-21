@@ -4,7 +4,7 @@
  */
 
 /**
- * A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are "-1" and its percentage -1.
+ * A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are "-1" and its percentage -1. A ZFS file system (type "zfs", from the openmediavault-zfs plugin) is found by the plugin, not by blkid: its full name ("tank/media") stands for its device files and label, it has no UUID (null) and no devlinks, its pool's disks are its devicefiles, and its sizes are JSON numbers (observed on the test VM).
  */
 export interface DetectedFilesystem {
   /** The kernel's name for the partition or device, such as "sda1". */
@@ -17,8 +17,11 @@ export interface DetectedFilesystem {
   /** The device the file system is on, under /dev: the disk of a partition ("/dev/sda" for "/dev/sda1"), or the device itself when it has no partitions. */
   parentdevicefile: string;
   devlinks: string[];
-  /** The file system's own identifier: a UUID for most types, a short volume ID for FAT ("ABCD-1234" form), a date-like value for an optical disc. */
-  uuid: string;
+  /**
+     * The file system's own identifier: a UUID for most types, a short volume ID for FAT ("ABCD-1234" form), a date-like value for an optical disc. Null for a ZFS file system, which has none (observed on the test VM).
+     * @nullable
+     */
+  uuid: string | null;
   label: string;
   /** The file system type as blkid reports it, such as "ext4", "btrfs", "vfat", "iso9660", or "swap" for swap space. */
   type: string;
@@ -26,11 +29,11 @@ export interface DetectedFilesystem {
   mounted: boolean;
   /** Where it is mounted, such as "/" or "/boot/efi"; empty when it is not mounted. */
   mountpoint: string;
-  /** Size in 1 KiB blocks. "-1" when not mounted. */
+  /** Size in 1 KiB blocks. "-1" when not mounted. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string. */
   blocks: string;
-  /** Bytes. "-1" when not mounted. */
+  /** Bytes. "-1" when not mounted. A ZFS file system sends a JSON number, which the transport turns into its decimal string. */
   size: string;
-  /** Bytes free. "-1" when not mounted. */
+  /** Bytes free. "-1" when not mounted. A ZFS file system sends a JSON number, which the transport turns into its decimal string. */
   available: string;
   /** Display text, such as "12.34 GiB". "-1" when not mounted. */
   used: string;

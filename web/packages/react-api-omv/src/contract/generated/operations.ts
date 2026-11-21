@@ -904,6 +904,7 @@ export const SCHEMAS: SchemaTable = {
       },
       uuid: {
         type: "string",
+        nullable: true,
       },
       label: {
         type: "string",
@@ -1063,6 +1064,7 @@ export const SCHEMAS: SchemaTable = {
       },
       uuid: {
         type: "string",
+        nullable: true,
       },
       label: {
         type: "string",
@@ -1683,6 +1685,7 @@ export const SCHEMAS: SchemaTable = {
       },
       uuid: {
         type: "string",
+        nullable: true,
       },
       label: {
         type: "string",

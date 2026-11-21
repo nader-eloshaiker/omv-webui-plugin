@@ -313,8 +313,12 @@ describe("as an administrator", () => {
     const entry = await fsTabGetByFsName({ fsname: fs!.canonicaldevicefile });
     expect(entry).not.toBe(false);
     expect(entry).toMatchObject({ dir: fs!.mountpoint, type: "ext4" });
-    // Found by the file system's own UUID too.
-    expect(await fsTabGetByFsName({ fsname: fs!.uuid })).toEqual(entry);
+    // Found by the file system's own UUID too. Only a ZFS file system has none (null).
+    const uuid = fs!.uuid;
+    if (uuid === null) {
+      throw new Error("an EXT4 file system has a UUID");
+    }
+    expect(await fsTabGetByFsName({ fsname: uuid })).toEqual(entry);
     // A device with no file system has no entry: false, not an error.
     expect(await fsTabGetByFsName({ fsname: "/dev/sdz9" })).toBe(false);
     const report = await fileSystemMgmtGetDetails({

@@ -4,7 +4,7 @@
  */
 
 /**
- * A file system that is configured and mounted now. A configured file system whose disk is missing or that is not mounted is left out of the list without a word; bind mounts are left out too.
+ * A file system that is configured and mounted now. A configured file system whose disk is missing or that is not mounted is left out of the list without a word; bind mounts are left out too. A ZFS file system (type "zfs", from the openmediavault-zfs plugin) has its full name ("tank/media") as its device files and label, no UUID (null) and no devlinks, and its sizes as JSON numbers (observed on the test VM).
  */
 export interface MountedFilesystem {
   /** The kernel's name for the partition or device, such as "sda1". */
@@ -17,19 +17,22 @@ export interface MountedFilesystem {
   /** The disk the file system is on, such as "/dev/sda". */
   parentdevicefile?: string;
   devlinks: string[];
-  /** The file system's own UUID (not a configuration object's). */
-  uuid: string;
+  /**
+     * The file system's own UUID (not a configuration object's). Null for a ZFS file system, which has none (observed on the test VM).
+     * @nullable
+     */
+  uuid: string | null;
   label: string;
   /** The file system type, such as "ext4" or "btrfs". */
   type: string;
   mounted: boolean;
   /** The configured mount point, such as "/srv/dev-disk-by-uuid-...". */
   mountpoint: string;
-  /** Size in 1 KiB blocks. "-1" when the server could not read the usage. */
+  /** Size in 1 KiB blocks. "-1" when the server could not read the usage. A ZFS file system sends a JSON number, its size divided by 1024, which may have a fraction (read from the plugin's source); the transport turns a whole number into its decimal string. */
   blocks: string;
-  /** Bytes. "-1" when the server could not read the usage. */
+  /** Bytes. "-1" when the server could not read the usage. A ZFS file system sends a JSON number, which the transport turns into its decimal string. */
   size: string;
-  /** Bytes free. "-1" when the server could not read the usage. */
+  /** Bytes free. "-1" when the server could not read the usage. A ZFS file system sends a JSON number, which the transport turns into its decimal string; it is the pool's free space, shared with the other file systems on the pool. */
   available: string;
   /** Display text, such as "12.34 GiB": the server formats it, unlike size and available, which are bytes. "-1" when the server could not read the usage. */
   used: string;

@@ -3,7 +3,10 @@ description: >-
   A file system the system detects on a disk, partition or other block device, whether or not OMV
   has set it up: the system's own root and boot file systems, swap space, and file systems from
   another computer included. A file system that is not mounted has no usage: its sizes are "-1"
-  and its percentage -1.
+  and its percentage -1. A ZFS file system (type "zfs", from the openmediavault-zfs plugin) is
+  found by the plugin, not by blkid: its full name ("tank/media") stands for its device files and
+  label, it has no UUID (null) and no devlinks, its pool's disks are its devicefiles, and its sizes
+  are JSON numbers (observed on the test VM).
 required:
   [
     devicename,
@@ -52,9 +55,11 @@ properties:
       type: string
   uuid:
     type: string
+    nullable: true
     description: >-
       The file system's own identifier: a UUID for most types, a short volume ID for FAT ("ABCD-1234"
-      form), a date-like value for an optical disc.
+      form), a date-like value for an optical disc. Null for a ZFS file system, which has none
+      (observed on the test VM).
   label:
     type: string
   type:
@@ -71,15 +76,22 @@ properties:
   blocks:
     type: string
     x-omv-int64: true
-    description: Size in 1 KiB blocks. "-1" when not mounted.
+    description: >-
+      Size in 1 KiB blocks. "-1" when not mounted. A ZFS file system sends a JSON number, its size
+      divided by 1024, which may have a fraction (read from the plugin's source); the transport
+      turns a whole number into its decimal string.
   size:
     type: string
     x-omv-int64: true
-    description: Bytes. "-1" when not mounted.
+    description: >-
+      Bytes. "-1" when not mounted. A ZFS file system sends a JSON number, which the transport
+      turns into its decimal string.
   available:
     type: string
     x-omv-int64: true
-    description: Bytes free. "-1" when not mounted.
+    description: >-
+      Bytes free. "-1" when not mounted. A ZFS file system sends a JSON number, which the transport
+      turns into its decimal string.
   used:
     type: string
     description: Display text, such as "12.34 GiB". "-1" when not mounted.

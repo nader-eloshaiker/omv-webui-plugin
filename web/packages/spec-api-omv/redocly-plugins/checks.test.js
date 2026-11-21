@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   acceptEmptyArrayForObject,
+  acceptIntegerForInt64,
   checkExampleCoverage,
   checkOmit,
   checkPathItem,
@@ -458,4 +459,16 @@ test("x-omv-omit: looks inside row schemas lint restated for PHP's empty array",
     messages(checkOmit(omitOp(["data[].wpapsk"], rows))),
     /removes "data\[\]\.wpapsk", so the response schema must not declare it/,
   );
+});
+
+test("lint restates an x-omv-int64 string to accept a JSON integer too, once", () => {
+  const schema = { type: "string", "x-omv-int64": true, description: "Bytes." };
+  assert.equal(acceptIntegerForInt64(schema), true);
+  assert.deepEqual(schema.anyOf, [
+    { type: "string", "x-omv-int64": true, description: "Bytes." },
+    { type: "integer" },
+  ]);
+  assert.equal(acceptIntegerForInt64(schema), false, "only once");
+  assert.equal(acceptIntegerForInt64({ type: "string" }), false);
+  assert.equal(acceptIntegerForInt64({ type: "integer" }), false);
 });
