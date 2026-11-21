@@ -34,6 +34,7 @@ import {
   fileSystemMgmtEnumerateMountedFilesystems,
   fileSystemMgmtGetList,
   logFileGetList,
+  mdMgmtEnumerateDevices,
   networkEnumerateDevicesList,
   networkGetGeneralSettings,
   nfsGetStats,
@@ -270,6 +271,14 @@ describe("as an administrator", () => {
     });
     expect(schedule.total).toBe(schedule.data.length);
     expect(await configIsDirty()).toBe(false);
+  });
+
+  it("is told the RAID plugin is not installed by HTTP 404", async () => {
+    await expect(mdMgmtEnumerateDevices()).rejects.toMatchObject({
+      status: 404,
+      code: 0,
+      message: "RPC service 'MdMgmt' not found.",
+    });
   });
 
   it("is told when a disk or settings object it asks for does not exist", async () => {

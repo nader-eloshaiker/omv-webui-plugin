@@ -884,6 +884,8 @@ export function scenarioAnswers(
     smartSetScheduledTest: pending("created"),
     smartDeleteScheduledTest: pending("deleted"),
     smartExecuteScheduledTest: guarded("started"),
+    // The RAID plugin is not installed on the test VM: OMV answers the unknown service with 404.
+    mdMgmtEnumerateDevices: guarded("notInstalled"),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty
