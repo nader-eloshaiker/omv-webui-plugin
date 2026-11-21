@@ -612,3 +612,5 @@ On the VM, a new mirror made on two disks that had earlier held a mirror with a 
 - **"Clear the new array" is a step of its own** in the step list, shown only when it runs. If it fails, the flow stops with the server's words and "Stop here" only; nothing else is erased, and the array stays.
 
 The design's 3.3, 3.4, 3.7, section 19 and copy tables say so.
+
+After this change, with the round's other fixes (Stripe is not brought back by "Change choices", which now moves focus to the level; the roll-up's plural; the phone layout), the build was installed on the test VM. The RAID and file-systems VM specs, with `OMV_WEBUI_VM_RAID_DISKS=sdb,sdc,sdd,sde` and `OMV_WEBUI_VM_SCRATCH_DISK=sdd`, gave 8 passed over HTTP and 8 passed over HTTPS. Afterwards no array, no ARRAY line, only sda1 mounted, `wipefs -n` empty on sdb to sde, nothing pending.
