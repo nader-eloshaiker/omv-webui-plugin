@@ -37,6 +37,14 @@ import {
   type FsMockState,
 } from "./fsScenarios.ts";
 import { RAID_SCENARIO_LABELS, RAID_SCENARIOS } from "./raidScenarios.ts";
+import {
+  ZFS_DIRTY,
+  ZFS_SCENARIO_LABELS,
+  ZFS_SCENARIOS,
+  ZFS_TASK_OUTPUTS,
+  zfsReplies,
+  type ZfsReplies,
+} from "./zfsScenarios.ts";
 
 export const SCENARIOS = [
   "admin",
@@ -87,6 +95,7 @@ export const SCENARIOS = [
   ...DISK_SCENARIOS,
   ...FS_SCENARIOS,
   ...RAID_SCENARIOS,
+  ...ZFS_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -143,6 +152,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...DISK_SCENARIO_LABELS,
   ...FS_SCENARIO_LABELS,
   ...RAID_SCENARIO_LABELS,
+  ...ZFS_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -828,6 +838,37 @@ export function scenarioAnswers(
       }
       return answer;
     };
+  /**
+   * A ZFS answer (zfsScenarios.ts): OMV's 404 outside the ZFS scenarios. A write the plugin marks
+   * dirty marks the same modules here (observed on the test VM).
+   */
+  const zfsReply = zfsReplies(name);
+  const zfsAnswer =
+    <Op extends keyof ZfsReplies>(operationId: Op) =>
+    ({
+      params,
+    }: {
+      params: unknown;
+    }): ReturnType<ZfsReplies[Op]> | FixedAnswer => {
+      // Only a signed-in call reaches the answer.
+      const gate = guarded<never>({ status: 200 })();
+      if (gate.status !== 200) {
+        return gate;
+      }
+      const answer = zfsReply[operationId]({ params }) as ReturnType<
+        ZfsReplies[Op]
+      >;
+      const modules: readonly FsModule[] | undefined = (
+        ZFS_DIRTY as Partial<Record<string, readonly FsModule[]>>
+      )[operationId];
+      if (modules !== undefined && typeof answer === "string") {
+        session.fsDirty = {
+          ...session.fsDirty,
+          ...Object.fromEntries(modules.map((m) => [m, FS_MODULES[m]])),
+        };
+      }
+      return answer;
+    };
   const disk = diskAnswers(name, session.disk);
   const fsMock = usesFsMock(name);
   if (fsMock && session.fs === undefined) {
@@ -1031,6 +1072,11 @@ export function scenarioAnswers(
       if (fsTask !== undefined) {
         return guarded(fsTask)();
       }
+      const zfsTask =
+        typeof filename === "string" ? ZFS_TASK_OUTPUTS[filename] : undefined;
+      if (zfsTask !== undefined) {
+        return guarded(zfsTask)();
+      }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
@@ -1163,6 +1209,27 @@ export function scenarioAnswers(
     mdMgmtRemove: mdPending("failed"),
     mdMgmtDelete: mdPending("deleted"),
     mdMgmtSetSyncAction: guarded("null"),
+    // The ZFS plugin (phase 5 ZFS design 14): absent by default; a captured pool in the zfs*
+    // scenarios.
+    zfsListCompressionTypes: zfsAnswer("zfsListCompressionTypes"),
+    zfsListPools: zfsAnswer("zfsListPools"),
+    zfsGetObjectDetails: zfsAnswer("zfsGetObjectDetails"),
+    zfsGetPoolDevices: zfsAnswer("zfsGetPoolDevices"),
+    zfsGetPoolStatus: zfsAnswer("zfsGetPoolStatus"),
+    zfsGetAllSnapshots: zfsAnswer("zfsGetAllSnapshots"),
+    zfsGetEmptyCandidates: zfsAnswer("zfsGetEmptyCandidates"),
+    zfsAddPool: zfsAnswer("zfsAddPool"),
+    zfsAddObject: zfsAnswer("zfsAddObject"),
+    zfsSetProperties: zfsAnswer("zfsSetProperties"),
+    zfsQuickSnapshot: zfsAnswer("zfsQuickSnapshot"),
+    zfsRollbackSnapshot: zfsAnswer("zfsRollbackSnapshot"),
+    zfsDeleteObjectBg: zfsAnswer("zfsDeleteObjectBg"),
+    zfsScrubPool: zfsAnswer("zfsScrubPool"),
+    zfsStopScrub: zfsAnswer("zfsStopScrub"),
+    zfsDeviceReplace: zfsAnswer("zfsDeviceReplace"),
+    zfsDeviceOffline: zfsAnswer("zfsDeviceOffline"),
+    zfsDeviceOnline: zfsAnswer("zfsDeviceOnline"),
+    zfsClearPool: zfsAnswer("zfsClearPool"),
     fileSystemMgmtEnumerateFilesystems: diskRead(
       "fileSystemMgmtEnumerateFilesystems",
     ),
