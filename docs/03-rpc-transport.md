@@ -123,7 +123,7 @@ Two backend methods take an uploaded package file. Not in version 1.
 
 A few replies carry a secret the interface must never hold: `EmailNotification.get` returns the SMTP password in plain text, and `UserMgmt.setUserByContext` echoes back any password it was sent. The contract lists such fields in the operation's `x-omv-omit` ([04](04-api-contract.md#extensions)) and leaves them out of the response schema, so the generated types do not have them.
 
-The transport deletes those top-level fields from the reply first, before normalisation, validation, the query cache or any caller sees it. A field of the same name in another operation's reply is left alone.
+A field is named by its path: `password` for a top-level field, `data[].wpapsk` for a field of every row of a list (`name[]` steps into each item, `name` into one nested object). The transport deletes those fields from the reply first, before normalisation, validation, the query cache or any caller sees it. A field of the same name elsewhere in the reply, or in another operation's reply, is left alone.
 
 ## Quirks the transport normalises
 

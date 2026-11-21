@@ -46,8 +46,9 @@ export interface OperationEntry {
   download?: { contentType: string };
   destructive?: "data" | "access" | "service";
   /**
-   * Top-level reply fields the transport deletes before anything else sees the reply (x-omv-omit):
-   * a secret the server sends that the interface must never hold, such as the SMTP password.
+   * Reply fields the transport deletes before anything else sees the reply (x-omv-omit): a secret
+   * the server sends that the interface must never hold, such as the SMTP password. A path is a
+   * top-level field (`password`) or a field of each row of a list (`data[].wpapsk`).
    */
   omit?: readonly string[];
   /** The 200 response's schema; null when the method returns null. */

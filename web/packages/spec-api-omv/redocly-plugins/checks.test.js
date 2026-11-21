@@ -276,10 +276,29 @@ const omitOp = (omit, schema) => ({
 test("x-omv-omit: shape", () => {
   const ok = okOp({ "x-omv-omit": ["password"] });
   assert.deepEqual(checkPathItem("/rpc/SSH/get", ok), []);
-  for (const bad of [[], "password", [""], [1], null]) {
+  for (const good of [["password"], ["data[].wpapsk"], ["a.b[].c", "d"]]) {
+    assert.deepEqual(
+      checkPathItem("/rpc/SSH/get", okOp({ "x-omv-omit": good })),
+      [],
+      JSON.stringify(good),
+    );
+  }
+  for (const bad of [
+    [],
+    "password",
+    [""],
+    [1],
+    null,
+    ["data[]"],
+    ["data[]."],
+    [".x"],
+    ["data[][].x"],
+    ["a b"],
+    ["data.[].x"],
+  ]) {
     assert.match(
       messages(checkPathItem("/rpc/SSH/get", okOp({ "x-omv-omit": bad }))),
-      /must be a non-empty list of response field names/,
+      /must be a non-empty list of response field paths/,
       JSON.stringify(bad),
     );
   }
@@ -292,6 +311,21 @@ test("x-omv-omit: shape", () => {
     ),
     /names a field twice/,
   );
+});
+
+const ROWS = () => ({
+  type: "object",
+  properties: {
+    total: { type: "integer" },
+    data: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["devicename"],
+        properties: { devicename: { type: "string" } },
+      },
+    },
+  },
 });
 
 const omitCases = [
@@ -333,6 +367,51 @@ const omitCases = [
     want: ["plain object schema"],
   },
   {
+    name: "a field of each row the schema does not describe",
+    op: omitOp(["data[].wpapsk"], ROWS()),
+    want: [],
+  },
+  {
+    name: "a declared field of each row",
+    op: omitOp(["data[].devicename"], ROWS()),
+    want: ["must not declare it", "must not require it"],
+  },
+  {
+    name: "rows the schema does not declare",
+    op: omitOp(["rows[].wpapsk"], ROWS()),
+    want: ['must declare "rows" as a list of objects'],
+  },
+  {
+    name: "a list step on a field that is not a list",
+    op: omitOp(["total[].x"], ROWS()),
+    want: ['must declare "total" as a list of objects'],
+  },
+  {
+    name: "an object step on a list",
+    op: omitOp(["data.wpapsk"], ROWS()),
+    want: ['must declare "data" as an object'],
+  },
+  {
+    name: "a nested object field",
+    op: omitOp(["smtp.password"], {
+      type: "object",
+      properties: {
+        smtp: { type: "object", properties: { port: { type: "integer" } } },
+      },
+    }),
+    want: [],
+  },
+  {
+    name: "rows whose item schema is a union",
+    op: omitOp(["data[].x"], {
+      type: "object",
+      properties: {
+        data: { type: "array", items: { oneOf: [{ type: "object" }] } },
+      },
+    }),
+    want: ['must declare "data" as a list of objects'],
+  },
+  {
     name: "no x-omv-omit",
     op: omitOp(undefined, { type: "string" }),
     want: [],
@@ -366,5 +445,17 @@ test("x-omv-omit: looks inside an object schema lint restated for PHP's empty ar
   assert.match(
     messages(checkOmit(omitOp(["password"], schema))),
     /must not declare it/,
+  );
+});
+
+test("x-omv-omit: looks inside row schemas lint restated for PHP's empty array", () => {
+  const rows = ROWS();
+  const item = rows.properties.data.items;
+  item.properties.wpapsk = { type: "string" };
+  acceptEmptyArrayForObject(item);
+  acceptEmptyArrayForObject(rows);
+  assert.match(
+    messages(checkOmit(omitOp(["data[].wpapsk"], rows))),
+    /removes "data\[\]\.wpapsk", so the response schema must not declare it/,
   );
 });
