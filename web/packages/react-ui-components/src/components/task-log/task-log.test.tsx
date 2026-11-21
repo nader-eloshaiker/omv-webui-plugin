@@ -176,4 +176,13 @@ describe("TaskLog notices", () => {
       "true",
     );
   });
+
+  it("keeps a blank line as a line", () => {
+    const { container } = render(
+      <TaskLog {...labels} lines={["Users:", "", "Connections:"]} />,
+    );
+    const lines = container.querySelectorAll("[data-slot=task-log-line]");
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toHaveClass("min-h-[1lh]");
+  });
 });

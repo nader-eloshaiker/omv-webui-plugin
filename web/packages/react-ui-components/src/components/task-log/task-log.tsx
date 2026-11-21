@@ -185,7 +185,8 @@ function TaskLog({
             </p>
           ) : null}
           {rows.map(({ key, line }) => (
-            <div key={key} data-slot="task-log-line">
+            // An empty line keeps a line's height, so blank lines that separate sections stay.
+            <div key={key} data-slot="task-log-line" className="min-h-[1lh]">
               {typeof line === "string" ? null : (
                 <span className="text-terminal-muted">
                   {stripControl(line.time)}
