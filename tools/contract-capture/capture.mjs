@@ -171,8 +171,9 @@ async function discardChanges(admin, what) {
 
 /**
  * Sign in once to learn the VM's own names (version, host name, disks' serial numbers and WWNs) so
- * the scrubber knows them, and return a recorder that scrubs, verifies and writes each reply.
- * Nothing raw is written; credentials and host are never printed.
+ * the scrubber knows them, and return a recorder that scrubs, verifies and writes each reply, with
+ * the run's scrubber for anything else a tool prints. Nothing raw is written; credentials and host
+ * are never printed.
  */
 export async function openCapture(env) {
   if (!env.NAS_HOST) {
@@ -275,7 +276,7 @@ export async function openCapture(env) {
       `${same ? "same " : "DIFF "} ${file}: committed example kept; draft in scratch/captures/`,
     );
   };
-  return { base, version, record, results };
+  return { base, version, record, results, scrub };
 }
 
 /**
