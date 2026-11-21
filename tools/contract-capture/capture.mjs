@@ -16,6 +16,9 @@
 // these starts only when no configuration change is pending, and ends by discarding every pending
 // change, so the VM is left as it was.
 //
+// A read that needs the object a setup created (its UUID, say) names the fields to take from the
+// setup's reply in `paramsFromSetup`; they are merged over `params`.
+//
 // Two more fields shape what is written. `keepFirst: {field: n}` keeps only the first n items of a
 // list in the reply (a process list of hundreds of rows), and the summary says so. On a `task`
 // entry, `resultJson: true` says the task's output is JSON (a list read in the background): every
@@ -400,6 +403,7 @@ async function main() {
         }
       }
     } else {
+      let created = {};
       if (entry.setup) {
         const { call, params, paramsFrom: from, merge } = entry.setup;
         const [service, method] = call.split(".");
@@ -410,6 +414,7 @@ async function main() {
         if (r.status !== 200) {
           throw new Error(`setup ${call} failed (HTTP ${r.status})`);
         }
+        created = r.body.response ?? {};
       }
       await s.login(env, entry.account);
       let params = entry.params ?? {};
@@ -418,6 +423,12 @@ async function main() {
         // that changes nothing but still marks the configuration dirty, so the pending-changes
         // replies can be captured safely.
         params = await paramsFrom(s, entry.paramsFrom, entry.pick);
+      }
+      for (const field of entry.paramsFromSetup ?? []) {
+        if (created[field] === undefined) {
+          throw new Error(`setup's reply has no ${field} to send`);
+        }
+        params = { ...params, [field]: created[field] };
       }
       const r = await s.call(entry.service, entry.method, params);
       if (entry.expect === "null") {

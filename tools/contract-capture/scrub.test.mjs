@@ -325,3 +325,41 @@ test("one disk spelt two ways gets one placeholder", () => {
     devicefile: "/dev/disk/by-id/nvme-Acme_EXAMPLE-SERIAL-0001",
   });
 });
+
+test("a WWN in smartctl's spaced spelling is the same disk's placeholder, in its field and in text", () => {
+  const { scrub, verify } = createScrubber({
+    ...known,
+    wwns: ["0x5000c500a1b2c3d4"],
+  });
+  const out = scrub({
+    wwn: "0x5000c500a1b2c3d4",
+    luwwndeviceid: "5 000c50 0a1b2c3d4",
+    text: "LU WWN Device Id: 5 000c50 0a1b2c3d4\nFirmware Version: 1.0",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(out, {
+    wwn: "EXAMPLE-WWN-0001",
+    luwwndeviceid: "EXAMPLE-WWN-0001",
+    text: "LU WWN Device Id: EXAMPLE-WWN-0001\nFirmware Version: 1.0",
+  });
+});
+
+test("a WWN field smartctl names is replaced even when the disk was not known beforehand", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({ luwwndeviceid: "5 001b44 8b1a2b3c4" });
+  assert.deepEqual(verify(out), []);
+  assert.equal(out.luwwndeviceid, "EXAMPLE-WWN-0001");
+});
+
+test("verify reports a WWN left in smartctl's spelling, never the value", () => {
+  const { verify } = createScrubber(known);
+  const text = verify({
+    a: "LU WWN Device Id: 5 000c50 0a1b2c3d4",
+    b: { luwwndeviceid: "5 000c50 0a1b2c3d4" },
+    ok: "Sector Sizes: 512 bytes logical, 4096 bytes physical",
+  }).join("\n");
+  assert.ok(text.includes("a WWN in smartctl's spelling at $.a"), text);
+  assert.ok(text.includes("WWN at $.b.luwwndeviceid"), text);
+  assert.ok(!text.includes("$.ok"), text);
+  assert.ok(!text.includes("0a1b2c3d4"), "a failure must not repeat the value");
+});
