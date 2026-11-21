@@ -1204,6 +1204,13 @@ export const CONTRACT_EXAMPLES = {
         ],
       },
     },
+    empty: {
+      status: 200,
+      value: {
+        total: 0,
+        data: [],
+      },
+    },
     unknownLog: {
       status: 500,
       value: {

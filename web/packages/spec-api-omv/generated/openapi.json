@@ -1417,6 +1417,9 @@
                   },
                   "smbAudit": {
                     "$ref": "#/components/examples/logFileGetList.smbAudit"
+                  },
+                  "empty": {
+                    "$ref": "#/components/examples/logFileGetList.empty"
                   }
                 }
               }
@@ -4353,6 +4356,14 @@
               "filename": "holiday.jpg"
             }
           ]
+        }
+      },
+      "logFileGetList.empty": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the S.M.A.R.T. log (smartd), which has no lines there",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
         }
       },
       "logFileGetList.unknownLog": {

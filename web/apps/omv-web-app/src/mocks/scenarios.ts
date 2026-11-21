@@ -211,6 +211,44 @@ export const startsDirty = (name: ScenarioName): boolean =>
 
 // The handle the contract's apply example returns.
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
+// The handle the contract's disk health example returns.
+const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
+
+/** The logs of stock OMV; any other id fails, as on OMV (the plugins' logs are not mocked). */
+const CORE_LOGS = new Set([
+  "syslog",
+  "daemon",
+  "auth",
+  "messages",
+  "boot",
+  "dmesg",
+  "rsyncd",
+  "smartd",
+  "dpkg",
+  "rsync",
+  "apt_term",
+  "apt_history",
+  "smbdaudit",
+]);
+
+/** The captured logs answer as captured; the other stock logs are empty, as smartd was. */
+function logFor(
+  params: unknown,
+): "syslog" | "updates" | "smbAudit" | "empty" | "unknownLog" {
+  const id = (params as { id?: unknown } | null)?.id;
+  switch (id) {
+    case "syslog":
+      return "syslog";
+    case "apt_term":
+      return "updates";
+    case "smbdaudit":
+      return "smbAudit";
+    default:
+      return typeof id === "string" && CORE_LOGS.has(id)
+        ? "empty"
+        : "unknownLog";
+  }
+}
 
 const SIGNED_IN_EXAMPLES = new Set(["authenticated", "authenticatedUser"]);
 
@@ -344,8 +382,11 @@ export function scenarioAnswers(
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
     // apply or undo, after which nothing is pending.
     execGetOutput: ({ params }) => {
-      const apply =
-        (params as { filename?: unknown } | null)?.filename === APPLY_HANDLE;
+      const filename = (params as { filename?: unknown } | null)?.filename;
+      if (filename === SMART_HANDLE) {
+        return guarded("smartDevicesFinished")();
+      }
+      const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
       }
@@ -389,5 +430,18 @@ export function scenarioAnswers(
     },
     userMgmtSetUserByContext: guarded("saved"),
     userMgmtSetPasswordByContext: guarded("null"),
+    // Dashboard and monitoring (Phase 5): the test VM as captured.
+    fileSystemMgmtEnumerateMountedFilesystems: guarded("withRoot"),
+    smartGetListBg: guarded("smartDevices"),
+    servicesGetStatus: guarded("sshOnly"),
+    networkEnumerateDevicesList: guarded("ethernetAndLoopback"),
+    logFileGetList: ({ params }) => guarded(logFor(params))(),
+    systemGetTopInfo: guarded("json"),
+    smbGetStats: guarded("disabled"),
+    nfsGetStats: guarded("disabled"),
+    // The pending changes of the mock are the ssh and avahi modules (adminPendingChanges), so only
+    // SSH's details wait for them, as on OMV.
+    sshGetStats: () =>
+      guarded(session.dirty ? "pendingChanges" : "noConnections")(),
   };
 }
