@@ -25,17 +25,19 @@ const DISK_NAME = /^[a-z][a-z0-9]{0,31}$/;
  * Chromium logs as failed resources. Each such reply is checked by `expectedFailures` below.
  */
 test.use({
-  extraAllowances: [
-    {
-      reason:
-        "the RAID plugin is not installed (404) and the VM's disks have no monitoring settings (500)",
-      matches: (message, origin) =>
-        message.location().url === `${origin}/rpc.php` &&
-        /^Failed to load resource: the server responded with a status of (404|500)/.test(
-          message.text(),
-        ),
-    },
-  ],
+  extraAllowances: {
+    list: [
+      {
+        reason:
+          "the RAID plugin is not installed (404) and the VM's disks have no monitoring settings (500)",
+        matches: (message, origin) =>
+          message.location().url === `${origin}/rpc.php` &&
+          /^Failed to load resource: the server responded with a status of (404|500)/.test(
+            message.text(),
+          ),
+      },
+    ],
+  },
 });
 
 async function signIn(page: Page, account: Account) {

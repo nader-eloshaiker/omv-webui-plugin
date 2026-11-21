@@ -16,6 +16,63 @@ test.skip(
   "No VM env file ($OMV_WEBUI_ENV); the VM suite is skipped.",
 );
 
+/**
+ * The VM's disks have no monitoring settings saved, and OMV answers Smart.getDeviceSettings for such a
+ * disk with HTTP 500 and its database lookup's message (the contract's notConfigured example). The
+ * interface reads it as "not watched", and no other reply says whether a disk has settings without
+ * waking it, so the pages ask. Chromium logs each 500 as a failed resource without the method's
+ * name, so the console line is allowed here and every failed reply is checked below to be exactly
+ * that one.
+ */
+test.use({
+  extraAllowances: {
+    list: [
+      {
+        reason:
+          "Smart.getDeviceSettings answers 500 for a disk with no settings saved, checked below",
+        matches: (message, origin) =>
+          message.location().url === `${origin}/rpc.php` &&
+          message
+            .text()
+            .startsWith(
+              "Failed to load resource: the server responded with a status of 500",
+            ),
+      },
+    ],
+  },
+});
+
+const NO_SETTINGS =
+  /^The XPath query '.*\/\/services\/smart\/monitor\/device\[.*' does not return the requested number of 1 object\(s\)\.$/s;
+
+/** Every failed rpc.php reply that is not "no settings saved" for Smart.getDeviceSettings. */
+function recordUnexpectedFailures(page: Page): string[] {
+  const unexpected: string[] = [];
+  page.on("response", async (response) => {
+    if (!response.url().endsWith("/rpc.php") || response.status() === 200) {
+      return;
+    }
+    let name = "";
+    try {
+      const body: unknown = response.request().postDataJSON();
+      name = `${String(field(body, "service"))}.${String(field(body, "method"))}`;
+      const message = field(field(await response.json(), "error"), "message");
+      if (
+        name === "Smart.getDeviceSettings" &&
+        response.status() === 500 &&
+        typeof message === "string" &&
+        NO_SETTINGS.test(message)
+      ) {
+        return;
+      }
+    } catch {
+      // Fall through: a failure whose reply could not be read is unexpected too.
+    }
+    unexpected.push(`${name} ${String(response.status())}`);
+  });
+  return unexpected;
+}
+
 /** The reads that run smartctl and can wake a sleeping disk, and the test start. */
 const WAKING = [
   "Smart.getListBg",
@@ -99,6 +156,7 @@ test.describe("an administrator", () => {
     test.setTimeout(2 * 60_000);
     const calls = recordCalls(page);
     const replies = recordReplies(page);
+    const unexpected = recordUnexpectedFailures(page);
     await signIn(page, vm.admin);
 
     await page.goto("/ui/storage/smart");
@@ -164,5 +222,6 @@ test.describe("an administrator", () => {
     for (const call of [...WAKING, ...WRITES]) {
       expect(calls, `${call} was called`).not.toContain(call);
     }
+    expect(unexpected).toEqual([]);
   });
 });

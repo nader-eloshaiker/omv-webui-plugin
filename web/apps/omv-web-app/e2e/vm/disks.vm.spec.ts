@@ -31,7 +31,7 @@ const rpcFailure = (status: number) => ({
 });
 // 404: the RAID plugin is not installed on the VM, so OMV does not know MdMgmt. 500: a disk with no
 // monitoring settings saved, and the VM's virtual disks, which report no health readings.
-test.use({ extraAllowances: [rpcFailure(404), rpcFailure(500)] });
+test.use({ extraAllowances: { list: [rpcFailure(404), rpcFailure(500)] } });
 
 /** The failures each read may legitimately answer with on the VM. */
 const EXPECTED_FAILURES: Readonly<Record<string, number>> = {

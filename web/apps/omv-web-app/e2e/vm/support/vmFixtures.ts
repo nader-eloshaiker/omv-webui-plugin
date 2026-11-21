@@ -130,8 +130,10 @@ interface TestFixtures {
    * Console errors a spec expects on top of VM_ALLOWANCES, each with its reason (`test.use`). Chromium
    * logs a 4xx or 5xx reply without saying which method it answered, so a spec that allows one also
    * checks the replies themselves (the disks pages: the RAID plugin's 404, the "no settings" 500).
+   * The list is wrapped in an object: Playwright reads an array whose second item is an object as a
+   * `[value, options]` tuple, so a bare list of two allowances would reach the fixture as its first.
    */
-  extraAllowances: readonly ConsoleAllowance[];
+  extraAllowances: { readonly list: readonly ConsoleAllowance[] };
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -154,13 +156,13 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { auto: true },
   ],
 
-  extraAllowances: [[], { option: true }],
+  extraAllowances: [{ list: [] }, { option: true }],
 
   observed: [
     async ({ page, vm, extraAllowances }, provide) => {
       const observed = await observe(page, vm.origin, [
         ...VM_ALLOWANCES,
-        ...extraAllowances,
+        ...extraAllowances.list,
       ]);
       await provide(observed);
       expectNothingObserved(observed);
