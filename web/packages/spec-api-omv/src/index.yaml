@@ -29,6 +29,7 @@ tags:
   - name: Services
   - name: SMB
   - name: NFS
+  - name: LogFile
 paths:
   /rpc/Session/login:
     $ref: ./operations/Session/login.yaml
@@ -88,6 +89,10 @@ paths:
     $ref: ./operations/SSH/getStats.yaml
   /rpc/Network/enumerateDevicesList:
     $ref: ./operations/Network/enumerateDevicesList.yaml
+  /rpc/LogFile/getList:
+    $ref: ./operations/LogFile/getList.yaml
+  /rpc/System/getTopInfo:
+    $ref: ./operations/System/getTopInfo.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

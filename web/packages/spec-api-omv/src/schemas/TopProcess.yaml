@@ -1,0 +1,45 @@
+type: object
+description: >-
+  One process as top lists it. Every value is text, as top prints it (jc --raw), except that the
+  server turns VIRT, RES and SHR into bytes.
+required:
+  [PID, USER, PR, NI, VIRT, RES, SHR, S, "%CPU", "%MEM", "TIME+", COMMAND]
+properties:
+  PID:
+    type: string
+  USER:
+    type: string
+  PR:
+    type: string
+    description: The scheduling priority; "rt" for a real-time process.
+  NI:
+    type: string
+    description: The nice value, from -20 to 19.
+  VIRT:
+    type: string
+    x-omv-int64: true
+    description: Virtual memory, in bytes.
+  RES:
+    type: string
+    x-omv-int64: true
+    description: Resident memory, in bytes.
+  SHR:
+    type: string
+    x-omv-int64: true
+    description: Shared memory, in bytes.
+  S:
+    type: string
+    description: >-
+      The state: R running, S sleeping, D waiting for a disk, I idle, T stopped, t stopped by a
+      debugger, Z zombie.
+  "%CPU":
+    type: string
+    description: Percent of one CPU since top's last update, such as "4.8".
+  "%MEM":
+    type: string
+    description: Percent of memory, such as "0.4".
+  "TIME+":
+    type: string
+    description: Display text, the CPU time used, such as "1:06.40".
+  COMMAND:
+    type: string

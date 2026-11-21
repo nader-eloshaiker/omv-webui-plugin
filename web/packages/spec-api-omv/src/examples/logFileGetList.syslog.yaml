@@ -1,0 +1,30 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 28028
+  data:
+    - rownum: 28027
+      ts: 1795231777
+      date: "Sat Nov 21 03:29:37 2026"
+      hostname: nas
+      message: "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+    - rownum: 28026
+      ts: 1795231776
+      date: "Sat Nov 21 03:29:36 2026"
+      hostname: nas
+      message: "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+    - rownum: 28025
+      ts: 1795231775
+      date: "Sat Nov 21 03:29:35 2026"
+      hostname: nas
+      message: "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+    - rownum: 28024
+      ts: 1795231757
+      date: "Sat Nov 21 03:29:17 2026"
+      hostname: nas
+      message: "openmediavault-webgui[85348]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+    - rownum: 28023
+      ts: 1795231757
+      date: "Sat Nov 21 03:29:17 2026"
+      hostname: nas
+      message: "openmediavault-webgui[85252]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"

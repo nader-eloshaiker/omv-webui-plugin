@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: systemGetTopInfo
+  tags:
+    - System
+  summary: Processes
+  description: >-
+    The system's load, memory and processes, as top reports them at one moment. The server runs
+    top for about a second for each call.
+  x-omv-rpc:
+    service: System
+    method: getTopInfo
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.system.gettopinfo
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SystemGetTopInfoRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TopInfo.yaml
+          examples:
+            json:
+              $ref: ../../examples/systemGetTopInfo.json.yaml

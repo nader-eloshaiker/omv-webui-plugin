@@ -3,5 +3,10 @@
     "where": "sessionVerify (Session.verify)",
     "message": "$: has a field code that OMV's datamodel does not declare",
     "reason": "Core declares only challengeresponse of type any and hands the whole params to the two-factor plugin; openmediavault-2fa-totp reads code (A10). The contract accepts only that shape."
+  },
+  {
+    "where": "logFileGetList (LogFile.getList)",
+    "message": "$: has a field search that OMV's datamodel does not declare",
+    "reason": "rpc.logfile.getlist does not declare search, but LogFile::getList passes $params['search'] to applyFilter, and validation ignores keys a datamodel does not declare. The contract declares it optional, as text, the type applyFilter searches with."
   }
 ]

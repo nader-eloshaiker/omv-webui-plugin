@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: logFileGetList
+  tags:
+    - LogFile
+  summary: Read a log
+  description: >-
+    A page of one system log, parsed into rows, sorted and searched by the backend. Every call
+    re-reads and parses the whole log (its last 100000 lines at most), whatever page is asked
+    for: read a log once and page it in the browser. Log lines can name users, hosts and
+    addresses; they are shown as text.
+  x-omv-rpc:
+    service: LogFile
+    method: getList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.logfile.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/LogFileGetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/LogRowList.yaml
+          examples:
+            syslog:
+              $ref: ../../examples/logFileGetList.syslog.yaml
+            updates:
+              $ref: ../../examples/logFileGetList.updates.yaml
+            smbAudit:
+              $ref: ../../examples/logFileGetList.smbAudit.yaml
+    "500":
+      description: The log id is not one the server knows.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            unknownLog:
+              $ref: ../../examples/logFileGetList.unknownLog.yaml

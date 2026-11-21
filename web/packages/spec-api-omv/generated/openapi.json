@@ -59,6 +59,9 @@
     },
     {
       "name": "NFS"
+    },
+    {
+      "name": "LogFile"
     }
   ],
   "paths": {
@@ -1363,6 +1366,117 @@
                   },
                   "wifi": {
                     "$ref": "#/components/examples/networkEnumerateDevicesList.wifi"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/LogFile/getList": {
+      "post": {
+        "operationId": "logFileGetList",
+        "tags": ["LogFile"],
+        "summary": "Read a log",
+        "description": "A page of one system log, parsed into rows, sorted and searched by the backend. Every call re-reads and parses the whole log (its last 100000 lines at most), whatever page is asked for: read a log once and page it in the browser. Log lines can name users, hosts and addresses; they are shown as text.",
+        "x-omv-rpc": {
+          "service": "LogFile",
+          "method": "getList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.logfile.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogFileGetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogRowList"
+                },
+                "examples": {
+                  "syslog": {
+                    "$ref": "#/components/examples/logFileGetList.syslog"
+                  },
+                  "updates": {
+                    "$ref": "#/components/examples/logFileGetList.updates"
+                  },
+                  "smbAudit": {
+                    "$ref": "#/components/examples/logFileGetList.smbAudit"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The log id is not one the server knows.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "unknownLog": {
+                    "$ref": "#/components/examples/logFileGetList.unknownLog"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/System/getTopInfo": {
+      "post": {
+        "operationId": "systemGetTopInfo",
+        "tags": ["System"],
+        "summary": "Processes",
+        "description": "The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.",
+        "x-omv-rpc": {
+          "service": "System",
+          "method": "getTopInfo"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.system.gettopinfo",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemGetTopInfoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopInfo"
+                },
+                "examples": {
+                  "json": {
+                    "$ref": "#/components/examples/systemGetTopInfo.json"
                   }
                 }
               }
@@ -2678,6 +2792,318 @@
           }
         }
       },
+      "LogFileGetListRequest": {
+        "type": "object",
+        "description": "Which log to read, and a page of it (rpc.logfile.getlist). The server re-reads and parses the whole log, up to its last 100000 lines, on every call, whatever page is asked for. `search` is not in OMV's datamodel, but the method reads it: a case-insensitive search over every column.",
+        "required": ["start", "limit", "id"],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "description": "The number of rows; null returns every row."
+          },
+          "sortfield": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortdir": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["asc", "desc"]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The log, such as syslog, auth, boot, daemon, messages, dmesg, rsync, rsyncd, smartd, apt_term or smbdaudit. Plugins add more. An unknown id fails."
+          },
+          "search": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LogRow": {
+        "type": "object",
+        "description": "One line of a log, parsed. Every row has `rownum`; the other columns depend on the log. Journal logs (syslog, auth, daemon, boot, ...) have ts, date, hostname and message; some file logs only message; the SMB/CIFS audit log (smbdaudit) has its own columns, listed here. Plugins' logs may have others.",
+        "required": ["rownum"],
+        "additionalProperties": true,
+        "properties": {
+          "rownum": {
+            "type": "integer",
+            "description": "The line's place in the part of the log read, from 0."
+          },
+          "ts": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Unix time of the line, in seconds; null when the server could not read its time."
+          },
+          "date": {
+            "type": "string",
+            "description": "Display text, the line's time in the server's locale. Not for parsing."
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "description": "The line's text. Shown as text."
+          },
+          "username": {
+            "type": "string",
+            "description": "smbdaudit only. The user who did it."
+          },
+          "clientipaddr": {
+            "type": "string",
+            "description": "smbdaudit only. The client's address."
+          },
+          "clientnetbiosname": {
+            "type": "string",
+            "description": "smbdaudit only. The client's NetBIOS name."
+          },
+          "servicerootdir": {
+            "type": "string",
+            "description": "smbdaudit only. The shared folder's path on the server."
+          },
+          "servicename": {
+            "type": "string",
+            "description": "smbdaudit only. The share's name."
+          },
+          "operation": {
+            "type": "string",
+            "description": "smbdaudit only. What was done, such as \"openat\", \"unlinkat\" or \"renameat\"."
+          },
+          "result": {
+            "type": "string",
+            "description": "smbdaudit only. \"ok\", or \"fail\" with the reason."
+          },
+          "filepath": {
+            "type": "string",
+            "description": "smbdaudit only. The file's path, as Samba logged it."
+          },
+          "filename": {
+            "type": "string",
+            "description": "smbdaudit only. The last part of filepath."
+          }
+        }
+      },
+      "LogRowList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every matching row of the part of the log read, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogRow"
+            }
+          }
+        }
+      },
+      "SystemGetTopInfoRequest": {
+        "type": "object",
+        "description": "The reply's form (rpc.system.gettopinfo). OMV also offers \"text\", top's output as one string; the contract asks only for \"json\", the parsed form.",
+        "required": ["format"],
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": ["json"]
+          }
+        }
+      },
+      "TopProcess": {
+        "type": "object",
+        "description": "One process as top lists it. Every value is text, as top prints it (jc --raw), except that the server turns VIRT, RES and SHR into bytes.",
+        "required": [
+          "PID",
+          "USER",
+          "PR",
+          "NI",
+          "VIRT",
+          "RES",
+          "SHR",
+          "S",
+          "%CPU",
+          "%MEM",
+          "TIME+",
+          "COMMAND"
+        ],
+        "properties": {
+          "PID": {
+            "type": "string"
+          },
+          "USER": {
+            "type": "string"
+          },
+          "PR": {
+            "type": "string",
+            "description": "The scheduling priority; \"rt\" for a real-time process."
+          },
+          "NI": {
+            "type": "string",
+            "description": "The nice value, from -20 to 19."
+          },
+          "VIRT": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Virtual memory, in bytes."
+          },
+          "RES": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Resident memory, in bytes."
+          },
+          "SHR": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Shared memory, in bytes."
+          },
+          "S": {
+            "type": "string",
+            "description": "The state: R running, S sleeping, D waiting for a disk, I idle, T stopped, t stopped by a debugger, Z zombie."
+          },
+          "%CPU": {
+            "type": "string",
+            "description": "Percent of one CPU since top's last update, such as \"4.8\"."
+          },
+          "%MEM": {
+            "type": "string",
+            "description": "Percent of memory, such as \"0.4\"."
+          },
+          "TIME+": {
+            "type": "string",
+            "description": "Display text, the CPU time used, such as \"1:06.40\"."
+          },
+          "COMMAND": {
+            "type": "string"
+          }
+        }
+      },
+      "TopInfo": {
+        "type": "object",
+        "description": "A snapshot of top (top -b -n 1), parsed by jc. Every value is text, as top prints it. The memory and swap figures are in top's unit, MiB unless top is set otherwise. The server takes about a second to answer.",
+        "required": [
+          "time",
+          "uptime",
+          "load_1m",
+          "load_5m",
+          "load_15m",
+          "tasks_total",
+          "tasks_running",
+          "tasks_sleeping",
+          "tasks_stopped",
+          "tasks_zombie",
+          "mem_total",
+          "mem_free",
+          "mem_used",
+          "mem_buff_cache",
+          "mem_available",
+          "swap_total",
+          "swap_free",
+          "swap_used",
+          "processes"
+        ],
+        "properties": {
+          "time": {
+            "type": "string",
+            "description": "Display text, the server's local time, such as \"03:27:44\"."
+          },
+          "uptime": {
+            "type": "string",
+            "description": "Display text, such as \"1 day, 20:48\"."
+          },
+          "users": {
+            "type": "string"
+          },
+          "load_1m": {
+            "type": "string"
+          },
+          "load_5m": {
+            "type": "string"
+          },
+          "load_15m": {
+            "type": "string"
+          },
+          "tasks_total": {
+            "type": "string"
+          },
+          "tasks_running": {
+            "type": "string"
+          },
+          "tasks_sleeping": {
+            "type": "string"
+          },
+          "tasks_stopped": {
+            "type": "string"
+          },
+          "tasks_zombie": {
+            "type": "string"
+          },
+          "cpu_user": {
+            "type": "string",
+            "description": "Percent of CPU time, such as \"4.8\"; the other cpu_ fields likewise."
+          },
+          "cpu_sys": {
+            "type": "string"
+          },
+          "cpu_nice": {
+            "type": "string"
+          },
+          "cpu_idle": {
+            "type": "string"
+          },
+          "cpu_wait": {
+            "type": "string"
+          },
+          "cpu_hardware": {
+            "type": "string"
+          },
+          "cpu_software": {
+            "type": "string"
+          },
+          "cpu_steal": {
+            "type": "string"
+          },
+          "mem_total": {
+            "type": "string",
+            "description": "Such as \"3914.0\", in top's unit (MiB)."
+          },
+          "mem_free": {
+            "type": "string"
+          },
+          "mem_used": {
+            "type": "string"
+          },
+          "mem_buff_cache": {
+            "type": "string"
+          },
+          "mem_available": {
+            "type": "string"
+          },
+          "swap_total": {
+            "type": "string"
+          },
+          "swap_free": {
+            "type": "string"
+          },
+          "swap_used": {
+            "type": "string"
+          },
+          "processes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopProcess"
+            }
+          }
+        }
+      },
       "SmartDevice": {
         "type": "object",
         "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
@@ -3821,6 +4247,265 @@
               "speed": -1,
               "description": "wlp3s0 [00:00:5e:00:53:02]",
               "stats": []
+            }
+          ]
+        }
+      },
+      "logFileGetList.syslog": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 28028,
+          "data": [
+            {
+              "rownum": 28027,
+              "ts": 1795231777,
+              "date": "Sat Nov 21 03:29:37 2026",
+              "hostname": "nas",
+              "message": "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+            },
+            {
+              "rownum": 28026,
+              "ts": 1795231776,
+              "date": "Sat Nov 21 03:29:36 2026",
+              "hostname": "nas",
+              "message": "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+            },
+            {
+              "rownum": 28025,
+              "ts": 1795231775,
+              "date": "Sat Nov 21 03:29:35 2026",
+              "hostname": "nas",
+              "message": "openmediavault-webgui[85363]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+            },
+            {
+              "rownum": 28024,
+              "ts": 1795231757,
+              "date": "Sat Nov 21 03:29:17 2026",
+              "hostname": "nas",
+              "message": "openmediavault-webgui[85348]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+            },
+            {
+              "rownum": 28023,
+              "ts": 1795231757,
+              "date": "Sat Nov 21 03:29:17 2026",
+              "hostname": "nas",
+              "message": "openmediavault-webgui[85252]: Authorized login from 192.0.2.2 (username=example-admin, user-agent=node)"
+            }
+          ]
+        }
+      },
+      "logFileGetList.updates": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1303,
+          "data": [
+            {
+              "rownum": 1302,
+              "message": "Log ended: 2026-11-20  21:55:01"
+            },
+            {
+              "rownum": 1301,
+              "message": "Updating workbench configuration files ...\r"
+            },
+            {
+              "rownum": 1300,
+              "message": "Processing triggers for openmediavault (8.6.1-1) ...\r"
+            }
+          ]
+        }
+      },
+      "logFileGetList.smbAudit": {
+        "summary": "Written by hand from the source's smbdaudit columns (OMV 8.6.1): two lines of the SMB/CIFS audit log, a file opened and one deleted. The test VM has no audited share. Documentation names and addresses only.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "rownum": 1,
+              "ts": 1795231920,
+              "date": "Sat Nov 21 03:32:00 2026",
+              "hostname": "nas",
+              "username": "example-user",
+              "clientipaddr": "192.0.2.10",
+              "clientnetbiosname": "EXAMPLE-PC",
+              "servicerootdir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001/media",
+              "servicename": "media",
+              "operation": "unlinkat",
+              "result": "ok",
+              "filepath": "photos/old.jpg",
+              "filename": "old.jpg"
+            },
+            {
+              "rownum": 0,
+              "ts": 1795231800,
+              "date": "Sat Nov 21 03:30:00 2026",
+              "hostname": "nas",
+              "username": "example-user",
+              "clientipaddr": "192.0.2.10",
+              "clientnetbiosname": "EXAMPLE-PC",
+              "servicerootdir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001/media",
+              "servicename": "media",
+              "operation": "openat",
+              "result": "ok",
+              "filepath": "photos/holiday.jpg",
+              "filename": "holiday.jpg"
+            }
+          ]
+        }
+      },
+      "logFileGetList.unknownLog": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Unknown log file specification (id=no-such-log)."
+        }
+      },
+      "systemGetTopInfo.json": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed; processes shortened to its first 8 of 174",
+        "x-omv-status": 200,
+        "value": {
+          "time": "03:27:44",
+          "uptime": "1 day, 20:48",
+          "users": "0",
+          "load_1m": "0.43",
+          "load_5m": "0.10",
+          "load_15m": "0.03",
+          "tasks_total": "174",
+          "tasks_running": "1",
+          "tasks_sleeping": "173",
+          "tasks_stopped": "0",
+          "tasks_zombie": "0",
+          "cpu_user": "4.8",
+          "cpu_sys": "0.0",
+          "cpu_nice": "0.0",
+          "cpu_idle": "95.2",
+          "cpu_wait": "0.0",
+          "cpu_hardware": "0.0",
+          "cpu_software": "0.0",
+          "cpu_steal": "0.0",
+          "mem_total": "3914.0",
+          "mem_free": "2865.1",
+          "mem_used": "382.6",
+          "mem_buff_cache": "833.6",
+          "swap_total": "0.0",
+          "swap_free": "0.0",
+          "swap_used": "0.0",
+          "mem_available": "3531.3",
+          "processes": [
+            {
+              "PID": "1",
+              "USER": "root",
+              "PR": "20",
+              "NI": "0",
+              "VIRT": "26001408",
+              "RES": "15642624",
+              "SHR": "10387456",
+              "S": "S",
+              "%CPU": "0.0",
+              "%MEM": "0.4",
+              "TIME+": "1:06.40",
+              "COMMAND": "systemd"
+            },
+            {
+              "PID": "2",
+              "USER": "root",
+              "PR": "20",
+              "NI": "0",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "S",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.25",
+              "COMMAND": "kthreadd"
+            },
+            {
+              "PID": "3",
+              "USER": "root",
+              "PR": "20",
+              "NI": "0",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "S",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "pool_workqueue_release"
+            },
+            {
+              "PID": "4",
+              "USER": "root",
+              "PR": "0",
+              "NI": "-20",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "I",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "kworker/R-kvfree_rcu_reclaim"
+            },
+            {
+              "PID": "5",
+              "USER": "root",
+              "PR": "0",
+              "NI": "-20",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "I",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "kworker/R-rcu_gp"
+            },
+            {
+              "PID": "6",
+              "USER": "root",
+              "PR": "0",
+              "NI": "-20",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "I",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "kworker/R-sync_wq"
+            },
+            {
+              "PID": "7",
+              "USER": "root",
+              "PR": "0",
+              "NI": "-20",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "I",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "kworker/R-slub_flushwq"
+            },
+            {
+              "PID": "8",
+              "USER": "root",
+              "PR": "0",
+              "NI": "-20",
+              "VIRT": "0",
+              "RES": "0",
+              "SHR": "0",
+              "S": "I",
+              "%CPU": "0.0",
+              "%MEM": "0.0",
+              "TIME+": "0:00.00",
+              "COMMAND": "kworker/R-netns"
             }
           ]
         }
