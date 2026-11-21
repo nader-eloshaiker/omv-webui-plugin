@@ -55,6 +55,13 @@ describe("Scheduled self-tests", () => {
     expect(document.title).toBe("Self-tests – Disk health – openmediavault");
   });
 
+  it("puts the table in a named, focusable scroll region for narrow screens", async () => {
+    await selfTests({ scenario: "disksNas" });
+    await screen.findByRole("table", { name: "Scheduled self-tests" });
+    const frame = screen.getByRole("region", { name: "Scheduled self-tests" });
+    expect(frame).toHaveAttribute("tabindex", "0");
+  });
+
   it("writes each test in words, grouped by disk in device order", async () => {
     await selfTests({ scenario: "disksNas" });
     await within(table()).findByText("Custom schedule");
@@ -125,7 +132,7 @@ describe("Scheduled self-tests", () => {
     );
     expect(
       await screen.findByText(
-        "/dev/sda started a short self-test. The disk runs it by itself; the result appears in its health details when it finishes, in about a few minutes.",
+        "/dev/sda started a short self-test. The disk runs it by itself; the result appears in its health details when it finishes, in a few minutes.",
         {},
         { timeout: 5000 },
       ),

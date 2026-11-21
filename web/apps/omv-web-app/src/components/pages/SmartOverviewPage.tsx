@@ -282,6 +282,7 @@ function Overview() {
         ) : null}
         <Table
           aria-label={t("smart.overview.tableLabel")}
+          frameLabel={t("smart.overview.tableLabel")}
           busy={disks === undefined && !diskList.isError}
           busyLabel={t("disks.loading")}
         >

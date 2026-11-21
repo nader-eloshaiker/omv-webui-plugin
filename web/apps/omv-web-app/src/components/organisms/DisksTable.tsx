@@ -202,6 +202,7 @@ export function DisksTable({
     <div>
       <Table
         aria-label={t("disks.tableLabel")}
+        frameLabel={t("disks.tableLabel")}
         busy={firstLoad || (refreshing && showHeader)}
         busyLabel={firstLoad ? t("disks.loading") : undefined}
       >

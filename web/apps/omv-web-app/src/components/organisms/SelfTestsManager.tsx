@@ -19,7 +19,6 @@ import {
   ConfirmDialog,
   EmptyState,
   ExternalLink,
-  Identifier,
   InlineAlert,
   Menu,
   MenuContent,
@@ -53,6 +52,7 @@ import { useSmartWatched, type Watch } from "../../hooks/useSmartWatched.ts";
 import { useScheduleText } from "../../hooks/useSmartWords.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { DevicePath } from "../atoms/DevicePath.tsx";
 import { DiskLink } from "../atoms/DiskLink.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
@@ -77,7 +77,7 @@ interface Row {
 function StoredDevice({ uuid }: { uuid: string }) {
   const stored = useSmartGetScheduledTest({ uuid }, { query: ON_OPEN });
   const device = stored.data?.devicefile ?? "";
-  return device === "" ? null : <Identifier>{device}</Identifier>;
+  return device === "" ? null : <DevicePath value={device} />;
 }
 
 function ActionsMenu({
@@ -256,15 +256,18 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
     body = rows.map((row) => (
       <TableRow key={row.entry.uuid}>
         {showDisk ? (
-          <TableCell>
+          <TableCell className="min-w-40">
             {row.disk && row.connected ? (
-              <span className="flex flex-col">
+              <span className="flex flex-col whitespace-nowrap">
                 <DiskLink
                   devicename={row.disk.devicename}
                   device={row.disk.canonicaldevicefile}
                 />
                 {row.disk.model.trim() === "" ? null : (
-                  <span dir="auto" className="text-xs text-muted-foreground">
+                  <span
+                    dir="auto"
+                    className="text-xs whitespace-normal text-muted-foreground"
+                  >
                     {row.disk.model}
                   </span>
                 )}
@@ -319,6 +322,8 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
   const table = (
     <Table
       aria-label={t("smart.tests.tableLabel")}
+      // On a disk's page the section of the same name holds the table; its frame stays unnamed.
+      frameLabel={showDisk ? t("smart.tests.tableLabel") : undefined}
       busy={schedule.data === undefined}
       busyLabel={t("smart.tests.loading")}
     >
