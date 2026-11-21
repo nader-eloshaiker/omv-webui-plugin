@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtEnumerateMountedFilesystems
+  tags:
+    - FileSystemMgmt
+  summary: Mounted file systems
+  description: >-
+    Every configured file system that is mounted now, with its size and usage. The server measures
+    each one as it answers, so a file system on a sleeping disk can make the reply slow. It does not
+    read S.M.A.R.T.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: enumerateMountedFilesystems
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.filesystemmgmt.enumeratemountedfilesystems
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/FileSystemMgmtEnumerateMountedFilesystemsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/MountedFilesystemList.yaml
+          examples:
+            withRoot:
+              $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.withRoot.yaml
+            nearlyFull:
+              $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.nearlyFull.yaml
+            empty:
+              $ref: ../../examples/fileSystemMgmtEnumerateMountedFilesystems.empty.yaml

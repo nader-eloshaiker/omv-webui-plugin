@@ -1,0 +1,13 @@
+type: object
+description: >-
+  Which mounted file systems to list (rpc.filesystemmgmt.enumeratemountedfilesystems). Both fields
+  are optional.
+properties:
+  type:
+    type: string
+    description: Only file systems of this type, such as "ext4".
+  includeroot:
+    type: boolean
+    description: >-
+      Also list the file system the system runs from, mounted at "/". Defaults to false. Its row is
+      made up by the server, with a warning threshold from the server's environment (85 by default).

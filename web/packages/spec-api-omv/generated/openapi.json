@@ -44,6 +44,12 @@
     },
     {
       "name": "EmailNotification"
+    },
+    {
+      "name": "FileSystemMgmt"
+    },
+    {
+      "name": "Smart"
     }
   ],
   "paths": {
@@ -478,6 +484,15 @@
                   },
                   "revertedFinished": {
                     "$ref": "#/components/examples/execGetOutput.revertedFinished"
+                  },
+                  "smartDevicesFinished": {
+                    "$ref": "#/components/examples/execGetOutput.smartDevicesFinished"
+                  },
+                  "smartManyBadSectorsFinished": {
+                    "$ref": "#/components/examples/execGetOutput.smartManyBadSectorsFinished"
+                  },
+                  "smartStatusUnknownFinished": {
+                    "$ref": "#/components/examples/execGetOutput.smartStatusUnknownFinished"
                   }
                 }
               }
@@ -1023,6 +1038,105 @@
           }
         }
       }
+    },
+    "/rpc/FileSystemMgmt/enumerateMountedFilesystems": {
+      "post": {
+        "operationId": "fileSystemMgmtEnumerateMountedFilesystems",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Mounted file systems",
+        "description": "Every configured file system that is mounted now, with its size and usage. The server measures each one as it answers, so a file system on a sleeping disk can make the reply slow. It does not read S.M.A.R.T.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "enumerateMountedFilesystems"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.filesystemmgmt.enumeratemountedfilesystems",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileSystemMgmtEnumerateMountedFilesystemsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MountedFilesystemList"
+                },
+                "examples": {
+                  "withRoot": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateMountedFilesystems.withRoot"
+                  },
+                  "nearlyFull": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateMountedFilesystems.nearlyFull"
+                  },
+                  "empty": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateMountedFilesystems.empty"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Smart/getListBg": {
+      "post": {
+        "operationId": "smartGetListBg",
+        "tags": ["Smart"],
+        "summary": "Read disk health",
+        "description": "Read the S.M.A.R.T. health of every disk that supports it, as a background task. The task's result is the list of disks. It changes no setting, but it runs smartctl on every disk without sparing sleeping ones, so it can wake them: the interface starts it only when the user asks for it. The parameters are checked inside the task, so a wrong one makes the task fail.",
+        "x-omv-rpc": {
+          "service": "Smart",
+          "method": "getListBg"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {
+          "result": "SmartDeviceList"
+        },
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "smartDevices": {
+                    "$ref": "#/components/examples/smartGetListBg.smartDevices"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1032,6 +1146,23 @@
         "description": "The result of an apply task (its final output, parsed as JSON) - the modules deployed.",
         "items": {
           "type": "string"
+        }
+      },
+      "SmartDeviceList": {
+        "type": "object",
+        "description": "The result of the S.M.A.R.T. list task (its final output, parsed as JSON): the disks that support S.M.A.R.T., paged, sorted and searched by the backend.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every matching disk, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SmartDevice"
+            }
+          }
         }
       },
       "Username": {
@@ -1909,6 +2040,259 @@
             "description": "The user name for the SMTP server, or empty."
           }
         }
+      },
+      "FileSystemMgmtEnumerateMountedFilesystemsRequest": {
+        "type": "object",
+        "description": "Which mounted file systems to list (rpc.filesystemmgmt.enumeratemountedfilesystems). Both fields are optional.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Only file systems of this type, such as \"ext4\"."
+          },
+          "includeroot": {
+            "type": "boolean",
+            "description": "Also list the file system the system runs from, mounted at \"/\". Defaults to false. Its row is made up by the server, with a warning threshold from the server's environment (85 by default)."
+          }
+        }
+      },
+      "MountedFilesystem": {
+        "type": "object",
+        "description": "A file system that is configured and mounted now. A configured file system whose disk is missing or that is not mounted is left out of the list without a word; bind mounts are left out too.",
+        "required": [
+          "devicename",
+          "devicefile",
+          "canonicaldevicefile",
+          "devlinks",
+          "uuid",
+          "label",
+          "type",
+          "mounted",
+          "mountpoint",
+          "blocks",
+          "size",
+          "available",
+          "used",
+          "percentage",
+          "description",
+          "comment",
+          "usagewarnthreshold"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the partition or device, such as \"sda1\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The device file OMV prefers, usually a /dev/disk/by-uuid/ link."
+          },
+          "predictabledevicefile": {
+            "type": "string"
+          },
+          "canonicaldevicefile": {
+            "type": "string",
+            "description": "The device file under /dev, such as \"/dev/sda1\"."
+          },
+          "parentdevicefile": {
+            "type": "string",
+            "description": "The disk the file system is on, such as \"/dev/sda\"."
+          },
+          "devlinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The file system's own UUID (not a configuration object's)."
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "The file system type, such as \"ext4\" or \"btrfs\"."
+          },
+          "mounted": {
+            "type": "boolean"
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "The configured mount point, such as \"/srv/dev-disk-by-uuid-...\"."
+          },
+          "blocks": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Size in 1 KiB blocks. \"-1\" when the server could not read the usage."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes. \"-1\" when the server could not read the usage."
+          },
+          "available": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes free. \"-1\" when the server could not read the usage."
+          },
+          "used": {
+            "type": "string",
+            "description": "Display text, such as \"12.34 GiB\": the server formats it, unlike size and available, which are bytes. \"-1\" when the server could not read the usage."
+          },
+          "percentage": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 100,
+            "description": "Percent used. -1 when the server could not read the usage."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]\"."
+          },
+          "propposixacl": {
+            "type": "boolean"
+          },
+          "propquota": {
+            "type": "boolean"
+          },
+          "propresize": {
+            "type": "boolean"
+          },
+          "propfstab": {
+            "type": "boolean"
+          },
+          "propreadonly": {
+            "type": "boolean"
+          },
+          "propcompress": {
+            "type": "boolean"
+          },
+          "propautodefrag": {
+            "type": "boolean"
+          },
+          "hasmultipledevices": {
+            "type": "boolean"
+          },
+          "devicefiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "comment": {
+            "type": "string"
+          },
+          "usagewarnthreshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percent used at which OMV warns about this file system. 0 means it never warns."
+          },
+          "_readonly": {
+            "type": "boolean"
+          },
+          "_used": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MountedFilesystemList": {
+        "type": "array",
+        "description": "Every mounted file system, in no particular order. A plain list: not paged, and without the {total, data} wrapper of the list methods.",
+        "items": {
+          "$ref": "#/components/schemas/MountedFilesystem"
+        }
+      },
+      "SmartDevice": {
+        "type": "object",
+        "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
+        "required": [
+          "devicename",
+          "canonicaldevicefile",
+          "devicefile",
+          "devicelinks",
+          "model",
+          "size",
+          "temperature",
+          "description",
+          "vendor",
+          "serialnumber",
+          "wwn",
+          "overallstatus",
+          "uuid",
+          "monitor",
+          "_used"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the disk, such as \"sda\"."
+          },
+          "canonicaldevicefile": {
+            "type": "string",
+            "description": "The device file under /dev, such as \"/dev/sda\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The disk's /dev/disk/by-id/ link."
+          },
+          "devicelinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes."
+          },
+          "temperature": {
+            "description": "Degrees Celsius: a whole number, or the same number as text (observed for an NVMe disk on OMV 8.6.1). The empty string when the disk reports none or could not be read.",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]\"."
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "serialnumber": {
+            "type": "string"
+          },
+          "wwn": {
+            "type": "string",
+            "description": "The disk's World Wide Name; the empty string when it has none."
+          },
+          "overallstatus": {
+            "type": "string",
+            "description": "The disk's health: GOOD; BAD_ATTRIBUTE_IN_THE_PAST (was used outside its design limits); BAD_SECTOR (a few bad sectors); BAD_ATTRIBUTE_NOW (used outside its design limits now); BAD_SECTOR_MANY (many bad sectors); BAD_STATUS (unknown: smartctl could not read the disk's health, as for disks that do not report it, such as some virtual disks). Open to other values, so a later OMV's value is shown as unknown rather than refused."
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The disk's monitoring settings object, or OMV's placeholder for an object not yet saved (fa4b1c66-ef79-11e5-87a0-0002b3a176b4) when monitoring was never set up for it."
+          },
+          "monitor": {
+            "type": "boolean",
+            "description": "Whether S.M.A.R.T. monitoring is turned on for this disk."
+          },
+          "_used": {
+            "type": "boolean",
+            "description": "Whether a scheduled S.M.A.R.T. test refers to this disk."
+          }
+        }
       }
     },
     "examples": {
@@ -2163,6 +2547,39 @@
           "running": false
         }
       },
+      "execGetOutput.smartDevicesFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusc32432tu5o6meLM1Slh",
+          "pos": 3779,
+          "output": "{\"total\":5,\"data\":[{\"devicename\":\"nvme0n1\",\"canonicaldevicefile\":\"/dev/nvme0n1\",\"devicefile\":\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"devicelinks\":[\"/dev/disk/by-diskseq/1\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1\",\"/dev/disk/by-id/nvme-EXAMPLE-WWN-0001\",\"/dev/disk/by-path/pci-0000:12:00.0-nvme-1\"],\"model\":\"VMware Virtual NVMe Disk\",\"size\":\"21474836480\",\"temperature\":\"30\",\"description\":\"VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]\",\"vendor\":\"0x15ad\",\"serialnumber\":\"EXAMPLE-SERIAL-0001\",\"wwn\":\"EXAMPLE-WWN-0001\",\"overallstatus\":\"GOOD\",\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"monitor\":false,\"_used\":false},{\"devicename\":\"sda\",\"canonicaldevicefile\":\"/dev/sda\",\"devicefile\":\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002\",\"devicelinks\":[\"/dev/disk/by-diskseq/2\",\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0002\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3.0\"],\"model\":\"VMware Virtual SATA Hard Drive\",\"size\":\"8589934592\",\"temperature\":\"\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sda, 8.00 GiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0002\",\"wwn\":\"EXAMPLE-WWN-0002\",\"overallstatus\":\"BAD_STATUS\",\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"monitor\":false,\"_used\":false},{\"devicename\":\"sdb\",\"canonicaldevicefile\":\"/dev/sdb\",\"devicefile\":\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003\",\"devicelinks\":[\"/dev/disk/by-diskseq/3\",\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0003\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-4\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-4.0\"],\"model\":\"VMware Virtual SATA Hard Drive\",\"size\":\"8589934592\",\"temperature\":\"\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0003\",\"wwn\":\"EXAMPLE-WWN-0003\",\"overallstatus\":\"BAD_STATUS\",\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"monitor\":false,\"_used\":false},{\"devicename\":\"sdc\",\"canonicaldevicefile\":\"/dev/sdc\",\"devicefile\":\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004\",\"devicelinks\":[\"/dev/disk/by-diskseq/4\",\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0004\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-5\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-5.0\"],\"model\":\"VMware Virtual SATA Hard Drive\",\"size\":\"8589934592\",\"temperature\":\"\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0004\",\"wwn\":\"EXAMPLE-WWN-0004\",\"overallstatus\":\"BAD_STATUS\",\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"monitor\":false,\"_used\":false},{\"devicename\":\"sdd\",\"canonicaldevicefile\":\"/dev/sdd\",\"devicefile\":\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005\",\"devicelinks\":[\"/dev/disk/by-diskseq/5\",\"/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0005\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-6\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-6.0\"],\"model\":\"VMware Virtual SATA Hard Drive\",\"size\":\"8589934592\",\"temperature\":\"\",\"description\":\"VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0005\",\"wwn\":\"EXAMPLE-WWN-0005\",\"overallstatus\":\"BAD_STATUS\",\"uuid\":\"fa4b1c66-ef79-11e5-87a0-0002b3a176b4\",\"monitor\":false,\"_used\":false}]}",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.smartManyBadSectorsFinished": {
+        "summary": "Written by hand from the smartDevicesFinished capture (OMV 8.6.1): the last poll of a disk health task in which a monitored hard disk reports many bad sectors (BAD_SECTOR_MANY). The test VM has only virtual disks, which cannot fail. Its temperature is a whole number, the other form the server sends.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusc32432tu5o6meLM1Slh",
+          "pos": 1402,
+          "output": "{\"total\":2,\"data\":[{\"devicename\":\"nvme0n1\",\"canonicaldevicefile\":\"/dev/nvme0n1\",\"devicefile\":\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"devicelinks\":[\"/dev/disk/by-diskseq/1\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1\",\"/dev/disk/by-id/nvme-EXAMPLE-WWN-0001\",\"/dev/disk/by-path/pci-0000:12:00.0-nvme-1\"],\"model\":\"VMware Virtual NVMe Disk\",\"size\":\"21474836480\",\"temperature\":\"30\",\"description\":\"VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]\",\"vendor\":\"0x15ad\",\"serialnumber\":\"EXAMPLE-SERIAL-0001\",\"wwn\":\"EXAMPLE-WWN-0001\",\"overallstatus\":\"GOOD\",\"uuid\":\"00000000-0000-4000-8000-000000000021\",\"monitor\":true,\"_used\":false},{\"devicename\":\"sda\",\"canonicaldevicefile\":\"/dev/sda\",\"devicefile\":\"/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0002\",\"devicelinks\":[\"/dev/disk/by-diskseq/2\",\"/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0002\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0002\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3.0\"],\"model\":\"Example HDD 4TB\",\"size\":\"4000787030016\",\"temperature\":41,\"description\":\"Example HDD 4TB [/dev/sda, 3.64 TiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0002\",\"wwn\":\"EXAMPLE-WWN-0002\",\"overallstatus\":\"BAD_SECTOR_MANY\",\"uuid\":\"00000000-0000-4000-8000-000000000022\",\"monitor\":true,\"_used\":false}]}",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.smartStatusUnknownFinished": {
+        "summary": "Written by hand from the smartDevicesFinished capture (OMV 8.6.1): the last poll of a disk health task in which a monitored hard disk could not be read (BAD_STATUS, no temperature), as the server reports a disk whose smartctl read failed.",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusc32432tu5o6meLM1Slh",
+          "pos": 1397,
+          "output": "{\"total\":2,\"data\":[{\"devicename\":\"nvme0n1\",\"canonicaldevicefile\":\"/dev/nvme0n1\",\"devicefile\":\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"devicelinks\":[\"/dev/disk/by-diskseq/1\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001\",\"/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1\",\"/dev/disk/by-id/nvme-EXAMPLE-WWN-0001\",\"/dev/disk/by-path/pci-0000:12:00.0-nvme-1\"],\"model\":\"VMware Virtual NVMe Disk\",\"size\":\"21474836480\",\"temperature\":\"30\",\"description\":\"VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]\",\"vendor\":\"0x15ad\",\"serialnumber\":\"EXAMPLE-SERIAL-0001\",\"wwn\":\"EXAMPLE-WWN-0001\",\"overallstatus\":\"GOOD\",\"uuid\":\"00000000-0000-4000-8000-000000000021\",\"monitor\":true,\"_used\":false},{\"devicename\":\"sda\",\"canonicaldevicefile\":\"/dev/sda\",\"devicefile\":\"/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0002\",\"devicelinks\":[\"/dev/disk/by-diskseq/2\",\"/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0002\",\"/dev/disk/by-id/wwn-EXAMPLE-WWN-0002\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3\",\"/dev/disk/by-path/pci-0000:01:02.0-ata-3.0\"],\"model\":\"Example HDD 4TB\",\"size\":\"4000787030016\",\"temperature\":\"\",\"description\":\"Example HDD 4TB [/dev/sda, 3.64 TiB]\",\"vendor\":\"ATA\",\"serialnumber\":\"EXAMPLE-SERIAL-0002\",\"wwn\":\"EXAMPLE-WWN-0002\",\"overallstatus\":\"BAD_STATUS\",\"uuid\":\"00000000-0000-4000-8000-000000000022\",\"monitor\":true,\"_used\":false}]}",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
       "execGetOutput.applyFailed": {
         "summary": "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only.",
         "x-omv-status": 500,
@@ -2395,6 +2812,202 @@
           "username": "example-smtp-user",
           "password": "EXAMPLE-PASSWORD"
         }
+      },
+      "fileSystemMgmtEnumerateMountedFilesystems.withRoot": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "2.03 MiB",
+            "available": "8330313728",
+            "size": "8349229056",
+            "percentage": 1,
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 0
+          },
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/gpt-auto-root"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "20431752",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "1.70 GiB",
+            "available": "18185621504",
+            "size": "20922114048",
+            "percentage": 10,
+            "description": "/dev/nvme0n1p1 [EXT4, 1.70 GiB (10%) used, 16.93 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 85
+          }
+        ]
+      },
+      "fileSystemMgmtEnumerateMountedFilesystems.nearlyFull": {
+        "summary": "Written by hand from the withRoot capture (OMV 8.6.1): the data file system is 91% full, past its warning threshold of 85%. The root file system is as captured.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "7.05 GiB",
+            "available": "751430615",
+            "size": "8349229056",
+            "percentage": 91,
+            "description": "/dev/sda1 [EXT4, 7.05 GiB (91%) used, 716.62 MiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 85
+          },
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/gpt-auto-root"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "20431752",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "1.70 GiB",
+            "available": "18185621504",
+            "size": "20922114048",
+            "percentage": 10,
+            "description": "/dev/nvme0n1p1 [EXT4, 1.70 GiB (10%) used, 16.93 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false,
+            "usagewarnthreshold": 85
+          }
+        ]
+      },
+      "fileSystemMgmtEnumerateMountedFilesystems.empty": {
+        "summary": "Written by hand: no data file system is mounted and the root file system was not asked for (a fresh install, or every data disk missing). The reply is an empty list.",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "smartGetListBg.smartDevices": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusc32432tu5o6meLM1Slh"
       }
     }
   }

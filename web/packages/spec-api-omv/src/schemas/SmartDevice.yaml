@@ -1,0 +1,76 @@
+type: object
+description: A disk that supports S.M.A.R.T., with its health as smartctl last reported it.
+required:
+  [
+    devicename,
+    canonicaldevicefile,
+    devicefile,
+    devicelinks,
+    model,
+    size,
+    temperature,
+    description,
+    vendor,
+    serialnumber,
+    wwn,
+    overallstatus,
+    uuid,
+    monitor,
+    _used,
+  ]
+properties:
+  devicename:
+    type: string
+    description: The kernel's name for the disk, such as "sda".
+  canonicaldevicefile:
+    type: string
+    description: The device file under /dev, such as "/dev/sda".
+  devicefile:
+    type: string
+    description: The disk's /dev/disk/by-id/ link.
+  devicelinks:
+    type: array
+    items:
+      type: string
+  model:
+    type: string
+  size:
+    type: string
+    x-omv-int64: true
+    description: Bytes.
+  temperature:
+    description: >-
+      Degrees Celsius: a whole number, or the same number as text (observed for an NVMe disk on
+      OMV 8.6.1). The empty string when the disk reports none or could not be read.
+    oneOf:
+      - type: integer
+      - type: string
+  description:
+    type: string
+    description: Display text, such as "VMware Virtual NVMe Disk [/dev/nvme0n1, 20.00 GiB]".
+  vendor:
+    type: string
+  serialnumber:
+    type: string
+  wwn:
+    type: string
+    description: The disk's World Wide Name; the empty string when it has none.
+  overallstatus:
+    type: string
+    description: >-
+      The disk's health: GOOD; BAD_ATTRIBUTE_IN_THE_PAST (was used outside its design limits);
+      BAD_SECTOR (a few bad sectors); BAD_ATTRIBUTE_NOW (used outside its design limits now);
+      BAD_SECTOR_MANY (many bad sectors); BAD_STATUS (unknown: smartctl could not read the disk's
+      health, as for disks that do not report it, such as some virtual disks). Open to other
+      values, so a later OMV's value is shown as unknown rather than refused.
+  uuid:
+    type: string
+    description: >-
+      The disk's monitoring settings object, or OMV's placeholder for an object not yet saved
+      (fa4b1c66-ef79-11e5-87a0-0002b3a176b4) when monitoring was never set up for it.
+  monitor:
+    type: boolean
+    description: Whether S.M.A.R.T. monitoring is turned on for this disk.
+  _used:
+    type: boolean
+    description: Whether a scheduled S.M.A.R.T. test refers to this disk.

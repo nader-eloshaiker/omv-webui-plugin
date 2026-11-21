@@ -1,0 +1,6 @@
+type: array
+description: >-
+  Every mounted file system, in no particular order. A plain list: not paged, and without the
+  {total, data} wrapper of the list methods.
+items:
+  $ref: ./MountedFilesystem.yaml

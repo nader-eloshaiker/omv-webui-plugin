@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smartGetListBg
+  tags:
+    - Smart
+  summary: Read disk health
+  description: >-
+    Read the S.M.A.R.T. health of every disk that supports it, as a background task. The task's
+    result is the list of disks. It changes no setting, but it runs smartctl on every disk without
+    sparing sleeping ones, so it can wake them: the interface starts it only when the user asks
+    for it. The parameters are checked inside the task, so a wrong one makes the task fail.
+  x-omv-rpc:
+    service: Smart
+    method: getListBg
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task:
+    result: SmartDeviceList
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            smartDevices:
+              $ref: ../../examples/smartGetListBg.smartDevices.yaml

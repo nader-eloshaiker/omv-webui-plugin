@@ -1,0 +1,86 @@
+summary: "Written by hand from the withRoot capture (OMV 8.6.1): the data file system is 91% full, past its warning threshold of 85%. The root file system is as captured."
+x-omv-status: 200
+value:
+  - devicename: sda1
+    devicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    predictabledevicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    canonicaldevicefile: /dev/sda1
+    parentdevicefile: /dev/sda
+    devlinks:
+      - /dev/disk/by-diskseq/2-part1
+      - /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1
+      - /dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1
+      - /dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001"
+      - "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1"
+      - /dev/disk/by-uuid/00000000-0000-4000-8000-000000000001
+    uuid: "00000000-0000-4000-8000-000000000001"
+    label: ""
+    type: ext4
+    blocks: "8153544"
+    mounted: true
+    mountpoint: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001
+    used: "7.05 GiB"
+    available: "751430615"
+    size: "8349229056"
+    percentage: 91
+    description: "/dev/sda1 [EXT4, 7.05 GiB (91%) used, 716.62 MiB available]"
+    propposixacl: true
+    propquota: true
+    propresize: true
+    propfstab: true
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: false
+    devicefiles:
+      - /dev/sda1
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+    usagewarnthreshold: 85
+  - devicename: nvme0n1p1
+    devicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+    predictabledevicefile: /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+    canonicaldevicefile: /dev/nvme0n1p1
+    parentdevicefile: /dev/nvme0n1
+    devlinks:
+      - /dev/disk/by-diskseq/1-part1
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1
+      - /dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1
+      - /dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1
+      - /dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1"
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004"
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003"
+      - "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1"
+      - /dev/disk/by-uuid/00000000-0000-4000-8000-000000000003
+      - /dev/gpt-auto-root
+    uuid: "00000000-0000-4000-8000-000000000003"
+    label: ""
+    type: ext4
+    blocks: "20431752"
+    mounted: true
+    mountpoint: /
+    used: "1.70 GiB"
+    available: "18185621504"
+    size: "20922114048"
+    percentage: 10
+    description: "/dev/nvme0n1p1 [EXT4, 1.70 GiB (10%) used, 16.93 GiB available]"
+    propposixacl: true
+    propquota: true
+    propresize: true
+    propfstab: true
+    propcompress: false
+    propautodefrag: false
+    hasmultipledevices: false
+    devicefiles:
+      - /dev/nvme0n1p1
+    comment: ""
+    _readonly: false
+    _used: false
+    propreadonly: false
+    usagewarnthreshold: 85
