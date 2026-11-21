@@ -81,6 +81,8 @@ paths:
     $ref: ./operations/FileSystemMgmt/enumerateMountedFilesystems.yaml
   /rpc/FileSystemMgmt/getList:
     $ref: ./operations/FileSystemMgmt/getList.yaml
+  /rpc/FileSystemMgmt/enumerateFilesystems:
+    $ref: ./operations/FileSystemMgmt/enumerateFilesystems.yaml
   /rpc/Smart/getListBg:
     $ref: ./operations/Smart/getListBg.yaml
   /rpc/Services/getStatus:

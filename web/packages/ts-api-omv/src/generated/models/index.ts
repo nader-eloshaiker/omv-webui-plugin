@@ -12,6 +12,8 @@ export * from './configRevertChangesRequestFilename.ts';
 export * from './configuredFilesystem.ts';
 export * from './configuredFilesystemList.ts';
 export * from './configuredFilesystemStatus.ts';
+export * from './detectedFilesystem.ts';
+export * from './detectedFilesystemList.ts';
 export * from './deviceFile.ts';
 export * from './deviceFileRequest.ts';
 export * from './diskDevice.ts';

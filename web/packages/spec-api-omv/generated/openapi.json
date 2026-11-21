@@ -1168,6 +1168,40 @@
         }
       }
     },
+    "/rpc/FileSystemMgmt/enumerateFilesystems": {
+      "post": {
+        "operationId": "fileSystemMgmtEnumerateFilesystems",
+        "tags": ["FileSystemMgmt"],
+        "summary": "Detected file systems",
+        "description": "Every file system the system detects, whether or not OMV has set it up, as a plain list: the system's own root and boot file systems, swap space (type \"swap\") and file systems from another computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this method itself and adds OMV's mount entries to its result, so reading it touches the disks no more than getList does. The server measures each mounted file system as it answers. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "FileSystemMgmt",
+          "method": "enumerateFilesystems"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectedFilesystemList"
+                },
+                "examples": {
+                  "vmFilesystems": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.vmFilesystems"
+                  },
+                  "swapAndForeign": {
+                    "$ref": "#/components/examples/fileSystemMgmtEnumerateFilesystems.swapAndForeign"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rpc/Smart/getListBg": {
       "post": {
         "operationId": "smartGetListBg",
@@ -3790,6 +3824,159 @@
           }
         }
       },
+      "DetectedFilesystem": {
+        "type": "object",
+        "description": "A file system the system detects on a disk, partition or other block device, whether or not OMV has set it up: the system's own root and boot file systems, swap space, and file systems from another computer included. A file system that is not mounted has no usage: its sizes are \"-1\" and its percentage -1.",
+        "required": [
+          "devicename",
+          "devicefile",
+          "predictabledevicefile",
+          "canonicaldevicefile",
+          "parentdevicefile",
+          "devlinks",
+          "uuid",
+          "label",
+          "type",
+          "blocks",
+          "mounted",
+          "mountpoint",
+          "used",
+          "available",
+          "size",
+          "percentage",
+          "description",
+          "hasmultipledevices",
+          "devicefiles",
+          "comment",
+          "_readonly",
+          "_used"
+        ],
+        "properties": {
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the partition or device, such as \"sda1\"."
+          },
+          "devicefile": {
+            "type": "string",
+            "description": "The device file OMV prefers, usually a /dev/disk/by-uuid/ link."
+          },
+          "predictabledevicefile": {
+            "type": "string"
+          },
+          "canonicaldevicefile": {
+            "type": "string",
+            "description": "The device file under /dev, such as \"/dev/sda1\"."
+          },
+          "parentdevicefile": {
+            "type": "string",
+            "description": "The device the file system is on, under /dev: the disk of a partition (\"/dev/sda\" for \"/dev/sda1\"), or the device itself when it has no partitions."
+          },
+          "devlinks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uuid": {
+            "type": "string",
+            "description": "The file system's own identifier: a UUID for most types, a short volume ID for FAT (\"ABCD-1234\" form), a date-like value for an optical disc."
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "The file system type as blkid reports it, such as \"ext4\", \"btrfs\", \"vfat\", \"iso9660\", or \"swap\" for swap space."
+          },
+          "mounted": {
+            "type": "boolean",
+            "description": "Whether it is mounted now. Swap space in use is never reported as mounted."
+          },
+          "mountpoint": {
+            "type": "string",
+            "description": "Where it is mounted, such as \"/\" or \"/boot/efi\"; empty when it is not mounted."
+          },
+          "blocks": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Size in 1 KiB blocks. \"-1\" when not mounted."
+          },
+          "size": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes. \"-1\" when not mounted."
+          },
+          "available": {
+            "type": "string",
+            "x-omv-int64": true,
+            "description": "Bytes free. \"-1\" when not mounted."
+          },
+          "used": {
+            "type": "string",
+            "description": "Display text, such as \"12.34 GiB\". \"-1\" when not mounted."
+          },
+          "percentage": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 100,
+            "description": "Percent used. -1 when not mounted."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, such as \"/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]\"."
+          },
+          "propposixacl": {
+            "type": "boolean"
+          },
+          "propquota": {
+            "type": "boolean"
+          },
+          "propresize": {
+            "type": "boolean"
+          },
+          "propfstab": {
+            "type": "boolean"
+          },
+          "propreadonly": {
+            "type": "boolean"
+          },
+          "propcompress": {
+            "type": "boolean"
+          },
+          "propautodefrag": {
+            "type": "boolean"
+          },
+          "hasmultipledevices": {
+            "type": "boolean",
+            "description": "Whether it spans several devices (btrfs across disks, for one)."
+          },
+          "devicefiles": {
+            "type": "array",
+            "description": "Every device the file system is on, under /dev, such as [\"/dev/sda1\"].",
+            "items": {
+              "type": "string"
+            }
+          },
+          "comment": {
+            "type": "string"
+          },
+          "_readonly": {
+            "type": "boolean",
+            "description": "True for the file system the system runs from."
+          },
+          "_used": {
+            "type": "boolean",
+            "description": "Whether OMV has set it up and something (a shared folder, for one) refers to it; always true for the file system the system runs from."
+          }
+        }
+      },
+      "DetectedFilesystemList": {
+        "type": "array",
+        "description": "Every file system the system detects, in no particular order.",
+        "items": {
+          "$ref": "#/components/schemas/DetectedFilesystem"
+        }
+      },
       "ServiceStatus": {
         "type": "object",
         "description": "One service whose state OMV reports. Plugins add their own services to the list.",
@@ -6318,6 +6505,286 @@
             }
           ]
         }
+      },
+      "fileSystemMgmtEnumerateFilesystems.vmFilesystems": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed: the data file system OMV set up, the system's root (read-only, used), its EFI partition and the cloud-init CD. The VM has no swap.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "sda1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001",
+            "canonicaldevicefile": "/dev/sda1",
+            "parentdevicefile": "/dev/sda",
+            "devlinks": [
+              "/dev/disk/by-diskseq/2-part1",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0002-part1",
+              "/dev/disk/by-id/wwn-EXAMPLE-WWN-0002-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3-part1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-partuuid/00000000-0000-4000-8000-000000000002",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part/by-uuid/00000000-0000-4000-8000-000000000001",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-3.0-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000001"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "label": "",
+            "type": "ext4",
+            "blocks": "8153544",
+            "mounted": true,
+            "mountpoint": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001",
+            "used": "2.03 MiB",
+            "available": "8330313728",
+            "size": "8349229056",
+            "percentage": 1,
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sda1"],
+            "comment": "",
+            "_readonly": false,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part1",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part1",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part1",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/1",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000004",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000003",
+              "/dev/gpt-auto-root"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "label": "",
+            "type": "ext4",
+            "blocks": "20431752",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "1.71 GiB",
+            "available": "18183507968",
+            "size": "20922114048",
+            "percentage": 10,
+            "description": "/dev/nvme0n1p1 [EXT4, 1.71 GiB (10%) used, 16.93 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "_readonly": true,
+            "_used": true,
+            "propreadonly": false
+          },
+          {
+            "devicename": "sr0",
+            "devicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "predictabledevicefile": "/dev/disk/by-uuid/2026-11-19-05-53-43-00",
+            "canonicaldevicefile": "/dev/sr0",
+            "parentdevicefile": "/dev/sr0",
+            "devlinks": [
+              "/dev/cdrom",
+              "/dev/disk/by-diskseq/7",
+              "/dev/disk/by-id/ata-VMware_Virtual_SATA_CDRW_Drive_EXAMPLE-SERIAL-0006",
+              "/dev/disk/by-label/cidata",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2",
+              "/dev/disk/by-path/pci-0000:01:02.0-ata-2.0",
+              "/dev/disk/by-uuid/2026-11-19-05-53-43-00"
+            ],
+            "uuid": "2026-11-19-05-53-43-00",
+            "label": "cidata",
+            "type": "iso9660",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sr0 [ISO9660, 900.00 KiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/sr0"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": true
+          },
+          {
+            "devicename": "nvme0n1p15",
+            "devicefile": "/dev/disk/by-uuid/0000-0001",
+            "predictabledevicefile": "/dev/disk/by-uuid/0000-0001",
+            "canonicaldevicefile": "/dev/nvme0n1p15",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-diskseq/1-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001-part15",
+              "/dev/disk/by-id/nvme-VMware_Virtual_NVMe_Disk_EXAMPLE-SERIAL-0001_1-part15",
+              "/dev/disk/by-id/nvme-EXAMPLE-WWN-0001-part15",
+              "/dev/disk/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partnum/15",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-partuuid/00000000-0000-4000-8000-000000000005",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part/by-uuid/0000-0001",
+              "/dev/disk/by-path/pci-0000:12:00.0-nvme-1-part15",
+              "/dev/disk/by-uuid/0000-0001"
+            ],
+            "uuid": "0000-0001",
+            "label": "",
+            "type": "vfat",
+            "blocks": "129758",
+            "mounted": true,
+            "mountpoint": "/boot/efi",
+            "used": "9.33 MiB",
+            "available": "123086848",
+            "size": "132872192",
+            "percentage": 8,
+            "description": "/dev/nvme0n1p15 [VFAT, 9.33 MiB (8%) used, 117.38 MiB available]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "hasmultipledevices": false,
+            "devicefiles": ["/dev/nvme0n1p15"],
+            "comment": "",
+            "_readonly": false,
+            "_used": false,
+            "propreadonly": false
+          }
+        ]
+      },
+      "fileSystemMgmtEnumerateFilesystems.swapAndForeign": {
+        "summary": "Written by hand from the vmFilesystems capture and the source (OMV 8.6.1): the system's root, a swap partition on a data disk (swap is never reported as mounted, and has no usage) and an ext4 file system from another computer on a disk OMV has not set up (label \"backup\", not mounted). The test VM has no swap and no such disk.",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "devicename": "nvme0n1p1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301",
+            "canonicaldevicefile": "/dev/nvme0n1p1",
+            "parentdevicefile": "/dev/nvme0n1",
+            "devlinks": [
+              "/dev/disk/by-id/nvme-Example_SSD_500GB_EXAMPLE-SERIAL-0100-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000301"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000301",
+            "devicefiles": ["/dev/nvme0n1p1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "",
+            "type": "ext4",
+            "blocks": "479597568",
+            "mounted": true,
+            "mountpoint": "/",
+            "used": "6.12 GiB",
+            "available": "459203465216",
+            "size": "491107909632",
+            "percentage": 2,
+            "description": "/dev/nvme0n1p1 [EXT4, 6.12 GiB (2%) used, 427.66 GiB available]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": true,
+            "_used": true
+          },
+          {
+            "devicename": "sdb1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302",
+            "canonicaldevicefile": "/dev/sdb1",
+            "parentdevicefile": "/dev/sdb",
+            "devlinks": [
+              "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0102-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000302"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000302",
+            "devicefiles": ["/dev/sdb1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "",
+            "type": "swap",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sdb1 [SWAP, 8.00 GiB]",
+            "propposixacl": false,
+            "propquota": false,
+            "propresize": false,
+            "propfstab": false,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": false,
+            "_used": false
+          },
+          {
+            "devicename": "sdc1",
+            "devicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303",
+            "predictabledevicefile": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303",
+            "canonicaldevicefile": "/dev/sdc1",
+            "parentdevicefile": "/dev/sdc",
+            "devlinks": [
+              "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0103-part1",
+              "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000303"
+            ],
+            "uuid": "00000000-0000-4000-8000-000000000303",
+            "devicefiles": ["/dev/sdc1"],
+            "comment": "",
+            "hasmultipledevices": false,
+            "label": "backup",
+            "type": "ext4",
+            "blocks": "-1",
+            "mounted": false,
+            "mountpoint": "",
+            "used": "-1",
+            "available": "-1",
+            "size": "-1",
+            "percentage": -1,
+            "description": "/dev/sdc1 [EXT4, 3.64 TiB]",
+            "propposixacl": true,
+            "propquota": true,
+            "propresize": true,
+            "propfstab": true,
+            "propcompress": false,
+            "propautodefrag": false,
+            "propreadonly": false,
+            "_readonly": false,
+            "_used": false
+          }
+        ]
       },
       "smartGetListBg.smartDevices": {
         "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",

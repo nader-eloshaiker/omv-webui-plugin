@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: fileSystemMgmtEnumerateFilesystems
+  tags:
+    - FileSystemMgmt
+  summary: Detected file systems
+  description: >-
+    Every file system the system detects, whether or not OMV has set it up, as a plain list: the
+    system's own root and boot file systems, swap space (type "swap") and file systems from another
+    computer included, which FileSystemMgmt.getList leaves out. FileSystemMgmt.getList calls this
+    method itself and adds OMV's mount entries to its result, so reading it touches the disks no more
+    than getList does. The server measures each mounted file system as it answers. Changes nothing.
+  x-omv-rpc:
+    service: FileSystemMgmt
+    method: enumerateFilesystems
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/DetectedFilesystemList.yaml
+          examples:
+            vmFilesystems:
+              $ref: ../../examples/fileSystemMgmtEnumerateFilesystems.vmFilesystems.yaml
+            swapAndForeign:
+              $ref: ../../examples/fileSystemMgmtEnumerateFilesystems.swapAndForeign.yaml

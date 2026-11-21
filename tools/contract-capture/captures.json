@@ -775,5 +775,11 @@
     "name": "notInstalled",
     "account": "admin",
     "comment": "The test VM has no RAID plugin: OMV answers an unknown service."
+  },
+  {
+    "service": "FileSystemMgmt",
+    "method": "enumerateFilesystems",
+    "name": "vmFilesystems",
+    "account": "admin"
   }
 ]
