@@ -230,4 +230,22 @@ describe("creating an array", () => {
     expect(failure).toHaveTextContent("Device or resource busy");
     expect(calls("MdMgmt.create")).toHaveLength(1);
   });
+
+  it("quick-wipes a new array that shows an earlier array's file system, then goes on", async () => {
+    const { user } = await create("raidLeftoverFs");
+    await user.click(await disk("/dev/sdb"));
+    await user.click(await disk("/dev/sdc"));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Type /dev/sdb /dev/sdc to confirm." }),
+      "/dev/sdb /dev/sdc",
+    );
+    await user.click(screen.getByRole("button", { name: "Erase 2 disks and create array" }));
+    expect(await screen.findByText("The RAID array is ready.", {}, { timeout: 40000 })).toBeVisible();
+    expect(calls("DiskMgmt.wipe")[0]?.params).toEqual({
+      devicefile: "/dev/md0",
+      secure: false,
+    });
+    expect(calls("FileSystemMgmt.create")).toHaveLength(1);
+  }, 60000);
 });

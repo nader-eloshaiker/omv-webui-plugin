@@ -40,6 +40,7 @@ import {
 import {
   addDecision,
   arrayState,
+  isOnArray,
   levelKey,
   readReport,
   sameArray,
@@ -586,33 +587,57 @@ async function stepFsCandidate(ctx: Context): Promise<boolean> {
     return false;
   }
   mark(ctx, "fsCandidate", { status: "running" });
-  try {
-    // A new array is a candidate within moments of its creation, once the system has seen the new
-    // device (observed: at once on one run, a moment later on another). This is a read, so it is
-    // looked at again a few times before the step stops; no change is ever repeated (UI-14).
-    let listed = false;
-    for (
-      let attempt = 0;
-      attempt < FS_CANDIDATE_TRIES && !listed;
-      attempt += 1
-    ) {
+  // A new array is a candidate within moments of its creation, once the system has seen the new
+  // device (observed). This is a read, so it is looked at again a few times; no change is repeated.
+  const listed = async () => {
+    for (let attempt = 0; attempt < FS_CANDIDATE_TRIES; attempt += 1) {
       if (attempt > 0) {
         await new Promise((resolve) =>
           setTimeout(resolve, FS_CANDIDATE_WAIT_MS),
         );
       }
       const list = await fsCandidates(ctx);
-      listed = list.some((c) => c.devicefile === array.devicefile);
+      if (list.some((c) => c.devicefile === array.devicefile)) {
+        return true;
+      }
     }
-    if (!listed) {
-      fail(ctx, "fsCandidate", { kind: "fsCandidate", error: undefined });
-      return false;
+    return false;
+  };
+  try {
+    if (!(await listed())) {
+      // Deleting an array erases only its marks (7), so a new array on the same disks can show the
+      // old array's file system again (observed on the VM), and the system then does not offer it.
+      // Those disks' contents are what the reader confirmed erasing: the new array is quick-wiped,
+      // as a disk under Erase and reuse is, and looked for again.
+      const detected = await ctx.fs.detected();
+      const leftover = detected.some((fs) => isOnArray(fs, array.devicefile));
+      if (!leftover) {
+        fail(ctx, "fsCandidate", { kind: "fsCandidate", error: undefined });
+        return false;
+      }
+      const taskId = await startWipe({
+        devicefile: array.devicefile,
+        device: array.devicefile,
+        serial: "",
+        secure: false,
+        label: ctx.labels.erase(array.devicefile),
+        begin: ctx.fs.wipe(array.devicefile),
+      });
+      mark(ctx, "fsCandidate", { status: "running", taskId });
+      const task = await waitFor(taskId);
+      if (task?.state !== "done" || !(await listed())) {
+        fail(ctx, "fsCandidate", { kind: "fsCandidate", error: task?.error });
+        return false;
+      }
     }
   } catch (error) {
     fail(ctx, "fsCandidate", { kind: "fsCandidate", error });
     return false;
   }
-  mark(ctx, "fsCandidate", { status: "succeeded" });
+  mark(ctx, "fsCandidate", {
+    ...(current(ctx)?.state.fsCandidate ?? {}),
+    status: "succeeded",
+  });
   return true;
 }
 

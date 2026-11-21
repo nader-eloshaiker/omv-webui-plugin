@@ -46,6 +46,7 @@ export const RAID_SCENARIOS = [
   "raidNoPlugin",
   "raidReadFails",
   "raidCreateFails",
+  "raidLeftoverFs",
 ] as const;
 export type RaidScenarioName = (typeof RAID_SCENARIOS)[number];
 
@@ -72,6 +73,8 @@ export const RAID_SCENARIO_LABELS: Record<RaidScenarioName, string> = {
   raidNoPlugin: "RAID: the plugin is not installed (404)",
   raidReadFails: "RAID: reading the arrays fails (hand-written)",
   raidCreateFails: "RAID: creating the array fails (hand-written)",
+  raidLeftoverFs:
+    "RAID: a new array shows an earlier array's file system (seen on the VM, written by hand)",
 };
 
 export const isRaidScenario = (name: string): name is RaidScenarioName =>

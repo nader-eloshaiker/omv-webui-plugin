@@ -774,6 +774,14 @@ export function fsAnswers(
       dirty: hooks.dirty,
       offerForFs: (devicefile, size, on) => {
         state.free = state.free.filter((c) => c.devicefile !== devicefile);
+        if (on && name === "raidLeftoverFs") {
+          // The disks held an earlier array with a file system at the same place (observed on the
+          // VM): the new array shows it, and is not offered until it is wiped.
+          state.detected.push(
+            detectedOn(devicefile, 94, { label: "earlier", mounted: false }),
+          );
+          return;
+        }
         if (on) {
           state.free.push({
             devicefile,
