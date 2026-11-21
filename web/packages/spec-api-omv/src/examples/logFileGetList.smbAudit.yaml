@@ -1,0 +1,31 @@
+summary: "Written by hand from the source's smbdaudit columns (OMV 8.6.1): two lines of the SMB/CIFS audit log, a file opened and one deleted. The test VM has no audited share. Documentation names and addresses only."
+x-omv-status: 200
+value:
+  total: 2
+  data:
+    - rownum: 1
+      ts: 1795231920
+      date: "Sat Nov 21 03:32:00 2026"
+      hostname: nas
+      username: example-user
+      clientipaddr: "192.0.2.10"
+      clientnetbiosname: EXAMPLE-PC
+      servicerootdir: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001/media
+      servicename: media
+      operation: unlinkat
+      result: ok
+      filepath: photos/old.jpg
+      filename: old.jpg
+    - rownum: 0
+      ts: 1795231800
+      date: "Sat Nov 21 03:30:00 2026"
+      hostname: nas
+      username: example-user
+      clientipaddr: "192.0.2.10"
+      clientnetbiosname: EXAMPLE-PC
+      servicerootdir: /srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000001/media
+      servicename: media
+      operation: openat
+      result: ok
+      filepath: photos/holiday.jpg
+      filename: holiday.jpg

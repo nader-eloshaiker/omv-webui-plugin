@@ -1,0 +1,90 @@
+type: object
+description: >-
+  A snapshot of top (top -b -n 1), parsed by jc. Every value is text, as top prints it. The memory
+  and swap figures are in top's unit, MiB unless top is set otherwise. The server takes about a
+  second to answer.
+required:
+  [
+    time,
+    uptime,
+    load_1m,
+    load_5m,
+    load_15m,
+    tasks_total,
+    tasks_running,
+    tasks_sleeping,
+    tasks_stopped,
+    tasks_zombie,
+    mem_total,
+    mem_free,
+    mem_used,
+    mem_buff_cache,
+    mem_available,
+    swap_total,
+    swap_free,
+    swap_used,
+    processes,
+  ]
+properties:
+  time:
+    type: string
+    description: Display text, the server's local time, such as "03:27:44".
+  uptime:
+    type: string
+    description: Display text, such as "1 day, 20:48".
+  users:
+    type: string
+  load_1m:
+    type: string
+  load_5m:
+    type: string
+  load_15m:
+    type: string
+  tasks_total:
+    type: string
+  tasks_running:
+    type: string
+  tasks_sleeping:
+    type: string
+  tasks_stopped:
+    type: string
+  tasks_zombie:
+    type: string
+  cpu_user:
+    type: string
+    description: Percent of CPU time, such as "4.8"; the other cpu_ fields likewise.
+  cpu_sys:
+    type: string
+  cpu_nice:
+    type: string
+  cpu_idle:
+    type: string
+  cpu_wait:
+    type: string
+  cpu_hardware:
+    type: string
+  cpu_software:
+    type: string
+  cpu_steal:
+    type: string
+  mem_total:
+    type: string
+    description: Such as "3914.0", in top's unit (MiB).
+  mem_free:
+    type: string
+  mem_used:
+    type: string
+  mem_buff_cache:
+    type: string
+  mem_available:
+    type: string
+  swap_total:
+    type: string
+  swap_free:
+    type: string
+  swap_used:
+    type: string
+  processes:
+    type: array
+    items:
+      $ref: ./TopProcess.yaml

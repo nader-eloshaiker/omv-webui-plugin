@@ -1,0 +1,11 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 1303
+  data:
+    - rownum: 1302
+      message: "Log ended: 2026-11-20  21:55:01"
+    - rownum: 1301
+      message: "Updating workbench configuration files ...\r"
+    - rownum: 1300
+      message: "Processing triggers for openmediavault (8.6.1-1) ...\r"

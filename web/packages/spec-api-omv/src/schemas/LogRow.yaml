@@ -1,0 +1,51 @@
+type: object
+description: >-
+  One line of a log, parsed. Every row has `rownum`; the other columns depend on the log. Journal
+  logs (syslog, auth, daemon, boot, ...) have ts, date, hostname and message; some file logs only
+  message; the SMB/CIFS audit log (smbdaudit) has its own columns, listed here. Plugins' logs may
+  have others.
+required: [rownum]
+additionalProperties: true
+properties:
+  rownum:
+    type: integer
+    description: The line's place in the part of the log read, from 0.
+  ts:
+    type: integer
+    nullable: true
+    description: Unix time of the line, in seconds; null when the server could not read its time.
+  date:
+    type: string
+    description: Display text, the line's time in the server's locale. Not for parsing.
+  hostname:
+    type: string
+  message:
+    type: string
+    description: The line's text. Shown as text.
+  username:
+    type: string
+    description: smbdaudit only. The user who did it.
+  clientipaddr:
+    type: string
+    description: smbdaudit only. The client's address.
+  clientnetbiosname:
+    type: string
+    description: smbdaudit only. The client's NetBIOS name.
+  servicerootdir:
+    type: string
+    description: smbdaudit only. The shared folder's path on the server.
+  servicename:
+    type: string
+    description: smbdaudit only. The share's name.
+  operation:
+    type: string
+    description: smbdaudit only. What was done, such as "openat", "unlinkat" or "renameat".
+  result:
+    type: string
+    description: smbdaudit only. "ok", or "fail" with the reason.
+  filepath:
+    type: string
+    description: smbdaudit only. The file's path, as Samba logged it.
+  filename:
+    type: string
+    description: smbdaudit only. The last part of filepath.

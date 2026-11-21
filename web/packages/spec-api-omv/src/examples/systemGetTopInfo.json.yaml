@@ -1,0 +1,127 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed; processes shortened to its first 8 of 174"
+x-omv-status: 200
+value:
+  time: "03:27:44"
+  uptime: "1 day, 20:48"
+  users: "0"
+  load_1m: "0.43"
+  load_5m: "0.10"
+  load_15m: "0.03"
+  tasks_total: "174"
+  tasks_running: "1"
+  tasks_sleeping: "173"
+  tasks_stopped: "0"
+  tasks_zombie: "0"
+  cpu_user: "4.8"
+  cpu_sys: "0.0"
+  cpu_nice: "0.0"
+  cpu_idle: "95.2"
+  cpu_wait: "0.0"
+  cpu_hardware: "0.0"
+  cpu_software: "0.0"
+  cpu_steal: "0.0"
+  mem_total: "3914.0"
+  mem_free: "2865.1"
+  mem_used: "382.6"
+  mem_buff_cache: "833.6"
+  swap_total: "0.0"
+  swap_free: "0.0"
+  swap_used: "0.0"
+  mem_available: "3531.3"
+  processes:
+    - PID: "1"
+      USER: root
+      PR: "20"
+      NI: "0"
+      VIRT: "26001408"
+      RES: "15642624"
+      SHR: "10387456"
+      S: S
+      "%CPU": "0.0"
+      "%MEM": "0.4"
+      "TIME+": "1:06.40"
+      COMMAND: systemd
+    - PID: "2"
+      USER: root
+      PR: "20"
+      NI: "0"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: S
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.25"
+      COMMAND: kthreadd
+    - PID: "3"
+      USER: root
+      PR: "20"
+      NI: "0"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: S
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: pool_workqueue_release
+    - PID: "4"
+      USER: root
+      PR: "0"
+      NI: "-20"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: I
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: kworker/R-kvfree_rcu_reclaim
+    - PID: "5"
+      USER: root
+      PR: "0"
+      NI: "-20"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: I
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: kworker/R-rcu_gp
+    - PID: "6"
+      USER: root
+      PR: "0"
+      NI: "-20"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: I
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: kworker/R-sync_wq
+    - PID: "7"
+      USER: root
+      PR: "0"
+      NI: "-20"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: I
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: kworker/R-slub_flushwq
+    - PID: "8"
+      USER: root
+      PR: "0"
+      NI: "-20"
+      VIRT: "0"
+      RES: "0"
+      SHR: "0"
+      S: I
+      "%CPU": "0.0"
+      "%MEM": "0.0"
+      "TIME+": "0:00.00"
+      COMMAND: kworker/R-netns

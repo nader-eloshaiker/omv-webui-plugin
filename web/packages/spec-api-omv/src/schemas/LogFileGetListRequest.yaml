@@ -1,0 +1,31 @@
+type: object
+description: >-
+  Which log to read, and a page of it (rpc.logfile.getlist). The server re-reads and parses the
+  whole log, up to its last 100000 lines, on every call, whatever page is asked for. `search` is
+  not in OMV's datamodel, but the method reads it: a case-insensitive search over every column.
+required: [start, limit, id]
+properties:
+  start:
+    type: integer
+    minimum: 0
+  limit:
+    type: integer
+    nullable: true
+    minimum: 0
+    description: The number of rows; null returns every row.
+  sortfield:
+    type: string
+    nullable: true
+  sortdir:
+    type: string
+    nullable: true
+    enum: [asc, desc]
+  id:
+    type: string
+    minLength: 1
+    description: >-
+      The log, such as syslog, auth, boot, daemon, messages, dmesg, rsync, rsyncd, smartd,
+      apt_term or smbdaudit. Plugins add more. An unknown id fails.
+  search:
+    type: string
+    nullable: true

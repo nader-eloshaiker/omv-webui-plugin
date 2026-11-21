@@ -2,6 +2,7 @@ export * from "./config/config.ts";
 export * from "./email-notification/email-notification.ts";
 export * from "./exec/exec.ts";
 export * from "./file-system-mgmt/file-system-mgmt.ts";
+export * from "./log-file/log-file.ts";
 export * from "./network/network.ts";
 export * from "./nfs/nfs.ts";
 export * from "./services/services.ts";

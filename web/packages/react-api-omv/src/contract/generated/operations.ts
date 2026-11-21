@@ -324,6 +324,28 @@ export const OPERATIONS = {
       $ref: "NetworkDeviceList",
     },
   },
+  "/rpc/LogFile/getList": {
+    operationId: "logFileGetList",
+    service: "LogFile",
+    method: "getList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "LogRowList",
+    },
+  },
+  "/rpc/System/getTopInfo": {
+    operationId: "systemGetTopInfo",
+    service: "System",
+    method: "getTopInfo",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "TopInfo",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -422,6 +444,71 @@ export const SCHEMAS: SchemaTable = {
       },
       running: {
         type: "boolean",
+      },
+    },
+  },
+  LogRow: {
+    type: "object",
+    required: ["rownum"],
+    properties: {
+      rownum: {
+        type: "integer",
+      },
+      ts: {
+        type: "integer",
+        nullable: true,
+      },
+      date: {
+        type: "string",
+      },
+      hostname: {
+        type: "string",
+      },
+      message: {
+        type: "string",
+      },
+      username: {
+        type: "string",
+      },
+      clientipaddr: {
+        type: "string",
+      },
+      clientnetbiosname: {
+        type: "string",
+      },
+      servicerootdir: {
+        type: "string",
+      },
+      servicename: {
+        type: "string",
+      },
+      operation: {
+        type: "string",
+      },
+      result: {
+        type: "string",
+      },
+      filepath: {
+        type: "string",
+      },
+      filename: {
+        type: "string",
+      },
+    },
+    additionalProperties: true,
+  },
+  LogRowList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "LogRow",
+        },
       },
     },
   },
@@ -1226,6 +1313,177 @@ export const SCHEMAS: SchemaTable = {
         type: "string",
       },
       ntpclients: {
+        type: "string",
+      },
+    },
+  },
+  TopInfo: {
+    type: "object",
+    required: [
+      "time",
+      "uptime",
+      "load_1m",
+      "load_5m",
+      "load_15m",
+      "tasks_total",
+      "tasks_running",
+      "tasks_sleeping",
+      "tasks_stopped",
+      "tasks_zombie",
+      "mem_total",
+      "mem_free",
+      "mem_used",
+      "mem_buff_cache",
+      "mem_available",
+      "swap_total",
+      "swap_free",
+      "swap_used",
+      "processes",
+    ],
+    properties: {
+      time: {
+        type: "string",
+      },
+      uptime: {
+        type: "string",
+      },
+      users: {
+        type: "string",
+      },
+      load_1m: {
+        type: "string",
+      },
+      load_5m: {
+        type: "string",
+      },
+      load_15m: {
+        type: "string",
+      },
+      tasks_total: {
+        type: "string",
+      },
+      tasks_running: {
+        type: "string",
+      },
+      tasks_sleeping: {
+        type: "string",
+      },
+      tasks_stopped: {
+        type: "string",
+      },
+      tasks_zombie: {
+        type: "string",
+      },
+      cpu_user: {
+        type: "string",
+      },
+      cpu_sys: {
+        type: "string",
+      },
+      cpu_nice: {
+        type: "string",
+      },
+      cpu_idle: {
+        type: "string",
+      },
+      cpu_wait: {
+        type: "string",
+      },
+      cpu_hardware: {
+        type: "string",
+      },
+      cpu_software: {
+        type: "string",
+      },
+      cpu_steal: {
+        type: "string",
+      },
+      mem_total: {
+        type: "string",
+      },
+      mem_free: {
+        type: "string",
+      },
+      mem_used: {
+        type: "string",
+      },
+      mem_buff_cache: {
+        type: "string",
+      },
+      mem_available: {
+        type: "string",
+      },
+      swap_total: {
+        type: "string",
+      },
+      swap_free: {
+        type: "string",
+      },
+      swap_used: {
+        type: "string",
+      },
+      processes: {
+        type: "array",
+        items: {
+          $ref: "TopProcess",
+        },
+      },
+    },
+  },
+  TopProcess: {
+    type: "object",
+    required: [
+      "PID",
+      "USER",
+      "PR",
+      "NI",
+      "VIRT",
+      "RES",
+      "SHR",
+      "S",
+      "%CPU",
+      "%MEM",
+      "TIME+",
+      "COMMAND",
+    ],
+    properties: {
+      PID: {
+        type: "string",
+      },
+      USER: {
+        type: "string",
+      },
+      PR: {
+        type: "string",
+      },
+      NI: {
+        type: "string",
+      },
+      VIRT: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      RES: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      SHR: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      S: {
+        type: "string",
+      },
+      "%CPU": {
+        type: "string",
+      },
+      "%MEM": {
+        type: "string",
+      },
+      "TIME+": {
+        type: "string",
+      },
+      COMMAND: {
         type: "string",
       },
     },

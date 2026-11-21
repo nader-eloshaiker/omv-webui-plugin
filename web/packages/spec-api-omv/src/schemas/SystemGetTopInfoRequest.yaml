@@ -1,0 +1,9 @@
+type: object
+description: >-
+  The reply's form (rpc.system.gettopinfo). OMV also offers "text", top's output as one string;
+  the contract asks only for "json", the parsed form.
+required: [format]
+properties:
+  format:
+    type: string
+    enum: [json]

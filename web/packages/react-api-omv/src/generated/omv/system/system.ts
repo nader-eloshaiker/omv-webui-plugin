@@ -4,8 +4,10 @@
  */
 import type {
   RpcErrorDetail,
+  SystemGetTopInfoRequest,
   SystemInformation,
   TimeSettings,
+  TopInfo,
 } from "@omv-webui/ts-api-omv";
 
 import type {
@@ -21,7 +23,7 @@ import type {
 } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 
-import type { ErrorType } from "../../../transport/rpcClient.ts";
+import type { BodyType, ErrorType } from "../../../transport/rpcClient.ts";
 import { rpcClient } from "../../../transport/rpcClient.ts";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -369,6 +371,193 @@ export function useSystemGetTimeSettings<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getSystemGetTimeSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.
+ * @summary Processes
+ */
+export const systemGetTopInfo = (
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TopInfo>(
+    {
+      url: `/rpc/System/getTopInfo`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: systemGetTopInfoRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getSystemGetTopInfoQueryKey = (
+  systemGetTopInfoRequest?: BodyType<SystemGetTopInfoRequest>,
+) => {
+  return ["POST", `/rpc/System/getTopInfo`, systemGetTopInfoRequest] as const;
+};
+
+export const getSystemGetTopInfoQueryOptions = <
+  TData = Awaited<ReturnType<typeof systemGetTopInfo>>,
+  TError = ErrorType<unknown>,
+>(
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof systemGetTopInfo>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getSystemGetTopInfoQueryKey(systemGetTopInfoRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof systemGetTopInfo>>
+  > = ({ signal }) =>
+    systemGetTopInfo(systemGetTopInfoRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof systemGetTopInfo>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SystemGetTopInfoQueryResult = NonNullable<
+  Awaited<ReturnType<typeof systemGetTopInfo>>
+>;
+export type SystemGetTopInfoQueryError = ErrorType<unknown>;
+
+/**
+ * The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.
+ * @summary Processes
+ */
+export function useSystemGetTopInfo<
+  TData = Awaited<ReturnType<typeof systemGetTopInfo>>,
+  TError = ErrorType<unknown>,
+>(
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof systemGetTopInfo>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof systemGetTopInfo>>,
+          TError,
+          Awaited<ReturnType<typeof systemGetTopInfo>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.
+ * @summary Processes
+ */
+export function useSystemGetTopInfo<
+  TData = Awaited<ReturnType<typeof systemGetTopInfo>>,
+  TError = ErrorType<unknown>,
+>(
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof systemGetTopInfo>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof systemGetTopInfo>>,
+          TError,
+          Awaited<ReturnType<typeof systemGetTopInfo>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.
+ * @summary Processes
+ */
+export function useSystemGetTopInfo<
+  TData = Awaited<ReturnType<typeof systemGetTopInfo>>,
+  TError = ErrorType<unknown>,
+>(
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof systemGetTopInfo>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The system's load, memory and processes, as top reports them at one moment. The server runs top for about a second for each call.
+ * @summary Processes
+ */
+export function useSystemGetTopInfo<
+  TData = Awaited<ReturnType<typeof systemGetTopInfo>>,
+  TError = ErrorType<unknown>,
+>(
+  systemGetTopInfoRequest: BodyType<SystemGetTopInfoRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof systemGetTopInfo>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getSystemGetTopInfoQueryOptions(
+    systemGetTopInfoRequest,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
