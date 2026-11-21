@@ -268,6 +268,50 @@ export const OPERATIONS = {
       $ref: "TaskHandle",
     },
   },
+  "/rpc/Services/getStatus": {
+    operationId: "servicesGetStatus",
+    service: "Services",
+    method: "getStatus",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ServiceStatusList",
+    },
+  },
+  "/rpc/SMB/getStats": {
+    operationId: "smbGetStats",
+    service: "SMB",
+    method: "getStats",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ServiceStatsText",
+    },
+  },
+  "/rpc/NFS/getStats": {
+    operationId: "nfsGetStats",
+    service: "NFS",
+    method: "getStats",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ServiceStatsText",
+    },
+  },
+  "/rpc/SSH/getStats": {
+    operationId: "sshGetStats",
+    service: "SSH",
+    method: "getStats",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ServiceStatsText",
+    },
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -517,6 +561,42 @@ export const SCHEMAS: SchemaTable = {
   Role: {
     type: "string",
     enum: ["admin", "user"],
+  },
+  ServiceStatsText: {
+    type: "string",
+  },
+  ServiceStatus: {
+    type: "object",
+    required: ["name", "title", "enabled", "running"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      title: {
+        type: "string",
+      },
+      enabled: {
+        type: "boolean",
+      },
+      running: {
+        type: "boolean",
+      },
+    },
+  },
+  ServiceStatusList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "ServiceStatus",
+        },
+      },
+    },
   },
   SessionAuthenticated: {
     type: "object",

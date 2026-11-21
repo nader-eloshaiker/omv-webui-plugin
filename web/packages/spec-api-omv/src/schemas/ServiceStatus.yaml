@@ -1,0 +1,16 @@
+type: object
+description: One service whose state OMV reports. Plugins add their own services to the list.
+required: [name, title, enabled, running]
+properties:
+  name:
+    type: string
+    description: The OMV module's name, such as "samba" or "ssh".
+  title:
+    type: string
+    description: Display text, translated by the server, such as "SMB/CIFS".
+  enabled:
+    type: boolean
+    description: Whether the service is turned on in OMV's settings.
+  running:
+    type: boolean
+    description: Whether systemd reports the service active now.

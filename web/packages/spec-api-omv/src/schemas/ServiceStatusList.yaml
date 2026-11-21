@@ -1,0 +1,10 @@
+type: object
+description: Every service whose state OMV reports, in no particular order. Not paged.
+required: [total, data]
+properties:
+  total:
+    type: integer
+  data:
+    type: array
+    items:
+      $ref: ./ServiceStatus.yaml

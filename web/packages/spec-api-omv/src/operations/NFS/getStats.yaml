@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsGetStats
+  tags:
+    - NFS
+  summary: NFS service details
+  description: >-
+    The NFS shares exported now and their options (exportfs). The reply is the commands' text as
+    they print it. It fails while the service's settings have changes not yet applied, because the
+    text would describe the old settings.
+  x-omv-rpc:
+    service: NFS
+    method: getStats
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ServiceStatsText.yaml
+          examples:
+            disabled:
+              $ref: ../../examples/nfsGetStats.disabled.yaml
+
+    "500":
+      description: >-
+        The nfs module has configuration changes that are not applied yet
+        (ConfigDirtyException): "Please apply the configuration changes first."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            pendingChanges:
+              $ref: ../../examples/nfsGetStats.pendingChanges.yaml

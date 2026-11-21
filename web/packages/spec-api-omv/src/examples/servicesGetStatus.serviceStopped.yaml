@@ -1,0 +1,21 @@
+summary: "Written by hand from the sshOnly capture (OMV 8.6.1): SMB/CIFS is turned on and running, and SSH is turned on but not running (it stopped or failed to start). The test VM's services all run when turned on."
+x-omv-status: 200
+value:
+  total: 4
+  data:
+    - name: nfs
+      title: NFS
+      enabled: false
+      running: false
+    - name: rsyncd
+      title: RSync server
+      enabled: false
+      running: false
+    - name: samba
+      title: SMB/CIFS
+      enabled: true
+      running: true
+    - name: ssh
+      title: SSH
+      enabled: true
+      running: false

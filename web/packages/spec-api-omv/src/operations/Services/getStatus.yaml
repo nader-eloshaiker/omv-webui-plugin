@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: servicesGetStatus
+  tags:
+    - Services
+  summary: Service status
+  description: >-
+    Whether each service is turned on and whether it is running. The server asks systemd about each
+    service as it answers.
+  x-omv-rpc:
+    service: Services
+    method: getStatus
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ServiceStatusList.yaml
+          examples:
+            sshOnly:
+              $ref: ../../examples/servicesGetStatus.sshOnly.yaml
+            serviceStopped:
+              $ref: ../../examples/servicesGetStatus.serviceStopped.yaml

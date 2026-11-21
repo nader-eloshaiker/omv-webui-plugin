@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: sshGetStats
+  tags:
+    - SSH
+  summary: SSH service details
+  description: >-
+    Who is signed in and which SSH connections are open (who and lsof). The reply is the commands'
+    text as they print it. It fails while the service's settings have changes not yet applied,
+    because the text would describe the old settings.
+  x-omv-rpc:
+    service: SSH
+    method: getStats
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ServiceStatsText.yaml
+          examples:
+            noConnections:
+              $ref: ../../examples/sshGetStats.noConnections.yaml
+            connected:
+              $ref: ../../examples/sshGetStats.connected.yaml
+    "500":
+      description: >-
+        The ssh module has configuration changes that are not applied yet
+        (ConfigDirtyException): "Please apply the configuration changes first."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            pendingChanges:
+              $ref: ../../examples/sshGetStats.pendingChanges.yaml

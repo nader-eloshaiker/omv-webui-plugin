@@ -402,9 +402,29 @@
     "account": "admin"
   },
   {
+    "service": "NFS",
+    "method": "getStats",
+    "name": "pendingChanges",
+    "account": "admin",
+    "setup": {
+      "call": "NFS.setSettings",
+      "paramsFrom": "NFS.getSettings"
+    }
+  },
+  {
     "service": "SSH",
     "method": "getStats",
     "name": "noConnections",
     "account": "admin"
+  },
+  {
+    "service": "SSH",
+    "method": "getStats",
+    "name": "pendingChanges",
+    "account": "admin",
+    "setup": {
+      "call": "SSH.set",
+      "paramsFrom": "SSH.get"
+    }
   }
 ]
