@@ -45,7 +45,7 @@ function OtherNames({ fs }: { fs: ConfiguredFilesystem }) {
       </DisclosureTrigger>
       <DisclosurePanel>
         <FactList>
-          {fs.uuid === "" ? null : (
+          {fs.uuid === null || fs.uuid === "" ? null : (
             <FactListItem>
               <FactListLabel>{t("filesystem.names.uuid")}</FactListLabel>
               <FactListValue variant="identifier">{fs.uuid}</FactListValue>

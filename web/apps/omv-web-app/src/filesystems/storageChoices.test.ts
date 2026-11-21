@@ -111,6 +111,32 @@ describe("storageChoices (6.3)", () => {
     ]);
   });
 
+  it("never offers a ZFS pool's disks, even when the server offers them (ZFS design 10.4)", () => {
+    // The captured lists with the mirror tank on sdb and sdc; the server's list here still has both.
+    const result = storageChoices(
+      inputs({
+        configured: CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value
+          .data as unknown as ConfiguredFilesystem[],
+        detected: CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.zfs
+          .value as unknown as DetectedFilesystem[],
+      }),
+      noMarks,
+    );
+    if (result.state !== "known") {
+      throw new Error(result.state);
+    }
+    expect(result.empty.map((c) => c.disk.devicename)).toEqual(["sdd"]);
+    expect(result.reuse).toEqual([]);
+    for (const name of ["sdb", "sdc"]) {
+      const member = result.unusable.find(
+        (u) => u.kind === "disk" && u.disk.devicename === name,
+      );
+      expect(member?.kind === "disk" && member.blockers).toEqual([
+        { kind: "zfs", pool: "tank" },
+      ]);
+    }
+  });
+
   it("never offers the system disk, whatever the server says", () => {
     const result = storageChoices(
       inputs({

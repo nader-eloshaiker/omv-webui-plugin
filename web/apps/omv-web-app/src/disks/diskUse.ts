@@ -12,7 +12,7 @@ import type {
   DiskDevice,
   MdArray,
 } from "@omv-webui/react-api-omv/generated";
-import { fsAddress } from "../filesystems/fsModel.ts";
+import { fsAddress, isZfs, sameUuid, zfsPool } from "../filesystems/fsModel.ts";
 import { naturalCompare, parseByteCount } from "../format/format.ts";
 
 /** A file system as the "Used for" words and the wipe confirmation name it. */
@@ -43,6 +43,7 @@ export type DiskUse =
   | { kind: "fsUnused"; fs: FsRef }
   | { kind: "swap" }
   | { kind: "raid"; array: ArrayRef }
+  | { kind: "zfs"; pool: string }
   | { kind: "wiping" }
   | { kind: "wiped"; at: number }
   | { kind: "none" }
@@ -57,6 +58,7 @@ export type WipeBlocker =
   | { kind: "fsCreating" }
   | { kind: "swap" }
   | { kind: "raid"; array: ArrayRef }
+  | { kind: "zfs"; pool: string }
   | { kind: "wiping" }
   | { kind: "unchecked" };
 
@@ -80,7 +82,7 @@ export interface SessionMarks {
 export interface DiskUseResult {
   /** False when an input is missing: "Not known", and the wipe is refused (fail closed). */
   known: boolean;
-  /** The "Used for" lines, in reading order: system disk, file systems, RAID (1.3.1). */
+  /** The "Used for" lines, in reading order: system disk, file systems, RAID, ZFS (1.3.1). */
   uses: DiskUse[];
   /** Every reason the wipe is refused, in 3.1's order; empty when it may be wiped. */
   blockers: WipeBlocker[];
@@ -171,13 +173,39 @@ function isConfigured(
   fs: DetectedFilesystem,
   configured: readonly ConfiguredFilesystem[],
 ): boolean {
+  // A missing UUID (ZFS reports null) matches nothing: two rows without one are not the same.
   return configured.some(
     (c) =>
-      (c.uuid !== "" && c.uuid === fs.uuid) ||
+      sameUuid(c.uuid, fs.uuid) ||
       (c.canonicaldevicefile !== "" &&
         c.canonicaldevicefile === fs.canonicaldevicefile) ||
       (c.devicefile !== "" && c.devicefile === fs.devicefile),
   );
+}
+
+/**
+ * The ZFS pools a disk is part of (the ZFS design 10.2), from the ZFS file systems the lists report:
+ * each names its pool's disks in `devicefiles` and the first of them in `parentdevicefile`. Null when a
+ * ZFS row names no disk at all: then no disk can be said to be outside the pool (fail closed).
+ */
+function zfsPoolsOn(
+  rows: readonly FsRow[],
+  names: ReadonlySet<string>,
+): string[] | null {
+  const pools: string[] = [];
+  for (const fs of rows) {
+    const members = [fs.parentdevicefile, ...fs.devicefiles].filter(
+      (d) => d !== "",
+    );
+    if (members.length === 0) {
+      return null;
+    }
+    const pool = zfsPool(fs);
+    if (members.some((d) => belongsTo(d, names)) && !pools.includes(pool)) {
+      pools.push(pool);
+    }
+  }
+  return pools;
 }
 
 // ---- The rules ----------------------------------------------------------------------------------
@@ -198,21 +226,34 @@ export function diskUse(
     blockers.push({ kind: "readOnly" });
   }
 
-  const { configured, detected, arrays } = inputs;
-  if (
-    configured === undefined ||
-    detected === undefined ||
-    arrays === undefined
-  ) {
+  /** Nothing is known about what the disk holds, so the wipe is refused. */
+  const notKnown = (): DiskUseResult => {
     uses.push({ kind: "unknown" });
     if (marks.wiping) {
       blockers.push({ kind: "wiping" });
     }
     blockers.push({ kind: "unchecked" });
     return { known: false, uses, blockers, unused: [] };
+  };
+
+  const { configured, detected, arrays } = inputs;
+  if (
+    configured === undefined ||
+    detected === undefined ||
+    arrays === undefined
+  ) {
+    return notKnown();
   }
 
   const names = diskNames(disk);
+  // A ZFS file system is not a file system on this disk but part of a pool across disks: the disk is
+  // part of that pool, whatever is mounted (the ZFS design 10.2).
+  const zfsRows = [...configured, ...detected].filter(isZfs);
+  const pools = zfsPoolsOn(zfsRows, names);
+  if (pools === null) {
+    return notKnown();
+  }
+
   const inUse: DiskUse[] = [];
   const setUp: DiskUse[] = [];
   const creating: DiskUse[] = [];
@@ -223,6 +264,9 @@ export function diskUse(
   const seen = new Set<string>();
 
   for (const fs of configured) {
+    if (isZfs(fs)) {
+      continue;
+    }
     if (fs.status === 2) {
       if (fs.parentdevicefile !== "" && belongsTo(fs.parentdevicefile, names)) {
         if (creating.length === 0) {
@@ -252,6 +296,9 @@ export function diskUse(
     }
     if (fs.type === "swap") {
       swap = true;
+      continue;
+    }
+    if (isZfs(fs)) {
       continue;
     }
     const ref = fsRef(fs);
@@ -284,6 +331,9 @@ export function diskUse(
     uses.push({ kind: "swap" });
   }
   uses.push(...raid);
+  for (const pool of pools) {
+    uses.push({ kind: "zfs", pool });
+  }
 
   blockers.push(...blockInUse, ...blockSetUp);
   if (creating.length > 0) {
@@ -293,6 +343,9 @@ export function diskUse(
     blockers.push({ kind: "swap" });
   }
   blockers.push(...blockRaid);
+  for (const pool of pools) {
+    blockers.push({ kind: "zfs", pool });
+  }
 
   if (marks.wiping) {
     uses.push({ kind: "wiping" });

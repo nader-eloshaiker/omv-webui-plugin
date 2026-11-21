@@ -23,10 +23,42 @@ export const isFsAddress = (value: unknown): value is string =>
 
 const BY_UUID = "/dev/disk/by-uuid/";
 
+/**
+ * A row's own UUID, or "" when it has none. A ZFS file system reports `null` (the ZFS design 10.3): no
+ * UUID is no UUID everywhere, so it never matches another row and never forms an address.
+ */
+export const ownUuid = (row: { uuid: string | null }): string => row.uuid ?? "";
+
+/** Whether two UUIDs name the same file system: never when either is missing, else ignoring case. */
+export function sameUuid(a: string | null, b: string | null): boolean {
+  return (
+    a !== null &&
+    b !== null &&
+    a !== "" &&
+    b !== "" &&
+    a.toLowerCase() === b.toLowerCase()
+  );
+}
+
+/** The file-system type OMV's ZFS plugin reports for a pool's own folder and each of its datasets. */
+export const ZFS_TYPE = "zfs";
+
+export const isZfs = (row: { type: string }): boolean => row.type === ZFS_TYPE;
+
+/** The pool a ZFS file system belongs to: the first part of its full name ("tank/media" is in "tank"). */
+export function zfsPool(row: {
+  devicefile: string;
+  devicename?: string;
+}): string {
+  const name = row.devicefile !== "" ? row.devicefile : (row.devicename ?? "");
+  return name.split("/")[0] ?? "";
+}
+
 /** The UUID a row is recorded by: its own, or the one in a missing file system's stable path. */
 function recordedUuid(row: Pick<ConfiguredFilesystem, "uuid" | "devicefile">) {
-  if (row.uuid !== "") {
-    return row.uuid;
+  const own = ownUuid(row);
+  if (own !== "") {
+    return own;
   }
   return row.devicefile.startsWith(BY_UUID)
     ? row.devicefile.slice(BY_UUID.length)
@@ -35,15 +67,16 @@ function recordedUuid(row: Pick<ConfiguredFilesystem, "uuid" | "devicefile">) {
 
 /**
  * The address of a file system's page, or null when it has none: one being created, the system drive,
- * and a row with no UUID this page can use (0.5).
+ * a ZFS file system (managed with its pool, and FsTab knows none of them), and a row with no UUID this
+ * page can use (0.5).
  */
 export function fsAddress(
   row: Pick<
     ConfiguredFilesystem,
-    "status" | "uuid" | "devicefile" | "mountpoint"
+    "status" | "uuid" | "devicefile" | "mountpoint" | "type"
   >,
 ): string | null {
-  if (row.status === 2 || row.mountpoint === "/") {
+  if (row.status === 2 || row.mountpoint === "/" || isZfs(row)) {
     return null;
   }
   const id = recordedUuid(row);
@@ -53,11 +86,11 @@ export function fsAddress(
 /** The page of a file system another read names, when getList has it (design 9). */
 export function addressIn(
   configured: readonly ConfiguredFilesystem[],
-  fs: { uuid: string; devicefile: string },
+  fs: { uuid: string | null; devicefile: string },
 ): string | null {
   const row = configured.find(
     (r) =>
-      (fs.uuid !== "" && r.uuid.toLowerCase() === fs.uuid.toLowerCase()) ||
+      sameUuid(r.uuid, fs.uuid) ||
       (fs.devicefile !== "" && r.devicefile === fs.devicefile),
   );
   return row === undefined ? null : fsAddress(row);
@@ -71,12 +104,11 @@ export function findFsRow(
   rows: readonly ConfiguredFilesystem[],
   address: string,
 ): ConfiguredFilesystem | undefined {
-  const wanted = address.toLowerCase();
+  if (!isFsAddress(address)) {
+    return undefined;
+  }
   return rows.find(
-    (row) =>
-      row.status !== 2 &&
-      row.mountpoint !== "/" &&
-      recordedUuid(row).toLowerCase() === wanted,
+    (row) => fsAddress(row) !== null && sameUuid(recordedUuid(row), address),
   );
 }
 
@@ -93,6 +125,7 @@ export const FS_TYPE_KEYS = [
   "exfat",
   "ntfs",
   "iso9660",
+  "zfs",
 ] as const;
 export type FsTypeKey = (typeof FS_TYPE_KEYS)[number];
 

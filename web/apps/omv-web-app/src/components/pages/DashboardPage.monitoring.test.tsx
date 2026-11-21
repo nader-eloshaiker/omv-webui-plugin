@@ -56,6 +56,33 @@ describe("the Storage card", () => {
     ).toHaveAttribute("href", "/ui/storage/filesystems");
   });
 
+  it("shows ZFS file systems, which have no UUID, with their figures and no page of their own", async () => {
+    await dashboard({ scenario: "fsZfs" });
+    const storage = card("Storage");
+    const meters = await within(storage).findAllByRole("meter");
+    expect(meters).toHaveLength(4);
+    for (const name of ["tank", "tank/media"]) {
+      const meter = within(storage).getByRole("meter", { name });
+      expect(meter).toHaveAttribute(
+        "aria-valuetext",
+        `0% full · 7.3${NBSP}GiB free of 7.3${NBSP}GiB`,
+      );
+      // Its name is text: a ZFS file system has no page here.
+      const label = within(storage).getByText(name, {
+        selector: "*:not([role=meter])",
+      });
+      expect(label.closest("a")).toBeNull();
+    }
+    // The data file system beside them keeps its link.
+    expect(
+      within(storage)
+        .getAllByRole("link")
+        .some((a) =>
+          a.getAttribute("href")?.startsWith("/ui/storage/filesystems/0000"),
+        ),
+    ).toBe(true);
+  });
+
   it("rolls up a file system past its level and lists it in the attention list", async () => {
     await dashboard({ scenario: "storageWarning" });
     const storage = card("Storage");

@@ -24,7 +24,12 @@ import type { TaskStatus } from "@omv-webui/react-ui-components";
 import { diskSession } from "../disks/diskSession.ts";
 import { diskNames, type FsRef, type SessionMarks } from "../disks/diskUse.ts";
 import { startWipe } from "../disks/wipeTask.ts";
-import { MOUNT_MODULES, otherModules } from "../filesystems/fsModel.ts";
+import {
+  MOUNT_MODULES,
+  otherModules,
+  ownUuid,
+  sameUuid,
+} from "../filesystems/fsModel.ts";
 import { recordCreated, recordCreatedOn } from "../filesystems/fsSession.ts";
 import { startTask } from "../filesystems/fsTasks.ts";
 import { findOnArray } from "../filesystems/storageChoices.ts";
@@ -751,8 +756,9 @@ async function stepFsSetUp(ctx: Context): Promise<boolean> {
     fail(ctx, "fsSetUp", { kind: "fsSetUp", error });
     return false;
   }
-  if (run.found.uuid !== "") {
-    recordCreated(run.found.uuid);
+  const created = ownUuid(run.found);
+  if (created !== "") {
+    recordCreated(created);
   }
   mark(ctx, "fsSetUp", { status: "succeeded" });
   return true;
@@ -938,9 +944,7 @@ async function stepVerify(ctx: Context): Promise<boolean> {
       const configured = await ctx.fs.configured();
       const row = configured.find(
         (r) =>
-          (found.uuid !== "" &&
-            r.uuid.toLowerCase() === found.uuid.toLowerCase()) ||
-          r.devicefile === found.devicefile,
+          sameUuid(r.uuid, found.uuid) || r.devicefile === found.devicefile,
       );
       if (row?.status !== 1 || !row.mounted) {
         fail(ctx, "verify", { kind: "notVerified" });

@@ -614,3 +614,28 @@ On the VM, a new mirror made on two disks that had earlier held a mirror with a 
 The design's 3.3, 3.4, 3.7, section 19 and copy tables say so.
 
 After this change, with the round's other fixes (Stripe is not brought back by "Change choices", which now moves focus to the level; the roll-up's plural; the phone layout), the build was installed on the test VM. The RAID and file-systems VM specs, with `OMV_WEBUI_VM_RAID_DISKS=sdb,sdc,sdd,sde` and `OMV_WEBUI_VM_SCRATCH_DISK=sdd`, gave 8 passed over HTTP and 8 passed over HTTPS. Afterwards no array, no ARRAY line, only sda1 mounted, `wipefs -n` empty on sdb to sde, nothing pending.
+
+## 2026-11-22 — ZFS file systems have no UUID, and the storage pages fell over on them
+
+**Found on the test VM** (OMV 8.6.1, openmediavault-zfs 8.1.4, OpenZFS 2.4.4, a mirror `tank` on sdb and sdc with the file system `tank/media`). OMV's file-system lists report a pool's own folder and each of its file systems as type `zfs` with `uuid` `null`. Their `devicename`, `devicefile`, `predictabledevicefile`, `canonicaldevicefile` and `label` are all the full name, such as `tank/media`. The other fields:
+
+- `devicefiles` lists the pool's disks, and `parentdevicefile` is the first of them. `devlinks` is empty.
+- `mountopts` is `""`; `propfstab`, `propresize` and `propquota` are false; `hasmultipledevices` is true; `_used` is false.
+- `getMountCandidates` never lists them, and `FsTab.getByFsName` answers 400 for such a name.
+
+A pool made by hand is only in `enumerateFilesystems`. Once the plugin's Discover has added its mount entries, `getList` and `enumerateMountedFilesystems` list it too. The contract was made to accept `uuid: null` in the commit before this one. The app still read `uuid` as a string: the dashboard, the File systems pages, the grow, unmount, Flow A and RAID runs threw on a ZFS row. The disk-use model also took two rows without a UUID for the same file system.
+
+**Fixed:**
+
+- **A missing UUID is no UUID everywhere.** `ownUuid` and `sameUuid` in `fsModel.ts` are used wherever a UUID is read or compared. `null` never matches anything, not even another `null`, and never forms an address. `findFsRow` finds a row past ZFS rows listed before it.
+- **No page for a ZFS file system.** `fsAddress` gives none to a `zfs` row, even one with a UUID. On the File systems list, a ZFS row has its name, the word "ZFS" (`fsType.zfs`) and its usage. It says it is part of its pool and managed with the pool in the classic interface. It has no link and no action, and it never appears under "Found on the disks, not mounted". The dashboard's Storage card shows each one with its figures and no link.
+- **A disk in a ZFS pool is in use.** The disk-use model has a new use and wipe blocker, "Part of ZFS pool {{pool}}", taken from `devicefiles` and `parentdevicefile` of the ZFS rows in either list, whatever is mounted. Its pool's file systems are not shown as file systems on the disk. The wipe, Flow A, Combine disks and the RAID choices refuse such a disk. It fails closed: a ZFS row that names no disk makes every disk "Not known".
+- **The mock** has the scenario `fsZfs` from the captured rows.
+
+**Left for the ZFS slice** (`docs/design/phase-5-zfs.md` on branch `phase-5-zfs`, section 10): one Storage item per pool (D22); links to the pool's pages; the line on File systems for ZFS file systems OMV does not know yet; and reading the pools themselves (`getPoolStatus`, `getPoolDevices`) in the disk-use model.
+
+**On the test VM**, the build was installed as a package with the lifecycle test. With `OMV_WEBUI_VM_ZFS_POOL=tank`, the new VM spec `zfs.vm.spec.ts` passed against the pool made by hand, before Discover. After Discover and Apply, the whole VM suite ran over HTTP and over HTTPS, with the disk-using tests' variables unset. Both runs gave 23 passed, 7 skipped and 1 failed. Both ZFS tests passed: the dashboard, File systems and Disks pages showed the pool with no page error, and a member disk's wipe was refused, naming the pool.
+
+The one failure, both times, is the System logs test. On this VM `LogFile.getList` for the system log answers 500: PHP ran out of its 128 MB memory limit reading a journal of about 100,000 entries. That is not related to ZFS; how large a log the page can read is still to be decided.
+
+The pool was then destroyed and its mount entries removed (Discover with `deleteStale`, then Apply). The disks were wiped, and the file-systems and RAID specs were run with `OMV_WEBUI_VM_SCRATCH_DISK=sdd` and `OMV_WEBUI_VM_RAID_DISKS=sdb,sdc,sdd,sde`: 8 passed over HTTP and 8 passed over HTTPS. Afterwards there was no pool, `wipefs -n` was empty on sdb to sde, only sda1 had a mount entry, and nothing was pending.

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Why a disk cannot be wiped, in words (phase 5 disks design 3.1; owner, P1, P3, P5): each blocker on
 // its own line in the page's order, with what to do. The only links are to the pages where the reader
-// can remove what blocks the wipe (a file system's page, an array's page); none leads to a wipe that
-// skips these checks (P3).
+// can remove what blocks the wipe (a file system's page, an array's page, the classic ZFS pages); none
+// leads to a wipe that skips these checks (P3).
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
@@ -145,6 +145,19 @@ function Line({ blocker }: { blocker: WipeBlocker }) {
         </>
       );
     }
+    case "zfs":
+      // The pool is managed in the classic interface until the ZFS slice adds its page.
+      return (
+        <>
+          <p>{t("wipe.blocked.zfs", { pool: blocker.pool })}</p>
+          <p className="text-sm">
+            {t("wipe.blocked.zfsDo")}{" "}
+            <ExternalLink href={CLASSIC.zfs} newTabLabel={newTab}>
+              {t("wipe.zfsLink")}
+            </ExternalLink>
+          </p>
+        </>
+      );
     case "wiping":
       return <p>{t("wipe.blocked.wiping")}</p>;
     case "unchecked":

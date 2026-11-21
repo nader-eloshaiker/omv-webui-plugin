@@ -28,7 +28,7 @@ import {
   isBusy,
   startGrow,
 } from "../../filesystems/fsActions.ts";
-import { growBlockers } from "../../filesystems/fsModel.ts";
+import { growBlockers, sameUuid } from "../../filesystems/fsModel.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { useFsApi } from "../../hooks/useFsApi.ts";
 import { useMemoryStore } from "../../shell/memoryStore.ts";
@@ -79,9 +79,7 @@ export function GrowSection({
     let fresh: ConfiguredFilesystem | undefined;
     try {
       const rows = await api.configured();
-      fresh = rows.find(
-        (r) => r.uuid !== "" && r.uuid.toLowerCase() === fs.uuid.toLowerCase(),
-      );
+      fresh = rows.find((r) => sameUuid(r.uuid, fs.uuid));
     } catch {
       fresh = undefined;
     }

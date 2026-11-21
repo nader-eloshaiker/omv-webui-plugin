@@ -345,6 +345,46 @@ describe("Storage > File systems", () => {
     ).toBeVisible();
   });
 
+  it("lists ZFS file systems, which have no UUID, as managed with their pool and with no page (ZFS 10.3)", async () => {
+    // The captured mirror tank; mount candidates here also list its file systems, which OMV's never
+    // do, so leaving them out is this page's own rule.
+    const zfs = CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.zfs.value;
+    await list({
+      scenario: "fsZfs",
+      answers: {
+        fileSystemMgmtGetMountCandidates: {
+          status: 200,
+          value: zfs.filter((fs) => fs.type === "zfs"),
+        },
+      },
+    });
+    for (const name of ["tank", "tank/media"]) {
+      const row = await rowOf(name);
+      expect(row).toHaveTextContent("ZFS");
+      expect(row).toHaveTextContent(
+        "Part of the ZFS pool tank. It is managed with the pool in the classic interface, not here.",
+      );
+      expect(row).not.toHaveTextContent(/no ID this page can use/);
+      expect(within(row).getByRole("meter")).toHaveAccessibleName(name);
+      // No page, so no grow, unmount or remove; and nothing on the row itself.
+      expect(
+        within(row).queryByRole("link", { name: /^Open file system/ }),
+      ).toBeNull();
+      expect(within(row).queryByRole("button")).toBeNull();
+    }
+    // The file system beside them keeps its page.
+    expect(
+      within(table()).getByRole("link", {
+        name: "Open file system EXT4 on /dev/sda1",
+      }),
+    ).toHaveAttribute("href", `/ui/storage/filesystems/${SDA1.uuid}`);
+    // Never under "Found on the disks, not mounted", and never offered for mounting.
+    for (const node of screen.getAllByText("tank/media")) {
+      expect(table().contains(node)).toBe(true);
+    }
+    expect(screen.queryByRole("button", { name: /^Mount tank/ })).toBeNull();
+  });
+
   it("says when it cannot look for unmounted file systems, and keeps the main table", async () => {
     await list({ scenario: "fsFoundFail" });
     expect(

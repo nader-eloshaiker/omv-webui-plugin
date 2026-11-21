@@ -914,6 +914,7 @@
       "fsOnDevice": "{{type}} on <device></device>",
       "swap": "Swap space",
       "raid": "Part of RAID <array></array>",
+      "zfs": "Part of ZFS pool {{pool}}",
       "wiping": "Being wiped",
       "wiped": "Empty (wiped at {{time}})",
       "none": "No file system found",
@@ -1164,11 +1165,14 @@
       "swap": "It holds swap space, disk space the NAS can use as extra memory.",
       "raid": "It is part of the RAID array <array></array>. Wiping it would damage the array.",
       "raidDo": "Take it out of the array, or delete the array, on the array's page first.",
+      "zfs": "It is part of the ZFS pool {{pool}}. Wiping it would damage the pool.",
+      "zfsDo": "Take it out of the pool, or delete the pool, in the classic interface first.",
       "wiping": "It is being wiped now.",
       "unchecked": "Could not check what this disk holds, so it cannot be wiped now."
     },
     "fsLink": "File systems in the classic interface",
     "raidLink": "Open RAID {{array}}",
+    "zfsLink": "ZFS in the classic interface",
     "checking": "Checking what is on this disk…",
     "refusedTitle": "This disk cannot be wiped now",
     "changedTitle": "This disk changed",
@@ -1598,6 +1602,7 @@
     "usedByNote": "Used by: whether shared folders or other settings use the file system. Its page says which.",
     "showProgress": "Show progress",
     "noId": "This file system has no ID this page can use. Manage it in the classic interface.",
+    "zfsLine": "Part of the ZFS pool {{pool}}. It is managed with the pool in the classic interface, not here.",
     "system": {
       "name": "System drive",
       "line": "Where openmediavault is installed. It is managed by the system, not here."
@@ -1715,7 +1720,8 @@
     "vfat": "FAT",
     "exfat": "exFAT",
     "ntfs": "NTFS",
-    "iso9660": "CD or DVD"
+    "iso9660": "CD or DVD",
+    "zfs": "ZFS"
   },
   "fsName": {
     "onDevice": "{{type}} on <device></device>"

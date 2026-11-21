@@ -19,6 +19,7 @@ import type {
   MdArray,
 } from "@omv-webui/react-api-omv/generated";
 import { partitionParent } from "../disks/diskUse.ts";
+import { sameUuid } from "../filesystems/fsModel.ts";
 
 // ---- Addresses (0.6) ------------------------------------------------------------------------------
 
@@ -616,7 +617,7 @@ export function arrayUsedBy(
       isOnArray(fs, row.devicefile) &&
       !set.some(
         (c) =>
-          (c.uuid !== "" && c.uuid === fs.uuid) ||
+          sameUuid(c.uuid, fs.uuid) ||
           (c.canonicaldevicefile !== "" &&
             c.canonicaldevicefile === fs.canonicaldevicefile),
       ),

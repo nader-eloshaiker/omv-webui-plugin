@@ -25,7 +25,7 @@ import type { FsRef, SessionMarks, WipeBlocker } from "../disks/diskUse.ts";
 import { startWipe } from "../disks/wipeTask.ts";
 import type { FsApi } from "../hooks/useFsApi.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
-import { MOUNT_MODULES, otherModules } from "./fsModel.ts";
+import { MOUNT_MODULES, otherModules, ownUuid, sameUuid } from "./fsModel.ts";
 import { recordCreated, recordCreatedOn } from "./fsSession.ts";
 import { startTask } from "./fsTasks.ts";
 import {
@@ -508,8 +508,9 @@ async function stepSetUp(ctx: Context): Promise<boolean> {
     fail(ctx, "setUp", { kind: "setUp", error });
     return false;
   }
-  if (run.found.uuid !== "") {
-    recordCreated(run.found.uuid);
+  const created = ownUuid(run.found);
+  if (created !== "") {
+    recordCreated(created);
   }
   mark(ctx, "setUp", { status: "succeeded" });
   return true;
@@ -525,9 +526,7 @@ async function newRow(ctx: Context): Promise<ConfiguredFilesystem | undefined> {
   const rows = await ctx.api.configured();
   return rows.find(
     (row) =>
-      (found.uuid !== "" &&
-        row.uuid.toLowerCase() === found.uuid.toLowerCase()) ||
-      row.devicefile === found.devicefile,
+      sameUuid(row.uuid, found.uuid) || row.devicefile === found.devicefile,
   );
 }
 

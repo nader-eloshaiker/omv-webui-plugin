@@ -117,6 +117,17 @@ describe("the wipe section", () => {
       "It holds swap space, disk space the NAS can use as extra memory.",
     ],
     ["disksSwap", "sdc", "A file system is being created on it now."],
+    // The captured ZFS mirror: both its disks, though nothing of the pool is a file system on them.
+    [
+      "fsZfs",
+      "sdb",
+      "It is part of the ZFS pool tank. Wiping it would damage the pool.",
+    ],
+    [
+      "fsZfs",
+      "sdc",
+      "It is part of the ZFS pool tank. Wiping it would damage the pool.",
+    ],
     [
       "disksSwap",
       "sda",
@@ -137,10 +148,10 @@ describe("the wipe section", () => {
       expect(screen.queryByRole("alertdialog")).toBeNull();
       // No way round a refusal (P3): the only links lead where the blocker can be removed.
       // The file system's own page carries the unmount or removal, and the array's page taking a
-      // disk out or deleting the array, each with its own refusals.
+      // disk out or deleting the array, each with its own refusals; a pool's in the classic pages.
       for (const link of within(section).queryAllByRole("link")) {
         expect(link.getAttribute("href")).toMatch(
-          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/ui\/storage\/filesystems\/[0-9a-f-]+|\/ui\/storage\/md\/md[0-9]+)$/,
+          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/#\/storage\/zfs\/pools|\/ui\/storage\/filesystems\/[0-9a-f-]+|\/ui\/storage\/md\/md[0-9]+)$/,
         );
       }
       expect(wipeCalls()).toHaveLength(0);

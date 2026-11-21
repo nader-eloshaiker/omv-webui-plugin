@@ -9,7 +9,7 @@ import type { TaskStatus } from "@omv-webui/react-ui-components";
 import { parseByteCount } from "../format/format.ts";
 import type { FsApi } from "../hooks/useFsApi.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
-import { otherModules, UNMOUNT_MODULES } from "./fsModel.ts";
+import { otherModules, ownUuid, sameUuid, UNMOUNT_MODULES } from "./fsModel.ts";
 import { isCut, startTask } from "./fsTasks.ts";
 
 export type GrowPhase =
@@ -94,7 +94,9 @@ export function startGrow(
   /** The page's address, which the action is kept by. */
   address: string,
 ): boolean {
-  if (isBusy(actionOf(address))) {
+  // Grow names the file system by its own UUID: a row without one is never grown (a ZFS file system).
+  const id = ownUuid(row);
+  if (id === "" || isBusy(actionOf(address))) {
     return false;
   }
   const before = parseByteCount(row.size);
@@ -104,14 +106,14 @@ export function startGrow(
     change<GrowRun>(uuid, (a) => ({ ...a, phase }));
   void (async () => {
     try {
-      await api.grow(row.uuid);
+      await api.grow(id);
     } catch (error) {
       end(isCut(error) ? { kind: "unknown" } : { kind: "failed", error });
       return;
     }
     try {
       const rows = await api.configured();
-      const fresh = rows.find((r) => key(r.uuid) === key(row.uuid));
+      const fresh = rows.find((r) => sameUuid(r.uuid, id));
       const size = parseByteCount(fresh?.size);
       end(
         size !== null && before !== null && size > before
@@ -150,7 +152,12 @@ export function startUnmount(
   if (isBusy(actionOf(uuid))) {
     return false;
   }
-  contexts.set(key(uuid), { api, labels, dir: row.mountpoint, uuid: row.uuid });
+  contexts.set(key(uuid), {
+    api,
+    labels,
+    dir: row.mountpoint,
+    uuid: ownUuid(row),
+  });
   put(uuid, {
     kind,
     uuid,
@@ -250,7 +257,7 @@ async function runVerify(uuid: string): Promise<void> {
     ]);
     const still = rows.some(
       (r) =>
-        (ctx.uuid !== "" && key(r.uuid) === key(ctx.uuid)) ||
+        sameUuid(r.uuid, ctx.uuid) ||
         (r.mountpoint !== "" && r.mountpoint === ctx.dir),
     );
     if (still) {

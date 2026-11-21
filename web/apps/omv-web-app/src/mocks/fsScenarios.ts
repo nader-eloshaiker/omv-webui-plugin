@@ -50,6 +50,7 @@ export const FS_SCENARIOS = [
   "fsDetailsLong",
   "fsDetailsFail",
   "fsSmbOn",
+  "fsZfs",
 ] as const;
 export type FsScenarioName = (typeof FS_SCENARIOS)[number];
 
@@ -75,6 +76,8 @@ export const FS_SCENARIO_LABELS: Record<FsScenarioName, string> = {
   fsDetailsLong: "Technical details: a 40,000-line report (hand-written)",
   fsDetailsFail: "Technical details: the report cannot be read",
   fsSmbOn: "Sharing handover: SMB/CIFS already on",
+  fsZfs:
+    "ZFS: the mirror tank on sdb and sdc with tank/media, known to OMV, no UUIDs (captured)",
 };
 
 export const isFsScenario = (name: string): name is FsScenarioName =>
@@ -116,6 +119,15 @@ const ENTRY = asDto<MountEntry>(CONTRACT_EXAMPLES.fsTabGetByFsName.entry.value);
 const FREE = asDto<FilesystemCandidate[]>(
   JSON.parse(CONTRACT_EXAMPLES.execGetOutput.fsCandidatesFinished.value.output),
 );
+/** The VM with the ZFS mirror tank on sdb and sdc and its file system tank/media, as captured. */
+const ZFS_CONFIGURED = asDto<ConfiguredFilesystem[]>(
+  CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value.data,
+);
+const ZFS_DETECTED = asDto<DetectedFilesystem[]>(
+  CONTRACT_EXAMPLES.fileSystemMgmtEnumerateFilesystems.zfs.value,
+);
+/** The disks of the captured pool. */
+const ZFS_DISKS = ["/dev/sdb", "/dev/sdc"];
 const CANDIDATES_FINISHED =
   CONTRACT_EXAMPLES.execGetOutput.fsCandidatesFinished.value;
 const CREATE_FINISHED =
@@ -148,8 +160,8 @@ const UNIT_FS = 8338000000;
 function detectedOn(
   device: string,
   id: number | string,
-  over: Partial<DetectedFilesystem> = {},
-): DetectedFilesystem {
+  over: Partial<DetectedFilesystem> & { uuid?: string } = {},
+): DetectedFilesystem & { uuid: string } {
   const uuid = typeof id === "string" ? id : uuidFor(id);
   const part = /\d$/.test(device) ? `${device}p1` : `${device}1`;
   const partition = device.startsWith("/dev/md") ? device : part;
@@ -480,6 +492,15 @@ export function newFsMockState(name: string): FsMockState {
       state.free = state.free.filter((c) => c.devicefile !== "/dev/sdd");
       break;
     }
+    case "fsZfs":
+      // Once the plugin's Discover has added their mount entries, both lists report the pool's own
+      // folder and each of its file systems with uuid null (a pool made by hand is only in
+      // enumerateFilesystems until then); mount candidates never list them (observed), and the
+      // server does not offer the pool's disks.
+      state.configured = clone(ZFS_CONFIGURED);
+      state.detected = clone(ZFS_DETECTED);
+      state.free = state.free.filter((c) => !ZFS_DISKS.includes(c.devicefile));
+      break;
     case "fsMany":
       state.configured = manyRows();
       state.entries = listEntries(state.configured, state.entries);
@@ -529,8 +550,9 @@ function dropEntry(state: FsMockState, fsname: string): void {
   state.entries = rest;
 }
 
-const byUuid = (uuid: string) => (row: { uuid: string }) =>
-  row.uuid.toLowerCase() === uuid.toLowerCase();
+/** The row with this UUID; a row without one (ZFS reports null) is never it. */
+const byUuid = (uuid: string) => (row: { uuid: string | null }) =>
+  row.uuid !== null && row.uuid.toLowerCase() === uuid.toLowerCase();
 
 const deviceOf = (devicefile: string): string =>
   VM_DISKS.find(
@@ -684,7 +706,9 @@ export function fsAnswers(
       state.configured.push(row);
       const entry = entryOf(row, uuidFor(80 + state.made));
       state.entries[row.devicefile] = entry;
-      state.pending.push(fs.uuid);
+      if (fs.uuid !== null) {
+        state.pending.push(fs.uuid);
+      }
       hooks.dirty(
         name === "fsAlsoPending"
           ? ["fstab", "collectd", "monit", "quota", "nfs"]
@@ -708,9 +732,10 @@ export function fsAnswers(
       }
       state.configured = state.configured.filter((r) => r !== row);
       dropEntry(state, row.devicefile);
-      state.pending = state.pending.filter((u) => u !== row.uuid);
-      if (row.status === 1) {
-        const back = state.detected.find(byUuid(row.uuid));
+      const id = row.uuid;
+      state.pending = state.pending.filter((u) => u !== id);
+      if (row.status === 1 && id !== null) {
+        const back = state.detected.find(byUuid(id));
         if (back !== undefined) {
           state.candidates.push({ ...back, mounted: false, mountpoint: "" });
         }
@@ -945,7 +970,7 @@ export function fsApplied(name: string, state: FsMockState): boolean {
     if (row !== undefined && name !== "fsNotMounted") {
       Object.assign(
         row,
-        mountedFigures(state.madeSizes[row.uuid] ?? ONE_DISK_FS, 1),
+        mountedFigures(state.madeSizes[uuid] ?? ONE_DISK_FS, 1),
       );
       const fs = state.detected.find(byUuid(uuid));
       if (fs !== undefined) {

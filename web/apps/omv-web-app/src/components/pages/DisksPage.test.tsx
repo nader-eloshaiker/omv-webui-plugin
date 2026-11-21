@@ -147,6 +147,21 @@ describe("Storage > Disks", () => {
     expect(await rowOf("/dev/sdc")).toHaveTextContent("7.3 TiB");
   });
 
+  it("names the ZFS pool its disks are part of, though no UUID comes with the pool's file systems", async () => {
+    await disks({ scenario: "fsZfs" });
+    await rows();
+    for (const device of ["/dev/sdb", "/dev/sdc"]) {
+      const row = await rowOf(device);
+      expect(row).toHaveTextContent("Part of ZFS pool tank");
+      // The pool is not a file system on the disk.
+      expect(row).not.toHaveTextContent(/File system tank/);
+    }
+    expect(await rowOf("/dev/sdd")).toHaveTextContent("No file system found");
+    expect(await rowOf("/dev/sda")).toHaveTextContent(
+      "File system EXT4 on /dev/sda1, in use",
+    );
+  });
+
   it("says Not known and refuses every wipe when the file systems cannot be read (fail closed)", async () => {
     await disks({ scenario: "disksUseFails" });
     expect(

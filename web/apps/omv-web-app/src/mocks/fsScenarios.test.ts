@@ -313,3 +313,44 @@ describe("the remembering file-system mock", () => {
     },
   );
 });
+
+describe("the ZFS scenario (fsZfs)", () => {
+  it("lists the captured pool's file systems with no UUID, and offers neither them nor its disks", () => {
+    const session = newMockSession(true);
+    const configured = value<{
+      data: { devicefile: string; type: string; uuid: string | null }[];
+    }>(call("fsZfs", session, "fileSystemMgmtGetList")).data;
+    expect(
+      configured
+        .filter((r) => r.type === "zfs")
+        .map((r) => [r.devicefile, r.uuid]),
+    ).toEqual([
+      ["tank", null],
+      ["tank/media", null],
+    ]);
+    const detected = value<{ type: string }[]>(
+      call("fsZfs", session, "fileSystemMgmtEnumerateFilesystems"),
+    );
+    expect(detected.filter((r) => r.type === "zfs")).toHaveLength(2);
+    const mounted = value<{ type: string; mountpoint: string }[]>(
+      call("fsZfs", session, "fileSystemMgmtEnumerateMountedFilesystems"),
+    );
+    expect(mounted.map((r) => r.mountpoint)).toEqual(
+      expect.arrayContaining(["/", "/tank", "/tank/media"]),
+    );
+    const found = value<Rows>(
+      call("fsZfs", session, "fileSystemMgmtGetMountCandidates"),
+    );
+    expect(found.some((r) => r.devicefile.startsWith("tank"))).toBe(false);
+    const free = value<{ output: string }>(
+      call("fsZfs", session, "execGetOutput", {
+        filename: FS_HANDLES.candidates,
+      }),
+    );
+    expect(
+      (JSON.parse(free.output) as { devicefile: string }[]).map(
+        (c) => c.devicefile,
+      ),
+    ).toEqual(["/dev/sdd"]);
+  });
+});
