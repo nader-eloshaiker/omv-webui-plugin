@@ -488,3 +488,31 @@ The owner agreed every destructive-action point of [design/phase-5-disks.md](des
 - **P7:** a secure wipe keeps running on the NAS after a reload, which the page can no longer show. The dialog says so before it starts.
 - **P8:** a secure wipe can be stopped after a plain confirmation. A quick wipe cannot.
 - **P9:** after a wipe, the disk shows "Empty (wiped at …)" for the session, with a link to create a file system in the classic interface until the file-systems slice exists.
+
+## 2026-11-21 — Phase 5, disks and disk health: built, on the mock and the test VM
+
+Built on `phase-5-disks` to [design/phase-5-disks.md](design/phase-5-disks.md), as agreed by the owner.
+
+- **The contract** gains 24 operations:
+  - the 21 disk and S.M.A.R.T. operations;
+  - `MdMgmt.enumerateDevices`, whose "plugin not installed" reply is HTTP 404 "RPC service 'MdMgmt' not found." (observed);
+  - `FileSystemMgmt.enumerateFilesystems`, *(recommended)* because only it shows swap (P5), and `FileSystemMgmt.getList` calls it itself.
+
+  The S.M.A.R.T. schedule fields use anchored patterns, accepting exactly the values the stock form offers. The capture scrubber now also replaces smartctl's spaced WWN form and FAT volume IDs. Both were caught in drafts that were never committed.
+- **The pages:**
+  - Storage > Disks and a disk's page, with health details read only on request and power settings;
+  - Disk health (Overview, Self-tests, Settings), the Flow D set-up page and scheduled self-tests;
+  - the wipe, with the interface's own safeguards.
+- **The S.M.A.R.T. reads that can wake a disk** are query hooks kept disabled until the reader presses their button. They are never refetched on mount, focus, reconnect or when a task ends. A source test fails if `refetchQueries` or `resetQueries`, which would restart them, appears in the app.
+- **An independent pass on the mock** found no blocker. Every agreed refusal and the confirmation behaved as designed. Its findings are fixed:
+  - server text inside sentences is now isolated, so a right-to-left model name no longer reorders the line;
+  - the tables' sideways scroll regions are named and focusable;
+  - two copy slips are corrected, and two duplicated readings are shown once;
+  - the power form keeps its saved state after Save;
+  - two missing scenarios are added.
+- **On the test VM** (OMV 8.6.1; no RAID plugin), the build was installed as a package. The first run showed no disk as free to wipe. The cause was the wipe section showing its fail-closed "could not check" state while its reads were still loading. It now says it is checking. `pnpm test:browser:vm` with `OMV_WEBUI_VM_WIPE_DISK=sdd` then gave 19 passed and 2 skipped over both HTTP and HTTPS. Those runs included the refusals of the system disk and of the disk with the mounted file system, and a real quick wipe of the empty scratch disk `sdd`. Nothing was left pending.
+- **On the VM, `Smart.getDeviceSettings` answers HTTP 500** for a disk with no saved monitoring settings. Only the waking health check could tell the page in advance, so the page makes the call and treats that reply as "not set". The VM test allows exactly that failure.
+- **Still to check:**
+  - shred's progress lines on a secure wipe;
+  - the start lines of a self-test on a disk that supports one (the VM's NVMe disk does not);
+  - whether a rescan or a settings save wakes a disk.
