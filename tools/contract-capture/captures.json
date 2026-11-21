@@ -357,6 +357,19 @@
   {
     "service": "LogFile",
     "method": "getList",
+    "name": "empty",
+    "account": "admin",
+    "params": {
+      "start": 0,
+      "limit": null,
+      "sortfield": null,
+      "sortdir": null,
+      "id": "smartd"
+    }
+  },
+  {
+    "service": "LogFile",
+    "method": "getList",
     "name": "unknownLog",
     "account": "admin",
     "params": {

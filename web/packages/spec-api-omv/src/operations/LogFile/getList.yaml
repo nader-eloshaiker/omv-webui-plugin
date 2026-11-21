@@ -37,6 +37,8 @@ post:
               $ref: ../../examples/logFileGetList.updates.yaml
             smbAudit:
               $ref: ../../examples/logFileGetList.smbAudit.yaml
+            empty:
+              $ref: ../../examples/logFileGetList.empty.yaml
     "500":
       description: The log id is not one the server knows.
       content:
