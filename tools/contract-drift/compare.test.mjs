@@ -266,3 +266,76 @@ for (const [name, email, want] of emailCases) {
     );
   });
 }
+
+test("checkContract finds a service whatever the case of its name, as OMV does", () => {
+  const c = {
+    components: { schemas: {} },
+    paths: {
+      "/rpc/Zfs/listPools": {
+        post: {
+          operationId: "zfsListPools",
+          "x-omv-rpc": { service: "Zfs", method: "listPools" },
+        },
+      },
+      "/rpc/Zfs/listpools": {
+        post: {
+          operationId: "zfsListpools",
+          "x-omv-rpc": { service: "Zfs", method: "listpools" },
+        },
+      },
+    },
+  };
+  const findings = checkContract(
+    c,
+    new Map(),
+    new Map([["zfs", new Set(["listPools"])]]),
+  );
+  // The service matches in any case; a method only as spelt.
+  assert.deepEqual(
+    findings.map((f) => `${f.severity} ${f.where}`),
+    ["missing zfsListpools (Zfs.listpools)"],
+  );
+});
+
+test("each alternative of a contract oneOf is held to OMV's one shape", () => {
+  const contract = {
+    components: {
+      schemas: {
+        Ok: {
+          type: "object",
+          required: ["type", "name"],
+          properties: {
+            type: { type: "string", enum: ["Pool"] },
+            name: { type: "string" },
+          },
+        },
+        Loose: {
+          type: "object",
+          required: ["type"],
+          properties: { type: { type: "string", enum: ["Pool", "Disk"] } },
+        },
+      },
+    },
+  };
+  const theirs = {
+    type: "object",
+    required: ["type", "name"],
+    properties: {
+      type: { type: "string", enum: ["Pool", "Filesystem"] },
+      name: { type: "string" },
+    },
+  };
+  const ours = {
+    oneOf: [
+      { $ref: "#/components/schemas/Ok" },
+      { $ref: "#/components/schemas/Loose" },
+    ],
+  };
+  assert.deepEqual(
+    compareSchemas(ours, theirs, contract).map((p) => `${p.at}: ${p.message}`),
+    [
+      "$: does not require name; OMV does",
+      '$.type: accepts "Disk", which OMV does not',
+    ],
+  );
+});

@@ -1,6 +1,6 @@
 # Lint, types, tests, the production build and its UI-1/UI-7/UI-11 checks, the Debian package and
-# lintian, the contract and its drift against a pinned openmediavault tree, the colour audit and pnpm
-# audit. One job, `build`, which the main branch ruleset requires.
+# lintian, the contract and its drift against pinned openmediavault and openmediavault-zfs trees,
+# the colour audit and pnpm audit. One job, `build`, which the main branch ruleset requires.
 name: CI
 
 on:
@@ -20,6 +20,9 @@ env:
   # The openmediavault tree the contract's request schemas were read from. Moved deliberately, in
   # the change that re-checks the contract against a new OMV release.
   OMV_REF: babf50d9b305cdced63bbefdb9df0a6d9720bac9
+  # The openmediavault-zfs tree (OMV-Extras keeps it in its own repository) that the Zfs
+  # operations were read from: its 8.1.4 head. Moved deliberately, like OMV_REF.
+  OMV_ZFS_REF: 58525e85724ed55783ff825471c05ff39da60c5d
 
 jobs:
   build:
@@ -43,6 +46,17 @@ jobs:
             deb/openmediavault/var/www/openmediavault/rpc
             deb/openmediavault-md/usr/share/openmediavault/datamodels
             deb/openmediavault-md/usr/share/openmediavault/engined/rpc
+
+      - name: Check out the pinned openmediavault-zfs tree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: OpenMediaVault-Plugin-Developers/openmediavault-zfs
+          ref: ${{ env.OMV_ZFS_REF }}
+          path: omv-zfs-source
+          persist-credentials: false
+          sparse-checkout: |
+            usr/share/openmediavault/datamodels
+            usr/share/openmediavault/engined/rpc
 
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
@@ -109,7 +123,7 @@ jobs:
         run: node --test 'tools/**/*.test.mjs'
 
       - name: Contract drift against openmediavault
-        run: node tools/contract-drift/drift.mjs --omv omv-source
+        run: node tools/contract-drift/drift.mjs --omv omv-source --zfs omv-zfs-source
 
       - name: Colour audit
         run: node tools/colour-audit.mjs contrast --quiet

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Reading an openmediavault source tree (or an installed system's /usr/share/openmediavault):
 // datamodels by id, and which methods each RPC service registers. In a source tree, the plugins
-// built from it (deb/openmediavault-md and the others) count too, as they do once installed.
+// built from it (deb/openmediavault-md and the others) count too, as they do once installed. A
+// plugin kept in a repository of its own (openmediavault-zfs, from OMV-Extras) is read as a second
+// tree and merged in, as it is merged into OMV once installed.
 import fs from "node:fs";
 import path from "node:path";
 
@@ -95,4 +97,33 @@ export function readServices(root) {
     }
   }
   return services;
+}
+
+/**
+ * The datamodels and services of OMV's tree with those of plugin trees merged in, as once the
+ * plugins are installed. A plugin's datamodel id or service that OMV's tree (or an earlier plugin)
+ * already has is an error: an installed plugin cannot replace one either.
+ * @param {string} root OMV's source tree
+ * @param {string[]} pluginRoots trees of plugins kept outside it
+ */
+export function readTrees(root, pluginRoots = []) {
+  const datamodels = readDatamodels(root);
+  const services = readServices(root);
+  for (const plugin of pluginRoots) {
+    for (const [id, model] of readDatamodels(plugin)) {
+      if (datamodels.has(id)) {
+        throw new Error(`${plugin} redefines the datamodel ${id}`);
+      }
+      datamodels.set(id, model);
+    }
+    for (const [name, methods] of readServices(plugin)) {
+      if (
+        [...services.keys()].some((k) => k.toLowerCase() === name.toLowerCase())
+      ) {
+        throw new Error(`${plugin} redefines the RPC service ${name}`);
+      }
+      services.set(name, methods);
+    }
+  }
+  return { datamodels, services };
 }

@@ -4,7 +4,12 @@ import { test } from "node:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { readDatamodels, readServices, servicesOf } from "./omv-source.mjs";
+import {
+  readDatamodels,
+  readServices,
+  readTrees,
+  servicesOf,
+} from "./omv-source.mjs";
 
 const plain = (services) =>
   Object.fromEntries([...services].map(([k, v]) => [k, [...v].sort()]));
@@ -87,5 +92,50 @@ test("a source tree's plugins count, as they do once installed", () => {
     ]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("a plugin kept in its own repository is merged in, and may not redefine what OMV has", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "omv-trees-"));
+  const put = (rel, text) => {
+    fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true });
+    fs.writeFileSync(path.join(tmp, rel), text);
+  };
+  const service = (name, method) =>
+    `<?php\nclass X {\n public function getName() { return "${name}"; }\n public function initialize() { $this->registerMethod("${method}"); }\n}\n`;
+  const omv = path.join(tmp, "omv");
+  const zfs = path.join(tmp, "zfs");
+  const clash = path.join(tmp, "clash");
+  try {
+    put(
+      "omv/deb/openmediavault/usr/share/openmediavault/datamodels/rpc.core.json",
+      '{"type":"rpc","id":"rpc.core.get"}',
+    );
+    put(
+      "omv/deb/openmediavault/usr/share/openmediavault/engined/rpc/core.inc",
+      service("Core", "get"),
+    );
+    // The layout of the openmediavault-zfs repository: usr/share/openmediavault at its root.
+    put(
+      "zfs/usr/share/openmediavault/datamodels/rpc.zfs.json",
+      '[{"type":"rpc","id":"rpc.zfs.name"}]',
+    );
+    put(
+      "zfs/usr/share/openmediavault/engined/rpc/zfs.inc",
+      service("zfs", "listPools"),
+    );
+    put(
+      "clash/usr/share/openmediavault/datamodels/rpc.core.json",
+      '{"type":"rpc","id":"rpc.core.get"}',
+    );
+    const { datamodels, services } = readTrees(omv, [zfs]);
+    assert.deepEqual([...datamodels.keys()].sort(), [
+      "rpc.core.get",
+      "rpc.zfs.name",
+    ]);
+    assert.deepEqual(plain(services), { Core: ["get"], zfs: ["listPools"] });
+    assert.throws(() => readTrees(omv, [clash]), /redefines the datamodel/);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
