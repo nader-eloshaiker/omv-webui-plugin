@@ -329,6 +329,21 @@ describe("the Disk health card", () => {
     ).toBeInTheDocument();
   });
 
+  it("says every disk is fine, with no monitoring advice, when all are good and monitored", async () => {
+    const { user } = await dashboard({ scenario: "disksAllGood" });
+    const disks = card("Disk health");
+    await user.click(
+      within(disks).getByRole("button", { name: "Check disk health" }),
+    );
+    expect(
+      await within(disks).findByText("3 disks: OK", {}, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    expect(within(disks).queryByText(/Monitoring/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Needs attention" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("says when no disk reports its health", async () => {
     const { user } = await dashboard({ scenario: "disksEmpty" });
     const disks = card("Disk health");

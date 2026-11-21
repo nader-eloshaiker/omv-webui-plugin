@@ -8,6 +8,7 @@ import {
   SCENARIOS,
   newMockSession,
   scenarioAnswers,
+  startsDirty,
   type MockSession,
   type ScenarioName,
 } from "./scenarios.ts";
@@ -116,4 +117,50 @@ describe("the mock scenarios", () => {
       ).toBe(want);
     },
   );
+
+  it("servicePending starts with SMB/CIFS saved and not applied, and SSH's details readable", () => {
+    const session = newMockSession(true, startsDirty("servicePending"));
+    const info = answerOf("servicePending", session, "systemGetInformation");
+    expect(info).toMatchObject({
+      status: 200,
+      value: { dirtyModules: { samba: expect.any(String) } },
+    });
+    expect(answerOf("servicePending", session, "smbGetStats")).toBe(
+      "pendingChanges",
+    );
+    expect(answerOf("servicePending", session, "sshGetStats")).toBe(
+      "noConnections",
+    );
+  });
+
+  it.each([
+    "disksAllGood",
+    "disksMixed",
+    "disksEmpty",
+    "disksUnrecognised",
+  ] as const)("%s ends its disk-health task with a list of disks", (name) => {
+    const answer = answerOf(name, newMockSession(true), "execGetOutput", {
+      filename: CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value,
+      pos: 0,
+    }) as FixedAnswer;
+    const output = (answer.value as { output: string }).output;
+    const list = JSON.parse(output) as { total: number; data: unknown[] };
+    expect(list.total).toBe(list.data.length);
+  });
+
+  it("logsLarge answers the syslog with 5,000 entries, newest first", () => {
+    const answer = answerOf(
+      "logsLarge",
+      newMockSession(true),
+      "logFileGetList",
+      {
+        id: "syslog",
+        start: 0,
+        limit: null,
+      },
+    ) as FixedAnswer;
+    const value = answer.value as { total: number; data: { rownum: number }[] };
+    expect(value.total).toBe(5000);
+    expect(value.data[0]?.rownum).toBe(4999);
+  });
 });

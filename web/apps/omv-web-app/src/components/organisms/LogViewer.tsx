@@ -442,7 +442,9 @@ export function LogViewer() {
               {columns.map((column) => {
                 const label = t(column.label as "logs.col.time");
                 const field = column.field;
-                const sortable = field !== null && layout !== "message";
+                // Sortable once there are rows to sort.
+                const sortable =
+                  field !== null && layout !== "message" && data !== undefined;
                 return (
                   <TableHead
                     key={column.key}

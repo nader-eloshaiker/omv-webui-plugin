@@ -61,13 +61,16 @@ export function UsageChart({
           domain={[0, 100]}
           yTicks={[0, 50, 100]}
           formatValue={format.percent}
+          // Time labels at the two ends only (design 1.6.2): the window's start and "Now".
           formatTime={(time) =>
             time === last
               ? t("dashboard.chart.now")
-              : new Date(time).toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+              : last !== undefined && time === last - CHART_WINDOW_MS
+                ? new Date(time).toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""
           }
           series={[
             {
