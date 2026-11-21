@@ -1321,6 +1321,55 @@
           }
         }
       }
+    },
+    "/rpc/Network/enumerateDevicesList": {
+      "post": {
+        "operationId": "networkEnumerateDevicesList",
+        "tags": ["Network"],
+        "summary": "Network interfaces",
+        "description": "A page of the system's network interfaces, sorted by the backend, including the loopback interface \"lo\". The backend ignores `search`. A configured Wi-Fi interface's reply carries a secret, never shown (UI-6).",
+        "x-omv-rpc": {
+          "service": "Network",
+          "method": "enumerateDevicesList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-omit": ["data[].wpapsk"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkDeviceList"
+                },
+                "examples": {
+                  "ethernetAndLoopback": {
+                    "$ref": "#/components/examples/networkEnumerateDevicesList.ethernetAndLoopback"
+                  },
+                  "wifi": {
+                    "$ref": "#/components/examples/networkEnumerateDevicesList.wifi"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2431,6 +2480,204 @@
         "type": "string",
         "description": "Display text: the raw output of the service's status commands, in the server's language, shown as preformatted text. When the service is turned off, the text \"Service disabled\", translated by the server."
       },
+      "NetworkDeviceStats": {
+        "type": "object",
+        "description": "The interface's counters since the system started, from /proc/net/dev, each a whole number as text. The server sends [] (PHP's empty map) when it cannot read them.",
+        "properties": {
+          "rx_bytes": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "rx_packets": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "rx_errors": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "rx_dropped": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "tx_bytes": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "tx_packets": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "tx_errors": {
+            "type": "string",
+            "x-omv-int64": true
+          },
+          "tx_dropped": {
+            "type": "string",
+            "x-omv-int64": true
+          }
+        },
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "NetworkDevice": {
+        "type": "object",
+        "description": "A network interface the system has, with its addresses, link and counters, and, when it is configured in OMV, the fields of its configuration (conf.system.network.interface). The loopback interface \"lo\" is included.",
+        "required": [
+          "uuid",
+          "comment",
+          "_used",
+          "_readonly",
+          "devicename",
+          "gateway",
+          "gateway6",
+          "address",
+          "address6",
+          "prefix",
+          "prefix6",
+          "netmask",
+          "netmask6",
+          "ether",
+          "mtu",
+          "state",
+          "link",
+          "vlan",
+          "vlanid",
+          "speed",
+          "description",
+          "stats"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "The interface's configuration object, or OMV's placeholder for an object not yet saved (fa4b1c66-ef79-11e5-87a0-0002b3a176b4) when it is not configured in OMV."
+          },
+          "comment": {
+            "type": "string"
+          },
+          "_used": {
+            "type": "boolean"
+          },
+          "_readonly": {
+            "type": "boolean"
+          },
+          "devicename": {
+            "type": "string",
+            "description": "The kernel's name for the interface, such as \"enp2s0\" or \"lo\"."
+          },
+          "type": {
+            "type": "string",
+            "description": "ethernet, wifi, vlan, bond, bridge, virtual, loopback or unknown; absent for some interfaces. Open to other values."
+          },
+          "method": {
+            "type": "string",
+            "description": "How IPv4 is configured, such as \"dhcp\" or \"static\". Only for a configured interface."
+          },
+          "method6": {
+            "type": "string",
+            "description": "How IPv6 is configured. Only for a configured interface."
+          },
+          "address": {
+            "type": "string",
+            "description": "The IPv4 address; the empty string when it has none."
+          },
+          "netmask": {
+            "type": "string",
+            "description": "The IPv4 netmask; the empty string when it has none."
+          },
+          "prefix": {
+            "type": "integer",
+            "description": "The IPv4 prefix length; -1 when it has no address."
+          },
+          "gateway": {
+            "type": "string"
+          },
+          "address6": {
+            "type": "string",
+            "description": "The IPv6 address; the empty string when it has none."
+          },
+          "netmask6": {
+            "type": "string"
+          },
+          "prefix6": {
+            "type": "integer",
+            "description": "The IPv6 prefix length; -1 when it has no address."
+          },
+          "gateway6": {
+            "type": "string"
+          },
+          "dnsnameservers": {
+            "type": "string"
+          },
+          "dnssearch": {
+            "type": "string"
+          },
+          "ether": {
+            "type": "string",
+            "description": "The MAC address."
+          },
+          "mtu": {
+            "type": "string",
+            "description": "Bytes, as text (observed on OMV 8.6.1)."
+          },
+          "state": {
+            "type": "string",
+            "description": "The kernel's operational state: UP, DOWN, LOWERLAYERDOWN, NOTPRESENT, TESTING, DORMANT or UNKNOWN (the loopback interface reports UNKNOWN). Open to other values."
+          },
+          "link": {
+            "type": "boolean",
+            "description": "Whether the interface has a link."
+          },
+          "vlan": {
+            "type": "boolean"
+          },
+          "vlanid": {
+            "type": "integer",
+            "description": "The VLAN ID; -1 when the interface is not a VLAN."
+          },
+          "speed": {
+            "type": "integer",
+            "description": "Mbit/s; -1 when unknown (the loopback interface, a link that is down)."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text, the name and MAC address, such as \"enp2s0 [00:00:5e:00:53:01]\"."
+          },
+          "stats": {
+            "$ref": "#/components/schemas/NetworkDeviceStats"
+          },
+          "wol": {
+            "type": "boolean"
+          },
+          "slaves": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "wpassid": {
+            "type": "string",
+            "description": "The Wi-Fi network name. Only for a configured Wi-Fi interface."
+          }
+        }
+      },
+      "NetworkDeviceList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every interface, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetworkDevice"
+            }
+          }
+        }
+      },
       "SmartDevice": {
         "type": "object",
         "description": "A disk that supports S.M.A.R.T., with its health as smartctl last reported it.",
@@ -3344,6 +3591,238 @@
         "value": {
           "code": 0,
           "message": "Please apply the configuration changes first."
+        }
+      },
+      "networkEnumerateDevicesList.ethernetAndLoopback": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed; the IPv4 address, which the scrubber marks NAS_HOST, set by hand to a documentation address",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "comment": "",
+              "_used": false,
+              "_readonly": false,
+              "type": "ethernet",
+              "devicename": "enp2s0",
+              "method": "dhcp",
+              "address": "192.0.2.10",
+              "netmask": "255.255.255.0",
+              "gateway": "192.0.2.1",
+              "routemetric": 0,
+              "method6": "dhcp",
+              "address6": "fe80::200:5eff:fe00:5301",
+              "netmask6": "ffff:ffff:ffff:ffff:0000:0000:0000:0000",
+              "gateway6": "",
+              "routemetric6": 1,
+              "dnsnameservers": "",
+              "dnssearch": "",
+              "mtu": "1500",
+              "wol": false,
+              "altmacaddress": "",
+              "slaves": [],
+              "bondprimary": "",
+              "bondmode": 1,
+              "bondmiimon": 0,
+              "bonddowndelay": 0,
+              "bondupdelay": 0,
+              "bondtransmithashpolicy": "layer2",
+              "vlanid": -1,
+              "vlanrawdevice": "",
+              "band": "auto",
+              "wpassid": "",
+              "wpapsk": "",
+              "keymanagement": "psk",
+              "hidden": false,
+              "prefix": 24,
+              "prefix6": 64,
+              "ether": "00:00:5e:00:53:01",
+              "state": "UP",
+              "link": true,
+              "vlan": false,
+              "speed": 1000,
+              "description": "enp2s0 [00:00:5e:00:53:01]",
+              "stats": {
+                "rx_bytes": "106928701",
+                "rx_packets": "142669",
+                "rx_errors": "0",
+                "rx_dropped": "0",
+                "rx_fifo_errors": "0",
+                "rx_frame_errors": "0",
+                "rx_compressed": "0",
+                "rx_multicast": "0",
+                "tx_bytes": "158236022",
+                "tx_packets": "140516",
+                "tx_errors": "0",
+                "tx_dropped": "12",
+                "tx_fifo_errors": "0",
+                "tx_collisions": "0",
+                "tx_carrier_errors": "0",
+                "tx_compressed": "0"
+              }
+            },
+            {
+              "uuid": "fa4b1c66-ef79-11e5-87a0-0002b3a176b4",
+              "comment": "",
+              "_used": false,
+              "_readonly": false,
+              "devicename": "lo",
+              "gateway": "",
+              "gateway6": "",
+              "address": "",
+              "address6": "",
+              "prefix": -1,
+              "prefix6": -1,
+              "netmask": "",
+              "netmask6": "",
+              "ether": "00:00:00:00:00:00",
+              "mtu": "65536",
+              "state": "UNKNOWN",
+              "link": true,
+              "vlan": false,
+              "vlanid": -1,
+              "speed": -1,
+              "description": "lo [00:00:00:00:00:00]",
+              "stats": {
+                "rx_bytes": "165305614",
+                "rx_packets": "148918",
+                "rx_errors": "0",
+                "rx_dropped": "0",
+                "rx_fifo_errors": "0",
+                "rx_frame_errors": "0",
+                "rx_compressed": "0",
+                "rx_multicast": "0",
+                "tx_bytes": "165305614",
+                "tx_packets": "148918",
+                "tx_errors": "0",
+                "tx_dropped": "0",
+                "tx_fifo_errors": "0",
+                "tx_collisions": "0",
+                "tx_carrier_errors": "0",
+                "tx_compressed": "0"
+              },
+              "type": "loopback"
+            }
+          ]
+        }
+      },
+      "networkEnumerateDevicesList.wifi": {
+        "summary": "Written by hand from the ethernetAndLoopback capture (OMV 8.6.1): beside the wired interface, a configured Wi-Fi interface that is down, with no address, no speed (-1) and no counters (the [] the server sends for an empty map). It carries a secret, never shown (UI-6), here a documentation value. The test VM has no Wi-Fi.",
+        "x-omv-status": 200,
+        "value": {
+          "total": 2,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "comment": "",
+              "_used": false,
+              "_readonly": false,
+              "type": "ethernet",
+              "devicename": "enp2s0",
+              "method": "dhcp",
+              "address": "192.0.2.10",
+              "netmask": "255.255.255.0",
+              "gateway": "192.0.2.1",
+              "routemetric": 0,
+              "method6": "dhcp",
+              "address6": "fe80::200:5eff:fe00:5301",
+              "netmask6": "ffff:ffff:ffff:ffff:0000:0000:0000:0000",
+              "gateway6": "",
+              "routemetric6": 1,
+              "dnsnameservers": "",
+              "dnssearch": "",
+              "mtu": "1500",
+              "wol": false,
+              "altmacaddress": "",
+              "slaves": [],
+              "bondprimary": "",
+              "bondmode": 1,
+              "bondmiimon": 0,
+              "bonddowndelay": 0,
+              "bondupdelay": 0,
+              "bondtransmithashpolicy": "layer2",
+              "vlanid": -1,
+              "vlanrawdevice": "",
+              "band": "auto",
+              "wpassid": "",
+              "wpapsk": "",
+              "keymanagement": "psk",
+              "hidden": false,
+              "prefix": 24,
+              "prefix6": 64,
+              "ether": "00:00:5e:00:53:01",
+              "state": "UP",
+              "link": true,
+              "vlan": false,
+              "speed": 1000,
+              "description": "enp2s0 [00:00:5e:00:53:01]",
+              "stats": {
+                "rx_bytes": "106928701",
+                "rx_packets": "142669",
+                "rx_errors": "0",
+                "rx_dropped": "0",
+                "rx_fifo_errors": "0",
+                "rx_frame_errors": "0",
+                "rx_compressed": "0",
+                "rx_multicast": "0",
+                "tx_bytes": "158236022",
+                "tx_packets": "140516",
+                "tx_errors": "0",
+                "tx_dropped": "12",
+                "tx_fifo_errors": "0",
+                "tx_collisions": "0",
+                "tx_carrier_errors": "0",
+                "tx_compressed": "0"
+              }
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "comment": "",
+              "_used": false,
+              "_readonly": false,
+              "type": "wifi",
+              "devicename": "wlp3s0",
+              "method": "dhcp",
+              "address": "",
+              "netmask": "",
+              "gateway": "",
+              "routemetric": 0,
+              "method6": "auto",
+              "address6": "",
+              "netmask6": "",
+              "gateway6": "",
+              "routemetric6": 1,
+              "dnsnameservers": "",
+              "dnssearch": "",
+              "mtu": "1500",
+              "wol": false,
+              "altmacaddress": "",
+              "slaves": [],
+              "bondprimary": "",
+              "bondmode": 1,
+              "bondmiimon": 0,
+              "bonddowndelay": 0,
+              "bondupdelay": 0,
+              "bondtransmithashpolicy": "layer2",
+              "vlanid": -1,
+              "vlanrawdevice": "",
+              "band": "auto",
+              "wpassid": "example-ssid",
+              "wpapsk": "EXAMPLE-PASSWORD",
+              "keymanagement": "psk",
+              "hidden": false,
+              "prefix": -1,
+              "prefix6": -1,
+              "ether": "00:00:5e:00:53:02",
+              "state": "DOWN",
+              "link": false,
+              "vlan": false,
+              "speed": -1,
+              "description": "wlp3s0 [00:00:5e:00:53:02]",
+              "stats": []
+            }
+          ]
         }
       }
     }

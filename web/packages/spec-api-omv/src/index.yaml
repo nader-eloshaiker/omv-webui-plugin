@@ -86,6 +86,8 @@ paths:
     $ref: ./operations/NFS/getStats.yaml
   /rpc/SSH/getStats:
     $ref: ./operations/SSH/getStats.yaml
+  /rpc/Network/enumerateDevicesList:
+    $ref: ./operations/Network/enumerateDevicesList.yaml
 components:
   schemas:
     # Named here because x-omv-task refers to it by name.

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkEnumerateDevicesList
+  tags:
+    - Network
+  summary: Network interfaces
+  description: >-
+    A page of the system's network interfaces, sorted by the backend, including the loopback
+    interface "lo". The backend ignores `search`. A configured Wi-Fi interface's reply carries a
+    secret, never shown (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: enumerateDevicesList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-omit: ["data[].wpapsk"]
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceList.yaml
+          examples:
+            ethernetAndLoopback:
+              $ref: ../../examples/networkEnumerateDevicesList.ethernetAndLoopback.yaml
+            wifi:
+              $ref: ../../examples/networkEnumerateDevicesList.wifi.yaml

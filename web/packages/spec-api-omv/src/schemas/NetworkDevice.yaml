@@ -1,0 +1,117 @@
+type: object
+description: >-
+  A network interface the system has, with its addresses, link and counters, and, when it is
+  configured in OMV, the fields of its configuration (conf.system.network.interface). The loopback
+  interface "lo" is included.
+required:
+  [
+    uuid,
+    comment,
+    _used,
+    _readonly,
+    devicename,
+    gateway,
+    gateway6,
+    address,
+    address6,
+    prefix,
+    prefix6,
+    netmask,
+    netmask6,
+    ether,
+    mtu,
+    state,
+    link,
+    vlan,
+    vlanid,
+    speed,
+    description,
+    stats,
+  ]
+properties:
+  uuid:
+    type: string
+    description: >-
+      The interface's configuration object, or OMV's placeholder for an object not yet saved
+      (fa4b1c66-ef79-11e5-87a0-0002b3a176b4) when it is not configured in OMV.
+  comment:
+    type: string
+  _used:
+    type: boolean
+  _readonly:
+    type: boolean
+  devicename:
+    type: string
+    description: The kernel's name for the interface, such as "enp2s0" or "lo".
+  type:
+    type: string
+    description: >-
+      ethernet, wifi, vlan, bond, bridge, virtual, loopback or unknown; absent for some interfaces.
+      Open to other values.
+  method:
+    type: string
+    description: How IPv4 is configured, such as "dhcp" or "static". Only for a configured interface.
+  method6:
+    type: string
+    description: How IPv6 is configured. Only for a configured interface.
+  address:
+    type: string
+    description: The IPv4 address; the empty string when it has none.
+  netmask:
+    type: string
+    description: The IPv4 netmask; the empty string when it has none.
+  prefix:
+    type: integer
+    description: The IPv4 prefix length; -1 when it has no address.
+  gateway:
+    type: string
+  address6:
+    type: string
+    description: The IPv6 address; the empty string when it has none.
+  netmask6:
+    type: string
+  prefix6:
+    type: integer
+    description: The IPv6 prefix length; -1 when it has no address.
+  gateway6:
+    type: string
+  dnsnameservers:
+    type: string
+  dnssearch:
+    type: string
+  ether:
+    type: string
+    description: The MAC address.
+  mtu:
+    type: string
+    description: Bytes, as text (observed on OMV 8.6.1).
+  state:
+    type: string
+    description: >-
+      The kernel's operational state: UP, DOWN, LOWERLAYERDOWN, NOTPRESENT, TESTING, DORMANT or
+      UNKNOWN (the loopback interface reports UNKNOWN). Open to other values.
+  link:
+    type: boolean
+    description: Whether the interface has a link.
+  vlan:
+    type: boolean
+  vlanid:
+    type: integer
+    description: The VLAN ID; -1 when the interface is not a VLAN.
+  speed:
+    type: integer
+    description: Mbit/s; -1 when unknown (the loopback interface, a link that is down).
+  description:
+    type: string
+    description: Display text, the name and MAC address, such as "enp2s0 [00:00:5e:00:53:01]".
+  stats:
+    $ref: ./NetworkDeviceStats.yaml
+  wol:
+    type: boolean
+  slaves:
+    type: array
+    items:
+      type: string
+  wpassid:
+    type: string
+    description: The Wi-Fi network name. Only for a configured Wi-Fi interface.

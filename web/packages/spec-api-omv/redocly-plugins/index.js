@@ -9,6 +9,40 @@ import {
   checkSchema,
 } from "./checks.js";
 
+/**
+ * A resolver for checks that follow $refs beyond the operation's own file: each $ref is resolved
+ * from the file it was written in, so a schema's relative reference to another schema resolves
+ * as it does when bundling.
+ */
+function resolverFor(ctx) {
+  const fileOf = new WeakMap();
+  const mark = (node, file, seen = new Set()) => {
+    if (!node || typeof node !== "object" || seen.has(node)) {
+      return;
+    }
+    seen.add(node);
+    if (!fileOf.has(node)) {
+      fileOf.set(node, file);
+    }
+    if ("$ref" in node) {
+      return;
+    }
+    for (const child of Object.values(node)) {
+      mark(child, file, seen);
+    }
+  };
+  return (node) => {
+    if (!node || typeof node !== "object" || !("$ref" in node)) {
+      return node;
+    }
+    const { node: target, location } = ctx.resolve(node, fileOf.get(node));
+    if (target && location) {
+      mark(target, location.source.absoluteRef);
+    }
+    return target;
+  };
+}
+
 const reportAll = (ctx, findings, base) => {
   for (const { message, at } of findings) {
     ctx.report({ message, location: at.length ? base.child(at) : base });
@@ -34,11 +68,7 @@ function Operation() {
     },
     Operation: {
       enter(op, ctx) {
-        reportAll(
-          ctx,
-          checkOmit(op, (node) => ctx.resolve(node).node),
-          ctx.location,
-        );
+        reportAll(ctx, checkOmit(op, resolverFor(ctx)), ctx.location);
       },
     },
   };
