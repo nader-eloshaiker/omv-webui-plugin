@@ -118,6 +118,15 @@ test("an administrator chooses a log by keyboard, searches it, and reads it only
   await expect(search).toHaveValue("");
   await expect(table.getByRole("row")).toHaveCount(6);
   expect(rpc.calls.filter((c) => c === "LogFile.getList")).toHaveLength(1);
+
+  // At 320px the message column keeps a readable width; the table's own frame scrolls sideways.
+  await page.setViewportSize({ width: 320, height: 800 });
+  const message = table.locator('tbody td [dir="auto"]').first();
+  const width = await message.evaluate(
+    (el) => el.getBoundingClientRect().width,
+  );
+  expect(width, "the message column at 320px").toBeGreaterThanOrEqual(280);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expectNoSidewaysScroll(page);
 });
 

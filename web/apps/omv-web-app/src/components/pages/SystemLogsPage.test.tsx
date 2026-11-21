@@ -39,6 +39,8 @@ describe("System logs", () => {
     expect(
       screen.getByText("Choose a log above to read it."),
     ).toBeInTheDocument();
+    // No empty table frame or column headers above the sentence.
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     const refresh = screen.getByRole("button", { name: "Refresh" });
     expect(refresh).toHaveAttribute("aria-disabled", "true");
@@ -130,7 +132,7 @@ describe("System logs", () => {
   it("says when nothing matches, and clears the search back to the full log", async () => {
     const { user } = await logs();
     await choose(user, "All system messages (syslog)");
-    await screen.findByText(/^28,028 entries/);
+    await screen.findByText(/^5 entries/);
     const search = screen.getByRole("searchbox", { name: "Search this log" });
     await user.type(search, "<b>nothing</b>");
     const empty = await screen.findByText('No entries match "<b>nothing</b>".');
@@ -144,17 +146,30 @@ describe("System logs", () => {
     expect(within(table()).getAllByRole("row")).toHaveLength(6);
   });
 
+  it("counts the entries received, so the count line never contradicts the table", async () => {
+    const { user } = await logs();
+    // The captured syslog reply says total 28,028 for the five lines it carries.
+    await choose(user, "All system messages (syslog)");
+    expect(await screen.findByText(/^5 entries, read at /)).toBeInTheDocument();
+    expect(screen.queryByText(/28,028/)).not.toBeInTheDocument();
+    expect(within(table()).getAllByRole("row")).toHaveLength(6);
+    expect(screen.getByText("1–5 of 5")).toBeInTheDocument();
+    await choose(user, "Software updates");
+    expect(await screen.findByText(/^3 entries, read at /)).toBeInTheDocument();
+    expect(within(table()).getAllByRole("row")).toHaveLength(4);
+  });
+
   it("reads again only on Refresh, and not when the same log is chosen again", async () => {
     const { user } = await logs();
     await choose(user, "All system messages (syslog)");
-    await screen.findByText(/^28,028 entries/);
+    await screen.findByText(/^5 entries/);
     await choose(user, "All system messages (syslog)");
     expect(reads()).toHaveLength(1);
     const refresh = screen.getByRole("button", { name: "Refresh" });
     await user.click(refresh);
     await waitFor(() => expect(reads()).toHaveLength(2));
     expect(reads()[1]?.background).toBe(false);
-    await screen.findByText(/^28,028 entries/);
+    await screen.findByText(/^5 entries/);
     expect(refresh).toHaveFocus();
   });
 
@@ -191,7 +206,7 @@ describe("System logs", () => {
   it("says the updates log has no times, and turns its order with a button", async () => {
     const { user } = await logs();
     await choose(user, "Software updates");
-    await screen.findByText(/^1,303 entries/);
+    await screen.findByText(/^3 entries/);
     expect(
       screen.getByText(
         "This log has no times. The newest lines are at the top.",
@@ -236,6 +251,7 @@ describe("System logs", () => {
     expect(alert).toHaveTextContent("Could not read this log.");
     expect(alert).toHaveTextContent("journalctl");
     expect(alert).not.toHaveTextContent("mock trace");
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
     await user.click(within(alert).getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(reads()).toHaveLength(2));
     expect(screen.getByRole("combobox", { name: "Log" })).toBeEnabled();
@@ -250,9 +266,13 @@ describe("System logs", () => {
     expect(body).toHaveTextContent(
       '<img src=x onerror="alert(1)"> <script>alert(2)</script>',
     );
-    const cells = within(body).getAllByRole("cell");
-    expect(cells.filter((c) => c.getAttribute("dir") === "auto")).toHaveLength(
-      4,
+    // Each message in its own direction, and no bidirectional control left to reverse it.
+    expect(body.querySelectorAll('td [dir="auto"]')).toHaveLength(4);
+    expect(body.textContent).not.toMatch(
+      /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/,
+    );
+    expect(body).toHaveTextContent(
+      "right-to-left override, then javascript:alert(3)",
     );
     expect(body).toHaveTextContent("a very long line end");
   });
