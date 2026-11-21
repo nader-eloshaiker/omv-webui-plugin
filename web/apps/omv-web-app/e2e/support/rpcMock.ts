@@ -36,6 +36,17 @@ const TRACE = "#0 mock trace for the browser test";
 
 /** The handle the contract's apply example returns; the undo example returns another. */
 const APPLY_HANDLE = CONTRACT_EXAMPLES.configApplyChangesBg.applied.value;
+/** The handle the contract's disk-health example returns. */
+const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
+
+/** The captured logs answer as captured; another stock log is empty, as smartd was on the VM. */
+const LOG_EXAMPLES: Readonly<
+  Record<string, "syslog" | "updates" | "smbAudit">
+> = {
+  syslog: "syslog",
+  apt_term: "updates",
+  smbdaudit: "smbAudit",
+};
 
 const isOperationId = (value: string): value is OperationId =>
   Object.hasOwn(CONTRACT_EXAMPLES, value);
@@ -198,8 +209,21 @@ export class RpcMock {
         return exampleReply(operationId, DEFAULT_EXAMPLE[operationId]);
       case "configIsDirty":
         return exampleReply(operationId, this.dirty ? "dirty" : "clean");
+      case "logFileGetList": {
+        const { params } = body as { params?: { id?: unknown } };
+        const id = typeof params?.id === "string" ? params.id : "";
+        return exampleReply(
+          operationId,
+          Object.hasOwn(LOG_EXAMPLES, id)
+            ? (LOG_EXAMPLES[id] ?? "empty")
+            : "empty",
+        );
+      }
       case "execGetOutput": {
         const { params } = body as { params?: { filename?: unknown } };
+        if (params?.filename === SMART_HANDLE) {
+          return exampleReply(operationId, "smartDevicesFinished");
+        }
         this.dirty = false;
         return exampleReply(
           operationId,
