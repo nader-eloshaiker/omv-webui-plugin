@@ -432,6 +432,7 @@ export function scenarioAnswers(
     userMgmtSetPasswordByContext: guarded("null"),
     // Dashboard and monitoring (Phase 5): the test VM as captured.
     fileSystemMgmtEnumerateMountedFilesystems: guarded("withRoot"),
+    fileSystemMgmtGetList: guarded("configured"),
     smartGetListBg: guarded("smartDevices"),
     servicesGetStatus: guarded("sshOnly"),
     networkEnumerateDevicesList: guarded("ethernetAndLoopback"),
