@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetSettings
+  tags:
+    - UserMgmt
+  summary: Home folders setting
+  description: >-
+    Whether every person has a home folder, and the shared folder that holds them. OMV keeps the
+    shared folder when home folders are turned off. Changes nothing.
+  x-omv-rpc:
+    service: UserMgmt
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/HomeFolderSettings.yaml
+          examples:
+            off:
+              $ref: ../../examples/userMgmtGetSettings.off.yaml
+            on:
+              $ref: ../../examples/userMgmtGetSettings.on.yaml

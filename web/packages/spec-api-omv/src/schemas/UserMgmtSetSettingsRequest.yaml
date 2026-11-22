@@ -1,0 +1,27 @@
+type: object
+description: >-
+  Turn home folders on in a shared folder, or off (rpc.usermgmt.setsettings). Stricter than OMV:
+  turning them on always names a shared folder.
+oneOf:
+  - type: object
+    required: [enable, sharedfolderref]
+    properties:
+      enable:
+        type: boolean
+        enum: [true]
+      sharedfolderref:
+        $ref: ./ObjectUuid.yaml
+    additionalProperties: false
+  - type: object
+    required: [enable, sharedfolderref]
+    properties:
+      enable:
+        type: boolean
+        enum: [false]
+      sharedfolderref:
+        description: The shared folder kept for next time, or empty.
+        oneOf:
+          - $ref: ./ObjectUuid.yaml
+          - type: string
+            maxLength: 0
+    additionalProperties: false

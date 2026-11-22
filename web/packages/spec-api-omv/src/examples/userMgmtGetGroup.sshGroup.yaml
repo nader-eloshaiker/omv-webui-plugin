@@ -1,0 +1,7 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: _ssh
+  gid: 103
+  members: []
+  system: true

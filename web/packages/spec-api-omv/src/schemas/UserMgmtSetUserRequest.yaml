@@ -1,0 +1,52 @@
+type: object
+description: >-
+  A person's account to make or change (rpc.usermgmt.setuser). OMV makes the account when no
+  account has the name and changes the one that has it otherwise; the interface checks with
+  UserMgmt.getUser first. Every field is written: the groups replace the whole list (an empty list
+  would leave them as they are, so the contract requires at least one), and an empty password keeps
+  the stored one. Stricter than OMV: no `uid` (the NAS chooses it), `shell` required as an absolute
+  path, the groups in OMV's name format, the description of UserDescription, and SSH keys only in
+  the RFC 4716 form OMV returns.
+required:
+  [name, groups, shell, password, email, comment, disallowusermod, sshpubkeys]
+properties:
+  name:
+    $ref: ./Username.yaml
+  groups:
+    type: array
+    description: >-
+      Every group the person is to be in, `users` among them: the system groups they are in, as
+      read, and the groups chosen.
+    minItems: 1
+    maxItems: 1000
+    items:
+      $ref: ./Username.yaml
+  shell:
+    type: string
+    description: The program that runs when they sign in to the command line, such as /usr/sbin/nologin.
+    maxLength: 255
+    pattern: "^/[A-Za-z0-9._/-]+$"
+  password:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    description: A new password, or empty to keep the stored one. One line.
+    pattern: '^[^\r\n]*$'
+  email:
+    description: An e-mail address, or empty.
+    oneOf:
+      - $ref: ./Email.yaml
+      - type: string
+        maxLength: 0
+  comment:
+    $ref: ./UserDescription.yaml
+  disallowusermod:
+    type: boolean
+    description: True if the person may not change their own details.
+  sshpubkeys:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./SshPublicKeyRfc4716.yaml
+additionalProperties: false

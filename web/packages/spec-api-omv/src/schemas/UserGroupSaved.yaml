@@ -1,0 +1,17 @@
+type: object
+description: The group as UserMgmt.setGroup stored it, with the members sent.
+required: [uuid, name, comment, members]
+properties:
+  uuid:
+    type: string
+    description: OMV's record of the group.
+  name:
+    type: string
+  comment:
+    type: string
+  members:
+    type: array
+    items:
+      type: string
+  gid:
+    type: integer

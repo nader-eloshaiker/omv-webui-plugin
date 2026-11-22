@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: admin
+  uid: 994
+  gid: 100
+  comment: WebGUI administrator
+  dir: /home/admin
+  shell: /usr/sbin/nologin
+  groups:
+    - users
+    - openmediavault-admin
+  system: true
+  email: ""
+  disallowusermod: false
+  sshpubkeys: []

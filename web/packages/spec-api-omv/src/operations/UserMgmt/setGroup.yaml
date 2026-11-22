@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtSetGroup
+  tags:
+    - UserMgmt
+  summary: Make or change a group
+  description: >-
+    Make a group, or change the one with that name. OMV refuses a system group. It writes its own
+    record (the description) first, makes the group when it is new, then sets its members to
+    exactly the list sent, at once; each member must exist. Returns the stored group.
+  x-omv-rpc:
+    service: UserMgmt
+    method: setGroup
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.usermgmt.setgroup
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtSetGroupRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserGroupSaved.yaml
+          examples:
+            created:
+              $ref: ../../examples/userMgmtSetGroup.created.yaml
+            changed:
+              $ref: ../../examples/userMgmtSetGroup.changed.yaml
+    "500":
+      description: "The account tool refused: a member who does not exist."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            unknownMember:
+              $ref: ../../examples/userMgmtSetGroup.unknownMember.yaml

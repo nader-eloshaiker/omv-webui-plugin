@@ -214,6 +214,100 @@ export const OPERATIONS = {
       $ref: "UserGroupList",
     },
   },
+  "/rpc/UserMgmt/getUser": {
+    operationId: "userMgmtGetUser",
+    service: "UserMgmt",
+    method: "getUser",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "UserAccount",
+    },
+  },
+  "/rpc/UserMgmt/setUser": {
+    operationId: "userMgmtSetUser",
+    service: "UserMgmt",
+    method: "setUser",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["password"],
+    response: {
+      $ref: "UserSaved",
+    },
+  },
+  "/rpc/UserMgmt/deleteUser": {
+    operationId: "userMgmtDeleteUser",
+    service: "UserMgmt",
+    method: "deleteUser",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "UserAccount",
+    },
+  },
+  "/rpc/UserMgmt/getGroup": {
+    operationId: "userMgmtGetGroup",
+    service: "UserMgmt",
+    method: "getGroup",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "UserGroup",
+    },
+  },
+  "/rpc/UserMgmt/setGroup": {
+    operationId: "userMgmtSetGroup",
+    service: "UserMgmt",
+    method: "setGroup",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "UserGroupSaved",
+    },
+  },
+  "/rpc/UserMgmt/deleteGroup": {
+    operationId: "userMgmtDeleteGroup",
+    service: "UserMgmt",
+    method: "deleteGroup",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    destructive: "access",
+    response: {
+      $ref: "UserGroup",
+    },
+  },
+  "/rpc/UserMgmt/getSettings": {
+    operationId: "userMgmtGetSettings",
+    service: "UserMgmt",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "HomeFolderSettings",
+    },
+  },
+  "/rpc/UserMgmt/setSettings": {
+    operationId: "userMgmtSetSettings",
+    service: "UserMgmt",
+    method: "setSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "HomeFolderSettings",
+    },
+  },
   "/rpc/SMB/getSettings": {
     operationId: "smbGetSettings",
     service: "SMB",
@@ -1715,6 +1809,18 @@ export const SCHEMAS: SchemaTable = {
       },
       writecache: {
         type: "boolean",
+      },
+    },
+  },
+  HomeFolderSettings: {
+    type: "object",
+    required: ["enable", "sharedfolderref"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      sharedfolderref: {
+        type: "string",
       },
     },
   },
@@ -3779,6 +3885,75 @@ export const SCHEMAS: SchemaTable = {
         items: {
           $ref: "UserGroup",
         },
+      },
+    },
+  },
+  UserGroupSaved: {
+    type: "object",
+    required: ["uuid", "name", "comment", "members"],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      members: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      gid: {
+        type: "integer",
+      },
+    },
+  },
+  UserSaved: {
+    type: "object",
+    required: [
+      "uuid",
+      "name",
+      "email",
+      "disallowusermod",
+      "sshpubkeys",
+      "groups",
+      "shell",
+      "comment",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      email: {
+        type: "string",
+      },
+      disallowusermod: {
+        type: "boolean",
+      },
+      sshpubkeys: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      groups: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      shell: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
       },
     },
   },

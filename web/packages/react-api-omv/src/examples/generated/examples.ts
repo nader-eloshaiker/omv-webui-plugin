@@ -1618,6 +1618,282 @@ export const CONTRACT_EXAMPLES = {
       },
     },
   },
+  userMgmtGetUser: {
+    person: {
+      status: 200,
+      value: {
+        name: "alex",
+        uid: 1003,
+        gid: 100,
+        comment: "Alex at home",
+        dir: "/home/alex",
+        shell: "/usr/sbin/nologin",
+        groups: ["users"],
+        system: false,
+        email: "alex@example.org",
+        disallowusermod: false,
+        sshpubkeys: [],
+      },
+    },
+    withKey: {
+      status: 200,
+      value: {
+        name: "alex",
+        uid: 1003,
+        gid: 100,
+        comment: "Alex at home",
+        dir: "/home/alex",
+        shell: "/usr/sbin/nologin",
+        groups: ["users"],
+        system: false,
+        email: "alex@example.org",
+        disallowusermod: false,
+        sshpubkeys: [
+          "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----",
+        ],
+      },
+    },
+    administrator: {
+      status: 200,
+      value: {
+        name: "example-admin",
+        uid: 1000,
+        gid: 100,
+        comment: "",
+        dir: "/home/example-admin",
+        shell: "/bin/sh",
+        groups: ["users", "openmediavault-admin"],
+        system: false,
+        email: "",
+        disallowusermod: false,
+        sshpubkeys: [],
+      },
+    },
+    builtInAdmin: {
+      status: 200,
+      value: {
+        name: "admin",
+        uid: 994,
+        gid: 100,
+        comment: "WebGUI administrator",
+        dir: "/home/admin",
+        shell: "/usr/sbin/nologin",
+        groups: ["users", "openmediavault-admin"],
+        system: true,
+        email: "",
+        disallowusermod: false,
+        sshpubkeys: [],
+      },
+    },
+    invalidName: {
+      status: 400,
+      value: {
+        code: 0,
+        message: "name: The value '-alex' is not a valid user name.",
+      },
+    },
+    missing: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "The user 'alex' does not exist.",
+      },
+    },
+  },
+  userMgmtSetUser: {
+    created: {
+      status: 200,
+      value: {
+        uuid: "00000000-0000-4000-8000-000000000001",
+        name: "alex",
+        email: "alex@example.org",
+        disallowusermod: false,
+        sshpubkeys: [],
+        groups: ["users"],
+        shell: "/usr/sbin/nologin",
+        password: "EXAMPLE-PASSWORD",
+        comment: "Alex at home",
+      },
+    },
+    changed: {
+      status: 200,
+      value: {
+        uuid: "00000000-0000-4000-8000-000000000001",
+        name: "alex",
+        email: "alex@example.org",
+        disallowusermod: false,
+        sshpubkeys: [],
+        groups: ["users", "example-team", "example-kids", "audio"],
+        shell: "/usr/sbin/nologin",
+        password: "",
+        comment: "Alex at home",
+      },
+    },
+    invalidEmail: {
+      status: 400,
+      value: {
+        code: 0,
+        message:
+          'email: The value "not an address" does not match exactly one schema of [{"type":"string","format":"email"},{"type":"string","maxLength":0}].',
+      },
+    },
+    passwordLineBreak: {
+      status: 400,
+      value: {
+        code: 0,
+        message: "password: The value contains a multi-line content.",
+      },
+    },
+    groupMissing: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "The group 'example-nogroup' does not exist.",
+      },
+    },
+    commentColon: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; usermod --gid 'users' --shell '/usr/sbin/nologin' --comment 'Alex: at home' --groups 'users' 'alex' 2>&1' with exit code '3': usermod: invalid field 'Alex: at home'",
+      },
+    },
+  },
+  userMgmtDeleteUser: {
+    deleted: {
+      status: 200,
+      value: {
+        name: "robin",
+        uid: 1004,
+        gid: 100,
+        comment: "Robin",
+        dir: "/nonexistent",
+        shell: "/usr/bin/sh",
+        groups: ["users", "_ssh", "example-team"],
+        system: false,
+        email: "",
+        disallowusermod: false,
+        sshpubkeys: [
+          "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----",
+        ],
+      },
+    },
+    missing: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "The user 'robin' does not exist.",
+      },
+    },
+  },
+  userMgmtGetGroup: {
+    sshGroup: {
+      status: 200,
+      value: {
+        name: "_ssh",
+        gid: 103,
+        members: [],
+        system: true,
+      },
+    },
+    adminGroup: {
+      status: 200,
+      value: {
+        name: "openmediavault-admin",
+        gid: 983,
+        members: ["admin", "example-admin"],
+        system: true,
+      },
+    },
+    missing: {
+      status: 500,
+      value: {
+        code: 0,
+        message: "The group 'example-team' does not exist.",
+      },
+    },
+  },
+  userMgmtSetGroup: {
+    created: {
+      status: 200,
+      value: {
+        uuid: "00000000-0000-4000-8000-000000000002",
+        name: "example-team",
+        comment: "",
+        members: [],
+      },
+    },
+    changed: {
+      status: 200,
+      value: {
+        uuid: "00000000-0000-4000-8000-000000000002",
+        name: "example-team",
+        comment: "The team",
+        members: ["alex", "sam"],
+      },
+    },
+    unknownMember: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; gpasswd --members 'example-nobody' 'example-kids' 2>&1' with exit code '3': gpasswd: user 'example-nobody' does not exist",
+      },
+    },
+  },
+  userMgmtDeleteGroup: {
+    deleted: {
+      status: 200,
+      value: {
+        name: "example-team",
+        gid: 1000,
+        members: [],
+        system: false,
+        comment: "The team, again",
+      },
+    },
+    hasMembers: {
+      status: 500,
+      value: {
+        code: 0,
+        message:
+          "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; delgroup --only-if-empty 'example-team' 2>&1' with exit code '41': fatal: The group `example-team' is not empty!",
+      },
+    },
+  },
+  userMgmtGetSettings: {
+    off: {
+      status: 200,
+      value: {
+        enable: false,
+        sharedfolderref: "",
+      },
+    },
+    on: {
+      status: 200,
+      value: {
+        enable: true,
+        sharedfolderref: "00000000-0000-4000-8000-000000000003",
+      },
+    },
+  },
+  userMgmtSetSettings: {
+    turnedOn: {
+      status: 200,
+      value: {
+        enable: true,
+        sharedfolderref: "00000000-0000-4000-8000-000000000003",
+      },
+    },
+    turnedOff: {
+      status: 200,
+      value: {
+        enable: false,
+        sharedfolderref: "00000000-0000-4000-8000-000000000003",
+      },
+    },
+  },
   smbGetSettings: {
     off: {
       status: 200,
@@ -8845,6 +9121,14 @@ export const DEFAULT_EXAMPLE = {
   shareMgmtDelete: "removed",
   userMgmtGetUserList: "several",
   userMgmtGetGroupList: "several",
+  userMgmtGetUser: "person",
+  userMgmtSetUser: "created",
+  userMgmtDeleteUser: "deleted",
+  userMgmtGetGroup: "sshGroup",
+  userMgmtSetGroup: "created",
+  userMgmtDeleteGroup: "deleted",
+  userMgmtGetSettings: "off",
+  userMgmtSetSettings: "turnedOn",
   smbGetSettings: "off",
   smbSetSettings: "turnedOn",
   smbGetShareList: "one",

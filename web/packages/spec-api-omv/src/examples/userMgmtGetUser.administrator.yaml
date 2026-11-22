@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: example-admin
+  uid: 1000
+  gid: 100
+  comment: ""
+  dir: /home/example-admin
+  shell: /bin/sh
+  groups:
+    - users
+    - openmediavault-admin
+  system: false
+  email: ""
+  disallowusermod: false
+  sshpubkeys: []

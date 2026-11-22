@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtDeleteUser
+  tags:
+    - UserMgmt
+  summary: Delete a person's account
+  description: >-
+    Delete a person's account at once: the account, its SMB entry and its group memberships, then
+    OMV's record of it (the e-mail address and SSH keys). The home folder and every file the person
+    owns stay on the disk, owned by the old account number. Shared folders' access lists and other
+    settings that name the person are not changed. Leaves the mail settings pending, and the SSH
+    settings when the person had keys. Returns the deleted account.
+  x-omv-rpc:
+    service: UserMgmt
+    method: deleteUser
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.usermgmt.deleteuser
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserAccount.yaml
+          examples:
+            deleted:
+              $ref: ../../examples/userMgmtDeleteUser.deleted.yaml
+    "500":
+      description: No account has that name.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            missing:
+              $ref: ../../examples/userMgmtDeleteUser.missing.yaml

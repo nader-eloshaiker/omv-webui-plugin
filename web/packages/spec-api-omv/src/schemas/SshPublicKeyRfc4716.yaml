@@ -1,0 +1,7 @@
+type: string
+description: >-
+  A public SSH key in RFC 4716 format, as OMV stores and returns it (UserMgmt.getUser). OMV also
+  accepts the OpenSSH one-line form and converts it; the contract sends keys back only as read.
+x-omv-format: sshpubkey-rfc4716
+maxLength: 16384
+pattern: '^---- BEGIN SSH2 PUBLIC KEY ----\r?\n[\s\S]*\r?\n---- END SSH2 PUBLIC KEY ----\r?\n?$'

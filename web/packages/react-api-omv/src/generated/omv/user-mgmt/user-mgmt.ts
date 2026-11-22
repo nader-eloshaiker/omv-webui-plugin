@@ -4,14 +4,23 @@
  */
 import type {
   GetListRequest,
+  HomeFolderSettings,
   RpcErrorDetail,
+  UserAccount,
   UserAccountList,
   UserByContext,
   UserByContextSaved,
+  UserGroup,
   UserGroupList,
+  UserGroupSaved,
   UserMgmtGetUserListRequest,
+  UserMgmtNameRequest,
+  UserMgmtSetGroupRequest,
   UserMgmtSetPasswordByContextRequest,
+  UserMgmtSetSettingsRequest,
   UserMgmtSetUserByContextRequest,
+  UserMgmtSetUserRequest,
+  UserSaved,
 } from "@omv-webui/ts-api-omv";
 
 import type {
@@ -434,6 +443,1036 @@ export function useUserMgmtGetGroupList<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+/**
+ * One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with "The user '…' does not exist.", which the interface reads as "the name is free" before it makes a person. Changes nothing.
+ * @summary One account, by name
+ */
+export const userMgmtGetUser = (
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserAccount>(
+    {
+      url: `/rpc/UserMgmt/getUser`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtNameRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtGetUserQueryKey = (
+  userMgmtNameRequest?: BodyType<UserMgmtNameRequest>,
+) => {
+  return ["POST", `/rpc/UserMgmt/getUser`, userMgmtNameRequest] as const;
+};
+
+export const getUserMgmtGetUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof userMgmtGetUser>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUser>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserMgmtGetUserQueryKey(userMgmtNameRequest);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof userMgmtGetUser>>> = ({
+    signal,
+  }) => userMgmtGetUser(userMgmtNameRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userMgmtGetUser>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserMgmtGetUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtGetUser>>
+>;
+export type UserMgmtGetUserQueryError = ErrorType<RpcErrorDetail>;
+
+/**
+ * One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with "The user '…' does not exist.", which the interface reads as "the name is free" before it makes a person. Changes nothing.
+ * @summary One account, by name
+ */
+export function useUserMgmtGetUser<
+  TData = Awaited<ReturnType<typeof userMgmtGetUser>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUser>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetUser>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetUser>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with "The user '…' does not exist.", which the interface reads as "the name is free" before it makes a person. Changes nothing.
+ * @summary One account, by name
+ */
+export function useUserMgmtGetUser<
+  TData = Awaited<ReturnType<typeof userMgmtGetUser>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUser>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetUser>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetUser>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with "The user '…' does not exist.", which the interface reads as "the name is free" before it makes a person. Changes nothing.
+ * @summary One account, by name
+ */
+export function useUserMgmtGetUser<
+  TData = Awaited<ReturnType<typeof userMgmtGetUser>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUser>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with "The user '…' does not exist.", which the interface reads as "the name is free" before it makes a person. Changes nothing.
+ * @summary One account, by name
+ */
+export function useUserMgmtGetUser<
+  TData = Awaited<ReturnType<typeof userMgmtGetUser>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUser>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserMgmtGetUserQueryOptions(
+    userMgmtNameRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Make a person's account, or change the one with that name: there is no separate "create". OMV refuses a system account. It writes its own record first (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form), then makes or changes the account at once: `users` as the main group, the shell, the description and the whole groups list sent; a new person also gets a home folder when home folders are on. Each group must exist. A password that is not empty is set at once, for signing in here and for SMB. Takes effect without an apply; the mail settings are left pending, and the SSH settings when the person has or had SSH keys. Returns the stored account, without the fields in x-omv-omit.
+ * @summary Make or change a person's account
+ */
+export const userMgmtSetUser = (
+  userMgmtSetUserRequest: BodyType<UserMgmtSetUserRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserSaved>(
+    {
+      url: `/rpc/UserMgmt/setUser`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtSetUserRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtSetUserMutationKey = () => ["userMgmtSetUser"] as const;
+
+export const getUserMgmtSetUserMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userMgmtSetUser>>,
+    TError,
+    UserMgmtSetUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userMgmtSetUser>>,
+  TError,
+  UserMgmtSetUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUserMgmtSetUserMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userMgmtSetUser>>,
+    UserMgmtSetUserMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userMgmtSetUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserMgmtSetUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtSetUser>>
+>;
+export type UserMgmtSetUserMutationBody = BodyType<UserMgmtSetUserRequest>;
+export type UserMgmtSetUserMutationError = ErrorType<RpcErrorDetail>;
+export type UserMgmtSetUserMutationVariables = {
+  data: BodyType<UserMgmtSetUserRequest>;
+};
+
+/**
+ * Make a person's account, or change the one with that name: there is no separate "create". OMV refuses a system account. It writes its own record first (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form), then makes or changes the account at once: `users` as the main group, the shell, the description and the whole groups list sent; a new person also gets a home folder when home folders are on. Each group must exist. A password that is not empty is set at once, for signing in here and for SMB. Takes effect without an apply; the mail settings are left pending, and the SSH settings when the person has or had SSH keys. Returns the stored account, without the fields in x-omv-omit.
+ * @summary Make or change a person's account
+ */
+export const useUserMgmtSetUser = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userMgmtSetUser>>,
+      TError,
+      UserMgmtSetUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userMgmtSetUser>>,
+  TError,
+  UserMgmtSetUserMutationVariables,
+  TContext
+> => {
+  return useMutation(getUserMgmtSetUserMutationOptions(options), queryClient);
+};
+/**
+ * Delete a person's account at once: the account, its SMB entry and its group memberships, then OMV's record of it (the e-mail address and SSH keys). The home folder and every file the person owns stay on the disk, owned by the old account number. Shared folders' access lists and other settings that name the person are not changed. Leaves the mail settings pending, and the SSH settings when the person had keys. Returns the deleted account.
+ * @summary Delete a person's account
+ */
+export const userMgmtDeleteUser = (
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserAccount>(
+    {
+      url: `/rpc/UserMgmt/deleteUser`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtNameRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtDeleteUserMutationKey = () =>
+  ["userMgmtDeleteUser"] as const;
+
+export const getUserMgmtDeleteUserMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userMgmtDeleteUser>>,
+    TError,
+    UserMgmtDeleteUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userMgmtDeleteUser>>,
+  TError,
+  UserMgmtDeleteUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUserMgmtDeleteUserMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userMgmtDeleteUser>>,
+    UserMgmtDeleteUserMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userMgmtDeleteUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserMgmtDeleteUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtDeleteUser>>
+>;
+export type UserMgmtDeleteUserMutationBody = BodyType<UserMgmtNameRequest>;
+export type UserMgmtDeleteUserMutationError = ErrorType<RpcErrorDetail>;
+export type UserMgmtDeleteUserMutationVariables = {
+  data: BodyType<UserMgmtNameRequest>;
+};
+
+/**
+ * Delete a person's account at once: the account, its SMB entry and its group memberships, then OMV's record of it (the e-mail address and SSH keys). The home folder and every file the person owns stay on the disk, owned by the old account number. Shared folders' access lists and other settings that name the person are not changed. Leaves the mail settings pending, and the SSH settings when the person had keys. Returns the deleted account.
+ * @summary Delete a person's account
+ */
+export const useUserMgmtDeleteUser = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userMgmtDeleteUser>>,
+      TError,
+      UserMgmtDeleteUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userMgmtDeleteUser>>,
+  TError,
+  UserMgmtDeleteUserMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getUserMgmtDeleteUserMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with "The group '…' does not exist.". Changes nothing.
+ * @summary One group, by name
+ */
+export const userMgmtGetGroup = (
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserGroup>(
+    {
+      url: `/rpc/UserMgmt/getGroup`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtNameRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtGetGroupQueryKey = (
+  userMgmtNameRequest?: BodyType<UserMgmtNameRequest>,
+) => {
+  return ["POST", `/rpc/UserMgmt/getGroup`, userMgmtNameRequest] as const;
+};
+
+export const getUserMgmtGetGroupQueryOptions = <
+  TData = Awaited<ReturnType<typeof userMgmtGetGroup>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroup>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserMgmtGetGroupQueryKey(userMgmtNameRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userMgmtGetGroup>>
+  > = ({ signal }) =>
+    userMgmtGetGroup(userMgmtNameRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userMgmtGetGroup>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserMgmtGetGroupQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtGetGroup>>
+>;
+export type UserMgmtGetGroupQueryError = ErrorType<RpcErrorDetail>;
+
+/**
+ * One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with "The group '…' does not exist.". Changes nothing.
+ * @summary One group, by name
+ */
+export function useUserMgmtGetGroup<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroup>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroup>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetGroup>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetGroup>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with "The group '…' does not exist.". Changes nothing.
+ * @summary One group, by name
+ */
+export function useUserMgmtGetGroup<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroup>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroup>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetGroup>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetGroup>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with "The group '…' does not exist.". Changes nothing.
+ * @summary One group, by name
+ */
+export function useUserMgmtGetGroup<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroup>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroup>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with "The group '…' does not exist.". Changes nothing.
+ * @summary One group, by name
+ */
+export function useUserMgmtGetGroup<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroup>>,
+  TError = ErrorType<RpcErrorDetail>,
+>(
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroup>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserMgmtGetGroupQueryOptions(
+    userMgmtNameRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Make a group, or change the one with that name. OMV refuses a system group. It writes its own record (the description) first, makes the group when it is new, then sets its members to exactly the list sent, at once; each member must exist. Returns the stored group.
+ * @summary Make or change a group
+ */
+export const userMgmtSetGroup = (
+  userMgmtSetGroupRequest: BodyType<UserMgmtSetGroupRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserGroupSaved>(
+    {
+      url: `/rpc/UserMgmt/setGroup`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtSetGroupRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtSetGroupMutationKey = () =>
+  ["userMgmtSetGroup"] as const;
+
+export const getUserMgmtSetGroupMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userMgmtSetGroup>>,
+    TError,
+    UserMgmtSetGroupMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userMgmtSetGroup>>,
+  TError,
+  UserMgmtSetGroupMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUserMgmtSetGroupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userMgmtSetGroup>>,
+    UserMgmtSetGroupMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userMgmtSetGroup(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserMgmtSetGroupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtSetGroup>>
+>;
+export type UserMgmtSetGroupMutationBody = BodyType<UserMgmtSetGroupRequest>;
+export type UserMgmtSetGroupMutationError = ErrorType<RpcErrorDetail>;
+export type UserMgmtSetGroupMutationVariables = {
+  data: BodyType<UserMgmtSetGroupRequest>;
+};
+
+/**
+ * Make a group, or change the one with that name. OMV refuses a system group. It writes its own record (the description) first, makes the group when it is new, then sets its members to exactly the list sent, at once; each member must exist. Returns the stored group.
+ * @summary Make or change a group
+ */
+export const useUserMgmtSetGroup = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userMgmtSetGroup>>,
+      TError,
+      UserMgmtSetGroupMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userMgmtSetGroup>>,
+  TError,
+  UserMgmtSetGroupMutationVariables,
+  TContext
+> => {
+  return useMutation(getUserMgmtSetGroupMutationOptions(options), queryClient);
+};
+/**
+ * Delete a group at once, then OMV's record of it. Refused while the group has members. Shared folders' access lists that name the group are not changed. Returns the deleted group.
+ * @summary Delete an empty group
+ */
+export const userMgmtDeleteGroup = (
+  userMgmtNameRequest: BodyType<UserMgmtNameRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserGroup>(
+    {
+      url: `/rpc/UserMgmt/deleteGroup`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtNameRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtDeleteGroupMutationKey = () =>
+  ["userMgmtDeleteGroup"] as const;
+
+export const getUserMgmtDeleteGroupMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userMgmtDeleteGroup>>,
+    TError,
+    UserMgmtDeleteGroupMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userMgmtDeleteGroup>>,
+  TError,
+  UserMgmtDeleteGroupMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUserMgmtDeleteGroupMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userMgmtDeleteGroup>>,
+    UserMgmtDeleteGroupMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userMgmtDeleteGroup(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserMgmtDeleteGroupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtDeleteGroup>>
+>;
+export type UserMgmtDeleteGroupMutationBody = BodyType<UserMgmtNameRequest>;
+export type UserMgmtDeleteGroupMutationError = ErrorType<RpcErrorDetail>;
+export type UserMgmtDeleteGroupMutationVariables = {
+  data: BodyType<UserMgmtNameRequest>;
+};
+
+/**
+ * Delete a group at once, then OMV's record of it. Refused while the group has members. Shared folders' access lists that name the group are not changed. Returns the deleted group.
+ * @summary Delete an empty group
+ */
+export const useUserMgmtDeleteGroup = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userMgmtDeleteGroup>>,
+      TError,
+      UserMgmtDeleteGroupMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userMgmtDeleteGroup>>,
+  TError,
+  UserMgmtDeleteGroupMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getUserMgmtDeleteGroupMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.
+ * @summary Home folders setting
+ */
+export const userMgmtGetSettings = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<HomeFolderSettings>(
+    { url: `/rpc/UserMgmt/getSettings`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getUserMgmtGetSettingsQueryKey = () => {
+  return ["POST", `/rpc/UserMgmt/getSettings`] as const;
+};
+
+export const getUserMgmtGetSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof userMgmtGetSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof userMgmtGetSettings>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getUserMgmtGetSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userMgmtGetSettings>>
+  > = ({ signal }) => userMgmtGetSettings(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userMgmtGetSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserMgmtGetSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtGetSettings>>
+>;
+export type UserMgmtGetSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.
+ * @summary Home folders setting
+ */
+export function useUserMgmtGetSettings<
+  TData = Awaited<ReturnType<typeof userMgmtGetSettings>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetSettings>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.
+ * @summary Home folders setting
+ */
+export function useUserMgmtGetSettings<
+  TData = Awaited<ReturnType<typeof userMgmtGetSettings>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetSettings>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetSettings>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.
+ * @summary Home folders setting
+ */
+export function useUserMgmtGetSettings<
+  TData = Awaited<ReturnType<typeof userMgmtGetSettings>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.
+ * @summary Home folders setting
+ */
+export function useUserMgmtGetSettings<
+  TData = Awaited<ReturnType<typeof userMgmtGetSettings>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetSettings>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserMgmtGetSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Save the home folders setting, then, inside the request, set every person's home folder: turned on, to a folder named after them in the shared folder (moving an existing home folder's content there when that folder does not exist yet, else making it, private to the person); turned off, to none, leaving every folder and file where it was. The SMB settings are left pending. Returns the stored setting.
+ * @summary Turn home folders on or off
+ */
+export const userMgmtSetSettings = (
+  userMgmtSetSettingsRequest: BodyType<UserMgmtSetSettingsRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<HomeFolderSettings>(
+    {
+      url: `/rpc/UserMgmt/setSettings`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtSetSettingsRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtSetSettingsMutationKey = () =>
+  ["userMgmtSetSettings"] as const;
+
+export const getUserMgmtSetSettingsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userMgmtSetSettings>>,
+    TError,
+    UserMgmtSetSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userMgmtSetSettings>>,
+  TError,
+  UserMgmtSetSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUserMgmtSetSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userMgmtSetSettings>>,
+    UserMgmtSetSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return userMgmtSetSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UserMgmtSetSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtSetSettings>>
+>;
+export type UserMgmtSetSettingsMutationBody =
+  BodyType<UserMgmtSetSettingsRequest>;
+export type UserMgmtSetSettingsMutationError = ErrorType<unknown>;
+export type UserMgmtSetSettingsMutationVariables = {
+  data: BodyType<UserMgmtSetSettingsRequest>;
+};
+
+/**
+ * Save the home folders setting, then, inside the request, set every person's home folder: turned on, to a folder named after them in the shared folder (moving an existing home folder's content there when that folder does not exist yet, else making it, private to the person); turned off, to none, leaving every folder and file where it was. The SMB settings are left pending. Returns the stored setting.
+ * @summary Turn home folders on or off
+ */
+export const useUserMgmtSetSettings = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof userMgmtSetSettings>>,
+      TError,
+      UserMgmtSetSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof userMgmtSetSettings>>,
+  TError,
+  UserMgmtSetSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getUserMgmtSetSettingsMutationOptions(options),
+    queryClient,
+  );
+};
 /**
  * The signed-in user's own account.
  * @summary My account

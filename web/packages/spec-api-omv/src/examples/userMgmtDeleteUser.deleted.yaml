@@ -1,0 +1,18 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: robin
+  uid: 1004
+  gid: 100
+  comment: Robin
+  dir: /nonexistent
+  shell: /usr/bin/sh
+  groups:
+    - users
+    - _ssh
+    - example-team
+  system: false
+  email: ""
+  disallowusermod: false
+  sshpubkeys:
+    - "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----"

@@ -1,0 +1,9 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: openmediavault-admin
+  gid: 983
+  members:
+    - admin
+    - example-admin
+  system: true

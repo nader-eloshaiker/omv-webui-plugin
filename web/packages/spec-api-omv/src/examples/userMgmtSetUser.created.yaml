@@ -1,0 +1,13 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000001"
+  name: alex
+  email: "alex@example.org"
+  disallowusermod: false
+  sshpubkeys: []
+  groups:
+    - users
+  shell: /usr/sbin/nologin
+  password: EXAMPLE-PASSWORD
+  comment: Alex at home

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtSetSettings
+  tags:
+    - UserMgmt
+  summary: Turn home folders on or off
+  description: >-
+    Save the home folders setting, then, inside the request, set every person's home folder: turned
+    on, to a folder named after them in the shared folder (moving an existing home folder's content
+    there when that folder does not exist yet, else making it, private to the person); turned off,
+    to none, leaving every folder and file where it was. The SMB settings are left pending. Returns
+    the stored setting.
+  x-omv-rpc:
+    service: UserMgmt
+    method: setSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.usermgmt.setsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtSetSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/HomeFolderSettings.yaml
+          examples:
+            turnedOn:
+              $ref: ../../examples/userMgmtSetSettings.turnedOn.yaml
+            turnedOff:
+              $ref: ../../examples/userMgmtSetSettings.turnedOff.yaml

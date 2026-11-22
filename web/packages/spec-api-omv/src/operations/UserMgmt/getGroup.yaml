@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetGroup
+  tags:
+    - UserMgmt
+  summary: One group, by name
+  description: >-
+    One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record.
+    Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`),
+    with `system` true. A name that is no group is refused with "The group '…' does not exist.".
+    Changes nothing.
+  x-omv-rpc:
+    service: UserMgmt
+    method: getGroup
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.usermgmt.getgroup
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserGroup.yaml
+          examples:
+            sshGroup:
+              $ref: ../../examples/userMgmtGetGroup.sshGroup.yaml
+            adminGroup:
+              $ref: ../../examples/userMgmtGetGroup.adminGroup.yaml
+    "500":
+      description: No group has that name.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            missing:
+              $ref: ../../examples/userMgmtGetGroup.missing.yaml

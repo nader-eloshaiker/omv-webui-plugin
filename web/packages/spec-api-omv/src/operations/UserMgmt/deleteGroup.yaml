@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtDeleteGroup
+  tags:
+    - UserMgmt
+  summary: Delete an empty group
+  description: >-
+    Delete a group at once, then OMV's record of it. Refused while the group has members. Shared
+    folders' access lists that name the group are not changed. Returns the deleted group.
+  x-omv-rpc:
+    service: UserMgmt
+    method: deleteGroup
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.usermgmt.deletegroup
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserGroup.yaml
+          examples:
+            deleted:
+              $ref: ../../examples/userMgmtDeleteGroup.deleted.yaml
+    "500":
+      description: The group still has members.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            hasMembers:
+              $ref: ../../examples/userMgmtDeleteGroup.hasMembers.yaml

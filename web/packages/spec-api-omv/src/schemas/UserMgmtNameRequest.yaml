@@ -1,0 +1,9 @@
+type: object
+description: >-
+  One account or group, by name (rpc.usermgmt.getuser, deleteuser, getgroup, deletegroup). The name
+  is the only key OMV has for either.
+required: [name]
+properties:
+  name:
+    $ref: ./Username.yaml
+additionalProperties: false
