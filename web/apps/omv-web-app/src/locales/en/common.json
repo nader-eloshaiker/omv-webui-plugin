@@ -438,7 +438,7 @@
     "rsync": "Rsync tasks",
     "rsyncd": "Rsync server",
     "rsyslog": "System log",
-    "samba": "SMB/CIFS",
+    "samba": "Windows and Mac sharing (SMB)",
     "sharedfolders": "Shared folders",
     "smartmontools": "Disk health (S.M.A.R.T.)",
     "ssh": "SSH",
@@ -609,9 +609,8 @@
   },
   "sharedFolders": {
     "title": "Shared folders",
-    "intro": "Folders on your disks that other computers can reach over the network. To add, change or delete one, use the classic interface for now.",
+    "intro": "Folders on your file systems that other computers can reach over the network. Open a folder to choose who may use it and how computers reach it.",
     "add": "Add a shared folder",
-    "addClassic": "Add a shared folder in the classic interface",
     "tableLabel": "Shared folders",
     "col": {
       "name": "Name",
@@ -620,7 +619,8 @@
       "path": "Path",
       "fullPath": "Full path",
       "description": "Description",
-      "used": "In use"
+      "used": "In use",
+      "sharing": "Sharing"
     },
     "usedNote": "In use: a network share, backup job or other setting refers to this folder. Which one is not reported.",
     "yes": "Yes",
@@ -651,8 +651,524 @@
     "refresh": "Refresh",
     "loading": "Loading shared folders…",
     "loadFailed": "Could not read the shared folders.",
-    "empty": "There are no shared folders yet. A shared folder is a folder on one of your disks that other computers can reach over the network.",
-    "filteredEmpty": "No shared folders match \"{{search}}\"."
+    "empty": "There are no shared folders yet. A shared folder is a folder on one of your file systems that other computers can reach over the network.",
+    "filteredEmpty": "No shared folders match \"{{search}}\".",
+    "open": "Open shared folder {{folder}}",
+    "sharing": {
+      "smb": "Windows and Mac",
+      "smbOff": "Windows and Mac (off)",
+      "guests": "Guests too",
+      "unknown": "Not known",
+      "loadFailed": "Could not read which folders are shared with Windows and Mac computers."
+    },
+    "smbOff": "Windows and Mac sharing is off, so no folder can be reached from Windows or Mac computers.",
+    "smbOffLink": "Open Windows and Mac sharing",
+    "footerLine": "NFS shares, file permissions on the disk and the advanced SMB options are in the classic interface.",
+    "classicLink": "Shared folders in the classic interface",
+    "unfinished": {
+      "notSaved": "<folder></folder> is made, but the NAS has not saved it yet. Apply the pending changes so it can be used.",
+      "notShared": "<folder></folder> is not shared with Windows and Mac computers yet.",
+      "shareIt": "Share it",
+      "noDir": "<folder></folder> was set up, but its folder could not be made on the disk.",
+      "open": "Open {{folder}}"
+    }
+  },
+  "sharedFolder": {
+    "docTitle": "{{folder}} – Shared folders",
+    "readAt": "Read at {{time}}.",
+    "changedElsewhere": "<folder></folder> was changed elsewhere since this page read it. Look at it again, then try once more.",
+    "gone": "This shared folder no longer exists.",
+    "state": {
+      "fsNotMounted": "Its file system <fs></fs> is not mounted.",
+      "fsMissing": "Its file system <fs></fs> is missing: its disk may be disconnected."
+    },
+    "subtitle": "Shared folder on <fs></fs>",
+    "loading": "Loading the shared folder…",
+    "notFound": "This shared folder does not exist. It may have been deleted.",
+    "toList": "Go to Shared folders",
+    "loadFailed": "Could not read this shared folder.",
+    "fact": {
+      "state": "State",
+      "fs": "File system",
+      "fsValue": "{{type}}, {{free}} free",
+      "path": "Folder on the file system",
+      "wholeFs": "The whole file system",
+      "fullPath": "Full path on the NAS",
+      "address": "Network address",
+      "addressWindows": "From Windows",
+      "addressMac": "From a Mac",
+      "addressHint": "If a computer cannot find {{host}}, use the NAS's network address in place of the name.",
+      "description": "Description",
+      "descriptionNone": "None"
+    },
+    "copyAddress": "Copy the address of {{folder}}",
+    "copyWindows": "Copy the Windows address of {{folder}}",
+    "copyMac": "Copy the Mac address of {{folder}}",
+    "description": {
+      "edit": "Edit",
+      "label": "Description",
+      "hint": "Shown in the list, to help you tell folders apart. It is not shown to other computers.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Description saved.",
+      "tooLong": "Use at most 255 characters."
+    },
+    "rename": {
+      "why": "Why can't I rename it?",
+      "body": "The name is also its network address, so it cannot be changed. To use another name, add a new shared folder for the same folder on the disk, move what uses it, then remove the old one and keep its files."
+    },
+    "todo": {
+      "fsGone": {
+        "title": "Its file system is gone",
+        "body": "<folder></folder> pointed at a file system that is no longer set up on this NAS. If the disk is still connected, set the file system up again under File systems. Otherwise point this shared folder at another file system, or delete it."
+      },
+      "notMounted": {
+        "title": "Its file system is not mounted",
+        "body": "The file system <fs></fs> is not mounted, so the folder cannot be reached. Connect its disk, then open the file system's page."
+      },
+      "missing": {
+        "title": "Its folder is missing",
+        "body": "The folder <path></path> is not on <fs></fs> any more. It may have been renamed or deleted on the disk. Point this shared folder at the right folder, or delete it."
+      },
+      "notDir": {
+        "title": "It points at a file",
+        "body": "<path></path> on <fs></fs> is a file, not a folder. Point this shared folder at a folder."
+      },
+      "nobody": {
+        "title": "Nobody can open it yet",
+        "body": "It is shared with Windows and Mac computers, but no person or group has access. Give someone access below."
+      },
+      "smbOff": {
+        "title": "Windows and Mac sharing is off",
+        "body": "This folder is set up for Windows and Mac computers, but sharing is off for the whole NAS."
+      },
+      "smbDown": {
+        "title": "Windows and Mac sharing is not running"
+      },
+      "repoint": "Point it somewhere else…",
+      "openFs": "Open {{fs}}",
+      "openFsList": "Open File systems"
+    },
+    "usedBy": {
+      "title": "Used by",
+      "other": "Used by a setting this page does not show: an NFS share, a backup job, the Rsync server, the home folders setting or an add-on. Look in the classic interface."
+    },
+    "unsaved": {
+      "title": "You have changes that are not saved.",
+      "body": "Refresh anyway and lose them?",
+      "leaveBody": "Leave this page and lose them?",
+      "keep": "Keep my changes",
+      "refresh": "Refresh and lose them",
+      "leave": "Leave and lose them"
+    },
+    "descriptionFailed": "The description was not saved."
+  },
+  "shares": {
+    "term": {
+      "sharedFolder": "A shared folder is a folder on one of your file systems that you can reach from other computers. Making one does not share it yet: you also choose who may use it and how computers reach it.",
+      "smb": "Windows and Mac computers reach shared folders over SMB, the file-sharing method both understand. Linux computers can use it too.",
+      "smbService": "Windows and Mac sharing must be on for any folder to be reached from those computers.",
+      "access": "Access decides who may open this folder from another computer, and whether they may change its files.",
+      "group": "A group is a set of people. Access given to a group applies to everyone in it.",
+      "path": "The folder this shared folder uses, inside its file system."
+    },
+    "action": {
+      "add": "adding it",
+      "access": "saving its access",
+      "share": "sharing it",
+      "stopShare": "stopping sharing",
+      "description": "saving its description",
+      "repoint": "pointing it somewhere else",
+      "remove": "removing it",
+      "delete": "deleting it"
+    }
+  },
+  "access": {
+    "title": "Who can use it",
+    "intro": "Choose who may open this folder from other computers. Anyone not given access cannot open it.",
+    "introGuests": "Choose who may open this folder from other computers. Guest access is on, so anyone on your network can open it without a password, whatever you choose here.",
+    "rw": "Read and write",
+    "ro": "Read only",
+    "none": "No access",
+    "blocked": "Blocked",
+    "blockedHint": "Blocked: cannot open it, even through a group.",
+    "blockedVia": "Blocked: cannot open it, even through {{group}}.",
+    "viaGroup": "Also gets {{access}} as a member of {{group}}.",
+    "rowLabel": "Access for {{name}}",
+    "col": {
+      "name": "Name",
+      "kind": "Kind",
+      "access": "Access"
+    },
+    "kind": {
+      "user": "User",
+      "group": "Group"
+    },
+    "changed": "Changed",
+    "search": "Search people and groups",
+    "show": {
+      "label": "Show",
+      "all": "Everyone",
+      "withAccess": "With access",
+      "changed": "Changed"
+    },
+    "setAll": "Set all shown to",
+    "setAllApply_one": "Apply to {{count}} shown",
+    "setAllApply_other": "Apply to {{count}} shown",
+    "count": "{{shown}} of {{total}} people and groups.",
+    "adminRow": "The web interface's administrator account cannot be given access to shared folders.",
+    "stale_one": "{{count}} entry for an account that is not on this list will be removed when you save: {{names}}.",
+    "stale_other": "{{count}} entries for accounts that are not on this list will be removed when you save: {{names}}.",
+    "changes_one": "{{count}} change not saved.",
+    "changes_other": "{{count}} changes not saved.",
+    "save": "Save access",
+    "discard": "Discard changes",
+    "saving": "Saving…",
+    "nothing": "Nothing to save.",
+    "saved": "Access to {{folder}} saved.",
+    "lastAccess": "<folder></folder> is shared with Windows and Mac computers, so at least one person or group must keep access. To close it to everyone, stop sharing it first.",
+    "changedElsewhere": "Access to <folder></folder> was changed elsewhere since you opened this page.",
+    "showCurrent": "Show the current access",
+    "network": "Access applies when the folder is opened from another computer. The folder's file permissions on the NAS can also stop people. Folders made in this interface let in everyone given access here; for others, file permissions are shown and changed in the classic interface.",
+    "networkLink": "File permissions in the classic interface",
+    "loading": "Loading people and groups…",
+    "loadFailed": "Could not read the people and groups on this NAS.",
+    "empty": "There are no user accounts on this NAS yet, apart from the administrator. Add the people who will use shared folders, then give them access here.",
+    "emptyLink": "Users in the classic interface",
+    "filtered": "No people or groups match \"{{search}}\".",
+    "clearSearch": "Clear the search",
+    "blockedByGroup": "Blocked through {{group}}: cannot open it, whatever this row says.",
+    "saveFailed": "Access was not saved."
+  },
+  "folderSmb": {
+    "title": "Windows and Mac computers",
+    "notShared": "Not shared with Windows and Mac computers.",
+    "shared": "Shared with Windows and Mac computers as <address></address>.",
+    "sharedSmbOff": "Set up for Windows and Mac computers, but Windows and Mac sharing is off.",
+    "sharedDisabled": "Set up for Windows and Mac computers, but turned off for this folder.",
+    "notApplied": "Not applied yet.",
+    "share": "Share with Windows and Mac computers…",
+    "needAccess": "Give at least one person or group access first, above.",
+    "fact": {
+      "sharedAs": "Shared as",
+      "browseable": "Shown in the network list",
+      "readonly": "Read only for everyone",
+      "guest": "Guest access",
+      "other": "Other options"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "guest": {
+      "off": "Off",
+      "on": "On: anyone on your network can open it without a password.",
+      "only": "Guests only: everyone who opens it is treated as a guest, so access per person does not apply."
+    },
+    "otherOptions": "Some options were set in the classic interface, such as the recycle bin. They are kept.",
+    "change": "Change options…",
+    "stop": {
+      "open": "Stop sharing…",
+      "title": "Stop sharing {{folder}} with Windows and Mac computers?",
+      "body": "Computers that use <address></address> cannot reach it after the changes are applied. The files stay on the NAS. Who can use it is kept.",
+      "options": "The options set in the classic interface, such as the recycle bin, are removed with the share.",
+      "optionsKept": "Its options are kept, so you can turn it on again.",
+      "cancel": "Cancel",
+      "confirm": "Stop sharing"
+    },
+    "turnOn": "Turn it on",
+    "form": {
+      "titleNew": "Share with Windows and Mac computers",
+      "titleChange": "Change how it is shared",
+      "browseable": "Show it in the network list",
+      "browseableHint": "Computers on your network see it when they browse the NAS. When this is off, it can still be opened by typing its address.",
+      "readonly": "Read only for everyone",
+      "readonlyHint": "Nobody can change files through this share, even people with Read and write access.",
+      "guest": "Also let in anyone on the network, without a password",
+      "guestHint": "Anyone who can reach your network can then open it. Use this only for files you would show to any visitor.",
+      "guestWarn": "Anyone on your network can open <folder></folder> without a password. The No access choices above no longer keep anyone out.",
+      "guestMode": "Folders made in this interface let in only the people given access, so guests may see the folder but not open it. To let guests open it, change its file permissions in the classic interface.",
+      "guestOnly": "Guests only is set in the classic interface. Saving here changes it to also let in people who sign in.",
+      "smbOff": "Windows and Mac sharing is off for the whole NAS. Sharing this folder turns it on.",
+      "hostTooLong": "Windows and Mac sharing needs a NAS name of 15 characters or fewer. This NAS is called <host></host> ({{count}} characters). Change its name under Network in the classic interface.",
+      "hostLink": "Network settings in the classic interface",
+      "share": "Share",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving…"
+    },
+    "saved": "{{folder}} is set to be shared. Apply the changes to share it.",
+    "savedChange": "The sharing options of {{folder}} are saved. Apply the changes to use them.",
+    "turnOnFailed": "<folder></folder> is set up for Windows and Mac computers, but Windows and Mac sharing could not be turned on.",
+    "tryAgain": "Try again",
+    "stopped": "{{folder}} will stop being shared when you apply the changes.",
+    "loadFailed": "Could not read how this folder is shared.",
+    "saveFailed": "The sharing options were not saved.",
+    "stopFailed": "Sharing was not stopped.",
+    "turnOnShareFailed": "<folder></folder> was not turned on for Windows and Mac computers.",
+    "turnedOnShare": "{{folder}} will be shared again when you apply the changes."
+  },
+  "smb": {
+    "title": "Windows and Mac sharing",
+    "subtitle": "SMB/CIFS",
+    "intro": "Turn it on here, then share folders from their own pages.",
+    "state": {
+      "off": "Off. No folder can be reached from Windows or Mac computers.",
+      "on": "On.",
+      "down": "On, but not running. Shared folders cannot be reached. The SMB service details may say why.",
+      "downLink": "Open the SMB service details",
+      "pendingOn": "Turned on. It starts when you apply the pending changes.",
+      "unread": "Could not read whether Windows and Mac sharing is on."
+    },
+    "switch": {
+      "off": "Windows and Mac sharing is off.",
+      "on": "Windows and Mac sharing is on."
+    },
+    "turnOn": "Turn on",
+    "turnOff": "Turn off…",
+    "saving": "Saving…",
+    "turnedOn": "Windows and Mac sharing will turn on when you apply the changes.",
+    "turnedOff": "Windows and Mac sharing will turn off when you apply the changes.",
+    "off": {
+      "title": "Turn off Windows and Mac sharing?",
+      "body_one": "After the changes are applied, no shared folder can be reached from Windows or Mac computers: {{count}} folder is shared now ({{list}}). The files stay on the NAS, and each folder keeps its sharing options for when you turn it on again.",
+      "body_other": "After the changes are applied, no shared folder can be reached from Windows or Mac computers: {{count}} folders are shared now ({{list}}). The files stay on the NAS, and each folder keeps its sharing options for when you turn it on again.",
+      "more": "and {{count}} more",
+      "bodyNone": "After the changes are applied, no shared folder can be reached from Windows or Mac computers. The files stay on the NAS, and each folder keeps its sharing options for when you turn it on again.",
+      "close": "If you are using a shared folder from this computer, close its files first.",
+      "cancel": "Cancel",
+      "confirm": "Turn off"
+    },
+    "shares": {
+      "title": "Shared folders",
+      "col": {
+        "folder": "Folder",
+        "address": "Address",
+        "guest": "Guest access",
+        "readonly": "Read only",
+        "browseable": "Shown in the network list"
+      },
+      "guest": {
+        "no": "Off",
+        "allow": "On",
+        "only": "Guests only"
+      },
+      "disabled": "Turned off for this folder",
+      "gone": "A shared folder that no longer exists",
+      "empty": "No folder is shared with Windows and Mac computers yet. Open a shared folder to share it.",
+      "emptyLink": "Open Shared folders",
+      "loadFailed": "Could not read the folders shared with Windows and Mac computers."
+    },
+    "connected": "Who is connected now",
+    "saveFailed": "Could not save the change.",
+    "footerLine": "The workgroup, home folders, protocol versions and other options are in the classic interface.",
+    "classicLink": "SMB/CIFS settings in the classic interface",
+    "loading": "Loading Windows and Mac sharing…"
+  },
+  "addShare": {
+    "title": "Add a shared folder",
+    "breadcrumb": "Add a shared folder",
+    "fs": {
+      "legend": "File system",
+      "handedOver": "(the storage you just added)",
+      "free": "{{free}} free",
+      "full": "Almost full: {{free}} free.",
+      "cannot_one": "File system that cannot hold a shared folder ({{count}})",
+      "cannot_other": "File systems that cannot hold a shared folder ({{count}})",
+      "reason": {
+        "notMounted": "Not mounted.",
+        "missing": "Missing.",
+        "system": "This is the system drive. Shared folders belong on a data disk.",
+        "notCandidate": "The NAS does not offer this file system for shared folders.",
+        "readOnly": "Mounted read only, so nothing can be written to it."
+      },
+      "choose": "Choose the file system to put it on.",
+      "loadFailed": "Could not check which file systems can hold a shared folder.",
+      "none": "No file system can hold a shared folder yet. Add storage first: a disk with a file system, mounted.",
+      "addStorage": "Add storage"
+    },
+    "name": {
+      "label": "Name",
+      "hint": "Other computers see the folder by this name. It cannot be changed later.",
+      "placeholder": "For example: Photos",
+      "length": "Use 1 to 80 characters. Letters outside the Latin alphabet count as two or more.",
+      "chars": "A name cannot contain any of these: \" \\ / [ ] : | < > + = ; , * ?, and cannot start or end with a space.",
+      "dots": "A name cannot start with a full stop or contain two in a row.",
+      "reserved": "{{name}} is a name Windows and Mac sharing keeps for itself. Choose another name.",
+      "taken": "There is already a shared folder called {{other}}."
+    },
+    "path": {
+      "default": "It uses a folder called <path></path> at the top of <fs></fs>.",
+      "other": "Use another folder",
+      "useDefault": "Use the default folder",
+      "label": "Folder on the file system",
+      "hint": "The folder is made if it does not exist. If it already exists, it is used as it is, with its files and its own file permissions.",
+      "whole": "Share the whole file system",
+      "wholeHint": "Every folder on it can then be reached through this shared folder.",
+      "invalid": "Use folder names separated by /, without . or .. and without names that start with a full stop.",
+      "tooDeep": "Use at most 8 folders in the path.",
+      "taken": "{{other}} already uses this folder."
+    },
+    "access": {
+      "intro": "Choose who may open this folder from other computers. You can change this later on the folder's page."
+    },
+    "smb": {
+      "label": "Share it with Windows and Mac computers"
+    },
+    "modeNote": "Only the people you give access to can open it.",
+    "continue": "Continue",
+    "check": {
+      "needAccess": "Give at least one person or group access, or untick Share it with Windows and Mac computers.",
+      "count_one": "{{count}} thing to fix",
+      "count_other": "{{count}} things to fix"
+    },
+    "sum": {
+      "title": "Ready to add the shared folder",
+      "make": "Make the shared folder <name></name> on <fs></fs>, in the folder <path></path>. Only the people you give access to can open it.",
+      "makeWhole": "Make the shared folder <name></name> using the whole file system <fs></fs>. Every folder on it can be reached through this shared folder.",
+      "existing": "If a folder called <path></path> already exists there, it is used as it is, with its files and its own file permissions.",
+      "rw": "Read and write: {{list}}.",
+      "ro": "Read only: {{list}}.",
+      "nobody": "Nobody has access yet.",
+      "group": "{{name}} (group)",
+      "share": "Share it with Windows and Mac computers as <address></address>.",
+      "smbOn": "Windows and Mac sharing is off now and will be turned on.",
+      "noShare": "It is not shared with other computers yet. You can share it later from its page.",
+      "guest": "Anyone on your network can open it without a password.",
+      "apply": "Then apply the changes. No other change is pending."
+    },
+    "confirm": "Add shared folder",
+    "changeChoices": "Change choices",
+    "step": {
+      "check": "Check the choices",
+      "make": "Make the shared folder",
+      "access": "Give access",
+      "smbOn": "Turn on Windows and Mac sharing",
+      "share": "Share the folder",
+      "apply": "Save and share",
+      "verify": "Check that it is ready"
+    },
+    "task": {
+      "apply": "Apply the changes for {{name}}"
+    },
+    "fail": {
+      "fsGone": "<fs></fs> cannot hold a shared folder any more: {{reason}}",
+      "nameTaken": "There is now a shared folder called <other></other>.",
+      "notMade": "The shared folder was not made.",
+      "noDir": "The shared folder was set up, but its folder could not be made on <fs></fs>.",
+      "removeAgain": "Remove it again",
+      "partial": "<name></name> was made, but {{what}} could not be saved.",
+      "what": {
+        "access": "who can use it",
+        "smbOn": "turning on Windows and Mac sharing",
+        "share": "sharing it with Windows and Mac computers",
+        "folder": "the folder cannot be reached",
+        "smb": "Windows and Mac sharing is not running"
+      },
+      "stopHere": "Stop here",
+      "stopBody": "The folder <path></path> is made on <fs></fs>. The changes saved so far are pending in the band. If you undo them there, the folder's record goes, but the empty folder stays on the disk.",
+      "apply": "Applying the changes failed.",
+      "notReady": "The changes are applied, but {{what}} is not ready yet.",
+      "unknown": "Could not tell whether “{{step}}” finished.",
+      "unknownBody": "The request was cut before the NAS answered. Check again to see what was done; the run then goes on from the first step that is not done.",
+      "checkRead": "Could not check the choices again.",
+      "pending": "Other changes became pending: <list></list>.",
+      "pendingBody": "Apply or undo them first, so that only this folder's changes are applied at the end. Nothing was changed.",
+      "hostTooLong": "Windows and Mac sharing cannot be turned on with this NAS name.",
+      "nothingDone": "Nothing was changed.",
+      "removeFailed": "The shared folder's record could not be removed."
+    },
+    "preflightBody": "Apply or undo them before you add a shared folder, so that only its changes are applied at the end.",
+    "alsoBody": "Also pending from elsewhere: <list></list>. Applying applies them too.",
+    "loading": "Checking what this NAS can share…",
+    "removed": "The shared folder's record is removed again. Nothing on the disk was changed.",
+    "toList": "Open Shared folders",
+    "tryAgain": "Try again",
+    "tryStep": "Try this step again",
+    "tryApply": "Try applying again",
+    "checkAgain": "Check again",
+    "done": {
+      "title": "{{name}} is ready.",
+      "shared": "Open it from a Windows computer at <windows></windows>, or from a Mac at <mac></mac>, and sign in with the name and password of someone who has access.",
+      "notShared": "It is not shared with other computers yet.",
+      "guest": "Anyone on your network can open it without a password.",
+      "open": "Open the shared folder",
+      "another": "Add another shared folder"
+    }
+  },
+  "repoint": {
+    "title": "Point {{folder}} somewhere else",
+    "body": "Choose where <folder></folder> should point. No files are moved: it uses whatever is in the folder you choose, and makes the folder if it does not exist.",
+    "users": "{{list}} will use the new folder as soon as the changes are applied.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "{{folder}} now points at {{path}} on {{fs}}. Apply the changes to use it.",
+    "okOnly": "This is only for a shared folder that cannot be reached. To move a working shared folder, use the classic interface.",
+    "useSmb": "Its share for Windows and Mac computers",
+    "useOther": "A setting this page does not show",
+    "failed": "{{folder}} was not changed."
+  },
+  "shareDelete": {
+    "title": "Delete this shared folder",
+    "intro": "Removing the shared folder keeps its files on the disk; only this NAS's setting goes. Deleting it with its files erases everything in its folder.",
+    "keep": {
+      "open": "Remove, keep the files…",
+      "title": "Remove the shared folder {{folder}}?",
+      "body": "The files stay on <fs></fs> in <path></path>. Nobody can reach them from other computers through <folder></folder> any more. Who could use it is forgotten.",
+      "later": "To use these files again later, add a shared folder for the same folder.",
+      "confirm": "Remove shared folder"
+    },
+    "files": {
+      "open": "Delete with all its files…",
+      "title": "Delete {{folder}} and all its files?",
+      "consequence": "Every file and folder in <path></path> is deleted from the NAS, at once. This cannot be undone, and this page cannot count how much that is.",
+      "btrfs": "<fs></fs> may keep snapshots of this folder. Snapshots are managed in the classic interface.",
+      "copyFirst": "If the files matter, copy them somewhere else first. Choose Remove, keep the files, if you only want the shared folder to go.",
+      "instead": "Remove and keep the files instead",
+      "typePrompt": "Type {{folder}} to confirm.",
+      "typeHint": "The button is available once the name matches.",
+      "confirm": "Delete folder and files"
+    },
+    "blocked": {
+      "smb": "It is shared with Windows and Mac computers.",
+      "smbDo": "Stop sharing it first, above, and apply that change.",
+      "smbClassic": "Remove its SMB share in the classic interface first.",
+      "unread": "Could not check what uses this shared folder, so it cannot be removed now.",
+      "running": "Wait for {{action}} to finish.",
+      "notOk": "Its folder cannot be found, so this page cannot tell what would be deleted.",
+      "fsNotMounted": "Its file system <fs></fs> is not mounted.",
+      "whole": "It is the whole file system <fs></fs>. Deleting all its files would erase everything on <fs></fs>.",
+      "wholeDo": "To erase the file system, use its page.",
+      "inside": "<other></other> uses <path></path>, inside this folder.",
+      "insideDo": "Delete or move {{other}} first.",
+      "system": "It is on the system drive."
+    },
+    "checking": "Checking what uses this shared folder…",
+    "gone": "This shared folder no longer exists.",
+    "cancel": "Cancel",
+    "checkingAgain": "Checking again…",
+    "step": {
+      "keep": "Remove the shared folder",
+      "files": "Delete the folder and its files",
+      "filesHint": "This can take a while for a large folder. Keep this page open.",
+      "save": "Save the change"
+    },
+    "done": {
+      "keep": "<folder></folder> was removed. Its files are still on <fs></fs> in <path></path>.",
+      "files": "<folder></folder> and its files were deleted.",
+      "toList": "Go to Shared folders"
+    },
+    "failed": {
+      "keep": "{{folder}} was not removed.",
+      "files": "{{folder}} was not deleted.",
+      "partly": "Some files may already be deleted.",
+      "saveBody": "The shared folder is removed. Saving the change failed, so it stays pending in the band."
+    },
+    "unknown": "Could not tell whether {{folder}} was removed.",
+    "checkAgain": "Check again",
+    "blockedTitle": "This shared folder cannot be removed now",
+    "preflightTitle": "Some changes are not applied yet",
+    "preflightBody": "Removing a shared folder saves its own change straight after, and other pending changes would be applied with it. Apply or undo them first.",
+    "saveFailedTitle": "The change was not saved.",
+    "stillThere": "{{folder}} is still on the list, so it was not removed."
   },
   "account": {
     "title": "Your account",
@@ -864,7 +1380,7 @@
     "emptyConnections": "Nothing to show. No one is connected right now.",
     "emptyNfs": "Nothing is shared over NFS right now.",
     "link": {
-      "smb": "Open SMB/CIFS settings in the classic interface",
+      "smbPage": "Windows and Mac sharing settings",
       "nfs": "Open NFS settings in the classic interface",
       "ssh": "Open SSH settings"
     },
@@ -1703,8 +2219,8 @@
     "usedBy": {
       "title": "Used by",
       "sharedFolder": "Shared folder",
-      "openShared": "Open Shared folders",
-      "openSharedName": "Open Shared folders, where {{name}} is listed",
+      "openShared": "Open its page",
+      "openSharedName": "Open shared folder {{name}}",
       "other": "Used by a setting this interface does not show yet, such as a quota or an add-on.",
       "none": "Nothing uses this file system.",
       "failed": "Could not check which shared folders use this file system.",
@@ -1919,7 +2435,7 @@
       "f2fsHint": "Made for flash cards and USB sticks. Not for hard disks."
     },
     "tagsPlaceholder": "For example: Media",
-    "sharingNext": "Sharing a folder on it with your computers is the next step. This page shows you how when the storage is ready.",
+    "sharingNext": "Sharing a folder on it with your computers is the next step.",
     "continue": "Continue",
     "summaryTitle": "Ready to add storage",
     "sum": {
@@ -1942,7 +2458,7 @@
       "level": "Warn when it is {{level}} full.",
       "noLevel": "No warning when it fills up.",
       "mount": "Then mount it, which applies the changes for it. Nothing else is pending.",
-      "shareNext": "Sharing a folder on it comes next, in the classic interface for now."
+      "shareNext": "Sharing a folder on it comes next."
     },
     "typePrompt": "Type {{device}} to confirm.",
     "typeHint": "The button is available once the name matches.",
@@ -2018,22 +2534,8 @@
     "openFs": "Open the file system",
     "handover": {
       "title": "Next: share a folder on it",
-      "folder": "Add a shared folder.",
-      "folderLink": "Add a shared folder in the classic interface",
-      "folderBody": "Choose the file system {{choiceText}}. For Permissions, choose \"Administrator: read/write, Users: read/write, Others: no access\", so that only the people you give access to can reach it.",
-      "access": "Choose who can use it.",
-      "accessLink": "Shared folders in the classic interface",
-      "accessBody": "Select the new folder, then the Permissions button (the key icon). Give each person or group Read/Write or Read-only. Anyone not given access cannot use it.",
-      "smbOn": "Turn on sharing with Windows and Mac computers.",
-      "smbOnLink": "SMB/CIFS settings in the classic interface",
-      "smbOnBody": "Tick Enabled, then Save.",
-      "share": "Share the folder with your computers.",
-      "shareLink": "Add an SMB share in the classic interface",
-      "shareBody": "Choose the new shared folder and Save. Leave Public at No, so that people sign in with their name and password.",
-      "guest": "Only if anyone on your network may open it without a password, choose Guests allowed instead. Anyone who can reach your network can then read it, and change it if the folder allows.",
-      "apply": "Apply the changes.",
-      "applyBody": "When you have saved these, apply the changes, here in the band at the top of the page or in the classic interface.",
-      "access2": "Who can actually open the folder depends on its permissions too. A shared folder's own page will show it when it is built here."
+      "body": "Make a shared folder on <fs></fs>, choose who can use it, and share it with your computers.",
+      "button": "Share a folder on it"
     },
     "multi": {
       "breadcrumb": "Combine disks",
@@ -3113,7 +3615,7 @@
       "checking": "Checking what uses it…",
       "unread": "Could not check what uses this file system.",
       "share": "Shared folder",
-      "openShare": "Open Shared folders for {{name}}",
+      "openShare": "Open shared folder {{name}}",
       "inside": "Inside it",
       "volume": "Volume",
       "openFs": "Open file system {{fs}}",
@@ -3365,7 +3867,7 @@
       "title": "This cannot be deleted now",
       "shares": "Shared folders use it: {{list}}.",
       "poolShares": "Shared folders use its own folder: {{list}}.",
-      "sharesDo": "Remove them first, in Shared folders.",
+      "sharesDo": "Remove them first, each from its own page:",
       "sharesLink": "Open Shared folders",
       "sharedUnnamed": "The ZFS plugin says a shared folder uses it. Remove that shared folder first, in Shared folders.",
       "other": "Something else on the NAS uses it, such as an add-on or a setting this interface does not show yet.",

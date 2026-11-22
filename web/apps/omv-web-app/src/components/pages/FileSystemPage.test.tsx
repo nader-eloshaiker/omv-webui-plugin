@@ -163,26 +163,32 @@ describe("what uses it, and unmounting it (5)", () => {
     expect(
       await within(used).findByText("a4share", {}, LONG),
     ).toBeInTheDocument();
+    const folderPage = /^\/ui\/storage\/shared-folders\/[0-9a-fA-F-]{36}$/u;
     expect(
-      within(used).getByRole("link", {
-        name: "Open Shared folders, where a4share is listed",
-      }),
-    ).toHaveAttribute("href", "/ui/storage/shared-folders");
+      within(used)
+        .getByRole("link", { name: "Open shared folder a4share" })
+        .getAttribute("href"),
+    ).toMatch(folderPage);
     const unmount = await section("Unmount this file system");
     expect(unmount).toHaveTextContent("Shared folders use it: a4share.");
     expect(unmount).toHaveTextContent(
       "Delete those shared folders, or move them to another file system, first.",
     );
+    // Each folder links to its own page, where it can be removed (shares design 9.1).
+    expect(
+      within(unmount)
+        .getByRole("link", { name: "Open shared folder a4share" })
+        .getAttribute("href"),
+    ).toMatch(folderPage);
     const button = within(unmount).getByRole("button", { name: "Unmount…" });
     expect(button).toHaveAttribute("aria-disabled", "true");
     await user.click(button);
     expect(screen.queryByRole("alertdialog")).toBeNull();
     // The links lead to removing the blocker, never to an unmount without the check.
     for (const link of within(unmount).getAllByRole("link")) {
-      expect([
-        "/ui/storage/shared-folders",
-        "/#/storage/shared-folders",
-      ]).toContain(link.getAttribute("href"));
+      expect(link.getAttribute("href")).toMatch(
+        /^(\/#\/storage\/shared-folders|\/ui\/storage\/shared-folders\/[0-9a-fA-F-]{36})$/u,
+      );
     }
     expect(callNames()).not.toContain("FileSystemMgmt.umountByDir");
   });
@@ -725,55 +731,27 @@ describe("growing it (4; owner, P5)", () => {
   });
 });
 
-describe("the sharing handover on a file system's page (2.4, D20)", () => {
-  it("follows Used by while nothing is shared from a mounted file system, with the agreed choices", async () => {
-    await page(MEDIA, {
+describe("the sharing handover on a file system's page (2.4, D20; shares design 6.7)", () => {
+  it("follows Used by while nothing is shared from a mounted file system, with one button to the add flow", async () => {
+    const { user } = await page(MEDIA, {
       scenario: "fsVariety",
       answers: { shareMgmtGetList: "empty" },
     });
     const handover = await section("Next: share a folder on it");
     expect(handover).toHaveTextContent(
-      'Choose the file system [Media,Photos]. For Permissions, choose "Administrator: read/write, Users: read/write, Others: no access"',
+      /^Next: share a folder on itMake a shared folder on .+, choose who can use it, and share it with your computers\.Share a folder on it$/u,
     );
-    expect(handover).toHaveTextContent("Leave Public at No");
-    expect(handover).toHaveTextContent(
-      "Only if anyone on your network may open it without a password, choose Guests allowed instead.",
-    );
-    expect(handover).toHaveTextContent(
-      "Turn on sharing with Windows and Mac computers.",
-    );
-    const hrefs = within(handover)
-      .getAllByRole("link")
-      .map((l) => l.getAttribute("href"));
-    expect(hrefs).toEqual([
-      "/#/storage/shared-folders/create",
-      "/#/storage/shared-folders",
-      "/#/services/smb/settings",
-      "/#/services/smb/shares/create",
-    ]);
-  });
-
-  it("leaves out turning SMB on when it is on already", async () => {
-    const services = CONTRACT_EXAMPLES.servicesGetStatus.sshOnly.value;
-    await page(MEDIA, {
-      scenario: "fsVariety",
-      answers: {
-        shareMgmtGetList: "empty",
-        servicesGetStatus: {
-          status: 200,
-          value: {
-            ...services,
-            data: services.data.map((s) =>
-              s.name === "samba" ? { ...s, enabled: true, running: true } : s,
-            ),
-          },
-        },
-      },
-    });
-    const handover = await section("Next: share a folder on it");
-    await waitFor(() =>
-      expect(within(handover).getAllByRole("link")).toHaveLength(3),
-    );
-    expect(handover).not.toHaveTextContent("Turn on sharing");
+    const links = within(handover).getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAccessibleName("Share a folder on it");
+    // The file system goes in memory, never in the address (UI-4).
+    expect(links[0]).toHaveAttribute("href", "/ui/storage/shared-folders/add");
+    await user.click(links[0] as HTMLElement);
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "Add a shared folder",
+      }),
+    ).toBeVisible();
   });
 });

@@ -88,12 +88,17 @@ function SettingsLink({ tab }: { tab: ServiceTab }) {
       </Link>
     );
   }
+  if (tab === "smb") {
+    // Windows and Mac sharing has its page here now (shares design 9.3); its footer has the classic one.
+    return (
+      <Link to="/services/smb" className={routerLinkClass}>
+        {t("serviceDetails.link.smbPage")}
+      </Link>
+    );
+  }
   return (
-    <ExternalLink
-      href={tab === "smb" ? CLASSIC.smbSettings : CLASSIC.nfsSettings}
-      newTabLabel={t("app.newTab")}
-    >
-      {t(`serviceDetails.link.${tab}`)}
+    <ExternalLink href={CLASSIC.nfsSettings} newTabLabel={t("app.newTab")}>
+      {t("serviceDetails.link.nfs")}
     </ExternalLink>
   );
 }

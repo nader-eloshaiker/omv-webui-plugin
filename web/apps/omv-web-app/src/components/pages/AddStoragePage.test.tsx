@@ -5,7 +5,7 @@
 // erased before the re-check, each failure plan (R6, R7, R10), the result with the sharing handover, the
 // disk handed over from its page in memory only, and a run that outlives its page.
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
@@ -160,9 +160,7 @@ describe("Flow A: Add storage", () => {
     expect(summary).toHaveTextContent(
       "Then mount it, which applies the changes for it. Nothing else is pending.",
     );
-    expect(summary).toHaveTextContent(
-      "Sharing a folder on it comes next, in the classic interface for now.",
-    );
+    expect(summary).toHaveTextContent("Sharing a folder on it comes next.");
     await waitFor(() => expect(summary.parentElement).toHaveFocus());
     // Unavailable until the device name is typed exactly; Enter does nothing.
     expect(confirmButton()).toHaveAttribute("aria-disabled", "true");
@@ -230,7 +228,12 @@ describe("Flow A: Add storage", () => {
     const handover = await screen.findByRole("region", {
       name: "Next: share a folder on it",
     });
-    expect(handover).toHaveTextContent("Choose the file system /dev/sdd1.");
+    expect(handover).toHaveTextContent(
+      "Make a shared folder on EXT4 on /dev/sdd1, choose who can use it, and share it with your computers.",
+    );
+    expect(
+      within(handover).getByRole("link", { name: "Share a folder on it" }),
+    ).toHaveAttribute("href", "/ui/storage/shared-folders/add");
   }, 30_000);
 
   it("reads the RAID plugin's 404 as no arrays, and adds the storage all the same", async () => {

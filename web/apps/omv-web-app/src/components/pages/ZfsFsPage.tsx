@@ -162,11 +162,12 @@ function FsUsedByPanel({
       name: s.name,
       action: (
         <Link
-          to="/storage/shared-folders"
+          to="/storage/shared-folders/$folder"
+          params={{ folder: s.uuid }}
           aria-label={t("zfsFs.usedBy.openShare", { name: s.name })}
           className={routerLinkClass}
         >
-          {t("zfsDelete.blocked.sharesLink")}
+          {t("filesystem.usedBy.openShared")}
         </Link>
       ),
     })),

@@ -71,6 +71,19 @@ describe("navFor", () => {
     expect(isCurrent("/storage/zfs/fs/tank/media", "/storage/zfs")).toBe(true);
     expect(isCurrent("/storage/zfs/create", "/storage/zfs")).toBe(true);
     expect(isCurrent("/storage/zfsx", "/storage/zfs")).toBe(false);
+    // A shared folder's page and "Add a shared folder" mark Shared folders (phase 5 shares 10.2).
+    expect(
+      isCurrent(
+        "/storage/shared-folders/00000000-0000-4000-8000-000000000005",
+        "/storage/shared-folders",
+      ),
+    ).toBe(true);
+    expect(
+      isCurrent("/storage/shared-folders/add", "/storage/shared-folders"),
+    ).toBe(true);
+    expect(
+      isCurrent("/storage/shared-foldersx", "/storage/shared-folders"),
+    ).toBe(false);
   });
 
   it("marks RAID current on an array's page and the RAID flows", () => {
@@ -128,6 +141,7 @@ describe("the table", () => {
       "/storage/zfs",
       "/storage/filesystems",
       "/storage/shared-folders",
+      "/services/smb",
       "/services/ssh",
       "/diagnostics/system-logs",
       "/diagnostics/processes",

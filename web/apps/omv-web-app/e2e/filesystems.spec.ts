@@ -173,7 +173,10 @@ test("Flow A creates and mounts a file system on an empty disk, only after the t
   const handover = page.getByRole("region", {
     name: copy.addStorage.handover.title,
   });
-  await expect(handover).toContainText("Leave Public at No");
+  // The handover is one button to "Add a shared folder" (shares design 6.7).
+  await expect(
+    handover.getByRole("link", { name: copy.addStorage.handover.button }),
+  ).toBeVisible();
   await expectNoSidewaysScroll(page);
 });
 

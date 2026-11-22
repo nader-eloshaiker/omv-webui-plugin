@@ -53,6 +53,7 @@ export interface NavPage {
 /** The routes of the pages built in this interface, more specific than `/$group/$item`. */
 export type BuiltRoute =
   | "/services/ssh"
+  | "/services/smb"
   | "/storage/shared-folders"
   | "/storage/disks"
   | "/storage/smart"
@@ -229,6 +230,7 @@ export const NAV_PAGES = [
     item: "smb",
     labelKey: "nav.items.services.smb",
     classic: "/#/services/smb",
+    route: "/services/smb",
     roles: ADMIN,
   },
   {
@@ -344,7 +346,8 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * tab of the Services page (`/diagnostics/services/smb`, ...) marks "Services"; a disk's page
  * (`/storage/disks/sdb`) marks "Disks", and every Disk health page (`/storage/smart/overview`, the
  * set-up page) marks "Disk health"; a file system's page and the two add-storage flows mark "File
- * systems"; an array's page and the RAID flows mark "RAID".
+ * systems"; an array's page and the RAID flows mark "RAID"; a shared folder's page and "Add a shared
+ * folder" mark "Shared folders".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -353,6 +356,8 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/diagnostics/services" &&
       pathname.startsWith("/diagnostics/services/")) ||
     (route === "/storage/disks" && pathname.startsWith("/storage/disks/")) ||
+    (route === "/storage/shared-folders" &&
+      pathname.startsWith("/storage/shared-folders/")) ||
     (route === "/storage/smart" && pathname.startsWith("/storage/smart/")) ||
     (route === "/storage/filesystems" &&
       pathname.startsWith("/storage/filesystems/")) ||

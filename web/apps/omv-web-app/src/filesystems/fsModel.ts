@@ -325,8 +325,14 @@ export function growBlockers(
   return blockers;
 }
 
+/** A shared folder named by a refusal: its name, and its UUID for the link to its page. */
+export interface BlockingFolder {
+  uuid: string;
+  name: string;
+}
+
 export type UnmountBlocker =
-  | { kind: "shared"; names: string[] }
+  | { kind: "shared"; names: string[]; folders: BlockingFolder[] }
   | { kind: "used" }
   | { kind: "other" }
   | { kind: "readOnly" }
@@ -352,7 +358,11 @@ export function unmountBlockers(
   if (row._used || used.kind === "shares") {
     blockers.push(
       used.kind === "shares"
-        ? { kind: "shared", names: used.folders.map((f) => f.name) }
+        ? {
+            kind: "shared",
+            names: used.folders.map((f) => f.name),
+            folders: used.folders.map((f) => ({ uuid: f.uuid, name: f.name })),
+          }
         : used.kind === "other" || used.kind === "none"
           ? { kind: "other" }
           : { kind: "used" },

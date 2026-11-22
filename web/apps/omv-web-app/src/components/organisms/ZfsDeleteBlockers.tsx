@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Why a file system or a pool cannot be deleted (phase 5 ZFS design 9.1, 9.2; owner, P11), each blocker
-// in words with what to do: links lead only to removing the blocker on this interface's pages; what
+// in words with what to do: links lead only to removing the blocker on this interface's pages (each
+// shared folder's own page, shares design 9.1); what
 // this interface does not manage (a volume, a clone, a locked file system) is said to be dealt with in
 // the classic interface, without a link that could be taken for a way round the refusal.
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
@@ -14,6 +15,7 @@ import {
   isVolumeRow,
   type DeleteBlocker,
 } from "../../zfs/zfsModel.ts";
+import { FolderLink } from "../atoms/FolderLink.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
 export function ZfsDeleteBlockers({
@@ -63,8 +65,15 @@ export function ZfsDeleteBlockers({
                     },
                   )}
                 </p>
-                <p className="text-sm">
-                  {t("zfsDelete.blocked.sharesDo")} {sharesLink}
+                <p className="flex flex-wrap gap-x-2 text-sm">
+                  <span>{t("zfsDelete.blocked.sharesDo")}</span>
+                  {b.folders.map((folder) => (
+                    <FolderLink
+                      key={folder.uuid}
+                      uuid={folder.uuid}
+                      name={folder.name}
+                    />
+                  ))}
                 </p>
               </>
             );

@@ -605,7 +605,11 @@ describe("refusals (0.10)", () => {
       snapshots: { data: [], failed: false },
     });
     expect(fsDeleteBlockers(media, used, false, false)).toEqual([
-      { kind: "shares", names: ["media"] },
+      {
+        kind: "shares",
+        names: ["media"],
+        folders: [{ uuid: "u", name: "media" }],
+      },
     ]);
     const unread = fsUsedBy(media, list, {
       shares: { failed: true, error: new Error("x") },

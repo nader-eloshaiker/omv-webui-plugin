@@ -605,8 +605,15 @@ test.describe("ZFS journeys on the VM", () => {
       .poll(() => times(seen, "Zfs.scrubPool"), { timeout: 30_000 })
       .toBe(1);
     const stop = page.getByRole("button", { name: copy.zfsCheck.stop });
-    if (await stop.isVisible()) {
-      await stop.click();
+    // The check can end between seeing the button and pressing it (the button then goes): a press
+    // that cannot land within ten seconds means it has ended, and the journey goes on.
+    const stopped =
+      (await stop.isVisible()) &&
+      (await stop.click({ timeout: 10_000 }).then(
+        () => true,
+        () => false,
+      ));
+    if (stopped) {
       const d = page.getByRole("alertdialog");
       await d.getByRole("button", { name: copy.zfsCheck.stopConfirm }).click();
       await expect(d).toHaveCount(0, { timeout: 30_000 });

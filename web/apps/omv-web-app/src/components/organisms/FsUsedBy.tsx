@@ -58,7 +58,8 @@ export function FsUsedBy({
                 name: folder.name,
                 action: (
                   <Link
-                    to="/storage/shared-folders"
+                    to="/storage/shared-folders/$folder"
+                    params={{ folder: folder.uuid }}
                     aria-label={t("filesystem.usedBy.openSharedName", {
                       name: folder.name,
                     })}

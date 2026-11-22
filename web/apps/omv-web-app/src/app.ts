@@ -32,6 +32,9 @@ import {
   createSessionStore,
   type SessionStore,
 } from "./session/sessionStore.ts";
+import { addFlowStore } from "./sharedFolders/addFlow.ts";
+import { shareDeletes } from "./sharedFolders/deleteRun.ts";
+import { sharesSession } from "./sharedFolders/sharesSession.ts";
 import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
 import { zfsActions } from "./zfs/zfsActions.ts";
 import { zfsFlowStore } from "./zfs/zfsRun.ts";
@@ -40,6 +43,9 @@ import { zfsSession } from "./zfs/zfsSession.ts";
 /** What pages keep in memory for the session; emptied when it ends. */
 const SESSION_VIEW_STATE = [
   sharedFoldersTable,
+  sharesSession,
+  shareDeletes,
+  addFlowStore,
   usageSamples,
   diskHealth,
   diskSession,
