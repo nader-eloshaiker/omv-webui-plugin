@@ -33,6 +33,7 @@ export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";
 export * from "./components/select/select";
 export * from "./components/side-nav/side-nav";
+export * from "./components/size-field/size-field";
 export * from "./components/skeleton/skeleton";
 export * from "./components/skip-link/skip-link";
 export * from "./components/status/status";

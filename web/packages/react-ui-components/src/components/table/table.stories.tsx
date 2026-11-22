@@ -14,6 +14,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableGroupRow,
   TableHead,
   TableHeader,
   TableLastRefreshed,
@@ -311,5 +312,221 @@ export const ScrollsInsideItsFrame: Story = {
         </TableRow>
       </TableBody>
     </Table>
+  ),
+};
+
+interface PoolDisk {
+  device: string;
+  model: string;
+  serial: string;
+  size: string;
+  role: string;
+  status?: HealthStatus;
+}
+
+interface DiskGroup {
+  id: string;
+  heading: string;
+  description?: string;
+  disks: PoolDisk[];
+}
+
+const MIRROR: DiskGroup = {
+  id: "group-mirror-0",
+  heading: "Mirror, 2 disks",
+  description: "Protected: one disk of the two can fail without losing files.",
+  disks: [
+    {
+      device: "/dev/sdb",
+      model: "Example HDD 4T",
+      serial: "EXAMPLE-0001",
+      size: "3.6 TiB",
+      role: "Working",
+    },
+    {
+      device: "/dev/sdc",
+      model: "Example HDD 4T",
+      serial: "EXAMPLE-0002",
+      size: "3.6 TiB",
+      role: "Working",
+    },
+  ],
+};
+
+const GROUPS: DiskGroup[] = [
+  MIRROR,
+  {
+    id: "group-mirror-1",
+    heading: "Mirror, 2 disks",
+    description:
+      "Not protected now: a disk is missing. If the other disk fails, every file on the pool is lost.",
+    disks: [
+      {
+        device: "/dev/sdd",
+        model: "Example HDD 4T",
+        serial: "EXAMPLE-0003",
+        size: "3.6 TiB",
+        role: "Working",
+      },
+      {
+        device: "/dev/sde",
+        model: "Example HDD 4T",
+        serial: "EXAMPLE-0004",
+        size: "3.6 TiB",
+        role: "Missing",
+        status: "critical",
+      },
+    ],
+  },
+  {
+    id: "group-cache",
+    heading: "Read cache, 1 disk",
+    description: "Speeds up reading. Losing it loses no files.",
+    disks: [
+      {
+        device: "/dev/nvme0n1",
+        model: "Example NVMe SSD 500G",
+        serial: "EXAMPLE-0005",
+        size: "465.8 GiB",
+        role: "Working",
+      },
+    ],
+  },
+];
+
+function RoleCell({ disk }: { disk: PoolDisk }) {
+  return disk.status ? (
+    <StatusPill status={disk.status}>{disk.role}</StatusPill>
+  ) : (
+    disk.role
+  );
+}
+
+/** A pool's disks, each group in its own body with its heading row first (phase 5, 2.5). */
+function PoolDisksTable({ groups }: { groups: DiskGroup[] }) {
+  return (
+    <Table aria-label="Disks of pool tank" frameLabel="Disks of pool tank">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Disk</TableHead>
+          <TableHead>Model</TableHead>
+          <TableHead numeric>Size</TableHead>
+          <TableHead>Role</TableHead>
+        </TableRow>
+      </TableHeader>
+      {groups.map((group) => (
+        <TableBody key={group.id}>
+          <TableGroupRow
+            colSpan={4}
+            id={group.id}
+            heading={group.heading}
+            description={group.description}
+          />
+          {group.disks.map((disk) => (
+            <TableRow key={disk.device} className="whitespace-nowrap">
+              <TableCell>
+                <Identifier>{disk.device}</Identifier>
+              </TableCell>
+              <TableCell>
+                <div>{disk.model}</div>
+                <Identifier className="text-sm text-muted-foreground">
+                  {disk.serial}
+                </Identifier>
+              </TableCell>
+              <TableCell numeric>{disk.size}</TableCell>
+              <TableCell>
+                <RoleCell disk={disk} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      ))}
+    </Table>
+  );
+}
+
+/** One group with its protection sentence. */
+export const GroupRowOneGroup: Story = {
+  render: () => <PoolDisksTable groups={[MIRROR]} />,
+};
+
+/**
+ * Several groups, each in its own body: a screen reader reads each disk with its group ("Mirror, 2
+ * disks ... /dev/sde, Missing").
+ */
+export const GroupRowSeveralGroups: Story = {
+  render: () => <PoolDisksTable groups={GROUPS} />,
+};
+
+/**
+ * A long heading in a 320px column. The table scrolls sideways inside its frame; the heading and its
+ * sentence stay at the frame's start and wrap in view, breaking a name with no spaces.
+ */
+export const GroupRowLongHeadingAt320: Story = {
+  decorators: [(Story) => <div className="w-80">{Story()}</div>],
+  render: () => (
+    <PoolDisksTable
+      groups={[
+        {
+          ...MIRROR,
+          heading:
+            "RAID-Z2, 6 disks, in special_metadata_class_for_small_blocks_and_the_dedup_table_of_backup-archive-2026",
+          description:
+            "Protected: any two disks of the six can fail without losing files. A third failure loses every file on the pool.",
+        },
+        ...GROUPS.slice(1),
+      ]}
+    />
+  ),
+};
+
+/** The compact phone layout: two columns, the disk and its role, at 320px. */
+export const GroupRowCompactPhoneLayout: Story = {
+  decorators: [(Story) => <div className="w-80">{Story()}</div>],
+  render: () => (
+    <Table aria-label="Disks of pool tank">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Disk</TableHead>
+          <TableHead>Role</TableHead>
+        </TableRow>
+      </TableHeader>
+      {GROUPS.map((group) => (
+        <TableBody key={group.id}>
+          <TableGroupRow
+            colSpan={2}
+            id={`${group.id}-compact`}
+            heading={group.heading}
+            description={group.description}
+          />
+          {group.disks.map((disk) => (
+            <TableRow key={disk.device} size="touch">
+              <TableCell>
+                <Identifier>{disk.device}</Identifier>
+                <div className="text-sm text-muted-foreground">{disk.size}</div>
+              </TableCell>
+              <TableCell>
+                <RoleCell disk={disk} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      ))}
+    </Table>
+  ),
+};
+
+/** Markup-looking words from the backend render as text. */
+export const GroupRowHostileText: Story = {
+  render: () => (
+    <PoolDisksTable
+      groups={[
+        {
+          ...MIRROR,
+          heading: '<img src="x" onerror="alert(1)"> Mirror, 2 disks',
+          description: "<script>alert('group')</script> &amp; <b>bold</b>",
+        },
+      ]}
+    />
   ),
 };
