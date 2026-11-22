@@ -224,3 +224,167 @@ describe("ConfirmDialog, keyboard", () => {
     expect(visited.slice(3, 6)).toEqual(cycle);
   });
 });
+
+describe("ConfirmDialog, lists and a checkbox (the deletes)", () => {
+  const SECTIONS = [
+    {
+      title: "What goes",
+      items: [
+        "Their account and password: alex can no longer sign in here, or open shared folders from their computers.",
+        "Their SSH sign-in.",
+      ],
+    },
+    {
+      title: "What stays",
+      items: ["Their files, wherever they are on the NAS."],
+    },
+  ];
+
+  function DeletePerson({
+    onConfirm = () => undefined,
+    onChecked = () => undefined,
+  }: {
+    onConfirm?: () => void;
+    onChecked?: (checked: boolean) => void;
+  }) {
+    const [open, setOpen] = React.useState(true);
+    const [checked, setChecked] = React.useState(true);
+    return (
+      <TypeToConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Delete alex?"
+        sections={SECTIONS}
+        checkbox={{
+          label:
+            "Also take alex off the access lists of 2 shared folders: Photos, Music.",
+          hint: "If you leave this, those folders keep an entry for alex.",
+          note: "After this, nobody can open Photos from other computers: alex was the only one with access.",
+          checked,
+          onCheckedChange: (next) => {
+            setChecked(next);
+            onChecked(next);
+          },
+        }}
+        confirmLabel="Delete person"
+        cancelLabel="Cancel"
+        confirmText="alex"
+        prompt="Type alex to confirm."
+        onConfirm={onConfirm}
+      >
+        <p>Scheduled jobs set to use alex stop working for them.</p>
+      </TypeToConfirmDialog>
+    );
+  }
+
+  it("reads the lists as the dialog's description, under h3 headings", async () => {
+    render(<DeletePerson />);
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveAccessibleName("Delete alex?");
+    expect(dialog).toHaveAccessibleDescription(
+      /^What goes.*Their account and password.*Their SSH sign-in\..*What stays.*Their files/,
+    );
+    expect(
+      screen
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent),
+    ).toEqual(["What goes", "What stays"]);
+    expect(screen.getAllByRole("list")).toHaveLength(2);
+  });
+
+  it("puts the sentence first in the description when there is one", async () => {
+    render(
+      <ConfirmDialog
+        open
+        onOpenChange={() => undefined}
+        variant="destructive"
+        title="Delete the group family?"
+        description="2 people are taken out of it: alex, sam."
+        sections={[{ title: "What stays", items: ["Their own access."] }]}
+        confirmLabel="Delete group"
+        cancelLabel="Cancel"
+        onConfirm={() => undefined}
+      />,
+    );
+    expect(await screen.findByRole("alertdialog")).toHaveAccessibleDescription(
+      /^2 people are taken out of it: alex, sam\..*What stays.*Their own access\./,
+    );
+  });
+
+  it("places the checkbox before the typed field, and shows its note while ticked", async () => {
+    const user = userEvent.setup();
+    const onChecked = vi.fn();
+    render(<DeletePerson onChecked={onChecked} />);
+    const box = await screen.findByRole("checkbox", {
+      name: "Also take alex off the access lists of 2 shared folders: Photos, Music.",
+    });
+    const typed = screen.getByRole("textbox", {
+      name: "Type alex to confirm.",
+    });
+    expect(
+      box.compareDocumentPosition(typed) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(box).toHaveAttribute("aria-checked", "true");
+    expect(box).toHaveAccessibleDescription(
+      /After this, nobody can open Photos.*If you leave this/,
+    );
+    await user.click(box);
+    expect(onChecked).toHaveBeenLastCalledWith(false);
+    expect(screen.queryByText(/After this, nobody can open Photos/)).toBeNull();
+    expect(box).toHaveAccessibleDescription(
+      "If you leave this, those folders keep an entry for alex.",
+    );
+  });
+
+  it("starts on Cancel, keeps the act unavailable but focusable until the name matches, and Enter in the field never confirms", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    render(<DeletePerson onConfirm={onConfirm} />);
+    const cancel = await screen.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    const confirm = screen.getByRole("button", { name: "Delete person" });
+    await user.tab();
+    expect(confirm).toHaveFocus();
+    expect(confirm).toHaveAttribute("aria-disabled", "true");
+    // Ticking the box does not stand in for typing the name.
+    await user.click(screen.getByRole("checkbox"));
+    expect(confirm).toHaveAttribute("aria-disabled", "true");
+    const typed = screen.getByRole("textbox", {
+      name: "Type alex to confirm.",
+    });
+    await user.type(typed, "alex{Enter}");
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveAttribute("aria-disabled", "true");
+    await user.click(confirm);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("takes a checkbox in a plain confirmation too", async () => {
+    const user = userEvent.setup();
+    function Plain() {
+      const [checked, setChecked] = React.useState(false);
+      return (
+        <ConfirmDialog
+          open
+          onOpenChange={() => undefined}
+          title="Delete the group family?"
+          description="Nobody is in it."
+          checkbox={{
+            label:
+              "Also take family off the access lists of 1 shared folder: Photos.",
+            checked,
+            onCheckedChange: setChecked,
+          }}
+          confirmLabel="Delete group"
+          cancelLabel="Cancel"
+          onConfirm={() => undefined}
+        />
+      );
+    }
+    render(<Plain />);
+    const box = await screen.findByRole("checkbox");
+    await user.click(box);
+    expect(box).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+});

@@ -2,6 +2,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { ExternalLink } from "../external-link/external-link";
+import { StatusPill } from "../status/status";
 import {
   AccessGrid,
   type AccessGridProps,
@@ -302,4 +303,141 @@ export const LongerWords: Story = {
 export const Narrow: Story = {
   decorators: [(Story) => <div className="w-[18rem]">{Story()}</div>],
   render: () => <Live rows={HOUSEHOLD} edits={{ "user:alex": "rw" }} />,
+};
+
+// A person's page (phase 5 users design 4.2): the same grid with shared folders as rows, each name a
+// link to the folder's page. The app passes its router link; a plain anchor stands in for it here.
+const FOLDER_WORDS: Partial<AccessGridProps<Access>> = {
+  "aria-label": "Shared folders alex may open",
+  columns: { name: "Name", kind: "Sharing", access: "Access" },
+  rowLabel: (name) => `Access to ${name}`,
+  search: { label: "Search shared folders", clearLabel: "Clear the search" },
+  show: {
+    label: "Show",
+    all: "All folders",
+    withAccess: "With access",
+    changed: "Changed",
+  },
+  countText: (shown, total) =>
+    `${shown.toLocaleString("en")} of ${total.toLocaleString("en")} shared folders.`,
+};
+
+function folder(
+  name: string,
+  value: Access,
+  kind: React.ReactNode,
+  extra: Partial<AccessGridRow<Access>> = {},
+): AccessGridRow<Access> {
+  return {
+    id: `folder:${name}`,
+    name,
+    kind,
+    value,
+    initialValue: value,
+    nameLink: {
+      "aria-label": `Open shared folder ${name}`,
+      render: (props) => (
+        <a
+          href={`#/storage/shared-folders/${encodeURIComponent(name)}`}
+          {...props}
+        />
+      ),
+    },
+    ...extra,
+  };
+}
+
+const FOLDERS: readonly AccessGridRow<Access>[] = [
+  folder("Music", "ro", "Windows and Mac", {
+    description: "The family music library",
+    notes: [`Also gets ${WORDS.rw} as a member of family.`],
+  }),
+  folder("Photos", "rw", "Windows and Mac", {
+    description: "Every photo since 2009",
+  }),
+  folder(
+    "old-backups",
+    "none",
+    <>
+      <StatusPill status="critical">Missing</StatusPill>
+      <span>Its disk is not connected.</span>
+    </>,
+  ),
+  folder("scans", "none", "Windows and Mac (off)"),
+  folder("public", "ro", "Guests too", {
+    notes: ["Anyone on your network can open it, without a password."],
+  }),
+  folder("work", "none", "Not shared"),
+];
+
+/** Folders as rows: each name a link to its page, named "Open shared folder …". */
+export const FoldersAsRowsWithLinks: Story = {
+  render: () => <Live {...FOLDER_WORDS} rows={FOLDERS} />,
+};
+
+/** A folder that is not OK shows its pill and status words in the Kind column instead. */
+export const PillInTheKindColumn: Story = {
+  render: () => (
+    <Live
+      {...FOLDER_WORDS}
+      rows={[
+        ...FOLDERS.slice(1, 3),
+        folder(
+          "archive",
+          "ro",
+          <>
+            <StatusPill status="warning">Degraded</StatusPill>
+            <span>Windows and Mac</span>
+          </>,
+        ),
+        folder(
+          "tv-recordings",
+          "none",
+          <StatusPill status="unknown">Not known</StatusPill>,
+        ),
+      ]}
+    />
+  ),
+};
+
+/**
+ * After "Save access": Photos was refused by the last-access check, so it is not written; its row
+ * keeps the change, says why, and stays editable. Music was saved.
+ */
+export const RowRefusedAfterSave: Story = {
+  render: () => (
+    <Live
+      {...FOLDER_WORDS}
+      rows={FOLDERS.map((row) =>
+        row.id === "folder:Photos"
+          ? {
+              ...row,
+              refusal:
+                "alex is the only one with access to Photos, which is shared with Windows and Mac computers. Give someone else access on its page, or stop sharing it, first.",
+            }
+          : row,
+      )}
+      edits={{ "folder:Photos": "none" }}
+    />
+  ),
+};
+
+/** 320px: the pill and its words wrap in their column beside the name; nothing scrolls sideways. */
+export const FoldersNarrow: Story = {
+  decorators: [(Story) => <div className="w-[18rem]">{Story()}</div>],
+  render: () => (
+    <Live
+      {...FOLDER_WORDS}
+      rows={FOLDERS.map((row) =>
+        row.id === "folder:Photos"
+          ? {
+              ...row,
+              refusal:
+                "alex is the only one with access to Photos, which is shared with Windows and Mac computers. Give someone else access on its page, or stop sharing it, first.",
+            }
+          : row,
+      )}
+      edits={{ "folder:Photos": "none" }}
+    />
+  ),
 };

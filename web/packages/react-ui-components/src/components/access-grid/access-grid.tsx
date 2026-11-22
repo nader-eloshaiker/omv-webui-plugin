@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { CircleAlert } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button } from "../button/button";
@@ -31,6 +32,30 @@ import {
 } from "../table/table";
 import { Identifier } from "../text/identifier";
 
+/** What the grid hands the app's link: spread it onto the router's link element. */
+interface AccessGridNameLinkProps {
+  /** The link's accessible name, from the row's `nameLink`. */
+  "aria-label": string;
+  /** The link's look; pass it on. */
+  className: string;
+  /** The name, in the mono face and its own direction. */
+  children: React.ReactNode;
+}
+
+/**
+ * Makes a row's name a link to its own page. The library knows no router: the app renders its own
+ * link with the props it is given, for example
+ * `render: (props) => <Link to="/storage/shared-folders/$uuid" params={{ uuid }} {...props} />`.
+ */
+interface AccessGridNameLink {
+  /**
+   * The link's accessible name, which contains the name as shown (WCAG 2.5.3): "Open shared folder
+   * Photos".
+   */
+  "aria-label": string;
+  render: (props: AccessGridNameLinkProps) => React.ReactElement;
+}
+
 interface AccessGridRow<V extends string = string> {
   /** Stable and unique across the grid: "group:family", "user:alex". */
   id: string;
@@ -40,7 +65,12 @@ interface AccessGridRow<V extends string = string> {
   description?: string;
   /** Lines under the name: "Also gets Read and write as a member of family." */
   notes?: readonly React.ReactNode[];
-  /** What the row is, in words: "Group", "User". */
+  /** The name as a link to the row's own page (a shared folder's, a person's). */
+  nameLink?: AccessGridNameLink;
+  /**
+   * What the row is, in words: "Group", "User", "Windows and Mac", or a `StatusPill` with its word
+   * for a folder that is not OK. It wraps inside its column, at 320px too.
+   */
   kind: React.ReactNode;
   /** The value shown now, saved or changed in the grid. */
   value: V;
@@ -55,6 +85,14 @@ interface AccessGridRow<V extends string = string> {
   allowedValues?: readonly V[];
   /** Why this row cannot be changed now, shown as text in the row and given as its description. */
   unavailableReason?: React.ReactNode;
+  /**
+   * Why the last save did not write this row, while the row keeps its change and stays editable:
+   * "alex is the only one with access to Photos, which is shared with Windows and Mac computers. Give
+   * someone else access on its page, or stop sharing it, first." Shown in the row with the error
+   * mark, given as the choice's description, and announced when it appears. Clear it when the row
+   * is changed again or saved.
+   */
+  refusal?: React.ReactNode;
 }
 
 type AccessGridShow = "all" | "withAccess" | "changed";
@@ -154,6 +192,9 @@ const PAGE_SIZES = [25, 50, 100] as const;
 const tableClass =
   "grid grid-cols-1 @2xl:grid-cols-[minmax(0,1fr)_auto_max-content]";
 const rowGroupClass = "grid @2xl:col-span-3 @2xl:grid-cols-subgrid";
+// The name as a link: the action ink, underlined so it is not colour alone (style guide 6).
+const nameLinkClass =
+  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline";
 const rowClass =
   "relative grid grid-cols-[minmax(0,1fr)_auto] @2xl:col-span-3 @2xl:grid-cols-subgrid";
 
@@ -200,18 +241,26 @@ function GridRow<V extends string>({
   const id = React.useId();
   const reasonId = `${id}-reason`;
   const changedId = `${id}-changed`;
+  const refusalId = `${id}-refusal`;
   const changed = isChanged(row);
   const unavailable = hasReason(reason);
+  const refused = hasReason(row.refusal);
   const rowOptions = options.filter((option) => allowed.includes(option.value));
   const describedBy =
-    [unavailable ? reasonId : null, changed ? changedId : null]
+    [
+      unavailable ? reasonId : null,
+      refused ? refusalId : null,
+      changed ? changedId : null,
+    ]
       .filter(Boolean)
       .join(" ") || undefined;
+  const nameClass = "max-w-full self-start font-medium";
   return (
     <TableRow
       role="row"
       data-changed={changed || undefined}
       data-unavailable={unavailable || undefined}
+      data-refused={refused || undefined}
       className={cn(
         rowClass,
         // The changed mark: the row's leading edge in the control ink, beside the word "Changed".
@@ -226,12 +275,17 @@ function GridRow<V extends string>({
       >
         {/* In its own direction, but at the column's start: a right-to-left name keeps its order
             without jumping to the far edge of a left-to-right table. */}
-        <Identifier
-          dir="auto"
-          className="max-w-full self-start font-medium text-foreground"
-        >
-          {row.name}
-        </Identifier>
+        {row.nameLink ? (
+          row.nameLink.render({
+            "aria-label": row.nameLink["aria-label"],
+            className: cn(nameClass, nameLinkClass),
+            children: <Identifier dir="auto">{row.name}</Identifier>,
+          })
+        ) : (
+          <Identifier dir="auto" className={cn(nameClass, "text-foreground")}>
+            {row.name}
+          </Identifier>
+        )}
         {row.description ? (
           <span
             dir="auto"
@@ -253,10 +307,28 @@ function GridRow<V extends string>({
             {reason}
           </span>
         ) : null}
+        {/* Always in the row, so a refusal that appears after a save is announced. */}
+        <span role="alert" className="empty:hidden">
+          {refused ? (
+            <span
+              id={refusalId}
+              data-slot="access-grid-refusal"
+              className="flex items-start gap-1.5 text-sm [overflow-wrap:anywhere] text-critical-label"
+            >
+              <CircleAlert
+                aria-hidden="true"
+                className="mt-0.5 size-3.5 shrink-0 text-critical-stroke"
+              />
+              <span className="min-w-0">{row.refusal}</span>
+            </span>
+          ) : null}
+        </span>
       </th>
       <TableCell
         role="cell"
-        className="flex h-auto items-start py-2 text-foreground @2xl:items-center"
+        // Status words and a pill wrap inside the cell, which never takes more than its share of a
+        // narrow row from the name beside it.
+        className="flex h-auto max-w-40 min-w-0 flex-wrap content-start items-start gap-x-2 gap-y-1 py-2 [overflow-wrap:anywhere] text-foreground @2xl:max-w-56 @2xl:content-center @2xl:items-center"
       >
         {row.kind}
       </TableCell>
@@ -633,4 +705,10 @@ function AccessGrid<V extends string = string>({
 }
 
 export { AccessGrid };
-export type { AccessGridProps, AccessGridRow, AccessGridShow };
+export type {
+  AccessGridNameLink,
+  AccessGridNameLinkProps,
+  AccessGridProps,
+  AccessGridRow,
+  AccessGridShow,
+};

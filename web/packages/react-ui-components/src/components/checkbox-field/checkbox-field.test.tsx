@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CheckboxField } from "./checkbox-field";
 
@@ -57,6 +58,76 @@ describe("CheckboxField", () => {
     expect(box).toHaveAttribute("aria-disabled", "true");
     expect(box.getAttribute("aria-describedby")).toContain(
       screen.getByText("Turn on SSH to change this.").id,
+    );
+  });
+
+  it("stays focusable when unavailable with focusableWhenDisabled, and refuses every change", async () => {
+    const user = userEvent.setup();
+    const onCheckedChange = vi.fn();
+    render(
+      <CheckboxField
+        label="Administrator of this NAS"
+        hint="You cannot take away your own administrator rights. Another administrator can."
+        disabled
+        focusableWhenDisabled
+        checked
+        onCheckedChange={onCheckedChange}
+      />,
+    );
+    const box = screen.getByRole("checkbox", {
+      name: "Administrator of this NAS",
+    });
+    expect(box).toHaveAttribute("aria-disabled", "true");
+    expect(box).toHaveAccessibleDescription(
+      "You cannot take away your own administrator rights. Another administrator can.",
+    );
+    await user.tab();
+    expect(box).toHaveFocus();
+    await user.keyboard(" ");
+    await user.click(box);
+    await user.click(screen.getByText("Administrator of this NAS"));
+    expect(onCheckedChange).not.toHaveBeenCalled();
+    expect(box).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("gives a warning as the box's description, in a polite region that is always there", async () => {
+    const user = userEvent.setup();
+    function Admin() {
+      const [checked, setChecked] = React.useState(false);
+      return (
+        <CheckboxField
+          label="Administrator of this NAS"
+          hint="Can change every setting on this NAS."
+          warning={
+            checked
+              ? "Make alex an administrator only if you trust them with everything on this NAS."
+              : undefined
+          }
+          checked={checked}
+          onCheckedChange={setChecked}
+        />
+      );
+    }
+    const { container } = render(<Admin />);
+    const region = container.querySelector(
+      '[data-slot="checkbox-field-warning-region"]',
+    );
+    expect(region).toHaveAttribute("aria-live", "polite");
+    expect(region).toBeEmptyDOMElement();
+    const box = screen.getByRole("checkbox", {
+      name: "Administrator of this NAS",
+    });
+    await user.click(box);
+    expect(region).toHaveTextContent(
+      "Make alex an administrator only if you trust them with everything on this NAS.",
+    );
+    expect(box).toHaveAccessibleDescription(
+      /Make alex an administrator only if you trust them.*Can change every setting/,
+    );
+    await user.click(box);
+    expect(region).toBeEmptyDOMElement();
+    expect(box).toHaveAccessibleDescription(
+      "Can change every setting on this NAS.",
     );
   });
 });

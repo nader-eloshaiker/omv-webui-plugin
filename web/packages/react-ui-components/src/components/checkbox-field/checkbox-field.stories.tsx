@@ -50,6 +50,56 @@ export const DisabledChecked: Story = {
   },
 };
 
+/**
+ * Unavailable but still a tab stop (`focusableWhenDisabled`), so the reason under it is heard when
+ * the box is reached: the signed-in person's own administrator rights.
+ */
+export const UnavailableButFocusable: Story = {
+  args: {
+    label: "Administrator of this NAS",
+    hint: "You cannot take away your own administrator rights. Another administrator can.",
+    disabled: true,
+    focusableWhenDisabled: true,
+    checked: true,
+  },
+};
+
+function Administrator() {
+  const [checked, setChecked] = React.useState(false);
+  return (
+    <CheckboxField
+      label="Administrator of this NAS"
+      hint="Can change every setting on this NAS, read and delete every file on it, and add or remove people, here and in the classic interface."
+      warning={
+        checked
+          ? "Make alex an administrator only if you trust them with everything on this NAS. An administrator can also take your own rights away."
+          : undefined
+      }
+      checked={checked}
+      onCheckedChange={setChecked}
+    />
+  );
+}
+
+/** Tick it: the warning appears under the hint, is announced, and becomes the box's description. */
+export const WithWarningWhenTicked: Story = { render: () => <Administrator /> };
+
+export const WithWarning: Story = {
+  args: {
+    label: "May sign in over SSH",
+    hint: "Lets alex sign in to the NAS's command line from another computer, type commands, and copy files with SFTP. Most people never need it.",
+    warning:
+      "With SSH, alex can run programs on the NAS and open every file their account can reach, not only through shared folders.",
+    defaultChecked: true,
+  },
+};
+
+/** 320px: the warning wraps under the label, aligned with it. */
+export const WithWarningNarrow: Story = {
+  ...WithWarning,
+  decorators: [(Story) => <div className="w-[18rem]">{Story()}</div>],
+};
+
 export const Invalid: Story = {
   args: {
     label: "I understand that the data on this disk will be lost",
