@@ -23,7 +23,7 @@ import {
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { fileSystemState } from "../../dashboard/dashboard.ts";
 import { belongsTo } from "../../disks/diskUse.ts";
 import {
@@ -42,9 +42,12 @@ import {
 } from "../../filesystems/fsModel.ts";
 import { naturalCompare } from "../../format/format.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
+import { useZfsPlugin } from "../../hooks/useZfsReads.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { useMemoryStore } from "../../shell/memoryStore.ts";
+import { isFsAddress as isZfsFsAddress } from "../../zfs/zfsModel.ts";
 import { FsNameView, FsTypeView } from "../atoms/FsNameView.tsx";
+import { PoolLink } from "../atoms/PoolLink.tsx";
 import { FsOnDisks } from "../molecules/FsOnDisks.tsx";
 import { FsStateView, FsUsageView } from "../molecules/FsStatus.tsx";
 
@@ -114,6 +117,12 @@ function FsRow({
   const { t } = useTranslation();
   const words = useFsWords();
   const { run } = useMemoryStore(flowStore);
+  // A ZFS file system's page is under ZFS, once the plugin is known to be installed (ZFS design 10.3).
+  const zfsPlugin = useZfsPlugin(true) === "installed";
+  const zfsPage =
+    isZfs(fs) && zfsPlugin && isZfsFsAddress(fs.devicefile)
+      ? fs.devicefile
+      : null;
   const state = fsState(fs, pending);
   const usage = fsUsage(fs);
   const address = fsAddress(fs);
@@ -131,7 +140,16 @@ function FsRow({
   return (
     <TableRow>
       <TableCell className="min-w-48 py-2">
-        {address === null ? (
+        {zfsPage !== null ? (
+          <Link
+            to="/storage/zfs/fs/$"
+            params={{ _splat: zfsPage }}
+            aria-label={t("filesystems.openZfs", { name: zfsPage })}
+            className={routerLinkClass}
+          >
+            <FsNameView name={name} />
+          </Link>
+        ) : address === null ? (
           <FsNameView name={name} />
         ) : (
           <Link
@@ -154,7 +172,9 @@ function FsRow({
         {isZfs(fs) ? (
           // Managed with its pool: no page, grow, unmount or remove here (ZFS design 10.3).
           <span className="block text-xs text-muted-foreground">
-            {t("filesystems.zfsLine", { pool: zfsPool(fs) })}
+            {zfsPlugin
+              ? t("filesystems.zfsLine", { pool: zfsPool(fs) })
+              : t("filesystems.zfsLineClassic", { pool: zfsPool(fs) })}
           </span>
         ) : address === null && state !== "creating" ? (
           <span className="block text-xs text-muted-foreground">
@@ -184,7 +204,14 @@ function FsRow({
         <FsTypeView type={fs.type} />
       </TableCell>
       <TableCell className="py-2">
-        <FsOnDisks fs={fs} disks={disks} />
+        {isZfs(fs) && zfsPlugin ? (
+          <Trans
+            i18nKey="filesystems.zfsOn"
+            components={{ pool: <PoolLink pool={zfsPool(fs)} /> }}
+          />
+        ) : (
+          <FsOnDisks fs={fs} disks={disks} />
+        )}
       </TableCell>
       <TableCell className="py-2">
         {fs._used ? t("filesystems.usedBy.yes") : t("filesystems.usedBy.no")}

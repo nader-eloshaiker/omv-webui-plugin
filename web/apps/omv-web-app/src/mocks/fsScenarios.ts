@@ -28,6 +28,16 @@ import {
   raidWiped,
   type RaidMockState,
 } from "./raidScenarios.ts";
+import {
+  isZfsScenario,
+  newZfsMockState,
+  zfsAnswers,
+  zfsFsRows,
+  zfsTakenDisks,
+  zfsTaskOutput,
+  zfsWiped,
+  type ZfsMockState,
+} from "./zfsScenarios.ts";
 
 export const FS_SCENARIOS = [
   "fsReuse",
@@ -88,7 +98,10 @@ export const isFsScenario = (name: string): name is FsScenarioName =>
  * RAID scenario (the RAID mock shares their disks and file systems).
  */
 export const usesFsMock = (name: string): boolean =>
-  name === "admin" || isFsScenario(name) || isRaidScenario(name);
+  name === "admin" ||
+  isFsScenario(name) ||
+  isRaidScenario(name) ||
+  isZfsScenario(name);
 
 const ok = (value: unknown): FixedAnswer => ({ status: 200, value });
 const fail = (status: number, message: string): FixedAnswer => ({
@@ -403,6 +416,8 @@ export interface FsMockState {
   tasks: number;
   /** What the RAID answers remember (raidScenarios.ts). */
   md: RaidMockState;
+  /** What the ZFS answers remember (zfsScenarios.ts), in the zfs* stories only. */
+  zfs: ZfsMockState | undefined;
 }
 
 export function newFsMockState(name: string): FsMockState {
@@ -420,6 +435,7 @@ export function newFsMockState(name: string): FsMockState {
     wiping: null,
     tasks: 0,
     md: newRaidMockState(name),
+    zfs: isZfsScenario(name) ? newZfsMockState(name) : undefined,
   };
   switch (name) {
     case "fsReuse": {
@@ -517,6 +533,11 @@ export function newFsMockState(name: string): FsMockState {
     }
     default:
       break;
+  }
+  // A ZFS pool's disks, and disks with ZFS's partition table, are never offered for a file system.
+  if (state.zfs !== undefined) {
+    const taken = zfsTakenDisks(state.zfs);
+    state.free = state.free.filter((c) => !taken.includes(c.devicefile));
   }
   // An array with nothing on it is a file-system candidate (observed: at once, while it synchronises).
   for (const array of state.md.arrays) {
@@ -641,10 +662,14 @@ export function fsAnswers(
   state: FsMockState,
   hooks: FsHooks,
 ): Record<string, (call: { params: unknown }) => FixedAnswer> {
-  return {
-    fileSystemMgmtGetList: () =>
-      ok({ total: state.configured.length, data: state.configured }),
-    fileSystemMgmtEnumerateFilesystems: () => ok(state.detected),
+  const base: Record<string, (call: { params: unknown }) => FixedAnswer> = {
+    // A ZFS pool's own folder and file systems join the lists as OMV reports them (zfsScenarios.ts).
+    fileSystemMgmtGetList: () => {
+      const data = [...state.configured, ...zfsFsRows(state.zfs, "configured")];
+      return ok({ total: data.length, data });
+    },
+    fileSystemMgmtEnumerateFilesystems: () =>
+      ok([...state.detected, ...zfsFsRows(state.zfs, "detected")]),
     fileSystemMgmtGetMountCandidates: () =>
       name === "fsFoundFail"
         ? fail(500, "Failed to execute command 'blkid': exit code '2'.")
@@ -856,6 +881,23 @@ export function fsAnswers(
       return ok(value);
     },
   };
+  if (state.zfs === undefined) {
+    return base;
+  }
+  // The ZFS plugin's answers, remembering pools, file systems, snapshots, checks, replacements and
+  // deletes, over these disks and lists.
+  const fsTab = base.fsTabGetByFsName;
+  return {
+    ...base,
+    ...zfsAnswers(name, state.zfs, {
+      dirty: hooks.dirty,
+      taken: (disks) => {
+        state.free = state.free.filter((c) => !disks.includes(c.devicefile));
+      },
+      mountEntry: (params) =>
+        fsTab === undefined ? ok(false) : fsTab({ params }),
+    }),
+  };
 }
 
 /** The last poll of a file-system task, by its handle; undefined for any other handle. */
@@ -876,6 +918,10 @@ export function fsTaskOutput(
       : of(FS_HANDLES.create)
         ? FS_HANDLES.create
         : undefined;
+  const zfsTask = zfsTaskOutput(state.zfs, handle);
+  if (zfsTask !== undefined) {
+    return zfsTask;
+  }
   if (filename === FS_HANDLES.candidates) {
     if (name === "fsCandidatesFail") {
       return fail(
@@ -1003,7 +1049,11 @@ export function fsReverted(state: FsMockState): void {
 
 /** A wipe asked for: remember the disk, cleaned when the wipe's last poll is answered. */
 export function fsWipeAsked(state: FsMockState, devicefile: string): void {
-  state.wiping = deviceOf(devicefile);
+  // A ZFS story's disks include ones the VM's capture lacks (sde, sdf, …): named by their kernel name.
+  state.wiping =
+    state.zfs?.disks.find(
+      (d) => d.devicefile === devicefile || d.devicelinks.includes(devicefile),
+    )?.canonicaldevicefile ?? deviceOf(devicefile);
 }
 
 /** The wipe's last poll: nothing is left on the disk, and the server offers it again. */
@@ -1014,6 +1064,7 @@ export function fsWiped(state: FsMockState): void {
   }
   state.wiping = null;
   raidWiped(state.md, device);
+  zfsWiped(state.zfs, device);
   const on = (fs: DetectedFilesystem) =>
     fs.parentdevicefile === device || fs.canonicaldevicefile.startsWith(device);
   state.detected = state.detected.filter((fs) => !on(fs));

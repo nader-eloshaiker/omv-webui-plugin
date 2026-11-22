@@ -8,6 +8,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { LayoutDashboard, Puzzle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
+import { useZfsPlugin } from "../../hooks/useZfsReads.ts";
 import { builtRoute, isCurrent, navFor } from "../../navigation/navigation.ts";
 
 export function MainNav({
@@ -24,6 +25,8 @@ export function MainNav({
   // The RAID item is shown only once the plugin is known to be installed (0.10); a normal user's shell
   // makes no RAID call (10).
   const raidPlugin = useRaidPlugin(role === "admin") === "installed";
+  // The same for ZFS, by Zfs.listCompressionTypes, which runs no command (ZFS design 0.11, P14).
+  const zfsPlugin = useZfsPlugin(role === "admin") === "installed";
   return (
     <>
       <ul className="flex flex-col gap-0.5">
@@ -35,7 +38,7 @@ export function MainNav({
           {t("nav.dashboard")}
         </SideNavItem>
       </ul>
-      {navFor(role, { raidPlugin }).map(({ group, pages }) => (
+      {navFor(role, { raidPlugin, zfsPlugin }).map(({ group, pages }) => (
         <SideNavGroup key={group} label={t(`nav.groups.${group}`)}>
           {pages.map((page) => {
             const built = builtRoute(page);

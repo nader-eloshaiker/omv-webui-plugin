@@ -43,9 +43,10 @@ export interface NavPage {
   route?: BuiltRoute;
   /**
    * Shown only when something known at run time says so: "raidPlugin", only when the RAID plugin is
-   * installed (phase 5 RAID design 0.10, D1; Q8).
+   * installed (phase 5 RAID design 0.10, D1; Q8); "zfsPlugin", only when the ZFS plugin is (phase 5
+   * ZFS design 0.11).
    */
-  when?: "raidPlugin";
+  when?: "raidPlugin" | "zfsPlugin";
   roles: readonly Role[];
 }
 
@@ -56,6 +57,7 @@ export type BuiltRoute =
   | "/storage/disks"
   | "/storage/smart"
   | "/storage/md"
+  | "/storage/zfs"
   | "/storage/filesystems"
   | "/account/settings"
   | "/diagnostics/system-logs"
@@ -182,6 +184,15 @@ export const NAV_PAGES = [
     route: "/storage/md",
     roles: ADMIN,
     when: "raidPlugin",
+  },
+  {
+    group: "storage",
+    item: "zfs",
+    labelKey: "nav.items.storage.zfs",
+    classic: "/#/storage/zfs/pools",
+    route: "/storage/zfs",
+    roles: ADMIN,
+    when: "zfsPlugin",
   },
   {
     group: "storage",
@@ -345,7 +356,8 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/storage/smart" && pathname.startsWith("/storage/smart/")) ||
     (route === "/storage/filesystems" &&
       pathname.startsWith("/storage/filesystems/")) ||
-    (route === "/storage/md" && pathname.startsWith("/storage/md/"))
+    (route === "/storage/md" && pathname.startsWith("/storage/md/")) ||
+    (route === "/storage/zfs" && pathname.startsWith("/storage/zfs/"))
   );
 }
 
@@ -353,6 +365,8 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
 export interface NavConditions {
   /** The RAID plugin is known to be installed (not while that is still being checked). */
   raidPlugin: boolean;
+  /** The ZFS plugin is known to be installed (phase 5 ZFS design 0.11, 11.2). */
+  zfsPlugin: boolean;
 }
 
 const shownBy = (page: NavPage, conditions: NavConditions): boolean =>
@@ -361,7 +375,7 @@ const shownBy = (page: NavPage, conditions: NavConditions): boolean =>
 /** The groups and their items a role sees, in order; empty groups are left out. */
 export function navFor(
   role: Role,
-  conditions: NavConditions = { raidPlugin: false },
+  conditions: NavConditions = { raidPlugin: false, zfsPlugin: false },
 ): { group: NavGroup; pages: NavPageEntry[] }[] {
   return NAV_GROUPS.map((group) => ({
     group,

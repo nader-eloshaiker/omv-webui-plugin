@@ -22,6 +22,8 @@ const READS = new Set([
   "Config.isDirty",
   // The menu's one probe of the RAID plugin (RAID design 0.10): it reads no array member.
   "MdMgmt.getCandidates",
+  // The menu's one probe of the ZFS plugin (ZFS design 0.11): it runs no command.
+  "Zfs.listCompressionTypes",
 ]);
 
 async function shell(options: Parameters<typeof renderApp>[0] = {}) {

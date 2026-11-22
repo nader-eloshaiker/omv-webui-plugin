@@ -21,6 +21,7 @@ import {
   useRaidArrays,
 } from "./useDiskReads.ts";
 import { useFsApi } from "./useFsApi.ts";
+import { useZfsPoolDisks } from "./useZfsReads.ts";
 
 export function useRaidDiskChoices(minSize: number | null = null) {
   const api = useFsApi();
@@ -33,6 +34,7 @@ export function useRaidDiskChoices(minSize: number | null = null) {
   const configured = useConfiguredFs();
   const detected = useDetectedFs();
   const arrays = useRaidArrays();
+  const zfs = useZfsPoolDisks();
   const session = useMemoryStore(diskSession);
   const tasks = useTasks();
   const [rescanning, setRescanning] = useState(false);
@@ -45,7 +47,9 @@ export function useRaidDiskChoices(minSize: number | null = null) {
       isRpcError(arrays.error) &&
       isRaidPluginMissing(arrays.error));
   const queries = [candidates, disks, configured, detected, arrays];
-  const failedRead = queries.find((q) => q.isError);
+  const failedQuery = queries.find((q) => q.isError);
+  const failedRead =
+    failedQuery ?? (zfs.failed ? { error: zfs.error } : undefined);
   const running = new Set(
     tasks.filter((x) => x.state === "running").map((x) => x.id),
   );
@@ -63,6 +67,7 @@ export function useRaidDiskChoices(minSize: number | null = null) {
       configured: configured.data?.data,
       detected: detected.data,
       arrays: arrays.data,
+      zfs: zfs.value,
     },
     marks,
     { failed: failedRead !== undefined, error: failedRead?.error },
@@ -74,6 +79,9 @@ export function useRaidDiskChoices(minSize: number | null = null) {
       if (q.isError || q === candidates) {
         void q.refetch();
       }
+    }
+    if (zfs.failed) {
+      void zfs.refetch();
     }
   };
 
@@ -88,7 +96,10 @@ export function useRaidDiskChoices(minSize: number | null = null) {
     } catch {
       // A failed rescan still reads again: the reads say what is there.
     }
-    await Promise.allSettled(queries.map((q) => q.refetch()));
+    await Promise.allSettled([
+      ...queries.map((q) => q.refetch()),
+      zfs.refetch(),
+    ]);
     setRescanning(false);
   };
 

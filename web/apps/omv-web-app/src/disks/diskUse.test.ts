@@ -95,7 +95,12 @@ const array = (over: Partial<MdArray> = {}): MdArray => ({
   ...over,
 });
 
-const nothing: UseInputs = { configured: [], detected: [], arrays: null };
+const nothing: UseInputs = {
+  configured: [],
+  detected: [],
+  arrays: null,
+  zfs: null,
+};
 
 // The VM with the mirror tank on sdb and sdc, as both lists reported it: tank and tank/media, uuid null.
 const ZFS_CONFIGURED = CONTRACT_EXAMPLES.fileSystemMgmtGetList.zfs.value
@@ -106,6 +111,7 @@ const zfsInputs: UseInputs = {
   configured: ZFS_CONFIGURED,
   detected: ZFS_DETECTED,
   arrays: null,
+  zfs: null,
 };
 const vmDisk = (name: string) =>
   disk({
@@ -353,6 +359,7 @@ describe("diskUse", () => {
       configured: [configured({ label: "data" })],
       detected: [detected({ type: "swap", canonicaldevicefile: "/dev/sdb5" })],
       arrays: [array({ devices: ["/dev/sdb3"] })],
+      zfs: null,
     });
     expect(result.uses.map((u) => u.kind)).toEqual([
       "system",
@@ -509,6 +516,32 @@ describe("diskUse with a ZFS pool (ZFS design 10.2)", () => {
   });
 });
 
+describe("the ZFS pools' own disks (ZFS design 10.2)", () => {
+  it("names a disk in a pool from getPoolDevices, spares and unmounted pools too", () => {
+    const result = diskUse(vmDisk("sdd"), {
+      ...nothing,
+      zfs: [{ pool: "backup", devices: ["/dev/sdd1"] }],
+    });
+    expect(result.blockers.map((b) => b.kind)).toEqual(["zfs"]);
+    expect(result.uses).toEqual([{ kind: "zfs", pool: "backup" }]);
+  });
+
+  it("names a pool once when its file systems and its disks both name it", () => {
+    const result = diskUse(vmDisk("sdb"), {
+      ...zfsInputs,
+      zfs: [{ pool: "tank", devices: ["/dev/sdb1", "/dev/sdc1"] }],
+    });
+    expect(result.blockers).toEqual([{ kind: "zfs", pool: "tank" }]);
+  });
+
+  it("is Not known while the pools are not read, or when none is reported beside ZFS file systems", () => {
+    expect(diskUse(vmDisk("sdd"), { ...nothing, zfs: undefined }).known).toBe(
+      false,
+    );
+    expect(diskUse(vmDisk("sdd"), { ...zfsInputs, zfs: [] }).known).toBe(false);
+    expect(diskUse(vmDisk("sdd"), { ...nothing, zfs: [] }).known).toBe(true);
+  });
+});
 describe("hasUntraceableStorage", () => {
   const disks = [disk()];
 
@@ -518,6 +551,7 @@ describe("hasUntraceableStorage", () => {
         configured: [configured()],
         detected: [],
         arrays: [array({ devicefile: "/dev/md0" })],
+        zfs: null,
       }),
     ).toBe(false);
     expect(
@@ -531,6 +565,7 @@ describe("hasUntraceableStorage", () => {
         ],
         detected: [],
         arrays: [array()],
+        zfs: null,
       }),
     ).toBe(false);
   });
@@ -547,6 +582,7 @@ describe("hasUntraceableStorage", () => {
         configured: [mapper],
         detected: [],
         arrays: null,
+        zfs: null,
       }),
     ).toBe(true);
     const handMade = configured({
@@ -560,6 +596,7 @@ describe("hasUntraceableStorage", () => {
         configured: [handMade],
         detected: [],
         arrays: null,
+        zfs: null,
       }),
     ).toBe(true);
   });
@@ -584,6 +621,7 @@ describe("hasUntraceableStorage", () => {
           }),
         ],
         arrays: null,
+        zfs: null,
       }),
     ).toBe(false);
   });

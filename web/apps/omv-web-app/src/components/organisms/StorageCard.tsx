@@ -27,6 +27,7 @@ import {
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { isPoolAddress } from "../../zfs/zfsModel.ts";
 import { FileSystemName } from "../atoms/FileSystemName.tsx";
 import { CardStaleLine } from "../molecules/CardStaleLine.tsx";
 import { DashboardCard } from "../molecules/DashboardCard.tsx";
@@ -39,8 +40,70 @@ const ROLL_UP: Record<FsState, RollUpStatus> = {
   below: "ok",
 };
 
+/** A ZFS pool standing for its file systems (ZFS design 10.1, D22): the fullest one's figures. */
+function PoolItem({
+  item,
+}: {
+  item: Extract<StorageItem, { kind: "zfsPool" }>;
+}) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const { fs, state } = item;
+  const size = parseByteCount(fs.size);
+  const free = parseByteCount(fs.available);
+  const name = t("dashboard.storage.zfsPool", { pool: item.pool });
+  const label =
+    item.linked && isPoolAddress(item.pool) ? (
+      <Link
+        to="/storage/zfs/pools/$pool"
+        params={{ pool: item.pool }}
+        aria-label={t("dashboard.storage.openPool", { pool: item.pool })}
+        className={routerLinkClass}
+      >
+        {name}
+      </Link>
+    ) : (
+      <span dir="auto">{name}</span>
+    );
+  const threshold =
+    state === "critical" || state === "warning"
+      ? { status: state, label: t(`health.${state}`) }
+      : undefined;
+  return (
+    <li className="flex flex-col gap-1">
+      {state === "unknown" || size === null || free === null ? (
+        <CapacityMeter
+          label={label}
+          value={null}
+          max={100}
+          valueText={t("filesystem.usage.unread")}
+        />
+      ) : (
+        <CapacityMeter
+          label={label}
+          value={fs.percentage}
+          max={100}
+          threshold={threshold}
+          valueText={t("dashboard.storage.value", {
+            percent: format.percent(fs.percentage),
+            free: formatBytes(free),
+            size: formatBytes(size),
+          })}
+        />
+      )}
+      <p className="text-xs text-muted-foreground">
+        {t("dashboard.storage.zfsShare", { count: item.count })}
+      </p>
+    </li>
+  );
+}
+
 /** The name, a router link to the file system's page when it has one (file-systems design 9). */
-function ItemName({ item }: { item: StorageItem }) {
+function ItemName({
+  item,
+}: {
+  item: Exclude<StorageItem, { kind: "zfsPool" }>;
+}) {
   if (item.address === null) {
     return <FileSystemName name={item.name} />;
   }
@@ -125,6 +188,9 @@ function MountedItem({
 
 function Item({ item }: { item: StorageItem }) {
   const { t } = useTranslation();
+  if (item.kind === "zfsPool") {
+    return <PoolItem item={item} />;
+  }
   if (item.kind === "missing") {
     return (
       <HealthListItem

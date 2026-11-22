@@ -41,7 +41,6 @@ import {
   ZFS_DIRTY,
   ZFS_SCENARIO_LABELS,
   ZFS_SCENARIOS,
-  ZFS_TASK_OUTPUTS,
   zfsReplies,
   type ZfsReplies,
 } from "./zfsScenarios.ts";
@@ -839,10 +838,10 @@ export function scenarioAnswers(
       return answer;
     };
   /**
-   * A ZFS answer (zfsScenarios.ts): OMV's 404 outside the ZFS scenarios. A write the plugin marks
-   * dirty marks the same modules here (observed on the test VM).
+   * A ZFS answer (zfsScenarios.ts) outside the zfs* stories: OMV's 404. In the zfs* stories the
+   * remembering ZFS answers, merged into the file-system mock's, take their place below.
    */
-  const zfsReply = zfsReplies(name);
+  const zfsReply = zfsReplies();
   const zfsAnswer =
     <Op extends keyof ZfsReplies>(operationId: Op) =>
     ({
@@ -1071,11 +1070,6 @@ export function scenarioAnswers(
         typeof filename === "string" ? FS_TASK_OUTPUTS[filename] : undefined;
       if (fsTask !== undefined) {
         return guarded(fsTask)();
-      }
-      const zfsTask =
-        typeof filename === "string" ? ZFS_TASK_OUTPUTS[filename] : undefined;
-      if (zfsTask !== undefined) {
-        return guarded(zfsTask)();
       }
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {

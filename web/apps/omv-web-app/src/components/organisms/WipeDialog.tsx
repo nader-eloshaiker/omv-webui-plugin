@@ -210,7 +210,11 @@ export function WipeDialog({
                 <li>{t("wipe.holds.none")}</li>
               ) : null}
               {phase.untraceable ? (
-                <li>{t("wipe.holds.untraceable")}</li>
+                <li>
+                  {phase.zfsKnown
+                    ? t("wipe.holds.untraceableNoZfs")
+                    : t("wipe.holds.untraceable")}
+                </li>
               ) : null}
               <li>{t("wipe.holds.settingsKept")}</li>
             </ul>

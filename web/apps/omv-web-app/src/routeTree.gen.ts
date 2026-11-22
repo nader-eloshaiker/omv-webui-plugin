@@ -38,8 +38,14 @@ import { Route as SignedInStorageSmartOverviewRouteImport } from './routes/_sign
 import { Route as SignedInStorageSmartSelfTestsRouteImport } from './routes/_signedIn/storage/smart/self-tests'
 import { Route as SignedInStorageSmartSetUpRouteImport } from './routes/_signedIn/storage/smart/set-up'
 import { Route as SignedInStorageSmartSettingsRouteImport } from './routes/_signedIn/storage/smart/settings'
+import { Route as SignedInStorageZfsIndexRouteImport } from './routes/_signedIn/storage/zfs/index'
+import { Route as SignedInStorageZfsCreateRouteImport } from './routes/_signedIn/storage/zfs/create'
 import { Route as SignedInStorageMdArrayIndexRouteImport } from './routes/_signedIn/storage/md/$array/index'
 import { Route as SignedInStorageMdArrayAddRouteImport } from './routes/_signedIn/storage/md/$array/add'
+import { Route as SignedInStorageZfsFsSplatRouteImport } from './routes/_signedIn/storage/zfs/fs/$'
+import { Route as SignedInStorageZfsPoolsPoolIndexRouteImport } from './routes/_signedIn/storage/zfs/pools/$pool/index'
+import { Route as SignedInStorageZfsPoolsPoolAddRouteImport } from './routes/_signedIn/storage/zfs/pools/$pool/add'
+import { Route as SignedInStorageZfsPoolsPoolReplaceRouteImport } from './routes/_signedIn/storage/zfs/pools/$pool/replace'
 
 const SignedInRoute = SignedInRouteImport.update({
   id: '/_signedIn',
@@ -203,6 +209,17 @@ const SignedInStorageSmartSettingsRoute =
     path: '/storage/smart/settings',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInStorageZfsIndexRoute = SignedInStorageZfsIndexRouteImport.update({
+  id: '/storage/zfs/',
+  path: '/storage/zfs/',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInStorageZfsCreateRoute =
+  SignedInStorageZfsCreateRouteImport.update({
+    id: '/storage/zfs/create',
+    path: '/storage/zfs/create',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInStorageMdArrayIndexRoute =
   SignedInStorageMdArrayIndexRouteImport.update({
     id: '/storage/md/$array/',
@@ -213,6 +230,30 @@ const SignedInStorageMdArrayAddRoute =
   SignedInStorageMdArrayAddRouteImport.update({
     id: '/storage/md/$array/add',
     path: '/storage/md/$array/add',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageZfsFsSplatRoute =
+  SignedInStorageZfsFsSplatRouteImport.update({
+    id: '/storage/zfs/fs/$',
+    path: '/storage/zfs/fs/$',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageZfsPoolsPoolIndexRoute =
+  SignedInStorageZfsPoolsPoolIndexRouteImport.update({
+    id: '/storage/zfs/pools/$pool/',
+    path: '/storage/zfs/pools/$pool/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageZfsPoolsPoolAddRoute =
+  SignedInStorageZfsPoolsPoolAddRouteImport.update({
+    id: '/storage/zfs/pools/$pool/add',
+    path: '/storage/zfs/pools/$pool/add',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInStorageZfsPoolsPoolReplaceRoute =
+  SignedInStorageZfsPoolsPoolReplaceRouteImport.update({
+    id: '/storage/zfs/pools/$pool/replace',
+    path: '/storage/zfs/pools/$pool/replace',
     getParentRoute: () => SignedInRoute,
   } as any)
 
@@ -240,13 +281,19 @@ export interface FileRoutesByFullPath {
   '/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
   '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
+  '/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
   '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
   '/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
   '/storage/md/': typeof SignedInStorageMdIndexRoute
   '/storage/smart/': typeof SignedInStorageSmartIndexRoute
+  '/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
+  '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
+  '/storage/zfs/pools/$pool/add': typeof SignedInStorageZfsPoolsPoolAddRoute
+  '/storage/zfs/pools/$pool/replace': typeof SignedInStorageZfsPoolsPoolReplaceRoute
+  '/storage/zfs/pools/$pool/': typeof SignedInStorageZfsPoolsPoolIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
@@ -272,13 +319,19 @@ export interface FileRoutesByTo {
   '/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
   '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
+  '/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
   '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
   '/storage/disks': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems': typeof SignedInStorageFilesystemsIndexRoute
   '/storage/md': typeof SignedInStorageMdIndexRoute
   '/storage/smart': typeof SignedInStorageSmartIndexRoute
+  '/storage/zfs': typeof SignedInStorageZfsIndexRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
+  '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array': typeof SignedInStorageMdArrayIndexRoute
+  '/storage/zfs/pools/$pool/add': typeof SignedInStorageZfsPoolsPoolAddRoute
+  '/storage/zfs/pools/$pool/replace': typeof SignedInStorageZfsPoolsPoolReplaceRoute
+  '/storage/zfs/pools/$pool': typeof SignedInStorageZfsPoolsPoolIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -306,13 +359,19 @@ export interface FileRoutesById {
   '/_signedIn/storage/smart/self-tests': typeof SignedInStorageSmartSelfTestsRoute
   '/_signedIn/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/_signedIn/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
+  '/_signedIn/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
   '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
   '/_signedIn/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/_signedIn/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
   '/_signedIn/storage/md/': typeof SignedInStorageMdIndexRoute
   '/_signedIn/storage/smart/': typeof SignedInStorageSmartIndexRoute
+  '/_signedIn/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/_signedIn/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
+  '/_signedIn/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/_signedIn/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
+  '/_signedIn/storage/zfs/pools/$pool/add': typeof SignedInStorageZfsPoolsPoolAddRoute
+  '/_signedIn/storage/zfs/pools/$pool/replace': typeof SignedInStorageZfsPoolsPoolReplaceRoute
+  '/_signedIn/storage/zfs/pools/$pool/': typeof SignedInStorageZfsPoolsPoolIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -340,13 +399,19 @@ export interface FileRouteTypes {
     | '/storage/smart/self-tests'
     | '/storage/smart/set-up'
     | '/storage/smart/settings'
+    | '/storage/zfs/create'
     | '/diagnostics/services/'
     | '/storage/disks/'
     | '/storage/filesystems/'
     | '/storage/md/'
     | '/storage/smart/'
+    | '/storage/zfs/'
     | '/storage/md/$array/add'
+    | '/storage/zfs/fs/$'
     | '/storage/md/$array/'
+    | '/storage/zfs/pools/$pool/add'
+    | '/storage/zfs/pools/$pool/replace'
+    | '/storage/zfs/pools/$pool/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -372,13 +437,19 @@ export interface FileRouteTypes {
     | '/storage/smart/self-tests'
     | '/storage/smart/set-up'
     | '/storage/smart/settings'
+    | '/storage/zfs/create'
     | '/diagnostics/services'
     | '/storage/disks'
     | '/storage/filesystems'
     | '/storage/md'
     | '/storage/smart'
+    | '/storage/zfs'
     | '/storage/md/$array/add'
+    | '/storage/zfs/fs/$'
     | '/storage/md/$array'
+    | '/storage/zfs/pools/$pool/add'
+    | '/storage/zfs/pools/$pool/replace'
+    | '/storage/zfs/pools/$pool'
   id:
     | '__root__'
     | '/_signedIn'
@@ -405,13 +476,19 @@ export interface FileRouteTypes {
     | '/_signedIn/storage/smart/self-tests'
     | '/_signedIn/storage/smart/set-up'
     | '/_signedIn/storage/smart/settings'
+    | '/_signedIn/storage/zfs/create'
     | '/_signedIn/diagnostics/services/'
     | '/_signedIn/storage/disks/'
     | '/_signedIn/storage/filesystems/'
     | '/_signedIn/storage/md/'
     | '/_signedIn/storage/smart/'
+    | '/_signedIn/storage/zfs/'
     | '/_signedIn/storage/md/$array/add'
+    | '/_signedIn/storage/zfs/fs/$'
     | '/_signedIn/storage/md/$array/'
+    | '/_signedIn/storage/zfs/pools/$pool/add'
+    | '/_signedIn/storage/zfs/pools/$pool/replace'
+    | '/_signedIn/storage/zfs/pools/$pool/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -624,6 +701,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInStorageSmartSettingsRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/storage/zfs/': {
+      id: '/_signedIn/storage/zfs/'
+      path: '/storage/zfs'
+      fullPath: '/storage/zfs/'
+      preLoaderRoute: typeof SignedInStorageZfsIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/zfs/create': {
+      id: '/_signedIn/storage/zfs/create'
+      path: '/storage/zfs/create'
+      fullPath: '/storage/zfs/create'
+      preLoaderRoute: typeof SignedInStorageZfsCreateRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/storage/md/$array/': {
       id: '/_signedIn/storage/md/$array/'
       path: '/storage/md/$array'
@@ -636,6 +727,34 @@ declare module '@tanstack/react-router' {
       path: '/storage/md/$array/add'
       fullPath: '/storage/md/$array/add'
       preLoaderRoute: typeof SignedInStorageMdArrayAddRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/zfs/fs/$': {
+      id: '/_signedIn/storage/zfs/fs/$'
+      path: '/storage/zfs/fs/$'
+      fullPath: '/storage/zfs/fs/$'
+      preLoaderRoute: typeof SignedInStorageZfsFsSplatRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/zfs/pools/$pool/': {
+      id: '/_signedIn/storage/zfs/pools/$pool/'
+      path: '/storage/zfs/pools/$pool'
+      fullPath: '/storage/zfs/pools/$pool/'
+      preLoaderRoute: typeof SignedInStorageZfsPoolsPoolIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/zfs/pools/$pool/add': {
+      id: '/_signedIn/storage/zfs/pools/$pool/add'
+      path: '/storage/zfs/pools/$pool/add'
+      fullPath: '/storage/zfs/pools/$pool/add'
+      preLoaderRoute: typeof SignedInStorageZfsPoolsPoolAddRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/storage/zfs/pools/$pool/replace': {
+      id: '/_signedIn/storage/zfs/pools/$pool/replace'
+      path: '/storage/zfs/pools/$pool/replace'
+      fullPath: '/storage/zfs/pools/$pool/replace'
+      preLoaderRoute: typeof SignedInStorageZfsPoolsPoolReplaceRouteImport
       parentRoute: typeof SignedInRoute
     }
   }
@@ -664,13 +783,19 @@ interface SignedInRouteChildren {
   SignedInStorageSmartSelfTestsRoute: typeof SignedInStorageSmartSelfTestsRoute
   SignedInStorageSmartSetUpRoute: typeof SignedInStorageSmartSetUpRoute
   SignedInStorageSmartSettingsRoute: typeof SignedInStorageSmartSettingsRoute
+  SignedInStorageZfsCreateRoute: typeof SignedInStorageZfsCreateRoute
   SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
   SignedInStorageDisksIndexRoute: typeof SignedInStorageDisksIndexRoute
   SignedInStorageFilesystemsIndexRoute: typeof SignedInStorageFilesystemsIndexRoute
   SignedInStorageMdIndexRoute: typeof SignedInStorageMdIndexRoute
   SignedInStorageSmartIndexRoute: typeof SignedInStorageSmartIndexRoute
+  SignedInStorageZfsIndexRoute: typeof SignedInStorageZfsIndexRoute
   SignedInStorageMdArrayAddRoute: typeof SignedInStorageMdArrayAddRoute
+  SignedInStorageZfsFsSplatRoute: typeof SignedInStorageZfsFsSplatRoute
   SignedInStorageMdArrayIndexRoute: typeof SignedInStorageMdArrayIndexRoute
+  SignedInStorageZfsPoolsPoolAddRoute: typeof SignedInStorageZfsPoolsPoolAddRoute
+  SignedInStorageZfsPoolsPoolReplaceRoute: typeof SignedInStorageZfsPoolsPoolReplaceRoute
+  SignedInStorageZfsPoolsPoolIndexRoute: typeof SignedInStorageZfsPoolsPoolIndexRoute
 }
 
 const SignedInRouteChildren: SignedInRouteChildren = {
@@ -697,13 +822,20 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInStorageSmartSelfTestsRoute: SignedInStorageSmartSelfTestsRoute,
   SignedInStorageSmartSetUpRoute: SignedInStorageSmartSetUpRoute,
   SignedInStorageSmartSettingsRoute: SignedInStorageSmartSettingsRoute,
+  SignedInStorageZfsCreateRoute: SignedInStorageZfsCreateRoute,
   SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
   SignedInStorageDisksIndexRoute: SignedInStorageDisksIndexRoute,
   SignedInStorageFilesystemsIndexRoute: SignedInStorageFilesystemsIndexRoute,
   SignedInStorageMdIndexRoute: SignedInStorageMdIndexRoute,
   SignedInStorageSmartIndexRoute: SignedInStorageSmartIndexRoute,
+  SignedInStorageZfsIndexRoute: SignedInStorageZfsIndexRoute,
   SignedInStorageMdArrayAddRoute: SignedInStorageMdArrayAddRoute,
+  SignedInStorageZfsFsSplatRoute: SignedInStorageZfsFsSplatRoute,
   SignedInStorageMdArrayIndexRoute: SignedInStorageMdArrayIndexRoute,
+  SignedInStorageZfsPoolsPoolAddRoute: SignedInStorageZfsPoolsPoolAddRoute,
+  SignedInStorageZfsPoolsPoolReplaceRoute:
+    SignedInStorageZfsPoolsPoolReplaceRoute,
+  SignedInStorageZfsPoolsPoolIndexRoute: SignedInStorageZfsPoolsPoolIndexRoute,
 }
 
 const SignedInRouteWithChildren = SignedInRoute._addFileChildren(

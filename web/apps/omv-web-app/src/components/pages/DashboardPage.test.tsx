@@ -172,9 +172,9 @@ describe("the administrator's dashboard", () => {
   it("sends no state-changing call on load (UI-4)", async () => {
     await dashboard();
     await within(checklist()).findByText("Etc/UTC");
-    expect(callNames().filter((c) => !/\.(get|is|enumerate)/.test(c))).toEqual(
-      [],
-    );
+    expect(
+      callNames().filter((c) => !/\.(get|is|enumerate|list)/.test(c)),
+    ).toEqual([]);
     // Disk health is read only when the reader asks (owner).
     expect(callNames()).not.toContain("Smart.getListBg");
   });

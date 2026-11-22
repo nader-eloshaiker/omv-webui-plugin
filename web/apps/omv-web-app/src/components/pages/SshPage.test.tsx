@@ -289,7 +289,11 @@ describe("the SSH page", () => {
     await sshPage();
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(
-      callNames().filter((c) => !/\.(get|is|getInformation)/.test(c)),
+      callNames().filter(
+        (c) =>
+          !/\.(get|is|getInformation)/.test(c) &&
+          c !== "Zfs.listCompressionTypes",
+      ),
     ).toEqual([]);
   });
 

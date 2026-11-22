@@ -23,12 +23,19 @@ const free: DiskUseResult = {
 describe("phaseAfterCheck", () => {
   it("offers the confirmation only when the disk is unchanged and free", () => {
     expect(
-      phaseAfterCheck({ kind: "ok", disk, result: free, untraceable: true }),
+      phaseAfterCheck({
+        kind: "ok",
+        disk,
+        result: free,
+        untraceable: true,
+        zfsKnown: false,
+      }),
     ).toEqual({
       phase: "confirm",
       disk,
       unused: [],
       untraceable: true,
+      zfsKnown: false,
       rechecking: false,
     });
   });

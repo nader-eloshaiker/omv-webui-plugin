@@ -38,6 +38,25 @@ export const RPC_401: ConsoleAllowance = {
       ),
 };
 
+/**
+ * A 404 from rpc.php is OMV's answer for a service it does not know: a plugin that is not installed.
+ * The shell asks once after sign-in whether the ZFS plugin is (Zfs.listCompressionTypes, ZFS design
+ * 0.11), and the mock's stories without ZFS answer it, and any other Zfs call, as OMV would. The
+ * console line cannot say which call it was, but no other 404 goes unnoticed: a method the mock does
+ * not know is also recorded in the mock's problems, which fails the test (fixtures.ts).
+ */
+export const RPC_404_NO_PLUGIN: ConsoleAllowance = {
+  reason:
+    "rpc.php answers 404 for a plugin that is not installed (the menu's probe)",
+  matches: (message, origin) =>
+    message.location().url === `${origin}/rpc.php` &&
+    message
+      .text()
+      .startsWith(
+        "Failed to load resource: the server responded with a status of 404",
+      ),
+};
+
 /** Start observing `page`, served from `origin`. Call before the first navigation. */
 export async function observe(
   page: Page,

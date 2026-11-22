@@ -43,7 +43,9 @@ import {
 } from "../disks/diskUse.ts";
 import { isRaidPluginMissing } from "../disks/diskWords.ts";
 import { useMemoryStore } from "../shell/memoryStore.ts";
+import { readZfsDisks } from "./useFsApi.ts";
 import { ALL_CONFIGURED } from "./useMonitoringReads.ts";
+import { useZfsPoolDisks } from "./useZfsReads.ts";
 
 /** Every disk, in device order (design 1.1). */
 export const ALL_DISKS: GetListRequest = {
@@ -89,8 +91,8 @@ export const useDiskList = () =>
 export const useConfiguredFs = () =>
   useFileSystemMgmtGetList(ALL_CONFIGURED, { query: ON_OPEN });
 
-export const useDetectedFs = () =>
-  useFileSystemMgmtEnumerateFilesystems({ query: ON_OPEN });
+export const useDetectedFs = (enabled = true) =>
+  useFileSystemMgmtEnumerateFilesystems({ query: { ...ON_OPEN, enabled } });
 
 /** The RAID plugin's arrays. A 404 means the plugin is not installed; nothing retries it. */
 export const useRaidArrays = () =>
@@ -133,6 +135,7 @@ export function useDiskInventory(): DiskInventory {
   const configured = useConfiguredFs();
   const detected = useDetectedFs();
   const raid = useRaidArrays();
+  const zfs = useZfsPoolDisks();
   const session = useMemoryStore(diskSession);
   const tasks = useTasks();
 
@@ -141,14 +144,19 @@ export function useDiskInventory(): DiskInventory {
     configured: configured.isError ? undefined : configured.data?.data,
     detected: detected.isError ? undefined : detected.data,
     arrays: raidMissing ? null : raid.isError ? undefined : raid.data,
+    zfs: zfs.value,
   };
   const failed =
-    configured.isError || detected.isError || (raid.isError && !raidMissing);
+    configured.isError ||
+    detected.isError ||
+    (raid.isError && !raidMissing) ||
+    zfs.failed;
   const useState = failed
     ? "failed"
     : inputs.configured === undefined ||
         inputs.detected === undefined ||
-        inputs.arrays === undefined
+        inputs.arrays === undefined ||
+        inputs.zfs === undefined
       ? "loading"
       : "known";
   const useError = configured.isError
@@ -157,13 +165,15 @@ export function useDiskInventory(): DiskInventory {
       ? detected.error
       : raid.isError && !raidMissing
         ? raid.error
-        : undefined;
+        : zfs.failed
+          ? zfs.error
+          : undefined;
 
   const rows = diskList.data?.data;
   const runningTasks = new Set(
     tasks.filter((t) => t.state === "running").map((t) => t.id),
   );
-  const { configured: c, detected: d, arrays: a } = inputs;
+  const { configured: c, detected: d, arrays: a, zfs: z } = inputs;
   const disks = useMemo(
     () => (rows === undefined ? undefined : byDeviceOrder(rows)),
     [rows],
@@ -175,7 +185,7 @@ export function useDiskInventory(): DiskInventory {
       disk.devicename,
       diskUse(
         disk,
-        { configured: c, detected: d, arrays: a },
+        { configured: c, detected: d, arrays: a, zfs: z },
         {
           wiping: wipe !== undefined && runningTasks.has(wipe.taskId),
           wipedAt: session.wipedAt[disk.devicefile],
@@ -196,12 +206,14 @@ export function useDiskInventory(): DiskInventory {
             configured: c,
             detected: d,
             arrays: a,
+            zfs: z,
           }),
     fetching:
       diskList.isFetching ||
       configured.isFetching ||
       detected.isFetching ||
-      raid.isFetching,
+      raid.isFetching ||
+      zfs.fetching,
   };
 }
 
@@ -212,6 +224,8 @@ export type Recheck =
       disk: DiskDevice;
       result: DiskUseResult;
       untraceable: boolean;
+      /** The ZFS pools' disks were read, so ZFS is not among what cannot be traced. */
+      zfsKnown: boolean;
     }
   | { kind: "refused"; disk: DiskDevice; result: DiskUseResult }
   | { kind: "changed"; disk: DiskDevice }
@@ -232,7 +246,7 @@ export function useRecheckDisk() {
         (value) => ({ ok: true as const, value }),
         (error: unknown) => ({ ok: false as const, error }),
       );
-    const [list, configured, detected, arrays] = await Promise.all([
+    const [list, configured, detected, arrays, zfs] = await Promise.all([
       settle(
         queryClient.fetchQuery({
           ...getDiskMgmtGetListQueryOptions(ALL_DISKS),
@@ -258,6 +272,7 @@ export function useRecheckDisk() {
           retry: false,
         }),
       ),
+      settle(readZfsDisks(queryClient)),
     ]);
     if (!list.ok) {
       return { kind: "unchecked", error: list.error };
@@ -272,7 +287,9 @@ export function useRecheckDisk() {
         ? detected.error
         : !arrays.ok && !raidMissing
           ? arrays.error
-          : undefined;
+          : !zfs.ok
+            ? zfs.error
+            : undefined;
     const disks = list.value.data;
     const fresh = disks.find((d) => d.devicename === shown.devicename);
     if (fresh === undefined) {
@@ -285,13 +302,14 @@ export function useRecheckDisk() {
     ) {
       return { kind: "changed", disk: fresh };
     }
-    if (failure !== undefined || !configured.ok || !detected.ok) {
+    if (failure !== undefined || !configured.ok || !detected.ok || !zfs.ok) {
       return { kind: "unchecked", error: failure };
     }
     const inputs: UseInputs = {
       configured: configured.value.data,
       detected: detected.value,
       arrays: arrays.ok ? arrays.value : null,
+      zfs: zfs.value,
     };
     const result = diskUse(fresh, inputs, marks);
     if (result.blockers.length > 0) {
@@ -302,6 +320,7 @@ export function useRecheckDisk() {
       disk: fresh,
       result,
       untraceable: hasUntraceableStorage(disks, inputs),
+      zfsKnown: zfs.value !== null,
     };
   };
 }

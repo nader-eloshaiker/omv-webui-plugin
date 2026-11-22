@@ -17,6 +17,7 @@ import { useFsWords } from "../../hooks/useFsWords.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
 import { arrayAddress } from "../../raid/raidModel.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { isPoolAddress } from "../../zfs/zfsModel.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
 /** A file system's name: its label as text, else "EXT4 on /dev/sdb1" with the device in code type. */
@@ -146,16 +147,29 @@ function Line({ blocker }: { blocker: WipeBlocker }) {
       );
     }
     case "zfs":
-      // The pool is managed in the classic interface until the ZFS slice adds its page.
+      // The pool's page, where replacing the disk or deleting the pool is offered (ZFS design 10.2).
       return (
         <>
           <p>{t("wipe.blocked.zfs", { pool: blocker.pool })}</p>
-          <p className="text-sm">
-            {t("wipe.blocked.zfsDo")}{" "}
-            <ExternalLink href={CLASSIC.zfs} newTabLabel={newTab}>
-              {t("wipe.zfsLink")}
-            </ExternalLink>
-          </p>
+          {isPoolAddress(blocker.pool) ? (
+            <p className="text-sm">
+              {t("wipe.blocked.zfsDoPool")}{" "}
+              <Link
+                to="/storage/zfs/pools/$pool"
+                params={{ pool: blocker.pool }}
+                className={routerLinkClass}
+              >
+                {t("wipe.zfsPoolLink", { pool: blocker.pool })}
+              </Link>
+            </p>
+          ) : (
+            <p className="text-sm">
+              {t("wipe.blocked.zfsDo")}{" "}
+              <ExternalLink href={CLASSIC.zfs} newTabLabel={newTab}>
+                {t("wipe.zfsLink")}
+              </ExternalLink>
+            </p>
+          )}
         </>
       );
     case "wiping":

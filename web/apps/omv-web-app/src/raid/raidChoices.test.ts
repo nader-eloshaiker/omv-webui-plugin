@@ -40,6 +40,7 @@ const inputs = (over: Partial<RaidChoiceInputs> = {}): RaidChoiceInputs => ({
   configured: CONFIGURED,
   detected: DETECTED,
   arrays: [],
+  zfs: null,
   ...over,
 });
 const none = () => ({ wiping: false });

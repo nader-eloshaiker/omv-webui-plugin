@@ -113,9 +113,9 @@ export async function answerWithScenario(
   return calls;
 }
 
-/** The storage calls the file-system pages make, with the pending-changes path. */
+/** The storage calls the file-system, RAID and ZFS pages make, with the pending-changes path. */
 export const STORAGE_CALLS = (call: string): boolean =>
-  /^(FileSystemMgmt|FsTab|DiskMgmt|MdMgmt|Exec|Config)\./.test(call) ||
+  /^(FileSystemMgmt|FsTab|DiskMgmt|MdMgmt|Zfs|Exec|Config)\./.test(call) ||
   call === "ShareMgmt.getList" ||
   call === "Services.getStatus" ||
   call === "System.getInformation";

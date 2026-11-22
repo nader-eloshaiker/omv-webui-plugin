@@ -28,7 +28,7 @@ describe("navFor", () => {
 
   it("shows RAID only when the plugin is known to be installed, between Disk health and File systems", () => {
     const storage = (raidPlugin: boolean) =>
-      navFor("admin", { raidPlugin })
+      navFor("admin", { raidPlugin, zfsPlugin: false })
         .find((g) => g.group === "storage")
         ?.pages.map((p) => p.item);
     expect(storage(false)).toEqual([
@@ -44,7 +44,33 @@ describe("navFor", () => {
       "filesystems",
       "shared-folders",
     ]);
-    expect(navFor("user", { raidPlugin: true })).toHaveLength(1);
+    expect(navFor("user", { raidPlugin: true, zfsPlugin: true })).toHaveLength(
+      1,
+    );
+  });
+
+  it("shows ZFS only when its plugin is known to be installed, after RAID", () => {
+    const storage = (zfsPlugin: boolean) =>
+      navFor("admin", { raidPlugin: true, zfsPlugin })
+        .find((g) => g.group === "storage")
+        ?.pages.map((p) => p.item);
+    expect(storage(false)).not.toContain("zfs");
+    expect(storage(true)).toEqual([
+      "disks",
+      "smart",
+      "md",
+      "zfs",
+      "filesystems",
+      "shared-folders",
+    ]);
+  });
+
+  it("marks ZFS current on a pool's page, a file system's page and the ZFS flows", () => {
+    expect(isCurrent("/storage/zfs", "/storage/zfs")).toBe(true);
+    expect(isCurrent("/storage/zfs/pools/tank", "/storage/zfs")).toBe(true);
+    expect(isCurrent("/storage/zfs/fs/tank/media", "/storage/zfs")).toBe(true);
+    expect(isCurrent("/storage/zfs/create", "/storage/zfs")).toBe(true);
+    expect(isCurrent("/storage/zfsx", "/storage/zfs")).toBe(false);
   });
 
   it("marks RAID current on an array's page and the RAID flows", () => {
@@ -76,11 +102,14 @@ describe("findNavPage", () => {
 describe("the table", () => {
   it("names each classic page in the hash form the classic interface routes by", () => {
     for (const page of NAV_PAGES) {
-      // System logs names its "Logs" sub-page: the stock group page has two.
+      // System logs names its "Logs" sub-page: the stock group page has two. ZFS names its "Pools"
+      // sub-page: the plugin's group page has eight.
       expect(page.classic).toBe(
         page.item === "system-logs"
           ? "/#/diagnostics/system-logs/logs"
-          : `/#/${page.group}/${page.item}`,
+          : page.item === "zfs"
+            ? "/#/storage/zfs/pools"
+            : `/#/${page.group}/${page.item}`,
       );
       expect(page.labelKey).toBe(`nav.items.${page.group}.${page.item}`);
     }
@@ -96,6 +125,7 @@ describe("the table", () => {
       "/storage/disks",
       "/storage/smart",
       "/storage/md",
+      "/storage/zfs",
       "/storage/filesystems",
       "/storage/shared-folders",
       "/services/ssh",

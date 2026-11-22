@@ -21,6 +21,8 @@ export type WipeDialogPhase =
       disk: DiskDevice;
       unused: FsRef[];
       untraceable: boolean;
+      /** The ZFS pools' disks were read: the untraceable sentence does not name ZFS (ZFS design 10.2). */
+      zfsKnown: boolean;
       /** "Checking again…": the second re-read on "Wipe disk" is under way. */
       rechecking: boolean;
       /** The wipe could not be started; nothing was erased. */
@@ -36,6 +38,7 @@ export function phaseAfterCheck(outcome: Recheck): WipeDialogPhase {
         disk: outcome.disk,
         unused: outcome.result.unused,
         untraceable: outcome.untraceable,
+        zfsKnown: outcome.zfsKnown,
         rechecking: false,
       };
     case "refused":

@@ -61,6 +61,7 @@ import {
   useServiceStatus,
 } from "../../hooks/useMonitoringReads.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
+import { useZfsPlugin, useZfsPoolHealth } from "../../hooks/useZfsReads.ts";
 import { pendingModules } from "../../pending/modules.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { MAIN_ID } from "../../shell/ids.ts";
@@ -157,6 +158,8 @@ function AdminDashboard({ username }: { username: string | null }) {
   const network = useNetworkInterfaces();
   const read = useForegroundRead();
   const disks = useMemoryStore(diskHealth);
+  const zfsPlugin = useZfsPlugin(true);
+  const zfsPools = useZfsPoolHealth(zfsPlugin === "installed");
   const { samples } = useMemoryStore(usageSamples);
   const data: SystemInformation | undefined = info.data;
   const showChecklist = data?.displayWelcomeMessage === true;
@@ -170,6 +173,7 @@ function AdminDashboard({ username }: { username: string | null }) {
           mounted.data,
           missingFileSystems(configured.data?.data ?? []),
           (fs) => addressIn(configured.data?.data ?? [], fs),
+          zfsPlugin === "installed",
         );
   const rows = attentionRows({
     info: data,
@@ -180,6 +184,7 @@ function AdminDashboard({ username }: { username: string | null }) {
       : undefined,
     services: services.data?.data,
     pending,
+    pools: zfsPools.data,
   });
   // A card's own stale line only when the page's line does not already say it.
   const pageStale = info.isRefetchError;

@@ -61,6 +61,7 @@ import { useFsApi } from "../../hooks/useFsApi.ts";
 import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
 import { useRaidWords } from "../../hooks/useRaidWords.tsx";
 import { useStorageChoices } from "../../hooks/useStorageChoices.ts";
+import { useZfsPlugin } from "../../hooks/useZfsReads.ts";
 import {
   arrayAddress,
   arrayState,
@@ -233,6 +234,7 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
   const api = useFsApi();
   const { choices, retry, rescan, rescanning } = useStorageChoices();
   const raidPlugin = useRaidPlugin(true) === "installed";
+  const zfsPlugin = useZfsPlugin(true) === "installed";
   const [draft, setDraft] = useState<FlowDraft>(() => initialDraft(kind));
   const [stage, setStage] = useState<"form" | "summary">("form");
   const [fixed, setFixed] = useState<FlowChoices | null>(null);
@@ -515,7 +517,29 @@ export function AddStorageDecisions({ kind }: { kind: FlowKind }) {
       {deviceField}
       <CannotUse choices={choices} defaultOpen={false} />
       {!multi && offeredDisks >= 2 ? (
-        raidPlugin ? (
+        zfsPlugin ? (
+          <p className="text-sm">
+            {raidPlugin
+              ? t("addStorage.combineHintZfs")
+              : t("addStorage.combineHintZfsOnly")}{" "}
+            <Link
+              to="/storage/filesystems/add-multi"
+              className={routerLinkClass}
+            >
+              {t("addStorage.combineLink")}
+            </Link>{" "}
+            {raidPlugin ? (
+              <>
+                <Link to="/storage/md/create" className={routerLinkClass}>
+                  {t("addStorage.combineRaidLink")}
+                </Link>{" "}
+              </>
+            ) : null}
+            <Link to="/storage/zfs/create" className={routerLinkClass}>
+              {t("addStorage.combineZfsLink")}
+            </Link>
+          </p>
+        ) : raidPlugin ? (
           <p className="text-sm">
             {t("addStorage.combineHintRaid")}{" "}
             <Link
