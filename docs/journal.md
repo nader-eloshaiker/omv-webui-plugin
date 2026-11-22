@@ -693,3 +693,7 @@ Built on `phase-5-zfs` to [design/phase-5-zfs.md](design/phase-5-zfs.md), as agr
 - **The library** gains `TableGroupRow` and `SizeField`.
 - **The mock remembers** creates, file systems, snapshots, checks, replacements, offline and online, and deletes, with 38 ZFS scenarios.
 - **Found while building:** the VM's facts in the contract entry above (FsTab refuses a ZFS name; `addObject` with a taken name changes nothing; a refused `addPool` can leave a partition table; deleted and replaced-out disks keep ZFS's GPT; ratios without "x"; `replacing-1` for both disks; the space shares; `lastscrub`'s time zone; by-id paths only). A pool whose disks ZFS names otherwise has no disk changes here. A pool being deleted is no longer read once its task ends, so its report is never asked for after it is gone.
+
+## 2026-11-22 — Phase 5, shares: the methods cleared for the contract
+
+The owner cleared all nine backend methods the shares domain needs: `ShareMgmt.set`, `ShareMgmt.setPrivileges`, `ShareMgmt.delete`, `UserMgmt.getUserList`, `UserMgmt.getGroupList`, `SMB.getSettings`, `SMB.setSettings`, `SMB.getShareList` and `SMB.setShare`. None is on the private review list. The design's points still need the owner's agreement before anything destructive is built.
