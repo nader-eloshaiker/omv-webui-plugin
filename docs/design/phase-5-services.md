@@ -11,7 +11,7 @@ shared folder's page says today that "an NFS share, a backup job, the Rsync serv
 without naming them ([phase-5-shares.md](phase-5-shares.md), 0.7); after this slice it names each one
 and links to it.
 
-**Status: proposed, not yet agreed by the owner (section 20).** The 19 methods the owner cleared on
+**Status: agreed by the owner on 2026-11-23 (P1 to P19 as written, section 20; `CertificateMgmt.getSshList` cleared). Not built yet.** The 19 methods the owner cleared on
 2026-11-23 and the SMB, NFS and SSH operations already in the contract cover everything here except
 remote copy jobs over SSH, which need one more read (14.0). This slice can delete data (a copy job
 that also deletes files on its destination, a job pointed the wrong way, emptying a recycle bin),

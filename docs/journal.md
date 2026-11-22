@@ -776,3 +776,11 @@ Built on `phase-5-users` to [design/phase-5-users.md](design/phase-5-users.md), 
 ## 2026-11-23 — Phase 5, services: the methods cleared for the contract
 
 The owner cleared the methods the services domain needs: NFS `getSettings`, `setSettings`, `getShareList`, `getShare`, `setShare` and `deleteShare`; Rsyncd `getSettings`, `setSettings`, `getModuleList`, `getModule`, `setModule` and `deleteModule`; Rsync `getList`, `get`, `set`, `delete` and `execute`; SMB `getShare` and `emptyRecycleBin`. None is on the private review list. SSH and the basic SMB methods are already in the contract. The design's points still need the owner's agreement before anything destructive is built.
+
+## 2026-11-23 — Phase 5, services: the owner's agreement to the design
+
+The owner agreed [design/phase-5-services.md](design/phase-5-services.md) P1 to P19 as written.
+
+- **P1:** `CertificateMgmt.getSshList` is cleared (a read; OMV removes the private key). Making and copying keys stays in the classic interface.
+- **P2, P3:** NFS, the rsync server and its folders, copy jobs (list, add with a trial run, edit, Run now, delete), and SMB's workgroup and recycle bins are built; the extra-options boxes, NFSv4 tuning, advanced rsync flags and the other SMB settings stay in the classic interface. They are called copy jobs, not backups.
+- **P4 to P19:** as written, including rsync passwords removed from every reply, deletion at the destination off by default with trials before a deleting job is scheduled, NFS read-only by default with "any computer" never preselected, rsync server folders needing a sign-in by default, and every user of a folder named under Used by.
