@@ -193,14 +193,15 @@ describe("what the grid shows (3.2, 0.4)", () => {
     await folderPage("sharesNoUsers", PHOTOS);
     expect(
       await screen.findByText(
-        /There are no user accounts on this NAS yet, apart from the administrator/,
+        /There is nobody on this NAS yet apart from the built-in admin account/,
         {},
         LONG,
       ),
     ).toBeVisible();
-    expect(
-      screen.getByRole("link", { name: /Users in the classic interface/ }),
-    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Add a person" })).toHaveAttribute(
+      "href",
+      "/ui/usermgmt/users/add",
+    );
   });
 
   it("says the lists could not be read, and offers no save", async () => {

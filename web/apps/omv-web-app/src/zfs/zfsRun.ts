@@ -264,6 +264,15 @@ function marksFor(disk: DiskDevice): SessionMarks {
   };
 }
 
+/** The replace's last step: how many reads of the pool, and how far apart. */
+export const REPLACE_VERIFY_TRIES = 5;
+export const REPLACE_VERIFY_GAP_MS = 2000;
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
 interface Context {
   id: number;
   fs: FsApi;
@@ -771,12 +780,23 @@ async function stepVerify(ctx: Context): Promise<boolean> {
   mark(ctx, "verify", { status: "running" });
   try {
     if (choices.kind === "replace") {
-      const now = await readPool(ctx, choices.pool);
       const sent =
         run.sendAs[targetDevice(choices.target)] ?? choices.target.byId;
-      const there =
-        now.disks.known &&
-        now.disks.disks.some((d) => sameDiskName(sent, d.path));
+      // The pool's status can lag the replace by a moment (observed on the test VM): read it a few
+      // times before saying the new disk is not there.
+      let there = false;
+      for (let attempt = 0; attempt < REPLACE_VERIFY_TRIES; attempt += 1) {
+        if (attempt > 0) {
+          await wait(REPLACE_VERIFY_GAP_MS);
+        }
+        const now = await readPool(ctx, choices.pool);
+        there =
+          now.disks.known &&
+          now.disks.disks.some((d) => sameDiskName(sent, d.path));
+        if (there) {
+          break;
+        }
+      }
       if (!there) {
         fail(ctx, "verify", { kind: "notSeen" });
         return false;

@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 400
+value:
+  code: 0
+  message: 'email: The value "not an address" does not match exactly one schema of [{"type":"string","format":"email"},{"type":"string","maxLength":0}].'

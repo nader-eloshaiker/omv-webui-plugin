@@ -73,6 +73,22 @@ paths:
     $ref: ./operations/UserMgmt/getUserList.yaml
   /rpc/UserMgmt/getGroupList:
     $ref: ./operations/UserMgmt/getGroupList.yaml
+  /rpc/UserMgmt/getUser:
+    $ref: ./operations/UserMgmt/getUser.yaml
+  /rpc/UserMgmt/setUser:
+    $ref: ./operations/UserMgmt/setUser.yaml
+  /rpc/UserMgmt/deleteUser:
+    $ref: ./operations/UserMgmt/deleteUser.yaml
+  /rpc/UserMgmt/getGroup:
+    $ref: ./operations/UserMgmt/getGroup.yaml
+  /rpc/UserMgmt/setGroup:
+    $ref: ./operations/UserMgmt/setGroup.yaml
+  /rpc/UserMgmt/deleteGroup:
+    $ref: ./operations/UserMgmt/deleteGroup.yaml
+  /rpc/UserMgmt/getSettings:
+    $ref: ./operations/UserMgmt/getSettings.yaml
+  /rpc/UserMgmt/setSettings:
+    $ref: ./operations/UserMgmt/setSettings.yaml
   /rpc/SMB/getSettings:
     $ref: ./operations/SMB/getSettings.yaml
   /rpc/SMB/setSettings:

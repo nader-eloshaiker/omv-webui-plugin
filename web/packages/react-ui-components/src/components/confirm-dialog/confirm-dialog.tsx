@@ -5,10 +5,35 @@ import * as React from "react";
 import { cn } from "../../utils";
 import { Button } from "../button/button";
 import { buttonRowClass } from "../button/button-class";
+import { CheckboxField } from "../checkbox-field/checkbox-field";
 import { backdropClass, popupClass } from "../dialog/dialog-classes";
 import { keepTabInside } from "../dialog/keep-tab-inside";
 import { TypeToConfirmField } from "../type-to-confirm/type-to-confirm-field";
 import { typedMatches } from "../type-to-confirm/typed-matches";
+
+/** A titled list in the body: "What goes", "What stays". */
+interface ConfirmDialogSection {
+  /** The list's heading, drawn as an `h3`: "What goes". */
+  title: React.ReactNode;
+  /** One line each, only the ones that apply: "Their administrator rights." */
+  items: readonly React.ReactNode[];
+}
+
+/** A choice made in the confirmation itself: "Also take alex off the access lists of 3 shared folders". */
+interface ConfirmDialogCheckbox {
+  label: React.ReactNode;
+  /** What leaving it does: "If you leave this, those folders keep an entry for alex, …" */
+  hint?: React.ReactNode;
+  /**
+   * A warning shown while it is ticked, also the checkbox's description and announced politely when
+   * it appears: "After this, nobody can open Photos from other computers: alex was the only one with
+   * access."
+   */
+  note?: React.ReactNode;
+  /** Held by the caller, which sets it each time the dialog opens (ticked by default, for example). */
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -17,9 +42,19 @@ interface ConfirmDialogProps {
   title: React.ReactNode;
   /**
    * The consequence in one plain sentence, with what depends on it (style guide 5.4). Set in the body
-   * colour: it is the sentence the decision rests on.
+   * colour: it is the sentence the decision rests on. Required unless `sections` say it.
    */
-  description: React.ReactNode;
+  description?: React.ReactNode;
+  /**
+   * Titled lists under the sentence: "What goes" and "What stays", each an `h3` and a list. With the
+   * sentence they are the dialog's description, read with its title when it opens.
+   */
+  sections?: readonly ConfirmDialogSection[];
+  /**
+   * A checkbox after the lists and before `children` (and so before a typed confirmation): a
+   * `CheckboxField` with its label, hint and the note shown while ticked.
+   */
+  checkbox?: ConfirmDialogCheckbox;
   /** Anything else the reader must see before deciding: the affected services, a dependency list. */
   children?: React.ReactNode;
   /** The act, as a verb with its object: "Wipe disk", "Apply 3 changes", "Undo 3 changes". */
@@ -52,6 +87,8 @@ function ConfirmDialog({
   onOpenChange,
   title,
   description,
+  sections,
+  checkbox,
   children,
   confirmLabel,
   cancelLabel,
@@ -86,11 +123,48 @@ function ConfirmDialog({
               <AlertDialog.Title className="text-lg leading-tight font-semibold text-foreground [overflow-wrap:anywhere]">
                 {title}
               </AlertDialog.Title>
-              <AlertDialog.Description className="text-base text-foreground">
-                {description}
-              </AlertDialog.Description>
+              {sections && sections.length > 0 ? (
+                // One description for the sentence and the lists, so all of it is read with the title.
+                <AlertDialog.Description
+                  render={<div />}
+                  className="flex flex-col gap-3 text-base text-foreground"
+                >
+                  {description ? <p>{description}</p> : null}
+                  {sections.map((section, position) => (
+                    <div
+                      key={`section-${String(position)}`}
+                      data-slot="confirm-dialog-section"
+                      className="flex flex-col gap-1"
+                    >
+                      <h3 className="text-base font-semibold [overflow-wrap:anywhere] text-foreground">
+                        {section.title}
+                      </h3>
+                      <ul className="flex list-disc flex-col gap-1 ps-5 [overflow-wrap:anywhere] marker:text-muted-foreground">
+                        {section.items.map((item, line) => (
+                          <li key={`item-${String(line)}`}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </AlertDialog.Description>
+              ) : description ? (
+                <AlertDialog.Description className="text-base text-foreground">
+                  {description}
+                </AlertDialog.Description>
+              ) : null}
             </div>
           </div>
+          {checkbox ? (
+            <CheckboxField
+              label={checkbox.label}
+              hint={checkbox.hint}
+              warning={checkbox.checked ? checkbox.note : undefined}
+              checked={checkbox.checked}
+              onCheckedChange={(checked) => checkbox.onCheckedChange(checked)}
+              disabled={pending}
+              focusableWhenDisabled
+            />
+          ) : null}
           {children}
           {error ? (
             <p
@@ -140,7 +214,8 @@ interface TypeToConfirmDialogProps extends Omit<
 /**
  * The typed confirmation for what cannot be undone (style guide 5.4, UI-8): the reader types the
  * object's name, and the confirm button stays unavailable until it matches. It opens empty every time,
- * focus starts on Cancel, and Enter in the field does nothing.
+ * focus starts on Cancel, and Enter in the field does nothing. A `checkbox` sits after the lists and
+ * before `children` and the typed field.
  */
 function TypeToConfirmDialog({
   confirmText,
@@ -183,4 +258,9 @@ function TypeToConfirmDialog({
 }
 
 export { ConfirmDialog, TypeToConfirmDialog };
-export type { ConfirmDialogProps, TypeToConfirmDialogProps };
+export type {
+  ConfirmDialogCheckbox,
+  ConfirmDialogProps,
+  ConfirmDialogSection,
+  TypeToConfirmDialogProps,
+};

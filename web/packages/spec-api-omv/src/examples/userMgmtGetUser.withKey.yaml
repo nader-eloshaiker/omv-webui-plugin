@@ -1,0 +1,16 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: alex
+  uid: 1003
+  gid: 100
+  comment: Alex at home
+  dir: /home/alex
+  shell: /usr/sbin/nologin
+  groups:
+    - users
+  system: false
+  email: "alex@example.org"
+  disallowusermod: false
+  sshpubkeys:
+    - "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----"

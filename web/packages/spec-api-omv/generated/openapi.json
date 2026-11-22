@@ -1124,6 +1124,512 @@
         }
       }
     },
+    "/rpc/UserMgmt/getUser": {
+      "post": {
+        "operationId": "userMgmtGetUser",
+        "tags": ["UserMgmt"],
+        "summary": "One account, by name",
+        "description": "One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form; defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with `system` true. A name that is no account is refused with \"The user '…' does not exist.\", which the interface reads as \"the name is free\" before it makes a person. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getUser"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.getuser",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccount"
+                },
+                "examples": {
+                  "person": {
+                    "$ref": "#/components/examples/userMgmtGetUser.person"
+                  },
+                  "withKey": {
+                    "$ref": "#/components/examples/userMgmtGetUser.withKey"
+                  },
+                  "administrator": {
+                    "$ref": "#/components/examples/userMgmtGetUser.administrator"
+                  },
+                  "builtInAdmin": {
+                    "$ref": "#/components/examples/userMgmtGetUser.builtInAdmin"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The name does not match OMV's name format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "invalidName": {
+                    "$ref": "#/components/examples/userMgmtGetUser.invalidName"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "No account has that name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "missing": {
+                    "$ref": "#/components/examples/userMgmtGetUser.missing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/setUser": {
+      "post": {
+        "operationId": "userMgmtSetUser",
+        "tags": ["UserMgmt"],
+        "summary": "Make or change a person's account",
+        "description": "Make a person's account, or change the one with that name: there is no separate \"create\". OMV refuses a system account. It writes its own record first (the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form), then makes or changes the account at once: `users` as the main group, the shell, the description and the whole groups list sent; a new person also gets a home folder when home folders are on. Each group must exist. A password that is not empty is set at once, for signing in here and for SMB. Takes effect without an apply; the mail settings are left pending, and the SSH settings when the person has or had SSH keys. Returns the stored account, without the fields in x-omv-omit.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "setUser"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "access",
+        "x-omv-omit": ["password"],
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.setuser",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtSetUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSaved"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/userMgmtSetUser.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/userMgmtSetUser.changed"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A field does not match what OMV accepts (an e-mail address, a password with a line break).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "invalidEmail": {
+                    "$ref": "#/components/examples/userMgmtSetUser.invalidEmail"
+                  },
+                  "passwordLineBreak": {
+                    "$ref": "#/components/examples/userMgmtSetUser.passwordLineBreak"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV or the account tool refused: a group that does not exist, a description with a colon.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "groupMissing": {
+                    "$ref": "#/components/examples/userMgmtSetUser.groupMissing"
+                  },
+                  "commentColon": {
+                    "$ref": "#/components/examples/userMgmtSetUser.commentColon"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/deleteUser": {
+      "post": {
+        "operationId": "userMgmtDeleteUser",
+        "tags": ["UserMgmt"],
+        "summary": "Delete a person's account",
+        "description": "Delete a person's account at once: the account, its SMB entry and its group memberships, then OMV's record of it (the e-mail address and SSH keys). The home folder and every file the person owns stay on the disk, owned by the old account number. Shared folders' access lists and other settings that name the person are not changed. Leaves the mail settings pending, and the SSH settings when the person had keys. Returns the deleted account.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "deleteUser"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "access",
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.deleteuser",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccount"
+                },
+                "examples": {
+                  "deleted": {
+                    "$ref": "#/components/examples/userMgmtDeleteUser.deleted"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "No account has that name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "missing": {
+                    "$ref": "#/components/examples/userMgmtDeleteUser.missing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/getGroup": {
+      "post": {
+        "operationId": "userMgmtGetGroup",
+        "tags": ["UserMgmt"],
+        "summary": "One group, by name",
+        "description": "One group's fields, as UserMgmt.getGroupList lists them; `comment` only when OMV holds a record. Unlike the list, it also answers for system groups (such as `_ssh` and `openmediavault-admin`), with `system` true. A name that is no group is refused with \"The group '…' does not exist.\". Changes nothing.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getGroup"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.getgroup",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroup"
+                },
+                "examples": {
+                  "sshGroup": {
+                    "$ref": "#/components/examples/userMgmtGetGroup.sshGroup"
+                  },
+                  "adminGroup": {
+                    "$ref": "#/components/examples/userMgmtGetGroup.adminGroup"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "No group has that name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "missing": {
+                    "$ref": "#/components/examples/userMgmtGetGroup.missing"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/setGroup": {
+      "post": {
+        "operationId": "userMgmtSetGroup",
+        "tags": ["UserMgmt"],
+        "summary": "Make or change a group",
+        "description": "Make a group, or change the one with that name. OMV refuses a system group. It writes its own record (the description) first, makes the group when it is new, then sets its members to exactly the list sent, at once; each member must exist. Returns the stored group.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "setGroup"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "access",
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.setgroup",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtSetGroupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupSaved"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/userMgmtSetGroup.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/userMgmtSetGroup.changed"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The account tool refused: a member who does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "unknownMember": {
+                    "$ref": "#/components/examples/userMgmtSetGroup.unknownMember"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/deleteGroup": {
+      "post": {
+        "operationId": "userMgmtDeleteGroup",
+        "tags": ["UserMgmt"],
+        "summary": "Delete an empty group",
+        "description": "Delete a group at once, then OMV's record of it. Refused while the group has members. Shared folders' access lists that name the group are not changed. Returns the deleted group.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "deleteGroup"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-destructive": "access",
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.deletegroup",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtNameRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroup"
+                },
+                "examples": {
+                  "deleted": {
+                    "$ref": "#/components/examples/userMgmtDeleteGroup.deleted"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The group still has members.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "hasMembers": {
+                    "$ref": "#/components/examples/userMgmtDeleteGroup.hasMembers"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/getSettings": {
+      "post": {
+        "operationId": "userMgmtGetSettings",
+        "tags": ["UserMgmt"],
+        "summary": "Home folders setting",
+        "description": "Whether every person has a home folder, and the shared folder that holds them. OMV keeps the shared folder when home folders are turned off. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeFolderSettings"
+                },
+                "examples": {
+                  "off": {
+                    "$ref": "#/components/examples/userMgmtGetSettings.off"
+                  },
+                  "on": {
+                    "$ref": "#/components/examples/userMgmtGetSettings.on"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/setSettings": {
+      "post": {
+        "operationId": "userMgmtSetSettings",
+        "tags": ["UserMgmt"],
+        "summary": "Turn home folders on or off",
+        "description": "Save the home folders setting, then, inside the request, set every person's home folder: turned on, to a folder named after them in the shared folder (moving an existing home folder's content there when that folder does not exist yet, else making it, private to the person); turned off, to none, leaving every folder and file where it was. The SMB settings are left pending. Returns the stored setting.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "setSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.setsettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtSetSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeFolderSettings"
+                },
+                "examples": {
+                  "turnedOn": {
+                    "$ref": "#/components/examples/userMgmtSetSettings.turnedOn"
+                  },
+                  "turnedOff": {
+                    "$ref": "#/components/examples/userMgmtSetSettings.turnedOff"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rpc/SMB/getSettings": {
       "post": {
         "operationId": "smbGetSettings",
@@ -6207,6 +6713,263 @@
           }
         }
       },
+      "UserMgmtNameRequest": {
+        "type": "object",
+        "description": "One account or group, by name (rpc.usermgmt.getuser, deleteuser, getgroup, deletegroup). The name is the only key OMV has for either.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/Username"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Email": {
+        "type": "string",
+        "description": "An e-mail address, in OMV's `email` format. OMV checks it with PHP's FILTER_VALIDATE_EMAIL; this pattern accepts a subset of that: a dot-atom local part of at most 64 characters, and a domain of two or more labels whose last starts with a letter. Quoted local parts and address literals, which PHP also accepts, are refused.",
+        "x-omv-format": "email",
+        "maxLength": 254,
+        "pattern": "^(?=[^@]{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
+      },
+      "UserDescription": {
+        "type": "string",
+        "description": "A person's description (the account's comment); may be empty. The system's account tool refuses a colon and a line break, so the contract does too, and at most 255 characters. The interface holds a description it edits to 65 characters (design phase-5-users D13); a longer one set elsewhere is sent back as read.",
+        "maxLength": 255,
+        "pattern": "^[^:\\r\\n]*$"
+      },
+      "SshPublicKeyRfc4716": {
+        "type": "string",
+        "description": "A public SSH key in RFC 4716 format, as OMV stores and returns it (UserMgmt.getUser). OMV also accepts the OpenSSH one-line form and converts it; the contract sends keys back only as read.",
+        "x-omv-format": "sshpubkey-rfc4716",
+        "maxLength": 16384,
+        "pattern": "^---- BEGIN SSH2 PUBLIC KEY ----\\r?\\n[\\s\\S]*\\r?\\n---- END SSH2 PUBLIC KEY ----\\r?\\n?$"
+      },
+      "UserMgmtSetUserRequest": {
+        "type": "object",
+        "description": "A person's account to make or change (rpc.usermgmt.setuser). OMV makes the account when no account has the name and changes the one that has it otherwise; the interface checks with UserMgmt.getUser first. Every field is written: the groups replace the whole list (an empty list would leave them as they are, so the contract requires at least one), and an empty password keeps the stored one. Stricter than OMV: no `uid` (the NAS chooses it), `shell` required as an absolute path, the groups in OMV's name format, the description of UserDescription, and SSH keys only in the RFC 4716 form OMV returns.",
+        "required": [
+          "name",
+          "groups",
+          "shell",
+          "password",
+          "email",
+          "comment",
+          "disallowusermod",
+          "sshpubkeys"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/Username"
+          },
+          "groups": {
+            "type": "array",
+            "description": "Every group the person is to be in, `users` among them: the system groups they are in, as read, and the groups chosen.",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/Username"
+            }
+          },
+          "shell": {
+            "type": "string",
+            "description": "The program that runs when they sign in to the command line, such as /usr/sbin/nologin.",
+            "maxLength": 255,
+            "pattern": "^/[A-Za-z0-9._/-]+$"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "x-omv-secret": true,
+            "x-omv-format": "no-multi-line",
+            "description": "A new password, or empty to keep the stored one. One line.",
+            "pattern": "^[^\\r\\n]*$"
+          },
+          "email": {
+            "description": "An e-mail address, or empty.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Email"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
+          },
+          "comment": {
+            "$ref": "#/components/schemas/UserDescription"
+          },
+          "disallowusermod": {
+            "type": "boolean",
+            "description": "True if the person may not change their own details."
+          },
+          "sshpubkeys": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/SshPublicKeyRfc4716"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserSaved": {
+        "type": "object",
+        "description": "The account as UserMgmt.setUser stored it: OMV's record (its UUID, the e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form) with the fields sent.",
+        "required": [
+          "uuid",
+          "name",
+          "email",
+          "disallowusermod",
+          "sshpubkeys",
+          "groups",
+          "shell",
+          "comment"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "OMV's record of the account."
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "disallowusermod": {
+            "type": "boolean"
+          },
+          "sshpubkeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shell": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "GroupDescription": {
+        "type": "string",
+        "description": "A group's description, stored only in OMV's record; may be empty. Stricter than OMV: one line of at most 255 characters. The interface holds a description it edits to 65 characters without a colon (design phase-5-users D13); one set elsewhere is sent back as read.",
+        "maxLength": 255,
+        "pattern": "^[^\\r\\n]*$"
+      },
+      "UserMgmtSetGroupRequest": {
+        "type": "object",
+        "description": "A group to make or change (rpc.usermgmt.setgroup). OMV makes the group when none has the name; the interface checks with UserMgmt.getGroup first. The member list replaces the stored one; an empty list empties the group. Stricter than OMV: no `gid` (the NAS chooses it), the description of GroupDescription, and at most 10,000 members.",
+        "required": ["name", "comment", "members"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/Username"
+          },
+          "comment": {
+            "$ref": "#/components/schemas/GroupDescription"
+          },
+          "members": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/Username"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserGroupSaved": {
+        "type": "object",
+        "description": "The group as UserMgmt.setGroup stored it, with the members sent.",
+        "required": ["uuid", "name", "comment", "members"],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "OMV's record of the group."
+          },
+          "name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gid": {
+            "type": "integer"
+          }
+        }
+      },
+      "HomeFolderSettings": {
+        "type": "object",
+        "description": "Whether every person has a home folder, and in which shared folder (UserMgmt.getSettings, conf.system.usermngmnt.homedir). OMV keeps the shared folder when home folders are turned off.",
+        "required": ["enable", "sharedfolderref"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "description": "The UUID of the shared folder that holds the home folders, or empty."
+          }
+        }
+      },
+      "UserMgmtSetSettingsRequest": {
+        "type": "object",
+        "description": "Turn home folders on in a shared folder, or off (rpc.usermgmt.setsettings). Stricter than OMV: turning them on always names a shared folder.",
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["enable", "sharedfolderref"],
+            "properties": {
+              "enable": {
+                "type": "boolean",
+                "enum": [true]
+              },
+              "sharedfolderref": {
+                "$ref": "#/components/schemas/ObjectUuid"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["enable", "sharedfolderref"],
+            "properties": {
+              "enable": {
+                "type": "boolean",
+                "enum": [false]
+              },
+              "sharedfolderref": {
+                "description": "The shared folder kept for next time, or empty.",
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/ObjectUuid"
+                  },
+                  {
+                    "type": "string",
+                    "maxLength": 0
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
       "SmbSettings": {
         "type": "object",
         "description": "The SMB/CIFS service's settings without its shares (SMB.getSettings, conf.service.smb). The interface changes only `enable` and sends everything else back as read (design 0.10).",
@@ -6695,13 +7458,6 @@
             "description": "Minutes an idle session lasts. 0 means the server never ends an idle session."
           }
         }
-      },
-      "Email": {
-        "type": "string",
-        "description": "An e-mail address, in OMV's `email` format. OMV checks it with PHP's FILTER_VALIDATE_EMAIL; this pattern accepts a subset of that: a dot-atom local part of at most 64 characters, and a domain of two or more labels whose last starts with a letter. Quoted local parts and address literals, which PHP also accepts, are refused.",
-        "x-omv-format": "email",
-        "maxLength": 254,
-        "pattern": "^(?=[^@]{1,64}@)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$"
       },
       "UserMgmtSetUserByContextRequest": {
         "type": "object",
@@ -11802,6 +12558,288 @@
         "value": {
           "total": 0,
           "data": []
+        }
+      },
+      "userMgmtGetUser.person": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "alex",
+          "uid": 1003,
+          "gid": 100,
+          "comment": "Alex at home",
+          "dir": "/home/alex",
+          "shell": "/usr/sbin/nologin",
+          "groups": ["users"],
+          "system": false,
+          "email": "alex@example.org",
+          "disallowusermod": false,
+          "sshpubkeys": []
+        }
+      },
+      "userMgmtGetUser.withKey": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "alex",
+          "uid": 1003,
+          "gid": 100,
+          "comment": "Alex at home",
+          "dir": "/home/alex",
+          "shell": "/usr/sbin/nologin",
+          "groups": ["users"],
+          "system": false,
+          "email": "alex@example.org",
+          "disallowusermod": false,
+          "sshpubkeys": [
+            "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----"
+          ]
+        }
+      },
+      "userMgmtGetUser.administrator": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "example-admin",
+          "uid": 1000,
+          "gid": 100,
+          "comment": "",
+          "dir": "/home/example-admin",
+          "shell": "/bin/sh",
+          "groups": ["users", "openmediavault-admin"],
+          "system": false,
+          "email": "",
+          "disallowusermod": false,
+          "sshpubkeys": []
+        }
+      },
+      "userMgmtGetUser.builtInAdmin": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "admin",
+          "uid": 994,
+          "gid": 100,
+          "comment": "WebGUI administrator",
+          "dir": "/home/admin",
+          "shell": "/usr/sbin/nologin",
+          "groups": ["users", "openmediavault-admin"],
+          "system": true,
+          "email": "",
+          "disallowusermod": false,
+          "sshpubkeys": []
+        }
+      },
+      "userMgmtGetUser.invalidName": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 400,
+        "value": {
+          "code": 0,
+          "message": "name: The value '-alex' is not a valid user name."
+        }
+      },
+      "userMgmtGetUser.missing": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The user 'alex' does not exist."
+        }
+      },
+      "userMgmtSetUser.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000001",
+          "name": "alex",
+          "email": "alex@example.org",
+          "disallowusermod": false,
+          "sshpubkeys": [],
+          "groups": ["users"],
+          "shell": "/usr/sbin/nologin",
+          "password": "EXAMPLE-PASSWORD",
+          "comment": "Alex at home"
+        }
+      },
+      "userMgmtSetUser.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000001",
+          "name": "alex",
+          "email": "alex@example.org",
+          "disallowusermod": false,
+          "sshpubkeys": [],
+          "groups": ["users", "example-team", "example-kids", "audio"],
+          "shell": "/usr/sbin/nologin",
+          "password": "",
+          "comment": "Alex at home"
+        }
+      },
+      "userMgmtSetUser.invalidEmail": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 400,
+        "value": {
+          "code": 0,
+          "message": "email: The value \"not an address\" does not match exactly one schema of [{\"type\":\"string\",\"format\":\"email\"},{\"type\":\"string\",\"maxLength\":0}]."
+        }
+      },
+      "userMgmtSetUser.passwordLineBreak": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 400,
+        "value": {
+          "code": 0,
+          "message": "password: The value contains a multi-line content."
+        }
+      },
+      "userMgmtSetUser.groupMissing": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The group 'example-nogroup' does not exist."
+        }
+      },
+      "userMgmtSetUser.commentColon": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; usermod --gid 'users' --shell '/usr/sbin/nologin' --comment 'Alex: at home' --groups 'users' 'alex' 2>&1' with exit code '3': usermod: invalid field 'Alex: at home'"
+        }
+      },
+      "userMgmtDeleteUser.deleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "robin",
+          "uid": 1004,
+          "gid": 100,
+          "comment": "Robin",
+          "dir": "/nonexistent",
+          "shell": "/usr/bin/sh",
+          "groups": ["users", "_ssh", "example-team"],
+          "system": false,
+          "email": "",
+          "disallowusermod": false,
+          "sshpubkeys": [
+            "---- BEGIN SSH2 PUBLIC KEY ----\nAAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n---- END SSH2 PUBLIC KEY ----"
+          ]
+        }
+      },
+      "userMgmtDeleteUser.missing": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The user 'robin' does not exist."
+        }
+      },
+      "userMgmtGetGroup.sshGroup": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "_ssh",
+          "gid": 103,
+          "members": [],
+          "system": true
+        }
+      },
+      "userMgmtGetGroup.adminGroup": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "openmediavault-admin",
+          "gid": 983,
+          "members": ["admin", "example-admin"],
+          "system": true
+        }
+      },
+      "userMgmtGetGroup.missing": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The group 'example-team' does not exist."
+        }
+      },
+      "userMgmtSetGroup.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000002",
+          "name": "example-team",
+          "comment": "",
+          "members": []
+        }
+      },
+      "userMgmtSetGroup.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000002",
+          "name": "example-team",
+          "comment": "The team",
+          "members": ["alex", "sam"]
+        }
+      },
+      "userMgmtSetGroup.unknownMember": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; gpasswd --members 'example-nobody' 'example-kids' 2>&1' with exit code '3': gpasswd: user 'example-nobody' does not exist"
+        }
+      },
+      "userMgmtDeleteGroup.deleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "name": "example-team",
+          "gid": 1000,
+          "members": [],
+          "system": false,
+          "comment": "The team, again"
+        }
+      },
+      "userMgmtDeleteGroup.hasMembers": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; delgroup --only-if-empty 'example-team' 2>&1' with exit code '41': fatal: The group `example-team' is not empty!"
+        }
+      },
+      "userMgmtGetSettings.off": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "sharedfolderref": ""
+        }
+      },
+      "userMgmtGetSettings.on": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000003"
+        }
+      },
+      "userMgmtSetSettings.turnedOn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000003"
+        }
+      },
+      "userMgmtSetSettings.turnedOff": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000003"
         }
       },
       "smbGetSettings.off": {

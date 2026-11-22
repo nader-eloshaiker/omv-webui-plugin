@@ -1,0 +1,28 @@
+type: object
+description: >-
+  The account as UserMgmt.setUser stored it: OMV's record (its UUID, the e-mail address, whether
+  the person may change their own details, the SSH keys in RFC 4716 form) with the fields sent.
+required:
+  [uuid, name, email, disallowusermod, sshpubkeys, groups, shell, comment]
+properties:
+  uuid:
+    type: string
+    description: OMV's record of the account.
+  name:
+    type: string
+  email:
+    type: string
+  disallowusermod:
+    type: boolean
+  sshpubkeys:
+    type: array
+    items:
+      type: string
+  groups:
+    type: array
+    items:
+      type: string
+  shell:
+    type: string
+  comment:
+    type: string

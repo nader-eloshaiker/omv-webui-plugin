@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  name: example-team
+  gid: 1000
+  members: []
+  system: false
+  comment: "The team, again"

@@ -58,6 +58,15 @@ export function ShareDeleteBlockers({
             );
           case "other":
             return <li key={b.kind}>{t("sharedFolder.usedBy.other")}</li>;
+          case "homeFolders":
+            return (
+              <li key={b.kind} className="flex flex-col items-start gap-1">
+                <span>{t("shareDelete.blocked.homeFolders")}</span>
+                <Link to="/usermgmt/settings" className={routerLinkClass}>
+                  {t("shareDelete.blocked.homeFoldersLink")}
+                </Link>
+              </li>
+            );
           case "unread":
             return (
               <li key={b.kind} className="flex flex-col items-start gap-2">

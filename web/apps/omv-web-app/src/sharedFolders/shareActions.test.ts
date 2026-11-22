@@ -366,6 +366,19 @@ describe("deleting a shared folder (8.1)", () => {
     expect(kinds(result.keep)).toEqual(["other"]);
   });
 
+  it("is refused while it holds the home folders, in place of the other use (users design 13.1)", () => {
+    const used = { ...A4, _used: true };
+    expect(
+      kinds(deleteBlockers(input({ folder: used, homeFolders: true })).keep),
+    ).toEqual(["homeFolders"]);
+    const shares = read([{ ...SHARE, sharedfolderref: A4.uuid }]);
+    expect(
+      kinds(
+        deleteBlockers(input({ folder: used, shares, homeFolders: true })).keep,
+      ),
+    ).toEqual(["smb", "homeFolders"]);
+  });
+
   it("fails closed when a read failed or has not arrived", () => {
     expect(
       kinds(deleteBlockers(input({ shares: read(undefined, true) })).keep),

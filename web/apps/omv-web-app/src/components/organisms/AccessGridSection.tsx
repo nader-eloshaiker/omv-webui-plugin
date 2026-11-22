@@ -5,13 +5,20 @@
 // (and Blocked only on a row that stores it, D3), the lines that say what a group adds or takes away,
 // the administrator's row unavailable with its reason, and the grid's states (loading, the lists'
 // failure with the server's words and a retry, no accounts with the classic Users page, filtered
-// empty). Controlled: the caller holds the choices (accessModel's `Choices`) and saves them; the grid
+// empty). Each row's name is a router link to the person's or group's page (phase 5 users design
+// 13.1), opened in the same tab, so the page's unsaved-changes guard asks first; a name that has no page
+// (the web administrator account, a name the static "add" routes take, one outside OMV's pattern) is
+// text. The empty state leads to "Add a person". Controlled: the caller holds the choices (accessModel's `Choices`) and saves them; the grid
 // keeps only its search, filter and page.
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
-import { AccessGrid, ExternalLink } from "@omv-webui/react-ui-components";
+import {
+  AccessGrid,
+  type AccessGridNameLink,
+} from "@omv-webui/react-ui-components";
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { inertBidi, isolate, isolateName } from "../../format/isolate.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
+import { groupHasPage } from "../../groups/groupPage.ts";
 import {
   allowedValues,
   GIVES_ACCESS,
@@ -24,6 +31,14 @@ import {
   type AccessRow,
   type Choices,
 } from "../../sharedFolders/accessModel.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
+import { hasOwnPage } from "../../users/nameRules.ts";
+
+/**
+ * Whether a person can be opened at `/usermgmt/users/$name`: OMV's pattern, and not "add", which the
+ * static "Add a person" route takes (14.2).
+ */
+const personHasPage = hasOwnPage;
 
 export interface AccessGridSectionProps {
   /** The table's name: "Who can use Photos". */
@@ -76,6 +91,38 @@ export function AccessGridSection({
     }
   };
 
+  const nameLink = (row: AccessRow): AccessGridNameLink | undefined => {
+    if (row.admin) {
+      return undefined;
+    }
+    if (row.kind === "group") {
+      return groupHasPage(row.name)
+        ? {
+            "aria-label": t("groups.open", { group: inertBidi(row.name) }),
+            render: (props) => (
+              <Link
+                to="/usermgmt/groups/$group"
+                params={{ group: row.name }}
+                {...props}
+              />
+            ),
+          }
+        : undefined;
+    }
+    return personHasPage(row.name)
+      ? {
+          "aria-label": t("users.open", { name: inertBidi(row.name) }),
+          render: (props) => (
+            <Link
+              to="/usermgmt/users/$name"
+              params={{ name: row.name }}
+              {...props}
+            />
+          ),
+        }
+      : undefined;
+  };
+
   const rows =
     model?.rows.map((row) => {
       const line = note(row);
@@ -83,6 +130,7 @@ export function AccessGridSection({
         id: row.id,
         // Shown with their bidirectional controls as "�" (format/isolate.ts); rows are kept by id.
         name: inertBidi(row.name),
+        nameLink: nameLink(row),
         description:
           row.description === "" ? undefined : inertBidi(row.description),
         notes: line === null ? undefined : [line],
@@ -175,9 +223,9 @@ export function AccessGridSection({
       empty={{
         message: t("access.empty"),
         action: (
-          <ExternalLink href={CLASSIC.users} newTabLabel={t("app.newTab")}>
+          <Link to="/usermgmt/users/add" className={routerLinkClass}>
             {t("access.emptyLink")}
-          </ExternalLink>
+          </Link>
         ),
       }}
       saving={saving ? { label: t("access.saving") } : undefined}

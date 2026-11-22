@@ -3,6 +3,8 @@
 // Apply in the pending band, which the transport's x-omv-dirty signal brings up. The port is the one
 // blocking check; the warnings never block. On/off settings are checkboxes: nothing takes effect until
 // Save and Apply. A refetch never overwrites unsaved edits; while clean, the form follows the server.
+// The hints about each person's own SSH access and keys link to Users, and a line under "Turn on SSH"
+// names who may sign in (phase 5 users design 13.2).
 import type { SshSettings } from "@omv-webui/react-api-omv/generated";
 import {
   getSshGetQueryKey,
@@ -25,8 +27,10 @@ import {
   TextareaField,
 } from "@omv-webui/react-ui-components";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 import {
   fromDraft,
   isDirty,
@@ -39,6 +43,9 @@ import {
   type SshDraft,
 } from "../../ssh/sshForm.ts";
 import { LeaveGuard } from "../molecules/LeaveGuard.tsx";
+import { SshPeopleLine } from "./SshPeopleLine.tsx";
+
+const usersLink = <Link to="/usermgmt/users" className={routerLinkClass} />;
 
 type BooleanSetting = Exclude<keyof SshSettings, "port" | "extraoptions">;
 
@@ -161,9 +168,12 @@ export function SshSettingsForm({ saved, pending }: Props) {
       <div className="flex flex-col gap-2">
         <CheckboxField
           label={t("ssh.enable")}
-          hint={t("ssh.enableHint")}
+          hint={
+            <Trans i18nKey="ssh.enableHint" components={{ users: usersLink }} />
+          }
           {...checkbox("enable")}
         />
+        <SshPeopleLine />
         {values.enable ? null : (
           <p className="text-sm text-muted-foreground">{t("ssh.offNote")}</p>
         )}
@@ -202,7 +212,9 @@ export function SshSettingsForm({ saved, pending }: Props) {
         />
         <CheckboxField
           label={t("ssh.key")}
-          hint={t("ssh.keyHint")}
+          hint={
+            <Trans i18nKey="ssh.keyHint" components={{ users: usersLink }} />
+          }
           {...checkbox("pubkeyauthentication")}
         />
         <CheckboxField

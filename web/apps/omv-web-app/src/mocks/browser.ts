@@ -5,19 +5,28 @@
 import { createRpcHandlers } from "@omv-webui/react-api-omv/mocks";
 import { setupWorker } from "msw/browser";
 import { useMockScenarioStore } from "../stores/useMockScenarioStore.ts";
-import { newMockSession, scenarioAnswers, startsDirty } from "./scenarios.ts";
+import {
+  newMockSession,
+  scenarioAnswers,
+  startsDirty,
+  startsSignedIn,
+} from "./scenarios.ts";
 import { sharesDelayHandlers } from "./sharesScenarios.ts";
+import { usersDelayHandlers } from "./usersScenarios.ts";
 
 export async function startMockWorker(): Promise<void> {
   const { scenario } = useMockScenarioStore.getState();
-  // "Session ends after loading" starts signed in; every other scenario starts at sign-in.
+  // "Session ends after loading" and usersSelfUnknown start signed in; every other scenario starts
+  // at sign-in.
   const session = newMockSession(
-    scenario === "sessionExpired",
+    startsSignedIn(scenario),
     startsDirty(scenario),
   );
-  // A story's pass-through handlers (a slow deletion) run first, then hand the call on.
+  // A story's pass-through handlers (a slow deletion, slow home folders) run first, then hand the
+  // call on.
   const worker = setupWorker(
     ...sharesDelayHandlers(scenario),
+    ...usersDelayHandlers(scenario),
     ...createRpcHandlers(scenarioAnswers(scenario, session)),
   );
   await worker.start({

@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetUser
+  tags:
+    - UserMgmt
+  summary: One account, by name
+  description: >-
+    One account's fields, as UserMgmt.getUserList lists them, with what OMV stores about it (the
+    e-mail address, whether the person may change their own details, the SSH keys in RFC 4716 form;
+    defaults when OMV holds no record). Unlike the list, it also answers for system accounts, with
+    `system` true. A name that is no account is refused with "The user '…' does not exist.", which
+    the interface reads as "the name is free" before it makes a person. Changes nothing.
+  x-omv-rpc:
+    service: UserMgmt
+    method: getUser
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.usermgmt.getuser
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtNameRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserAccount.yaml
+          examples:
+            person:
+              $ref: ../../examples/userMgmtGetUser.person.yaml
+            withKey:
+              $ref: ../../examples/userMgmtGetUser.withKey.yaml
+            administrator:
+              $ref: ../../examples/userMgmtGetUser.administrator.yaml
+            builtInAdmin:
+              $ref: ../../examples/userMgmtGetUser.builtInAdmin.yaml
+    "500":
+      description: No account has that name.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            missing:
+              $ref: ../../examples/userMgmtGetUser.missing.yaml
+    "400":
+      description: "The name does not match OMV's name format."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            invalidName:
+              $ref: ../../examples/userMgmtGetUser.invalidName.yaml

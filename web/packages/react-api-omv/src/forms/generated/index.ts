@@ -90,9 +90,29 @@ export {
 } from "./smbSetShare.ts";
 export { SshSetRequestSchema, type SshSetFormValues } from "./sshSet.ts";
 export {
+  UserMgmtDeleteGroupRequestSchema,
+  type UserMgmtDeleteGroupFormValues,
+} from "./userMgmtDeleteGroup.ts";
+export {
+  UserMgmtDeleteUserRequestSchema,
+  type UserMgmtDeleteUserFormValues,
+} from "./userMgmtDeleteUser.ts";
+export {
+  UserMgmtSetGroupRequestSchema,
+  type UserMgmtSetGroupFormValues,
+} from "./userMgmtSetGroup.ts";
+export {
   UserMgmtSetPasswordByContextRequestSchema,
   type UserMgmtSetPasswordByContextFormValues,
 } from "./userMgmtSetPasswordByContext.ts";
+export {
+  UserMgmtSetSettingsRequestSchema,
+  type UserMgmtSetSettingsFormValues,
+} from "./userMgmtSetSettings.ts";
+export {
+  UserMgmtSetUserRequestSchema,
+  type UserMgmtSetUserFormValues,
+} from "./userMgmtSetUser.ts";
 export {
   UserMgmtSetUserByContextRequestSchema,
   type UserMgmtSetUserByContextFormValues,

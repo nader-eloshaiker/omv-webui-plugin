@@ -2,7 +2,11 @@
 // `pnpm dev:mock` only: a small panel in the corner to choose the mock scenario. Choosing reloads the
 // page so the app boots against it. Development words, not the interface's: this never ships.
 import { useMockScenarioStore } from "../stores/useMockScenarioStore.ts";
-import { isScenarioName, SCENARIO_LABELS, SCENARIOS } from "./scenarios.ts";
+import {
+  isScenarioName,
+  SCENARIO_GROUPS,
+  SCENARIO_LABELS,
+} from "./scenarios.ts";
 
 export default function ScenarioPicker() {
   const scenario = useMockScenarioStore((s) => s.scenario);
@@ -23,10 +27,14 @@ export default function ScenarioPicker() {
           }
         }}
       >
-        {SCENARIOS.map((name) => (
-          <option key={name} value={name}>
-            {SCENARIO_LABELS[name]}
-          </option>
+        {SCENARIO_GROUPS.map((group) => (
+          <optgroup key={group.label} label={group.label}>
+            {group.names.map((name) => (
+              <option key={name} value={name}>
+                {SCENARIO_LABELS[name]}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
     </div>

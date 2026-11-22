@@ -70,6 +70,10 @@ describe("navFor", () => {
     expect(isCurrent("/storage/zfs/pools/tank", "/storage/zfs")).toBe(true);
     expect(isCurrent("/storage/zfs/fs/tank/media", "/storage/zfs")).toBe(true);
     expect(isCurrent("/storage/zfs/create", "/storage/zfs")).toBe(true);
+    expect(isCurrent("/usermgmt/groups/family", "/usermgmt/groups")).toBe(true);
+    expect(isCurrent("/usermgmt/groups/add", "/usermgmt/groups")).toBe(true);
+    expect(isCurrent("/usermgmt/users/alex", "/usermgmt/users")).toBe(true);
+    expect(isCurrent("/usermgmt/groups/family", "/usermgmt/users")).toBe(false);
     expect(isCurrent("/storage/zfsx", "/storage/zfs")).toBe(false);
     // A shared folder's page and "Add a shared folder" mark Shared folders (phase 5 shares 10.2).
     expect(
@@ -143,6 +147,9 @@ describe("the table", () => {
       "/storage/shared-folders",
       "/services/smb",
       "/services/ssh",
+      "/usermgmt/settings",
+      "/usermgmt/users",
+      "/usermgmt/groups",
       "/diagnostics/system-logs",
       "/diagnostics/processes",
       "/diagnostics/services",

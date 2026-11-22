@@ -4,7 +4,8 @@
 // form is only on the dialog's confirm button), each unavailable (aria-disabled, still focusable) with
 // its blockers in words beside it, from the page's reads, failing closed. Pressing one opens the dialog,
 // which reads ShareMgmt.getList, SMB.getShareList, FileSystemMgmt.getList and the pending modules again
-// before it shows anything (8.2).
+// before it shows anything (8.2), and the home-folder setting (phase 5 users design 13.1): the folder
+// that holds them is refused with "Turn home folders off first.".
 import type {
   ConfiguredFilesystem,
   SharedFolder,
@@ -13,6 +14,8 @@ import type {
 import { Button } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { holdsHomeFolders } from "../../homeFolders/homeModel.ts";
+import { useGroupsRereads } from "../../hooks/useGroupsApi.ts";
 import { useSharesApi } from "../../hooks/useSharesApi.ts";
 import {
   isShareDeleting,
@@ -49,6 +52,7 @@ export function ShareDeleteSection({
   shares,
   fileSystems,
   pending,
+  homeFolders = false,
   onRetry,
   onStopSharing,
   onDone,
@@ -58,6 +62,8 @@ export function ShareDeleteSection({
   shares: ListRead<SmbShareRow>;
   fileSystems: ListRead<ConfiguredFilesystem>;
   pending: readonly string[];
+  /** It holds the home folders now, as the page read the setting. */
+  homeFolders?: boolean;
   onRetry: () => void;
   /** Opens "Stop sharing…" in the section above (4.5). */
   onStopSharing: () => void;
@@ -69,6 +75,7 @@ export function ShareDeleteSection({
 }) {
   const { t } = useTranslation();
   const api = useSharesApi();
+  const rereads = useGroupsRereads();
   useMemoryStore(shareDeletes);
   useMemoryStore(sharesSession);
   const keepRef = useRef<HTMLButtonElement>(null);
@@ -88,6 +95,7 @@ export function ShareDeleteSection({
     fileSystems,
     running: deleting ? null : running,
     pending,
+    homeFolders,
   });
   // The files-only blockers: the shared ones are said once, beside the first button.
   const filesOnly = blockers.files.filter(
@@ -97,7 +105,7 @@ export function ShareDeleteSection({
   const filesBlocked = !deleting && blockers.files.length > 0;
 
   const check = async (forWay: DeleteWay): Promise<ShareDeleteCheck> => {
-    const [list, sharesNow, fsNow, pendingNow] = await Promise.all([
+    const [list, sharesNow, fsNow, pendingNow, homeNow] = await Promise.all([
       settle(api.folders()),
       settle(api.shares()),
       settle(api.fileSystems()),
@@ -105,6 +113,8 @@ export function ShareDeleteSection({
         (p) => p,
         () => null,
       ),
+      // Not read: `_used` still refuses the folder that holds them (0.7's "other").
+      rereads.homeSettings().catch(() => undefined),
     ]);
     if (list.failed || list.data === undefined) {
       return {
@@ -139,6 +149,7 @@ export function ShareDeleteSection({
       fileSystems: fsNow,
       running: runningOn(folder.uuid),
       pending: pendingNow ?? [],
+      homeFolders: holdsHomeFolders(homeNow, folder.uuid),
     });
     const refusing = forWay === "keep" ? found.keep : found.files;
     if (refusing.length > 0) {

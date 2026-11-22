@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { Eye } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
-import { Button, IconButton } from "../button/button";
-import {
-  Field,
-  FieldControl,
-  FieldError,
-  FieldHint,
-  FieldLabel,
-} from "../field/field";
+import { Button } from "../button/button";
+import { Field, FieldError, FieldHint, FieldLabel } from "../field/field";
+import { MaskedInput } from "./masked-input";
 
 interface StoredSecret {
   /** Says a secret is stored without showing it: "Set". */
@@ -141,30 +135,16 @@ function SecretField({
     >
       <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <FieldControl
-            {...safeProps}
-            ref={setInputRef}
-            id={inputId}
-            type={revealed ? "text" : "password"}
-            autoComplete={autoComplete}
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            className="pe-9 font-mono"
-          />
-          <IconButton
-            label={revealLabel}
-            icon={<Eye />}
-            variant="ghost"
-            size="icon-sm"
-            aria-pressed={revealed}
-            aria-controls={inputId}
-            disabled={disabled}
-            onClick={() => setRevealed((value) => !value)}
-            className="absolute end-0.5 top-0.5 text-muted-foreground"
-          />
-        </div>
+        <MaskedInput
+          {...safeProps}
+          ref={setInputRef}
+          id={inputId}
+          autoComplete={autoComplete}
+          disabled={disabled}
+          revealed={revealed}
+          onRevealedChange={setRevealed}
+          revealLabel={revealLabel}
+        />
         {stored ? (
           <Button
             variant="ghost"

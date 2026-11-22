@@ -1,0 +1,18 @@
+type: object
+description: >-
+  A group to make or change (rpc.usermgmt.setgroup). OMV makes the group when none has the name;
+  the interface checks with UserMgmt.getGroup first. The member list replaces the stored one; an
+  empty list empties the group. Stricter than OMV: no `gid` (the NAS chooses it), the description
+  of GroupDescription, and at most 10,000 members.
+required: [name, comment, members]
+properties:
+  name:
+    $ref: ./Username.yaml
+  comment:
+    $ref: ./GroupDescription.yaml
+  members:
+    type: array
+    maxItems: 10000
+    items:
+      $ref: ./Username.yaml
+additionalProperties: false

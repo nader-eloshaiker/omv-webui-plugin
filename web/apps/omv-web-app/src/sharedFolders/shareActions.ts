@@ -396,6 +396,8 @@ export type DeleteBlocker =
   | { kind: "smb"; share: SmbShareRow }
   /** 0.7's "Used by a setting this page does not show…" (`_used` with no SMB share). */
   | { kind: "other" }
+  /** "It holds every person's home folder. Turn home folders off first." (users design 13.1) */
+  | { kind: "homeFolders" }
   /** "Could not check what uses this shared folder, so it cannot be removed now." + message. */
   | { kind: "unread"; error: unknown }
   /** A read has not arrived yet: nothing is offered until it has. */
@@ -422,6 +424,8 @@ export interface DeleteInput {
   /** The action running on this folder in this session, if any (sharesSession). */
   running?: SharesAction | null;
   pending?: readonly string[];
+  /** It holds the home folders now (UserMgmt.getSettings); unknown is false, `_used` still blocks. */
+  homeFolders?: boolean;
 }
 
 export interface DeleteBlockers {
@@ -453,7 +457,10 @@ export function deleteBlockers(input: DeleteInput): DeleteBlockers {
     const share = shareOf(input.shares.data, input.folder.uuid);
     if (share !== undefined) {
       keep.push({ kind: "smb", share });
-    } else if (input.folder._used) {
+    }
+    if (input.homeFolders === true) {
+      keep.push({ kind: "homeFolders" });
+    } else if (share === undefined && input.folder._used) {
       keep.push({ kind: "other" });
     }
   }

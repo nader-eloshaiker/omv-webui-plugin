@@ -57,6 +57,7 @@ import {
 import { guestMode, shareOf } from "../../sharedFolders/smbModel.ts";
 import { FolderNameText } from "../atoms/FolderNameText.tsx";
 import { PendingMark } from "../atoms/PendingMark.tsx";
+import { UsersDeletedNote } from "../molecules/UsersDeletedNote.tsx";
 import { AccessGridSection } from "./AccessGridSection.tsx";
 
 type Alert =
@@ -285,6 +286,7 @@ export function FolderAccessSection({
             count: stale.length,
             names: stale.map((e) => isolateName(e.name)).join(", "),
           })}
+          <UsersDeletedNote entries={stale} />
         </p>
       ) : null}
       {alertView}

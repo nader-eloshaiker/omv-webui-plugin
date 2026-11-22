@@ -3,6 +3,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
+import { StatusPill } from "../status/status";
 import {
   AccessGrid,
   type AccessGridProps,
@@ -442,5 +443,101 @@ describe("AccessGrid", () => {
       screen.getByText('<img src="x" alt="injected">'),
     ).toBeInTheDocument();
     expect(screen.queryByAltText("injected")).toBeNull();
+  });
+
+  it("makes a name the app's own link, with the accessible name it is given", () => {
+    render(
+      <Grid
+        rows={[
+          row("share:photos", "Photos", "rw", {
+            kind: "Windows and Mac",
+            nameLink: {
+              "aria-label": "Open shared folder Photos",
+              render: (props) => (
+                <a href="#/shared-folders/photos" {...props} />
+              ),
+            },
+          }),
+          row("share:scans", "scans", "none", { kind: "Not shared" }),
+        ]}
+      />,
+    );
+    const link = screen.getByRole("link", {
+      name: "Open shared folder Photos",
+    });
+    expect(link).toHaveAttribute("href", "#/shared-folders/photos");
+    expect(link).toHaveTextContent("Photos");
+    expect(link.querySelector("code")).toHaveAttribute("dir", "auto");
+    expect(link.className).toContain("underline");
+    expect(screen.queryByRole("link", { name: /scans/ })).toBeNull();
+    // The choice is still named by the bare name.
+    expect(
+      screen.getByRole("radiogroup", { name: "Access for Photos" }),
+    ).toBeInTheDocument();
+  });
+
+  it("carries a status pill and its words in the Kind column", () => {
+    render(
+      <Grid
+        rows={[
+          row("share:old", "old-backups", "ro", {
+            kind: (
+              <>
+                <StatusPill status="critical">Missing</StatusPill>
+                <span>Its disk is not connected.</span>
+              </>
+            ),
+          }),
+        ]}
+      />,
+    );
+    const [kind] = within(bodyRows()[0]!).getAllByRole("cell");
+    expect(kind).toHaveTextContent("MissingIts disk is not connected.");
+    expect(kind!.querySelector('[data-slot="status-pill"]')).toHaveAttribute(
+      "data-status",
+      "critical",
+    );
+  });
+
+  it("shows a refusal in the row, announced and describing the choice, while the row keeps its change", async () => {
+    const user = userEvent.setup();
+    const refusal =
+      "alex is the only one with access to Photos, which is shared with Windows and Mac computers. Give someone else access on its page, or stop sharing it, first.";
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <AccessGrid<Access>
+        {...BASE}
+        rows={[row("share:photos", "Photos", "none", { initialValue: "rw" })]}
+        onChange={onChange}
+        onSetAll={() => undefined}
+      />,
+    );
+    const choice = screen.getByRole("radiogroup", {
+      name: "Access for Photos",
+    });
+    const tableRow = choice.closest("tr")!;
+    const region = within(tableRow).getByRole("alert");
+    expect(region).toBeEmptyDOMElement();
+    rerender(
+      <AccessGrid<Access>
+        {...BASE}
+        rows={[
+          row("share:photos", "Photos", "none", {
+            initialValue: "rw",
+            refusal,
+          }),
+        ]}
+        onChange={onChange}
+        onSetAll={() => undefined}
+      />,
+    );
+    expect(region).toHaveTextContent(refusal);
+    expect(tableRow).toHaveAttribute("data-refused", "true");
+    expect(tableRow).toHaveAttribute("data-changed", "true");
+    expect(choice).toHaveAccessibleDescription(`${refusal} Changed`);
+    // Still editable: a refusal is not an unavailable row.
+    expect(choice).not.toHaveAttribute("aria-disabled");
+    await user.click(within(choice).getByRole("radio", { name: "Read only" }));
+    expect(onChange).toHaveBeenCalledWith("share:photos", "ro");
   });
 });

@@ -1,0 +1,11 @@
+type: object
+description: >-
+  Whether every person has a home folder, and in which shared folder (UserMgmt.getSettings,
+  conf.system.usermngmnt.homedir). OMV keeps the shared folder when home folders are turned off.
+required: [enable, sharedfolderref]
+properties:
+  enable:
+    type: boolean
+  sharedfolderref:
+    type: string
+    description: The UUID of the shared folder that holds the home folders, or empty.

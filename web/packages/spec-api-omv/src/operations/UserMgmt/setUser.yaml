@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtSetUser
+  tags:
+    - UserMgmt
+  summary: Make or change a person's account
+  description: >-
+    Make a person's account, or change the one with that name: there is no separate "create". OMV
+    refuses a system account. It writes its own record first (the e-mail address, whether the person
+    may change their own details, the SSH keys in RFC 4716 form), then makes or changes the account
+    at once: `users` as the main group, the shell, the description and the whole groups list sent;
+    a new person also gets a home folder when home folders are on. Each group must exist. A password
+    that is not empty is set at once, for signing in here and for SMB. Takes effect without an apply;
+    the mail settings are left pending, and the SSH settings when the person has or had SSH keys.
+    Returns the stored account, without the fields in x-omv-omit.
+  x-omv-rpc:
+    service: UserMgmt
+    method: setUser
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: [password]
+  x-omv-source:
+    datamodel: rpc.usermgmt.setuser
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtSetUserRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserSaved.yaml
+          examples:
+            created:
+              $ref: ../../examples/userMgmtSetUser.created.yaml
+            changed:
+              $ref: ../../examples/userMgmtSetUser.changed.yaml
+    "400":
+      description: A field does not match what OMV accepts (an e-mail address, a password with a line break).
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            invalidEmail:
+              $ref: ../../examples/userMgmtSetUser.invalidEmail.yaml
+            passwordLineBreak:
+              $ref: ../../examples/userMgmtSetUser.passwordLineBreak.yaml
+    "500":
+      description: "OMV or the account tool refused: a group that does not exist, a description with a colon."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            groupMissing:
+              $ref: ../../examples/userMgmtSetUser.groupMissing.yaml
+            commentColon:
+              $ref: ../../examples/userMgmtSetUser.commentColon.yaml

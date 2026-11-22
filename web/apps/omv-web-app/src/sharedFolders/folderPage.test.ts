@@ -60,6 +60,25 @@ describe("folderUse (2.5)", () => {
       }),
     ).toBeNull();
   });
+
+  it("names the home folders while the folder holds them (users design 13.1)", () => {
+    expect(
+      folderUse({
+        used: true,
+        homeFolders: true,
+        hasShare: false,
+        shares: read,
+      }),
+    ).toEqual({ kind: "home" });
+    expect(
+      folderUse({
+        used: true,
+        homeFolders: false,
+        hasShare: false,
+        shares: read,
+      }),
+    ).toEqual({ kind: "other" });
+  });
 });
 
 describe("unsaved work (2.8)", () => {
