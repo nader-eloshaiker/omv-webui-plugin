@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The public surface of @omv-webui/react-ui-components. App-agnostic: nothing here knows the API, the
 // router or an OMV concept beyond the style guide's vocabulary, and no component carries its own words.
+export * from "./components/access-grid/access-grid";
 export * from "./components/banner/notice-banner";
 export * from "./components/banner/pending-banner";
 export * from "./components/breadcrumbs/breadcrumbs";
@@ -31,6 +32,7 @@ export * from "./components/progress-bar/progress-bar";
 export * from "./components/radio-group-field/radio-group-field";
 export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";
+export * from "./components/segmented-choice/segmented-choice";
 export * from "./components/select/select";
 export * from "./components/side-nav/side-nav";
 export * from "./components/size-field/size-field";

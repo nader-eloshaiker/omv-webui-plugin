@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { History, OctagonX, X } from "lucide-react";
+import { History, OctagonX, TriangleAlert, X } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button, IconButton } from "../button/button";
@@ -429,11 +429,36 @@ function AlsoPendingNotice({
   );
 }
 
+/**
+ * A summary item that carries the warning shape in place of its bullet: a risk the reader chose
+ * ("Anyone on your network can open it without a password."). The shape is drawn in the neutral ink,
+ * never a status colour, since nothing has failed; the words carry the meaning.
+ */
+interface JobSummaryNotedItem {
+  content: React.ReactNode;
+  tone: "warning";
+}
+
+type JobSummaryItem = React.ReactNode | JobSummaryNotedItem;
+
+function isNotedItem(item: JobSummaryItem): item is JobSummaryNotedItem {
+  return (
+    typeof item === "object" &&
+    item !== null &&
+    !React.isValidElement(item) &&
+    "tone" in item &&
+    "content" in item
+  );
+}
+
 interface JobSummaryProps {
   /** "Ready to add the disk and share it". */
   title: React.ReactNode;
-  /** Every choice made, in plain words, one item each (R2). */
-  items: readonly React.ReactNode[];
+  /**
+   * Every choice made, in plain words, one item each (R2). An item is its words, or
+   * `{ content, tone: "warning" }` for one that carries the warning shape.
+   */
+  items: readonly JobSummaryItem[];
   confirmLabel: React.ReactNode;
   backLabel: React.ReactNode;
   onConfirm: () => void;
@@ -448,6 +473,13 @@ interface JobSummaryProps {
    * has no protection" as an `InlineAlert`. Rendered after the items and before the typed confirmation.
    */
   notice?: React.ReactNode;
+  /**
+   * Draw the title as a heading at this level in the page outline, with the same look, so the page
+   * can move focus to it on arrival (it carries `tabIndex={-1}`). Omitted, the title is a paragraph.
+   */
+  titleLevel?: HeadingLevel;
+  /** The title heading, for the page to focus on arrival. Used only with `titleLevel`. */
+  titleRef?: React.Ref<HTMLHeadingElement>;
   className?: string;
 }
 
@@ -461,9 +493,13 @@ function JobSummary({
   onBack,
   typedConfirmation,
   notice,
+  titleLevel,
+  titleRef,
   className,
 }: JobSummaryProps) {
   const [typed, setTyped] = React.useState("");
+  const TitleHeading =
+    titleLevel === undefined ? undefined : HEADINGS[titleLevel];
   const ready =
     typedConfirmation === undefined ||
     typedMatches(typed, typedConfirmation.confirmText);
@@ -472,11 +508,35 @@ function JobSummary({
       data-slot="job-summary"
       className={cn("flex flex-col gap-3", className)}
     >
-      <p className="font-semibold text-foreground">{title}</p>
+      {TitleHeading ? (
+        <TitleHeading
+          ref={titleRef}
+          tabIndex={-1}
+          className="font-semibold text-foreground outline-hidden"
+        >
+          {title}
+        </TitleHeading>
+      ) : (
+        <p className="font-semibold text-foreground">{title}</p>
+      )}
       <ul className="flex list-disc flex-col gap-1 ps-5 text-base text-foreground marker:text-muted-foreground">
-        {items.map((item, position) => (
-          <li key={`item-${String(position)}`}>{item}</li>
-        ))}
+        {items.map((item, position) =>
+          isNotedItem(item) ? (
+            <li
+              key={`item-${String(position)}`}
+              data-tone={item.tone}
+              className="relative list-none"
+            >
+              <TriangleAlert
+                aria-hidden="true"
+                className="absolute -start-5 top-[calc((1lh-1rem)/2)] size-4 text-muted-foreground"
+              />
+              {item.content}
+            </li>
+          ) : (
+            <li key={`item-${String(position)}`}>{item}</li>
+          ),
+        )}
       </ul>
       {notice}
       {typedConfirmation ? (
@@ -611,6 +671,8 @@ export type {
   JobResultProps,
   JobStep,
   JobStepListProps,
+  JobSummaryItem,
+  JobSummaryNotedItem,
   JobSummaryProps,
   PreflightNoticeProps,
 };

@@ -47,9 +47,10 @@ interface UsedByPanelProps {
   /**
    * The backend says the object is in use but no known referrer was found (UX audit 4.8): a message
    * such as "Used by an add-on or setting this interface does not show yet" and a link to the classic
-   * interface (an `ExternalLink` with a fixed address, UI-3).
+   * interface (an `ExternalLink` with a fixed address, UI-3). Leave the link out where the message
+   * alone says where to look.
    */
-  unknownUse?: { message: React.ReactNode; classicLink: React.ReactNode };
+  unknownUse?: { message: React.ReactNode; classicLink?: React.ReactNode };
   /**
    * The act that is blocked while the object is in use, shown unavailable with the blocker named in
    * words beside it (never only in a tooltip): "Delete" with "Remove the 2 shares that use it first."
@@ -141,7 +142,7 @@ function UsedByPanel({
         />
         <div className="flex flex-col gap-1">
           <p>{unknownUse.message}</p>
-          <div>{unknownUse.classicLink}</div>
+          {unknownUse.classicLink ? <div>{unknownUse.classicLink}</div> : null}
         </div>
       </div>
     );
