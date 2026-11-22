@@ -8,14 +8,12 @@ UX audit's Flow F "Replace a failing disk" (its 4.7, J8a) for ZFS, deleting a fi
 and how ZFS joins Flow A, the dashboard and the other storage pages. ZFS here is the ZFS plugin from
 OMV-Extras, `openmediavault-zfs`.
 
-**Status: draft for the owner, 2026-11-22. Not agreed, not built.** No method of the ZFS plugin has
-been cleared by the owner yet. Section 12 lists every one this design needs, and the ones it
-deliberately leaves out; nothing here is built, and no contract entry is written, until the owner has
-answered that list. This slice erases disks (creating a pool and replacing a disk overwrite them),
-destroys data (deleting a file system, a snapshot or a pool, and rolling a file system back), and has
-actions that take away protection (taking a disk offline), so the owner agrees the design first
-(journal, 2026-11-21, "Storage is built in slices"). Section 18 lists the points to agree; section 17
-lists the other judgement calls, each taken as recommended unless the owner says otherwise.
+**Status: agreed by the owner (P1 to P15 as written, all 19 methods cleared; journal, 2026-11-22) and
+built on `phase-5-zfs`.** The contract was written from captures on the test VM, which contradicted
+this design in places; the build follows the VM. Section 20 lists every change, and the sections it
+names say so where they are affected. This slice erases disks (creating a pool and replacing a disk
+overwrite them), destroys data (deleting a file system, a snapshot or a pool, and rolling a file system
+back), and has actions that take away protection (taking a disk offline).
 
 Normative sources: the [style guide](style-guide.md), the `UI-*` rules in [05](../05-security.md)
 (UI-8 above all), the journal entries of 2026-11-20 (Q8: both storage plugins in version 1, each shown
@@ -49,16 +47,16 @@ installed and keeps every one of them. This slice builds what an owner without Z
 **see that the pool is healthy, set it up, keep files on it, recover from a mistake, and survive a
 failed disk**, and leaves the rest to the classic interface, linked plainly (section 18, P2).
 
-| Built here | Left to the classic interface, and why |
-| --- | --- |
-| The pools list and a pool's page: state worst first, capacity, the disks and how they are arranged, health per disk, the last check, what is stored on it | **Import and export**: moving a pool between computers is rare, and a forced import of a pool still in use elsewhere can damage it. The list's footer says where it is |
-| Creating a pool with one group of disks: Mirror, RAID-Z1, RAID-Z2, RAID-Z3, and Stripe (no protection) apart and never preselected | **Adding disk groups, spares, read caches, write logs and metadata disks, removing a group, growing RAID-Z by one disk, attaching and detaching mirror disks**: each changes the pool's layout for good or needs knowledge to choose well; the plugin's own guide warns against adding them without a reason |
-| ZFS file systems at the top of a pool: create, open, set a size limit, turn compression on or off, delete | **Nested file systems, record size, case sensitivity, mount folder, renaming, cloning, promoting, the raw property editor**: tuning, not daily work |
-| Snapshots of a file system: list, take one now, roll back to the newest, delete one | **Range deletes, cloning a snapshot, the difference report, scheduled snapshots**: bulk or scheduled work with its own forms |
-| Checking a pool (scrub): check now, stop, continue a paused check; the progress while it runs | **Pausing a check, scheduled checks, TRIM, upgrading a pool's features** (one-way) |
-| Replacing a disk (Flow F), taking a disk offline and back, clearing error counts after a fixed fault | **Volumes** (block devices for virtual machines or iSCSI): listed, not managed |
-| How ZFS appears on the dashboard, the Disks, File systems and Flow A pages | **Encryption**: unlocking, locking and keys are secrets with their own storage choices on the NAS (UI-6); the pages show which file systems are encrypted and whether they are locked |
-| | **Discover** (registering file systems made outside OMV), **Fix packages**, **ARC statistics and memory settings**, **pool history**, **replication jobs** |
+| Built here                                                                                                                                                | Left to the classic interface, and why                                                                                                                                                                                                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The pools list and a pool's page: state worst first, capacity, the disks and how they are arranged, health per disk, the last check, what is stored on it | **Import and export**: moving a pool between computers is rare, and a forced import of a pool still in use elsewhere can damage it. The list's footer says where it is                                                                                                                                       |
+| Creating a pool with one group of disks: Mirror, RAID-Z1, RAID-Z2, RAID-Z3, and Stripe (no protection) apart and never preselected                        | **Adding disk groups, spares, read caches, write logs and metadata disks, removing a group, growing RAID-Z by one disk, attaching and detaching mirror disks**: each changes the pool's layout for good or needs knowledge to choose well; the plugin's own guide warns against adding them without a reason |
+| ZFS file systems at the top of a pool: create, open, set a size limit, turn compression on or off, delete                                                 | **Nested file systems, record size, case sensitivity, mount folder, renaming, cloning, promoting, the raw property editor**: tuning, not daily work                                                                                                                                                          |
+| Snapshots of a file system: list, take one now, roll back to the newest, delete one                                                                       | **Range deletes, cloning a snapshot, the difference report, scheduled snapshots**: bulk or scheduled work with its own forms                                                                                                                                                                                 |
+| Checking a pool (scrub): check now, stop, continue a paused check; the progress while it runs                                                             | **Pausing a check, scheduled checks, TRIM, upgrading a pool's features** (one-way)                                                                                                                                                                                                                           |
+| Replacing a disk (Flow F), taking a disk offline and back, clearing error counts after a fixed fault                                                      | **Volumes** (block devices for virtual machines or iSCSI): listed, not managed                                                                                                                                                                                                                               |
+| How ZFS appears on the dashboard, the Disks, File systems and Flow A pages                                                                                | **Encryption**: unlocking, locking and keys are secrets with their own storage choices on the NAS (UI-6); the pages show which file systems are encrypted and whether they are locked                                                                                                                        |
+|                                                                                                                                                           | **Discover** (registering file systems made outside OMV), **Fix packages**, **ARC statistics and memory settings**, **pool history**, **replication jobs**                                                                                                                                                   |
 
 The recommendation rests on three things: the destructive actions kept are the ones an owner will
 meet (create, replace, delete, roll back); every action kept can be given a plain sentence for what
@@ -83,38 +81,38 @@ what a flow hands on). This section adds only what is new.
 ZFS's own words mean nothing to most owners, and "dataset" means nothing to anyone. The interface uses
 four nouns, each introduced once where it first appears, in the catalogue as shared keys:
 
-| ZFS term | The interface says | Introduced as (`zfs.term.*`) |
-| --- | --- | --- |
-| pool (`zpool`) | **pool** ("ZFS pool" where the context does not say ZFS) | "A pool joins one or more disks into one store of space, and decides how your files survive a failed disk." |
-| vdev | **disk group**, said only for pools with more than one ("group of 2 mirrored disks"); a pool made here has one, and the page then says nothing about groups | "A pool is made of one or more groups of disks. Each group protects its own disks. If any group loses more disks than it can, the whole pool is lost." |
-| dataset of type filesystem | **file system** (the word the File systems pages already use, for the same thing to an owner: somewhere to keep shared folders) | "A ZFS file system is a folder on a pool that you can share, with its own size limit and snapshots. All file systems on a pool share its free space." |
-| the pool's root dataset | **the pool's own folder** | "Every pool is also a file system itself, in the folder named after the pool. It is better to keep files in file systems made on the pool." |
-| zvol | **volume** | "A volume is a part of the pool that acts as a separate disk, for virtual machines or iSCSI. This page lists volumes but does not manage them." |
-| snapshot | **snapshot** | "A snapshot keeps a file system's files as they were at one moment. It takes no space at first, and grows as the files change." |
-| scrub | **check** (as the RAID slice) | "A check reads every file on the pool and compares it with its copies. ZFS repairs what it finds from a good copy." |
-| resilver | **rebuilding** (as the RAID slice) | |
-| spare, cache (L2ARC), log (SLOG), special, dedup | **spare**, **read cache**, **write log**, **metadata disk**, **deduplication table** | Shown only, with one sentence each (0.4) |
+| ZFS term                                         | The interface says                                                                                                                                          | Introduced as (`zfs.term.*`)                                                                                                                           |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| pool (`zpool`)                                   | **pool** ("ZFS pool" where the context does not say ZFS)                                                                                                    | "A pool joins one or more disks into one store of space, and decides how your files survive a failed disk."                                            |
+| vdev                                             | **disk group**, said only for pools with more than one ("group of 2 mirrored disks"); a pool made here has one, and the page then says nothing about groups | "A pool is made of one or more groups of disks. Each group protects its own disks. If any group loses more disks than it can, the whole pool is lost." |
+| dataset of type filesystem                       | **file system** (the word the File systems pages already use, for the same thing to an owner: somewhere to keep shared folders)                             | "A ZFS file system is a folder on a pool that you can share, with its own size limit and snapshots. All file systems on a pool share its free space."  |
+| the pool's root dataset                          | **the pool's own folder**                                                                                                                                   | "Every pool is also a file system itself, in the folder named after the pool. It is better to keep files in file systems made on the pool."            |
+| zvol                                             | **volume**                                                                                                                                                  | "A volume is a part of the pool that acts as a separate disk, for virtual machines or iSCSI. This page lists volumes but does not manage them."        |
+| snapshot                                         | **snapshot**                                                                                                                                                | "A snapshot keeps a file system's files as they were at one moment. It takes no space at first, and grows as the files change."                        |
+| scrub                                            | **check** (as the RAID slice)                                                                                                                               | "A check reads every file on the pool and compares it with its copies. ZFS repairs what it finds from a good copy."                                    |
+| resilver                                         | **rebuilding** (as the RAID slice)                                                                                                                          |                                                                                                                                                        |
+| spare, cache (L2ARC), log (SLOG), special, dedup | **spare**, **read cache**, **write log**, **metadata disk**, **deduplication table**                                                                        | Shown only, with one sentence each (0.4)                                                                                                               |
 
 "Dataset", "vdev", "zpool", "zvol", "scrub", "resilver", "ARC" and "ashift" appear only in the
 technical details (the server's own report) and in `Identifier` names.
 
 ### 0.2 Formatting
 
-| What | Rule | Example |
-| --- | --- | --- |
-| A pool's name (`{{pool}}`) | The pool's `name`, as text in `Identifier` (it is a technical name the reader chose or the classic interface made), `dir="auto"` | `tank` |
-| A file system's name (`{{fs}}`) | Its full `path` (`pool/name`) in `Identifier`; the pool's own folder is said as "{{pool}} (the pool's own folder)" | `tank/media` |
-| A snapshot's name (`{{snapshot}}`) | The part after `@` (`name` in the reply) in `Identifier`; the full `path` (`pool/name@snap`) only in technical places (the typed confirmation names the short part, 5.4) | `2026-11-22_14-05-00` |
-| Layout of a disk group (`{{layout}}`) | A shared word list `zfsLayout.*`, with the RAID words where the idea is the same: `mirror` "Mirror"; `raidz1` "Parity (RAID-Z1)"; `raidz2` "Double parity (RAID-Z2)"; `raidz3` "Triple parity (RAID-Z3)"; a single disk "Single disk"; several single disks "Stripe"; `draid…` "Distributed parity (dRAID)"; anything else as received, in `Identifier` | `Mirror` |
-| A pool's layout in a list | "{{layout}}, {{count}} disks" for one group; "{{count}} groups, {{disks}} disks" for several, the groups named on its page | `Parity (RAID-Z1), 3 disks` |
-| Space for files | From **the pool's own folder** row (`listPools`, `poolroot` true): `used` and `used + available` (bytes), with Phase 3's byte rule and "about" before the total. The pool row's own `size`, `used` and `available` are the disks' raw space, parity included for RAID-Z, so they are **not** shown as space for files (section 17, D6) **[verify]** both against the VM | `1.2 TiB of about 7.1 TiB used` |
-| How full | The pool row's `capacity` (whole percent, of the raw space): the meter's value. It is what ZFS itself uses to slow down and refuse writes | `17% full` |
-| File system space | `used`; "{{available}} free, shared with the other file systems on {{pool}}"; with a size limit (`size` not null), "{{used}} of {{limit}} used" | `340.0 GiB used · 6.8 TiB free, shared with the pool` |
-| Compression | `compression`: `off` "Off"; `lz4` "On (LZ4)"; `on` "On"; `zstd…`, `gzip…`, `lzjb`, `zle` "On ({{value}})" with the value in `Identifier`; and `compressratio` as "saves about {{percent}}" when above `1.00x` | `On (LZ4), saves about 18%` |
-| Progress of a check or a rebuild | From the report's `scan:` lines (0.3): the percentage before `% done` with one decimal, and "about {{left}} left" from the `to go` time with the duration rule; neither: "progress not known" | `27.0% done, about 10 minutes left` |
-| Last check | From the report's `scan:` line: "Last checked {{when}}" with the relative-date rule and the date in a tooltip-free second line; "Never checked" when there is no scan line; "The last check was stopped on {{date}}" for a cancelled one. A finished rebuild is **not** a check (its `scan:` line says "resilvered"), so the plugin's `lastscrub` and `scrubstate` are read only as a cross-check (section 17, D9) **[verify]** the date format | `Last checked 3 days ago` |
-| Disk names, serial numbers, label sizes | The disks slice's rules (its 0.1), including the label size in every confirmation that erases a disk | `3.6 TiB (4 TB on the label)` |
-| Server-written text (the report, state words not recognised, error messages) | As received, as text (UI-2), `dir="auto"`. The plugin joins report lines with a line feed and a carriage return; the interface splits on either and drops empty ends | |
+| What                                                                         | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Example                                               |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| A pool's name (`{{pool}}`)                                                   | The pool's `name`, as text in `Identifier` (it is a technical name the reader chose or the classic interface made), `dir="auto"`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `tank`                                                |
+| A file system's name (`{{fs}}`)                                              | Its full `path` (`pool/name`) in `Identifier`; the pool's own folder is said as "{{pool}} (the pool's own folder)"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `tank/media`                                          |
+| A snapshot's name (`{{snapshot}}`)                                           | The part after `@` (`name` in the reply) in `Identifier`; the full `path` (`pool/name@snap`) only in technical places (the typed confirmation names the short part, 5.4)                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `2026-11-22_14-05-00`                                 |
+| Layout of a disk group (`{{layout}}`)                                        | A shared word list `zfsLayout.*`, with the RAID words where the idea is the same: `mirror` "Mirror"; `raidz1` "Parity (RAID-Z1)"; `raidz2` "Double parity (RAID-Z2)"; `raidz3` "Triple parity (RAID-Z3)"; a single disk "Single disk"; several single disks "Stripe"; `draid…` "Distributed parity (dRAID)"; anything else as received, in `Identifier`                                                                                                                                                                                                                                                                       | `Mirror`                                              |
+| A pool's layout in a list                                                    | "{{layout}}, {{count}} disks" for one group; "{{count}} groups, {{disks}} disks" for several, the groups named on its page                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `Parity (RAID-Z1), 3 disks`                           |
+| Space for files                                                              | From **the pool's own folder** row (`listPools`, `poolroot` true): `used` and `used + available` (bytes), with Phase 3's byte rule and "about" before the total. The pool row's own `size`, `used` and `available` are the disks' raw space, parity included for RAID-Z, so they are **not** shown as space for files (section 17, D6) **[verify]** both against the VM                                                                                                                                                                                                                                                       | `1.2 TiB of about 7.1 TiB used`                       |
+| How full                                                                     | The pool row's `capacity` (whole percent, of the raw space): the meter's value. It is what ZFS itself uses to slow down and refuse writes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `17% full`                                            |
+| File system space                                                            | `used`; "{{available}} free, shared with the other file systems on {{pool}}"; with a size limit (`size` not null), "{{used}} of {{limit}} used"                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `340.0 GiB used · 6.8 TiB free, shared with the pool` |
+| Compression                                                                  | `compression`: `off` "Off"; `lz4` "On (LZ4)"; `on` "On"; `zstd…`, `gzip…`, `lzjb`, `zle` "On ({{value}})" with the value in `Identifier`; and `compressratio` as "saves about {{percent}}" when above `1.00`. The plugin writes the ratio without an "x" ("1.00", observed; section 20, item 5); a trailing "x" is read too                                                                                                                                                                                                                                                                                                   | `On (LZ4), saves about 18%`                           |
+| Progress of a check or a rebuild                                             | From the report's `scan:` lines (0.3): the percentage before `% done` with one decimal, and "about {{left}} left" from the `to go` time with the duration rule; neither: "progress not known"                                                                                                                                                                                                                                                                                                                                                                                                                                 | `27.0% done, about 10 minutes left`                   |
+| Last check                                                                   | The **date** from the plugin's `lastscrub`, which carries its time zone ("Sat Nov 21 12:00:00 UTC 2026", observed); the report's `scan:` line has none, so it says only **what** the last scan was. "Last checked {{when}}" with the relative-date rule and the date in this computer's format and time zone on a second line; "Never checked" for `Never`; "The last check was stopped on {{date}}" for a cancelled one; after a rebuild (the scan line says "resilvered"), "Not checked since a disk was rebuilt on {{date}}". A date whose time zone is not UTC, GMT or an offset is shown as written (section 20, item 8) | `Last checked about 3 days ago`                       |
+| Disk names, serial numbers, label sizes                                      | The disks slice's rules (its 0.1), including the label size in every confirmation that erases a disk                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `3.6 TiB (4 TB on the label)`                         |
+| Server-written text (the report, state words not recognised, error messages) | As received, as text (UI-2), `dir="auto"`. The plugin joins report lines with a line feed and a carriage return; the interface splits on either and drops empty ends                                                                                                                                                                                                                                                                                                                                                                                                                                                          |                                                       |
 
 The pool row's `devices` field joins device paths with a markup line break; the interface does not
 use it (UI-2), and reads the devices from `getPoolDevices` instead (0.4).
@@ -135,21 +133,21 @@ places, and the stricter reading wins:
 The report is open text; the interface recognises only the forms below **[verify]** every form on the
 VM by capture (section 15).
 
-| Recognised | State | Reason, beside the pill |
-| --- | --- | --- |
-| `state` is `UNKNOWN`, empty or missing, or the report could not be read or parsed | **Unknown** | "Could not read its state." |
-| `FAULTED`, `UNAVAIL`, `REMOVED`, `OFFLINE` | **Critical** | "Cannot be used. Too many of its disks are missing or have failed, so its files cannot be reached." |
-| `SUSPENDED` | **Critical** | "Stopped reading and writing after errors on its disks. Its files cannot be reached." |
-| `status` is `Error`, or the `errors:` line counts damaged data | **Critical** | "ZFS found damaged files that it could not repair from a copy. The technical details list them." |
-| `DEGRADED` and a rebuild in progress | **Critical** | "A disk is missing or has failed. Rebuilding onto {{disk}}: {{progress}}. {{protection}}" (0.5's sentence for what is left until the rebuild ends) |
-| `DEGRADED` | **Critical** | "A disk is missing or has failed. {{protection}} Replace the disk." |
-| `ONLINE`, a rebuild in progress (after replacing a disk that still worked, or a disk brought back) | **Warning** | "Copying data onto {{disk}}: {{progress}}. It is fully protected again when this ends." |
-| `ONLINE`, `removalactive` | **Warning** | "Moving data off a disk group that is being removed: this was started in the classic interface." |
-| `ONLINE`, a disk's error counts are above zero | **Warning** | "A disk has reported errors: {{disk}}. ZFS repaired them from a copy. Check the pool, and replace the disk if the errors come back." |
-| `ONLINE`, a check in progress | **OK** | "Being checked: {{progress}}. This can take hours." |
-| `ONLINE`, a check paused | **OK** | "The check is paused at {{percent}}." |
-| `ONLINE`, none of the above | **OK** | none |
-| anything else | **Unknown** | "Its state is “{{state}}”, which this page does not recognise." |
+| Recognised                                                                                         | State        | Reason, beside the pill                                                                                                                            |
+| -------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `state` is `UNKNOWN`, empty or missing, or the report could not be read or parsed                  | **Unknown**  | "Could not read its state."                                                                                                                        |
+| `FAULTED`, `UNAVAIL`, `REMOVED`, `OFFLINE`                                                         | **Critical** | "Cannot be used. Too many of its disks are missing or have failed, so its files cannot be reached."                                                |
+| `SUSPENDED`                                                                                        | **Critical** | "Stopped reading and writing after errors on its disks. Its files cannot be reached."                                                              |
+| `status` is `Error`, or the `errors:` line counts damaged data                                     | **Critical** | "ZFS found damaged files that it could not repair from a copy. The technical details list them."                                                   |
+| `DEGRADED` and a rebuild in progress                                                               | **Critical** | "A disk is missing or has failed. Rebuilding onto {{disk}}: {{progress}}. {{protection}}" (0.5's sentence for what is left until the rebuild ends) |
+| `DEGRADED`                                                                                         | **Critical** | "A disk is missing or has failed. {{protection}} Replace the disk."                                                                                |
+| `ONLINE`, a rebuild in progress (after replacing a disk that still worked, or a disk brought back) | **Warning**  | "Copying data onto {{disk}}: {{progress}}. It is fully protected again when this ends."                                                            |
+| `ONLINE`, `removalactive`                                                                          | **Warning**  | "Moving data off a disk group that is being removed: this was started in the classic interface."                                                   |
+| `ONLINE`, a disk's error counts are above zero                                                     | **Warning**  | "A disk has reported errors: {{disk}}. ZFS repaired them from a copy. Check the pool, and replace the disk if the errors come back."               |
+| `ONLINE`, a check in progress                                                                      | **OK**       | "Being checked: {{progress}}. This can take hours."                                                                                                |
+| `ONLINE`, a check paused                                                                           | **OK**       | "The check is paused at {{percent}}."                                                                                                              |
+| `ONLINE`, none of the above                                                                        | **OK**       | none                                                                                                                                               |
+| anything else                                                                                      | **Unknown**  | "Its state is “{{state}}”, which this page does not recognise."                                                                                    |
 
 - **Degraded is Critical**, as the style guide names it (its 2) and as the RAID slice does (its D4),
   even while it rebuilds and even for RAID-Z2 with one disk missing: until the rebuild ends, it is
@@ -178,27 +176,27 @@ The report's device tree says how the disks are arranged; `getPoolDevices` gives
 suffix (`-part1`) that ZFS adds on whole disks **[verify]** the forms, and matches each path to a disk
 of `DiskMgmt.getList` by the disks slice's names and partition rule.
 
-| Where in the tree | Shown as | Notes |
-| --- | --- | --- |
-| A data group (`mirror-0`, `raidz1-0`, …) | A group heading: "{{layout}}, {{count}} disks" and 0.5's sentence for that group | Only when the pool has more than one group, or any class below |
-| A disk directly under the pool (no group) | "Single disk" for a pool of one, "Stripe" for several | Protects nothing (0.5) |
-| `spares` | Heading "Spares": "A spare waits, and takes the place of a failed disk by itself." | |
-| `logs`, `cache`, `special`, `dedup` | Headings "Write log", "Read cache", "Metadata disks", "Deduplication table", each with "Added in the classic interface." | Shown, never changed here |
-| `replacing-N`, `spare-N` (inside a group, while a disk is being replaced or a spare stands in) | The two disks on one row pair: "{{new}} is taking the place of {{old}}" | |
+| Where in the tree                                                                              | Shown as                                                                                                                 | Notes                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| A data group (`mirror-0`, `raidz1-0`, …)                                                       | A group heading: "{{layout}}, {{count}} disks" and 0.5's sentence for that group                                         | Only when the pool has more than one group, or any class below                                                                          |
+| A disk directly under the pool (no group)                                                      | "Single disk" for a pool of one, "Stripe" for several                                                                    | Protects nothing (0.5)                                                                                                                  |
+| `spares`                                                                                       | Heading "Spares": "A spare waits, and takes the place of a failed disk by itself."                                       |                                                                                                                                         |
+| `logs`, `cache`, `special`, `dedup`                                                            | Headings "Write log", "Read cache", "Metadata disks", "Deduplication table", each with "Added in the classic interface." | Shown, never changed here                                                                                                               |
+| `replacing-N`, `spare-N` (inside a group, while a disk is being replaced or a spare stands in) | The two disks on **one row**: "{{new}} is taking the place of {{old}}", with the new disk's progress                     | `getPoolDevices` gives both disks the group `replacing-1` (observed): one replacement in progress, never two disks (section 20, item 6) |
 
-| ZFS's word for the disk | Role | Shown |
-| --- | --- | --- |
-| `ONLINE`, error counts zero | **Working** | the word |
-| `ONLINE`, any error count above zero | **Working, with errors** | the Warning pill and "{{read}} read, {{write}} write and {{checksum}} checksum errors since the counts were last cleared" |
-| `ONLINE` with the report's `(resilvering)` mark | **Rebuilding** | the word and 0.2's progress |
-| `DEGRADED` (a disk) | **Failing** | the Critical pill and "ZFS stopped trusting it after too many errors." |
-| `FAULTED` | **Failed** | the Critical pill and "Failed" |
-| `UNAVAIL` | **Missing** | the Critical pill and "Missing: not connected, or it cannot be opened" with the path it was last seen at (the report's "was …") |
-| `REMOVED` | **Removed** | the Critical pill and "Removed: it was unplugged while in use" |
-| `OFFLINE` | **Offline** | the word and "Taken offline. ZFS does not use it until it is brought back." No pill: it was a choice; the pool's pill says what it costs |
-| `AVAIL` (a spare) | **Spare** | "Waiting" |
-| `INUSE` (a spare) | **Spare, standing in** | "Standing in for {{disk}}" |
-| anything else | as received, in `Identifier` | the role is not known |
+| ZFS's word for the disk                         | Role                         | Shown                                                                                                                                    |
+| ----------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `ONLINE`, error counts zero                     | **Working**                  | the word                                                                                                                                 |
+| `ONLINE`, any error count above zero            | **Working, with errors**     | the Warning pill and "{{read}} read, {{write}} write and {{checksum}} checksum errors since the counts were last cleared"                |
+| `ONLINE` with the report's `(resilvering)` mark | **Rebuilding**               | the word and 0.2's progress                                                                                                              |
+| `DEGRADED` (a disk)                             | **Failing**                  | the Critical pill and "ZFS stopped trusting it after too many errors."                                                                   |
+| `FAULTED`                                       | **Failed**                   | the Critical pill and "Failed"                                                                                                           |
+| `UNAVAIL`                                       | **Missing**                  | the Critical pill and "Missing: not connected, or it cannot be opened" with the path it was last seen at (the report's "was …")          |
+| `REMOVED`                                       | **Removed**                  | the Critical pill and "Removed: it was unplugged while in use"                                                                           |
+| `OFFLINE`                                       | **Offline**                  | the word and "Taken offline. ZFS does not use it until it is brought back." No pill: it was a choice; the pool's pill says what it costs |
+| `AVAIL` (a spare)                               | **Spare**                    | "Waiting"                                                                                                                                |
+| `INUSE` (a spare)                               | **Spare, standing in**       | "Standing in for {{disk}}"                                                                                                               |
+| anything else                                   | as received, in `Identifier` | the role is not known                                                                                                                    |
 
 - **Counts**: working disks are the Working and Working-with-errors ones; a Rebuilding disk is not yet
   working.
@@ -212,13 +210,13 @@ of `DiskMgmt.getList` by the disks slice's names and partition rule.
 From each data group's layout and its number of disks `n`, in words, on the pool's page, in the
 create form and in every confirmation (section 17, D5):
 
-| Layout | It can lose | Usable space (each disk counts as the smallest in its group, `s`) |
-| --- | --- | --- |
-| Mirror | `n − 1` disks: "It can lose {{count}} disks and keep every file." (2 disks: "1 disk") | `s` |
-| Parity (RAID-Z1) | 1 disk | `(n − 1) × s` |
-| Double parity (RAID-Z2) | 2 disks | `(n − 2) × s` |
-| Triple parity (RAID-Z3) | 3 disks | `(n − 3) × s` |
-| Single disk, Stripe | none: "It cannot lose any disk. If one fails, everything on the pool is lost." | the total of the disks |
+| Layout                  | It can lose                                                                           | Usable space (each disk counts as the smallest in its group, `s`) |
+| ----------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Mirror                  | `n − 1` disks: "It can lose {{count}} disks and keep every file." (2 disks: "1 disk") | `s`                                                               |
+| Parity (RAID-Z1)        | 1 disk                                                                                | `(n − 1) × s`                                                     |
+| Double parity (RAID-Z2) | 2 disks                                                                               | `(n − 2) × s`                                                     |
+| Triple parity (RAID-Z3) | 3 disks                                                                               | `(n − 3) × s`                                                     |
+| Single disk, Stripe     | none: "It cannot lose any disk. If one fails, everything on the pool is lost."        | the total of the disks                                            |
 
 - With several groups: "It can lose {{count}} disks in each group. If one group loses more, the whole
   pool is lost." (the smallest figure of the groups), with each group's own sentence on its heading.
@@ -227,9 +225,12 @@ create form and in every confirmation (section 17, D5):
 - **ZFS checks every file it reads** against a checksum, and repairs a damaged one from a copy when
   the layout keeps one; a Single disk or a Stripe can find damage but not repair it. The create form
   says so once (3.2).
-- Usable space is computed in the browser and said with "about" **[verify]** against the pool's own
-  folder's `used + available` after a create on the VM; ZFS keeps a few percent back for itself, and
-  RAID-Z loses a little more to padding, so the estimate is reduced by 3.2% and rounded down.
+- Usable space is computed in the browser and always said with "about", **calibrated on the VM**
+  (section 20, item 7): the pool's own folder's `used + available` as a share of the base was 90.8% of
+  `s` for a mirror and a single disk, 90.8% of `2s` for a stripe of two, 94.8% of `2s` for a RAID-Z1 of
+  three and 92.4% of `2s` for a RAID-Z2 of four. Those shares are used for those layouts; any other
+  RAID-Z count uses 90%, below every share seen, so the estimate never claims more. Rounded down to the
+  tenth of its unit.
 
 ### 0.6 What touches the disks, and the one poll
 
@@ -242,18 +243,18 @@ From the source, the plugin's reads run ZFS's own status and listing commands. T
 `zfs get`) read each file system's properties, which ZFS usually holds in memory but may have to read
 from the pool when memory is short. None of this has been observed yet:
 
-| Method | What it runs (read from source) | Touches the disks? | When this slice calls it |
-| --- | --- | --- | --- |
-| `Zfs.listCompressionTypes` | nothing: it returns a fixed list | No | Once after an administrator signs in, for the menu item (0.11) |
-| `Zfs.getPoolStatus` | the status and list commands, for every pool | Expected not **[verify]** | The dashboard, once per visit (10.1); the disk-use model (0.8) |
-| `Zfs.getPoolDevices` | the status command, for one pool | Expected not **[verify]** | A pool's page; the disk-use model, once per pool; the replace flow |
-| `Zfs.getObjectDetails` (type `Pool`) | the status command with its error list, for one pool | Expected not **[verify]** | The ZFS list (each pool) and a pool's page; the poll for a busy pool |
-| `Zfs.listPools` | the status and list commands, and the listing commands for every file system and volume | Possibly **[verify]** | The ZFS pages: on opening, Refresh, after an action, the poll |
-| `Zfs.getAllSnapshots` | the listing command for every snapshot on every pool | Possibly **[verify]** | A file system's page, its snapshots section |
-| `Zfs.getObjectDetails` (type `Filesystem`) | the listing commands for one file system, all properties | Possibly **[verify]** | Only on "Show technical details" (4.3) |
-| `Zfs.getEmptyCandidates` | OMV's device information, as `MdMgmt.getCandidates` | As in the RAID slice | The create and replace flows |
-| `Zfs.addPool`, `deviceReplace`, `deleteObjectBg` (pool), `DiskMgmt.wipe` | | Yes, they write to the disks | Only after their confirmations |
-| `Zfs.scrubPool` | | Yes: it reads every disk of the pool, for hours | Only after its confirmation (section 6) |
+| Method                                                                   | What it runs (read from source)                                                         | Touches the disks?                              | When this slice calls it                                             |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------- |
+| `Zfs.listCompressionTypes`                                               | nothing: it returns a fixed list                                                        | No                                              | Once after an administrator signs in, for the menu item (0.11)       |
+| `Zfs.getPoolStatus`                                                      | the status and list commands, for every pool                                            | Expected not **[verify]**                       | The dashboard, once per visit (10.1); the disk-use model (0.8)       |
+| `Zfs.getPoolDevices`                                                     | the status command, for one pool                                                        | Expected not **[verify]**                       | A pool's page; the disk-use model, once per pool; the replace flow   |
+| `Zfs.getObjectDetails` (type `Pool`)                                     | the status command with its error list, for one pool                                    | Expected not **[verify]**                       | The ZFS list (each pool) and a pool's page; the poll for a busy pool |
+| `Zfs.listPools`                                                          | the status and list commands, and the listing commands for every file system and volume | Possibly **[verify]**                           | The ZFS pages: on opening, Refresh, after an action, the poll        |
+| `Zfs.getAllSnapshots`                                                    | the listing command for every snapshot on every pool                                    | Possibly **[verify]**                           | A file system's page, its snapshots section                          |
+| `Zfs.getObjectDetails` (type `Filesystem`)                               | the listing commands for one file system, all properties                                | Possibly **[verify]**                           | Only on "Show technical details" (4.3)                               |
+| `Zfs.getEmptyCandidates`                                                 | OMV's device information, as `MdMgmt.getCandidates`                                     | As in the RAID slice                            | The create and replace flows                                         |
+| `Zfs.addPool`, `deviceReplace`, `deleteObjectBg` (pool), `DiskMgmt.wipe` |                                                                                         | Yes, they write to the disks                    | Only after their confirmations                                       |
+| `Zfs.scrubPool`                                                          |                                                                                         | Yes: it reads every disk of the pool, for hours | Only after its confirmation (section 6)                              |
 
 So the pools are read **only on the ZFS pages, the Disks pages and the flows**, which are about pools
 or disks, and the dashboard reads only `getPoolStatus`, once per visit, if the VM shows that it reads
@@ -288,10 +289,10 @@ interface." with the footer's link.
 
 **Names this interface gives** are stricter (section 18, P5):
 
-| Name | Rule | Said to the reader when it fails |
-| --- | --- | --- |
-| A new pool | 1 to 32 characters; a letter first, then letters, digits, hyphens and underscores (`^[A-Za-z][A-Za-z0-9_-]{0,31}$`); not a name ZFS keeps for itself (`mirror`, `raidz`, `draid`, `spare`, `log`, or a name starting with one of the first four, case ignored); not the name of a folder the system itself uses at the top of the disk (`bin`, `boot`, `dev`, `etc`, `home`, `lib`, `lib32`, `lib64`, `media`, `mnt`, `opt`, `proc`, `root`, `run`, `sbin`, `srv`, `sys`, `tmp`, `usr`, `var`, case ignored); not the name of a pool already on this NAS | "Use 1 to 32 letters, digits, hyphens or underscores, starting with a letter." / "{{name}} is a word ZFS keeps for itself. Choose another name." / "{{name}} is a folder the system uses. The pool's folder would be /{{name}}, so choose another name." / "There is already a pool called {{name}}." |
-| A new file system | 1 to 64 characters; a letter or digit first, then letters, digits, hyphens, underscores and full stops (`^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$`); not `.` or `..`; not the name of a file system or volume already at the top of that pool, case ignored | "Use 1 to 64 letters, digits, hyphens, underscores or full stops, starting with a letter or digit." / "There is already a file system or volume called {{name}} on {{pool}}." |
+| Name              | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Said to the reader when it fails                                                                                                                                                                                                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new pool        | 1 to 32 characters; a letter first, then letters, digits, hyphens and underscores (`^[A-Za-z][A-Za-z0-9_-]{0,31}$`); not a name ZFS keeps for itself (`mirror`, `raidz`, `draid`, `spare`, `log`, or a name starting with one of the first four, case ignored); not the name of a folder the system itself uses at the top of the disk (`bin`, `boot`, `dev`, `etc`, `home`, `lib`, `lib32`, `lib64`, `media`, `mnt`, `opt`, `proc`, `root`, `run`, `sbin`, `srv`, `sys`, `tmp`, `usr`, `var`, case ignored); not the name of a pool already on this NAS | "Use 1 to 32 letters, digits, hyphens or underscores, starting with a letter." / "{{name}} is a word ZFS keeps for itself. Choose another name." / "{{name}} is a folder the system uses. The pool's folder would be /{{name}}, so choose another name." / "There is already a pool called {{name}}." |
+| A new file system | 1 to 64 characters; a letter or digit first, then letters, digits, hyphens, underscores and full stops (`^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$`); not `.` or `..`; not the name of a file system or volume already at the top of that pool, case ignored                                                                                                                                                                                                                                                                                                     | "Use 1 to 64 letters, digits, hyphens, underscores or full stops, starting with a letter or digit." / "There is already a file system or volume called {{name}} on {{pool}}."                                                                                                                         |
 
 The pool's folder on the NAS is `/{{pool}}`, and a file system's is `/{{pool}}/{{name}}`, the plugin's
 own defaults (section 17, D13). The contract's request schemas carry the same patterns (section 12).
@@ -306,12 +307,12 @@ and this interface never forces (section 17, D12). As in Flow A and the RAID sli
 placed by both the plugin's list and the disks slice's disk-use model (its 0.6), and the stricter
 wins** (journal, 2026-11-21):
 
-| Group | A disk is here when | Shown as |
-| --- | --- | --- |
-| **Empty disks** | It is in `getEmptyCandidates`, and the disk-use model finds nothing on it ("No file system found", or "Empty (wiped at …)" in this session) | Offered first |
-| **Erase and reuse** | It is not in `getEmptyCandidates`, the disk-use model allows a wipe ("No file system found", or "File system {{name}}, not used on this NAS"), it is in no pool (below), and it is not connected by USB | Offered under its own heading, each with what is on it; it gets a quick wipe first, as in Flow A and the RAID slice. A disk from a deleted pool comes back this way if the plugin does not offer it **[verify]** |
-| **Too small** (replacing only) | Otherwise offered, but smaller than the disk it replaces (or, for a missing disk, than the smallest disk left in its group) | Not offered; under "Cannot be used": "It is smaller than the disk it would replace ({{size}}). A replacement must be at least as large." |
-| **Cannot be used** | Anything else in `DiskMgmt.getList`: the system disk, a read-only disk, a disk with a file system in use, set up or being created, swap, a RAID member, **a disk in a ZFS pool** (below), a disk being wiped, and a disk connected by USB | Not offered; listed in a `Disclosure` "Disks that cannot be used ({{count}})", each with the disks slice's blocker sentence; for a pool: "It is part of ZFS pool {{pool}}."; for USB: "It is connected by USB. The ZFS plugin does not use USB disks, because a USB connection can drop and damage the pool." |
+| Group                          | A disk is here when                                                                                                                                                                                                                       | Shown as                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Empty disks**                | It is in `getEmptyCandidates`, and the disk-use model finds nothing on it ("No file system found", or "Empty (wiped at …)" in this session)                                                                                               | Offered first                                                                                                                                                                                                                                                                                                                                     |
+| **Erase and reuse**            | It is not in `getEmptyCandidates`, the disk-use model allows a wipe ("No file system found", or "File system {{name}}, not used on this NAS"), it is in no pool (below), and it is not connected by USB                                   | Offered under its own heading, each with what is on it; it gets a quick wipe first, as in Flow A and the RAID slice. **Settled on the VM** (section 20, item 4): a deleted pool's disks, a disk replaced out of a pool and a disk a refused create wrote to keep ZFS's partition table and are not candidates until wiped, so they come back here |
+| **Too small** (replacing only) | Otherwise offered, but smaller than the disk it replaces (or, for a missing disk, than the smallest disk left in its group)                                                                                                               | Not offered; under "Cannot be used": "It is smaller than the disk it would replace ({{size}}). A replacement must be at least as large."                                                                                                                                                                                                          |
+| **Cannot be used**             | Anything else in `DiskMgmt.getList`: the system disk, a read-only disk, a disk with a file system in use, set up or being created, swap, a RAID member, **a disk in a ZFS pool** (below), a disk being wiped, and a disk connected by USB | Not offered; listed in a `Disclosure` "Disks that cannot be used ({{count}})", each with the disks slice's blocker sentence; for a pool: "It is part of ZFS pool {{pool}}."; for USB: "It is connected by USB. The ZFS plugin does not use USB disks, because a USB connection can drop and damage the pool."                                     |
 
 **A disk in a ZFS pool** joins the disk-use model in this slice (section 10.2): a disk is "Part of ZFS
 pool {{pool}}" when one of `getPoolDevices`'s paths, for any pool in `getPoolStatus`, names the disk or
@@ -334,7 +335,9 @@ RAID slice's sentence, extended).
 - The disk is sent to the server by the stable name the plugin's candidate list gives
   (`/dev/disk/by-id/…`), with the plugin's own by-id setting, so a disk renamed between the check and
   the call is never hit by mistake. For an Erase and reuse disk, its `/dev/disk/by-id/…` link from
-  `DiskMgmt.getList` is used, after it has appeared in the candidate list.
+  `DiskMgmt.getList` decides that it can be offered, and after its wipe the name the candidate list
+  then gives is sent. The contract takes only by-id names, so a disk with none is not offered: "It has
+  no stable ID, which ZFS needs to find it again after a restart." (section 20, item 9).
 
 ### 0.9 Pending changes in this slice
 
@@ -345,13 +348,13 @@ does so for snapshots too. Deleting a pool or a file system also removes the plu
 for it, which marks `zfscron` pending **[verify]**. Changes to the pool itself (a check, a replaced
 disk, a disk offline) mark nothing.
 
-| Action | Marks pending | Applied by |
-| --- | --- | --- |
-| Create a pool (section 3), add a file system (4.2) | `fstab`, `collectd`, `monit`, `quota` **[verify]** | The flow's own checkpoint at its end, after R10 |
-| Delete a snapshot, a file system or a pool (5.5, section 9) | the same four, and `zfscron` when a job was removed **[verify]** | The dialog's own last step, right after the deletion, after refusing to start while anything else is pending (section 18, P15) |
-| Size limit, compression (4.4) | `collectd`, `monit`, `quota` **[verify]** | The band, as any saved setting |
-| Take a snapshot, roll back, check, stop, replace, offline, online, clear errors | nothing | |
-| Saving the email or notification settings in the classic interface | `zfszed` too (the plugin listens for them) | The band |
+| Action                                                                          | Marks pending                                                    | Applied by                                                                                                                     |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Create a pool (section 3), add a file system (4.2)                              | `fstab`, `collectd`, `monit`, `quota` **[verify]**               | The flow's own checkpoint at its end, after R10                                                                                |
+| Delete a snapshot, a file system or a pool (5.5, section 9)                     | the same four, and `zfscron` when a job was removed **[verify]** | The dialog's own last step, right after the deletion, after refusing to start while anything else is pending (section 18, P15) |
+| Size limit, compression (4.4)                                                   | `collectd`, `monit`, `quota` **[verify]**                        | The band, as any saved setting                                                                                                 |
+| Take a snapshot, roll back, check, stop, replace, offline, online, clear errors | nothing                                                          |                                                                                                                                |
+| Saving the email or notification settings in the classic interface              | `zfszed` too (the plugin listens for them)                       | The band                                                                                                                       |
 
 New module words: `modules.zfs` "ZFS settings", `modules.zfszed` "ZFS alerts", `modules.zfscron` "ZFS
 schedules". The band knows them by name; this slice never marks `zfs` itself.
@@ -376,21 +379,21 @@ interface's own (journal, 2026-11-21), checked before the call and again at its 
 refusal offers no classic link that would do the same thing without the check (the earlier slices' P3,
 P9 and P10).
 
-| Action | Refused when | Section |
-| --- | --- | --- |
-| Create a pool | Fewer disks than the layout needs; any disk the 0.8 groups do not offer; a name 0.7 refuses | 3 |
-| Add a file system | The pool is not usable (Critical for `FAULTED`, `UNAVAIL`, `SUSPENDED`), Unknown, or full (Critical by 0.3's level); a name 0.7 refuses | 4.2 |
-| Size limit | Smaller than what the file system already holds | 4.4 |
-| Take a snapshot | The file system is locked (encrypted, its key not loaded), or the pool is not usable or Unknown | 5.3 |
-| Roll back | Not the file system's newest snapshot; the file system is locked; the pool is not usable or Unknown | 5.4 |
-| Delete a snapshot | Another file system was cloned from it (`origin` of a row in `listPools`) | 5.5 |
-| Check | The pool is Critical or Unknown, being rebuilt, or already being checked | 6 |
-| Replace a disk | The pool is Unknown, `FAULTED`, `UNAVAIL` or `SUSPENDED`; a rebuild is already running; the disk is a spare, read cache, write log, metadata disk or deduplication disk; a Single disk or Stripe disk that is not Working (its data is gone, 7.1); the roles are not known; the new disk is not offered by 0.8 | 7 |
-| Take offline | The disk's group would be left with no copy (0.5: it cannot lose another disk), or the disk is not Working; the pool is not OK or Warning; a rebuild is running | 7.7 |
-| Bring back | The disk is not Offline | 7.7 |
-| Delete a file system | It is the pool's own folder (delete the pool instead); file systems or volumes inside it; a shared folder uses it (`ShareMgmt.getList`, by its mount entry, and the plugin's `hasshares`); something else uses its mount entry (`_used`); it is locked; another file system was cloned from one of its snapshots; the reads these rules need failed | 9.1 |
-| Delete a pool | Any file system or volume on it other than its own folder; a shared folder uses its own folder; something else uses its own folder's mount entry; its own folder is locked; the reads these rules need failed | 9.2 |
-| Any of them | The pool's state is Unknown (0.3); an action on this pool is already running in this session; the object changed since the page was read (a pool by its name and disks, a file system by its name and pool) | all |
+| Action               | Refused when                                                                                                                                                                                                                                                                                                                                        | Section |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Create a pool        | Fewer disks than the layout needs; any disk the 0.8 groups do not offer; a name 0.7 refuses                                                                                                                                                                                                                                                         | 3       |
+| Add a file system    | The pool is not usable (Critical for `FAULTED`, `UNAVAIL`, `SUSPENDED`), Unknown, or full (Critical by 0.3's level); a name 0.7 refuses                                                                                                                                                                                                             | 4.2     |
+| Size limit           | Smaller than what the file system already holds                                                                                                                                                                                                                                                                                                     | 4.4     |
+| Take a snapshot      | The file system is locked (encrypted, its key not loaded), or the pool is not usable or Unknown                                                                                                                                                                                                                                                     | 5.3     |
+| Roll back            | Not the file system's newest snapshot; the file system is locked; the pool is not usable or Unknown                                                                                                                                                                                                                                                 | 5.4     |
+| Delete a snapshot    | Another file system was cloned from it (`origin` of a row in `listPools`)                                                                                                                                                                                                                                                                           | 5.5     |
+| Check                | The pool is Critical or Unknown, being rebuilt, or already being checked                                                                                                                                                                                                                                                                            | 6       |
+| Replace a disk       | The pool is Unknown, `FAULTED`, `UNAVAIL` or `SUSPENDED`; a rebuild is already running; the disk is a spare, read cache, write log, metadata disk or deduplication disk; a Single disk or Stripe disk that is not Working (its data is gone, 7.1); the roles are not known; the new disk is not offered by 0.8                                      | 7       |
+| Take offline         | The disk's group would be left with no copy (0.5: it cannot lose another disk), or the disk is not Working; the pool is not OK or Warning; a rebuild is running                                                                                                                                                                                     | 7.7     |
+| Bring back           | The disk is not Offline                                                                                                                                                                                                                                                                                                                             | 7.7     |
+| Delete a file system | It is the pool's own folder (delete the pool instead); file systems or volumes inside it; a shared folder uses it (`ShareMgmt.getList`, by its mount entry, and the plugin's `hasshares`); something else uses its mount entry (`_used`); it is locked; another file system was cloned from one of its snapshots; the reads these rules need failed | 9.1     |
+| Delete a pool        | Any file system or volume on it other than its own folder; a shared folder uses its own folder; something else uses its own folder's mount entry; its own folder is locked; the reads these rules need failed                                                                                                                                       | 9.2     |
+| Any of them          | The pool's state is Unknown (0.3); an action on this pool is already running in this session; the object changed since the page was read (a pool by its name and disks, a file system by its name and pool)                                                                                                                                         | all     |
 
 Fail closed, as the earlier slices do: when a read these rules need has failed, the action is
 unavailable until a read succeeds, with the server's message. The interface always sends the mount
@@ -433,10 +436,12 @@ type `zfs` whose `devicefile` is its full name (read from the plugin's file-syst
 interface names what uses it with the library's `UsedByPanel`, as the file-systems slice does (its
 0.6):
 
-- **Shared folders on it**: rows of `ShareMgmt.getList` whose `mntentref` is the mount entry's `uuid`
-  (from `FsTab.getByFsName` with the full name), or, when that read fails, whose `mntent.dir` equals
-  the file system's `mountpoint`. Each by name, with a router link to the Shared folders page. The
-  plugin's own `hasshares` is read too, and the stricter wins.
+- **Shared folders on it**: rows of `ShareMgmt.getList` whose `mntent.dir` equals the file system's
+  `mountpoint`. `FsTab.getByFsName` refuses a ZFS name (HTTP 400, observed: OMV's datamodel takes only
+  a UUID or a device file), so it is **never called** for a ZFS file system (section 20, item 1). Each
+  by name, with a router link to the Shared folders page. The plugin's own `hasshares` is read too, and
+  the stricter wins: `hasshares` with no folder found refuses the delete with "The ZFS plugin says a
+  shared folder uses it."
 - **Something else**: the `getList` row's `_used` is true and no shared folder matches: the
   file-systems slice's sentence, with the classic File systems link.
 - **File systems and volumes inside it** (`listPools` rows whose `path` starts with this one's and a
@@ -487,14 +492,14 @@ In parallel, on opening, on Refresh and after an action this session started end
 
 ### 1.3 Columns
 
-| Order | Header | Field | Display |
-| --- | --- | --- | --- |
-| 1 | Pool | `name` | A router link to the pool's page, in `Identifier`. Accessible name "Open pool {{pool}}". No link for a name outside 0.7's pattern. Sortable (natural order) |
-| 2 | State | 0.3 | The pill and its reason, never in a tooltip; while checking or rebuilding, a compact `ProgressBar` under the reason with the same figures as text |
-| 3 | Layout | the report | 0.2's pool layout words |
-| 4 | Space | the pool's own folder's row, `capacity` | `CapacityMeter` compact: "{{used}} of about {{total}} used" (0.2) and the meter at `capacity`; the Warning or Critical pill of 0.3 beside it. Sortable by `capacity` |
-| 5 | Last check | the report | 0.2's last-check words. Over 35 days, or never, a second line `text-sm muted-foreground`: "Pools should be checked about once a month." (not a status) |
-| 6 | File systems | `listPools` | "{{count}} file systems" (the pool's own folder not counted), and "{{count}} volumes" when there are any |
+| Order | Header       | Field                                   | Display                                                                                                                                                              |
+| ----- | ------------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Pool         | `name`                                  | A router link to the pool's page, in `Identifier`. Accessible name "Open pool {{pool}}". No link for a name outside 0.7's pattern. Sortable (natural order)          |
+| 2     | State        | 0.3                                     | The pill and its reason, never in a tooltip; while checking or rebuilding, a compact `ProgressBar` under the reason with the same figures as text                    |
+| 3     | Layout       | the report                              | 0.2's pool layout words                                                                                                                                              |
+| 4     | Space        | the pool's own folder's row, `capacity` | `CapacityMeter` compact: "{{used}} of about {{total}} used" (0.2) and the meter at `capacity`; the Warning or Critical pill of 0.3 beside it. Sortable by `capacity` |
+| 5     | Last check   | the report                              | 0.2's last-check words. Over 35 days, or never, a second line `text-sm muted-foreground`: "Pools should be checked about once a month." (not a status)               |
+| 6     | File systems | `listPools`                             | "{{count}} file systems" (the pool's own folder not counted), and "{{count}} volumes" when there are any                                                             |
 
 The rows keep the server's order on every read; problems are led by the roll-up, not by moving rows.
 There is no row selection and no row action: each pool's actions are on its page.
@@ -522,23 +527,23 @@ the worst pill and "1 of 2 pools: Critical" (`zfs.rollUp`). Nothing when every p
 
 The job journal lives in memory, so a reload ends a flow view. The list recognises from server state:
 
-| Found | Line | Action |
-| --- | --- | --- |
-| A pool this session created, with no file system but its own folder, whose create flow chose "Make a first file system" | "Pool {{pool}} has no file system for shared folders yet." | Router link "Add a file system" → 4.2 for that pool |
-| `fstab` (or another of 0.9's modules) pending, and this session created or deleted something on a pool | "The NAS has not saved the change to pool {{pool}} yet. Apply the pending changes so its file systems are monitored and can be shared." | none: the band carries Apply |
+| Found                                                                                                                   | Line                                                                                                                                    | Action                                              |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| A pool this session created, with no file system but its own folder, whose create flow chose "Make a first file system" | "Pool {{pool}} has no file system for shared folders yet."                                                                              | Router link "Add a file system" → 4.2 for that pool |
+| `fstab` (or another of 0.9's modules) pending, and this session created or deleted something on a pool                  | "The NAS has not saved the change to pool {{pool}} yet. Apply the pending changes so its file systems are monitored and can be shared." | none: the band carries Apply                        |
 
 ### 1.7 States
 
-| State | Look |
-| --- | --- |
-| Plugin not installed | 0.11 |
-| Loading | Header row and `TableSkeletonRows` (2); "Loading the ZFS pools…" for assistive technology |
-| Error (`listPools` failed, not 404) | `EmptyState variant="error"` in the table body: "Could not read the ZFS pools." + server message + "Try again". The toolbar stays |
-| Empty | `EmptyState variant="empty"`: "There are no ZFS pools yet. Create one to keep your files on one or more disks, with copies that survive a failed disk." Action: router link "Create pool". Under it, `text-sm muted-foreground`: "A pool from another NAS is imported in the classic interface." |
-| A pool's report failed | That row: Layout and Last check "Not known", State Unknown with "Could not read its state." The other rows stay |
-| Refreshing | Rows stay with `aria-busy`; Refresh shows "Refreshing…"; afterwards "Read at" is announced. A poll does not announce |
-| Poll failed | The rows stay; beside "Read at": "Could not update since {{time}}." and "Try again" |
-| Populated | The table |
+| State                               | Look                                                                                                                                                                                                                                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Plugin not installed                | 0.11                                                                                                                                                                                                                                                                                             |
+| Loading                             | Header row and `TableSkeletonRows` (2); "Loading the ZFS pools…" for assistive technology                                                                                                                                                                                                        |
+| Error (`listPools` failed, not 404) | `EmptyState variant="error"` in the table body: "Could not read the ZFS pools." + server message + "Try again". The toolbar stays                                                                                                                                                                |
+| Empty                               | `EmptyState variant="empty"`: "There are no ZFS pools yet. Create one to keep your files on one or more disks, with copies that survive a failed disk." Action: router link "Create pool". Under it, `text-sm muted-foreground`: "A pool from another NAS is imported in the classic interface." |
+| A pool's report failed              | That row: Layout and Last check "Not known", State Unknown with "Could not read its state." The other rows stay                                                                                                                                                                                  |
+| Refreshing                          | Rows stay with `aria-busy`; Refresh shows "Refreshing…"; afterwards "Read at" is announced. A poll does not announce                                                                                                                                                                             |
+| Poll failed                         | The rows stay; beside "Read at": "Could not update since {{time}}." and "Try again"                                                                                                                                                                                                              |
+| Populated                           | The table                                                                                                                                                                                                                                                                                        |
 
 ### 1.8 Keyboard
 
@@ -550,85 +555,85 @@ Refresh. A poll never moves focus.
 
 ### 1.9 Copy
 
-| Key | English |
-| --- | --- |
-| `zfs.title` | ZFS |
-| `zfs.intro` | ZFS keeps your files on one or more disks as a pool. Depending on how the disks are arranged, a pool keeps working when a disk fails, and ZFS checks every file it reads. It is not a backup: a file deleted by mistake is gone from every disk at once, unless a snapshot keeps it. |
-| `zfs.create` | Create pool |
-| `zfs.refresh` | Refresh |
-| `zfs.refreshing` | Refreshing… |
-| `zfs.readAt` | Read at {{time}}. |
-| `zfs.polling` | Updated every 30 seconds while a pool is being checked or rebuilt. |
-| `zfs.pollFailed` | Could not update since {{time}}. |
-| `zfs.loading` | Loading the ZFS pools… |
-| `zfs.loadFailed` | Could not read the ZFS pools. |
-| `zfs.empty` | There are no ZFS pools yet. Create one to keep your files on one or more disks, with copies that survive a failed disk. |
-| `zfs.emptyImport` | A pool from another NAS is imported in the classic interface. |
-| `zfs.rollUp_one` / `_other` | {{number}} of {{count}} pool: {{status}} / {{number}} of {{count}} pools: {{status}} |
-| `zfs.tableLabel` | ZFS pools |
-| `zfs.col.pool` | Pool |
-| `zfs.col.state` | State |
-| `zfs.col.layout` | Layout |
-| `zfs.col.space` | Space |
-| `zfs.col.lastCheck` | Last check |
-| `zfs.col.fileSystems` | File systems |
-| `zfs.open` | Open pool {{pool}} |
-| `zfs.noPage` | This page cannot open it. Manage it in the classic interface. |
-| `zfs.space` | {{used}} of about {{total}} used |
-| `zfs.fsCount_one` / `_other` | {{count}} file system / {{count}} file systems |
-| `zfs.volCount_one` / `_other` | {{count}} volume / {{count}} volumes |
-| `zfs.checkAdvice` | Pools should be checked about once a month. |
-| `zfs.alerts.on` | When a disk in a pool fails, the NAS emails you, if ZFS alerts are on under Notifications in the classic interface. |
-| `zfs.alerts.onLink` | Notification events in the classic interface |
-| `zfs.alerts.off` | Email notifications are off, so a failed disk is shown only here and on the dashboard. |
-| `zfs.alerts.offLink` | Notification settings in the classic interface |
-| `zfs.unfinished.noFs` | Pool <pool></pool> has no file system for shared folders yet. |
-| `zfs.unfinished.addFs` | Add a file system |
-| `zfs.unfinished.notSaved` | The NAS has not saved the change to pool <pool></pool> yet. Apply the pending changes so its file systems are monitored and can be shared. |
-| `zfs.footerLine` | Importing or exporting a pool, adding disks to a pool, encryption, volumes and scheduled snapshots and checks are in the classic interface. |
-| `zfs.classicLink` | ZFS in the classic interface |
-| `zfs.notInstalled.title` | ZFS needs the openmediavault-zfs plugin, which is not installed on this NAS. |
-| `zfs.notInstalled.body` | ZFS keeps your files safe across several disks, checks every file it reads, and can take snapshots. To use it, install openmediavault-zfs under System > Plugins in the classic interface (it comes from OMV-Extras), then come back here. |
-| `zfs.notInstalled.link` | Plugins in the classic interface |
-| `zfs.term.pool` | A pool joins one or more disks into one store of space, and decides how your files survive a failed disk. |
-| `zfs.term.group` | A pool is made of one or more groups of disks. Each group protects its own disks. If any group loses more disks than it can, the whole pool is lost. |
-| `zfs.term.fileSystem` | A ZFS file system is a folder on a pool that you can share, with its own size limit and snapshots. All file systems on a pool share its free space. |
-| `zfs.term.poolFolder` | Every pool is also a file system itself, in the folder named after the pool. It is better to keep files in file systems made on the pool. |
-| `zfs.term.volume` | A volume is a part of the pool that acts as a separate disk, for virtual machines or iSCSI. This page lists volumes but does not manage them. |
-| `zfs.term.snapshot` | A snapshot keeps a file system's files as they were at one moment. It takes no space at first, and grows as the files change. |
-| `zfs.term.check` | A check reads every file on the pool and compares it with its copies. ZFS repairs what it finds from a good copy. |
-| `zfsState.unread` | Could not read its state. |
-| `zfsState.unusable` | Cannot be used. Too many of its disks are missing or have failed, so its files cannot be reached. |
-| `zfsState.suspended` | Stopped reading and writing after errors on its disks. Its files cannot be reached. |
-| `zfsState.dataErrors` | ZFS found damaged files that it could not repair from a copy. The technical details list them. |
-| `zfsState.degradedRebuilding` | A disk is missing or has failed. Rebuilding onto <disk></disk>: {{progress}}. {{protection}} |
-| `zfsState.degraded` | A disk is missing or has failed. {{protection}} Replace the disk. |
-| `zfsState.copying` | Copying data onto <disk></disk>: {{progress}}. It is fully protected again when this ends. |
-| `zfsState.removing` | Moving data off a disk group that is being removed: this was started in the classic interface. |
-| `zfsState.diskErrors` | A disk has reported errors: <disk></disk>. ZFS repaired them from a copy. Check the pool, and replace the disk if the errors come back. |
-| `zfsState.checking` | Being checked: {{progress}}. This can take hours. |
-| `zfsState.checkPaused` | The check is paused at {{percent}}. |
-| `zfsState.unrecognised` | Its state is “{{state}}”, which this page does not recognise. |
-| `zfsState.unknownBlocks` | Its state could not be read, so it cannot be changed now. |
-| `zfsState.fullWarning` | ZFS slows down when a pool is more than 80% full. |
-| `zfsState.fullCritical` | Almost no space is left. Saving files may fail. |
-| `zfsState.progress` | {{percent}} done, about {{left}} left |
-| `zfsState.progressNoTime` | {{percent}} done |
-| `zfsState.progressUnknown` | progress not known |
-| `zfsCheck.last` | Last checked {{when}} |
-| `zfsCheck.never` | Never checked |
-| `zfsCheck.stopped` | The last check was stopped on {{date}} |
-| `zfsLayout.mirror` … `zfsLayout.unknown` | Mirror, Parity (RAID-Z1), Double parity (RAID-Z2), Triple parity (RAID-Z3), Single disk, Stripe, Distributed parity (dRAID), Not known |
-| `zfsLayout.withDisks_one` / `_other` | {{layout}}, {{count}} disk / {{layout}}, {{count}} disks |
-| `zfsLayout.groups` | {{groups}} groups, {{disks}} disks |
-| `zfsProtect.mirror_one` / `_other` | It can lose {{count}} disk and keep every file. / It can lose {{count}} disks and keep every file. |
-| `zfsProtect.parity_one` / `_other` | It can lose {{count}} disk. / It can lose {{count}} disks. |
-| `zfsProtect.none` | It cannot lose any disk. If one fails, everything on the pool is lost. |
-| `zfsProtect.noMore` | It cannot lose another disk. |
-| `zfsProtect.groups_one` / `_other` | It can lose {{count}} disk in each group. If one group loses more, the whole pool is lost. / It can lose {{count}} disks in each group. If one group loses more, the whole pool is lost. |
-| `modules.zfs` | ZFS settings |
-| `modules.zfszed` | ZFS alerts |
-| `modules.zfscron` | ZFS schedules |
+| Key                                      | English                                                                                                                                                                                                                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zfs.title`                              | ZFS                                                                                                                                                                                                                                                                                  |
+| `zfs.intro`                              | ZFS keeps your files on one or more disks as a pool. Depending on how the disks are arranged, a pool keeps working when a disk fails, and ZFS checks every file it reads. It is not a backup: a file deleted by mistake is gone from every disk at once, unless a snapshot keeps it. |
+| `zfs.create`                             | Create pool                                                                                                                                                                                                                                                                          |
+| `zfs.refresh`                            | Refresh                                                                                                                                                                                                                                                                              |
+| `zfs.refreshing`                         | Refreshing…                                                                                                                                                                                                                                                                          |
+| `zfs.readAt`                             | Read at {{time}}.                                                                                                                                                                                                                                                                    |
+| `zfs.polling`                            | Updated every 30 seconds while a pool is being checked or rebuilt.                                                                                                                                                                                                                   |
+| `zfs.pollFailed`                         | Could not update since {{time}}.                                                                                                                                                                                                                                                     |
+| `zfs.loading`                            | Loading the ZFS pools…                                                                                                                                                                                                                                                               |
+| `zfs.loadFailed`                         | Could not read the ZFS pools.                                                                                                                                                                                                                                                        |
+| `zfs.empty`                              | There are no ZFS pools yet. Create one to keep your files on one or more disks, with copies that survive a failed disk.                                                                                                                                                              |
+| `zfs.emptyImport`                        | A pool from another NAS is imported in the classic interface.                                                                                                                                                                                                                        |
+| `zfs.rollUp_one` / `_other`              | {{number}} of {{count}} pool: {{status}} / {{number}} of {{count}} pools: {{status}}                                                                                                                                                                                                 |
+| `zfs.tableLabel`                         | ZFS pools                                                                                                                                                                                                                                                                            |
+| `zfs.col.pool`                           | Pool                                                                                                                                                                                                                                                                                 |
+| `zfs.col.state`                          | State                                                                                                                                                                                                                                                                                |
+| `zfs.col.layout`                         | Layout                                                                                                                                                                                                                                                                               |
+| `zfs.col.space`                          | Space                                                                                                                                                                                                                                                                                |
+| `zfs.col.lastCheck`                      | Last check                                                                                                                                                                                                                                                                           |
+| `zfs.col.fileSystems`                    | File systems                                                                                                                                                                                                                                                                         |
+| `zfs.open`                               | Open pool {{pool}}                                                                                                                                                                                                                                                                   |
+| `zfs.noPage`                             | This page cannot open it. Manage it in the classic interface.                                                                                                                                                                                                                        |
+| `zfs.space`                              | {{used}} of about {{total}} used                                                                                                                                                                                                                                                     |
+| `zfs.fsCount_one` / `_other`             | {{count}} file system / {{count}} file systems                                                                                                                                                                                                                                       |
+| `zfs.volCount_one` / `_other`            | {{count}} volume / {{count}} volumes                                                                                                                                                                                                                                                 |
+| `zfs.checkAdvice`                        | Pools should be checked about once a month.                                                                                                                                                                                                                                          |
+| `zfs.alerts.on`                          | When a disk in a pool fails, the NAS emails you, if ZFS alerts are on under Notifications in the classic interface.                                                                                                                                                                  |
+| `zfs.alerts.onLink`                      | Notification events in the classic interface                                                                                                                                                                                                                                         |
+| `zfs.alerts.off`                         | Email notifications are off, so a failed disk is shown only here and on the dashboard.                                                                                                                                                                                               |
+| `zfs.alerts.offLink`                     | Notification settings in the classic interface                                                                                                                                                                                                                                       |
+| `zfs.unfinished.noFs`                    | Pool <pool></pool> has no file system for shared folders yet.                                                                                                                                                                                                                        |
+| `zfs.unfinished.addFs`                   | Add a file system                                                                                                                                                                                                                                                                    |
+| `zfs.unfinished.notSaved`                | The NAS has not saved the change to pool <pool></pool> yet. Apply the pending changes so its file systems are monitored and can be shared.                                                                                                                                           |
+| `zfs.footerLine`                         | Importing or exporting a pool, adding disks to a pool, encryption, volumes and scheduled snapshots and checks are in the classic interface.                                                                                                                                          |
+| `zfs.classicLink`                        | ZFS in the classic interface                                                                                                                                                                                                                                                         |
+| `zfs.notInstalled.title`                 | ZFS needs the openmediavault-zfs plugin, which is not installed on this NAS.                                                                                                                                                                                                         |
+| `zfs.notInstalled.body`                  | ZFS keeps your files safe across several disks, checks every file it reads, and can take snapshots. To use it, install openmediavault-zfs under System > Plugins in the classic interface (it comes from OMV-Extras), then come back here.                                           |
+| `zfs.notInstalled.link`                  | Plugins in the classic interface                                                                                                                                                                                                                                                     |
+| `zfs.term.pool`                          | A pool joins one or more disks into one store of space, and decides how your files survive a failed disk.                                                                                                                                                                            |
+| `zfs.term.group`                         | A pool is made of one or more groups of disks. Each group protects its own disks. If any group loses more disks than it can, the whole pool is lost.                                                                                                                                 |
+| `zfs.term.fileSystem`                    | A ZFS file system is a folder on a pool that you can share, with its own size limit and snapshots. All file systems on a pool share its free space.                                                                                                                                  |
+| `zfs.term.poolFolder`                    | Every pool is also a file system itself, in the folder named after the pool. It is better to keep files in file systems made on the pool.                                                                                                                                            |
+| `zfs.term.volume`                        | A volume is a part of the pool that acts as a separate disk, for virtual machines or iSCSI. This page lists volumes but does not manage them.                                                                                                                                        |
+| `zfs.term.snapshot`                      | A snapshot keeps a file system's files as they were at one moment. It takes no space at first, and grows as the files change.                                                                                                                                                        |
+| `zfs.term.check`                         | A check reads every file on the pool and compares it with its copies. ZFS repairs what it finds from a good copy.                                                                                                                                                                    |
+| `zfsState.unread`                        | Could not read its state.                                                                                                                                                                                                                                                            |
+| `zfsState.unusable`                      | Cannot be used. Too many of its disks are missing or have failed, so its files cannot be reached.                                                                                                                                                                                    |
+| `zfsState.suspended`                     | Stopped reading and writing after errors on its disks. Its files cannot be reached.                                                                                                                                                                                                  |
+| `zfsState.dataErrors`                    | ZFS found damaged files that it could not repair from a copy. The technical details list them.                                                                                                                                                                                       |
+| `zfsState.degradedRebuilding`            | A disk is missing or has failed. Rebuilding onto <disk></disk>: {{progress}}. {{protection}}                                                                                                                                                                                         |
+| `zfsState.degraded`                      | A disk is missing or has failed. {{protection}} Replace the disk.                                                                                                                                                                                                                    |
+| `zfsState.copying`                       | Copying data onto <disk></disk>: {{progress}}. It is fully protected again when this ends.                                                                                                                                                                                           |
+| `zfsState.removing`                      | Moving data off a disk group that is being removed: this was started in the classic interface.                                                                                                                                                                                       |
+| `zfsState.diskErrors`                    | A disk has reported errors: <disk></disk>. ZFS repaired them from a copy. Check the pool, and replace the disk if the errors come back.                                                                                                                                              |
+| `zfsState.checking`                      | Being checked: {{progress}}. This can take hours.                                                                                                                                                                                                                                    |
+| `zfsState.checkPaused`                   | The check is paused at {{percent}}.                                                                                                                                                                                                                                                  |
+| `zfsState.unrecognised`                  | Its state is “{{state}}”, which this page does not recognise.                                                                                                                                                                                                                        |
+| `zfsState.unknownBlocks`                 | Its state could not be read, so it cannot be changed now.                                                                                                                                                                                                                            |
+| `zfsState.fullWarning`                   | ZFS slows down when a pool is more than 80% full.                                                                                                                                                                                                                                    |
+| `zfsState.fullCritical`                  | Almost no space is left. Saving files may fail.                                                                                                                                                                                                                                      |
+| `zfsState.progress`                      | {{percent}} done, about {{left}} left                                                                                                                                                                                                                                                |
+| `zfsState.progressNoTime`                | {{percent}} done                                                                                                                                                                                                                                                                     |
+| `zfsState.progressUnknown`               | progress not known                                                                                                                                                                                                                                                                   |
+| `zfsCheck.last`                          | Last checked {{when}}                                                                                                                                                                                                                                                                |
+| `zfsCheck.never`                         | Never checked                                                                                                                                                                                                                                                                        |
+| `zfsCheck.stopped`                       | The last check was stopped on {{date}}                                                                                                                                                                                                                                               |
+| `zfsLayout.mirror` … `zfsLayout.unknown` | Mirror, Parity (RAID-Z1), Double parity (RAID-Z2), Triple parity (RAID-Z3), Single disk, Stripe, Distributed parity (dRAID), Not known                                                                                                                                               |
+| `zfsLayout.withDisks_one` / `_other`     | {{layout}}, {{count}} disk / {{layout}}, {{count}} disks                                                                                                                                                                                                                             |
+| `zfsLayout.groups`                       | {{groups}} groups, {{disks}} disks                                                                                                                                                                                                                                                   |
+| `zfsProtect.mirror_one` / `_other`       | It can lose {{count}} disk and keep every file. / It can lose {{count}} disks and keep every file.                                                                                                                                                                                   |
+| `zfsProtect.parity_one` / `_other`       | It can lose {{count}} disk. / It can lose {{count}} disks.                                                                                                                                                                                                                           |
+| `zfsProtect.none`                        | It cannot lose any disk. If one fails, everything on the pool is lost.                                                                                                                                                                                                               |
+| `zfsProtect.noMore`                      | It cannot lose another disk.                                                                                                                                                                                                                                                         |
+| `zfsProtect.groups_one` / `_other`       | It can lose {{count}} disk in each group. If one group loses more, the whole pool is lost. / It can lose {{count}} disks in each group. If one group loses more, the whole pool is lost.                                                                                             |
+| `modules.zfs`                            | ZFS settings                                                                                                                                                                                                                                                                         |
+| `modules.zfszed`                         | ZFS alerts                                                                                                                                                                                                                                                                           |
+| `modules.zfscron`                        | ZFS schedules                                                                                                                                                                                                                                                                        |
 
 ---
 
@@ -675,31 +680,31 @@ ZFS – openmediavault".
 
 A `FactList`:
 
-| Label | Value |
-| --- | --- |
-| State | 0.3's pill and reason |
-| Layout | 0.2's words, and under it, `text-sm muted-foreground`, 0.5's protection sentence for the pool as it is now |
-| Space for files | `CapacityMeter`: "{{used}} of about {{total}} used ({{capacity}} full)", and 0.3's level pill when crossed. Under it: "Shared by every file system on this pool." |
-| Last check | 0.2's words; while checking, the progress |
-| Compression | the pool's own folder's `compression` and `compressratio` (0.2), and "File systems on the pool use it unless they say otherwise." |
-| Encryption | Only when the pool's own folder is encrypted: "Encrypted" (`encryption` not `OFF`), and "Locked" or "Unlocked" (`keystatus`), with "Locking and unlocking are in the classic interface." |
-| Folder on the NAS | the pool's own folder's `mountpoint`, in `Identifier`, with `CopyButton` |
+| Label             | Value                                                                                                                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State             | 0.3's pill and reason                                                                                                                                                                    |
+| Layout            | 0.2's words, and under it, `text-sm muted-foreground`, 0.5's protection sentence for the pool as it is now                                                                               |
+| Space for files   | `CapacityMeter`: "{{used}} of about {{total}} used ({{capacity}} full)", and 0.3's level pill when crossed. Under it: "Shared by every file system on this pool."                        |
+| Last check        | 0.2's words; while checking, the progress                                                                                                                                                |
+| Compression       | the pool's own folder's `compression` and `compressratio` (0.2), and "File systems on the pool use it unless they say otherwise."                                                        |
+| Encryption        | Only when the pool's own folder is encrypted: "Encrypted" (`encryption` not `OFF`), and "Locked" or "Unlocked" (`keystatus`), with "Locking and unlocking are in the classic interface." |
+| Folder on the NAS | the pool's own folder's `mountpoint`, in `Identifier`, with `CopyButton`                                                                                                                 |
 
 ### 2.4 What to do now
 
 A `Card` with an `h3`, the steps as an ordered list, and the action buttons. It is the start of Flow F
 (section 8); each case says only what applies:
 
-| Case | Heading | Body and actions |
-| --- | --- | --- |
-| A disk **Failed**, **Failing** or **Removed**, still listed with its path | "Replace the failed disk" | "The disk {{device}} ({{model}}, serial number {{serial}}) has failed. Replace it with a disk at least {{size}} large." Then two numbered ways (section 8): with a free place for a disk: "Connect the new disk, then press Replace the disk." Without: "Turn off the NAS, swap the failed disk for the new one, turn it on, then come back here and press Replace the disk." Button **"Replace the disk…"** (filled; router link to the replace flow with this disk chosen in memory, section 7) |
-| A disk **Missing** | "Replace the missing disk" | "A disk of this pool cannot be found any more. It was last seen as {{path}}. These disks are still in the pool: {{list}} (each with its serial number). The disk that is not in this list is the one to replace." Then "Connect a disk at least {{size}} large, then press Replace the disk." and "Look for new disks" (`DiskMgmt.rescan`, then the reads). Button **"Replace the disk…"** |
-| A disk **Offline** | "A disk is offline" | "{{device}} was taken offline, so the pool is not fully protected. If you are replacing it, swap it now and press Replace the disk. If not, bring it back." Buttons "Replace the disk…" and "Bring it back…" (7.7) |
-| **Rebuilding** | "Rebuilding" | "ZFS is copying everything onto {{disk}}. This takes hours on a large disk. Its files can be used meanwhile. You can leave this page or sign out; rebuilding goes on on the NAS." No button |
-| **Unusable** (`FAULTED`, `UNAVAIL`, `SUSPENDED`) | "This pool cannot be used" | "Too many of its disks are missing or have failed. If a disk was unplugged, connect it again and restart the NAS. This page cannot repair a pool in this state; the technical details show what ZFS reports." **[verify]** that reconnecting and restarting brings a pool back on the VM |
-| **Damaged files** (`errors:` above zero) | "Some files are damaged" | "ZFS found files it could not repair, because no good copy was left. The technical details list them. Copy them back from a backup or a snapshot, then check the pool again." Button "Show technical details" |
-| A disk **Working, with errors**, the pool otherwise OK | "A disk has reported errors" | "ZFS found errors on {{device}} ({{model}}, serial number {{serial}}) and repaired them from a copy. A loose cable can cause this as well as a failing disk. Check the pool. If the errors come back, replace the disk." Buttons "Check now…" (section 6) and "Clear the error counts…" (7.8), with under it: "Clear them only after you have fixed the cause, such as a cable." |
-| A Working disk's **health check** is Warning or Critical | "A disk in this pool may fail soon" | "The disk health check found a problem on {{device}} ({{model}}, serial number {{serial}}): {{reason}}. Replace it before it fails. ZFS keeps using it while it copies everything onto the new disk, so the pool stays protected." Buttons "Replace the disk…" and a router link "Open disk {{device}}" for its health details |
+| Case                                                                      | Heading                             | Body and actions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A disk **Failed**, **Failing** or **Removed**, still listed with its path | "Replace the failed disk"           | "The disk {{device}} ({{model}}, serial number {{serial}}) has failed. Replace it with a disk at least {{size}} large." Then two numbered ways (section 8): with a free place for a disk: "Connect the new disk, then press Replace the disk." Without: "Turn off the NAS, swap the failed disk for the new one, turn it on, then come back here and press Replace the disk." Button **"Replace the disk…"** (filled; router link to the replace flow with this disk chosen in memory, section 7) |
+| A disk **Missing**                                                        | "Replace the missing disk"          | "A disk of this pool cannot be found any more. It was last seen as {{path}}. These disks are still in the pool: {{list}} (each with its serial number). The disk that is not in this list is the one to replace." Then "Connect a disk at least {{size}} large, then press Replace the disk." and "Look for new disks" (`DiskMgmt.rescan`, then the reads). Button **"Replace the disk…"**                                                                                                        |
+| A disk **Offline**                                                        | "A disk is offline"                 | "{{device}} was taken offline, so the pool is not fully protected. If you are replacing it, swap it now and press Replace the disk. If not, bring it back." Buttons "Replace the disk…" and "Bring it back…" (7.7)                                                                                                                                                                                                                                                                                |
+| **Rebuilding**                                                            | "Rebuilding"                        | "ZFS is copying everything onto {{disk}}. This takes hours on a large disk. Its files can be used meanwhile. You can leave this page or sign out; rebuilding goes on on the NAS." No button                                                                                                                                                                                                                                                                                                       |
+| **Unusable** (`FAULTED`, `UNAVAIL`, `SUSPENDED`)                          | "This pool cannot be used"          | "Too many of its disks are missing or have failed. If a disk was unplugged, connect it again and restart the NAS. This page cannot repair a pool in this state; the technical details show what ZFS reports." **[verify]** that reconnecting and restarting brings a pool back on the VM                                                                                                                                                                                                          |
+| **Damaged files** (`errors:` above zero)                                  | "Some files are damaged"            | "ZFS found files it could not repair, because no good copy was left. The technical details list them. Copy them back from a backup or a snapshot, then check the pool again." Button "Show technical details"                                                                                                                                                                                                                                                                                     |
+| A disk **Working, with errors**, the pool otherwise OK                    | "A disk has reported errors"        | "ZFS found errors on {{device}} ({{model}}, serial number {{serial}}) and repaired them from a copy. A loose cable can cause this as well as a failing disk. Check the pool. If the errors come back, replace the disk." Buttons "Check now…" (section 6) and "Clear the error counts…" (7.8), with under it: "Clear them only after you have fixed the cause, such as a cable."                                                                                                                  |
+| A Working disk's **health check** is Warning or Critical                  | "A disk in this pool may fail soon" | "The disk health check found a problem on {{device}} ({{model}}, serial number {{serial}}): {{reason}}. Replace it before it fails. ZFS keeps using it while it copies everything onto the new disk, so the pool stays protected." Buttons "Replace the disk…" and a router link "Open disk {{device}}" for its health details                                                                                                                                                                    |
 
 The card never claims a disk is failing from anything but 0.4's role or the session's health check;
 "Not checked" disks are never warned about.
@@ -710,14 +715,14 @@ A table, one row per disk in the report's tree, grouped as 0.4 says. With one da
 else, there are no group headings; otherwise each group or class is a heading row (`TableGroupRow`,
 13.1) with its words.
 
-| Order | Header | Display |
-| --- | --- | --- |
-| 1 | Disk | The device as a router link to its disk page (the disks slice's rule), in `Identifier`; a missing disk: "Missing" in `muted-foreground`, and the path it was last seen at under it |
-| 2 | Model | The model, and under it the serial number in `Identifier` (from `DiskMgmt.getList`) |
-| 3 | Size | From `DiskMgmt.getList`, right-aligned, tabular |
-| 4 | Role | 0.4's word; Failed, Failing, Missing and Removed with the Critical pill; Working with errors with the Warning pill and the counts; Rebuilding with its progress |
-| 5 | Health | From the session's check: the pill and reason; "Not checked" in `muted-foreground` with, once under the table, a router link "Check disk health on the Disks page" |
-| 6 | (actions) | A visible "Replace…" button (neutral) on each row where section 7 allows it, accessible name "Replace {{device}} in pool {{pool}}"; "Take offline…" or "Bring back…" (7.7) where allowed. Where an action is not allowed, nothing in the row and the reason in the section's place |
+| Order | Header    | Display                                                                                                                                                                                                                                                                            |
+| ----- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Disk      | The device as a router link to its disk page (the disks slice's rule), in `Identifier`; a missing disk: "Missing" in `muted-foreground`, and the path it was last seen at under it                                                                                                 |
+| 2     | Model     | The model, and under it the serial number in `Identifier` (from `DiskMgmt.getList`)                                                                                                                                                                                                |
+| 3     | Size      | From `DiskMgmt.getList`, right-aligned, tabular                                                                                                                                                                                                                                    |
+| 4     | Role      | 0.4's word; Failed, Failing, Missing and Removed with the Critical pill; Working with errors with the Warning pill and the counts; Rebuilding with its progress                                                                                                                    |
+| 5     | Health    | From the session's check: the pill and reason; "Not checked" in `muted-foreground` with, once under the table, a router link "Check disk health on the Disks page"                                                                                                                 |
+| 6     | (actions) | A visible "Replace…" button (neutral) on each row where section 7 allows it, accessible name "Replace {{device}} in pool {{pool}}"; "Take offline…" or "Bring back…" (7.7) where allowed. Where an action is not allowed, nothing in the row and the reason in the section's place |
 
 Under the table, `text-sm muted-foreground`, only when the pool has any: "Spares, read caches, write
 logs and metadata disks are added and removed in the classic interface."
@@ -727,13 +732,13 @@ logs and metadata disks are added and removed in the classic interface."
 A table of the pool's file systems and volumes (`listPools` rows of this pool), the pool's own folder
 first:
 
-| Order | Header | Display |
-| --- | --- | --- |
-| 1 | File system | The name as a router link to its page (0.7), in `Identifier`; the pool's own folder as "{{pool}} (the pool's own folder)"; a volume as text with "Volume" |
-| 2 | State | A file system: **OK** when mounted; **Critical** "Locked. Its files cannot be reached until it is unlocked in the classic interface." when encrypted and its key not loaded; **Critical** "Not mounted. Its files cannot be reached." otherwise (the file-systems slice's 0.2 words); no pill and "Has no folder" when its `mountpoint` is empty or `none` (made so in the classic interface) **[verify]** the value. A volume: no pill, "Managed in the classic interface" |
-| 3 | Used | `used`, and "of {{limit}}" when it has a size limit |
-| 4 | Snapshots | the count from `getAllSnapshots` once it has been read on a file system's page this session; otherwise nothing (the list is not read here, 0.6) |
-| 5 | Shared | "{{count}} shared folders" from 0.12, or "Not shared" |
+| Order | Header      | Display                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | File system | The name as a router link to its page (0.7), in `Identifier`; the pool's own folder as "{{pool}} (the pool's own folder)"; a volume as text with "Volume"                                                                                                                                                                                                                                                                                                                   |
+| 2     | State       | A file system: **OK** when mounted; **Critical** "Locked. Its files cannot be reached until it is unlocked in the classic interface." when encrypted and its key not loaded; **Critical** "Not mounted. Its files cannot be reached." otherwise (the file-systems slice's 0.2 words); no pill and "Has no folder" when its `mountpoint` is empty or `none` (made so in the classic interface) **[verify]** the value. A volume: no pill, "Managed in the classic interface" |
+| 3     | Used        | `used`, and "of {{limit}}" when it has a size limit                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 4     | Snapshots   | the count from `getAllSnapshots` once it has been read on a file system's page this session; otherwise nothing (the list is not read here, 0.6)                                                                                                                                                                                                                                                                                                                             |
+| 5     | Shared      | "{{count}} shared folders" from 0.12, or "Not shared"                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 Above the table: the term sentences of 0.1 for a file system and the pool's own folder, in a
 `Disclosure` "What is a file system?" (once per page). Under it: **"Add a file system"** (neutral, router
@@ -761,110 +766,110 @@ disappears in a poll moves focus to its table's heading only if focus was in tha
 
 ### 2.9 States of the page
 
-| State | Look |
-| --- | --- |
-| Plugin not installed | 0.11 |
-| Loading | Title skeleton; the summary as `FactListSkeleton`; the sections' headings with skeletons |
-| `listPools` failed | `EmptyState variant="error"`: "Could not read this pool." + server message + "Try again" |
-| No such pool (pattern fails, or no row) | `EmptyState variant="empty"`: "There is no pool with this name on this NAS. It may have been deleted, or exported in the classic interface." and router link "Show all pools" → `/storage/zfs` |
-| Gone after a re-read (deleted in another tab) | The same empty state |
+| State                                                                                                              | Look                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Plugin not installed                                                                                               | 0.11                                                                                                                                                                                                                 |
+| Loading                                                                                                            | Title skeleton; the summary as `FactListSkeleton`; the sections' headings with skeletons                                                                                                                             |
+| `listPools` failed                                                                                                 | `EmptyState variant="error"`: "Could not read this pool." + server message + "Try again"                                                                                                                             |
+| No such pool (pattern fails, or no row)                                                                            | `EmptyState variant="empty"`: "There is no pool with this name on this NAS. It may have been deleted, or exported in the classic interface." and router link "Show all pools" → `/storage/zfs`                       |
+| Gone after a re-read (deleted in another tab)                                                                      | The same empty state                                                                                                                                                                                                 |
 | The disks changed after a re-read (another pool now has this name: none of its disks are the ones the page showed) | An `InlineAlert` (Unknown treatment) above the title: "This is a different pool from the one this page showed. Its details have been read again." Every running dialog of this page closes with "This pool changed." |
-| The report or `getPoolDevices` failed | The page, with roles "Not known" and 0.4's blocked actions |
-| Populated | 2.2 |
+| The report or `getPoolDevices` failed                                                                              | The page, with roles "Not known" and 0.4's blocked actions                                                                                                                                                           |
+| Populated                                                                                                          | 2.2                                                                                                                                                                                                                  |
 
 ### 2.10 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsPool.title` | Pool {{pool}} |
-| `zfsPool.documentTitle` | Pool {{pool}} – ZFS |
-| `zfsPool.subtitle` | {{layout}} · {{space}} |
-| `zfsPool.fact.state` | State |
-| `zfsPool.fact.layout` | Layout |
-| `zfsPool.fact.space` | Space for files |
-| `zfsPool.spaceShared` | Shared by every file system on this pool. |
-| `zfsPool.spaceValue` | {{used}} of about {{total}} used ({{capacity}} full) |
-| `zfsPool.fact.lastCheck` | Last check |
-| `zfsPool.fact.compression` | Compression |
-| `zfsPool.compressionInherit` | File systems on the pool use it unless they say otherwise. |
-| `zfsPool.fact.encryption` | Encryption |
-| `zfsPool.encrypted` | Encrypted |
-| `zfsPool.locked` | Locked |
-| `zfsPool.unlocked` | Unlocked |
-| `zfsPool.encryptionClassic` | Locking and unlocking are in the classic interface. |
-| `zfsPool.fact.folder` | Folder on the NAS |
-| `zfsPool.todo.failedTitle` | Replace the failed disk |
-| `zfsPool.todo.failedBody` | The disk <device></device> ({{model}}, serial number <serial></serial>) has failed. Replace it with a disk at least {{size}} large. |
-| `zfsPool.todo.wayFree` | Connect the new disk, then press Replace the disk. |
-| `zfsPool.todo.waySwap` | Turn off the NAS, swap the failed disk for the new one, turn it on, then come back here and press Replace the disk. |
-| `zfsPool.todo.replace` | Replace the disk… |
-| `zfsPool.todo.missingTitle` | Replace the missing disk |
-| `zfsPool.todo.missingBody` | A disk of this pool cannot be found any more. It was last seen as <path></path>. These disks are still in the pool: {{list}}. The disk that is not in this list is the one to replace. |
-| `zfsPool.todo.missingConnect` | Connect a disk at least {{size}} large, then press Replace the disk. |
-| `zfsPool.todo.rescan` | Look for new disks |
-| `zfsPool.todo.offlineTitle` | A disk is offline |
-| `zfsPool.todo.offlineBody` | <device></device> was taken offline, so the pool is not fully protected. If you are replacing it, swap it now and press Replace the disk. If not, bring it back. |
-| `zfsPool.todo.bringBack` | Bring it back… |
-| `zfsPool.todo.rebuildingTitle` | Rebuilding |
-| `zfsPool.todo.rebuildingBody` | ZFS is copying everything onto <disk></disk>. This takes hours on a large disk. Its files can be used meanwhile. You can leave this page or sign out; rebuilding goes on on the NAS. |
-| `zfsPool.todo.unusableTitle` | This pool cannot be used |
-| `zfsPool.todo.unusableBody` | Too many of its disks are missing or have failed. If a disk was unplugged, connect it again and restart the NAS. This page cannot repair a pool in this state; the technical details show what ZFS reports. |
-| `zfsPool.todo.damagedTitle` | Some files are damaged |
-| `zfsPool.todo.damagedBody` | ZFS found files it could not repair, because no good copy was left. The technical details list them. Copy them back from a backup or a snapshot, then check the pool again. |
-| `zfsPool.todo.errorsTitle` | A disk has reported errors |
-| `zfsPool.todo.errorsBody` | ZFS found errors on <device></device> ({{model}}, serial number <serial></serial>) and repaired them from a copy. A loose cable can cause this as well as a failing disk. Check the pool. If the errors come back, replace the disk. |
-| `zfsPool.todo.clearHint` | Clear them only after you have fixed the cause, such as a cable. |
-| `zfsPool.todo.healthTitle` | A disk in this pool may fail soon |
-| `zfsPool.todo.healthBody` | The disk health check found a problem on <device></device> ({{model}}, serial number <serial></serial>): {{reason}}. Replace it before it fails. ZFS keeps using it while it copies everything onto the new disk, so the pool stays protected. |
-| `zfsPool.disks.title` | Disks |
-| `zfsPool.disks.tableLabel` | Disks in pool {{pool}} |
-| `zfsPool.disks.col.disk` / `.model` / `.size` / `.role` / `.health` | Disk / Model / Size / Role / Health |
-| `zfsPool.disks.missing` | Missing |
-| `zfsPool.disks.lastSeen` | Last seen as <path></path> |
-| `zfsPool.disks.replaceLabel` | Replace {{device}} in pool {{pool}} |
-| `zfsPool.disks.classesClassic` | Spares, read caches, write logs and metadata disks are added and removed in the classic interface. |
-| `zfsPool.disks.checkHealth` | Check disk health on the Disks page |
-| `zfsPool.group.heading` | {{layout}}, {{count}} disks |
-| `zfsPool.group.spares` | Spares |
-| `zfsPool.group.sparesHint` | A spare waits, and takes the place of a failed disk by itself. |
-| `zfsPool.group.log` / `.cache` / `.special` / `.dedup` | Write log / Read cache / Metadata disks / Deduplication table |
-| `zfsPool.group.classic` | Added in the classic interface. |
-| `zfsPool.group.replacing` | <new></new> is taking the place of <old></old> |
-| `zfsRole.working` … `zfsRole.unknown` | Working, Working, with errors, Rebuilding, Failing, Failed, Missing, Removed, Offline, Spare, Spare, standing in, Not known |
-| `zfsRole.errors` | {{read}} read, {{write}} write and {{checksum}} checksum errors since the counts were last cleared |
-| `zfsRole.failing` | ZFS stopped trusting it after too many errors. |
-| `zfsRole.missing` | Missing: not connected, or it cannot be opened |
-| `zfsRole.removed` | Removed: it was unplugged while in use |
-| `zfsRole.offline` | Taken offline. ZFS does not use it until it is brought back. |
-| `zfsRole.spareWaiting` | Waiting |
-| `zfsRole.standingIn` | Standing in for <disk></disk> |
-| `zfsRole.notKnownBlocks` | Could not tell what each disk is doing, so this cannot be done now. |
-| `zfsPool.fs.title` | File systems |
-| `zfsPool.fs.tableLabel` | File systems on pool {{pool}} |
-| `zfsPool.fs.col.name` / `.state` / `.used` / `.snapshots` / `.shared` | File system / State / Used / Snapshots / Shared |
-| `zfsPool.fs.poolFolder` | <pool></pool> (the pool's own folder) |
-| `zfsPool.fs.volume` | Volume |
-| `zfsPool.fs.volumeClassic` | Managed in the classic interface |
-| `zfsPool.fs.locked` | Locked. Its files cannot be reached until it is unlocked in the classic interface. |
-| `zfsPool.fs.notMounted` | Not mounted. Its files cannot be reached. |
-| `zfsPool.fs.noFolder` | Has no folder |
-| `zfsPool.fs.usedOf` | {{used}} of {{limit}} |
-| `zfsPool.fs.shared_one` / `_other` | {{count}} shared folder / {{count}} shared folders |
-| `zfsPool.fs.notShared` | Not shared |
-| `zfsPool.fs.what` | What is a file system? |
-| `zfsPool.fs.add` | Add a file system |
-| `zfsPool.fs.onlyRoot` | Nothing is kept on this pool yet, except in its own folder. Add a file system for your shared folders. |
-| `zfsPool.details.title` | Technical details |
-| `zfsPool.details.show` | Show technical details |
-| `zfsPool.details.hide` | Hide technical details |
-| `zfsPool.details.copy` | Copy report |
-| `zfsPool.details.intro` | ZFS's own report on the pool: how its disks are arranged, their error counts, the last check, and any damaged files. |
-| `zfsPool.details.failed` | Could not read the technical details. |
-| `zfsPool.loadFailed` | Could not read this pool. |
-| `zfsPool.notFound` | There is no pool with this name on this NAS. It may have been deleted, or exported in the classic interface. |
-| `zfsPool.showAll` | Show all pools |
-| `zfsPool.changed` | This is a different pool from the one this page showed. Its details have been read again. |
-| `zfsPool.changedDialog` | This pool changed. |
+| Key                                                                   | English                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zfsPool.title`                                                       | Pool {{pool}}                                                                                                                                                                                                                                  |
+| `zfsPool.documentTitle`                                               | Pool {{pool}} – ZFS                                                                                                                                                                                                                            |
+| `zfsPool.subtitle`                                                    | {{layout}} · {{space}}                                                                                                                                                                                                                         |
+| `zfsPool.fact.state`                                                  | State                                                                                                                                                                                                                                          |
+| `zfsPool.fact.layout`                                                 | Layout                                                                                                                                                                                                                                         |
+| `zfsPool.fact.space`                                                  | Space for files                                                                                                                                                                                                                                |
+| `zfsPool.spaceShared`                                                 | Shared by every file system on this pool.                                                                                                                                                                                                      |
+| `zfsPool.spaceValue`                                                  | {{used}} of about {{total}} used ({{capacity}} full)                                                                                                                                                                                           |
+| `zfsPool.fact.lastCheck`                                              | Last check                                                                                                                                                                                                                                     |
+| `zfsPool.fact.compression`                                            | Compression                                                                                                                                                                                                                                    |
+| `zfsPool.compressionInherit`                                          | File systems on the pool use it unless they say otherwise.                                                                                                                                                                                     |
+| `zfsPool.fact.encryption`                                             | Encryption                                                                                                                                                                                                                                     |
+| `zfsPool.encrypted`                                                   | Encrypted                                                                                                                                                                                                                                      |
+| `zfsPool.locked`                                                      | Locked                                                                                                                                                                                                                                         |
+| `zfsPool.unlocked`                                                    | Unlocked                                                                                                                                                                                                                                       |
+| `zfsPool.encryptionClassic`                                           | Locking and unlocking are in the classic interface.                                                                                                                                                                                            |
+| `zfsPool.fact.folder`                                                 | Folder on the NAS                                                                                                                                                                                                                              |
+| `zfsPool.todo.failedTitle`                                            | Replace the failed disk                                                                                                                                                                                                                        |
+| `zfsPool.todo.failedBody`                                             | The disk <device></device> ({{model}}, serial number <serial></serial>) has failed. Replace it with a disk at least {{size}} large.                                                                                                            |
+| `zfsPool.todo.wayFree`                                                | Connect the new disk, then press Replace the disk.                                                                                                                                                                                             |
+| `zfsPool.todo.waySwap`                                                | Turn off the NAS, swap the failed disk for the new one, turn it on, then come back here and press Replace the disk.                                                                                                                            |
+| `zfsPool.todo.replace`                                                | Replace the disk…                                                                                                                                                                                                                              |
+| `zfsPool.todo.missingTitle`                                           | Replace the missing disk                                                                                                                                                                                                                       |
+| `zfsPool.todo.missingBody`                                            | A disk of this pool cannot be found any more. It was last seen as <path></path>. These disks are still in the pool: {{list}}. The disk that is not in this list is the one to replace.                                                         |
+| `zfsPool.todo.missingConnect`                                         | Connect a disk at least {{size}} large, then press Replace the disk.                                                                                                                                                                           |
+| `zfsPool.todo.rescan`                                                 | Look for new disks                                                                                                                                                                                                                             |
+| `zfsPool.todo.offlineTitle`                                           | A disk is offline                                                                                                                                                                                                                              |
+| `zfsPool.todo.offlineBody`                                            | <device></device> was taken offline, so the pool is not fully protected. If you are replacing it, swap it now and press Replace the disk. If not, bring it back.                                                                               |
+| `zfsPool.todo.bringBack`                                              | Bring it back…                                                                                                                                                                                                                                 |
+| `zfsPool.todo.rebuildingTitle`                                        | Rebuilding                                                                                                                                                                                                                                     |
+| `zfsPool.todo.rebuildingBody`                                         | ZFS is copying everything onto <disk></disk>. This takes hours on a large disk. Its files can be used meanwhile. You can leave this page or sign out; rebuilding goes on on the NAS.                                                           |
+| `zfsPool.todo.unusableTitle`                                          | This pool cannot be used                                                                                                                                                                                                                       |
+| `zfsPool.todo.unusableBody`                                           | Too many of its disks are missing or have failed. If a disk was unplugged, connect it again and restart the NAS. This page cannot repair a pool in this state; the technical details show what ZFS reports.                                    |
+| `zfsPool.todo.damagedTitle`                                           | Some files are damaged                                                                                                                                                                                                                         |
+| `zfsPool.todo.damagedBody`                                            | ZFS found files it could not repair, because no good copy was left. The technical details list them. Copy them back from a backup or a snapshot, then check the pool again.                                                                    |
+| `zfsPool.todo.errorsTitle`                                            | A disk has reported errors                                                                                                                                                                                                                     |
+| `zfsPool.todo.errorsBody`                                             | ZFS found errors on <device></device> ({{model}}, serial number <serial></serial>) and repaired them from a copy. A loose cable can cause this as well as a failing disk. Check the pool. If the errors come back, replace the disk.           |
+| `zfsPool.todo.clearHint`                                              | Clear them only after you have fixed the cause, such as a cable.                                                                                                                                                                               |
+| `zfsPool.todo.healthTitle`                                            | A disk in this pool may fail soon                                                                                                                                                                                                              |
+| `zfsPool.todo.healthBody`                                             | The disk health check found a problem on <device></device> ({{model}}, serial number <serial></serial>): {{reason}}. Replace it before it fails. ZFS keeps using it while it copies everything onto the new disk, so the pool stays protected. |
+| `zfsPool.disks.title`                                                 | Disks                                                                                                                                                                                                                                          |
+| `zfsPool.disks.tableLabel`                                            | Disks in pool {{pool}}                                                                                                                                                                                                                         |
+| `zfsPool.disks.col.disk` / `.model` / `.size` / `.role` / `.health`   | Disk / Model / Size / Role / Health                                                                                                                                                                                                            |
+| `zfsPool.disks.missing`                                               | Missing                                                                                                                                                                                                                                        |
+| `zfsPool.disks.lastSeen`                                              | Last seen as <path></path>                                                                                                                                                                                                                     |
+| `zfsPool.disks.replaceLabel`                                          | Replace {{device}} in pool {{pool}}                                                                                                                                                                                                            |
+| `zfsPool.disks.classesClassic`                                        | Spares, read caches, write logs and metadata disks are added and removed in the classic interface.                                                                                                                                             |
+| `zfsPool.disks.checkHealth`                                           | Check disk health on the Disks page                                                                                                                                                                                                            |
+| `zfsPool.group.heading`                                               | {{layout}}, {{count}} disks                                                                                                                                                                                                                    |
+| `zfsPool.group.spares`                                                | Spares                                                                                                                                                                                                                                         |
+| `zfsPool.group.sparesHint`                                            | A spare waits, and takes the place of a failed disk by itself.                                                                                                                                                                                 |
+| `zfsPool.group.log` / `.cache` / `.special` / `.dedup`                | Write log / Read cache / Metadata disks / Deduplication table                                                                                                                                                                                  |
+| `zfsPool.group.classic`                                               | Added in the classic interface.                                                                                                                                                                                                                |
+| `zfsPool.group.replacing`                                             | <new></new> is taking the place of <old></old>                                                                                                                                                                                                 |
+| `zfsRole.working` … `zfsRole.unknown`                                 | Working, Working, with errors, Rebuilding, Failing, Failed, Missing, Removed, Offline, Spare, Spare, standing in, Not known                                                                                                                    |
+| `zfsRole.errors`                                                      | {{read}} read, {{write}} write and {{checksum}} checksum errors since the counts were last cleared                                                                                                                                             |
+| `zfsRole.failing`                                                     | ZFS stopped trusting it after too many errors.                                                                                                                                                                                                 |
+| `zfsRole.missing`                                                     | Missing: not connected, or it cannot be opened                                                                                                                                                                                                 |
+| `zfsRole.removed`                                                     | Removed: it was unplugged while in use                                                                                                                                                                                                         |
+| `zfsRole.offline`                                                     | Taken offline. ZFS does not use it until it is brought back.                                                                                                                                                                                   |
+| `zfsRole.spareWaiting`                                                | Waiting                                                                                                                                                                                                                                        |
+| `zfsRole.standingIn`                                                  | Standing in for <disk></disk>                                                                                                                                                                                                                  |
+| `zfsRole.notKnownBlocks`                                              | Could not tell what each disk is doing, so this cannot be done now.                                                                                                                                                                            |
+| `zfsPool.fs.title`                                                    | File systems                                                                                                                                                                                                                                   |
+| `zfsPool.fs.tableLabel`                                               | File systems on pool {{pool}}                                                                                                                                                                                                                  |
+| `zfsPool.fs.col.name` / `.state` / `.used` / `.snapshots` / `.shared` | File system / State / Used / Snapshots / Shared                                                                                                                                                                                                |
+| `zfsPool.fs.poolFolder`                                               | <pool></pool> (the pool's own folder)                                                                                                                                                                                                          |
+| `zfsPool.fs.volume`                                                   | Volume                                                                                                                                                                                                                                         |
+| `zfsPool.fs.volumeClassic`                                            | Managed in the classic interface                                                                                                                                                                                                               |
+| `zfsPool.fs.locked`                                                   | Locked. Its files cannot be reached until it is unlocked in the classic interface.                                                                                                                                                             |
+| `zfsPool.fs.notMounted`                                               | Not mounted. Its files cannot be reached.                                                                                                                                                                                                      |
+| `zfsPool.fs.noFolder`                                                 | Has no folder                                                                                                                                                                                                                                  |
+| `zfsPool.fs.usedOf`                                                   | {{used}} of {{limit}}                                                                                                                                                                                                                          |
+| `zfsPool.fs.shared_one` / `_other`                                    | {{count}} shared folder / {{count}} shared folders                                                                                                                                                                                             |
+| `zfsPool.fs.notShared`                                                | Not shared                                                                                                                                                                                                                                     |
+| `zfsPool.fs.what`                                                     | What is a file system?                                                                                                                                                                                                                         |
+| `zfsPool.fs.add`                                                      | Add a file system                                                                                                                                                                                                                              |
+| `zfsPool.fs.onlyRoot`                                                 | Nothing is kept on this pool yet, except in its own folder. Add a file system for your shared folders.                                                                                                                                         |
+| `zfsPool.details.title`                                               | Technical details                                                                                                                                                                                                                              |
+| `zfsPool.details.show`                                                | Show technical details                                                                                                                                                                                                                         |
+| `zfsPool.details.hide`                                                | Hide technical details                                                                                                                                                                                                                         |
+| `zfsPool.details.copy`                                                | Copy report                                                                                                                                                                                                                                    |
+| `zfsPool.details.intro`                                               | ZFS's own report on the pool: how its disks are arranged, their error counts, the last check, and any damaged files.                                                                                                                           |
+| `zfsPool.details.failed`                                              | Could not read the technical details.                                                                                                                                                                                                          |
+| `zfsPool.loadFailed`                                                  | Could not read this pool.                                                                                                                                                                                                                      |
+| `zfsPool.notFound`                                                    | There is no pool with this name on this NAS. It may have been deleted, or exported in the classic interface.                                                                                                                                   |
+| `zfsPool.showAll`                                                     | Show all pools                                                                                                                                                                                                                                 |
+| `zfsPool.changed`                                                     | This is a different pool from the one this page showed. Its details have been read again.                                                                                                                                                      |
+| `zfsPool.changedDialog`                                               | This pool changed.                                                                                                                                                                                                                             |
 
 ---
 
@@ -996,15 +1001,15 @@ summary; Enter in the typed field does nothing; focus moves to the summary's hea
 
 `JobStepList`, each step with its state word:
 
-| # | Step label | Calls | Notes |
-| --- | --- | --- | --- |
-| 1 | "Check the disks again" | `getEmptyCandidates`, the disk-use inputs, `getPoolStatus`, each pool's `getPoolDevices`, `listPools` | Every disk must still be offered in the same group, with the same serial number and model; the name must still be free. Otherwise the flow stops before anything is erased (3.7) |
-| 2 … | "Erase {{device}}", one per Erase and reuse disk | `DiskMgmt.wipe {devicefile, secure: false}`, a task, output in a `Disclosure` | Then `getEmptyCandidates` again: the disk must now be a candidate |
-| n | "Create the pool" | `Zfs.addPool {name, pooltype, devices, devalias: "id", force: false, mountpoint: "", ashift: true, ashiftval: 12, casesensitivity: "sensitive", compress: true, compresstype: "lz4"}` | Synchronous **[verify]** how long, and how its reply looks (the source returns nothing) |
-| n+1 | "Find the new pool" | `listPools`, `getPoolDevices`, the report | A Pool row with the name, whose disks are exactly the chosen disks (by any of their names) and whose layout is the chosen one. Exactly one must match |
-| With C4: n+2 | "Make the file system {{fs}}" | `Zfs.addObject {type: "filesystem", path: pool, name: fs, mountpoint: ""}` | Synchronous; it marks the same four modules |
-| last but one | **"Save the pool's settings"** | R10: expected exactly `fstab`, `collectd`, `monit`, `quota` **[verify]**; then `Config.applyChangesBg` | The checkpoint, labelled by what it does, not "Apply" |
-| last | "Check the result" | `listPools` (the pool's own folder, and with C4 the file system, mounted); `FileSystemMgmt.getList` (each has a row, status 1, mounted) | Never claim a mounted file system that is not (UX audit B8) |
+| #            | Step label                                       | Calls                                                                                                                                                                                 | Notes                                                                                                                                                                            |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1            | "Check the disks again"                          | `getEmptyCandidates`, the disk-use inputs, `getPoolStatus`, each pool's `getPoolDevices`, `listPools`                                                                                 | Every disk must still be offered in the same group, with the same serial number and model; the name must still be free. Otherwise the flow stops before anything is erased (3.7) |
+| 2 …          | "Erase {{device}}", one per Erase and reuse disk | `DiskMgmt.wipe {devicefile, secure: false}`, a task, output in a `Disclosure`                                                                                                         | Then `getEmptyCandidates` again: the disk must now be a candidate                                                                                                                |
+| n            | "Create the pool"                                | `Zfs.addPool {name, pooltype, devices, devalias: "id", force: false, mountpoint: "", ashift: true, ashiftval: 12, casesensitivity: "sensitive", compress: true, compresstype: "lz4"}` | Synchronous **[verify]** how long, and how its reply looks (the source returns nothing)                                                                                          |
+| n+1          | "Find the new pool"                              | `listPools`, `getPoolDevices`, the report                                                                                                                                             | A Pool row with the name, whose disks are exactly the chosen disks (by any of their names) and whose layout is the chosen one. Exactly one must match                            |
+| With C4: n+2 | "Make the file system {{fs}}"                    | `Zfs.addObject {type: "filesystem", path: pool, name: fs, mountpoint: ""}`                                                                                                            | Synchronous; it marks the same four modules                                                                                                                                      |
+| last but one | **"Save the pool's settings"**                   | R10: expected exactly `fstab`, `collectd`, `monit`, `quota` **[verify]**; then `Config.applyChangesBg`                                                                                | The checkpoint, labelled by what it does, not "Apply"                                                                                                                            |
+| last         | "Check the result"                               | `listPools` (the pool's own folder, and with C4 the file system, mounted); `FileSystemMgmt.getList` (each has a row, status 1, mounted)                                               | Never claim a mounted file system that is not (UX audit B8)                                                                                                                      |
 
 While a task step runs, it shows "Running for {{duration}}" and its output, following the tail. The
 tasks are in the Tasks menu ("Erase disk {{device}}", "Apply changes"). No step can be cancelled.
@@ -1034,18 +1039,18 @@ a pool with no file system and the pending changes.
 The flow stops at the failed step, never retries by itself (UI-14), says what succeeded, what failed
 (the server's message as text, UI-9) and what did not run; focus moves to the failure's heading.
 
-| Fails at | The system is left | The reader sees | Offered |
-| --- | --- | --- | --- |
-| 1, a blocker or a change | unchanged | "{{device}} cannot be used now." + the blocker; "The disk now called {{device}} is not the one you chose. Nothing was erased. Choose again."; or "There is now a pool called {{pool}}. Nothing was erased. Choose another name." | "Change choices" |
-| 1, a read failed | unchanged | "Could not check the disks again, so nothing was erased." + message | "Try this step again"; "Stop here" |
-| 2, an erase | earlier disks erased; this one unchanged or partly erased | "{{device}} could not be erased." + the output open, and "{{erased}} were erased before this step failed. They stay erased." | "Try this step again"; "Stop here" |
-| 2, still not a candidate | erased | "{{device}} was erased, but the ZFS plugin still does not offer it for a pool." | "Check again"; "Stop here" |
-| n, create | reuse disks erased; perhaps a pool's marks on some | "The pool was not created." + message, and "The disks may now carry parts of an unfinished pool. Creating again overwrites them." | "Try this step again"; "Stop here" (the disks then show under Erase and reuse) |
-| n+1, not found | a pool may exist | "The pool was created but has not appeared yet." | "Look again"; "Stop here", with "It is listed under ZFS when it appears." |
-| n+2, file system | the pool exists, its own folder registered | Flow A's sentence for a failed create, and "The pool stays. You can add a file system on its page." + message | "Try this step again"; "Stop here", which goes on to the checkpoint for the pool alone |
-| Checkpoint, R10 finds more | pending: this flow's and something else | `AlsoPendingPrompt` "Also pending from elsewhere: {{list}}. Saving applies them too." | "Apply them too"; "Stop here" (the changes stay in the band) |
-| Checkpoint, apply | some modules deployed, some not; all still pending (B3) | "Saving the pool's settings failed." + message | **"Try again"** first (R7); then "Stop here", the changes stay in the band. No "Undo": it would not remove the pool, which already exists on the disks (as the RAID slice's D12) |
-| Last, not mounted | applied | "{{name}} was created but is not mounted." + "The pool exists. Its page shows what ZFS reports." | "Check again"; "Open pool {{pool}}" |
+| Fails at                   | The system is left                                        | The reader sees                                                                                                                                                                                                                  | Offered                                                                                                                                                                          |
+| -------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1, a blocker or a change   | unchanged                                                 | "{{device}} cannot be used now." + the blocker; "The disk now called {{device}} is not the one you chose. Nothing was erased. Choose again."; or "There is now a pool called {{pool}}. Nothing was erased. Choose another name." | "Change choices"                                                                                                                                                                 |
+| 1, a read failed           | unchanged                                                 | "Could not check the disks again, so nothing was erased." + message                                                                                                                                                              | "Try this step again"; "Stop here"                                                                                                                                               |
+| 2, an erase                | earlier disks erased; this one unchanged or partly erased | "{{device}} could not be erased." + the output open, and "{{erased}} were erased before this step failed. They stay erased."                                                                                                     | "Try this step again"; "Stop here"                                                                                                                                               |
+| 2, still not a candidate   | erased                                                    | "{{device}} was erased, but the ZFS plugin still does not offer it for a pool."                                                                                                                                                  | "Check again"; "Stop here"                                                                                                                                                       |
+| n, create                  | reuse disks erased; perhaps a pool's marks on some        | "The pool was not created." + message, and "The disks may now carry parts of an unfinished pool. Creating again overwrites them."                                                                                                | "Try this step again"; "Stop here" (the disks then show under Erase and reuse)                                                                                                   |
+| n+1, not found             | a pool may exist                                          | "The pool was created but has not appeared yet."                                                                                                                                                                                 | "Look again"; "Stop here", with "It is listed under ZFS when it appears."                                                                                                        |
+| n+2, file system           | the pool exists, its own folder registered                | Flow A's sentence for a failed create, and "The pool stays. You can add a file system on its page." + message                                                                                                                    | "Try this step again"; "Stop here", which goes on to the checkpoint for the pool alone                                                                                           |
+| Checkpoint, R10 finds more | pending: this flow's and something else                   | `AlsoPendingPrompt` "Also pending from elsewhere: {{list}}. Saving applies them too."                                                                                                                                            | "Apply them too"; "Stop here" (the changes stay in the band)                                                                                                                     |
+| Checkpoint, apply          | some modules deployed, some not; all still pending (B3)   | "Saving the pool's settings failed." + message                                                                                                                                                                                   | **"Try again"** first (R7); then "Stop here", the changes stay in the band. No "Undo": it would not remove the pool, which already exists on the disks (as the RAID slice's D12) |
+| Last, not mounted          | applied                                                   | "{{name}} was created but is not mounted." + "The pool exists. Its page shows what ZFS reports."                                                                                                                                 | "Check again"; "Open pool {{pool}}"                                                                                                                                              |
 
 **Backing out.** The flow offers no automatic undo: the pool exists on the disks from step n on. A
 reader who wants it gone deletes its file system and then the pool on its page (section 9), where the
@@ -1067,98 +1072,98 @@ politely, a failure assertively with focus on its heading, the result politely.
 Flow A's keys (`addStorage.*`) are reused for the erase lines, the handover and the task names; the
 keys below are new.
 
-| Key | English |
-| --- | --- |
-| `zfsCreate.breadcrumb` | Create pool |
-| `zfsCreate.title` | Create a ZFS pool |
-| `zfsCreate.documentTitle` | Create pool – ZFS |
-| `zfsCreate.preflightBody` | Apply or undo them before you create a pool, so that only these changes are applied at the end. |
-| `zfsCreate.looking` | Looking for disks that can go into a pool… This reads the disks, which wakes any that have gone to sleep. |
-| `zfsCreate.checkFailed` | Could not check which disks can be used. |
-| `zfsCreate.disks` | Disks to use |
-| `zfsCreate.minFor` | Choose at least {{count}} disks for {{layout}}. |
-| `zfsCreate.minOne` | Choose at least one disk. |
-| `zfsCreate.mixedSizes` | These disks differ in size. Each counts as the smallest, {{size}}; {{lost}} on the larger ones is not used. |
-| `zfsCreate.notEnough` | A pool needs at least one disk that can be erased. Connect a disk, or free one that is in use. |
-| `zfsCreate.cannot.pool` | It is part of ZFS pool <pool></pool>. |
-| `zfsCreate.cannot.usb` | It is connected by USB. The ZFS plugin does not use USB disks, because a USB connection can drop and damage the pool. |
-| `zfsCreate.cannot.small` | It is smaller than the disk it would replace ({{size}}). A replacement must be at least as large. |
-| `zfsCreate.holds.unknown` | No file system was found, but the disk is not empty: it may hold old partitions, or be part of a RAID array or a ZFS pool from another computer. |
-| `zfsCreate.layout` | Layout |
-| `zfsCreate.group.protected` | Protected |
-| `zfsCreate.group.unprotected` | Not protected |
-| `zfsCreate.mirror` | Mirror, recommended |
-| `zfsCreate.mirrorHint` | Every file is kept on every disk. It can lose all but one disk. You can use the space of one disk: about {{usable}}. |
-| `zfsCreate.raidz1Hint` | It can lose 1 disk. You can use all but one disk's space: about {{usable}}. If a second disk fails while it rebuilds, everything is lost. |
-| `zfsCreate.raidz2Hint` | It can lose 2 disks. You can use all but two disks' space: about {{usable}}. |
-| `zfsCreate.raidz3Hint` | It can lose 3 disks. You can use all but three disks' space: about {{usable}}. For many large disks. |
-| `zfsCreate.needs` | Needs at least {{count}} disks. |
-| `zfsCreate.stripe` | No protection (stripe) |
-| `zfsCreate.stripeHintOne` | One disk, no protection. If it fails, everything on the pool is lost. ZFS still finds damaged files, but cannot repair them. About {{usable}}. Protection cannot be added to it here later. |
-| `zfsCreate.stripeHintMany` | No protection. If one disk fails, everything on all of them is lost. It uses all the space: about {{usable}}. Protection cannot be added to it here later. |
-| `zfsCreate.stripeHintNoSize` | No protection. If a disk fails, everything on the pool is lost. Protection cannot be added to it here later. |
-| `zfsCreate.oneDiskAlt` | For one disk, Add storage under File systems makes a simpler file system that needs no plugin. |
-| `zfsCreate.oneDiskAltLink` | Add storage |
-| `zfsCreate.checksums` | ZFS checks every file it reads. With a protected layout it also repairs a damaged file from a good copy. |
-| `zfsCreate.chooseLayout` | Choose how to protect your files. |
-| `zfsCreate.name` | Pool name |
-| `zfsCreate.nameHint` | Letters, digits, hyphens and underscores, starting with a letter. The pool's folder on the NAS is /{{name}}. |
-| `zfsName.pool.pattern` | Use 1 to 32 letters, digits, hyphens or underscores, starting with a letter. |
-| `zfsName.pool.reserved` | {{name}} is a word ZFS keeps for itself. Choose another name. |
-| `zfsName.pool.systemFolder` | {{name}} is a folder the system uses. The pool's folder would be /{{name}}, so choose another name. |
-| `zfsName.pool.taken` | There is already a pool called {{name}}. |
-| `zfsName.fs.pattern` | Use 1 to 64 letters, digits, hyphens, underscores or full stops, starting with a letter or digit. |
-| `zfsName.fs.taken` | There is already a file system or volume called {{name}} on {{pool}}. |
-| `zfsCreate.firstFs` | Make a first file system on it, for your shared folders. |
-| `zfsCreate.firstFsHint` | Keeping files in a file system rather than in the pool's own folder lets you give each its own size limit and snapshots. |
-| `zfsCreate.firstFsName` | File system name |
-| `zfsCreate.chosen` | Settings this page chooses for you |
-| `zfsCreate.chosen.compression` | Compression is on (LZ4). It saves space and is usually faster. |
-| `zfsCreate.chosen.ids` | Disks are named by their stable ID, so the pool finds them after a restart even if their names change. |
-| `zfsCreate.chosen.blocks` | ZFS writes in 4 KiB blocks, which suits current disks. |
-| `zfsCreate.chosen.case` | File names are case-sensitive, as everywhere else on the NAS. |
-| `zfsCreate.chosen.later` | These cannot be changed here later. The classic interface offers the other choices. |
-| `zfsCreate.sharingNext` | Sharing a folder on it with your computers is the next step. This page shows you how when the pool is ready. |
-| `zfsCreate.continue` | Continue |
-| `zfsCreate.summaryTitle` | Ready to create the pool |
-| `zfsCreate.sum.erase_one` / `_other` | Erase {{count}} disk. Everything on it is lost: / Erase {{count}} disks. Everything on them is lost: |
-| `zfsCreate.sum.create` | Create the pool <pool></pool>: {{layout}}. About {{usable}} for files. {{protection}} |
-| `zfsCreate.sum.folder` | Its folder on the NAS is /{{pool}}. |
-| `zfsCreate.sum.fs` | Make the file system <fs></fs> on it, in the folder /{{pool}}/{{name}}. |
-| `zfsCreate.sum.save` | Then save the pool's settings, which applies the changes for it. Nothing else is pending. |
-| `zfsCreate.sum.sharing` | Sharing a folder on it comes next, in the classic interface for now. |
-| `zfsCreate.sum.noProtectTitle` | This pool has no protection |
-| `zfsCreate.sum.noProtectMany` | If one disk fails, everything on all {{count}} disks is lost: every file on the pool, not only the files on that disk. Keep a backup of anything you store on it. |
-| `zfsCreate.sum.noProtectOne` | If the disk fails, everything on the pool is lost. Keep a backup of anything you store on it. |
-| `zfsCreate.typePrompt` | Type {{devices}} to confirm. |
-| `zfsCreate.typeHint` | The button is available once the names match. |
-| `zfsCreate.confirm_one` / `_other` | Erase {{count}} disk and create pool / Erase {{count}} disks and create pool |
-| `zfsCreate.changeChoices` | Change choices |
-| `zfsCreate.step.check` | Check the disks again |
-| `zfsCreate.step.create` | Create the pool |
-| `zfsCreate.step.find` | Find the new pool |
-| `zfsCreate.step.fs` | Make the file system {{name}} |
-| `zfsCreate.step.save` | Save the pool's settings |
-| `zfsCreate.step.verify` | Check the result |
-| `zfsCreate.fail.checkRead` | Could not check the disks again, so nothing was erased. |
-| `zfsCreate.fail.nameTaken` | There is now a pool called {{pool}}. Nothing was erased. Choose another name. |
-| `zfsCreate.fail.notCandidate` | {{device}} was erased, but the ZFS plugin still does not offer it for a pool. |
-| `zfsCreate.fail.create` | The pool was not created. |
-| `zfsCreate.fail.createParts` | The disks may now carry parts of an unfinished pool. Creating again overwrites them. |
-| `zfsCreate.fail.notFound` | The pool was created but has not appeared yet. |
-| `zfsCreate.fail.listedLater` | It is listed under ZFS when it appears. |
-| `zfsCreate.fail.poolStays` | The pool stays. You can add a file system on its page. |
-| `zfsCreate.fail.save` | Saving the pool's settings failed. |
-| `zfsCreate.fail.notMounted` | {{name}} was created but is not mounted. |
-| `zfsCreate.fail.notMountedBody` | The pool exists. Its page shows what ZFS reports. |
-| `zfsCreate.alsoBody` | Also pending from elsewhere: {{list}}. Saving applies them too. |
-| `zfsCreate.doneTitle` | The pool is ready. |
-| `zfsCreate.doneBody` | Pool <pool></pool> ({{layout}}, about {{size}} for files) is ready. {{protection}} |
-| `zfsCreate.doneBodyNone` | Pool <pool></pool> ({{layout}}, about {{size}} for files) is ready. It has no protection: if a disk fails, everything on it is lost. |
-| `zfsCreate.doneFs` | <fs></fs> is mounted and ready, with {{size}} free. |
-| `zfsCreate.openPool` | Open pool {{pool}} |
-| `zfsCreate.openFs` | Open the file system |
-| `zfsCreate.addFs` | Add a file system |
+| Key                                  | English                                                                                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zfsCreate.breadcrumb`               | Create pool                                                                                                                                                                                 |
+| `zfsCreate.title`                    | Create a ZFS pool                                                                                                                                                                           |
+| `zfsCreate.documentTitle`            | Create pool – ZFS                                                                                                                                                                           |
+| `zfsCreate.preflightBody`            | Apply or undo them before you create a pool, so that only these changes are applied at the end.                                                                                             |
+| `zfsCreate.looking`                  | Looking for disks that can go into a pool… This reads the disks, which wakes any that have gone to sleep.                                                                                   |
+| `zfsCreate.checkFailed`              | Could not check which disks can be used.                                                                                                                                                    |
+| `zfsCreate.disks`                    | Disks to use                                                                                                                                                                                |
+| `zfsCreate.minFor`                   | Choose at least {{count}} disks for {{layout}}.                                                                                                                                             |
+| `zfsCreate.minOne`                   | Choose at least one disk.                                                                                                                                                                   |
+| `zfsCreate.mixedSizes`               | These disks differ in size. Each counts as the smallest, {{size}}; {{lost}} on the larger ones is not used.                                                                                 |
+| `zfsCreate.notEnough`                | A pool needs at least one disk that can be erased. Connect a disk, or free one that is in use.                                                                                              |
+| `zfsCreate.cannot.pool`              | It is part of ZFS pool <pool></pool>.                                                                                                                                                       |
+| `zfsCreate.cannot.usb`               | It is connected by USB. The ZFS plugin does not use USB disks, because a USB connection can drop and damage the pool.                                                                       |
+| `zfsCreate.cannot.small`             | It is smaller than the disk it would replace ({{size}}). A replacement must be at least as large.                                                                                           |
+| `zfsCreate.holds.unknown`            | No file system was found, but the disk is not empty: it may hold old partitions, or be part of a RAID array or a ZFS pool from another computer.                                            |
+| `zfsCreate.layout`                   | Layout                                                                                                                                                                                      |
+| `zfsCreate.group.protected`          | Protected                                                                                                                                                                                   |
+| `zfsCreate.group.unprotected`        | Not protected                                                                                                                                                                               |
+| `zfsCreate.mirror`                   | Mirror, recommended                                                                                                                                                                         |
+| `zfsCreate.mirrorHint`               | Every file is kept on every disk. It can lose all but one disk. You can use the space of one disk: about {{usable}}.                                                                        |
+| `zfsCreate.raidz1Hint`               | It can lose 1 disk. You can use all but one disk's space: about {{usable}}. If a second disk fails while it rebuilds, everything is lost.                                                   |
+| `zfsCreate.raidz2Hint`               | It can lose 2 disks. You can use all but two disks' space: about {{usable}}.                                                                                                                |
+| `zfsCreate.raidz3Hint`               | It can lose 3 disks. You can use all but three disks' space: about {{usable}}. For many large disks.                                                                                        |
+| `zfsCreate.needs`                    | Needs at least {{count}} disks.                                                                                                                                                             |
+| `zfsCreate.stripe`                   | No protection (stripe)                                                                                                                                                                      |
+| `zfsCreate.stripeHintOne`            | One disk, no protection. If it fails, everything on the pool is lost. ZFS still finds damaged files, but cannot repair them. About {{usable}}. Protection cannot be added to it here later. |
+| `zfsCreate.stripeHintMany`           | No protection. If one disk fails, everything on all of them is lost. It uses all the space: about {{usable}}. Protection cannot be added to it here later.                                  |
+| `zfsCreate.stripeHintNoSize`         | No protection. If a disk fails, everything on the pool is lost. Protection cannot be added to it here later.                                                                                |
+| `zfsCreate.oneDiskAlt`               | For one disk, Add storage under File systems makes a simpler file system that needs no plugin.                                                                                              |
+| `zfsCreate.oneDiskAltLink`           | Add storage                                                                                                                                                                                 |
+| `zfsCreate.checksums`                | ZFS checks every file it reads. With a protected layout it also repairs a damaged file from a good copy.                                                                                    |
+| `zfsCreate.chooseLayout`             | Choose how to protect your files.                                                                                                                                                           |
+| `zfsCreate.name`                     | Pool name                                                                                                                                                                                   |
+| `zfsCreate.nameHint`                 | Letters, digits, hyphens and underscores, starting with a letter. The pool's folder on the NAS is /{{name}}.                                                                                |
+| `zfsName.pool.pattern`               | Use 1 to 32 letters, digits, hyphens or underscores, starting with a letter.                                                                                                                |
+| `zfsName.pool.reserved`              | {{name}} is a word ZFS keeps for itself. Choose another name.                                                                                                                               |
+| `zfsName.pool.systemFolder`          | {{name}} is a folder the system uses. The pool's folder would be /{{name}}, so choose another name.                                                                                         |
+| `zfsName.pool.taken`                 | There is already a pool called {{name}}.                                                                                                                                                    |
+| `zfsName.fs.pattern`                 | Use 1 to 64 letters, digits, hyphens, underscores or full stops, starting with a letter or digit.                                                                                           |
+| `zfsName.fs.taken`                   | There is already a file system or volume called {{name}} on {{pool}}.                                                                                                                       |
+| `zfsCreate.firstFs`                  | Make a first file system on it, for your shared folders.                                                                                                                                    |
+| `zfsCreate.firstFsHint`              | Keeping files in a file system rather than in the pool's own folder lets you give each its own size limit and snapshots.                                                                    |
+| `zfsCreate.firstFsName`              | File system name                                                                                                                                                                            |
+| `zfsCreate.chosen`                   | Settings this page chooses for you                                                                                                                                                          |
+| `zfsCreate.chosen.compression`       | Compression is on (LZ4). It saves space and is usually faster.                                                                                                                              |
+| `zfsCreate.chosen.ids`               | Disks are named by their stable ID, so the pool finds them after a restart even if their names change.                                                                                      |
+| `zfsCreate.chosen.blocks`            | ZFS writes in 4 KiB blocks, which suits current disks.                                                                                                                                      |
+| `zfsCreate.chosen.case`              | File names are case-sensitive, as everywhere else on the NAS.                                                                                                                               |
+| `zfsCreate.chosen.later`             | These cannot be changed here later. The classic interface offers the other choices.                                                                                                         |
+| `zfsCreate.sharingNext`              | Sharing a folder on it with your computers is the next step. This page shows you how when the pool is ready.                                                                                |
+| `zfsCreate.continue`                 | Continue                                                                                                                                                                                    |
+| `zfsCreate.summaryTitle`             | Ready to create the pool                                                                                                                                                                    |
+| `zfsCreate.sum.erase_one` / `_other` | Erase {{count}} disk. Everything on it is lost: / Erase {{count}} disks. Everything on them is lost:                                                                                        |
+| `zfsCreate.sum.create`               | Create the pool <pool></pool>: {{layout}}. About {{usable}} for files. {{protection}}                                                                                                       |
+| `zfsCreate.sum.folder`               | Its folder on the NAS is /{{pool}}.                                                                                                                                                         |
+| `zfsCreate.sum.fs`                   | Make the file system <fs></fs> on it, in the folder /{{pool}}/{{name}}.                                                                                                                     |
+| `zfsCreate.sum.save`                 | Then save the pool's settings, which applies the changes for it. Nothing else is pending.                                                                                                   |
+| `zfsCreate.sum.sharing`              | Sharing a folder on it comes next, in the classic interface for now.                                                                                                                        |
+| `zfsCreate.sum.noProtectTitle`       | This pool has no protection                                                                                                                                                                 |
+| `zfsCreate.sum.noProtectMany`        | If one disk fails, everything on all {{count}} disks is lost: every file on the pool, not only the files on that disk. Keep a backup of anything you store on it.                           |
+| `zfsCreate.sum.noProtectOne`         | If the disk fails, everything on the pool is lost. Keep a backup of anything you store on it.                                                                                               |
+| `zfsCreate.typePrompt`               | Type {{devices}} to confirm.                                                                                                                                                                |
+| `zfsCreate.typeHint`                 | The button is available once the names match.                                                                                                                                               |
+| `zfsCreate.confirm_one` / `_other`   | Erase {{count}} disk and create pool / Erase {{count}} disks and create pool                                                                                                                |
+| `zfsCreate.changeChoices`            | Change choices                                                                                                                                                                              |
+| `zfsCreate.step.check`               | Check the disks again                                                                                                                                                                       |
+| `zfsCreate.step.create`              | Create the pool                                                                                                                                                                             |
+| `zfsCreate.step.find`                | Find the new pool                                                                                                                                                                           |
+| `zfsCreate.step.fs`                  | Make the file system {{name}}                                                                                                                                                               |
+| `zfsCreate.step.save`                | Save the pool's settings                                                                                                                                                                    |
+| `zfsCreate.step.verify`              | Check the result                                                                                                                                                                            |
+| `zfsCreate.fail.checkRead`           | Could not check the disks again, so nothing was erased.                                                                                                                                     |
+| `zfsCreate.fail.nameTaken`           | There is now a pool called {{pool}}. Nothing was erased. Choose another name.                                                                                                               |
+| `zfsCreate.fail.notCandidate`        | {{device}} was erased, but the ZFS plugin still does not offer it for a pool.                                                                                                               |
+| `zfsCreate.fail.create`              | The pool was not created.                                                                                                                                                                   |
+| `zfsCreate.fail.createParts`         | The disks may now carry parts of an unfinished pool. Creating again overwrites them.                                                                                                        |
+| `zfsCreate.fail.notFound`            | The pool was created but has not appeared yet.                                                                                                                                              |
+| `zfsCreate.fail.listedLater`         | It is listed under ZFS when it appears.                                                                                                                                                     |
+| `zfsCreate.fail.poolStays`           | The pool stays. You can add a file system on its page.                                                                                                                                      |
+| `zfsCreate.fail.save`                | Saving the pool's settings failed.                                                                                                                                                          |
+| `zfsCreate.fail.notMounted`          | {{name}} was created but is not mounted.                                                                                                                                                    |
+| `zfsCreate.fail.notMountedBody`      | The pool exists. Its page shows what ZFS reports.                                                                                                                                           |
+| `zfsCreate.alsoBody`                 | Also pending from elsewhere: {{list}}. Saving applies them too.                                                                                                                             |
+| `zfsCreate.doneTitle`                | The pool is ready.                                                                                                                                                                          |
+| `zfsCreate.doneBody`                 | Pool <pool></pool> ({{layout}}, about {{size}} for files) is ready. {{protection}}                                                                                                          |
+| `zfsCreate.doneBodyNone`             | Pool <pool></pool> ({{layout}}, about {{size}} for files) is ready. It has no protection: if a disk fails, everything on it is lost.                                                        |
+| `zfsCreate.doneFs`                   | <fs></fs> is mounted and ready, with {{size}} free.                                                                                                                                         |
+| `zfsCreate.openPool`                 | Open pool {{pool}}                                                                                                                                                                          |
+| `zfsCreate.openFs`                   | Open the file system                                                                                                                                                                        |
+| `zfsCreate.addFs`                    | Add a file system                                                                                                                                                                           |
 
 ---
 
@@ -1202,13 +1207,13 @@ is erased, so there is a summary but no typed confirmation.
   **"Add file system"** (filled primary, not destructive); "Change choices".
 - **Steps**:
 
-| # | Step label | Calls | Notes |
-| --- | --- | --- | --- |
-| 1 | "Check the pool again" | `listPools`, the report | The pool is still usable; the name is still free |
-| 2 | "Make the file system" | `Zfs.addObject {type: "filesystem", path: pool, name, mountpoint: ""}` | Synchronous |
-| 3 (with a limit) | "Set its size limit" | `Zfs.setProperties {type: "Filesystem", name: pool/name, properties: [{property: "quota", value, modified: true}]}` | Synchronous; marks `collectd`, `monit`, `quota` |
-| 4 | **"Save the file system's settings"** | R10: expected `fstab`, `collectd`, `monit`, `quota` **[verify]**; `Config.applyChangesBg` | The checkpoint |
-| 5 | "Check the result" | `listPools` (mounted), `FileSystemMgmt.getList` (a row, status 1, mounted) | |
+| #                | Step label                            | Calls                                                                                                               | Notes                                            |
+| ---------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1                | "Check the pool again"                | `listPools`, the report                                                                                             | The pool is still usable; the name is still free |
+| 2                | "Make the file system"                | `Zfs.addObject {type: "filesystem", path: pool, name, mountpoint: ""}`                                              | Synchronous                                      |
+| 3 (with a limit) | "Set its size limit"                  | `Zfs.setProperties {type: "Filesystem", name: pool/name, properties: [{property: "quota", value, modified: true}]}` | Synchronous; marks `collectd`, `monit`, `quota`  |
+| 4                | **"Save the file system's settings"** | R10: expected `fstab`, `collectd`, `monit`, `quota` **[verify]**; `Config.applyChangesBg`                           | The checkpoint                                   |
+| 5                | "Check the result"                    | `listPools` (mounted), `FileSystemMgmt.getList` (a row, status 1, mounted)                                          |                                                  |
 
 - **Result**: "{{pool}}/{{name}} is mounted and ready, with {{free}} free." router link "Open the
   file system", and Flow A's handover card (the file-systems slice's 6.8).
@@ -1280,72 +1285,72 @@ file system before writing):
 
 ### 4.5 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsFsAdd.breadcrumb` | Add a file system |
-| `zfsFsAdd.title` | Add a file system to pool {{pool}} |
-| `zfsFsAdd.documentTitle` | Add a file system – Pool {{pool}} – ZFS |
-| `zfsFsAdd.preflightBody` | Apply or undo them before you add a file system, so that only these changes are applied at the end. |
-| `zfsFsAdd.refused` | A file system cannot be added to this pool now. |
-| `zfsFsAdd.name` | File system name |
-| `zfsFsAdd.nameHint` | Letters, digits, hyphens, underscores and full stops. Its folder on the NAS is /{{pool}}/{{name}}. |
-| `zfsFsAdd.limit` | How large may it grow? |
-| `zfsFsAdd.limitNone` | No limit: it can use all the free space of the pool |
-| `zfsFsAdd.limitUpTo` | Up to: |
-| `zfsFsAdd.limitHint` | A limit keeps one file system from filling the pool for the others. |
-| `zfsFsAdd.compression` | Compression is {{compression}}, as for the pool. |
-| `zfsFsAdd.summaryTitle` | Ready to add the file system |
-| `zfsFsAdd.sum.make` | Make the file system <fs></fs>, in the folder /{{pool}}/{{name}}. |
-| `zfsFsAdd.sum.limit` | Limit it to {{limit}}. |
-| `zfsFsAdd.sum.save` | Then save its settings, which applies the changes for it. Nothing else is pending. |
-| `zfsFsAdd.confirm` | Add file system |
-| `zfsFsAdd.step.check` | Check the pool again |
-| `zfsFsAdd.step.make` | Make the file system |
-| `zfsFsAdd.step.limit` | Set its size limit |
-| `zfsFsAdd.step.save` | Save the file system's settings |
-| `zfsFsAdd.step.verify` | Check the result |
-| `zfsFsAdd.fail.limit` | The file system was made, but its size limit was not set. |
-| `zfsFsAdd.fail.goOn` | Go on without a limit |
-| `zfsFsAdd.done` | <fs></fs> is mounted and ready, with {{free}} free. |
-| `zfsFs.subtitle` | ZFS file system on pool {{pool}} |
-| `zfsFs.documentTitle` | {{fs}} – ZFS |
-| `zfsFs.poolState` | Pool <pool></pool>: {{status}}. {{reason}} |
-| `zfsFs.fact.space` | Space |
-| `zfsFs.spaceShared` | {{used}} used · {{available}} free, shared with the other file systems on {{pool}} |
-| `zfsFs.fact.limit` | Size limit |
-| `zfsFs.noLimit` | No limit |
-| `zfsFs.fact.compression` | Compression |
-| `zfsFs.compression.off` | Off |
-| `zfsFs.compression.lz4` | On (LZ4) |
-| `zfsFs.compression.on` | On |
-| `zfsFs.compression.other` | On (<value></value>) |
-| `zfsFs.compression.saves` | saves about {{percent}} |
-| `zfsFs.fact.folder` | Folder on the NAS |
-| `zfsFs.fact.encryption` | Encryption |
-| `zfsFs.encryptedLocked` | Encrypted, locked |
-| `zfsFs.encryptedUnlocked` | Encrypted, unlocked |
-| `zfsFs.fact.origin` | Made from |
-| `zfsFs.origin` | A copy of <origin></origin>, made in the classic interface. |
-| `zfsFs.usedBy.title` | Used by |
-| `zfsFs.usedBy.nothing` | Nothing uses this file system yet. |
-| `zfsFs.usedBy.inside` | Inside it: <fs></fs> |
-| `zfsFs.usedBy.clone` | <fs></fs> was made from its snapshot <snapshot></snapshot>. |
-| `zfsFs.details.readsPool` | This reads the file system's settings from the pool, which may wake its disks. |
-| `zfsFs.poolFolderNote` | This is the pool's own folder. It goes when the pool is deleted. |
-| `zfsFs.volumeNoPage` | Volumes are managed in the classic interface. |
-| `zfsFs.loadFailed` | Could not read this file system. |
-| `zfsFs.notFound` | There is no file system with this name on this NAS. It may have been deleted or renamed in the classic interface. |
-| `zfsFs.showPool` | Show pool {{pool}} |
-| `zfsFsSettings.title` | Settings |
-| `zfsFsSettings.limitTooSmall` | It already holds {{used}}. Choose a limit above that, or delete files first. |
-| `zfsFsSettings.limitHint` | Changing the limit does not move or delete any file. |
-| `zfsFsSettings.compression` | Compression |
-| `zfsFsSettings.compressionOn` | On (LZ4), recommended |
-| `zfsFsSettings.compressionOff` | Off |
-| `zfsFsSettings.compressionKeep` | Keep {{value}} |
-| `zfsFsSettings.compressionHint` | Only files saved from now on are affected; files already there stay as they are. |
-| `zfsFsSettings.save` | Save |
-| `zfsFsSettings.readOnly` | These settings cannot be changed while the pool cannot be used. |
+| Key                             | English                                                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `zfsFsAdd.breadcrumb`           | Add a file system                                                                                                 |
+| `zfsFsAdd.title`                | Add a file system to pool {{pool}}                                                                                |
+| `zfsFsAdd.documentTitle`        | Add a file system – Pool {{pool}} – ZFS                                                                           |
+| `zfsFsAdd.preflightBody`        | Apply or undo them before you add a file system, so that only these changes are applied at the end.               |
+| `zfsFsAdd.refused`              | A file system cannot be added to this pool now.                                                                   |
+| `zfsFsAdd.name`                 | File system name                                                                                                  |
+| `zfsFsAdd.nameHint`             | Letters, digits, hyphens, underscores and full stops. Its folder on the NAS is /{{pool}}/{{name}}.                |
+| `zfsFsAdd.limit`                | How large may it grow?                                                                                            |
+| `zfsFsAdd.limitNone`            | No limit: it can use all the free space of the pool                                                               |
+| `zfsFsAdd.limitUpTo`            | Up to:                                                                                                            |
+| `zfsFsAdd.limitHint`            | A limit keeps one file system from filling the pool for the others.                                               |
+| `zfsFsAdd.compression`          | Compression is {{compression}}, as for the pool.                                                                  |
+| `zfsFsAdd.summaryTitle`         | Ready to add the file system                                                                                      |
+| `zfsFsAdd.sum.make`             | Make the file system <fs></fs>, in the folder /{{pool}}/{{name}}.                                                 |
+| `zfsFsAdd.sum.limit`            | Limit it to {{limit}}.                                                                                            |
+| `zfsFsAdd.sum.save`             | Then save its settings, which applies the changes for it. Nothing else is pending.                                |
+| `zfsFsAdd.confirm`              | Add file system                                                                                                   |
+| `zfsFsAdd.step.check`           | Check the pool again                                                                                              |
+| `zfsFsAdd.step.make`            | Make the file system                                                                                              |
+| `zfsFsAdd.step.limit`           | Set its size limit                                                                                                |
+| `zfsFsAdd.step.save`            | Save the file system's settings                                                                                   |
+| `zfsFsAdd.step.verify`          | Check the result                                                                                                  |
+| `zfsFsAdd.fail.limit`           | The file system was made, but its size limit was not set.                                                         |
+| `zfsFsAdd.fail.goOn`            | Go on without a limit                                                                                             |
+| `zfsFsAdd.done`                 | <fs></fs> is mounted and ready, with {{free}} free.                                                               |
+| `zfsFs.subtitle`                | ZFS file system on pool {{pool}}                                                                                  |
+| `zfsFs.documentTitle`           | {{fs}} – ZFS                                                                                                      |
+| `zfsFs.poolState`               | Pool <pool></pool>: {{status}}. {{reason}}                                                                        |
+| `zfsFs.fact.space`              | Space                                                                                                             |
+| `zfsFs.spaceShared`             | {{used}} used · {{available}} free, shared with the other file systems on {{pool}}                                |
+| `zfsFs.fact.limit`              | Size limit                                                                                                        |
+| `zfsFs.noLimit`                 | No limit                                                                                                          |
+| `zfsFs.fact.compression`        | Compression                                                                                                       |
+| `zfsFs.compression.off`         | Off                                                                                                               |
+| `zfsFs.compression.lz4`         | On (LZ4)                                                                                                          |
+| `zfsFs.compression.on`          | On                                                                                                                |
+| `zfsFs.compression.other`       | On (<value></value>)                                                                                              |
+| `zfsFs.compression.saves`       | saves about {{percent}}                                                                                           |
+| `zfsFs.fact.folder`             | Folder on the NAS                                                                                                 |
+| `zfsFs.fact.encryption`         | Encryption                                                                                                        |
+| `zfsFs.encryptedLocked`         | Encrypted, locked                                                                                                 |
+| `zfsFs.encryptedUnlocked`       | Encrypted, unlocked                                                                                               |
+| `zfsFs.fact.origin`             | Made from                                                                                                         |
+| `zfsFs.origin`                  | A copy of <origin></origin>, made in the classic interface.                                                       |
+| `zfsFs.usedBy.title`            | Used by                                                                                                           |
+| `zfsFs.usedBy.nothing`          | Nothing uses this file system yet.                                                                                |
+| `zfsFs.usedBy.inside`           | Inside it: <fs></fs>                                                                                              |
+| `zfsFs.usedBy.clone`            | <fs></fs> was made from its snapshot <snapshot></snapshot>.                                                       |
+| `zfsFs.details.readsPool`       | This reads the file system's settings from the pool, which may wake its disks.                                    |
+| `zfsFs.poolFolderNote`          | This is the pool's own folder. It goes when the pool is deleted.                                                  |
+| `zfsFs.volumeNoPage`            | Volumes are managed in the classic interface.                                                                     |
+| `zfsFs.loadFailed`              | Could not read this file system.                                                                                  |
+| `zfsFs.notFound`                | There is no file system with this name on this NAS. It may have been deleted or renamed in the classic interface. |
+| `zfsFs.showPool`                | Show pool {{pool}}                                                                                                |
+| `zfsFsSettings.title`           | Settings                                                                                                          |
+| `zfsFsSettings.limitTooSmall`   | It already holds {{used}}. Choose a limit above that, or delete files first.                                      |
+| `zfsFsSettings.limitHint`       | Changing the limit does not move or delete any file.                                                              |
+| `zfsFsSettings.compression`     | Compression                                                                                                       |
+| `zfsFsSettings.compressionOn`   | On (LZ4), recommended                                                                                             |
+| `zfsFsSettings.compressionOff`  | Off                                                                                                               |
+| `zfsFsSettings.compressionKeep` | Keep {{value}}                                                                                                    |
+| `zfsFsSettings.compressionHint` | Only files saved from now on are affected; files already there stay as they are.                                  |
+| `zfsFsSettings.save`            | Save                                                                                                              |
+| `zfsFsSettings.readOnly`        | These settings cannot be changed while the pool cannot be used.                                                   |
 
 ---
 
@@ -1373,11 +1378,11 @@ before keeping the second sentence.
 A table, not paged up to 50 rows, then client-side pages of 50 (an automatic schedule can make
 hundreds):
 
-| Order | Header | Display |
-| --- | --- | --- |
-| 1 | Snapshot | `name` in `Identifier`; "Newest" in `text-xs muted-foreground` beside the last one. Snapshots taken by this page are named by the NAS with the date and time (5.3), so the name is the time for those |
-| 2 | Holds | `used`: "Space freed if you delete it", right-aligned, tabular. Under the header: "Space that only this snapshot keeps." |
-| 3 | (actions) | "Roll back…" on the newest only, with the accessible name "Roll {{fs}} back to snapshot {{snapshot}}"; "Delete…" on each, "Delete snapshot {{snapshot}} of {{fs}}" |
+| Order | Header    | Display                                                                                                                                                                                               |
+| ----- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Snapshot  | `name` in `Identifier`; "Newest" in `text-xs muted-foreground` beside the last one. Snapshots taken by this page are named by the NAS with the date and time (5.3), so the name is the time for those |
+| 2     | Holds     | `used`: "Space freed if you delete it", right-aligned, tabular. Under the header: "Space that only this snapshot keeps."                                                                              |
+| 3     | (actions) | "Roll back…" on the newest only, with the accessible name "Roll {{fs}} back to snapshot {{snapshot}}"; "Delete…" on each, "Delete snapshot {{snapshot}} of {{fs}}"                                    |
 
 Above the table: "{{count}} snapshots, holding {{total}}." and **"Take a snapshot now"** (neutral).
 Under it, `text-sm muted-foreground`: "Automatic snapshots on a schedule are set up in the classic
@@ -1391,11 +1396,11 @@ populated table.
 
 ### 5.2 What the actions cost
 
-| Action | Lost | Confirmation |
-| --- | --- | --- |
-| Take a snapshot | nothing | none: the button acts, then says so (5.3) |
-| Roll back to the newest snapshot | every change to the file system since that snapshot: new files, changed files, deletions undone and redone | destructive, typed: the file system's name (section 18, P7) |
-| Delete a snapshot | the older versions only that snapshot keeps; the files in the file system now are not touched | destructive, typed: the snapshot's name (UI-8: data-destructive) |
+| Action                           | Lost                                                                                                       | Confirmation                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Take a snapshot                  | nothing                                                                                                    | none: the button acts, then says so (5.3)                        |
+| Roll back to the newest snapshot | every change to the file system since that snapshot: new files, changed files, deletions undone and redone | destructive, typed: the file system's name (section 18, P7)      |
+| Delete a snapshot                | the older versions only that snapshot keeps; the files in the file system now are not touched              | destructive, typed: the snapshot's name (UI-8: data-destructive) |
 
 ### 5.3 Take a snapshot now
 
@@ -1408,7 +1413,7 @@ name is in the classic interface.
 - Refused (0.10) with the reason beside the button: locked; the pool not usable or Unknown.
 - While it runs: the button shows "Taking a snapshot…". Then the list is read again, and a polite
   announcement and the line under the button: "Snapshot {{snapshot}} taken." Failed: `InlineAlert
-  tone="critical"` "The snapshot was not taken." + message (for example two in the same second, which
+tone="critical"` "The snapshot was not taken." + message (for example two in the same second, which
   the server refuses).
 
 ### 5.4 Roll back
@@ -1464,10 +1469,10 @@ in words, "Apply them now" / "Undo them") instead of the confirmation (section 1
 **On confirm**: re-read (`getAllSnapshots`, `listPools`, `dirtyModules`), then a step list inside the
 dialog (`JobStepList`, compact):
 
-| # | Step | Calls |
-| --- | --- | --- |
-| 1 | "Delete the snapshot" | `Zfs.deleteObjectBg {type: "Snapshot", name: path, recursive: false}`, a task ("Delete snapshot {{snapshot}}") |
-| 2 | "Save the change" | R10: expected `fstab`, `collectd`, `monit`, `quota` **[verify]**; `Config.applyChangesBg` |
+| #   | Step                  | Calls                                                                                                          |
+| --- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | "Delete the snapshot" | `Zfs.deleteObjectBg {type: "Snapshot", name: path, recursive: false}`, a task ("Delete snapshot {{snapshot}}") |
+| 2   | "Save the change"     | R10: expected `fstab`, `collectd`, `monit`, `quota` **[verify]**; `Config.applyChangesBg`                      |
 
 Result: the dialog closes; the list is read again; announced "Snapshot {{snapshot}} was deleted." A
 failure at step 1 stays in the dialog with the server's words; at step 2, R7's "Try again" first,
@@ -1475,57 +1480,57 @@ then "Stop here" (the changes stay in the band, and the snapshot is gone either 
 
 ### 5.6 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsSnap.title` | Snapshots |
-| `zfsSnap.singleFile` | To get back a single file, there is no need to roll back: the files of each snapshot can be opened in the hidden folder .zfs/snapshot inside this file system's folder. |
-| `zfsSnap.summary_one` / `_other` | {{count}} snapshot, holding {{total}}. / {{count}} snapshots, holding {{total}}. |
-| `zfsSnap.take` | Take a snapshot now |
-| `zfsSnap.taking` | Taking a snapshot… |
-| `zfsSnap.recursive` | Include the file systems inside it |
-| `zfsSnap.taken` | Snapshot <snapshot></snapshot> taken. |
-| `zfsSnap.takeFailed` | The snapshot was not taken. |
-| `zfsSnap.schedules` | Automatic snapshots on a schedule are set up in the classic interface. |
-| `zfsSnap.schedulesLink` | Snapshot schedules in the classic interface |
-| `zfsSnap.tableLabel` | Snapshots of {{fs}} |
-| `zfsSnap.col.snapshot` | Snapshot |
-| `zfsSnap.col.holds` | Holds |
-| `zfsSnap.col.holdsHint` | Space that only this snapshot keeps. |
-| `zfsSnap.newest` | Newest |
-| `zfsSnap.goFurther` | To go back further, delete the newer snapshots first. Each one you delete is gone. |
-| `zfsSnap.loading` | Loading the snapshots… |
-| `zfsSnap.loadFailed` | Could not read the snapshots. |
-| `zfsSnap.empty` | No snapshots of this file system yet. Take one before a big change, so you can go back. |
-| `zfsSnap.rollBack` | Roll back… |
-| `zfsSnap.rollBackLabel` | Roll {{fs}} back to snapshot {{snapshot}} |
-| `zfsSnap.checking` | Checking… |
-| `zfsSnap.gone` | This snapshot no longer exists. |
-| `zfsSnap.notNewest` | A newer snapshot has been taken since this page read the list. |
-| `zfsSnap.rb.title` | Roll {{fs}} back to {{snapshot}}? |
-| `zfsSnap.rb.consequence` | Every change to <fs></fs> since this snapshot is lost: files saved since are deleted, and files changed or deleted since go back to how they were. This cannot be undone. |
-| `zfsSnap.rb.shared` | People using {{list}} see their files change at once. Ask them to close their files first. |
-| `zfsSnap.rb.kept` | The snapshot itself is kept. |
-| `zfsSnap.rb.typePrompt` | Type {{fs}} to confirm. |
-| `zfsSnap.rb.confirm` | Roll back |
-| `zfsSnap.rb.checkingAgain` | Checking again… |
-| `zfsSnap.rb.running` | Rolling {{fs}} back… |
-| `zfsSnap.rb.done` | <fs></fs> was rolled back to <snapshot></snapshot>. |
-| `zfsSnap.rb.failed` | {{fs}} was not rolled back. |
-| `zfsSnap.rb.unknown` | Could not tell whether {{fs}} was rolled back. |
-| `zfsSnap.delete` | Delete… |
-| `zfsSnap.deleteLabel` | Delete snapshot {{snapshot}} of {{fs}} |
-| `zfsSnap.del.cloned` | <clone></clone> was made from this snapshot. Delete or promote it in the classic interface first. |
-| `zfsSnap.del.title` | Delete snapshot {{snapshot}}? |
-| `zfsSnap.del.of` | Of <fs></fs>, holding {{used}}. |
-| `zfsSnap.del.consequence` | The older versions of files that only this snapshot keeps are lost. The files in <fs></fs> now are not touched. This cannot be undone. |
-| `zfsSnap.del.typePrompt` | Type {{snapshot}} to confirm. |
-| `zfsSnap.del.confirm` | Delete snapshot |
-| `zfsSnap.del.step.delete` | Delete the snapshot |
-| `zfsSnap.del.step.save` | Save the change |
-| `zfsSnap.del.task` | Delete snapshot {{snapshot}} |
-| `zfsSnap.del.done` | Snapshot <snapshot></snapshot> was deleted. |
-| `zfsSnap.del.failed` | Snapshot {{snapshot}} was not deleted. |
-| `zfsSnap.del.goneAnyway` | The snapshot is deleted. Saving the change failed, so it stays pending in the band. |
+| Key                              | English                                                                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zfsSnap.title`                  | Snapshots                                                                                                                                                                 |
+| `zfsSnap.singleFile`             | To get back a single file, there is no need to roll back: the files of each snapshot can be opened in the hidden folder .zfs/snapshot inside this file system's folder.   |
+| `zfsSnap.summary_one` / `_other` | {{count}} snapshot, holding {{total}}. / {{count}} snapshots, holding {{total}}.                                                                                          |
+| `zfsSnap.take`                   | Take a snapshot now                                                                                                                                                       |
+| `zfsSnap.taking`                 | Taking a snapshot…                                                                                                                                                        |
+| `zfsSnap.recursive`              | Include the file systems inside it                                                                                                                                        |
+| `zfsSnap.taken`                  | Snapshot <snapshot></snapshot> taken.                                                                                                                                     |
+| `zfsSnap.takeFailed`             | The snapshot was not taken.                                                                                                                                               |
+| `zfsSnap.schedules`              | Automatic snapshots on a schedule are set up in the classic interface.                                                                                                    |
+| `zfsSnap.schedulesLink`          | Snapshot schedules in the classic interface                                                                                                                               |
+| `zfsSnap.tableLabel`             | Snapshots of {{fs}}                                                                                                                                                       |
+| `zfsSnap.col.snapshot`           | Snapshot                                                                                                                                                                  |
+| `zfsSnap.col.holds`              | Holds                                                                                                                                                                     |
+| `zfsSnap.col.holdsHint`          | Space that only this snapshot keeps.                                                                                                                                      |
+| `zfsSnap.newest`                 | Newest                                                                                                                                                                    |
+| `zfsSnap.goFurther`              | To go back further, delete the newer snapshots first. Each one you delete is gone.                                                                                        |
+| `zfsSnap.loading`                | Loading the snapshots…                                                                                                                                                    |
+| `zfsSnap.loadFailed`             | Could not read the snapshots.                                                                                                                                             |
+| `zfsSnap.empty`                  | No snapshots of this file system yet. Take one before a big change, so you can go back.                                                                                   |
+| `zfsSnap.rollBack`               | Roll back…                                                                                                                                                                |
+| `zfsSnap.rollBackLabel`          | Roll {{fs}} back to snapshot {{snapshot}}                                                                                                                                 |
+| `zfsSnap.checking`               | Checking…                                                                                                                                                                 |
+| `zfsSnap.gone`                   | This snapshot no longer exists.                                                                                                                                           |
+| `zfsSnap.notNewest`              | A newer snapshot has been taken since this page read the list.                                                                                                            |
+| `zfsSnap.rb.title`               | Roll {{fs}} back to {{snapshot}}?                                                                                                                                         |
+| `zfsSnap.rb.consequence`         | Every change to <fs></fs> since this snapshot is lost: files saved since are deleted, and files changed or deleted since go back to how they were. This cannot be undone. |
+| `zfsSnap.rb.shared`              | People using {{list}} see their files change at once. Ask them to close their files first.                                                                                |
+| `zfsSnap.rb.kept`                | The snapshot itself is kept.                                                                                                                                              |
+| `zfsSnap.rb.typePrompt`          | Type {{fs}} to confirm.                                                                                                                                                   |
+| `zfsSnap.rb.confirm`             | Roll back                                                                                                                                                                 |
+| `zfsSnap.rb.checkingAgain`       | Checking again…                                                                                                                                                           |
+| `zfsSnap.rb.running`             | Rolling {{fs}} back…                                                                                                                                                      |
+| `zfsSnap.rb.done`                | <fs></fs> was rolled back to <snapshot></snapshot>.                                                                                                                       |
+| `zfsSnap.rb.failed`              | {{fs}} was not rolled back.                                                                                                                                               |
+| `zfsSnap.rb.unknown`             | Could not tell whether {{fs}} was rolled back.                                                                                                                            |
+| `zfsSnap.delete`                 | Delete…                                                                                                                                                                   |
+| `zfsSnap.deleteLabel`            | Delete snapshot {{snapshot}} of {{fs}}                                                                                                                                    |
+| `zfsSnap.del.cloned`             | <clone></clone> was made from this snapshot. Delete or promote it in the classic interface first.                                                                         |
+| `zfsSnap.del.title`              | Delete snapshot {{snapshot}}?                                                                                                                                             |
+| `zfsSnap.del.of`                 | Of <fs></fs>, holding {{used}}.                                                                                                                                           |
+| `zfsSnap.del.consequence`        | The older versions of files that only this snapshot keeps are lost. The files in <fs></fs> now are not touched. This cannot be undone.                                    |
+| `zfsSnap.del.typePrompt`         | Type {{snapshot}} to confirm.                                                                                                                                             |
+| `zfsSnap.del.confirm`            | Delete snapshot                                                                                                                                                           |
+| `zfsSnap.del.step.delete`        | Delete the snapshot                                                                                                                                                       |
+| `zfsSnap.del.step.save`          | Save the change                                                                                                                                                           |
+| `zfsSnap.del.task`               | Delete snapshot {{snapshot}}                                                                                                                                              |
+| `zfsSnap.del.done`               | Snapshot <snapshot></snapshot> was deleted.                                                                                                                               |
+| `zfsSnap.del.failed`             | Snapshot {{snapshot}} was not deleted.                                                                                                                                    |
+| `zfsSnap.del.goneAnyway`         | The snapshot is deleted. Saving the change failed, so it stays pending in the band.                                                                                       |
 
 ---
 
@@ -1574,29 +1579,29 @@ Failed: the dialog stays with the server's words.
 
 ### 6.3 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsCheck.title` | Check this pool |
-| `zfsCheck.cost` | It reads every disk for hours, and keeps the disks awake meanwhile. The pool can be used during a check, a little more slowly. |
-| `zfsCheck.repaired` | The last check repaired {{amount}}. |
-| `zfsCheck.unrepaired_one` / `_other` | The last check found {{count}} error it could not repair. / The last check found {{count}} errors it could not repair. |
-| `zfsCheck.start` | Check now… |
-| `zfsCheck.stop` | Stop checking… |
-| `zfsCheck.resume` | Continue checking… |
-| `zfsCheck.refused.critical` | Replace the missing disk first: a check would add hours of work to the disks that are left. |
-| `zfsCheck.refused.rebuilding` | A check cannot run while the pool is being rebuilt. |
-| `zfsCheck.schedules` | Checks on a schedule are set up in the classic interface. |
-| `zfsCheck.schedulesLink` | Check schedules in the classic interface |
-| `zfsCheck.startTitle` | Check pool {{pool}} now? |
-| `zfsCheck.startBody` | ZFS reads every file on the pool and repairs what it can from a good copy. This takes hours on large disks, wakes every disk of the pool and keeps it busy. The pool can be used meanwhile. |
-| `zfsCheck.startConfirm` | Check now |
-| `zfsCheck.stopTitle` | Stop checking pool {{pool}}? |
-| `zfsCheck.stopBody` | The check stops now and starts from the beginning next time. |
-| `zfsCheck.stopConfirm` | Stop checking |
-| `zfsCheck.resumeTitle` | Continue checking pool {{pool}}? |
-| `zfsCheck.resumeBody` | The check carries on from {{percent}}. |
-| `zfsCheck.resumeConfirm` | Continue checking |
-| `zfsCheck.failed` | The check could not be changed. |
+| Key                                  | English                                                                                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zfsCheck.title`                     | Check this pool                                                                                                                                                                             |
+| `zfsCheck.cost`                      | It reads every disk for hours, and keeps the disks awake meanwhile. The pool can be used during a check, a little more slowly.                                                              |
+| `zfsCheck.repaired`                  | The last check repaired {{amount}}.                                                                                                                                                         |
+| `zfsCheck.unrepaired_one` / `_other` | The last check found {{count}} error it could not repair. / The last check found {{count}} errors it could not repair.                                                                      |
+| `zfsCheck.start`                     | Check now…                                                                                                                                                                                  |
+| `zfsCheck.stop`                      | Stop checking…                                                                                                                                                                              |
+| `zfsCheck.resume`                    | Continue checking…                                                                                                                                                                          |
+| `zfsCheck.refused.critical`          | Replace the missing disk first: a check would add hours of work to the disks that are left.                                                                                                 |
+| `zfsCheck.refused.rebuilding`        | A check cannot run while the pool is being rebuilt.                                                                                                                                         |
+| `zfsCheck.schedules`                 | Checks on a schedule are set up in the classic interface.                                                                                                                                   |
+| `zfsCheck.schedulesLink`             | Check schedules in the classic interface                                                                                                                                                    |
+| `zfsCheck.startTitle`                | Check pool {{pool}} now?                                                                                                                                                                    |
+| `zfsCheck.startBody`                 | ZFS reads every file on the pool and repairs what it can from a good copy. This takes hours on large disks, wakes every disk of the pool and keeps it busy. The pool can be used meanwhile. |
+| `zfsCheck.startConfirm`              | Check now                                                                                                                                                                                   |
+| `zfsCheck.stopTitle`                 | Stop checking pool {{pool}}?                                                                                                                                                                |
+| `zfsCheck.stopBody`                  | The check stops now and starts from the beginning next time.                                                                                                                                |
+| `zfsCheck.stopConfirm`               | Stop checking                                                                                                                                                                               |
+| `zfsCheck.resumeTitle`               | Continue checking pool {{pool}}?                                                                                                                                                            |
+| `zfsCheck.resumeBody`                | The check carries on from {{percent}}.                                                                                                                                                      |
+| `zfsCheck.resumeConfirm`             | Continue checking                                                                                                                                                                           |
+| `zfsCheck.failed`                    | The check could not be changed.                                                                                                                                                             |
 
 ---
 
@@ -1615,14 +1620,14 @@ disk never lowers the pool's protection. That is why this slice replaces disks i
 
 ### 7.1 When "Replace…" is offered (on a disk's row, 2.5, and in What to do now, 2.4)
 
-| The disk | Offered? |
-| --- | --- |
-| In a Mirror or RAID-Z group: Working, Working with errors, Failing, Failed, Missing, Removed or Offline | Yes |
-| A Single disk or in a Stripe: Working or Working with errors | Yes: the data is copied while the old disk still works |
-| A Single disk or in a Stripe: anything else | No: "Its files are already lost, because this pool has no copy of them." |
-| Rebuilding, or a pool already rebuilding | No: "Wait until rebuilding ends." |
-| A spare, read cache, write log, metadata disk or deduplication disk | No: "Managed in the classic interface." |
-| The pool Unknown, `FAULTED`, `UNAVAIL` or `SUSPENDED`, or the roles not known | No: 0.3's or 0.4's reason |
+| The disk                                                                                                | Offered?                                                                 |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| In a Mirror or RAID-Z group: Working, Working with errors, Failing, Failed, Missing, Removed or Offline | Yes                                                                      |
+| A Single disk or in a Stripe: Working or Working with errors                                            | Yes: the data is copied while the old disk still works                   |
+| A Single disk or in a Stripe: anything else                                                             | No: "Its files are already lost, because this pool has no copy of them." |
+| Rebuilding, or a pool already rebuilding                                                                | No: "Wait until rebuilding ends."                                        |
+| A spare, read cache, write log, metadata disk or deduplication disk                                     | No: "Managed in the classic interface."                                  |
+| The pool Unknown, `FAULTED`, `UNAVAIL` or `SUSPENDED`, or the roles not known                           | No: 0.3's or 0.4's reason                                                |
 
 ### 7.2 The flow
 
@@ -1664,12 +1669,12 @@ disk":
 
 **Steps** (R3, R5):
 
-| # | Step label | Calls | Notes |
-| --- | --- | --- | --- |
-| 1 | "Check the pool and the disks again" | the pool's reads, `getEmptyCandidates`, the disk-use inputs | The old disk is still in the pool at the same place, with the same role or worse; the new disk is still offered in the same group, with the same serial number and model; 7.1 still allows it. Otherwise the flow stops before anything is erased |
-| 2 (reuse only) | "Erase {{new}}" | `DiskMgmt.wipe {devicefile, secure: false}`, a task | Then `getEmptyCandidates` again: it must now be a candidate |
-| 3 | "Start rebuilding onto {{new}}" | `Zfs.deviceReplace {pool, olddevice: the old disk's path from getPoolDevices, newdevice: the new disk's by-id path}` | Synchronous, short **[verify]** |
-| 4 | "Check the result" | the report, `getPoolDevices` | The new disk is in the pool, in {{old}}'s place, Rebuilding (or, on a small pool, already Working) |
+| #              | Step label                           | Calls                                                                                                                | Notes                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1              | "Check the pool and the disks again" | the pool's reads, `getEmptyCandidates`, the disk-use inputs                                                          | The old disk is still in the pool at the same place, with the same role or worse; the new disk is still offered in the same group, with the same serial number and model; 7.1 still allows it. Otherwise the flow stops before anything is erased |
+| 2 (reuse only) | "Erase {{new}}"                      | `DiskMgmt.wipe {devicefile, secure: false}`, a task                                                                  | Then `getEmptyCandidates` again: it must now be a candidate                                                                                                                                                                                       |
+| 3              | "Start rebuilding onto {{new}}"      | `Zfs.deviceReplace {pool, olddevice: the old disk's path from getPoolDevices, newdevice: the new disk's by-id path}` | Synchronous, short **[verify]**                                                                                                                                                                                                                   |
+| 4              | "Check the result"                   | the report, `getPoolDevices`                                                                                         | The new disk is in the pool, in {{old}}'s place, Rebuilding (or, on a small pool, already Working)                                                                                                                                                |
 
 **Result**: `JobResult` succeeded: "Rebuilding onto {{new}} has started." "It takes hours on a large
 disk. You can leave this page or sign out; rebuilding goes on on the NAS. The pool's page shows its
@@ -1725,55 +1730,55 @@ the counts are the only record of them here." Button **"Clear error counts"**.
 
 ### 7.9 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsReplace.breadcrumb` | Replace a disk |
-| `zfsReplace.title` | Replace a disk in pool {{pool}} |
-| `zfsReplace.documentTitle` | Replace a disk – Pool {{pool}} – ZFS |
-| `zfsReplace.choose` | Disk to replace |
-| `zfsReplace.changeDisk` | Change disk |
-| `zfsReplace.new` | New disk |
-| `zfsReplace.none` | No disk can take its place. Connect a disk at least {{size}} large, then look again. |
-| `zfsReplace.rescan` | Look for new disks |
-| `zfsReplace.whileWorking` | ZFS keeps using <old></old> while it copies everything onto the new disk. When it ends, you can take <old></old> out. |
-| `zfsReplace.whileFailed` | ZFS rebuilds what <old></old> held from the other disks onto the new one. Until it ends, {{protection}} |
-| `zfsReplace.spareBack` | The spare <spare></spare> goes back to waiting when rebuilding ends. |
-| `zfsReplace.notAllowed.noCopy` | Its files are already lost, because this pool has no copy of them. |
-| `zfsReplace.notAllowed.rebuilding` | Wait until rebuilding ends. |
-| `zfsReplace.notAllowed.class` | Managed in the classic interface. |
-| `zfsReplace.summaryTitle` | Ready to replace the disk |
-| `zfsReplace.sum.erase` | Erase <new></new>. Everything on it is lost: |
-| `zfsReplace.sum.place` | Put it in the place of <old></old> ({{model}}, serial number <serial></serial>) in pool <pool></pool>. |
-| `zfsReplace.sum.rebuild` | Rebuilding then takes hours on large disks. The pool can be used meanwhile. |
-| `zfsReplace.typePrompt` | Type {{device}} to confirm. |
-| `zfsReplace.confirm` | Erase disk and replace |
-| `zfsReplace.step.check` | Check the pool and the disks again |
-| `zfsReplace.step.erase` | Erase {{device}} |
-| `zfsReplace.step.replace` | Start rebuilding onto {{device}} |
-| `zfsReplace.step.verify` | Check the result |
-| `zfsReplace.doneTitle` | Rebuilding onto {{device}} has started. |
-| `zfsReplace.doneBody` | It takes hours on a large disk. You can leave this page or sign out; rebuilding goes on on the NAS. The pool's page shows its progress. |
-| `zfsReplace.doneOld` | When rebuilding ends, <old></old> ({{model}}, serial number <serial></serial>) is no longer part of the pool, and you can take it out. |
-| `zfsReplace.wipeAdvice` | Wipe a disk before you give it away. |
-| `zfsReplace.openOld` | Open disk {{device}} |
-| `zfsReplace.fail.changed` | The pool or the disks changed. Nothing was erased. Choose again. |
-| `zfsReplace.fail.notCandidate` | {{device}} was erased, but the ZFS plugin still does not offer it. |
-| `zfsReplace.fail.replace` | The disk was not put in the pool. |
-| `zfsReplace.fail.erased` | {{device}} was erased. |
-| `zfsReplace.fail.notSeen` | Rebuilding was started but the new disk has not appeared in the pool yet. |
-| `zfsOffline.button` | Take offline… |
-| `zfsOffline.title` | Take {{device}} offline? |
-| `zfsOffline.body` | Pool <pool></pool> keeps working without it, but {{protection}}. ZFS stops using the disk until you bring it back or replace it. |
-| `zfsOffline.confirm` | Take offline |
-| `zfsOnline.button` | Bring back… |
-| `zfsOnline.title` | Bring {{device}} back into pool {{pool}}? |
-| `zfsOnline.body` | ZFS uses it again and copies onto it what changed while it was offline. |
-| `zfsOnline.confirm` | Bring back |
-| `zfsClear.button` | Clear the error counts… |
-| `zfsClear.title` | Clear the error counts of pool {{pool}}? |
-| `zfsClear.body` | Do this only after you have fixed the cause, such as a loose cable. If the disk is failing, the errors come back, and the counts are the only record of them here. |
-| `zfsClear.confirm` | Clear error counts |
-| `zfsDevice.failed` | The disk could not be changed. |
+| Key                                | English                                                                                                                                                            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zfsReplace.breadcrumb`            | Replace a disk                                                                                                                                                     |
+| `zfsReplace.title`                 | Replace a disk in pool {{pool}}                                                                                                                                    |
+| `zfsReplace.documentTitle`         | Replace a disk – Pool {{pool}} – ZFS                                                                                                                               |
+| `zfsReplace.choose`                | Disk to replace                                                                                                                                                    |
+| `zfsReplace.changeDisk`            | Change disk                                                                                                                                                        |
+| `zfsReplace.new`                   | New disk                                                                                                                                                           |
+| `zfsReplace.none`                  | No disk can take its place. Connect a disk at least {{size}} large, then look again.                                                                               |
+| `zfsReplace.rescan`                | Look for new disks                                                                                                                                                 |
+| `zfsReplace.whileWorking`          | ZFS keeps using <old></old> while it copies everything onto the new disk. When it ends, you can take <old></old> out.                                              |
+| `zfsReplace.whileFailed`           | ZFS rebuilds what <old></old> held from the other disks onto the new one. Until it ends, {{protection}}                                                            |
+| `zfsReplace.spareBack`             | The spare <spare></spare> goes back to waiting when rebuilding ends.                                                                                               |
+| `zfsReplace.notAllowed.noCopy`     | Its files are already lost, because this pool has no copy of them.                                                                                                 |
+| `zfsReplace.notAllowed.rebuilding` | Wait until rebuilding ends.                                                                                                                                        |
+| `zfsReplace.notAllowed.class`      | Managed in the classic interface.                                                                                                                                  |
+| `zfsReplace.summaryTitle`          | Ready to replace the disk                                                                                                                                          |
+| `zfsReplace.sum.erase`             | Erase <new></new>. Everything on it is lost:                                                                                                                       |
+| `zfsReplace.sum.place`             | Put it in the place of <old></old> ({{model}}, serial number <serial></serial>) in pool <pool></pool>.                                                             |
+| `zfsReplace.sum.rebuild`           | Rebuilding then takes hours on large disks. The pool can be used meanwhile.                                                                                        |
+| `zfsReplace.typePrompt`            | Type {{device}} to confirm.                                                                                                                                        |
+| `zfsReplace.confirm`               | Erase disk and replace                                                                                                                                             |
+| `zfsReplace.step.check`            | Check the pool and the disks again                                                                                                                                 |
+| `zfsReplace.step.erase`            | Erase {{device}}                                                                                                                                                   |
+| `zfsReplace.step.replace`          | Start rebuilding onto {{device}}                                                                                                                                   |
+| `zfsReplace.step.verify`           | Check the result                                                                                                                                                   |
+| `zfsReplace.doneTitle`             | Rebuilding onto {{device}} has started.                                                                                                                            |
+| `zfsReplace.doneBody`              | It takes hours on a large disk. You can leave this page or sign out; rebuilding goes on on the NAS. The pool's page shows its progress.                            |
+| `zfsReplace.doneOld`               | When rebuilding ends, <old></old> ({{model}}, serial number <serial></serial>) is no longer part of the pool, and you can take it out.                             |
+| `zfsReplace.wipeAdvice`            | Wipe a disk before you give it away.                                                                                                                               |
+| `zfsReplace.openOld`               | Open disk {{device}}                                                                                                                                               |
+| `zfsReplace.fail.changed`          | The pool or the disks changed. Nothing was erased. Choose again.                                                                                                   |
+| `zfsReplace.fail.notCandidate`     | {{device}} was erased, but the ZFS plugin still does not offer it.                                                                                                 |
+| `zfsReplace.fail.replace`          | The disk was not put in the pool.                                                                                                                                  |
+| `zfsReplace.fail.erased`           | {{device}} was erased.                                                                                                                                             |
+| `zfsReplace.fail.notSeen`          | Rebuilding was started but the new disk has not appeared in the pool yet.                                                                                          |
+| `zfsOffline.button`                | Take offline…                                                                                                                                                      |
+| `zfsOffline.title`                 | Take {{device}} offline?                                                                                                                                           |
+| `zfsOffline.body`                  | Pool <pool></pool> keeps working without it, but {{protection}}. ZFS stops using the disk until you bring it back or replace it.                                   |
+| `zfsOffline.confirm`               | Take offline                                                                                                                                                       |
+| `zfsOnline.button`                 | Bring back…                                                                                                                                                        |
+| `zfsOnline.title`                  | Bring {{device}} back into pool {{pool}}?                                                                                                                          |
+| `zfsOnline.body`                   | ZFS uses it again and copies onto it what changed while it was offline.                                                                                            |
+| `zfsOnline.confirm`                | Bring back                                                                                                                                                         |
+| `zfsClear.button`                  | Clear the error counts…                                                                                                                                            |
+| `zfsClear.title`                   | Clear the error counts of pool {{pool}}?                                                                                                                           |
+| `zfsClear.body`                    | Do this only after you have fixed the cause, such as a loose cable. If the disk is failing, the errors come back, and the counts are the only record of them here. |
+| `zfsClear.confirm`                 | Clear error counts                                                                                                                                                 |
+| `zfsDevice.failed`                 | The disk could not be changed.                                                                                                                                     |
 
 ---
 
@@ -1790,26 +1795,26 @@ section 8), built from the pieces above.
 
 ### 8.2 The journey
 
-| # | Where | What the reader does | Calls |
-| --- | --- | --- | --- |
-| 1 | The pool's page, What to do now (2.4) | Reads which disk failed (device, model, serial number) or which disks remain | reads only |
-| 2a | With a free place for a disk: connect the new disk, then "Look for new disks" | | `DiskMgmt.rescan` |
-| 2b | Without, and the old disk still works (a health warning, errors): "Take offline…" (7.7), turn off the NAS (the classic interface's power menu), swap the disks, turn it on, sign in, open the pool | | `Zfs.deviceOffline` |
-| 2c | Without, and the old disk has failed or is missing: turn off the NAS, swap the disks, turn it on, sign in, open the pool | | |
-| 3 | "Replace the disk…" (section 7): the replacement is preselected when it is the only disk offered; typed confirmation; steps | | `getEmptyCandidates`, `DiskMgmt.wipe` (reuse), `Zfs.deviceReplace` |
-| 4 | The pool's page shows Rebuilding with its progress, polled (0.6); the reader may leave | | `listPools`, the report, `getPoolDevices` |
-| 5 | When rebuilding ends, the state is OK, and the old disk is no longer listed | | |
+| #   | Where                                                                                                                                                                                              | What the reader does                                                         | Calls                                                              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 1   | The pool's page, What to do now (2.4)                                                                                                                                                              | Reads which disk failed (device, model, serial number) or which disks remain | reads only                                                         |
+| 2a  | With a free place for a disk: connect the new disk, then "Look for new disks"                                                                                                                      |                                                                              | `DiskMgmt.rescan`                                                  |
+| 2b  | Without, and the old disk still works (a health warning, errors): "Take offline…" (7.7), turn off the NAS (the classic interface's power menu), swap the disks, turn it on, sign in, open the pool |                                                                              | `Zfs.deviceOffline`                                                |
+| 2c  | Without, and the old disk has failed or is missing: turn off the NAS, swap the disks, turn it on, sign in, open the pool                                                                           |                                                                              |                                                                    |
+| 3   | "Replace the disk…" (section 7): the replacement is preselected when it is the only disk offered; typed confirmation; steps                                                                        |                                                                              | `getEmptyCandidates`, `DiskMgmt.wipe` (reuse), `Zfs.deviceReplace` |
+| 4   | The pool's page shows Rebuilding with its progress, polled (0.6); the reader may leave                                                                                                             |                                                                              | `listPools`, the report, `getPoolDevices`                          |
+| 5   | When rebuilding ends, the state is OK, and the old disk is no longer listed                                                                                                                        |                                                                              |                                                                    |
 
 **Replacing a disk that still works, with a free place**: step 2a then 3. The pool stays fully
 protected throughout, because ZFS keeps the old disk until the new one is complete; this is ZFS's
 advantage over the RAID slice's spare-then-remove, and the page says so (7.2).
 
-| | Stock (J8a) | Here |
-| --- | --- | --- |
-| Pages | the pools list's Devices menu, a form per action, plus the Disks page to wipe | the pool's page and the replace flow |
-| Disk named by | device path; model and serial only on the Disks page | device, model and serial number everywhere it is chosen, offlined or replaced |
-| Confirmations | a form per action | one typed confirmation for the new disk; a plain one to take a working disk offline |
-| Rebuild visible | the pools list's state; the scrub status page by hand | a progress bar with time left, polled only while it rebuilds |
+|                 | Stock (J8a)                                                                   | Here                                                                                |
+| --------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Pages           | the pools list's Devices menu, a form per action, plus the Disks page to wipe | the pool's page and the replace flow                                                |
+| Disk named by   | device path; model and serial only on the Disks page                          | device, model and serial number everywhere it is chosen, offlined or replaced       |
+| Confirmations   | a form per action                                                             | one typed confirmation for the new disk; a plain one to take a working disk offline |
+| Rebuild visible | the pools list's state; the scrub status page by hand                         | a progress bar with time left, polled only while it rebuilds                        |
 
 ### 8.3 The pause
 
@@ -1839,15 +1844,15 @@ system erases every file in it and all its snapshots." Button **"Delete file sys
 destructive form is on the dialog's confirm button). Unavailable (`aria-disabled`, focusable), each
 blocker in words beside the button (0.10):
 
-| Blocker | Words | What to do |
-| --- | --- | --- |
-| Shared folders use it | "Shared folders use it: {{list}}." | "Remove them first, in Shared folders." router link to the Shared folders page |
-| Something else uses its mount entry | the file-systems slice's "used by a setting" sentence | the classic File systems link stays in the footer for what this page does not show |
-| File systems or volumes inside it | "It holds {{list}}." | for a file system: "Delete it first, on its page." router link; for a volume: "Delete it in the classic interface first." (no link, section 18, P11) |
-| A clone was made from one of its snapshots | "{{clone}} was made from one of its snapshots." | "Delete or promote it in the classic interface first." |
-| Locked | "It is locked." | "Unlock it in the classic interface first." |
-| A read failed | "Could not check what uses this file system, so it cannot be deleted now." + message | "Try again" |
-| An action on its pool is running in this session; the pool is Unknown | 0.10's words | none |
+| Blocker                                                               | Words                                                                                | What to do                                                                                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared folders use it                                                 | "Shared folders use it: {{list}}."                                                   | "Remove them first, in Shared folders." router link to the Shared folders page                                                                       |
+| Something else uses its mount entry                                   | the file-systems slice's "used by a setting" sentence                                | the classic File systems link stays in the footer for what this page does not show                                                                   |
+| File systems or volumes inside it                                     | "It holds {{list}}."                                                                 | for a file system: "Delete it first, on its page." router link; for a volume: "Delete it in the classic interface first." (no link, section 18, P11) |
+| A clone was made from one of its snapshots                            | "{{clone}} was made from one of its snapshots."                                      | "Delete or promote it in the classic interface first."                                                                                               |
+| Locked                                                                | "It is locked."                                                                      | "Unlock it in the classic interface first."                                                                                                          |
+| A read failed                                                         | "Could not check what uses this file system, so it cannot be deleted now." + message | "Try again"                                                                                                                                          |
+| An action on its pool is running in this session; the pool is Unknown | 0.10's words                                                                         | none                                                                                                                                                 |
 
 **The check before the dialog**: pressing "Delete file system…" re-reads `listPools`, `getAllSnapshots`,
 `FileSystemMgmt.getList`, `ShareMgmt.getList`, `FsTab.getByFsName` and `dirtyModules`. The dialog opens
@@ -1885,14 +1890,14 @@ then offered as empty (0.8) or need a wipe.
 erases everything on it and frees its disks for other use." Button **"Delete pool…"** (neutral).
 Unavailable, each blocker in words (0.10):
 
-| Blocker | Words | What to do |
-| --- | --- | --- |
-| File systems on it besides its own folder | "It holds the file systems {{list}}." | "Delete them first, on their pages." with a router link per file system |
-| Volumes on it | "It holds the volumes {{list}}." | "Delete them in the classic interface first." (no link, P11) |
-| Shared folders use its own folder | "Shared folders use its own folder: {{list}}." | router link to the Shared folders page |
-| Something else uses its own folder's mount entry | the "used by a setting" sentence | |
-| Its own folder is locked | "Its own folder is locked." | "Unlock it in the classic interface first." |
-| A read failed; Unknown; an action running | 0.10's words | "Try again" for a read |
+| Blocker                                          | Words                                          | What to do                                                              |
+| ------------------------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| File systems on it besides its own folder        | "It holds the file systems {{list}}."          | "Delete them first, on their pages." with a router link per file system |
+| Volumes on it                                    | "It holds the volumes {{list}}."               | "Delete them in the classic interface first." (no link, P11)            |
+| Shared folders use its own folder                | "Shared folders use its own folder: {{list}}." | router link to the Shared folders page                                  |
+| Something else uses its own folder's mount entry | the "used by a setting" sentence               |                                                                         |
+| Its own folder is locked                         | "Its own folder is locked."                    | "Unlock it in the classic interface first."                             |
+| A read failed; Unknown; an action running        | 0.10's words                                   | "Try again" for a read                                                  |
 
 A pool being checked or rebuilt can be deleted: nothing it holds is kept.
 
@@ -1926,62 +1931,62 @@ and its hint is linked. The steps are announced politely, a failure assertively,
 
 ### 9.4 Copy
 
-| Key | English |
-| --- | --- |
-| `zfsDelete.fs.title` | Delete this file system |
-| `zfsDelete.fs.intro` | Deleting a file system erases every file in it and all its snapshots. |
-| `zfsDelete.fs.open` | Delete file system… |
-| `zfsDelete.blocked.shares` | Shared folders use it: {{list}}. |
-| `zfsDelete.blocked.sharesDo` | Remove them first, in Shared folders. |
-| `zfsDelete.blocked.sharesLink` | Open Shared folders |
-| `zfsDelete.blocked.inside` | It holds {{list}}. |
-| `zfsDelete.blocked.insideFsDo` | Delete it first, on its page. |
-| `zfsDelete.blocked.insideVolDo` | Delete it in the classic interface first. |
-| `zfsDelete.blocked.clone` | <clone></clone> was made from one of its snapshots. |
-| `zfsDelete.blocked.cloneDo` | Delete or promote it in the classic interface first. |
-| `zfsDelete.blocked.locked` | It is locked. |
-| `zfsDelete.blocked.lockedDo` | Unlock it in the classic interface first. |
-| `zfsDelete.blocked.unread` | Could not check what uses this file system, so it cannot be deleted now. |
-| `zfsDelete.fs.checking` | Checking what uses this file system… |
-| `zfsDelete.fs.gone` | This file system no longer exists. |
-| `zfsDelete.fs.dialogTitle` | Delete file system {{fs}}? |
-| `zfsDelete.fs.snapshots` | {{count}} snapshots holding {{size}} |
-| `zfsDelete.fs.consequence` | Every file in <fs></fs> and all {{count}} of its snapshots are lost. This cannot be undone. |
-| `zfsDelete.fs.typePrompt` | Type {{fs}} to confirm. |
-| `zfsDelete.fs.confirm` | Delete file system |
-| `zfsDelete.checkingAgain` | Checking again… |
-| `zfsDelete.fs.step.delete` | Delete the file system |
-| `zfsDelete.step.save` | Save the change |
-| `zfsDelete.fs.task` | Delete file system {{fs}} |
-| `zfsDelete.fs.doneTitle` | {{fs}} was deleted. |
-| `zfsDelete.fs.doneBody` | Its space is free on pool <pool></pool>. |
-| `zfsDelete.fs.failed` | {{fs}} was not deleted. |
-| `zfsDelete.fs.goneAnyway` | The file system is deleted. Saving the change failed, so it stays pending in the band. |
-| `zfsDelete.fs.unknown` | Could not tell whether {{fs}} was deleted. |
-| `zfsDelete.pool.title` | Delete this pool |
-| `zfsDelete.pool.intro` | Deleting a pool erases everything on it and frees its disks for other use. |
-| `zfsDelete.pool.open` | Delete pool… |
-| `zfsDelete.pool.blocked.fs` | It holds the file systems {{list}}. |
-| `zfsDelete.pool.blocked.fsDo` | Delete them first, on their pages. |
-| `zfsDelete.pool.blocked.vol` | It holds the volumes {{list}}. |
-| `zfsDelete.pool.blocked.volDo` | Delete them in the classic interface first. |
-| `zfsDelete.pool.blocked.shares` | Shared folders use its own folder: {{list}}. |
-| `zfsDelete.pool.blocked.locked` | Its own folder is locked. |
-| `zfsDelete.pool.checking` | Checking what is on this pool… |
-| `zfsDelete.pool.gone` | This pool no longer exists. |
-| `zfsDelete.pool.dialogTitle` | Delete pool {{pool}}? |
-| `zfsDelete.pool.consequence` | Everything on this pool is lost: the files in its own folder ({{used}}) and its {{count}} snapshots. This cannot be undone. |
-| `zfsDelete.pool.disks` | Its disks are cleared of the pool's marks and can be used again. The files on them are not overwritten, only made unreadable; wipe a disk before you give it away. |
-| `zfsDelete.pool.typePrompt` | Type {{pool}} to confirm. |
-| `zfsDelete.pool.confirm` | Delete pool |
-| `zfsDelete.pool.step.delete` | Delete the pool |
-| `zfsDelete.pool.task` | Delete pool {{pool}} |
-| `zfsDelete.pool.doneTitle` | Pool {{pool}} was deleted. |
-| `zfsDelete.pool.doneBody` | Its disks are free: {{list}}. |
-| `zfsDelete.pool.toList` | Go to ZFS |
-| `zfsDelete.pool.failed` | Pool {{pool}} was not deleted. |
-| `zfsDelete.pool.notCleared` | If the pool was destroyed but its disks were not cleared, they show under Erase and reuse when you next use them. |
-| `zfsDelete.pool.unknown` | Could not tell whether pool {{pool}} was deleted. |
+| Key                             | English                                                                                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zfsDelete.fs.title`            | Delete this file system                                                                                                                                            |
+| `zfsDelete.fs.intro`            | Deleting a file system erases every file in it and all its snapshots.                                                                                              |
+| `zfsDelete.fs.open`             | Delete file system…                                                                                                                                                |
+| `zfsDelete.blocked.shares`      | Shared folders use it: {{list}}.                                                                                                                                   |
+| `zfsDelete.blocked.sharesDo`    | Remove them first, in Shared folders.                                                                                                                              |
+| `zfsDelete.blocked.sharesLink`  | Open Shared folders                                                                                                                                                |
+| `zfsDelete.blocked.inside`      | It holds {{list}}.                                                                                                                                                 |
+| `zfsDelete.blocked.insideFsDo`  | Delete it first, on its page.                                                                                                                                      |
+| `zfsDelete.blocked.insideVolDo` | Delete it in the classic interface first.                                                                                                                          |
+| `zfsDelete.blocked.clone`       | <clone></clone> was made from one of its snapshots.                                                                                                                |
+| `zfsDelete.blocked.cloneDo`     | Delete or promote it in the classic interface first.                                                                                                               |
+| `zfsDelete.blocked.locked`      | It is locked.                                                                                                                                                      |
+| `zfsDelete.blocked.lockedDo`    | Unlock it in the classic interface first.                                                                                                                          |
+| `zfsDelete.blocked.unread`      | Could not check what uses this file system, so it cannot be deleted now.                                                                                           |
+| `zfsDelete.fs.checking`         | Checking what uses this file system…                                                                                                                               |
+| `zfsDelete.fs.gone`             | This file system no longer exists.                                                                                                                                 |
+| `zfsDelete.fs.dialogTitle`      | Delete file system {{fs}}?                                                                                                                                         |
+| `zfsDelete.fs.snapshots`        | {{count}} snapshots holding {{size}}                                                                                                                               |
+| `zfsDelete.fs.consequence`      | Every file in <fs></fs> and all {{count}} of its snapshots are lost. This cannot be undone.                                                                        |
+| `zfsDelete.fs.typePrompt`       | Type {{fs}} to confirm.                                                                                                                                            |
+| `zfsDelete.fs.confirm`          | Delete file system                                                                                                                                                 |
+| `zfsDelete.checkingAgain`       | Checking again…                                                                                                                                                    |
+| `zfsDelete.fs.step.delete`      | Delete the file system                                                                                                                                             |
+| `zfsDelete.step.save`           | Save the change                                                                                                                                                    |
+| `zfsDelete.fs.task`             | Delete file system {{fs}}                                                                                                                                          |
+| `zfsDelete.fs.doneTitle`        | {{fs}} was deleted.                                                                                                                                                |
+| `zfsDelete.fs.doneBody`         | Its space is free on pool <pool></pool>.                                                                                                                           |
+| `zfsDelete.fs.failed`           | {{fs}} was not deleted.                                                                                                                                            |
+| `zfsDelete.fs.goneAnyway`       | The file system is deleted. Saving the change failed, so it stays pending in the band.                                                                             |
+| `zfsDelete.fs.unknown`          | Could not tell whether {{fs}} was deleted.                                                                                                                         |
+| `zfsDelete.pool.title`          | Delete this pool                                                                                                                                                   |
+| `zfsDelete.pool.intro`          | Deleting a pool erases everything on it and frees its disks for other use.                                                                                         |
+| `zfsDelete.pool.open`           | Delete pool…                                                                                                                                                       |
+| `zfsDelete.pool.blocked.fs`     | It holds the file systems {{list}}.                                                                                                                                |
+| `zfsDelete.pool.blocked.fsDo`   | Delete them first, on their pages.                                                                                                                                 |
+| `zfsDelete.pool.blocked.vol`    | It holds the volumes {{list}}.                                                                                                                                     |
+| `zfsDelete.pool.blocked.volDo`  | Delete them in the classic interface first.                                                                                                                        |
+| `zfsDelete.pool.blocked.shares` | Shared folders use its own folder: {{list}}.                                                                                                                       |
+| `zfsDelete.pool.blocked.locked` | Its own folder is locked.                                                                                                                                          |
+| `zfsDelete.pool.checking`       | Checking what is on this pool…                                                                                                                                     |
+| `zfsDelete.pool.gone`           | This pool no longer exists.                                                                                                                                        |
+| `zfsDelete.pool.dialogTitle`    | Delete pool {{pool}}?                                                                                                                                              |
+| `zfsDelete.pool.consequence`    | Everything on this pool is lost: the files in its own folder ({{used}}) and its {{count}} snapshots. This cannot be undone.                                        |
+| `zfsDelete.pool.disks`          | Its disks are cleared of the pool's marks and can be used again. The files on them are not overwritten, only made unreadable; wipe a disk before you give it away. |
+| `zfsDelete.pool.typePrompt`     | Type {{pool}} to confirm.                                                                                                                                          |
+| `zfsDelete.pool.confirm`        | Delete pool                                                                                                                                                        |
+| `zfsDelete.pool.step.delete`    | Delete the pool                                                                                                                                                    |
+| `zfsDelete.pool.task`           | Delete pool {{pool}}                                                                                                                                               |
+| `zfsDelete.pool.doneTitle`      | Pool {{pool}} was deleted.                                                                                                                                         |
+| `zfsDelete.pool.doneBody`       | Its disks are free: {{list}}.                                                                                                                                      |
+| `zfsDelete.pool.toList`         | Go to ZFS                                                                                                                                                          |
+| `zfsDelete.pool.failed`         | Pool {{pool}} was not deleted.                                                                                                                                     |
+| `zfsDelete.pool.notCleared`     | If the pool was destroyed but its disks were not cleared, they show under Erase and reuse when you next use them.                                                  |
+| `zfsDelete.pool.unknown`        | Could not tell whether pool {{pool}} was deleted.                                                                                                                  |
 
 ---
 
@@ -1989,18 +1994,18 @@ and its hint is linked. The steps are announced politely, a failure assertively,
 
 ### 10.1 Dashboard
 
-| Where | Becomes |
-| --- | --- |
+| Where                                        | Becomes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Attention rows (the monitoring design's 1.7) | **One row per pool that is not OK by state** (0.3, from `getPoolStatus`'s `state` and `status`, which are what it returns), read **once per visit** and on "Try again", never polled, **only if the VM shows that `getPoolStatus` reads no disk** (section 18, P14). Critical: "ZFS pool {{pool}}: a disk is missing or has failed." (`DEGRADED`), "ZFS pool {{pool}} cannot be used." (`FAULTED`, `UNAVAIL`, `SUSPENDED`), "ZFS pool {{pool}} has damaged files." (`status` `Error`). Action: router link "Open pool {{pool}}". Placed with the disk rows (order 3). No row for a disk's error counts or for how full (the report and the pool row are not read here), and none for Unknown (the monitoring design's rule). If the VM shows a disk read, there are no ZFS rows, as for RAID (its 9.1) |
-| Storage card (1.2) | Unchanged reads. ZFS file systems (`type` `zfs`) of one pool are shown **as one item for the pool**: "ZFS pool {{pool}}" with the fullest of its file systems' figures and "{{count}} file systems share this space", because each one reports the pool's free space as its own and six rows of the same free space mislead (section 17, D22). The item links to the pool's page when the plugin is known to be installed |
+| Storage card (1.2)                           | Unchanged reads. ZFS file systems (`type` `zfs`) of one pool are shown **as one item for the pool**: "ZFS pool {{pool}}" with the fullest of its file systems' figures and "{{count}} file systems share this space", because each one reports the pool's free space as its own and six rows of the same free space mislead (section 17, D22). The item links to the pool's page when the plugin is known to be installed                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### 10.2 Disks
 
-| Where | Was | Becomes |
-| --- | --- | --- |
+| Where                                      | Was                                                                                              | Becomes                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | The disk-use model (the disks slice's 0.6) | ZFS pools' disks seen only through mounted file systems, and the untraceable sentence naming ZFS | A new use, **"Part of ZFS pool {{pool}}"** (kind `zfs`), from `getPoolStatus` and each pool's `getPoolDevices` (0.8), read wherever the model is read (the Disks pages, the wipe, Flow A, the RAID and ZFS flows). It refuses a wipe, a RAID use and a new file system, as a RAID member does. Fail closed: when the plugin is installed and these reads fail, the model is "Not known" for every disk. The untraceable sentence drops "ZFS" from its list once these reads succeed |
-| Disks list and a disk's page, "Used for" | nothing, or the mounted ZFS file system's name | "Part of ZFS pool {{pool}}" with a router link to the pool's page, and the role in words when it is not a data disk ("Spare in ZFS pool {{pool}}", "Read cache of ZFS pool {{pool}}"), from `getPoolDevices` and the report **[verify]** that the role can be told from `getPoolDevices` alone; if not, only "Part of" is shown there |
-| A disk's page, wipe blocker | the file system's blocker, when one was mounted | "It is part of ZFS pool {{pool}}." "Replace it, or delete the pool, on the pool's page first." + router link "Open pool {{pool}}" (where sections 7 and 9's own refusals apply) |
+| Disks list and a disk's page, "Used for"   | nothing, or the mounted ZFS file system's name                                                   | "Part of ZFS pool {{pool}}" with a router link to the pool's page, and the role in words when it is not a data disk ("Spare in ZFS pool {{pool}}", "Read cache of ZFS pool {{pool}}"), from `getPoolDevices` and the report **[verify]** that the role can be told from `getPoolDevices` alone; if not, only "Part of" is shown there                                                                                                                                               |
+| A disk's page, wipe blocker                | the file system's blocker, when one was mounted                                                  | "It is part of ZFS pool {{pool}}." "Replace it, or delete the pool, on the pool's page first." + router link "Open pool {{pool}}" (where sections 7 and 9's own refusals apply)                                                                                                                                                                                                                                                                                                     |
 
 ### 10.3 File systems
 
@@ -2009,14 +2014,14 @@ full name as `devicefile` and `label`, no UUID, the pool's first disk as `parent
 disks as `devicefiles`, and backend properties saying it is not mounted through OMV's mount table and
 cannot be grown by OMV (read from the plugin's backend). So:
 
-| Where | Becomes |
-| --- | --- |
-| Type word | `zfs` "ZFS" joins the shared word list |
-| Name and link | The full name in `Identifier`; a router link to its page under ZFS (0.7), not to a File systems page (it has no UUID, the file-systems slice's 0.5). Without the plugin known to be installed: text, with the existing "This file system has no ID this page can use" sentence |
-| "On" column | "ZFS pool {{pool}}", a router link to the pool's page |
-| Unmount, grow, warning level and tags | Not offered for ZFS rows: "ZFS file systems are managed on the ZFS pages." The existing refusals already exclude them (they are not mounted through OMV's settings and cannot be grown by OMV) |
-| "Found on the disks, not mounted" (the file-systems slice's 1.5) | **ZFS file systems are left out**: the plugin's backend reports every ZFS file system, and mounting one through OMV's mount dialog would give it a second, different folder. A line instead, when any are found: "{{count}} ZFS file systems are not known to OMV yet, for example ones made outside the NAS's pages. Add them with Discover in the classic interface." with the classic ZFS link |
-| The contract | `FileSystemMgmt.getList` and `enumerateFilesystems` rows for ZFS carry a `uuid` of `null` (the backend has none; OMV's helper copies it as it is) **[verify]**. The contract makes `uuid` nullable, and every function that reads it (the address, the disk-use model) treats `null` as empty. This is the first check on the VM (15.2, step 1): until it holds, the File systems pages could fail with a pool present |
+| Where                                                            | Becomes                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type word                                                        | `zfs` "ZFS" joins the shared word list                                                                                                                                                                                                                                                                                                                                                                                 |
+| Name and link                                                    | The full name in `Identifier`; a router link to its page under ZFS (0.7), not to a File systems page (it has no UUID, the file-systems slice's 0.5). Without the plugin known to be installed: text, with the existing "This file system has no ID this page can use" sentence                                                                                                                                         |
+| "On" column                                                      | "ZFS pool {{pool}}", a router link to the pool's page                                                                                                                                                                                                                                                                                                                                                                  |
+| Unmount, grow, warning level and tags                            | Not offered for ZFS rows: "ZFS file systems are managed on the ZFS pages." The existing refusals already exclude them (they are not mounted through OMV's settings and cannot be grown by OMV)                                                                                                                                                                                                                         |
+| "Found on the disks, not mounted" (the file-systems slice's 1.5) | **ZFS file systems are left out**: the plugin's backend reports every ZFS file system, and mounting one through OMV's mount dialog would give it a second, different folder. A line instead, when any are found: "{{count}} ZFS file systems are not known to OMV yet, for example ones made outside the NAS's pages. Add them with Discover in the classic interface." with the classic ZFS link                      |
+| The contract                                                     | `FileSystemMgmt.getList` and `enumerateFilesystems` rows for ZFS carry a `uuid` of `null` (the backend has none; OMV's helper copies it as it is) **[verify]**. The contract makes `uuid` nullable, and every function that reads it (the address, the disk-use model) treats `null` as empty. This is the first check on the VM (15.2, step 1): until it holds, the File systems pages could fail with a pool present |
 
 ### 10.4 Flow A
 
@@ -2052,14 +2057,14 @@ Every method in this slice refuses a normal user (read from source). So:
 
 ### 11.2 Navigation and routes
 
-| Item | Route | Roles | Replaces |
-| --- | --- | --- | --- |
-| Storage > ZFS (only with the plugin) | `/storage/zfs` | admin | the stock ZFS Pools list |
-| (no menu item) | `/storage/zfs/create` | admin | the stock Add pool form |
-| (no menu item) | `/storage/zfs/pools/$pool` | admin | the stock Details, Scrub and Devices menus for a pool, and its Delete |
-| (no menu item) | `/storage/zfs/pools/$pool/add` | admin | the stock Add filesystem dialog |
-| (no menu item) | `/storage/zfs/pools/$pool/replace` | admin | the stock Replace device form |
-| (no menu item) | `/storage/zfs/fs/$` | admin | the stock Datasets and Snapshots pages for one file system, its properties for the size limit and compression, and its Delete |
+| Item                                 | Route                              | Roles | Replaces                                                                                                                      |
+| ------------------------------------ | ---------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Storage > ZFS (only with the plugin) | `/storage/zfs`                     | admin | the stock ZFS Pools list                                                                                                      |
+| (no menu item)                       | `/storage/zfs/create`              | admin | the stock Add pool form                                                                                                       |
+| (no menu item)                       | `/storage/zfs/pools/$pool`         | admin | the stock Details, Scrub and Devices menus for a pool, and its Delete                                                         |
+| (no menu item)                       | `/storage/zfs/pools/$pool/add`     | admin | the stock Add filesystem dialog                                                                                               |
+| (no menu item)                       | `/storage/zfs/pools/$pool/replace` | admin | the stock Replace device form                                                                                                 |
+| (no menu item)                       | `/storage/zfs/fs/$`                | admin | the stock Datasets and Snapshots pages for one file system, its properties for the size limit and compression, and its Delete |
 
 - **The menu item.** `NAV_PAGES` gains Storage > ZFS (`item: "zfs"`, the classic segment;
   `labelKey: "nav.items.storage.zfs"` "ZFS"; `classic: "/#/storage/zfs/pools"`), placed after RAID and
@@ -2087,27 +2092,27 @@ datamodels where this interface sends less, which the contract rules allow; "Str
 
 ### 12.1 ZFS methods this design needs
 
-| # | Method | What it does (read from source) | Changes state? | Marks pending | Background task? | Used where, when | Contract notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `Zfs.listCompressionTypes` | Returns a fixed list of compression names; runs no command and reads nothing | No | No | No | The shell, once after an administrator signs in, to know whether the plugin is installed (0.11) | No parameters. Its 404 means not installed. The list itself is not used |
-| 2 | `Zfs.listPools` | Lists every pool, file system and volume in one flat list: names, type, sizes, mount folder, mounted, compression and ratio, size limit, origin, encryption and key state, whether shared folders use it, the pool's state, error status, check state and capacity. Runs ZFS's status, list and listing commands and reads OMV's configuration | No | No | No (a `Bg` twin exists, not used) | Every ZFS page, the create and add flows: open, Refresh, after an action, the re-checks, the poll (0.6) | Request: the four common list parameters, always sent (`start` 0, `limit` null, the sort fields null). Response: open object rows; `devices` (markup-joined) not used; sizes as numbers **[verify]** |
-| 3 | `Zfs.getObjectDetails` | Returns ZFS's own report as text: for a pool, its status report with the device tree, error counts, last check and damaged files; for a file system, its listing and every property | No | No | No | The ZFS list (each pool), a pool's page, the poll for a busy pool; a file system's technical details on request | Stricter: `type` only `Pool` or `Filesystem` (the source also has `Volume` and `Snapshot`); `name` 0.7's existing-name patterns. Response: a string, lines joined by a line feed and a carriage return. Captures scrubbed: serial numbers inside device names, damaged-file paths |
-| 4 | `Zfs.getPoolDevices` | Lists one pool's disks: full path, state, the group each is in | No | No | No | A pool's page, the replace flow, the disk-use model (once per pool) | `name` the pool pattern. Response: `{devicefile, state, vdev, label}[]`; `label` is server English, not shown. An empty reply for a listed pool is treated as a failure (0.8) |
-| 5 | `Zfs.getPoolStatus` | Lists every pool's name, state, error status and capacity, from ZFS's status and list commands only | No | No | No | The dashboard, once per visit, if it reads no disk (P14); the disk-use model, for the pool names | No parameters. An empty reply while ZFS file systems exist is treated as a failure (0.8) |
-| 6 | `Zfs.getAllSnapshots` | Lists every snapshot on every pool: file system, name, space it holds, size it shows, encryption. Not when it was taken | No | No | No (a `Bg` twin exists, not used) | A file system's page; its delete and roll-back re-checks | Request: the common list parameters. **[verify]** the time on a NAS with thousands of snapshots; if it is slow, the `Bg` twin is the fallback and needs clearing too |
-| 7 | `Zfs.getEmptyCandidates` | Lists disks that may go into a pool: not read-only, not USB, not named by another service's settings, no file system found; with stable by-id paths, size, vendor, serial number | No | No | No | The create and replace flows, and their re-checks | No parameters. `serialnumber` scrubbed in captures; `label` and `description` are server English, not shown |
-| 8 | `Zfs.addPool` | Creates a pool from the disks given with one layout, then turns compression on, and registers the pool's own folder with OMV | Yes: **erases the disks given** | `fstab`, `collectd`, `monit`, `quota` | No (synchronous) | The create flow, after the typed confirmation and the re-check | `x-omv-destructive: data`, `x-omv-dirty`. Stricter: `pooltype` one of `mirror`, `raidz1`, `raidz2`, `raidz3`, `basic`; `name` 0.7's new-pool rule; `devices` 1 or more by-id device paths (the contract's device-file pattern, limited to letters, digits and `. _ : + -` after `/dev/disk/by-id/`); `devalias` only `id`; `force` only `false`; `mountpoint` only empty; `ashift` only `true` and `ashiftval` only `12`; `casesensitivity` only `sensitive`; `compress` only `true`, `compresstype` only `lz4` (both read by the source though not in its datamodel). The description says the server checks nothing about what is on the disks beyond ZFS's own refusal of a disk in use |
-| 9 | `Zfs.addObject` | Creates a file system (or, not used here, a snapshot, volume or clone), mounts it and registers it with OMV | Yes | `fstab`, `collectd`, `monit`, `quota` | No | The create flow's first file system; adding a file system (4.2) | Stricter: `type` only `filesystem`; `path` an existing pool's name; `name` 0.7's new-file-system rule; `mountpoint` only empty; `compression`, `recordsize`, `casesensitivity` not sent |
-| 10 | `Zfs.setProperties` | Sets ZFS properties of a pool or file system | Yes | for a file system: `collectd`, `monit`, `quota` | No | A file system's settings (4.4), and the size limit step of 4.2 | Stricter: `type` only `Filesystem`; `name` the existing-name pattern; `properties` 1 or 2 items, `property` only `quota` or `compression`, `value` for `quota` `none` or a size with a `G` or `T` suffix, for `compression` `lz4` or `off`, `modified` only `true` |
-| 11 | `Zfs.quickSnapshot` | Takes a snapshot of a file system, named with the NAS's date and time; with `recursive`, of the file systems inside it too | Yes (adds a snapshot) | No | No | Take a snapshot now (5.3) | `name` the existing-name pattern; `recursive` boolean |
-| 12 | `Zfs.rollbackSnapshot` | Rolls a file system back to a snapshot; ZFS refuses when newer snapshots exist | Yes: **loses every change since the snapshot** | No | No | Roll back (5.4), after the typed confirmation | `x-omv-destructive: data`. `name` a snapshot's full name (`pool/fs@snap`, each part 0.7's existing-name pattern) |
-| 13 | `Zfs.deleteObjectBg` | Deletes a snapshot, a file system (with its snapshots and mount entry) or a pool (destroying it and clearing its disks' marks), and the scheduled jobs that named it; refuses a pool with file systems or volumes, a file system with file systems inside it, either while shared folders use it | Yes: **destroys data** | `fstab`, `collectd`, `monit`, `quota`; `zfscron` when a job was removed **[verify]** | **Yes** (returns a task handle) | Delete a snapshot (5.5), a file system (9.1), a pool (9.2), after the typed confirmations | `x-omv-destructive: data`, `x-omv-task`, `x-omv-dirty`. Stricter: `type` only `Snapshot`, `Filesystem` or `Pool` (not `Volume`); `name` the matching existing-name pattern; `mp` the mount folder read for the object (empty for a snapshot); `recursive` only `false` |
-| 14 | `Zfs.scrubPool` | Starts a check of a pool, or continues a paused one | Yes (starts hours of work) | No | No (the check runs in ZFS) | Check now, Continue checking (6.2) | `name` the pool pattern |
-| 15 | `Zfs.stopScrub` | Stops a pool's check | Yes | No | No | Stop checking (6.2) | `name` the pool pattern |
-| 16 | `Zfs.deviceReplace` | Replaces a disk of a pool with another; ZFS rebuilds onto the new one | Yes: **erases the new disk** | No | No (the rebuild runs in ZFS) | The replace flow (7.2), after the typed confirmation | `x-omv-destructive: data`. `pool` the pool pattern; `olddevice` a device path as `getPoolDevices` gave it; `newdevice` a by-id path as `getEmptyCandidates` gave it |
-| 17 | `Zfs.deviceOffline` | Makes ZFS stop using a disk until it is brought back | Yes: **takes away protection** | No | No | Take offline (7.7) | `x-omv-destructive: service`. `pool`, `device` as above |
-| 18 | `Zfs.deviceOnline` | Brings an offline disk back into use | Yes | No | No | Bring back (7.7) | `pool`, `device` as above |
-| 19 | `Zfs.clearPool` | Sets a pool's error counts back to zero and lets ZFS try a failed disk again | Yes (clears the record of errors) | No | No | Clear error counts (7.8) | `name` the pool pattern |
+| #   | Method                     | What it does (read from source)                                                                                                                                                                                                                                                                                                                | Changes state?                                 | Marks pending                                                                        | Background task?                  | Used where, when                                                                                                | Contract notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `Zfs.listCompressionTypes` | Returns a fixed list of compression names; runs no command and reads nothing                                                                                                                                                                                                                                                                   | No                                             | No                                                                                   | No                                | The shell, once after an administrator signs in, to know whether the plugin is installed (0.11)                 | No parameters. Its 404 means not installed. The list itself is not used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2   | `Zfs.listPools`            | Lists every pool, file system and volume in one flat list: names, type, sizes, mount folder, mounted, compression and ratio, size limit, origin, encryption and key state, whether shared folders use it, the pool's state, error status, check state and capacity. Runs ZFS's status, list and listing commands and reads OMV's configuration | No                                             | No                                                                                   | No (a `Bg` twin exists, not used) | Every ZFS page, the create and add flows: open, Refresh, after an action, the re-checks, the poll (0.6)         | Request: the four common list parameters, always sent (`start` 0, `limit` null, the sort fields null). Response: open object rows; `devices` (markup-joined) not used; sizes as numbers **[verify]**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 3   | `Zfs.getObjectDetails`     | Returns ZFS's own report as text: for a pool, its status report with the device tree, error counts, last check and damaged files; for a file system, its listing and every property                                                                                                                                                            | No                                             | No                                                                                   | No                                | The ZFS list (each pool), a pool's page, the poll for a busy pool; a file system's technical details on request | Stricter: `type` only `Pool` or `Filesystem` (the source also has `Volume` and `Snapshot`); `name` 0.7's existing-name patterns. Response: a string, lines joined by a line feed and a carriage return. Captures scrubbed: serial numbers inside device names, damaged-file paths                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 4   | `Zfs.getPoolDevices`       | Lists one pool's disks: full path, state, the group each is in                                                                                                                                                                                                                                                                                 | No                                             | No                                                                                   | No                                | A pool's page, the replace flow, the disk-use model (once per pool)                                             | `name` the pool pattern. Response: `{devicefile, state, vdev, label}[]`; `label` is server English, not shown. An empty reply for a listed pool is treated as a failure (0.8)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 5   | `Zfs.getPoolStatus`        | Lists every pool's name, state, error status and capacity, from ZFS's status and list commands only                                                                                                                                                                                                                                            | No                                             | No                                                                                   | No                                | The dashboard, once per visit, if it reads no disk (P14); the disk-use model, for the pool names                | No parameters. An empty reply while ZFS file systems exist is treated as a failure (0.8)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 6   | `Zfs.getAllSnapshots`      | Lists every snapshot on every pool: file system, name, space it holds, size it shows, encryption. Not when it was taken                                                                                                                                                                                                                        | No                                             | No                                                                                   | No (a `Bg` twin exists, not used) | A file system's page; its delete and roll-back re-checks                                                        | Request: the common list parameters. **[verify]** the time on a NAS with thousands of snapshots; if it is slow, the `Bg` twin is the fallback and needs clearing too                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 7   | `Zfs.getEmptyCandidates`   | Lists disks that may go into a pool: not read-only, not USB, not named by another service's settings, no file system found; with stable by-id paths, size, vendor, serial number                                                                                                                                                               | No                                             | No                                                                                   | No                                | The create and replace flows, and their re-checks                                                               | No parameters. `serialnumber` scrubbed in captures; `label` and `description` are server English, not shown                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 8   | `Zfs.addPool`              | Creates a pool from the disks given with one layout, then turns compression on, and registers the pool's own folder with OMV                                                                                                                                                                                                                   | Yes: **erases the disks given**                | `fstab`, `collectd`, `monit`, `quota`                                                | No (synchronous)                  | The create flow, after the typed confirmation and the re-check                                                  | `x-omv-destructive: data`, `x-omv-dirty`. Stricter: `pooltype` one of `mirror`, `raidz1`, `raidz2`, `raidz3`, `basic`; `name` 0.7's new-pool rule; `devices` 1 or more by-id device paths (the contract's device-file pattern, limited to letters, digits and `. _ : + -` after `/dev/disk/by-id/`); `devalias` only `id`; `force` only `false`; `mountpoint` only empty; `ashift` only `true` and `ashiftval` only `12`; `casesensitivity` only `sensitive`; `compress` only `true`, `compresstype` only `lz4` (both read by the source though not in its datamodel). The description says the server checks nothing about what is on the disks beyond ZFS's own refusal of a disk in use |
+| 9   | `Zfs.addObject`            | Creates a file system (or, not used here, a snapshot, volume or clone), mounts it and registers it with OMV                                                                                                                                                                                                                                    | Yes                                            | `fstab`, `collectd`, `monit`, `quota`                                                | No                                | The create flow's first file system; adding a file system (4.2)                                                 | Stricter: `type` only `filesystem`; `path` an existing pool's name; `name` 0.7's new-file-system rule; `mountpoint` only empty; `compression`, `recordsize`, `casesensitivity` not sent                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 10  | `Zfs.setProperties`        | Sets ZFS properties of a pool or file system                                                                                                                                                                                                                                                                                                   | Yes                                            | for a file system: `collectd`, `monit`, `quota`                                      | No                                | A file system's settings (4.4), and the size limit step of 4.2                                                  | Stricter: `type` only `Filesystem`; `name` the existing-name pattern; `properties` 1 or 2 items, `property` only `quota` or `compression`, `value` for `quota` `none` or a size with a `G` or `T` suffix, for `compression` `lz4` or `off`, `modified` only `true`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 11  | `Zfs.quickSnapshot`        | Takes a snapshot of a file system, named with the NAS's date and time; with `recursive`, of the file systems inside it too                                                                                                                                                                                                                     | Yes (adds a snapshot)                          | No                                                                                   | No                                | Take a snapshot now (5.3)                                                                                       | `name` the existing-name pattern; `recursive` boolean                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 12  | `Zfs.rollbackSnapshot`     | Rolls a file system back to a snapshot; ZFS refuses when newer snapshots exist                                                                                                                                                                                                                                                                 | Yes: **loses every change since the snapshot** | No                                                                                   | No                                | Roll back (5.4), after the typed confirmation                                                                   | `x-omv-destructive: data`. `name` a snapshot's full name (`pool/fs@snap`, each part 0.7's existing-name pattern)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 13  | `Zfs.deleteObjectBg`       | Deletes a snapshot, a file system (with its snapshots and mount entry) or a pool (destroying it and clearing its disks' marks), and the scheduled jobs that named it; refuses a pool with file systems or volumes, a file system with file systems inside it, either while shared folders use it                                               | Yes: **destroys data**                         | `fstab`, `collectd`, `monit`, `quota`; `zfscron` when a job was removed **[verify]** | **Yes** (returns a task handle)   | Delete a snapshot (5.5), a file system (9.1), a pool (9.2), after the typed confirmations                       | `x-omv-destructive: data`, `x-omv-task`, `x-omv-dirty`. Stricter: `type` only `Snapshot`, `Filesystem` or `Pool` (not `Volume`); `name` the matching existing-name pattern; `mp` the mount folder read for the object (empty for a snapshot); `recursive` only `false`                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 14  | `Zfs.scrubPool`            | Starts a check of a pool, or continues a paused one                                                                                                                                                                                                                                                                                            | Yes (starts hours of work)                     | No                                                                                   | No (the check runs in ZFS)        | Check now, Continue checking (6.2)                                                                              | `name` the pool pattern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 15  | `Zfs.stopScrub`            | Stops a pool's check                                                                                                                                                                                                                                                                                                                           | Yes                                            | No                                                                                   | No                                | Stop checking (6.2)                                                                                             | `name` the pool pattern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 16  | `Zfs.deviceReplace`        | Replaces a disk of a pool with another; ZFS rebuilds onto the new one                                                                                                                                                                                                                                                                          | Yes: **erases the new disk**                   | No                                                                                   | No (the rebuild runs in ZFS)      | The replace flow (7.2), after the typed confirmation                                                            | `x-omv-destructive: data`. `pool` the pool pattern; `olddevice` a device path as `getPoolDevices` gave it; `newdevice` a by-id path as `getEmptyCandidates` gave it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 17  | `Zfs.deviceOffline`        | Makes ZFS stop using a disk until it is brought back                                                                                                                                                                                                                                                                                           | Yes: **takes away protection**                 | No                                                                                   | No                                | Take offline (7.7)                                                                                              | `x-omv-destructive: service`. `pool`, `device` as above                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 18  | `Zfs.deviceOnline`         | Brings an offline disk back into use                                                                                                                                                                                                                                                                                                           | Yes                                            | No                                                                                   | No                                | Bring back (7.7)                                                                                                | `pool`, `device` as above                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 19  | `Zfs.clearPool`            | Sets a pool's error counts back to zero and lets ZFS try a failed disk again                                                                                                                                                                                                                                                                   | Yes (clears the record of errors)              | No                                                                                   | No                                | Clear error counts (7.8)                                                                                        | `name` the pool pattern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 Nineteen methods: seven reads (1 to 7) and twelve that change state. Captured examples are scrubbed
 before commit (AGENTS.md rule 2): serial numbers and WWNs, and the by-id names built from them, in
@@ -2116,15 +2121,15 @@ names that are personal are replaced by documentation names (`tank`, `media`).
 
 ### 12.2 Other methods, already in the contract
 
-| Method | Where | Status |
-| --- | --- | --- |
-| `DiskMgmt.getList`, `DiskMgmt.rescan`, `DiskMgmt.wipe` | flows, pages, the disk-use model | Exist |
+| Method                                                                                                        | Where                                                              | Status                                                          |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| `DiskMgmt.getList`, `DiskMgmt.rescan`, `DiskMgmt.wipe`                                                        | flows, pages, the disk-use model                                   | Exist                                                           |
 | `FileSystemMgmt.getList`, `FileSystemMgmt.enumerateFilesystems`, `FileSystemMgmt.enumerateMountedFilesystems` | the disk-use model, Used by, the File systems pages, the dashboard | Exist; `uuid` becomes nullable for ZFS rows **[verify]** (10.3) |
-| `FsTab.getByFsName` | Used by (0.12) | Exists |
-| `ShareMgmt.getList` | Used by, the delete refusals | Exists |
-| `MdMgmt.enumerateDevices` | the disk-use model, as before | Exists |
-| `EmailNotification.get` | the ZFS list's alerts line | Exists; password omitted |
-| `Config.applyChangesBg`, `Config.revertChangesBg`, `Exec.*`, `System.getInformation` | checkpoints, the band, tasks | Exist |
+| `FsTab.getByFsName`                                                                                           | Used by (0.12)                                                     | Exists                                                          |
+| `ShareMgmt.getList`                                                                                           | Used by, the delete refusals                                       | Exists                                                          |
+| `MdMgmt.enumerateDevices`                                                                                     | the disk-use model, as before                                      | Exists                                                          |
+| `EmailNotification.get`                                                                                       | the ZFS list's alerts line                                         | Exists; password omitted                                        |
+| `Config.applyChangesBg`, `Config.revertChangesBg`, `Exec.*`, `System.getInformation`                          | checkpoints, the band, tasks                                       | Exist                                                           |
 
 ### 12.3 ZFS methods this design deliberately does not use
 
@@ -2155,10 +2160,10 @@ names that are personal are replaced by documentation names (`tank`, `media`).
 
 Each with stories for every state in both themes (design-system engineer).
 
-| Component | Why | States to cover |
-| --- | --- | --- |
+| Component       | Why                                                                                                                                                | States to cover                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `TableGroupRow` | A heading row inside a table body, spanning its columns, for a pool's disk groups and classes (2.5): the group's words and its protection sentence | one group; several; a long heading at 320px; in the compact phone layout; read by a screen reader as a row header for the rows under it |
-| `SizeField` | A size limit: a number and a unit (GiB, TiB) side by side, one label, binary units, error and hint linked (4.2, 4.4) | empty, filled, invalid (below what it holds), disabled with reason, 320px and 200% zoom; the unit change keeps the number |
+| `SizeField`     | A size limit: a number and a unit (GiB, TiB) side by side, one label, binary units, error and hint linked (4.2, 4.4)                               | empty, filled, invalid (below what it holds), disabled with reason, 320px and 200% zoom; the unit change keeps the number               |
 
 The menu item's condition is in the app's navigation model (`when: "zfsPlugin"`), as RAID's is. No
 new colour, token or colour variant: the slice uses the status, pending, destructive and neutral
@@ -2210,24 +2215,24 @@ the flows. Cleared at sign-out with the task registry; nothing touches browser s
 
 Built from scrubbed captures where the VM can show them (section 15); hand-written ones say so.
 
-| Method | Scenarios |
-| --- | --- |
-| `Zfs.listCompressionTypes` | the list (captured); the 404 (written from OMV's reply for an unknown service, as the RAID one was) |
-| `Zfs.listPools` | none (captured); a mirror of two with `data` (captured); RAID-Z1 of three, RAID-Z2 of four, a single disk, a stripe of two (captured); a pool with a spare (captured); a degraded mirror (captured, a disk offline and one detached by hand); rebuilding (captured); being checked, paused (captured); a nearly full pool (captured, filled to 85%); an encrypted, locked file system (captured, made in the classic interface); a volume (captured); a clone (captured); nested file systems (captured); a file system with no folder (captured); `state` `UNKNOWN` (hand-written); twenty pools; names 64 characters long, right-to-left, looking like markup (hand-written, within 0.7's patterns, and outside them) |
-| `Zfs.getObjectDetails` | one report per pool scenario above (captured where possible), including RAID-Z3 of five and a pool with several groups, logs, cache and special (hand-written in ZFS's format); damaged files (hand-written); a report that cannot be parsed; an error; a file system's properties (captured) |
-| `Zfs.getPoolDevices` | per pool scenario; an empty reply for a listed pool (hand-written, the fail-closed case) |
-| `Zfs.getPoolStatus` | none; one per pool scenario; an empty reply while ZFS file systems exist (hand-written) |
-| `Zfs.getAllSnapshots` | none; a few (captured); 500 on one file system (hand-written); a snapshot a clone was made from (captured) |
-| `Zfs.getEmptyCandidates` | the VM's empty scratch disks (captured); none; one too small (hand-written); an error |
-| `Zfs.addPool` | each layout on the VM's disks (captured); refused because a disk is in use (captured); a name ZFS refuses (captured) |
-| `Zfs.addObject`, `Zfs.setProperties` | created (captured); a name taken (captured); a limit below what it holds (captured) |
-| `Zfs.quickSnapshot`, `Zfs.rollbackSnapshot` | taken, rolled back (captured); rollback refused for an older snapshot (captured); two snapshots in one second (captured) |
-| `Zfs.deleteObjectBg` | snapshot, file system, pool deleted (captured, with the task's output); refused while shared, with children, with a clone (captured) |
-| `Zfs.scrubPool`, `Zfs.stopScrub` | started, stopped, continued (captured) |
-| `Zfs.deviceReplace`, `deviceOffline`, `deviceOnline`, `clearPool` | each (captured); replace with a disk too small (captured); offline refused with no copy left (captured) |
-| The mock's memory | As the RAID mock's: it remembers creates, file systems, snapshots, replacements, checks and deletes, with ZFS's work moving on at each read (a tenth more of a check or rebuild per report), so the journeys of sections 3, 4, 5, 7, 8 and 9 can be walked on `pnpm dev:mock` and in the browser test. Built as `zfsScenarios.ts` over the file-system mock's disks and file systems; its reports are written line by line in ZFS's format and read by the same parser as the captures. Named stories: `zfsNone`, `zfsMirror`, `zfsRaidz1`, `zfsRaidz2`, `zfsRaidz3`, `zfsSingle`, `zfsStripe`, `zfsSpare`, `zfsDegraded`, `zfsRebuilding`, `zfsChecking`, `zfsPaused`, `zfsErrors`, `zfsDamaged`, `zfsUnusable`, `zfsFull`, `zfsLocked`, `zfsVolume`, `zfsClone`, `zfsNested`, `zfsGroups`, `zfsStateUnknown`, `zfsReportFails`, `zfsEmptyDevices`, `zfsMany`, `zfsHostile`, `zfsNoPlugin`, `zfsBroken` (the plugin installed, ZFS not working) |
-| `FileSystemMgmt.getList`, `enumerateFilesystems`, `enumerateMountedFilesystems` | ZFS rows with `uuid` `null` (captured) alongside the existing ones |
-| `System.getInformation`, `Config.*` | the flows: nothing pending; the four pending; the four and `zfscron`; those and `nfs` (R10); apply failed half way |
+| Method                                                                          | Scenarios                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Zfs.listCompressionTypes`                                                      | the list (captured); the 404 (written from OMV's reply for an unknown service, as the RAID one was)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Zfs.listPools`                                                                 | none (captured); a mirror of two with `data` (captured); RAID-Z1 of three, RAID-Z2 of four, a single disk, a stripe of two (captured); a pool with a spare (captured); a degraded mirror (captured, a disk offline and one detached by hand); rebuilding (captured); being checked, paused (captured); a nearly full pool (captured, filled to 85%); an encrypted, locked file system (captured, made in the classic interface); a volume (captured); a clone (captured); nested file systems (captured); a file system with no folder (captured); `state` `UNKNOWN` (hand-written); twenty pools; names 64 characters long, right-to-left, looking like markup (hand-written, within 0.7's patterns, and outside them)                                                                                                                                                                                                                          |
+| `Zfs.getObjectDetails`                                                          | one report per pool scenario above (captured where possible), including RAID-Z3 of five and a pool with several groups, logs, cache and special (hand-written in ZFS's format); damaged files (hand-written); a report that cannot be parsed; an error; a file system's properties (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Zfs.getPoolDevices`                                                            | per pool scenario; an empty reply for a listed pool (hand-written, the fail-closed case)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `Zfs.getPoolStatus`                                                             | none; one per pool scenario; an empty reply while ZFS file systems exist (hand-written)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `Zfs.getAllSnapshots`                                                           | none; a few (captured); 500 on one file system (hand-written); a snapshot a clone was made from (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `Zfs.getEmptyCandidates`                                                        | the VM's empty scratch disks (captured); none; one too small (hand-written); an error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `Zfs.addPool`                                                                   | each layout on the VM's disks (captured); refused because a disk is in use (captured); a name ZFS refuses (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `Zfs.addObject`, `Zfs.setProperties`                                            | created (captured); a name taken (captured); a limit below what it holds (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Zfs.quickSnapshot`, `Zfs.rollbackSnapshot`                                     | taken, rolled back (captured); rollback refused for an older snapshot (captured); two snapshots in one second (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `Zfs.deleteObjectBg`                                                            | snapshot, file system, pool deleted (captured, with the task's output); refused while shared, with children, with a clone (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `Zfs.scrubPool`, `Zfs.stopScrub`                                                | started, stopped, continued (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `Zfs.deviceReplace`, `deviceOffline`, `deviceOnline`, `clearPool`               | each (captured); replace with a disk too small (captured); offline refused with no copy left (captured)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| The mock's memory                                                               | As the RAID mock's: it remembers creates, file systems, snapshots, replacements, checks and deletes, with ZFS's work moving on at each read (a tenth more of a check or rebuild per report), so the journeys of sections 3, 4, 5, 7, 8 and 9 can be walked on `pnpm dev:mock` and in the browser test. Built as `zfsScenarios.ts` over the file-system mock's disks and file systems; its reports are written line by line in ZFS's format and read by the same parser as the captures. Named stories: `zfsNone`, `zfsMirror`, `zfsRaidz1`, `zfsRaidz2`, `zfsRaidz3`, `zfsSingle`, `zfsStripe`, `zfsSpare`, `zfsDegraded`, `zfsRebuilding`, `zfsChecking`, `zfsPaused`, `zfsErrors`, `zfsDamaged`, `zfsUnusable`, `zfsFull`, `zfsLocked`, `zfsVolume`, `zfsClone`, `zfsNested`, `zfsGroups`, `zfsStateUnknown`, `zfsReportFails`, `zfsEmptyDevices`, `zfsMany`, `zfsHostile`, `zfsNoPlugin`, `zfsBroken` (the plugin installed, ZFS not working) |
+| `FileSystemMgmt.getList`, `enumerateFilesystems`, `enumerateMountedFilesystems` | ZFS rows with `uuid` `null` (captured) alongside the existing ones                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `System.getInformation`, `Config.*`                                             | the flows: nothing pending; the four pending; the four and `zfscron`; those and `nfs` (R10); apply failed half way                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -2333,58 +2338,58 @@ stated, not claimed, until observed on a real NAS (the owner's own server stays 
 
 ### 16.1 Trying to break it
 
-| Probe | Finding | Design response |
-| --- | --- | --- |
-| Create a pool that includes the system disk or `sda` | ZFS would refuse a disk in use, but the plugin's list is not the interface's only guard | Not offered: the disk-use model refuses both whatever the plugin says (0.8); re-checked at step 1 |
-| A disk the plugin offers that the interface sees as a RAID member or another pool's | The two lists disagree | The stricter wins: not offered, with the reason (0.8) |
-| `getPoolStatus` or `getPoolDevices` answers empty after a read error on the NAS | The model would think no disk is in a pool | An empty reply that contradicts another read is a failed read; fail closed (0.8, D10) |
-| **Two tabs create pools on the same disks** | No lock on the server | Each tab's step 1 re-reads; once the first pool exists its disks are "Part of ZFS pool" and the second stops. In the seconds between, ZFS refuses the second create because the disks are in use. Stated; no data of the owner's is at risk |
-| **Disks renamed** between the summary and step 1 | A different physical disk could be overwritten | Serial number and model compared at step 1; the stable by-id name is what the server receives (0.8) |
-| A pool named `etc`, `srv`, `mirror` or `log` | Its folder would sit on a system folder, or ZFS would refuse it | Refused by 0.7's rules, with the reason, before Continue |
-| A pool named like an existing one, differing in case | Two pools `Tank` and `tank` confuse the reader | "There is already a pool called {{name}}" compares without case |
-| 200-character names, right-to-left names, `<img onerror>` names made in the classic interface | Layout, UI-2 | Outside 0.7's patterns: no page, the name as text with "Manage it in the classic interface"; within them: text nodes, `dir="auto"`, wrapping, markup shown literally |
-| The pool row's `devices` field | It carries a markup line break | Not used; devices come from `getPoolDevices` (0.2) |
-| `/storage/zfs/fs/tank/../../rpc.php`, `/storage/zfs/pools/-rf`, `/storage/zfs/fs/tank%2Fmedia` | URL as an identifier | Patterns reject them; not-found state; no call (0.7) |
-| `/storage/zfs/pools/tank/replace` from a bookmark | Could preselect and erase a disk | The disk to replace is chosen in memory only; the new disk is never preselected unless it is the only one, and the typed confirmation stands |
-| **Stripe chosen by mistake**, or one disk with the only layout it allows | Losing the disk loses everything | Never preselected, grouped apart under "Not protected", last; the loss in its hint and again before the typed field; Change choices clears it (3.2, 3.3) |
-| Replace a working disk with a smaller one | ZFS refuses after the new disk was erased | Not offered: Too small (0.8), before anything is erased |
-| Replace the only disk of a single-disk pool that has failed | Nothing to rebuild from | Not offered, with "Its files are already lost" (7.1) |
-| Take offline the last good disk of a mirror | The pool would stop | Not offered when the group cannot lose another disk; ZFS refuses too (7.7) |
-| Roll back while people are using a shared folder on it | Their files change under them | Said in the dialog before the typed field (5.4) |
-| Roll back to an older snapshot | The server would refuse; if it were asked to force, it would delete the newer ones | Offered on the newest only; the contract has no way to force it (5.4, 12) |
-| Delete a file system that a shared folder uses | The shared folder would point nowhere | Refused by the interface and by the plugin; re-checked on confirm (9.1) |
-| Delete a file system whose snapshot another one was cloned from | The plugin refuses with a message naming the clone | Refused before the dialog, with the clone named (9.1) |
-| Delete a pool with file systems | The plugin refuses | Refused first, each file system named with its link (9.2) |
-| Delete a pool, then regret it | Nothing restores it | Typed confirmation naming every disk; "cannot be undone" (9.2) |
-| A deletion leaves four modules pending | The band would puzzle the reader, and Undo cannot bring the object back | The deletion refuses to start while anything else is pending, and applies its own changes after (0.9, P15) |
-| Apply fails half way at a checkpoint (B3) | Some modules deployed, some not | "Try again" first; the changes stay in the band; no "Undo" (3.7) |
-| Another administrator saves a change during a flow | It would ride the checkpoint | R10 lists it and asks |
-| Another administrator deletes the pool in the classic interface during the replace flow | | Step 1's re-read: the pool is gone; nothing is erased |
-| A poll during a 2-day rebuild | Could keep the session alive forever | Background reads with `updatelastaccess: false`; the idle timeout signs out (UI-14); the rebuild goes on |
-| A poll on a healthy, idle NAS | Would read for nothing | Never: the poll runs only while a check or rebuild is under way (0.6) |
-| The report's form changes in a newer ZFS | Words not recognised | Unknown, with the server's words; every action unavailable (0.3, 0.4) |
-| The plugin is removed while a ZFS page is open | 404 on the next read | The page switches to 0.11's state |
-| The plugin is installed and ZFS's kernel module did not build | Every read fails | The pages show the server's words; the File systems page and the dashboard show the file systems as Missing (0.11) |
-| A ZFS file system not known to OMV appears under "Found on the disks" | Mounting it there would give it a second folder | ZFS rows are left out of that section, with the Discover line (10.3) |
-| Thousands of snapshots from a schedule | A long read and a long table | Client-side pages of 50; **[verify]** the read's time (12, item 6) |
-| A shared screenshot of the technical details | Damaged-file paths and disk serial numbers on screen | Shown only on request; never stored, titled, toasted or logged (2.7) |
-| Press "Delete pool" or "Roll back" twice | Two calls | Buttons ignore presses while their call runs; the session registry refuses a second action on the same pool |
-| 0 pools; 1; 20; a pool of 30 disks in 6 groups | | 1.7's empty state; tables not paged but in their own frames; group rows (13.1) |
-| A normal user types any ZFS address | Refused methods | "Only administrators" page, no call (11.1) |
+| Probe                                                                                          | Finding                                                                                 | Design response                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create a pool that includes the system disk or `sda`                                           | ZFS would refuse a disk in use, but the plugin's list is not the interface's only guard | Not offered: the disk-use model refuses both whatever the plugin says (0.8); re-checked at step 1                                                                                                                                           |
+| A disk the plugin offers that the interface sees as a RAID member or another pool's            | The two lists disagree                                                                  | The stricter wins: not offered, with the reason (0.8)                                                                                                                                                                                       |
+| `getPoolStatus` or `getPoolDevices` answers empty after a read error on the NAS                | The model would think no disk is in a pool                                              | An empty reply that contradicts another read is a failed read; fail closed (0.8, D10)                                                                                                                                                       |
+| **Two tabs create pools on the same disks**                                                    | No lock on the server                                                                   | Each tab's step 1 re-reads; once the first pool exists its disks are "Part of ZFS pool" and the second stops. In the seconds between, ZFS refuses the second create because the disks are in use. Stated; no data of the owner's is at risk |
+| **Disks renamed** between the summary and step 1                                               | A different physical disk could be overwritten                                          | Serial number and model compared at step 1; the stable by-id name is what the server receives (0.8)                                                                                                                                         |
+| A pool named `etc`, `srv`, `mirror` or `log`                                                   | Its folder would sit on a system folder, or ZFS would refuse it                         | Refused by 0.7's rules, with the reason, before Continue                                                                                                                                                                                    |
+| A pool named like an existing one, differing in case                                           | Two pools `Tank` and `tank` confuse the reader                                          | "There is already a pool called {{name}}" compares without case                                                                                                                                                                             |
+| 200-character names, right-to-left names, `<img onerror>` names made in the classic interface  | Layout, UI-2                                                                            | Outside 0.7's patterns: no page, the name as text with "Manage it in the classic interface"; within them: text nodes, `dir="auto"`, wrapping, markup shown literally                                                                        |
+| The pool row's `devices` field                                                                 | It carries a markup line break                                                          | Not used; devices come from `getPoolDevices` (0.2)                                                                                                                                                                                          |
+| `/storage/zfs/fs/tank/../../rpc.php`, `/storage/zfs/pools/-rf`, `/storage/zfs/fs/tank%2Fmedia` | URL as an identifier                                                                    | Patterns reject them; not-found state; no call (0.7)                                                                                                                                                                                        |
+| `/storage/zfs/pools/tank/replace` from a bookmark                                              | Could preselect and erase a disk                                                        | The disk to replace is chosen in memory only; the new disk is never preselected unless it is the only one, and the typed confirmation stands                                                                                                |
+| **Stripe chosen by mistake**, or one disk with the only layout it allows                       | Losing the disk loses everything                                                        | Never preselected, grouped apart under "Not protected", last; the loss in its hint and again before the typed field; Change choices clears it (3.2, 3.3)                                                                                    |
+| Replace a working disk with a smaller one                                                      | ZFS refuses after the new disk was erased                                               | Not offered: Too small (0.8), before anything is erased                                                                                                                                                                                     |
+| Replace the only disk of a single-disk pool that has failed                                    | Nothing to rebuild from                                                                 | Not offered, with "Its files are already lost" (7.1)                                                                                                                                                                                        |
+| Take offline the last good disk of a mirror                                                    | The pool would stop                                                                     | Not offered when the group cannot lose another disk; ZFS refuses too (7.7)                                                                                                                                                                  |
+| Roll back while people are using a shared folder on it                                         | Their files change under them                                                           | Said in the dialog before the typed field (5.4)                                                                                                                                                                                             |
+| Roll back to an older snapshot                                                                 | The server would refuse; if it were asked to force, it would delete the newer ones      | Offered on the newest only; the contract has no way to force it (5.4, 12)                                                                                                                                                                   |
+| Delete a file system that a shared folder uses                                                 | The shared folder would point nowhere                                                   | Refused by the interface and by the plugin; re-checked on confirm (9.1)                                                                                                                                                                     |
+| Delete a file system whose snapshot another one was cloned from                                | The plugin refuses with a message naming the clone                                      | Refused before the dialog, with the clone named (9.1)                                                                                                                                                                                       |
+| Delete a pool with file systems                                                                | The plugin refuses                                                                      | Refused first, each file system named with its link (9.2)                                                                                                                                                                                   |
+| Delete a pool, then regret it                                                                  | Nothing restores it                                                                     | Typed confirmation naming every disk; "cannot be undone" (9.2)                                                                                                                                                                              |
+| A deletion leaves four modules pending                                                         | The band would puzzle the reader, and Undo cannot bring the object back                 | The deletion refuses to start while anything else is pending, and applies its own changes after (0.9, P15)                                                                                                                                  |
+| Apply fails half way at a checkpoint (B3)                                                      | Some modules deployed, some not                                                         | "Try again" first; the changes stay in the band; no "Undo" (3.7)                                                                                                                                                                            |
+| Another administrator saves a change during a flow                                             | It would ride the checkpoint                                                            | R10 lists it and asks                                                                                                                                                                                                                       |
+| Another administrator deletes the pool in the classic interface during the replace flow        |                                                                                         | Step 1's re-read: the pool is gone; nothing is erased                                                                                                                                                                                       |
+| A poll during a 2-day rebuild                                                                  | Could keep the session alive forever                                                    | Background reads with `updatelastaccess: false`; the idle timeout signs out (UI-14); the rebuild goes on                                                                                                                                    |
+| A poll on a healthy, idle NAS                                                                  | Would read for nothing                                                                  | Never: the poll runs only while a check or rebuild is under way (0.6)                                                                                                                                                                       |
+| The report's form changes in a newer ZFS                                                       | Words not recognised                                                                    | Unknown, with the server's words; every action unavailable (0.3, 0.4)                                                                                                                                                                       |
+| The plugin is removed while a ZFS page is open                                                 | 404 on the next read                                                                    | The page switches to 0.11's state                                                                                                                                                                                                           |
+| The plugin is installed and ZFS's kernel module did not build                                  | Every read fails                                                                        | The pages show the server's words; the File systems page and the dashboard show the file systems as Missing (0.11)                                                                                                                          |
+| A ZFS file system not known to OMV appears under "Found on the disks"                          | Mounting it there would give it a second folder                                         | ZFS rows are left out of that section, with the Discover line (10.3)                                                                                                                                                                        |
+| Thousands of snapshots from a schedule                                                         | A long read and a long table                                                            | Client-side pages of 50; **[verify]** the read's time (12, item 6)                                                                                                                                                                          |
+| A shared screenshot of the technical details                                                   | Damaged-file paths and disk serial numbers on screen                                    | Shown only on request; never stored, titled, toasted or logged (2.7)                                                                                                                                                                        |
+| Press "Delete pool" or "Roll back" twice                                                       | Two calls                                                                               | Buttons ignore presses while their call runs; the session registry refuses a second action on the same pool                                                                                                                                 |
+| 0 pools; 1; 20; a pool of 30 disks in 6 groups                                                 |                                                                                         | 1.7's empty state; tables not paged but in their own frames; group rows (13.1)                                                                                                                                                              |
+| A normal user types any ZFS address                                                            | Refused methods                                                                         | "Only administrators" page, no call (11.1)                                                                                                                                                                                                  |
 
 ### 16.2 Without sight
 
-| Probe | Requirement |
-| --- | --- |
-| Tab through each page | The orders in 1.8, 2.8, 3.8, 9.3; skip link first (shell) |
-| The state | Every state is a word and an icon shape; the reason is text next to the pill, not a tooltip; progress has `aria-valuetext` with the percentage and the time left in words |
-| A poll | A change of state is announced once, politely; the moving percentage is not announced; focus never moves |
-| The disk tree | Group rows are row headers for the rows under them, so each disk is read with its group ("Mirror, 2 disks: sdb, Working") |
-| The disk choice | Each option reads device, model, size, then the serial number and what is on it, before it is chosen |
-| The typed confirmations | The prompt is the field's label; the reason the button is unavailable is its hint; the consequence is read before the field |
-| The steps | An ordered list; each step's state is a word; changes polite, a failure assertive with focus moved to it |
-| Colour | Critical, Warning, OK and Unknown differ by word and shape; the role words are words; destructive buttons differ by words and icon, not only colour; the "No protection" warning has the warning shape and words on a neutral surface |
-| 200% zoom | One column; tables and the report scroll in their own frames only |
+| Probe                   | Requirement                                                                                                                                                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tab through each page   | The orders in 1.8, 2.8, 3.8, 9.3; skip link first (shell)                                                                                                                                                                             |
+| The state               | Every state is a word and an icon shape; the reason is text next to the pill, not a tooltip; progress has `aria-valuetext` with the percentage and the time left in words                                                             |
+| A poll                  | A change of state is announced once, politely; the moving percentage is not announced; focus never moves                                                                                                                              |
+| The disk tree           | Group rows are row headers for the rows under them, so each disk is read with its group ("Mirror, 2 disks: sdb, Working")                                                                                                             |
+| The disk choice         | Each option reads device, model, size, then the serial number and what is on it, before it is chosen                                                                                                                                  |
+| The typed confirmations | The prompt is the field's label; the reason the button is unavailable is its hint; the consequence is read before the field                                                                                                           |
+| The steps               | An ordered list; each step's state is a word; changes polite, a failure assertive with focus moved to it                                                                                                                              |
+| Colour                  | Critical, Warning, OK and Unknown differ by word and shape; the role words are words; destructive buttons differ by words and icon, not only colour; the "No protection" warning has the warning shape and words on a neutral surface |
+| 200% zoom               | One column; tables and the report scroll in their own frames only                                                                                                                                                                     |
 
 ---
 
@@ -2393,31 +2398,31 @@ stated, not claimed, until observed on a real NAS (the owner's own server stays 
 Judgement calls made in this design. Each is the recommended answer; the design is built this way
 unless the owner says otherwise.
 
-| ID | Decision | Why |
-| --- | --- | --- |
-| D1 | The menu item is **"ZFS"** under Storage, after RAID, one item for pools, file systems and snapshots, shown only with the plugin installed *(recommended)* | Q8; "ZFS" is what owners search for; the classic interface's eight sub-pages are one journey here (pool, then file system, then snapshots) |
-| D2 | **Four nouns**: pool, file system, volume, snapshot; "the pool's own folder" for the root dataset; "disk group" only when there is more than one; never "dataset" or "vdev" outside technical details *(recommended)* | "File system" is the word the File systems pages already use for the same thing to an owner; the others need ZFS knowledge |
-| D3 | A pool's page is addressed by its **name**, a file system's by its **full name** as the rest of the address, each part validated; the disk handed to the replace flow is passed **in memory** *(recommended)* | ZFS names are what every ZFS tool and the classic interface use; they are chosen by the owner, not hardware identifiers; a bookmark must never choose a disk |
-| D4 | **Degraded (even while rebuilding) is Critical; copying onto a disk that was working, a disk's errors and being 80% full are Warning; a check is OK** *(recommended)* | As the RAID slice's D4; a disk's errors need watching, not alarm |
-| D5 | **"It can lose" is said in words** for every pool, group and choice, with usable space in "about" figures *(recommended)* | As RAID's D6 |
-| D6 | **Space for files comes from the pool's own folder**, not the pool row's raw size *(recommended)* | For RAID-Z the raw size counts parity, which no file can use |
-| D7 | **Fixed levels for how full a pool is**: Warning at 80%, Critical at 95% *(recommended)* | ZFS's own advice and behaviour: it slows down past 80% and keeps a few percent back near the top |
-| D8 | **Each disk's role is read from ZFS's report** and its path from `getPoolDevices`; anything that cannot be matched fails closed *(recommended)* | No single method gives both; replacing the wrong disk is the costliest mistake in this slice |
-| D9 | **The last check is read from the report**, not from the plugin's `lastscrub` *(recommended)* | The plugin reports the end of a rebuild as the last check |
-| D10 | **An empty reply that contradicts another read is a failed read** *(recommended)* | The plugin answers some failures with an empty list; the disk-use model must not take that for "no pools" |
-| D11 | Pools get **compression on (LZ4)** *(recommended)* | The plugin's guide calls it free; it is the classic form's choice too, though off there by default |
-| D12 | Pools get **4 KiB blocks** (`ashift` 12), disks **by stable ID**, **case-sensitive** names, and creation is **never forced** *(recommended)* | The plugin's guide advises 12 for current disks; IDs survive restarts; the rest of the NAS is case-sensitive; forcing would overwrite what the interface did not check |
-| D13 | **The plugin's default folders** (`/{{pool}}`, `/{{pool}}/{{name}}`), with system folder names refused as pool names *(recommended)* | Matches the classic interface and the guide; a custom folder is classic-only |
-| D14 | **One disk group per pool** at creation; pools with several groups are shown in full *(recommended)* | The plugin's create makes one; adding groups is a layout change for good (P2) |
-| D15 | **File systems at the top of a pool only**, with **size limit and compression** as their only settings *(recommended)* | The two settings an owner asks for; nesting and tuning are classic-only |
-| D16 | **Volumes and encryption are shown, not managed** *(recommended)* | Volumes serve virtual machines and iSCSI, outside this domain; keys are secrets with their own storage choices (UI-6) |
-| D17 | **Snapshots are taken with the NAS's own date-and-time name** (`quickSnapshot`), not a custom name *(recommended)* | The named method marks four modules pending for a snapshot; the dated one marks nothing, and the name then tells when it was taken, which the reply does not |
-| D18 | **Roll back only to the newest snapshot** *(recommended)* | ZFS refuses older ones without deleting the newer; offering a button that always fails would mislead |
-| D19 | **No pause button**; a paused check can be continued or stopped *(recommended)* | Three buttons for one job is two too many; a pause comes from a schedule or the classic interface |
-| D20 | **A check and a rebuild are not tasks** in the Tasks menu; they are the pool's state *(recommended)* | As RAID's D20: they run in ZFS, have no task handle, and survive sign-out and restarts |
-| D21 | **The plugin's reads are made directly, not through their background twins** *(recommended)* | Each is expected to answer in seconds **[verify]**; a task per read would fill the Tasks menu |
-| D22 | The dashboard's **Storage card shows one item per pool** for ZFS file systems *(recommended)* | Every file system of a pool reports the pool's free space as its own |
-| D23 | Catalogue: `zfsLayout.*`, `zfsRole.*`, `zfsState.*`, `zfsProtect.*`, `zfs.term.*` as shared keys; `modules.zfs`, `modules.zfszed`, `modules.zfscron`; the type word `zfs` "ZFS" *(recommended)* | Several pages use them |
+| ID  | Decision                                                                                                                                                                                                              | Why                                                                                                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | The menu item is **"ZFS"** under Storage, after RAID, one item for pools, file systems and snapshots, shown only with the plugin installed _(recommended)_                                                            | Q8; "ZFS" is what owners search for; the classic interface's eight sub-pages are one journey here (pool, then file system, then snapshots)                             |
+| D2  | **Four nouns**: pool, file system, volume, snapshot; "the pool's own folder" for the root dataset; "disk group" only when there is more than one; never "dataset" or "vdev" outside technical details _(recommended)_ | "File system" is the word the File systems pages already use for the same thing to an owner; the others need ZFS knowledge                                             |
+| D3  | A pool's page is addressed by its **name**, a file system's by its **full name** as the rest of the address, each part validated; the disk handed to the replace flow is passed **in memory** _(recommended)_         | ZFS names are what every ZFS tool and the classic interface use; they are chosen by the owner, not hardware identifiers; a bookmark must never choose a disk           |
+| D4  | **Degraded (even while rebuilding) is Critical; copying onto a disk that was working, a disk's errors and being 80% full are Warning; a check is OK** _(recommended)_                                                 | As the RAID slice's D4; a disk's errors need watching, not alarm                                                                                                       |
+| D5  | **"It can lose" is said in words** for every pool, group and choice, with usable space in "about" figures _(recommended)_                                                                                             | As RAID's D6                                                                                                                                                           |
+| D6  | **Space for files comes from the pool's own folder**, not the pool row's raw size _(recommended)_                                                                                                                     | For RAID-Z the raw size counts parity, which no file can use                                                                                                           |
+| D7  | **Fixed levels for how full a pool is**: Warning at 80%, Critical at 95% _(recommended)_                                                                                                                              | ZFS's own advice and behaviour: it slows down past 80% and keeps a few percent back near the top                                                                       |
+| D8  | **Each disk's role is read from ZFS's report** and its path from `getPoolDevices`; anything that cannot be matched fails closed _(recommended)_                                                                       | No single method gives both; replacing the wrong disk is the costliest mistake in this slice                                                                           |
+| D9  | **The last check is read from the report**, not from the plugin's `lastscrub` _(recommended)_                                                                                                                         | The plugin reports the end of a rebuild as the last check                                                                                                              |
+| D10 | **An empty reply that contradicts another read is a failed read** _(recommended)_                                                                                                                                     | The plugin answers some failures with an empty list; the disk-use model must not take that for "no pools"                                                              |
+| D11 | Pools get **compression on (LZ4)** _(recommended)_                                                                                                                                                                    | The plugin's guide calls it free; it is the classic form's choice too, though off there by default                                                                     |
+| D12 | Pools get **4 KiB blocks** (`ashift` 12), disks **by stable ID**, **case-sensitive** names, and creation is **never forced** _(recommended)_                                                                          | The plugin's guide advises 12 for current disks; IDs survive restarts; the rest of the NAS is case-sensitive; forcing would overwrite what the interface did not check |
+| D13 | **The plugin's default folders** (`/{{pool}}`, `/{{pool}}/{{name}}`), with system folder names refused as pool names _(recommended)_                                                                                  | Matches the classic interface and the guide; a custom folder is classic-only                                                                                           |
+| D14 | **One disk group per pool** at creation; pools with several groups are shown in full _(recommended)_                                                                                                                  | The plugin's create makes one; adding groups is a layout change for good (P2)                                                                                          |
+| D15 | **File systems at the top of a pool only**, with **size limit and compression** as their only settings _(recommended)_                                                                                                | The two settings an owner asks for; nesting and tuning are classic-only                                                                                                |
+| D16 | **Volumes and encryption are shown, not managed** _(recommended)_                                                                                                                                                     | Volumes serve virtual machines and iSCSI, outside this domain; keys are secrets with their own storage choices (UI-6)                                                  |
+| D17 | **Snapshots are taken with the NAS's own date-and-time name** (`quickSnapshot`), not a custom name _(recommended)_                                                                                                    | The named method marks four modules pending for a snapshot; the dated one marks nothing, and the name then tells when it was taken, which the reply does not           |
+| D18 | **Roll back only to the newest snapshot** _(recommended)_                                                                                                                                                             | ZFS refuses older ones without deleting the newer; offering a button that always fails would mislead                                                                   |
+| D19 | **No pause button**; a paused check can be continued or stopped _(recommended)_                                                                                                                                       | Three buttons for one job is two too many; a pause comes from a schedule or the classic interface                                                                      |
+| D20 | **A check and a rebuild are not tasks** in the Tasks menu; they are the pool's state _(recommended)_                                                                                                                  | As RAID's D20: they run in ZFS, have no task handle, and survive sign-out and restarts                                                                                 |
+| D21 | **The plugin's reads are made directly, not through their background twins** _(recommended)_                                                                                                                          | Each is expected to answer in seconds **[verify]**; a task per read would fill the Tasks menu                                                                          |
+| D22 | The dashboard's **Storage card shows one item per pool** for ZFS file systems _(recommended)_                                                                                                                         | Every file system of a pool reports the pool's free space as its own                                                                                                   |
+| D23 | Catalogue: `zfsLayout.*`, `zfsRole.*`, `zfsState.*`, `zfsProtect.*`, `zfs.term.*` as shared keys; `modules.zfs`, `modules.zfszed`, `modules.zfscron`; the type word `zfs` "ZFS" _(recommended)_                       | Several pages use them                                                                                                                                                 |
 
 ---
 
@@ -2511,13 +2516,91 @@ Nothing has been observed yet (section 15.2 is the plan). These assumptions carr
 the VM shows otherwise, the build follows the VM and this section records each change, as the RAID
 slice's section 19 does.
 
-| # | Assumption | If it does not hold |
-| --- | --- | --- |
-| 1 | `FileSystemMgmt.getList` returns ZFS rows with `uuid` `null`, and the existing pages can be made to accept it by widening the contract | The File systems pages need a ZFS-specific path before this slice ships; until then they would fail on any NAS with a pool |
-| 2 | ZFS's status commands read no disk; the listing commands usually do not | P14 decides the dashboard's rows; if even the status commands read a disk, the disk-use model's reads move to the pages about disks only, as RAID's did |
-| 3 | The report's text follows ZFS's usual layout (indented tree, `scan:` and `errors:` lines), and `getPoolDevices` names match the report's | The parser is rewritten against the captures; until it passes, every device action fails closed |
-| 4 | `addPool`, `addObject` and `deleteObjectBg` mark exactly `fstab`, `collectd`, `monit` and `quota` (and `zfscron` for deletes that removed a job) | The expected sets of R10 change; nothing else does |
-| 5 | A deleted pool's disks come back as empty candidates, or as Erase and reuse | 0.8's wording for those disks changes |
-| 6 | `getAllSnapshots` answers in seconds with many snapshots | Its background twin is put to the owner (12.1, item 6) |
-| 7 | The plugin's reads answer in seconds on a NAS with several pools | The ZFS list reads the reports only on the pool pages, and shows the plugin's state words in the list |
-| 8 | Applying the four modules after a pool is created succeeds, with ZFS's own mounts already in place | The checkpoint's failure plan is extended with what the VM shows |
+| #   | Assumption                                                                                                                                       | If it does not hold                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `FileSystemMgmt.getList` returns ZFS rows with `uuid` `null`, and the existing pages can be made to accept it by widening the contract           | The File systems pages need a ZFS-specific path before this slice ships; until then they would fail on any NAS with a pool                              |
+| 2   | ZFS's status commands read no disk; the listing commands usually do not                                                                          | P14 decides the dashboard's rows; if even the status commands read a disk, the disk-use model's reads move to the pages about disks only, as RAID's did |
+| 3   | The report's text follows ZFS's usual layout (indented tree, `scan:` and `errors:` lines), and `getPoolDevices` names match the report's         | The parser is rewritten against the captures; until it passes, every device action fails closed                                                         |
+| 4   | `addPool`, `addObject` and `deleteObjectBg` mark exactly `fstab`, `collectd`, `monit` and `quota` (and `zfscron` for deletes that removed a job) | The expected sets of R10 change; nothing else does                                                                                                      |
+| 5   | A deleted pool's disks come back as empty candidates, or as Erase and reuse                                                                      | 0.8's wording for those disks changes                                                                                                                   |
+| 6   | `getAllSnapshots` answers in seconds with many snapshots                                                                                         | Its background twin is put to the owner (12.1, item 6)                                                                                                  |
+| 7   | The plugin's reads answer in seconds on a NAS with several pools                                                                                 | The ZFS list reads the reports only on the pool pages, and shows the plugin's state words in the list                                                   |
+| 8   | Applying the four modules after a pool is created succeeds, with ZFS's own mounts already in place                                               | The checkpoint's failure plan is extended with what the VM shows                                                                                        |
+
+---
+
+## 20. Changes during the build
+
+The contract was written from captures on the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4, OpenZFS
+2.4.4; journal, 2026-11-22). Where the VM contradicted this design, the build follows the VM:
+
+| #   | What the VM showed                                                                                                                                                  | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `FsTab.getByFsName` answers HTTP 400 for a ZFS file system's name                                                                                                   | What uses a file system is found by the folder its shared folders' mount entries name (0.12); the method is never called for ZFS. Deletes and roll-backs read the shared folders the same way                                                                                                                                                                                                                                                   |
+| 2   | `Zfs.addObject` with a name that is taken answers 200 and changes nothing                                                                                           | The name is checked again from a fresh `listPools` just before the call, and the file system must be listed afterwards: otherwise "The NAS answered, but the pool does not list a file system {{name}}. It was not made." (3.7, 4.2). A name that appeared meanwhile stops the step with "There is now a file system or volume called {{name}} on {{pool}}"                                                                                     |
+| 3   | A refused `addPool` (a reserved name) still wrote a partition table to its disk                                                                                     | After any create failure the flow says "ZFS can leave a partition table on the disks even when it refuses, so the disks may have been changed. They were checked again: choose again, and any that now hold something are offered under Erase and reuse." Its only ways on are "Change choices", which reads the disks again, and "Stop here"; it never retries the create                                                                      |
+| 4   | A deleted pool's disks, and a disk replaced out of a pool, keep ZFS's GPT and are not candidates until wiped                                                        | They are offered under "Erase and reuse" with the quick wipe first (0.8, settled). The delete-pool confirmation and result say so; the replace result says the old disk keeps ZFS's marks                                                                                                                                                                                                                                                       |
+| 5   | `compressratio` and `dedup` read "1.00"                                                                                                                             | Read without the "x" (0.2)                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 6   | During a replace, `getPoolDevices` gives the old and the new disk the group `replacing-1`                                                                           | One row, "{{new}} is taking the place of {{old}}" (0.4); no change is offered for either disk until the rebuild ends                                                                                                                                                                                                                                                                                                                            |
+| 7   | Own-folder space against the base: mirror 90.8% of `s`, single disk 90.8% of `s`, stripe of 2 90.8% of `2s`, RAID-Z1 of 3 94.8% of `2s`, RAID-Z2 of 4 92.4% of `2s` | The estimate uses those shares, 90% for other RAID-Z counts, always "about", never more (0.5)                                                                                                                                                                                                                                                                                                                                                   |
+| 8   | `lastscrub` carries a time zone ("… UTC 2026"); the scan line does not                                                                                              | The date comes from `lastscrub`, parsed and shown in this computer's format and time zone; the scan line says only whether it was a check or a rebuild (0.2)                                                                                                                                                                                                                                                                                    |
+| 9   | The contract accepts only by-id device paths, and quotas in whole GiB or TiB                                                                                        | A pool whose disks ZFS names by kernel name or path cannot have its disks changed here: its page says "ZFS knows this pool's disks by names that can change, not by their stable IDs, so this page cannot change its disks. Disks of this pool are replaced, taken offline and brought back in the classic interface." with no link (P11), and offers no replace, offline or online (fail closed). A size limit is a whole number of GiB or TiB |
+| 10  | — (the owner's rule for deletes)                                                                                                                                    | Every delete sends, as `mp`, the folder `listPools` reported for the object (`mountpoint`; empty for a snapshot), never one typed or derived here. Deletes refuse to start while other changes are pending, then apply their own (P15)                                                                                                                                                                                                          |
+
+Other decisions taken while building, each within the agreed design:
+
+- **The snapshot list's order.** `getAllSnapshots` lists snapshots in name order (captured). "Newest"
+  is the last of a file system's snapshots in that order, which is the time order for the dated names
+  this page gives. A snapshot named otherwise in the classic interface may not be the newest; ZFS then
+  refuses the roll-back, and the dialog shows ZFS's words.
+- **What to do now** offers "Check now…" beside "Clear the error counts…" through the check section's
+  own dialog, so there is one confirmation for a check wherever it starts.
+- **The dashboard** reads `getPoolStatus` once per visit, as P14 allows (the VM showed it reads no
+  member disk). A pool's Storage item has no attention row for how full it is.
+- **File systems** gains the line "{{count}} ZFS file systems are not known to OMV yet …" from
+  `enumerateFilesystems` rows of type `zfs` that `getList` does not list, once the plugin is known to
+  be installed; without the plugin, a ZFS row keeps the classic-interface sentence.
+- **The disk-use model** reads `getPoolStatus` and each pool's `getPoolDevices` wherever it is read
+  (Disks, a disk's page, the wipe, Flow A, the RAID and ZFS flows). A pool whose name the contract
+  cannot send, or a pool with no disks in `getPoolDevices`, makes every disk "Not known" (D10). The wipe
+  confirmation's untraceable-storage sentence drops "ZFS" once these reads succeed.
+- **The menu item** stands after RAID and before File systems. The plugin's own menu entry has no
+  position, so the classic menu places it by its own rule; this interface keeps the design's place.
+- **The flows' page headings** name the task ("Create a ZFS pool", "Add a file system to pool
+  {{pool}}", "Replace a disk in pool {{pool}}"), with the job runner's own heading under them; the
+  create form says how many disks a layout needs in plain words, and says it as an error only after
+  Continue.
+- **At a phone's width** the pools list keeps Pool and State (a long pool name ends in an ellipsis; its
+  full name is the link's name), a pool's file systems keep File system and State with what each holds
+  under the name, and the snapshots keep Snapshot and the actions with what each holds under the name.
+  Names do not break inside; pills never wrap.
+- **The delete dialogs** keep showing their steps after the deleted object has gone from the list (a
+  finished task reads every list again), and a pool being deleted is not read again, so its report is
+  never asked for after it is gone.
+
+New and changed catalogue keys beyond the copy tables above:
+
+| Key                                                              | English                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zfsCheck.ago`                                                   | about {{duration}} ago                                                                                                                                                                                                           |
+| `zfsCheck.afterRebuild`                                          | Not checked since a disk was rebuilt on {{date}}                                                                                                                                                                                 |
+| `zfsCheck.notKnown`                                              | Not known                                                                                                                                                                                                                        |
+| `zfsBlock.notById`                                               | ZFS knows this pool's disks by names that can change, not by their stable IDs, so this page cannot change its disks. Disks of this pool are replaced, taken offline and brought back in the classic interface.                   |
+| `zfsPool.notById`                                                | This pool cannot have its disks changed here                                                                                                                                                                                     |
+| `zfsCreate.cannot.noId`                                          | It has no stable ID, which ZFS needs to find it again after a restart.                                                                                                                                                           |
+| `zfsCreate.fail.createParts`                                     | ZFS can leave a partition table on the disks even when it refuses, so the disks may have been changed. They were checked again: choose again, and any that now hold something are offered under Erase and reuse.                 |
+| `zfsCreate.fail.fsNotListed`                                     | The NAS answered, but the pool does not list a file system {{name}}. It was not made.                                                                                                                                            |
+| `zfsCreate.fail.fsTaken`                                         | There is now a file system or volume called {{name}} on {{pool}}, so a new one was not made. Choose another name on the pool's page.                                                                                             |
+| `zfsCreate.holdsUnknown`                                         | No file system was found, but the disk is not empty: it may hold old partitions, or be part of a RAID array or a ZFS pool from another computer or one deleted here.                                                             |
+| `zfsDelete.pool.disks`                                           | Its disks are cleared of the pool's marks. The files on them are not overwritten, only made unreadable; wipe a disk before you give it away. To use them again here, choose them under Erase and reuse, which erases them first. |
+| `zfsDelete.blocked.sharedUnnamed`                                | The ZFS plugin says a shared folder uses it. Remove that shared folder first, in Shared folders.                                                                                                                                 |
+| `zfsDelete.preflightBody`                                        | A deletion saves its own change straight after, and an undo cannot bring back what was deleted. Apply or undo the other changes first.                                                                                           |
+| `zfsReplace.doneOldKept`                                         | It keeps ZFS's marks, so to use it again here, choose it under Erase and reuse.                                                                                                                                                  |
+| `dashboard.storage.zfsPool`                                      | ZFS pool {{pool}}                                                                                                                                                                                                                |
+| `dashboard.storage.zfsShare_one` / `_other`                      | {{count}} file system shares this space / {{count}} file systems share this space                                                                                                                                                |
+| `dashboard.attention.zfsDegraded` / `zfsUnusable` / `zfsDamaged` | ZFS pool {{pool}}: a disk is missing or has failed. / ZFS pool {{pool}} cannot be used. / ZFS pool {{pool}} has damaged files.                                                                                                   |
+| `filesystems.zfsLine`                                            | Part of ZFS pool {{pool}}. ZFS file systems are managed on the ZFS pages.                                                                                                                                                        |
+| `filesystems.zfsUnknown_one` / `_other`                          | {{count}} ZFS file system is not known to OMV yet, … / {{count}} ZFS file systems are not known to OMV yet, for example ones made outside the NAS's pages. Add them with Discover in the classic interface.                      |
+| `wipe.blocked.zfsDoPool`                                         | Replace it, or delete the pool, on the pool's page first.                                                                                                                                                                        |
+| `wipe.holds.untraceableNoZfs`                                    | This NAS also has storage that this page cannot trace to a disk, such as encrypted disks or LVM. …                                                                                                                               |
+| `addStorage.combineHintZfs`                                      | To combine several disks, use Combine disks (BTRFS), create a RAID array under RAID, or create a ZFS pool under ZFS.                                                                                                             |
