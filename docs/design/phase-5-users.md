@@ -8,7 +8,7 @@ group, its members and deleting it; and the home-folder setting. It picks up whe
 access grid points today ("Users in the classic interface", [phase-5-shares.md](phase-5-shares.md)
 3.4), and links back to that grid from every person and group.
 
-**Status: agreed by the owner on 2026-11-22 (P1 to P17 as written, section 21; a whole-file-system shared folder for home folders is settled by the VM check, keeping the safer choice). Not built yet.** The ten UserMgmt methods the owner
+**Status: agreed by the owner on 2026-11-22 (P1 to P17 as written, section 21; a whole-file-system shared folder for home folders is settled by the VM check, keeping the safer choice). Built on 2026-11-22; where the test VM contradicted this design, the build follows the VM, and section 23 lists each change.** The ten UserMgmt methods the owner
 cleared today and the five already in the contract cover everything here; section 15.0 asks for no
 further method. This slice hands out and takes away control of the NAS (administrator rights, SSH
 sign-in), cuts access (deleting a person or a group, taking someone out of a group, a new password),
@@ -156,11 +156,11 @@ inside the request, and is not undone by Undo in the band. Read from source:
 | Action                                                                         | At once, inside the request                                                                                                                        | Left pending (the band)                                                                                                          |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Add a person (`setUser`, new)                                                  | The account, its groups, its shell; its password for signing in here **and** for Windows and Mac sharing; its home folder when home folders are on | Email (`postfix`), always; SSH (`ssh`) when the person has SSH keys, never at creation here                                      |
-| Change a person (`setUser`): groups, administrator, SSH, description, password | All of it, the email address and SSH keys excepted                                                                                                 | Email, always (OMV refreshes its list of addresses); SSH when the person has or had SSH keys                                     |
-| Delete a person (`deleteUser`)                                                 | The account, its Windows and Mac sharing entry, its group memberships, OMV's record (email address, SSH keys)                                      | Email; SSH when they had keys                                                                                                    |
-| Add a group (`setGroup`, new)                                                  | The group and its members                                                                                                                          | Nothing **[verify]**                                                                                                             |
-| Change a group (`setGroup`): members, description                              | The members; the description is OMV's record                                                                                                       | Windows and Mac sharing (`samba`), so that computers connected now use the new members **[verify]**                              |
-| Delete a group (`deleteGroup`)                                                 | The group and OMV's record                                                                                                                         | Nothing **[verify]**                                                                                                             |
+| Change a person (`setUser`): groups, administrator, SSH, description, password | All of it, the email address and SSH keys excepted; administrator rights apply from the person's next sign-in (23)                                 | Email and SSH, always (observed: OMV marks SSH on every change to a person it holds a record of, keys or not; 23)                |
+| Delete a person (`deleteUser`)                                                 | The account, its Windows and Mac sharing entry, its group memberships, OMV's record (email address, SSH keys)                                      | Email and SSH (observed, 23)                                                                                                     |
+| Add a group (`setGroup`, new)                                                  | The group and its members                                                                                                                          | Nothing (observed, 23)                                                                                                           |
+| Change a group (`setGroup`): members, description                              | The members; the description is OMV's record                                                                                                       | Windows and Mac sharing (`samba`), so that computers connected now use the new members (observed, 23)                            |
+| Delete a group (`deleteGroup`)                                                 | The group and OMV's record                                                                                                                         | Nothing (observed, 23)                                                                                                           |
 | Turn home folders on or off (`setSettings`)                                    | Every person's home folder is set (and made, or set to none) **[verify]** how long for many people                                                 | Windows and Mac sharing (it shares home folders only while they are on)                                                          |
 | Access to shared folders (`ShareMgmt.setPrivileges`)                           | Nothing                                                                                                                                            | Shared folders, System services, and Windows and Mac sharing with Network discovery when the folder is shared (shares slice, 19) |
 
@@ -170,11 +170,12 @@ So:
   session changed it and Email is pending; beside "Shared folders" on a person's or group's page when
   this session saved access there and its modules are pending; beside a group's "Members" when this
   session saved them and Windows and Mac sharing is pending; on the home-folders page likewise. It
-  never appears beside groups, administrator, SSH or a password: those are already in effect.
+  never appears beside groups, administrator, SSH or a password: none of them waits for Apply
+  (administrator rights apply from the person's next sign-in, 3.5).
 - **After every save of a person**, the page says once, under the section that saved: "Saved, and
-  already in effect. The NAS also lists its email settings as not applied: applying them only
-  refreshes the email addresses it knows." (`users.savedNote`). The band then shows "Email" pending,
-  as it does today after a password change (observed, Phase 3); applying it changes nothing else.
+  already in effect. The NAS also lists its email and SSH settings as not applied: applying them only
+  refreshes the email addresses and SSH keys it knows." (`users.savedNote`). The band then shows
+  "Email" and "SSH" pending (observed on the test VM, 23); applying them changes nothing else.
 - **Undo in the band** restores OMV's records (the email address, SSH keys, a group's description) to
   the last applied state and nothing else (B4): an account made since stays, a group change stays, a
   new password stays. That is the UX audit's V4 **[verify]**. The add flows therefore apply their
@@ -238,6 +239,7 @@ Read from source:
 | 1 to 32 characters **[verify]** the system's limit                                                             | "Use 1 to 32 characters."                                                                                                                     |
 | Small letters a to z, digits, `.`, `_` and `-`; starting with a letter                                         | "Use small letters a to z, digits, and . _ or -, starting with a letter."                                                                     |
 | Not `admin`, `administrator`, `root`, `guest`, `nobody`, `users` or `everyone`, even if no such account exists | "{{name}} is a name the NAS or Windows keeps for itself. Choose another name."                                                                |
+| Not `add`, the address of "Add a person" (the owner's decision, 23)                                            | "{{name}} is the address of “Add a person” in this interface, so a person cannot be called that. Choose another name."                        |
 | No account of that name, built-in ones included (`getUser` finds it)                                           | A person: "There is already a person called {{name}}." A built-in account: "{{name}} is a name the NAS uses for itself. Choose another name." |
 | No group of that name, system groups included (`getGroup` finds it)                                            | "There is already a group called {{name}}. Choose a name no group uses, so the two cannot be confused."                                       |
 
@@ -248,7 +250,8 @@ of digits alone reads as an account number; a trailing `$` marks a Windows compu
 person and a group of the same name look alike in every access list.
 
 **A new group's name**: the same character rule and length; not `users`, `root`, `admin`, `sudo`,
-`wheel`, `everyone` or `guests`; no group of that name ("There is already a group called
+`wheel`, `everyone` or `guests`; not `add` ("{{group}} is the address of “Add a group” in this
+interface, so a group cannot be called that. Choose another name.", the owner's decision, 23); no group of that name ("There is already a group called
 {{group}}."), and no account of that name ("There is already a person called {{group}}. Choose a
 name no person uses, so the two cannot be confused.").
 
@@ -323,8 +326,9 @@ sign in again, then try once more."
 
 | Action                    | Marks pending                                                                   | Applied by                                                |
 | ------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `setUser` (any)           | `postfix`; `ssh` when the person has or had SSH keys                            | The band; the add flow's checkpoint                       |
-| `deleteUser`              | `postfix`; `ssh` when they had keys                                             | The delete's own last step                                |
+| `setUser` new             | `postfix` (observed, 23)                                                        |
+| `setUser` change          | `postfix`, `ssh`, keys or not (observed, 23)                                    | The band; the add flow's checkpoint                       |
+| `deleteUser`              | `postfix`, `ssh` (observed, 23)                                                 | The delete's own last step                                |
 | `setGroup` new            | none                                                                            | (the add-group flow's checkpoint, when access was given)  |
 | `setGroup` change         | `samba`                                                                         | The band; the delete-group flow's last step               |
 | `deleteGroup`             | none                                                                            | (the delete-group flow's last step, for its other writes) |
@@ -486,51 +490,51 @@ footer link. On arrival focus is on the page title.
 
 ### 1.7 Copy
 
-| Key                            | English                                                                                                                                        |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `users.title`                  | Users                                                                                                                                          |
-| `users.term.person`            | A person is someone who uses this NAS: they open shared folders from their own computer, and can sign in here to change their own password.    |
-| `users.control.title`          | Who can control this NAS                                                                                                                       |
-| `users.control.admins`         | Administrators: {{list}}, and the built-in admin account.                                                                                      |
-| `users.control.adminOnly`      | Only the built-in admin account is an administrator.                                                                                           |
-| `users.control.ssh`            | May sign in over SSH: {{list}}.                                                                                                                |
-| `users.control.sshNobody`      | Nobody may sign in over SSH.                                                                                                                   |
-| `users.control.systemGroups`   | In system groups that give control of the NAS: <name></name> ({{groups}}).                                                                     |
-| `users.search`                 | Search people                                                                                                                                  |
-| `users.show`                   | Show                                                                                                                                           |
-| `users.show.all`               | Everyone                                                                                                                                       |
-| `users.show.admins`            | Administrators                                                                                                                                 |
-| `users.show.ssh`               | May sign in over SSH                                                                                                                           |
-| `users.show.systemGroups`      | In system groups                                                                                                                               |
-| `users.add`                    | Add a person                                                                                                                                   |
-| `users.open`                   | Open {{name}}                                                                                                                                  |
-| `users.you`                    | (you)                                                                                                                                          |
-| `users.col.name`               | Name                                                                                                                                           |
-| `users.col.description`        | Description                                                                                                                                    |
-| `users.col.email`              | Email address                                                                                                                                  |
-| `users.col.groups`             | Groups                                                                                                                                         |
-| `users.col.admin`              | Administrator                                                                                                                                  |
-| `users.col.ssh`                | SSH                                                                                                                                            |
-| `users.yes`                    | Yes                                                                                                                                            |
-| `users.no`                     | No                                                                                                                                             |
-| `users.sshAllowed`             | Allowed                                                                                                                                        |
-| `users.more`                   | and {{count}} more                                                                                                                             |
-| `users.notKnown`               | Not known                                                                                                                                      |
-| `users.loading`                | Loading people…                                                                                                                                |
-| `users.loadFailed`             | Could not read the people on this NAS.                                                                                                         |
-| `users.groupsFailed`           | Could not read the groups.                                                                                                                     |
-| `users.empty`                  | There is nobody on this NAS yet apart from the built-in admin account. Add the people who will use its shared folders.                         |
-| `users.filtered`               | No people match "{{search}}".                                                                                                                  |
-| `users.filteredShow`           | Nobody matches this filter.                                                                                                                    |
-| `users.clearSearch`            | Clear the search                                                                                                                               |
-| `users.showAll`                | Show everyone                                                                                                                                  |
-| `users.footer.admin`           | The built-in admin account is not on this list. To change its password, sign in as admin and open Your account.                                |
-| `users.footer.classic`         | Importing many people at once, quotas and SSH keys are in the classic interface.                                                               |
-| `users.classicLink`            | Users in the classic interface                                                                                                                 |
-| `users.unfinished.access`      | <name></name> was added, but their access to shared folders was not saved.                                                                     |
-| `users.unfinished.notDeleted`  | <name></name> is still on this NAS. Deleting them did not finish.                                                                              |
-| `users.unfinished.staleAccess` | Shared folders still list <name></name>, who was deleted: {{folders}}.                                                                         |
-| `users.savedNote`              | Saved, and already in effect. The NAS also lists its email settings as not applied: applying them only refreshes the email addresses it knows. |
+| Key                            | English                                                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users.title`                  | Users                                                                                                                                                               |
+| `users.term.person`            | A person is someone who uses this NAS: they open shared folders from their own computer, and can sign in here to change their own password.                         |
+| `users.control.title`          | Who can control this NAS                                                                                                                                            |
+| `users.control.admins`         | Administrators: {{list}}, and the built-in admin account.                                                                                                           |
+| `users.control.adminOnly`      | Only the built-in admin account is an administrator.                                                                                                                |
+| `users.control.ssh`            | May sign in over SSH: {{list}}.                                                                                                                                     |
+| `users.control.sshNobody`      | Nobody may sign in over SSH.                                                                                                                                        |
+| `users.control.systemGroups`   | In system groups that give control of the NAS: <name></name> ({{groups}}).                                                                                          |
+| `users.search`                 | Search people                                                                                                                                                       |
+| `users.show`                   | Show                                                                                                                                                                |
+| `users.show.all`               | Everyone                                                                                                                                                            |
+| `users.show.admins`            | Administrators                                                                                                                                                      |
+| `users.show.ssh`               | May sign in over SSH                                                                                                                                                |
+| `users.show.systemGroups`      | In system groups                                                                                                                                                    |
+| `users.add`                    | Add a person                                                                                                                                                        |
+| `users.open`                   | Open {{name}}                                                                                                                                                       |
+| `users.you`                    | (you)                                                                                                                                                               |
+| `users.col.name`               | Name                                                                                                                                                                |
+| `users.col.description`        | Description                                                                                                                                                         |
+| `users.col.email`              | Email address                                                                                                                                                       |
+| `users.col.groups`             | Groups                                                                                                                                                              |
+| `users.col.admin`              | Administrator                                                                                                                                                       |
+| `users.col.ssh`                | SSH                                                                                                                                                                 |
+| `users.yes`                    | Yes                                                                                                                                                                 |
+| `users.no`                     | No                                                                                                                                                                  |
+| `users.sshAllowed`             | Allowed                                                                                                                                                             |
+| `users.more`                   | and {{count}} more                                                                                                                                                  |
+| `users.notKnown`               | Not known                                                                                                                                                           |
+| `users.loading`                | Loading people…                                                                                                                                                     |
+| `users.loadFailed`             | Could not read the people on this NAS.                                                                                                                              |
+| `users.groupsFailed`           | Could not read the groups.                                                                                                                                          |
+| `users.empty`                  | There is nobody on this NAS yet apart from the built-in admin account. Add the people who will use its shared folders.                                              |
+| `users.filtered`               | No people match "{{search}}".                                                                                                                                       |
+| `users.filteredShow`           | Nobody matches this filter.                                                                                                                                         |
+| `users.clearSearch`            | Clear the search                                                                                                                                                    |
+| `users.showAll`                | Show everyone                                                                                                                                                       |
+| `users.footer.admin`           | The built-in admin account is not on this list. To change its password, sign in as admin and open Your account.                                                     |
+| `users.footer.classic`         | Importing many people at once, quotas and SSH keys are in the classic interface.                                                                                    |
+| `users.classicLink`            | Users in the classic interface                                                                                                                                      |
+| `users.unfinished.access`      | <name></name> was added, but their access to shared folders was not saved.                                                                                          |
+| `users.unfinished.notDeleted`  | <name></name> is still on this NAS. Deleting them did not finish.                                                                                                   |
+| `users.unfinished.staleAccess` | Shared folders still list <name></name>, who was deleted: {{folders}}.                                                                                              |
+| `users.savedNote`              | Saved, and already in effect. The NAS also lists its email and SSH settings as not applied: applying them only refreshes the email addresses and SSH keys it knows. |
 
 ---
 
@@ -791,13 +795,19 @@ focus on Cancel, listing each change in the order of the form:
      when SSH is off);
    - SSH taken away: "{{name}} can no longer sign in over SSH or copy files with SFTP. Anything that
      signs in to the NAS as {{name}}, such as a backup from another computer, stops working."
-3. "This takes effect as soon as you save. It does not wait for Apply."
+3. When administrator rights change: "Applies from their next sign-in. If they are signed in now, ask
+   them to sign out and in again." (`personCan.confirm.nextSignIn`), and, when SSH changes too, "SSH
+   sign-in changes as soon as you save. It does not wait for Apply." (`personCan.confirm.sshNow`).
+   When only SSH changes: "This takes effect as soon as you save. It does not wait for Apply." (the
+   owner's decision, 23)
 4. Buttons: "Cancel" (focused) and **"Save changes"** (filled primary: nothing is destroyed, and the
    choice can be changed back here; the words above carry the weight, not the colour).
 
 On confirm: `getUser` re-read and 0.11's checks; then 0.8's self rule once more; then `setUser` with
-the groups and shell of 3.2 and 3.3. Saved: toast per change ("{{name}} is now an administrator. It
-takes effect the next time they sign in.", "{{name}} is no longer an administrator.", "{{name}} may now
+the groups and shell of 3.2 and 3.3. Saved: toast per change ("{{name}} is an administrator from their next
+sign-in. If they are signed in now, ask them to sign out and in again.", "{{name}} is no longer an
+administrator from their next sign-in. If they are signed in now, ask them to sign out and in again.",
+"{{name}} may now
 sign in over SSH.", "{{name}} can no longer sign in over SSH."), 0.4's note under the section, focus on
 "Save" (now unavailable). Failed: an `InlineAlert` above the buttons with the server's message; the
 choices stay.
@@ -814,55 +824,58 @@ choices stay.
 
 ### 3.7 Copy
 
-| Key                             | English                                                                                                                                                                          |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `personCan.title`               | What {{name}} can do                                                                                                                                                             |
-| `personCan.intro`               | Everyone can open the shared folders they are given access to, and sign in here to change their own password. These two choices give more.                                       |
-| `personCan.admin`               | Administrator of this NAS                                                                                                                                                        |
-| `personCan.adminHint`           | Can change every setting on this NAS, read and delete every file on it, and add or remove people, here and in the classic interface.                                             |
-| `personCan.adminWarn`           | Make <name></name> an administrator only if you trust them with everything on this NAS. An administrator can also take your own rights away.                                     |
-| `personCan.adminSelf`           | You cannot take away your own administrator rights. Another administrator can.                                                                                                   |
-| `personCan.adminUnknownSelf`    | Could not tell which account you are signed in with. Sign out and sign in again, then try once more.                                                                             |
-| `personCan.adminNoGroup`        | Administrator rights cannot be given here: the NAS has no group called openmediavault-admin.                                                                                     |
-| `personCan.ssh`                 | May sign in over SSH                                                                                                                                                             |
-| `personCan.sshHint`             | Lets <name></name> sign in to the NAS's command line from another computer, type commands, and copy files with SFTP. Most people never need it.                                  |
-| `personCan.sshWarn`             | With SSH, <name></name> can run programs on the NAS and open every file their account can reach, not only through shared folders.                                                |
-| `personCan.sshOff`              | SSH is off on this NAS, so this has no effect until it is turned on.                                                                                                             |
-| `personCan.sshOffLink`          | Open SSH settings                                                                                                                                                                |
-| `personCan.sshKeysOnly`         | SSH accepts only keys, and <name></name> has none. Keys are added in the classic interface.                                                                                      |
-| `personCan.sshUnread`           | Could not check whether SSH is on.                                                                                                                                               |
-| `personCan.sshRoot`             | <name></name> is also in the system group root, which lets them sign in over SSH too. Take them out of it in the classic interface.                                              |
-| `personCan.sshNoGroup`          | SSH sign-in cannot be set up here: the NAS has no group called _ssh.                                                                                                             |
-| `personCan.optionFailed`        | Could not check this option.                                                                                                                                                     |
-| `personCan.other.title`         | Other system groups                                                                                                                                                              |
-| `personCan.other.intro`         | <name></name> is also in these groups, set in the classic interface or by an add-on. They are kept when you save here.                                                           |
-| `personCan.other.warn`          | {{groups}} give control over the NAS itself, as an administrator has. Take <name></name> out of them in the classic interface if that is not meant.                              |
-| `systemGroup.root`              | the NAS's superuser group; it also allows SSH sign-in                                                                                                                            |
-| `systemGroup.sudo`              | can run anything as the NAS's superuser                                                                                                                                          |
-| `systemGroup.disk`              | can read and write every disk directly                                                                                                                                           |
-| `systemGroup.shadow`            | can read the NAS's stored passwords                                                                                                                                              |
-| `systemGroup.containers`        | can start containers or virtual machines with full control                                                                                                                       |
-| `systemGroup.omv`               | the NAS's own groups, which its web interface uses                                                                                                                               |
-| `systemGroup.logs`              | can read the NAS's logs                                                                                                                                                          |
-| `personCan.save`                | Save                                                                                                                                                                             |
-| `personCan.discard`             | Discard changes                                                                                                                                                                  |
-| `personCan.saving`              | Saving…                                                                                                                                                                          |
-| `personCan.confirm.title`       | Change what {{name}} can do?                                                                                                                                                     |
-| `personCan.confirm.makeAdmin`   | <name></name> becomes an administrator of this NAS. The next time they sign in, they can change every setting, read and delete every file, and add or remove people.             |
-| `personCan.confirm.removeAdmin` | <name></name> is no longer an administrator. They can still open the shared folders they have access to and change their own password.                                           |
-| `personCan.confirm.lastAdmin`   | After this, the built-in admin account is the only administrator. Make sure you know its password.                                                                               |
-| `personCan.confirm.allowSsh`    | <name></name> may sign in over SSH and use the NAS's command line.                                                                                                               |
-| `personCan.confirm.removeSsh`   | <name></name> can no longer sign in over SSH or copy files with SFTP. Anything that signs in to the NAS as <name></name>, such as a backup from another computer, stops working. |
-| `personCan.confirm.now`         | This takes effect as soon as you save. It does not wait for Apply.                                                                                                               |
-| `personCan.confirm.cancel`      | Cancel                                                                                                                                                                           |
-| `personCan.confirm.save`        | Save changes                                                                                                                                                                     |
-| `personCan.saved.makeAdmin`     | {{name}} is now an administrator. It takes effect the next time they sign in.                                                                                                    |
-| `personCan.saved.removeAdmin`   | {{name}} is no longer an administrator.                                                                                                                                          |
-| `personCan.saved.allowSsh`      | {{name}} may now sign in over SSH.                                                                                                                                               |
-| `personCan.saved.removeSsh`     | {{name}} can no longer sign in over SSH.                                                                                                                                         |
-| `users.term.admin`              | An administrator can change every setting on this NAS, read and delete every file on it, and add or remove people. Make only people you trust with everything administrators.    |
-| `users.term.ssh`                | SSH lets someone sign in to the NAS's command line from another computer, type commands and copy files. Most people never need it.                                               |
-| `users.term.systemGroup`        | System groups are made by the NAS and the programs on it. Some of them give a person power over the NAS itself.                                                                  |
+| Key                             | English                                                                                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `personCan.title`               | What {{name}} can do                                                                                                                                                                                    |
+| `personCan.intro`               | Everyone can open the shared folders they are given access to, and sign in here to change their own password. These two choices give more.                                                              |
+| `personCan.admin`               | Administrator of this NAS                                                                                                                                                                               |
+| `personCan.adminHint`           | Can change every setting on this NAS, read and delete every file on it, and add or remove people, here and in the classic interface.                                                                    |
+| `personCan.adminWarn`           | Make <name></name> an administrator only if you trust them with everything on this NAS. An administrator can also take your own rights away.                                                            |
+| `personCan.adminSelf`           | You cannot take away your own administrator rights. Another administrator can.                                                                                                                          |
+| `personCan.adminUnknownSelf`    | Could not tell which account you are signed in with. Sign out and sign in again, then try once more.                                                                                                    |
+| `personCan.adminNoGroup`        | Administrator rights cannot be given here: the NAS has no group called openmediavault-admin.                                                                                                            |
+| `personCan.ssh`                 | May sign in over SSH                                                                                                                                                                                    |
+| `personCan.sshHint`             | Lets <name></name> sign in to the NAS's command line from another computer, type commands, and copy files with SFTP. Most people never need it.                                                         |
+| `personCan.sshWarn`             | With SSH, <name></name> can run programs on the NAS and open every file their account can reach, not only through shared folders.                                                                       |
+| `personCan.sshOff`              | SSH is off on this NAS, so this has no effect until it is turned on.                                                                                                                                    |
+| `personCan.sshOffLink`          | Open SSH settings                                                                                                                                                                                       |
+| `personCan.sshKeysOnly`         | SSH accepts only keys, and <name></name> has none. Keys are added in the classic interface.                                                                                                             |
+| `personCan.sshUnread`           | Could not check whether SSH is on.                                                                                                                                                                      |
+| `personCan.sshRoot`             | <name></name> is also in the system group root, which lets them sign in over SSH too. Take them out of it in the classic interface.                                                                     |
+| `personCan.sshNoGroup`          | SSH sign-in cannot be set up here: the NAS has no group called _ssh.                                                                                                                                    |
+| `personCan.optionFailed`        | Could not check this option.                                                                                                                                                                            |
+| `personCan.other.title`         | Other system groups                                                                                                                                                                                     |
+| `personCan.other.intro`         | <name></name> is also in these groups, set in the classic interface or by an add-on. They are kept when you save here.                                                                                  |
+| `personCan.other.warn`          | {{groups}} give control over the NAS itself, as an administrator has. Take <name></name> out of them in the classic interface if that is not meant.                                                     |
+| `systemGroup.root`              | the NAS's superuser group; it also allows SSH sign-in                                                                                                                                                   |
+| `systemGroup.sudo`              | can run anything as the NAS's superuser                                                                                                                                                                 |
+| `systemGroup.disk`              | can read and write every disk directly                                                                                                                                                                  |
+| `systemGroup.shadow`            | can read the NAS's stored passwords                                                                                                                                                                     |
+| `systemGroup.containers`        | can start containers or virtual machines with full control                                                                                                                                              |
+| `systemGroup.omv`               | the NAS's own groups, which its web interface uses                                                                                                                                                      |
+| `systemGroup.logs`              | can read the NAS's logs                                                                                                                                                                                 |
+| `personCan.save`                | Save                                                                                                                                                                                                    |
+| `personCan.discard`             | Discard changes                                                                                                                                                                                         |
+| `personCan.saving`              | Saving…                                                                                                                                                                                                 |
+| `personCan.confirm.title`       | Change what {{name}} can do?                                                                                                                                                                            |
+| `personCan.confirm.makeAdmin`   | <name></name> becomes an administrator of this NAS. The next time they sign in, they can change every setting, read and delete every file, and add or remove people.                                    |
+| `personCan.confirm.removeAdmin` | <name></name> is no longer an administrator. They can still open the shared folders they have access to and change their own password.                                                                  |
+| `personCan.confirm.lastAdmin`   | After this, the built-in admin account is the only administrator. Make sure you know its password.                                                                                                      |
+| `personCan.confirm.allowSsh`    | <name></name> may sign in over SSH and use the NAS's command line.                                                                                                                                      |
+| `personCan.confirm.removeSsh`   | <name></name> can no longer sign in over SSH or copy files with SFTP. Anything that signs in to the NAS as <name></name>, such as a backup from another computer, stops working.                        |
+| `personCan.confirm.now`         | This takes effect as soon as you save. It does not wait for Apply.                                                                                                                                      |
+| `personCan.confirm.nextSignIn`  | Applies from their next sign-in. If they are signed in now, ask them to sign out and in again.                                                                                                          |
+| `personCan.confirm.sshNow`      | SSH sign-in changes as soon as you save. It does not wait for Apply.                                                                                                                                    |
+| `personCan.confirm.cancel`      | Cancel                                                                                                                                                                                                  |
+| `personCan.confirm.save`        | Save changes                                                                                                                                                                                            |
+| `personCan.saved.makeAdmin`     | {{name}} is an administrator from their next sign-in. If they are signed in now, ask them to sign out and in again.                                                                                     |
+| `personCan.saved.removeAdmin`   | {{name}} is no longer an administrator from their next sign-in. If they are signed in now, ask them to sign out and in again.                                                                           |
+| `personCan.savedNoteAdmin`      | Saved. Administrator rights apply from the person's next sign-in. The NAS also lists its email and SSH settings as not applied: applying them only refreshes the email addresses and SSH keys it knows. |
+| `personCan.saved.allowSsh`      | {{name}} may now sign in over SSH.                                                                                                                                                                      |
+| `personCan.saved.removeSsh`     | {{name}} can no longer sign in over SSH.                                                                                                                                                                |
+| `users.term.admin`              | An administrator can change every setting on this NAS, read and delete every file on it, and add or remove people. Make only people you trust with everything administrators.                           |
+| `users.term.ssh`                | SSH lets someone sign in to the NAS's command line from another computer, type commands and copy files. Most people never need it.                                                                      |
+| `users.term.systemGroup`        | System groups are made by the NAS and the programs on it. Some of them give a person power over the NAS itself.                                                                                         |
 
 ---
 
@@ -1303,8 +1316,9 @@ this NAS." or the confirmation.
    - "Their files, wherever they are on the NAS. The files keep their old owner, who is then shown as a
      number. A person you add later may be given the same number and so become the owner of these
      files." **[verify]** which account number the next new person gets.
-   - With a home folder: "Their home folder, {{folder}} › {{name}}, with everything in it. If you add
-     a person called {{name}} again, they get this folder." **[verify]**
+   - With a home folder: "Their home folder, {{folder}} › {{name}}, with everything in it. A new
+     person with this name gets the same home folder, but may not be able to open the files left in
+     it." (the owner's decision, 23)
 4. **Access**, when any folder lists them: a `CheckboxField`, **ticked by default**: "Also take
    {{name}} off the access lists of {{count}} shared folders: {{list}}." Hint: "If you leave this,
    those folders keep an entry for {{name}}, and a person you add later with the same name gets that
@@ -1371,7 +1385,7 @@ Steps announced politely, a failure assertively, the result politely.
 | `personDelete.goes.email`               | Their email address on this NAS, <email></email>.                                                                                                                                                     |
 | `personDelete.stays.title`              | What stays                                                                                                                                                                                            |
 | `personDelete.stays.files`              | Their files, wherever they are on the NAS. The files keep their old owner, who is then shown as a number. A person you add later may be given the same number and so become the owner of these files. |
-| `personDelete.stays.home`               | Their home folder, <folder></folder> › <name></name>, with everything in it. If you add a person called <name></name> again, they get this folder.                                                    |
+| `personDelete.stays.home`               | Their home folder, <folder></folder> › <name></name>, with everything in it. A new person with this name gets the same home folder, but may not be able to open the files left in it.                 |
 | `personDelete.access_one` / `_other`    | Also take <name></name> off the access list of {{count}} shared folder: {{list}}. / Also take <name></name> off the access lists of {{count}} shared folders: {{list}}.                               |
 | `personDelete.accessHint`               | If you leave this, those folders keep an entry for <name></name>, and a person you add later with the same name gets that access.                                                                     |
 | `personDelete.leavesNobody`             | After this, nobody can open {{folders}} from other computers: <name></name> was the only one with access.                                                                                             |
@@ -1781,7 +1795,7 @@ muted-foreground`: "To keep home folders in another shared folder, use the class
 ### 12.4 Which shared folders may hold home folders
 
 Offered: a shared folder whose status is OK (the shares slice's 0.3), whose file system is mounted and
-not Critical, that is not on the system drive, and that is not the whole file system (`/`) **[owner]**
+not Critical, that is not on the system drive, and that is not the whole file system (`/`) (settled on the test VM, keeping the safer choice; 23)
 (a home folder for each person at the top of a whole disk mixes them with every other folder there).
 The rest are listed with their reason: "Cannot be reached.", "Its file system is not mounted.", "On
 the system drive.", "It is the whole file system {{fs}}." Fail closed: any of these reads failing
@@ -1944,10 +1958,11 @@ called first (UI-4), as on the other administrator pages.
 | `/usermgmt/settings`      | 12   | Users > Settings (exists; gains its route) | The menu keeps OMV's word "Settings"; the page title says "Home folders"                         |
 
 The routes follow the classic interface's paths (`/#/usermgmt/...`) so existing users recognise them.
-`add` is not a valid name under 0.6's rule for new names, but an existing account may be called `add`
-under OMV's wider rule: the static `add` route wins, and such a person's page is reached from the list
-by a link that passes the name as data, not by typing the address **[verify]** the router's
-precedence, and whether any VM account is named `add`.
+The static `add` route wins over `$name` and `$group`. OMV takes an account called `add` (observed,
+23), so such a person is listed without a link, with "This person's page cannot open here, because
+their name is also the address of “Add a person”. Open them in the classic interface's list of users."
+(`users.addNameNoPage`) and the fixed link to the classic Users list; no address is built from the
+name (UI-3).
 
 ---
 
@@ -2301,7 +2316,7 @@ has a recommendation.
    that amount to control of the NAS warned on the page and named on the Users list; kept on every
    save. **Recommended: as written.** (0.5, 3.4)
 6. **P6, names.** New people and groups: 1 to 32 small letters, digits, `.`, `_`, `-`, starting with a
-   letter; no name used by any account or group of either kind; a few reserved words. Names are fixed
+   letter; no name used by any account or group of either kind; a few reserved words, `add` among them (23). Names are fixed
    once made. Existing names are kept as they are. **Recommended: as written.** (0.6)
 7. **P7, passwords.** OMV's rules only (not empty, one line), typed twice, a reveal toggle, no meter;
    never shown, cleared after every request, removed from the reply; in effect at once; a line on
@@ -2324,7 +2339,7 @@ has a recommendation.
     what they leave. **Recommended: as written.** The alternative is for every person save to apply
     the Email change itself, which would deploy anyone else's pending mail settings too. (0.4, 0.9)
 12. **P12, home folders.** Turning them on in a shared folder (OK, mounted, not the system drive, not a
-    whole file system **[owner]**) and off, each with a plain confirmation; moving them to another
+    whole file system, settled on the test VM, 23) and off, each with a plain confirmation; moving them to another
     shared folder stays in the classic interface, because it moves every person's files inside one
     request. **Recommended: as written.** (Section 12)
 13. **P13, access from a person's and a group's page.** The shares slice's grid with folders as rows,
@@ -2361,3 +2376,51 @@ build" section records each change, as the earlier slices do.
 | 6   | A new group marks nothing pending; a changed one marks Windows and Mac sharing                            | The add-group flow's checkpoint and 9.3's note follow the VM                                                                                                                                            |
 | 7   | Turning home folders on finishes within the web server's limits for a few hundred people                  | A cut request is already "Could not tell"; if it is common, the dialog says before confirming that it may take longer than the page can follow, and turning on again finishes the rest                  |
 | 8   | SSH keys sent back as read are stored unchanged                                                           | If OMV changes them, the interface still sends them as read (OMV's own conversion), and the VM's result is recorded; if keys are lost, saving a person with keys is refused here until P14 is revisited |
+
+---
+
+## 23. Changes made during the build
+
+The contract was written from captures on the test VM (OMV 8.6.1) by
+`tools/contract-capture/users.mjs`: three documentation people and two groups made, changed and
+deleted, passwords set, SSH and administrator rights given and taken away, signing in here, over SSH
+and SFTP, and to SMB from a client as those people, home folders turned on and off in a shared folder
+on a scratch EXT4 file system, and 300 people made and removed to time the lists. The VM was left as
+it was. Where the VM answered a **[verify]** or contradicted this design, the build follows the VM:
+
+| #   | Item (18.2, 22)   | What the VM showed                                                                                                                                                                                                                                                                                                                                                                | What changed                                                                                                                                                                                                              |
+| --- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 18.2 #1, 22 #1    | `getUser` and `getGroup` for a missing name answer HTTP 500 with "The user '…' does not exist." / "The group '…' does not exist."; a name OMV's pattern refuses answers HTTP 400. `getUser` answers for `admin`, `root` and `nobody` with `system` true                                                                                                                           | 0.11's check reads a name as free only from that exact message for that name; any other answer stops the flow                                                                                                             |
+| 2   | 18.2 #2, 22 #2    | `_ssh` and `openmediavault-admin` are system groups on OMV 8.6.1, read by `getGroup`                                                                                                                                                                                                                                                                                              | Nothing                                                                                                                                                                                                                   |
+| 3   | 18.2 #3           | A new person is made with either shell; with home folders off their home folder path is `/home/{name}`, which is not made; `groups` `["users"]` and `[]` both give `users` only; a new person marks `postfix` only                                                                                                                                                                | Nothing                                                                                                                                                                                                                   |
+| 4   | 18.2 #4, 22 #3, 4 | `groups` replaces the whole list, system groups included; `["users"]` takes a person out of every other group; `[]` changes nothing. `uid` on a change is ignored. **Every change to a person marks `postfix` and `ssh`**, keys or not                                                                                                                                            | 0.4 and 0.9: a change and a delete mark Email and SSH; `users.savedNote` names both; R10's expected sets follow                                                                                                           |
+| 5   | 18.2 #4, 22 #8    | SSH keys sent back as read are stored unchanged (RFC 4716)                                                                                                                                                                                                                                                                                                                        | Nothing                                                                                                                                                                                                                   |
+| 6   | 18.2 #4, D13      | A description with a comma, of 66 and of 200 characters, and right-to-left, is stored as sent; a colon is refused by the system's account tool (HTTP 500 with its command). A group's description (OMV's record only) takes a colon and 66 characters. An email address with capitals is stored as sent                                                                           | The interface still holds what the reader types to 65 characters without a colon (D13). The contract accepts up to 255 (no colon for a person, one line for a group), so a description set elsewhere is sent back as read |
+| 7   | 18.2 #5           | A new and a changed password work at once here and over SMB, with no Apply: with spaces at both ends (the trimmed one is refused), a colon, non-Latin letters, 200 characters. A line break is refused (HTTP 400)                                                                                                                                                                 | Nothing                                                                                                                                                                                                                   |
+| 8   | 18.2 #6           | In `_ssh` with `/usr/bin/sh`: SSH and SFTP sign in; with `/usr/sbin/nologin`: neither; out of `_ssh`: refused; in `root`: let in. Each at once. A key works only after Apply                                                                                                                                                                                                      | Nothing (D6 and D7 hold)                                                                                                                                                                                                  |
+| 9   | 18.2 #7           | Membership of `openmediavault-admin` gives the administrator role at the next sign-in; taken out, the normal role at the next sign-in                                                                                                                                                                                                                                             | Nothing                                                                                                                                                                                                                   |
+| 10  | 18.2 #8, 22 #5    | `deleteUser`: SMB, signing in here and key sign-in are refused at once; the person's files stay, owned by the old number, shown without a name; their group memberships go; their access entries stay; `postfix` and `ssh` pending. The next new person got the next unused number, not the deleted one                                                                           | 7.3's lists stand; the access checkbox stays                                                                                                                                                                              |
+| 11  | 18.2 #9, 22 #6    | A new group marks nothing; a change of members or of the description marks `samba`, also for a group OMV held no record of; `deleteGroup` marks nothing and is refused while the group has members (HTTP 500, the system tool's "is not empty"); `members` `[]` empties it. A person added to a group opened a share given to the group from a new connection before Apply        | 0.9 stands; 11.3's step 4 expects `samba` only when step 1 ran                                                                                                                                                            |
+| 12  | 18.2 #10, 22 #7   | `getSettings` is `{enable, sharedfolderref}`, and keeps the folder when off. Turning on took 93 ms for 6 people and 1.6 s for 306; an existing home folder's content was moved in; a new one is private to the person. Off sets every home folder to `/nonexistent` and keeps every file. The folder is `_used` while on and its delete is refused. `samba` is pending after each | 12.5's "moved" line stands. Whether Windows and Mac computers then list each home folder was not settled (the client check failed for another reason); 12.5 and 12.6 keep their lines                                     |
+| 13  | 12.4, P12         | OMV takes a shared folder that is a whole file system for home folders, and makes every person's folder at the top of that file system, beside every other folder there                                                                                                                                                                                                           | **Settled, keeping the safer choice**: such a folder is not offered (12.4's "It is the whole file system {{fs}}.")                                                                                                        |
+| 14  | 18.2 #11          | The system took names of 33 and 100 characters, capitals, a leading digit, a trailing `$` and `add`; it refused digits only and 257 characters. A group and a person of the same name were both made                                                                                                                                                                              | 0.6's rules stand (stricter), and `add` is reserved (owner, below). An `add` made elsewhere has no page here: the static route wins (14.2), so it is shown without a link, with `users.addNameNoPage`                     |
+| 15  | 18.2 #12          | `getUserList` with 306 people took 0.24 s                                                                                                                                                                                                                                                                                                                                         | Nothing: lists are read whole (D2)                                                                                                                                                                                        |
+| 16  | 18.2 #13          | From the classic interface's source: `/#/usermgmt/users/edit/{name}` and `/#/usermgmt/groups/edit/{name}`                                                                                                                                                                                                                                                                         | Nothing: this design links the classic lists only                                                                                                                                                                         |
+
+Turning home folders on or off sets the home folder path of every person in `users`, the VM's own
+test accounts included; the capture tool put each one back exactly afterwards.
+
+**The owner's decisions during the build (2026-11-22):**
+
+- **`add` is reserved** (0.6, P6): a new person or group may not be called `add`, the address of "Add
+  a person" and "Add a group". An existing `add` made elsewhere is shown as text, with the fixed link
+  to the classic interface's list.
+- **Administrator rights apply from the next sign-in** (3.5): the confirmation, the toasts and the
+  saved note say "Applies from their next sign-in. If they are signed in now, ask them to sign out and
+  in again." in place of "takes effect as soon as you save", which stays only for a change to SSH.
+- **A reused name and the home folder** (7.3, P9): "A new person with this name gets the same home
+  folder, but may not be able to open the files left in it." replaces "they get this folder".
+- **Accepted as built**: the password asked again for any retry of the add flow's step 2, never kept
+  in a store; deleting a person in two dialogs that hand over to each other (the checks, then the typed
+  confirmation); 3.5's changes as lines of the description; and, in the add flow, a folder that still
+  holds an entry for the typed name showing that access, since the new person would get it.
