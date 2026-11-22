@@ -1,0 +1,49 @@
+type: object
+description: >-
+  The SMB/CIFS service's settings without its shares (SMB.getSettings, conf.service.smb). The
+  interface changes only `enable` and sends everything else back as read (design 0.10).
+required: [enable]
+properties:
+  enable:
+    type: boolean
+    description: Whether Windows and Mac sharing is on for the whole NAS.
+  workgroup:
+    type: string
+  serverstring:
+    type: string
+  loglevel:
+    type: integer
+  usesendfile:
+    type: boolean
+  aio:
+    type: boolean
+  timeserver:
+    type: boolean
+  winssupport:
+    type: boolean
+  winsserver:
+    type: string
+  homesenable:
+    type: boolean
+  homesbrowseable:
+    type: boolean
+  homesrecyclebin:
+    type: boolean
+  homesmacoscompat:
+    type: boolean
+  homesinheritacls:
+    type: boolean
+  homesinheritpermissions:
+    type: boolean
+  homesextraoptions:
+    type: string
+  homesfollowsymlinks:
+    type: boolean
+  homeswidelinks:
+    type: boolean
+  netbios:
+    type: boolean
+  minprotocol:
+    type: string
+  extraoptions:
+    type: string

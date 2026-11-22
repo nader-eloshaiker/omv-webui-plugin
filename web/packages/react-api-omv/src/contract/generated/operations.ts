@@ -146,6 +146,131 @@ export const OPERATIONS = {
       $ref: "SharedFolderList",
     },
   },
+  "/rpc/ShareMgmt/getCandidates": {
+    operationId: "shareMgmtGetCandidates",
+    service: "ShareMgmt",
+    method: "getCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ShareCandidateList",
+    },
+  },
+  "/rpc/ShareMgmt/set": {
+    operationId: "shareMgmtSet",
+    service: "ShareMgmt",
+    method: "set",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SharedFolderSaved",
+    },
+  },
+  "/rpc/ShareMgmt/setPrivileges": {
+    operationId: "shareMgmtSetPrivileges",
+    service: "ShareMgmt",
+    method: "setPrivileges",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "SharedFolderSaved",
+    },
+  },
+  "/rpc/ShareMgmt/delete": {
+    operationId: "shareMgmtDelete",
+    service: "ShareMgmt",
+    method: "delete",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: {
+      $ref: "SharedFolderSaved",
+    },
+  },
+  "/rpc/UserMgmt/getUserList": {
+    operationId: "userMgmtGetUserList",
+    service: "UserMgmt",
+    method: "getUserList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "UserAccountList",
+    },
+  },
+  "/rpc/UserMgmt/getGroupList": {
+    operationId: "userMgmtGetGroupList",
+    service: "UserMgmt",
+    method: "getGroupList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "UserGroupList",
+    },
+  },
+  "/rpc/SMB/getSettings": {
+    operationId: "smbGetSettings",
+    service: "SMB",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmbSettings",
+    },
+  },
+  "/rpc/SMB/setSettings": {
+    operationId: "smbSetSettings",
+    service: "SMB",
+    method: "setSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "SmbSettings",
+    },
+  },
+  "/rpc/SMB/getShareList": {
+    operationId: "smbGetShareList",
+    service: "SMB",
+    method: "getShareList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmbShareList",
+    },
+  },
+  "/rpc/SMB/setShare": {
+    operationId: "smbSetShare",
+    service: "SMB",
+    method: "setShare",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "SmbShare",
+    },
+  },
+  "/rpc/SMB/deleteShare": {
+    operationId: "smbDeleteShare",
+    service: "SMB",
+    method: "deleteShare",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "SmbShare",
+    },
+  },
   "/rpc/UserMgmt/getUserByContext": {
     operationId: "userMgmtGetUserByContext",
     service: "UserMgmt",
@@ -2265,6 +2390,26 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  ShareCandidate: {
+    type: "object",
+    required: ["uuid", "description"],
+    properties: {
+      uuid: {
+        type: "string",
+        pattern:
+          "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      },
+      description: {
+        type: "string",
+      },
+    },
+  },
+  ShareCandidateList: {
+    type: "array",
+    items: {
+      $ref: "ShareCandidate",
+    },
+  },
   SharedFolder: {
     type: "object",
     required: [
@@ -2384,6 +2529,51 @@ export const SCHEMAS: SchemaTable = {
       perms: {
         type: "integer",
         enum: [0, 5, 7],
+      },
+    },
+  },
+  SharedFolderSaved: {
+    type: "object",
+    required: ["uuid", "name", "comment", "mntentref", "reldirpath"],
+    properties: {
+      uuid: {
+        type: "string",
+        pattern:
+          "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      },
+      name: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      mntentref: {
+        type: "string",
+      },
+      reldirpath: {
+        type: "string",
+      },
+      privileges: {
+        oneOf: [
+          {
+            type: "object",
+            properties: {
+              privilege: {
+                type: "array",
+                items: {
+                  $ref: "SharedFolderPrivilege",
+                },
+              },
+            },
+          },
+          {
+            type: "string",
+            enum: [""],
+          },
+        ],
+      },
+      mode: {
+        type: "string",
       },
     },
   },
@@ -2896,6 +3086,196 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  SmbSettings: {
+    type: "object",
+    required: ["enable"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      workgroup: {
+        type: "string",
+      },
+      serverstring: {
+        type: "string",
+      },
+      loglevel: {
+        type: "integer",
+      },
+      usesendfile: {
+        type: "boolean",
+      },
+      aio: {
+        type: "boolean",
+      },
+      timeserver: {
+        type: "boolean",
+      },
+      winssupport: {
+        type: "boolean",
+      },
+      winsserver: {
+        type: "string",
+      },
+      homesenable: {
+        type: "boolean",
+      },
+      homesbrowseable: {
+        type: "boolean",
+      },
+      homesrecyclebin: {
+        type: "boolean",
+      },
+      homesmacoscompat: {
+        type: "boolean",
+      },
+      homesinheritacls: {
+        type: "boolean",
+      },
+      homesinheritpermissions: {
+        type: "boolean",
+      },
+      homesextraoptions: {
+        type: "string",
+      },
+      homesfollowsymlinks: {
+        type: "boolean",
+      },
+      homeswidelinks: {
+        type: "boolean",
+      },
+      netbios: {
+        type: "boolean",
+      },
+      minprotocol: {
+        type: "string",
+      },
+      extraoptions: {
+        type: "string",
+      },
+    },
+  },
+  SmbShare: {
+    type: "object",
+    required: [
+      "uuid",
+      "sharedfolderref",
+      "enable",
+      "guest",
+      "readonly",
+      "browseable",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+        pattern:
+          "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sharedfolderref: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      guest: {
+        type: "string",
+      },
+      readonly: {
+        type: "boolean",
+      },
+      browseable: {
+        type: "boolean",
+      },
+      recyclebin: {
+        type: "boolean",
+      },
+      recyclemaxsize: {
+        type: "integer",
+      },
+      recyclemaxage: {
+        type: "integer",
+      },
+      hidedotfiles: {
+        type: "boolean",
+      },
+      inheritacls: {
+        type: "boolean",
+      },
+      inheritpermissions: {
+        type: "boolean",
+      },
+      easupport: {
+        type: "boolean",
+      },
+      storedosattributes: {
+        type: "boolean",
+      },
+      hostsallow: {
+        type: "string",
+      },
+      hostsdeny: {
+        type: "string",
+      },
+      audit: {
+        type: "boolean",
+      },
+      macoscompat: {
+        type: "boolean",
+      },
+      timemachine: {
+        type: "boolean",
+      },
+      timemachinemaxsize: {
+        type: "string",
+      },
+      transportencryption: {
+        type: "boolean",
+      },
+      followsymlinks: {
+        type: "boolean",
+      },
+      widelinks: {
+        type: "boolean",
+      },
+      extraoptions: {
+        type: "string",
+      },
+    },
+  },
+  SmbShareList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "SmbShareRow",
+        },
+      },
+    },
+  },
+  SmbShareRow: {
+    allOf: [
+      {
+        $ref: "SmbShare",
+      },
+      {
+        type: "object",
+        required: ["sharedfoldername"],
+        properties: {
+          sharedfoldername: {
+            type: "string",
+          },
+        },
+      },
+    ],
+  },
   SshSettings: {
     type: "object",
     required: [
@@ -3231,6 +3611,66 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  UserAccount: {
+    type: "object",
+    required: ["name"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      uid: {
+        type: "integer",
+      },
+      gid: {
+        type: "integer",
+      },
+      comment: {
+        type: "string",
+      },
+      dir: {
+        type: "string",
+      },
+      shell: {
+        type: "string",
+      },
+      groups: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      system: {
+        type: "boolean",
+      },
+      email: {
+        type: "string",
+      },
+      disallowusermod: {
+        type: "boolean",
+      },
+      sshpubkeys: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+    },
+  },
+  UserAccountList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "UserAccount",
+        },
+      },
+    },
+  },
   UserByContext: {
     type: "object",
     required: ["name", "comment", "email", "sshpubkeys", "_readonly"],
@@ -3300,6 +3740,45 @@ export const SCHEMAS: SchemaTable = {
       },
       shell: {
         type: "string",
+      },
+    },
+  },
+  UserGroup: {
+    type: "object",
+    required: ["name"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      gid: {
+        type: "integer",
+      },
+      members: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      system: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+    },
+  },
+  UserGroupList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "UserGroup",
+        },
       },
     },
   },

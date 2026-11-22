@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetGroupList
+  tags:
+    - UserMgmt
+  summary: Groups that can be given access
+  description: >-
+    A page of the groups that are not system groups, sorted and searched by the backend. Changes
+    nothing.
+  x-omv-rpc:
+    service: UserMgmt
+    method: getGroupList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserGroupList.yaml
+          examples:
+            several:
+              $ref: ../../examples/userMgmtGetGroupList.several.yaml
+            stock:
+              $ref: ../../examples/userMgmtGetGroupList.stock.yaml

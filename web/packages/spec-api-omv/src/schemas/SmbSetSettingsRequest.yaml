@@ -1,0 +1,69 @@
+type: object
+description: >-
+  The SMB/CIFS service's settings to store (rpc.smb.setsettings). OMV writes the fields sent over
+  the stored object and keeps the rest; the interface always sends the whole SMB.getSettings reply
+  with only `enable` changed. The twelve fields OMV's datamodel requires are required; the stored
+  home-folder, `netbios` and `minprotocol` fields, which OMV's datamodel does not name but stores
+  when sent, are optional and within the bounds of conf.service.smb. With `enable` true OMV refuses
+  a NAS name longer than 15 characters, and home-folder sharing while home folders are off.
+required:
+  [
+    enable,
+    workgroup,
+    serverstring,
+    loglevel,
+    usesendfile,
+    aio,
+    timeserver,
+    winssupport,
+    winsserver,
+    homesenable,
+    homesbrowseable,
+    extraoptions,
+  ]
+properties:
+  enable:
+    type: boolean
+  workgroup:
+    type: string
+  serverstring:
+    type: string
+  loglevel:
+    type: integer
+    enum: [0, 1, 2, 3, 10]
+  usesendfile:
+    type: boolean
+  aio:
+    type: boolean
+  timeserver:
+    type: boolean
+  winssupport:
+    type: boolean
+  winsserver:
+    type: string
+  homesenable:
+    type: boolean
+  homesbrowseable:
+    type: boolean
+  homesrecyclebin:
+    type: boolean
+  homesmacoscompat:
+    type: boolean
+  homesinheritacls:
+    type: boolean
+  homesinheritpermissions:
+    type: boolean
+  homesextraoptions:
+    type: string
+  homesfollowsymlinks:
+    type: boolean
+  homeswidelinks:
+    type: boolean
+  netbios:
+    type: boolean
+  minprotocol:
+    type: string
+    enum: [SMB1, SMB2, SMB3]
+  extraoptions:
+    type: string
+additionalProperties: false

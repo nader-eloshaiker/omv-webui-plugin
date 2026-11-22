@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: shareMgmtSetPrivileges
+  tags:
+    - ShareMgmt
+  summary: Set who can use a shared folder
+  description: >-
+    Replace a shared folder's whole access list: an entry left out is removed. Access decides who
+    the SMB and Rsync servers let in; it changes no file permission on the disk. OMV refuses an
+    account that does not exist and the web interface's administrator account, and then nothing
+    changes. Nothing reaches the network until the pending changes are applied; it marks the
+    sharedfolders and systemd modules dirty, and samba when the folder has an SMB share. It can
+    take access away, so it is a service-level change.
+  x-omv-rpc:
+    service: ShareMgmt
+    method: setPrivileges
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.sharemgmt.setprivileges
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ShareMgmtSetPrivilegesRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SharedFolderSaved.yaml
+          examples:
+            saved:
+              $ref: ../../examples/shareMgmtSetPrivileges.saved.yaml
+    "500":
+      description: >-
+        OMV refused an entry: the account does not exist, or it is the web interface's
+        administrator account.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            unknownAccount:
+              $ref: ../../examples/shareMgmtSetPrivileges.unknownAccount.yaml
+            adminRefused:
+              $ref: ../../examples/shareMgmtSetPrivileges.adminRefused.yaml

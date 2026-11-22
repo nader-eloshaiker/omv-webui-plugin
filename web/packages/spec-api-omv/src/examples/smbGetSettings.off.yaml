@@ -1,0 +1,24 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  enable: false
+  workgroup: WORKGROUP
+  serverstring: "%h server"
+  loglevel: 0
+  usesendfile: true
+  aio: true
+  timeserver: false
+  winssupport: false
+  winsserver: ""
+  homesenable: false
+  homesbrowseable: true
+  homesrecyclebin: false
+  homesmacoscompat: false
+  homesinheritacls: false
+  homesinheritpermissions: false
+  homesextraoptions: ""
+  homesfollowsymlinks: false
+  homeswidelinks: false
+  netbios: false
+  minprotocol: SMB2
+  extraoptions: ""

@@ -98,5 +98,75 @@
     "where": "zfsSetProperties (Zfs.setProperties)",
     "message": "$.properties[]: has a field modified that OMV's datamodel does not declare",
     "reason": "rpc.zfs.setproperties does not declare modified on a property, but OMVRpcServiceZFS::setProperties skips every property whose modified is not true, and validation ignores keys a datamodel does not declare. The contract requires it, as true only, on both of its kinds of property (size limit and compression)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesrecyclebin that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesrecyclebin, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesmacoscompat that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesmacoscompat, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesinheritacls that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesinheritacls, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesinheritpermissions that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesinheritpermissions, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesextraoptions that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesextraoptions, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homesfollowsymlinks that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homesfollowsymlinks, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field homeswidelinks that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare homeswidelinks, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field netbios that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare netbios, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetSettings (SMB.setSettings)",
+    "message": "$: has a field minprotocol that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setsettings does not declare minprotocol, but SMB::setSettings writes the params over the stored conf.service.smb object, which has it, so a value sent is stored and one left out is kept (observed on the test VM). The contract makes it optional, within conf.service.smb's bounds, so the whole SMB.getSettings reply can be sent back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetShare (SMB.setShare)",
+    "message": "$: has a field macoscompat that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setshare does not declare macoscompat, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetShare (SMB.setShare)",
+    "message": "$: has a field timemachinemaxsize that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setshare does not declare timemachinemaxsize, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetShare (SMB.setShare)",
+    "message": "$: has a field transportencryption that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setshare does not declare transportencryption, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetShare (SMB.setShare)",
+    "message": "$: has a field followsymlinks that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setshare does not declare followsymlinks, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "smbSetShare (SMB.setShare)",
+    "message": "$: has a field widelinks that OMV's datamodel does not declare",
+    "reason": "rpc.smb.setshare does not declare widelinks, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
   }
 ]

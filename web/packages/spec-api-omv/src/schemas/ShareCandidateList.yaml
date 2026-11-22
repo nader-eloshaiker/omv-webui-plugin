@@ -1,0 +1,4 @@
+type: array
+description: The file systems that can hold a new shared folder, in the server's order.
+items:
+  $ref: ./ShareCandidate.yaml

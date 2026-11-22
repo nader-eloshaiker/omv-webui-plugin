@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: shareMgmtSet
+  tags:
+    - ShareMgmt
+  summary: Make or change a shared folder
+  description: >-
+    Store a shared folder. With OMV's placeholder UUID it makes a new one: the record is written
+    first, then its folder is made on the disk at once if it does not exist (on BTRFS, as a
+    subvolume), with the file mode sent, the group every person belongs to and the setgid mark; a
+    folder that exists is used as it is, with its files and file permissions. On an existing
+    shared folder it rewrites the record and keeps the access list. OMV refuses a name already
+    taken (exact case) and a path already used on the same file system. It does not check that the
+    file system is mounted; the interface makes folders only on file systems ShareMgmt.getCandidates
+    and its own reading offer. Marks the sharedfolders and systemd modules dirty, and on a change
+    also the modules of what uses the folder, such as samba. Returns the stored folder.
+  x-omv-rpc:
+    service: ShareMgmt
+    method: set
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.sharemgmt.set
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ShareMgmtSetRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SharedFolderSaved.yaml
+          examples:
+            created:
+              $ref: ../../examples/shareMgmtSet.created.yaml
+            changed:
+              $ref: ../../examples/shareMgmtSet.changed.yaml
+    "500":
+      description: >-
+        OMV refused: a shared folder with that name, or with that path on the same file system,
+        already exists.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            nameTaken:
+              $ref: ../../examples/shareMgmtSet.nameTaken.yaml
+            pathTaken:
+              $ref: ../../examples/shareMgmtSet.pathTaken.yaml

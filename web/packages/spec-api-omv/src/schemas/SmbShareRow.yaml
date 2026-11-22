@@ -1,0 +1,9 @@
+description: An SMB share as SMB.getShareList lists it, with the name of its shared folder.
+allOf:
+  - $ref: ./SmbShare.yaml
+  - type: object
+    required: [sharedfoldername]
+    properties:
+      sharedfoldername:
+        type: string
+        description: The shared folder's name, which is also the share's name on the network.

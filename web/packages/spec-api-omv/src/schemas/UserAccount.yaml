@@ -1,0 +1,35 @@
+type: object
+description: >-
+  A person's account that is not a system account (UserMgmt.getUserList), with what OMV stores
+  about it. The interface shows only the name and the description.
+required: [name]
+properties:
+  name:
+    type: string
+    description: The account name.
+  uid:
+    type: integer
+  gid:
+    type: integer
+  comment:
+    type: string
+    description: The account's description; may be empty.
+  dir:
+    type: string
+  shell:
+    type: string
+  groups:
+    type: array
+    description: The names of the groups the person belongs to, their primary group included.
+    items:
+      type: string
+  system:
+    type: boolean
+  email:
+    type: string
+  disallowusermod:
+    type: boolean
+  sshpubkeys:
+    type: array
+    items:
+      type: string

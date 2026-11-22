@@ -1,0 +1,12 @@
+type: object
+description: >-
+  A shared folder to delete (rpc.sharemgmt.delete). `recursive` false removes only the shared
+  folder's record and leaves every file on the disk; `recursive` true first deletes its folder on
+  the disk and everything in it, inside the request.
+required: [uuid, recursive]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  recursive:
+    type: boolean
+additionalProperties: false

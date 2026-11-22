@@ -1,0 +1,15 @@
+type: object
+description: >-
+  A shared folder's whole access list (rpc.sharemgmt.setprivileges). It replaces the stored list:
+  an entry left out is removed. Stricter than OMV: `privileges` is required (OMV does not mark it)
+  and holds at most 10,000 entries.
+required: [uuid, privileges]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  privileges:
+    type: array
+    maxItems: 10000
+    items:
+      $ref: ./SharedFolderPrivilegeEntry.yaml
+additionalProperties: false

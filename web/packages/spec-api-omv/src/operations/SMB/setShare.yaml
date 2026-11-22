@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbSetShare
+  tags:
+    - SMB
+  summary: Share a folder with Windows and Mac computers, or change how
+  description: >-
+    Store an SMB share. With OMV's placeholder UUID it makes one; otherwise it replaces the stored
+    one with what is sent, so a field left out returns to its default. OMV refuses a second share
+    for the same shared folder and does not check that the shared folder exists. Time Machine
+    turns macOS compatibility on. Nothing reaches the network until the pending changes are
+    applied; it marks the samba and avahi modules dirty. Returns the stored share.
+  x-omv-rpc:
+    service: SMB
+    method: setShare
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.smb.setshare
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SmbSetShareRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmbShare.yaml
+          examples:
+            created:
+              $ref: ../../examples/smbSetShare.created.yaml
+            changed:
+              $ref: ../../examples/smbSetShare.changed.yaml
+    "500":
+      description: OMV refused, such as a second share for the same shared folder.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            secondShare:
+              $ref: ../../examples/smbSetShare.secondShare.yaml

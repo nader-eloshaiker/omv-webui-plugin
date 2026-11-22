@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "A shared folder with the name 'Photos' already exists."

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbDeleteShare
+  tags:
+    - SMB
+  summary: Stop sharing a folder with Windows and Mac computers
+  description: >-
+    Remove an SMB share's record, with every option set on it. It touches no shared folder, no
+    access list and no file. Computers using the share lose it once the pending changes are
+    applied; it marks the samba and avahi modules dirty. Returns the removed share.
+  x-omv-rpc:
+    service: SMB
+    method: deleteShare
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmbShare.yaml
+          examples:
+            removed:
+              $ref: ../../examples/smbDeleteShare.removed.yaml

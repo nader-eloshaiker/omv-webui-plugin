@@ -1,0 +1,14 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000005"
+  name: Photos
+  comment: Family photos
+  mntentref: "00000000-0000-4000-8000-000000000002"
+  reldirpath: Photos/
+  privileges:
+    privilege:
+      - type: user
+        name: alex
+        perms: 7
+  mode: "775"

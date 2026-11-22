@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: shareMgmtGetCandidates
+  tags:
+    - ShareMgmt
+  summary: File systems that can hold a shared folder
+  description: >-
+    OMV's own list of the file systems a new shared folder may be made on: each mount entry that
+    is mounted now, is not a bind mount, and whose file system type can hold a shared folder, with
+    the mount entry's UUID that ShareMgmt.set takes. It checks each mount folder but reads no file.
+    Changes nothing.
+  x-omv-rpc:
+    service: ShareMgmt
+    method: getCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ShareCandidateList.yaml
+          examples:
+            dataOnly:
+              $ref: ../../examples/shareMgmtGetCandidates.dataOnly.yaml
+            several:
+              $ref: ../../examples/shareMgmtGetCandidates.several.yaml
