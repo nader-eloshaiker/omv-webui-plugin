@@ -8,8 +8,9 @@ options, stopping), changing where a broken folder points, and deleting a shared
 without its files. It picks up where Flow A ends ([phase-5-filesystems.md](phase-5-filesystems.md),
 6.8, "Next: share a folder on it").
 
-**Status: proposed, for the owner to agree (section 17). Nothing is built.** The nine methods the
-owner cleared on 2026-11-22 cover most of it; two more are asked for (11.0). This slice destroys data
+**Status: agreed by the owner on 2026-11-22 (P1 to P16 as written, section 17). Not built yet.** The
+nine methods cleared first and the two asked for in 11.0 (`SMB.deleteShare`, `ShareMgmt.getCandidates`)
+are all cleared. This slice destroys data
 (deleting a shared folder with its files), cuts access (stopping a share, turning SMB off, taking
 someone's access away, deleting a folder) and can open a folder to anyone on the network (guest
 access), so every destructive point is in section 17 and nothing destructive is built before the

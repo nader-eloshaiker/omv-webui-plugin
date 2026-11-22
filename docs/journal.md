@@ -697,3 +697,11 @@ Built on `phase-5-zfs` to [design/phase-5-zfs.md](design/phase-5-zfs.md), as agr
 ## 2026-11-22 — Phase 5, shares: the methods cleared for the contract
 
 The owner cleared all nine backend methods the shares domain needs: `ShareMgmt.set`, `ShareMgmt.setPrivileges`, `ShareMgmt.delete`, `UserMgmt.getUserList`, `UserMgmt.getGroupList`, `SMB.getSettings`, `SMB.setSettings`, `SMB.getShareList` and `SMB.setShare`. None is on the private review list. The design's points still need the owner's agreement before anything destructive is built.
+
+## 2026-11-22 — Phase 5, shares: the owner's agreement to the design
+
+The owner agreed [design/phase-5-shares.md](design/phase-5-shares.md) as written.
+
+- **P1, two more methods:** `SMB.deleteShare` and `ShareMgmt.getCandidates` are cleared; neither is on the private review list. `ShareMgmt.getFileACL` is not asked for now (P16).
+- **P2, the scope:** create, edit, access per person and group, delete, and sharing over SMB are built. File permissions (ACLs), NFS, the advanced SMB settings and share options, copying access, renaming, moving a working folder and BTRFS snapshots stay in the classic interface.
+- **P3 to P16:** agreed as written. That includes new folders at mode 770 with no choice, names fixed once made, guest access its own unticked checkbox warned twice, no SMB share with guests off until someone has access, Stop sharing removing the share, and two deletes, the one with files red, typed and refused in the cases section 8 lists.
