@@ -772,3 +772,7 @@ Built on `phase-5-users` to [design/phase-5-users.md](design/phase-5-users.md), 
 ## 2026-11-22 — Phase 5, users and groups: the owner's decisions during the build
 
 `add` is reserved for new people and groups; administrator rights are said to apply from the next sign-in; deleting a person says a new person of the same name gets the home folder but may not open its files; the build's four departures are accepted (design section 23).
+
+## 2026-11-23 — Phase 5, services: the methods cleared for the contract
+
+The owner cleared the methods the services domain needs: NFS `getSettings`, `setSettings`, `getShareList`, `getShare`, `setShare` and `deleteShare`; Rsyncd `getSettings`, `setSettings`, `getModuleList`, `getModule`, `setModule` and `deleteModule`; Rsync `getList`, `get`, `set`, `delete` and `execute`; SMB `getShare` and `emptyRecycleBin`. None is on the private review list. SSH and the basic SMB methods are already in the contract. The design's points still need the owner's agreement before anything destructive is built.
