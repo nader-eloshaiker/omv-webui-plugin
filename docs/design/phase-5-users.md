@@ -8,7 +8,7 @@ group, its members and deleting it; and the home-folder setting. It picks up whe
 access grid points today ("Users in the classic interface", [phase-5-shares.md](phase-5-shares.md)
 3.4), and links back to that grid from every person and group.
 
-**Status: draft for the owner, 2026-11-22; nothing is built.** The ten UserMgmt methods the owner
+**Status: agreed by the owner on 2026-11-22 (P1 to P17 as written, section 21; a whole-file-system shared folder for home folders is settled by the VM check, keeping the safer choice). Not built yet.** The ten UserMgmt methods the owner
 cleared today and the five already in the contract cover everything here; section 15.0 asks for no
 further method. This slice hands out and takes away control of the NAS (administrator rights, SSH
 sign-in), cuts access (deleting a person or a group, taking someone out of a group, a new password),

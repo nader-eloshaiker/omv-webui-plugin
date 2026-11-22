@@ -738,3 +738,11 @@ Built on `phase-5-shares` to [design/phase-5-shares.md](design/phase-5-shares.md
 ## 2026-11-22 — Phase 5, users and groups: the methods cleared for the contract
 
 The owner cleared the UserMgmt methods the users-and-groups domain needs, beyond the five already in the contract: `getUser`, `setUser`, `deleteUser`, `getGroup`, `setGroup`, `deleteGroup`, `getSettings`, `setSettings`, `enumerateUsers` and `enumerateGroups`. None is on the private review list. `importUsers` and `importGroups` (bulk import) stay in the classic interface. The design's points still need the owner's agreement before anything destructive is built.
+
+## 2026-11-22 — Phase 5, users and groups: the owner's agreement to the design
+
+The owner agreed [design/phase-5-users.md](design/phase-5-users.md) P1 to P17 as written.
+
+- **P1, P2:** no new methods (`enumerateUsers` and `enumerateGroups` stay out of the contract); Users and Groups lists and pages, add, edit, delete, passwords and home folders on and off are built; bulk import, quotas, SSH keys, other system groups, account numbers and shell, renaming, moving home folders, SMB home shares and "disallow account modification" stay in the classic interface.
+- **P3 to P5:** administrator and SSH sign-in are explicit checkboxes, off by default, warned; nobody removes their own administrator rights; other system groups are never offered, are shown with what they mean, and are kept on every save.
+- **P6 to P17:** as written, including the name checked free immediately before an add, a typed delete for a person (never oneself) that removes their access entries by default, a group emptied before its delete, and the built-in admin never listed or changed. Whether a shared folder covering a whole file system may hold home folders is settled by the VM check, keeping the safer choice.
