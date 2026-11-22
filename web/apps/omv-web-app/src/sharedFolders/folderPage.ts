@@ -25,8 +25,10 @@ export function fsPage(
   return address === null ? null : { kind: "fs", address };
 }
 
-/** What "Used by" shows (0.7, 2.5). */
+/** What "Used by" shows (0.7, 2.5; phase 5 users design 13.1). */
 export type FolderUse =
+  /** "Home folders of every person", with a link to the home-folders page. */
+  | { kind: "home" }
   /** "Used by a setting this page does not show…" */
   | { kind: "other" }
   /** The share list could not be read: the retry form. */
@@ -39,10 +41,15 @@ export type FolderUse =
  */
 export function folderUse(input: {
   used: boolean;
+  /** It holds the home folders now (UserMgmt.getSettings; homeModel.holdsHomeFolders). */
+  homeFolders?: boolean;
   /** The folder has an SMB share (section 4 shows it). */
   hasShare: boolean;
   shares: { ready: boolean; failed: boolean; error?: unknown };
 }): FolderUse | null {
+  if (input.homeFolders === true) {
+    return { kind: "home" };
+  }
   if (input.shares.failed) {
     return { kind: "unread", error: input.shares.error };
   }

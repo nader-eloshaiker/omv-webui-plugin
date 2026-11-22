@@ -63,7 +63,10 @@ export type BuiltRoute =
   | "/account/settings"
   | "/diagnostics/system-logs"
   | "/diagnostics/processes"
-  | "/diagnostics/services";
+  | "/diagnostics/services"
+  | "/usermgmt/users"
+  | "/usermgmt/groups"
+  | "/usermgmt/settings";
 
 const ADMIN = ["admin"] as const satisfies readonly Role[];
 const EVERYONE = ["admin", "user"] as const satisfies readonly Role[];
@@ -246,6 +249,7 @@ export const NAV_PAGES = [
     item: "settings",
     labelKey: "nav.items.usermgmt.settings",
     classic: "/#/usermgmt/settings",
+    route: "/usermgmt/settings",
     roles: ADMIN,
   },
   {
@@ -253,6 +257,7 @@ export const NAV_PAGES = [
     item: "users",
     labelKey: "nav.items.usermgmt.users",
     classic: "/#/usermgmt/users",
+    route: "/usermgmt/users",
     roles: ADMIN,
   },
   {
@@ -260,6 +265,7 @@ export const NAV_PAGES = [
     item: "groups",
     labelKey: "nav.items.usermgmt.groups",
     classic: "/#/usermgmt/groups",
+    route: "/usermgmt/groups",
     roles: ADMIN,
   },
   {
@@ -347,7 +353,8 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * (`/storage/disks/sdb`) marks "Disks", and every Disk health page (`/storage/smart/overview`, the
  * set-up page) marks "Disk health"; a file system's page and the two add-storage flows mark "File
  * systems"; an array's page and the RAID flows mark "RAID"; a shared folder's page and "Add a shared
- * folder" mark "Shared folders".
+ * folder" mark "Shared folders"; a person's page and "Add a person" mark "Users", and a group's page
+ * and "Add a group" mark "Groups".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -362,7 +369,9 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/storage/filesystems" &&
       pathname.startsWith("/storage/filesystems/")) ||
     (route === "/storage/md" && pathname.startsWith("/storage/md/")) ||
-    (route === "/storage/zfs" && pathname.startsWith("/storage/zfs/"))
+    (route === "/storage/zfs" && pathname.startsWith("/storage/zfs/")) ||
+    (route === "/usermgmt/users" && pathname.startsWith("/usermgmt/users/")) ||
+    (route === "/usermgmt/groups" && pathname.startsWith("/usermgmt/groups/"))
   );
 }
 
@@ -406,6 +415,8 @@ export const CLASSIC = {
   sharedFolders: "/#/storage/shared-folders",
   smbAddShare: "/#/services/smb/shares/create",
   users: "/#/usermgmt/users",
+  groups: "/#/usermgmt/groups",
+  userSettings: "/#/usermgmt/settings",
   fileSystems: "/#/storage/filesystems",
   smartSettings: "/#/storage/smart/settings",
   smartDevices: "/#/storage/smart/devices",

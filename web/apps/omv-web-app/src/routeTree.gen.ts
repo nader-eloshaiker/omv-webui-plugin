@@ -21,6 +21,7 @@ import { Route as SignedInDiagnosticsProcessesRouteImport } from './routes/_sign
 import { Route as SignedInDiagnosticsSystemLogsRouteImport } from './routes/_signedIn/diagnostics/system-logs'
 import { Route as SignedInServicesSmbRouteImport } from './routes/_signedIn/services/smb'
 import { Route as SignedInServicesSshRouteImport } from './routes/_signedIn/services/ssh'
+import { Route as SignedInUsermgmtSettingsRouteImport } from './routes/_signedIn/usermgmt/settings'
 import { Route as SignedInDiagnosticsServicesIndexRouteImport } from './routes/_signedIn/diagnostics/services/index'
 import { Route as SignedInDiagnosticsServicesNfsRouteImport } from './routes/_signedIn/diagnostics/services/nfs'
 import { Route as SignedInDiagnosticsServicesSmbRouteImport } from './routes/_signedIn/diagnostics/services/smb'
@@ -43,6 +44,12 @@ import { Route as SignedInStorageSmartSetUpRouteImport } from './routes/_signedI
 import { Route as SignedInStorageSmartSettingsRouteImport } from './routes/_signedIn/storage/smart/settings'
 import { Route as SignedInStorageZfsIndexRouteImport } from './routes/_signedIn/storage/zfs/index'
 import { Route as SignedInStorageZfsCreateRouteImport } from './routes/_signedIn/storage/zfs/create'
+import { Route as SignedInUsermgmtGroupsIndexRouteImport } from './routes/_signedIn/usermgmt/groups/index'
+import { Route as SignedInUsermgmtGroupsGroupRouteImport } from './routes/_signedIn/usermgmt/groups/$group'
+import { Route as SignedInUsermgmtGroupsAddRouteImport } from './routes/_signedIn/usermgmt/groups/add'
+import { Route as SignedInUsermgmtUsersIndexRouteImport } from './routes/_signedIn/usermgmt/users/index'
+import { Route as SignedInUsermgmtUsersNameRouteImport } from './routes/_signedIn/usermgmt/users/$name'
+import { Route as SignedInUsermgmtUsersAddRouteImport } from './routes/_signedIn/usermgmt/users/add'
 import { Route as SignedInStorageMdArrayIndexRouteImport } from './routes/_signedIn/storage/md/$array/index'
 import { Route as SignedInStorageMdArrayAddRouteImport } from './routes/_signedIn/storage/md/$array/add'
 import { Route as SignedInStorageZfsFsSplatRouteImport } from './routes/_signedIn/storage/zfs/fs/$'
@@ -111,6 +118,12 @@ const SignedInServicesSshRoute = SignedInServicesSshRouteImport.update({
   path: '/services/ssh',
   getParentRoute: () => SignedInRoute,
 } as any)
+const SignedInUsermgmtSettingsRoute =
+  SignedInUsermgmtSettingsRouteImport.update({
+    id: '/usermgmt/settings',
+    path: '/usermgmt/settings',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInDiagnosticsServicesIndexRoute =
   SignedInDiagnosticsServicesIndexRouteImport.update({
     id: '/diagnostics/services/',
@@ -240,6 +253,42 @@ const SignedInStorageZfsCreateRoute =
     path: '/storage/zfs/create',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInUsermgmtGroupsIndexRoute =
+  SignedInUsermgmtGroupsIndexRouteImport.update({
+    id: '/usermgmt/groups/',
+    path: '/usermgmt/groups/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInUsermgmtGroupsGroupRoute =
+  SignedInUsermgmtGroupsGroupRouteImport.update({
+    id: '/usermgmt/groups/$group',
+    path: '/usermgmt/groups/$group',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInUsermgmtGroupsAddRoute =
+  SignedInUsermgmtGroupsAddRouteImport.update({
+    id: '/usermgmt/groups/add',
+    path: '/usermgmt/groups/add',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInUsermgmtUsersIndexRoute =
+  SignedInUsermgmtUsersIndexRouteImport.update({
+    id: '/usermgmt/users/',
+    path: '/usermgmt/users/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInUsermgmtUsersNameRoute =
+  SignedInUsermgmtUsersNameRouteImport.update({
+    id: '/usermgmt/users/$name',
+    path: '/usermgmt/users/$name',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInUsermgmtUsersAddRoute =
+  SignedInUsermgmtUsersAddRouteImport.update({
+    id: '/usermgmt/users/add',
+    path: '/usermgmt/users/add',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInStorageMdArrayIndexRoute =
   SignedInStorageMdArrayIndexRouteImport.update({
     id: '/storage/md/$array/',
@@ -289,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
+  '/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
@@ -304,6 +354,10 @@ export interface FileRoutesByFullPath {
   '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
+  '/usermgmt/groups/$group': typeof SignedInUsermgmtGroupsGroupRoute
+  '/usermgmt/groups/add': typeof SignedInUsermgmtGroupsAddRoute
+  '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
+  '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
   '/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
@@ -311,6 +365,8 @@ export interface FileRoutesByFullPath {
   '/storage/shared-folders/': typeof SignedInStorageSharedFoldersIndexRoute
   '/storage/smart/': typeof SignedInStorageSmartIndexRoute
   '/storage/zfs/': typeof SignedInStorageZfsIndexRoute
+  '/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
+  '/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
@@ -330,6 +386,7 @@ export interface FileRoutesByTo {
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
+  '/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
@@ -345,6 +402,10 @@ export interface FileRoutesByTo {
   '/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
+  '/usermgmt/groups/$group': typeof SignedInUsermgmtGroupsGroupRoute
+  '/usermgmt/groups/add': typeof SignedInUsermgmtGroupsAddRoute
+  '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
+  '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
   '/storage/disks': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems': typeof SignedInStorageFilesystemsIndexRoute
@@ -352,6 +413,8 @@ export interface FileRoutesByTo {
   '/storage/shared-folders': typeof SignedInStorageSharedFoldersIndexRoute
   '/storage/smart': typeof SignedInStorageSmartIndexRoute
   '/storage/zfs': typeof SignedInStorageZfsIndexRoute
+  '/usermgmt/groups': typeof SignedInUsermgmtGroupsIndexRoute
+  '/usermgmt/users': typeof SignedInUsermgmtUsersIndexRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array': typeof SignedInStorageMdArrayIndexRoute
@@ -373,6 +436,7 @@ export interface FileRoutesById {
   '/_signedIn/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
   '/_signedIn/services/smb': typeof SignedInServicesSmbRoute
   '/_signedIn/services/ssh': typeof SignedInServicesSshRoute
+  '/_signedIn/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/_signedIn/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/_signedIn/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/_signedIn/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
@@ -388,6 +452,10 @@ export interface FileRoutesById {
   '/_signedIn/storage/smart/set-up': typeof SignedInStorageSmartSetUpRoute
   '/_signedIn/storage/smart/settings': typeof SignedInStorageSmartSettingsRoute
   '/_signedIn/storage/zfs/create': typeof SignedInStorageZfsCreateRoute
+  '/_signedIn/usermgmt/groups/$group': typeof SignedInUsermgmtGroupsGroupRoute
+  '/_signedIn/usermgmt/groups/add': typeof SignedInUsermgmtGroupsAddRoute
+  '/_signedIn/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
+  '/_signedIn/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
   '/_signedIn/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/_signedIn/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
@@ -395,6 +463,8 @@ export interface FileRoutesById {
   '/_signedIn/storage/shared-folders/': typeof SignedInStorageSharedFoldersIndexRoute
   '/_signedIn/storage/smart/': typeof SignedInStorageSmartIndexRoute
   '/_signedIn/storage/zfs/': typeof SignedInStorageZfsIndexRoute
+  '/_signedIn/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
+  '/_signedIn/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
   '/_signedIn/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/_signedIn/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/_signedIn/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
@@ -416,6 +486,7 @@ export interface FileRouteTypes {
     | '/diagnostics/system-logs'
     | '/services/smb'
     | '/services/ssh'
+    | '/usermgmt/settings'
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
@@ -431,6 +502,10 @@ export interface FileRouteTypes {
     | '/storage/smart/set-up'
     | '/storage/smart/settings'
     | '/storage/zfs/create'
+    | '/usermgmt/groups/$group'
+    | '/usermgmt/groups/add'
+    | '/usermgmt/users/$name'
+    | '/usermgmt/users/add'
     | '/diagnostics/services/'
     | '/storage/disks/'
     | '/storage/filesystems/'
@@ -438,6 +513,8 @@ export interface FileRouteTypes {
     | '/storage/shared-folders/'
     | '/storage/smart/'
     | '/storage/zfs/'
+    | '/usermgmt/groups/'
+    | '/usermgmt/users/'
     | '/storage/md/$array/add'
     | '/storage/zfs/fs/$'
     | '/storage/md/$array/'
@@ -457,6 +534,7 @@ export interface FileRouteTypes {
     | '/diagnostics/system-logs'
     | '/services/smb'
     | '/services/ssh'
+    | '/usermgmt/settings'
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
@@ -472,6 +550,10 @@ export interface FileRouteTypes {
     | '/storage/smart/set-up'
     | '/storage/smart/settings'
     | '/storage/zfs/create'
+    | '/usermgmt/groups/$group'
+    | '/usermgmt/groups/add'
+    | '/usermgmt/users/$name'
+    | '/usermgmt/users/add'
     | '/diagnostics/services'
     | '/storage/disks'
     | '/storage/filesystems'
@@ -479,6 +561,8 @@ export interface FileRouteTypes {
     | '/storage/shared-folders'
     | '/storage/smart'
     | '/storage/zfs'
+    | '/usermgmt/groups'
+    | '/usermgmt/users'
     | '/storage/md/$array/add'
     | '/storage/zfs/fs/$'
     | '/storage/md/$array'
@@ -499,6 +583,7 @@ export interface FileRouteTypes {
     | '/_signedIn/diagnostics/system-logs'
     | '/_signedIn/services/smb'
     | '/_signedIn/services/ssh'
+    | '/_signedIn/usermgmt/settings'
     | '/_signedIn/diagnostics/services/nfs'
     | '/_signedIn/diagnostics/services/smb'
     | '/_signedIn/diagnostics/services/ssh'
@@ -514,6 +599,10 @@ export interface FileRouteTypes {
     | '/_signedIn/storage/smart/set-up'
     | '/_signedIn/storage/smart/settings'
     | '/_signedIn/storage/zfs/create'
+    | '/_signedIn/usermgmt/groups/$group'
+    | '/_signedIn/usermgmt/groups/add'
+    | '/_signedIn/usermgmt/users/$name'
+    | '/_signedIn/usermgmt/users/add'
     | '/_signedIn/diagnostics/services/'
     | '/_signedIn/storage/disks/'
     | '/_signedIn/storage/filesystems/'
@@ -521,6 +610,8 @@ export interface FileRouteTypes {
     | '/_signedIn/storage/shared-folders/'
     | '/_signedIn/storage/smart/'
     | '/_signedIn/storage/zfs/'
+    | '/_signedIn/usermgmt/groups/'
+    | '/_signedIn/usermgmt/users/'
     | '/_signedIn/storage/md/$array/add'
     | '/_signedIn/storage/zfs/fs/$'
     | '/_signedIn/storage/md/$array/'
@@ -618,6 +709,13 @@ declare module '@tanstack/react-router' {
       path: '/services/ssh'
       fullPath: '/services/ssh'
       preLoaderRoute: typeof SignedInServicesSshRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/settings': {
+      id: '/_signedIn/usermgmt/settings'
+      path: '/usermgmt/settings'
+      fullPath: '/usermgmt/settings'
+      preLoaderRoute: typeof SignedInUsermgmtSettingsRouteImport
       parentRoute: typeof SignedInRoute
     }
     '/_signedIn/diagnostics/services/': {
@@ -774,6 +872,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInStorageZfsCreateRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/usermgmt/groups/': {
+      id: '/_signedIn/usermgmt/groups/'
+      path: '/usermgmt/groups'
+      fullPath: '/usermgmt/groups/'
+      preLoaderRoute: typeof SignedInUsermgmtGroupsIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/groups/$group': {
+      id: '/_signedIn/usermgmt/groups/$group'
+      path: '/usermgmt/groups/$group'
+      fullPath: '/usermgmt/groups/$group'
+      preLoaderRoute: typeof SignedInUsermgmtGroupsGroupRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/groups/add': {
+      id: '/_signedIn/usermgmt/groups/add'
+      path: '/usermgmt/groups/add'
+      fullPath: '/usermgmt/groups/add'
+      preLoaderRoute: typeof SignedInUsermgmtGroupsAddRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/users/': {
+      id: '/_signedIn/usermgmt/users/'
+      path: '/usermgmt/users'
+      fullPath: '/usermgmt/users/'
+      preLoaderRoute: typeof SignedInUsermgmtUsersIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/users/$name': {
+      id: '/_signedIn/usermgmt/users/$name'
+      path: '/usermgmt/users/$name'
+      fullPath: '/usermgmt/users/$name'
+      preLoaderRoute: typeof SignedInUsermgmtUsersNameRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/usermgmt/users/add': {
+      id: '/_signedIn/usermgmt/users/add'
+      path: '/usermgmt/users/add'
+      fullPath: '/usermgmt/users/add'
+      preLoaderRoute: typeof SignedInUsermgmtUsersAddRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/storage/md/$array/': {
       id: '/_signedIn/storage/md/$array/'
       path: '/storage/md/$array'
@@ -830,6 +970,7 @@ interface SignedInRouteChildren {
   SignedInDiagnosticsSystemLogsRoute: typeof SignedInDiagnosticsSystemLogsRoute
   SignedInServicesSmbRoute: typeof SignedInServicesSmbRoute
   SignedInServicesSshRoute: typeof SignedInServicesSshRoute
+  SignedInUsermgmtSettingsRoute: typeof SignedInUsermgmtSettingsRoute
   SignedInDiagnosticsServicesNfsRoute: typeof SignedInDiagnosticsServicesNfsRoute
   SignedInDiagnosticsServicesSmbRoute: typeof SignedInDiagnosticsServicesSmbRoute
   SignedInDiagnosticsServicesSshRoute: typeof SignedInDiagnosticsServicesSshRoute
@@ -845,6 +986,10 @@ interface SignedInRouteChildren {
   SignedInStorageSmartSetUpRoute: typeof SignedInStorageSmartSetUpRoute
   SignedInStorageSmartSettingsRoute: typeof SignedInStorageSmartSettingsRoute
   SignedInStorageZfsCreateRoute: typeof SignedInStorageZfsCreateRoute
+  SignedInUsermgmtGroupsGroupRoute: typeof SignedInUsermgmtGroupsGroupRoute
+  SignedInUsermgmtGroupsAddRoute: typeof SignedInUsermgmtGroupsAddRoute
+  SignedInUsermgmtUsersNameRoute: typeof SignedInUsermgmtUsersNameRoute
+  SignedInUsermgmtUsersAddRoute: typeof SignedInUsermgmtUsersAddRoute
   SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
   SignedInStorageDisksIndexRoute: typeof SignedInStorageDisksIndexRoute
   SignedInStorageFilesystemsIndexRoute: typeof SignedInStorageFilesystemsIndexRoute
@@ -852,6 +997,8 @@ interface SignedInRouteChildren {
   SignedInStorageSharedFoldersIndexRoute: typeof SignedInStorageSharedFoldersIndexRoute
   SignedInStorageSmartIndexRoute: typeof SignedInStorageSmartIndexRoute
   SignedInStorageZfsIndexRoute: typeof SignedInStorageZfsIndexRoute
+  SignedInUsermgmtGroupsIndexRoute: typeof SignedInUsermgmtGroupsIndexRoute
+  SignedInUsermgmtUsersIndexRoute: typeof SignedInUsermgmtUsersIndexRoute
   SignedInStorageMdArrayAddRoute: typeof SignedInStorageMdArrayAddRoute
   SignedInStorageZfsFsSplatRoute: typeof SignedInStorageZfsFsSplatRoute
   SignedInStorageMdArrayIndexRoute: typeof SignedInStorageMdArrayIndexRoute
@@ -871,6 +1018,7 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInDiagnosticsSystemLogsRoute: SignedInDiagnosticsSystemLogsRoute,
   SignedInServicesSmbRoute: SignedInServicesSmbRoute,
   SignedInServicesSshRoute: SignedInServicesSshRoute,
+  SignedInUsermgmtSettingsRoute: SignedInUsermgmtSettingsRoute,
   SignedInDiagnosticsServicesNfsRoute: SignedInDiagnosticsServicesNfsRoute,
   SignedInDiagnosticsServicesSmbRoute: SignedInDiagnosticsServicesSmbRoute,
   SignedInDiagnosticsServicesSshRoute: SignedInDiagnosticsServicesSshRoute,
@@ -888,6 +1036,10 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInStorageSmartSetUpRoute: SignedInStorageSmartSetUpRoute,
   SignedInStorageSmartSettingsRoute: SignedInStorageSmartSettingsRoute,
   SignedInStorageZfsCreateRoute: SignedInStorageZfsCreateRoute,
+  SignedInUsermgmtGroupsGroupRoute: SignedInUsermgmtGroupsGroupRoute,
+  SignedInUsermgmtGroupsAddRoute: SignedInUsermgmtGroupsAddRoute,
+  SignedInUsermgmtUsersNameRoute: SignedInUsermgmtUsersNameRoute,
+  SignedInUsermgmtUsersAddRoute: SignedInUsermgmtUsersAddRoute,
   SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
   SignedInStorageDisksIndexRoute: SignedInStorageDisksIndexRoute,
   SignedInStorageFilesystemsIndexRoute: SignedInStorageFilesystemsIndexRoute,
@@ -896,6 +1048,8 @@ const SignedInRouteChildren: SignedInRouteChildren = {
     SignedInStorageSharedFoldersIndexRoute,
   SignedInStorageSmartIndexRoute: SignedInStorageSmartIndexRoute,
   SignedInStorageZfsIndexRoute: SignedInStorageZfsIndexRoute,
+  SignedInUsermgmtGroupsIndexRoute: SignedInUsermgmtGroupsIndexRoute,
+  SignedInUsermgmtUsersIndexRoute: SignedInUsermgmtUsersIndexRoute,
   SignedInStorageMdArrayAddRoute: SignedInStorageMdArrayAddRoute,
   SignedInStorageZfsFsSplatRoute: SignedInStorageZfsFsSplatRoute,
   SignedInStorageMdArrayIndexRoute: SignedInStorageMdArrayIndexRoute,

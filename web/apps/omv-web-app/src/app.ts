@@ -18,6 +18,9 @@ import { diskSession } from "./disks/diskSession.ts";
 import { flowStore } from "./filesystems/flowRun.ts";
 import { fsActions } from "./filesystems/fsActions.ts";
 import { fsSession } from "./filesystems/fsSession.ts";
+import { addGroupStore } from "./groups/addGroupFlow.ts";
+import { groupDeletes } from "./groups/deleteGroupFlow.ts";
+import { homeSession } from "./homeFolders/homeSession.ts";
 import { logsView } from "./logs/logsViewStore.ts";
 import { processesView } from "./processes/processesViewStore.ts";
 import { raidFlowStore } from "./raid/raidRun.ts";
@@ -36,12 +39,16 @@ import { addFlowStore } from "./sharedFolders/addFlow.ts";
 import { shareDeletes } from "./sharedFolders/deleteRun.ts";
 import { sharesSession } from "./sharedFolders/sharesSession.ts";
 import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
+import { addPersonStore } from "./users/addPersonFlow.ts";
+import { personDeletes } from "./users/deletePersonFlow.ts";
+import { usersSession } from "./users/usersSession.ts";
 import { zfsActions } from "./zfs/zfsActions.ts";
 import { zfsFlowStore } from "./zfs/zfsRun.ts";
 import { zfsSession } from "./zfs/zfsSession.ts";
 
 /** What pages keep in memory for the session; emptied when it ends. */
 const SESSION_VIEW_STATE = [
+  groupDeletes,
   sharedFoldersTable,
   sharesSession,
   shareDeletes,
@@ -59,6 +66,11 @@ const SESSION_VIEW_STATE = [
   zfsActions,
   logsView,
   processesView,
+  homeSession,
+  addGroupStore,
+  usersSession,
+  addPersonStore,
+  personDeletes,
 ];
 const resetViewState = () => {
   for (const store of SESSION_VIEW_STATE) {

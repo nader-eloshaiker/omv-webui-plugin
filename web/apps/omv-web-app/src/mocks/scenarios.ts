@@ -50,6 +50,20 @@ import {
   type SharesModule,
 } from "./sharesScenarios.ts";
 import {
+  isUsersScenario,
+  newUsersMockState,
+  USERS_MODULES,
+  USERS_SCENARIO_LABELS,
+  USERS_SCENARIOS,
+  usersAnswers,
+  usersApplied,
+  usersReverted,
+  usersStartsPending,
+  usersStartsSignedIn,
+  type UsersMockState,
+  type UsersModule,
+} from "./usersScenarios.ts";
+import {
   ZFS_DIRTY,
   ZFS_SCENARIO_LABELS,
   ZFS_SCENARIOS,
@@ -108,11 +122,37 @@ export const SCENARIOS = [
   ...RAID_SCENARIOS,
   ...ZFS_SCENARIOS,
   ...SHARES_SCENARIOS,
+  ...USERS_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
 export const isScenarioName = (value: unknown): value is ScenarioName =>
   typeof value === "string" && (SCENARIOS as readonly string[]).includes(value);
+
+const FAMILIES = new Set<string>([
+  ...DISK_SCENARIOS,
+  ...FS_SCENARIOS,
+  ...RAID_SCENARIOS,
+  ...ZFS_SCENARIOS,
+  ...SHARES_SCENARIOS,
+  ...USERS_SCENARIOS,
+]);
+/** The scenarios in the picker's groups. Development words, not the interface's. */
+export const SCENARIO_GROUPS: readonly {
+  label: string;
+  names: readonly ScenarioName[];
+}[] = [
+  {
+    label: "Shell, dashboard and services",
+    names: SCENARIOS.filter((n) => !FAMILIES.has(n)),
+  },
+  { label: "Disks", names: DISK_SCENARIOS },
+  { label: "File systems", names: FS_SCENARIOS },
+  { label: "RAID", names: RAID_SCENARIOS },
+  { label: "ZFS", names: ZFS_SCENARIOS },
+  { label: "Shared folders and SMB", names: SHARES_SCENARIOS },
+  { label: "Users and groups", names: USERS_SCENARIOS },
+];
 
 /** What each scenario shows, for the picker. Development words, not the interface's. */
 export const SCENARIO_LABELS: Record<ScenarioName, string> = {
@@ -166,6 +206,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...RAID_SCENARIO_LABELS,
   ...ZFS_SCENARIO_LABELS,
   ...SHARES_SCENARIO_LABELS,
+  ...USERS_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -644,6 +685,39 @@ const BUSY_TOP: FixedAnswer = {
   },
 };
 
+// ---- Phase 5 users: stateless answers outside the users* stories, from the captured examples.
+
+const LISTED_PEOPLE = CONTRACT_EXAMPLES.userMgmtGetUserList.several.value.data;
+const LISTED_GROUPS = CONTRACT_EXAMPLES.userMgmtGetGroupList.several.value.data;
+const nameOf = (params: unknown): string => {
+  const name = (params as { name?: unknown } | null)?.name;
+  return typeof name === "string" ? name : "";
+};
+/** getUser: a captured person by name, the built-in admin, or OMV's "does not exist". */
+function capturedUser(params: unknown): FixedAnswer {
+  const name = nameOf(params);
+  const found =
+    name === "admin"
+      ? CONTRACT_EXAMPLES.userMgmtGetUser.builtInAdmin.value
+      : LISTED_PEOPLE.find((u) => u.name === name);
+  return found === undefined
+    ? { status: 500, code: 0, message: `The user '${name}' does not exist.` }
+    : { status: 200, value: found };
+}
+/** getGroup: a captured group by name, the two system groups, or OMV's "does not exist". */
+function capturedGroup(params: unknown): FixedAnswer {
+  const name = nameOf(params);
+  const found =
+    name === "_ssh"
+      ? CONTRACT_EXAMPLES.userMgmtGetGroup.sshGroup.value
+      : name === "openmediavault-admin"
+        ? CONTRACT_EXAMPLES.userMgmtGetGroup.adminGroup.value
+        : LISTED_GROUPS.find((g) => g.name === name);
+  return found === undefined
+    ? { status: 500, code: 0, message: `The group '${name}' does not exist.` }
+    : { status: 200, value: found };
+}
+
 export interface MockSession {
   signedIn: boolean;
   /** A password was accepted and a second factor is awaited (A10). */
@@ -664,6 +738,8 @@ export interface MockSession {
   fs?: FsMockState;
   /** What the shares answers remember (sharesScenarios.ts), in the shares* stories only. */
   shares?: SharesMockState;
+  /** What the users answers remember (usersScenarios.ts), in the users* stories only. */
+  users?: UsersMockState;
 }
 
 export const newMockSession = (
@@ -685,6 +761,14 @@ export const startsDirty = (name: ScenarioName): boolean =>
   name === "pendingChanges" ||
   name === "applyFails" ||
   name === "servicePending";
+
+/**
+ * Whether `pnpm dev:mock` starts a scenario signed in: "Session ends after loading", and
+ * usersSelfUnknown, whose boot probe must read (and fail to read) the signed-in name.
+ */
+export const startsSignedIn = (name: ScenarioName): boolean =>
+  name === "sessionExpired" ||
+  (isUsersScenario(name) && usersStartsSignedIn(name));
 
 // The handle the contract's apply example returns.
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
@@ -890,15 +974,44 @@ export function scenarioAnswers(
       return gate.status === 200 ? reply({ params }) : gate;
     };
   };
-  /** The NAS's name in the shares stories (sharesLongHost has a long one). */
+  /** The modules a users write marks dirty (observed on the test VM), with OMV's descriptions. */
+  const usersDirty = (modules: readonly UsersModule[]) => {
+    session.fsDirty = {
+      ...session.fsDirty,
+      ...Object.fromEntries(modules.map((m) => [m, USERS_MODULES[m]])),
+    };
+  };
+  /** A users write outside the users* stories: its example, with its modules pending. */
+  const usersPending =
+    <T extends string>(reply: T, modules: readonly UsersModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        usersDirty(modules);
+      }
+      return answer;
+    };
+  // The remembering users answers (usersScenarios.ts), in the users* stories. They hold their own
+  // shared folders, SMB and file systems (the shares mock's state, built for each story).
+  if (isUsersScenario(name) && session.users === undefined) {
+    session.users = newUsersMockState(name);
+    usersDirty(usersStartsPending(name));
+  }
+  const usersState = session.users;
+  const usersReplies =
+    usersState === undefined
+      ? undefined
+      : usersAnswers(usersState, { dirty: usersDirty });
+  /** The NAS's name in the shares and users stories (sharesLongHost has a long one). */
+  const host = sharesState?.host ?? usersState?.shares.host;
   const withHost = (answer: FixedAnswer): FixedAnswer =>
-    sharesState === undefined || answer.status !== 200
+    host === undefined || answer.status !== 200
       ? answer
       : {
           ...answer,
           value: {
             ...(answer.value as object),
-            hostname: sharesState.host,
+            hostname: host,
           },
         };
   /**
@@ -1149,6 +1262,14 @@ export function scenarioAnswers(
           sharesReverted(sharesState);
         }
       }
+      if (usersState !== undefined && session.signedIn) {
+        if (apply && !usersApplied(usersState)) {
+          return guarded("applyFailed")();
+        }
+        if (filename === REVERT_HANDLE) {
+          usersReverted(usersState);
+        }
+      }
       if (apply && fsState !== undefined && session.signedIn) {
         if (!fsApplied(name, fsState)) {
           return guarded("applyFailed")();
@@ -1387,5 +1508,33 @@ export function scenarioAnswers(
             ? "connected"
             : "noConnections",
       )(),
+    // People, groups and home folders (phase 5 users design 15): stateless captured examples outside
+    // the users* stories, each write marking what it marks on the VM; the remembering answers below in
+    // the users* stories.
+    userMgmtGetUser: ({ params }) => guarded<never>(capturedUser(params))(),
+    userMgmtSetUser: ({ params }) =>
+      LISTED_PEOPLE.some((u) => u.name === nameOf(params))
+        ? usersPending("changed", ["postfix", "ssh"])()
+        : usersPending("created", ["postfix"])(),
+    userMgmtDeleteUser: usersPending("deleted", ["postfix", "ssh"]),
+    userMgmtGetGroup: ({ params }) => guarded<never>(capturedGroup(params))(),
+    userMgmtSetGroup: ({ params }) =>
+      LISTED_GROUPS.some((g) => g.name === nameOf(params))
+        ? usersPending("changed", ["samba"])()
+        : guarded("created")(),
+    userMgmtDeleteGroup: guarded("deleted"),
+    userMgmtGetSettings: guarded("off"),
+    userMgmtSetSettings: ({ params }) =>
+      (params as { enable?: unknown } | null)?.enable === true
+        ? usersPending("turnedOn", ["samba"])()
+        : usersPending("turnedOff", ["samba"])(),
+    ...(usersReplies === undefined
+      ? {}
+      : Object.fromEntries(
+          Object.entries(usersReplies).map(([operationId, reply]) => [
+            operationId,
+            sharesRead(reply),
+          ]),
+        )),
   };
 }

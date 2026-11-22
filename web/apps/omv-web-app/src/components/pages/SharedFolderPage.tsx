@@ -26,6 +26,7 @@ import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
+import { holdsHomeFolders } from "../../homeFolders/homeModel.ts";
 import {
   useSharedFolderView,
   type SharedFolderView,
@@ -346,8 +347,10 @@ function Sections({
     retry: () => void q.refetch(),
   });
   const shares = list(v.shares);
+  const holdsHomes = holdsHomeFolders(v.home.data, row.uuid);
   const use = folderUse({
     used: row._used,
+    homeFolders: holdsHomes,
     hasShare: v.share !== undefined,
     shares: {
       ready: shares.data !== undefined,
@@ -466,6 +469,7 @@ function Sections({
         shares={shares}
         fileSystems={list(v.fileSystems)}
         pending={pending}
+        homeFolders={holdsHomes}
         onRetry={() => void v.refresh()}
         onStopSharing={() => setStopOpen(true)}
         onDone={(outcome, way, words) => {

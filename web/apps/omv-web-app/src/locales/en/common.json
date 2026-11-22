@@ -575,7 +575,7 @@
     "intro": "SSH lets you sign in to the NAS from another computer and type commands. It is for advanced tasks; most people never need it.",
     "pendingOnArrival": "Saved SSH settings are waiting to be applied. The form shows the saved settings, which are not in effect yet.",
     "enable": "Turn on SSH",
-    "enableHint": "Each person also needs SSH access on their own account, which is set under Users.",
+    "enableHint": "Each person also needs SSH access on their own account, which is set under <users>Users</users>.",
     "offNote": "The settings below are used when SSH is on.",
     "port": "Port",
     "portHint": "The number SSH programs connect to. The usual one is 22; if you change it, tell your SSH program the new number.",
@@ -585,7 +585,7 @@
     "signIn": "Signing in",
     "password": "Allow signing in with a password",
     "key": "Allow signing in with a key",
-    "keyHint": "A key is a file on your computer that proves who you are, with no password to guess. Keys are added to each account under Users.",
+    "keyHint": "A key is a file on your computer that proves who you are, with no password to guess. Keys are added to each account under <users>Users</users>.",
     "root": "Allow the root account to sign in",
     "rootHint": "root is the built-in account with full control of the NAS. It is safer to leave this off and sign in with your own account.",
     "connection": "Connection",
@@ -605,7 +605,9 @@
     "saved": "Saved. The changes take effect when you apply them in the band at the top of the page.",
     "saveFailed": "The SSH settings were not saved.",
     "loadFailed": "Could not read the SSH settings.",
-    "loading": "Loading the SSH settings…"
+    "loading": "Loading the SSH settings…",
+    "people": "People who may sign in over SSH: {{list}}.",
+    "nobody": "Nobody may sign in over SSH yet: allow it on a person's page."
   },
   "sharedFolders": {
     "title": "Shared folders",
@@ -751,7 +753,9 @@
     },
     "usedBy": {
       "title": "Used by",
-      "other": "Used by a setting this page does not show: an NFS share, a backup job, the Rsync server, the home folders setting or an add-on. Look in the classic interface."
+      "other": "Used by a setting this page does not show: an NFS share, a backup job, the Rsync server or an add-on. Look in the classic interface.",
+      "homeKind": "Home folders",
+      "home": "Home folders of every person"
     },
     "unsaved": {
       "title": "You have changes that are not saved.",
@@ -833,8 +837,8 @@
     "networkLink": "File permissions in the classic interface",
     "loading": "Loading people and groups…",
     "loadFailed": "Could not read the people and groups on this NAS.",
-    "empty": "There are no user accounts on this NAS yet, apart from the administrator. Add the people who will use shared folders, then give them access here.",
-    "emptyLink": "Users in the classic interface",
+    "empty": "There is nobody on this NAS yet apart from the built-in admin account. Add the people who will use shared folders, then give them access here.",
+    "emptyLink": "Add a person",
     "filtered": "No people or groups match \"{{search}}\".",
     "clearSearch": "Clear the search",
     "blockedByGroup": "Blocked through {{group}}: cannot open it, whatever this row says.",
@@ -1139,7 +1143,9 @@
       "wholeDo": "To erase the file system, use its page.",
       "inside": "<other></other> uses <path></path>, inside this folder.",
       "insideDo": "Delete or move {{other}} first.",
-      "system": "It is on the system drive."
+      "system": "It is on the system drive.",
+      "homeFolders": "It holds every person's home folder. Turn home folders off first.",
+      "homeFoldersLink": "Open the home folders setting"
     },
     "checking": "Checking what uses this shared folder…",
     "gone": "This shared folder no longer exists.",
@@ -3900,5 +3906,745 @@
     "tryAgain": "Try again",
     "dismiss": "Dismiss",
     "alsoBody": "Also pending from elsewhere: <list></list>. Saving applies them too."
+  },
+  "users": {
+    "title": "Users",
+    "term": {
+      "person": "A person is someone who uses this NAS: they open shared folders from their own computer, and can sign in here to change their own password.",
+      "email": "Email that the NAS sends to this person, such as messages from scheduled jobs, goes to this address.",
+      "home": "A home folder is a private folder for one person, inside a shared folder that holds everyone's. Only that person can open it.",
+      "keys": "An SSH key is a file on someone's computer that lets them sign in over SSH without a password.",
+      "admin": "An administrator can change every setting on this NAS, read and delete every file on it, and add or remove people. Make only people you trust with everything administrators.",
+      "ssh": "SSH lets someone sign in to the NAS's command line from another computer, type commands and copy files. Most people never need it.",
+      "systemGroup": "System groups are made by the NAS and the programs on it. Some of them give a person power over the NAS itself."
+    },
+    "control": {
+      "title": "Who can control this NAS",
+      "admins": "Administrators: {{list}}, and the built-in admin account.",
+      "adminOnly": "Only the built-in admin account is an administrator.",
+      "ssh": "May sign in over SSH: {{list}}.",
+      "sshNobody": "Nobody may sign in over SSH.",
+      "systemGroups": "In system groups that give control of the NAS: <name></name> ({{groups}})."
+    },
+    "search": "Search people",
+    "show": {
+      "label": "Show",
+      "all": "Everyone",
+      "admins": "Administrators",
+      "ssh": "May sign in over SSH",
+      "systemGroups": "In system groups"
+    },
+    "add": "Add a person",
+    "open": "Open {{name}}",
+    "you": "(you)",
+    "col": {
+      "name": "Name",
+      "description": "Description",
+      "email": "Email address",
+      "groups": "Groups",
+      "admin": "Administrator",
+      "ssh": "SSH"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "sshAllowed": "Allowed",
+    "more": "and {{count}} more",
+    "notKnown": "Not known",
+    "loading": "Loading people…",
+    "loadFailed": "Could not read the people on this NAS.",
+    "groupsFailed": "Could not read the groups.",
+    "empty": "There is nobody on this NAS yet apart from the built-in admin account. Add the people who will use its shared folders.",
+    "filtered": "No people match \"{{search}}\".",
+    "filteredShow": "Nobody matches this filter.",
+    "clearSearch": "Clear the search",
+    "showAll": "Show everyone",
+    "footer": {
+      "admin": "The built-in admin account is not on this list. To change its password, sign in as admin and open Your account.",
+      "classic": "Importing many people at once, quotas and SSH keys are in the classic interface."
+    },
+    "classicLink": "Users in the classic interface",
+    "unfinished": {
+      "access": "<name></name> was added, but their access to shared folders was not saved.",
+      "notDeleted": "<name></name> is still on this NAS. Deleting them did not finish.",
+      "staleAccess": "Shared folders still list <name></name>, who was deleted: {{folders}}."
+    },
+    "savedNote": "Saved, and already in effect. The NAS also lists its email and SSH settings as not applied: applying them only refreshes the email addresses and SSH keys it knows.",
+    "addNameNoPage": "This person's page cannot open here, because their name is also the address of “Add a person”. Open them in the classic interface's list of users.",
+    "action": {
+      "details": "saving their details",
+      "powers": "saving what they can do",
+      "groups": "saving their groups",
+      "access": "saving their access",
+      "password": "setting their password",
+      "add": "adding them",
+      "delete": "deleting them",
+      "members": "saving its members",
+      "description": "saving its description"
+    },
+    "staleDeleted": "<name></name> was deleted in this session."
+  },
+  "person": {
+    "docTitle": "{{name}} – Users",
+    "subtitleNone": "Person",
+    "isYou": "This is the account you are signed in with.",
+    "yourAccount": "Your account",
+    "loading": "Loading this person…",
+    "notFound": "There is nobody called {{name}} on this NAS. They may have been deleted.",
+    "notFoundPlain": "There is no such person on this NAS.",
+    "toList": "Go to Users",
+    "loadFailed": "Could not read this person.",
+    "editDetails": "Edit details",
+    "fact": {
+      "name": "Name",
+      "description": "Description",
+      "email": "Email address",
+      "home": "Home folder",
+      "homeValue": "<folder></folder> › <name></name>",
+      "homeOff": "Home folders are off.",
+      "homeLink": "Home folders settings",
+      "keys": "SSH keys",
+      "keysCount_one": "{{count}} SSH key, added in the classic interface.",
+      "keysCount_other": "{{count}} SSH keys, added in the classic interface.",
+      "ownDetails": "Can change their own details",
+      "ownDetailsClassic": "Set in the classic interface.",
+      "technical": "Technical details",
+      "uid": "Account number",
+      "gid": "Main group",
+      "shell": "Command-line program",
+      "dir": "Home folder path"
+    },
+    "copyEmail": "Copy the email address of {{name}}",
+    "rename": {
+      "why": "Why can't I rename {{name}}?",
+      "body": "The name is what <name></name> signs in with, and what every shared folder's access list uses. To use another name, add a new person, give them the same access, and delete this one. Files that belong to <name></name> keep belonging to the old account."
+    },
+    "details": {
+      "description": "Description",
+      "descriptionHint": "Shown in lists, to help you tell people apart. Windows and Mac computers may show it too.",
+      "descriptionTooLong": "Use at most 65 characters.",
+      "descriptionChars": "A description cannot contain a colon or a line break.",
+      "email": "Email address",
+      "emailInvalid": "Enter one email address, such as alex@example.org, or leave this empty.",
+      "save": "Save details",
+      "cancel": "Cancel",
+      "saved": "Details of {{name}} saved.",
+      "failed": "The details were not saved."
+    },
+    "gone": "<name></name> is no longer on this NAS.",
+    "changedElsewhere": "<name></name> was changed elsewhere since you opened this page.",
+    "showCurrent": "Show the current details",
+    "todo": {
+      "power": {
+        "title": "{{name}} has control over the NAS",
+        "body": "<name></name> is in {{groups}}. Members of these groups can take control of the NAS, as an administrator can. If that is not meant, take <name></name> out of them in the classic interface."
+      },
+      "ssh": {
+        "title": "{{name}} cannot sign in over SSH yet"
+      },
+      "noAccess": {
+        "title": "{{name}} cannot open any shared folder yet",
+        "body": "Choose which shared folders <name></name> may open, below.",
+        "action": "Choose shared folders"
+      },
+      "home": {
+        "title": "{{name}} cannot reach their home folder",
+        "body": "Home folders are in <folder></folder>, which cannot be reached: {{reason}}",
+        "open": "Open {{folder}}",
+        "fsNotMounted": "its file system is not mounted.",
+        "fsMissing": "its file system is missing; its disk may be disconnected.",
+        "unknown": "its state is not recognised ({{code}})."
+      }
+    },
+    "ssh": {
+      "noLoginShell": "Allowed, but their account is set not to open a command line, so they cannot sign in over SSH.",
+      "sshOff": "Allowed, but SSH is off on this NAS.",
+      "notRunning": "Allowed, but SSH is not running on this NAS.",
+      "notRunningLink": "Open the SSH service details",
+      "keysOnly": "Allowed, but SSH accepts only keys, and <name></name> has none. Keys are added in the classic interface."
+    }
+  },
+  "personCan": {
+    "title": "What {{name}} can do",
+    "intro": "Everyone can open the shared folders they are given access to, and sign in here to change their own password. These two choices give more.",
+    "admin": "Administrator of this NAS",
+    "adminHint": "Can change every setting on this NAS, read and delete every file on it, and add or remove people, here and in the classic interface.",
+    "adminWarn": "Make <name></name> an administrator only if you trust them with everything on this NAS. An administrator can also take your own rights away.",
+    "adminSelf": "You cannot take away your own administrator rights. Another administrator can.",
+    "adminUnknownSelf": "Could not tell which account you are signed in with. Sign out and sign in again, then try once more.",
+    "adminNoGroup": "Administrator rights cannot be given here: the NAS has no group called openmediavault-admin.",
+    "ssh": "May sign in over SSH",
+    "sshHint": "Lets <name></name> sign in to the NAS's command line from another computer, type commands, and copy files with SFTP. Most people never need it.",
+    "sshWarn": "With SSH, <name></name> can run programs on the NAS and open every file their account can reach, not only through shared folders.",
+    "sshOff": "SSH is off on this NAS, so this has no effect until it is turned on.",
+    "sshOffLink": "Open SSH settings",
+    "sshKeysOnly": "SSH accepts only keys, and <name></name> has none. Keys are added in the classic interface.",
+    "sshUnread": "Could not check whether SSH is on.",
+    "sshRoot": "<name></name> is also in the system group root, which lets them sign in over SSH too. Take them out of it in the classic interface.",
+    "sshNoGroup": "SSH sign-in cannot be set up here: the NAS has no group called _ssh.",
+    "optionFailed": "Could not check this option.",
+    "other": {
+      "title": "Other system groups",
+      "intro": "<name></name> is also in these groups, set in the classic interface or by an add-on. They are kept when you save here.",
+      "warn": "{{groups}} give control over the NAS itself, as an administrator has. Take <name></name> out of them in the classic interface if that is not meant."
+    },
+    "save": "Save",
+    "discard": "Discard changes",
+    "saving": "Saving…",
+    "confirm": {
+      "title": "Change what {{name}} can do?",
+      "makeAdmin": "<name></name> becomes an administrator of this NAS. The next time they sign in, they can change every setting, read and delete every file, and add or remove people.",
+      "removeAdmin": "<name></name> is no longer an administrator. They can still open the shared folders they have access to and change their own password.",
+      "lastAdmin": "After this, the built-in admin account is the only administrator. Make sure you know its password.",
+      "allowSsh": "<name></name> may sign in over SSH and use the NAS's command line.",
+      "removeSsh": "<name></name> can no longer sign in over SSH or copy files with SFTP. Anything that signs in to the NAS as <name></name>, such as a backup from another computer, stops working.",
+      "now": "This takes effect as soon as you save. It does not wait for Apply.",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "nextSignIn": "Applies from their next sign-in. If they are signed in now, ask them to sign out and in again.",
+      "sshNow": "SSH sign-in changes as soon as you save. It does not wait for Apply."
+    },
+    "saved": {
+      "makeAdmin": "{{name}} is an administrator from their next sign-in. If they are signed in now, ask them to sign out and in again.",
+      "removeAdmin": "{{name}} is no longer an administrator from their next sign-in. If they are signed in now, ask them to sign out and in again.",
+      "allowSsh": "{{name}} may now sign in over SSH.",
+      "removeSsh": "{{name}} can no longer sign in over SSH."
+    },
+    "failed": "The changes were not saved.",
+    "savedNoteAdmin": "Saved. Administrator rights apply from the person's next sign-in. The NAS also lists its email and SSH settings as not applied: applying them only refreshes the email addresses and SSH keys it knows."
+  },
+  "systemGroup": {
+    "root": "the NAS's superuser group; it also allows SSH sign-in",
+    "sudo": "can run anything as the NAS's superuser",
+    "disk": "can read and write every disk directly",
+    "shadow": "can read the NAS's stored passwords",
+    "containers": "can start containers or virtual machines with full control",
+    "omv": "the NAS's own groups, which its web interface uses",
+    "logs": "can read the NAS's logs"
+  },
+  "personGroups": {
+    "title": "Groups",
+    "noPowers": "Groups give no other powers on the NAS.",
+    "search": "Search groups",
+    "show": {
+      "label": "Show",
+      "all": "All groups",
+      "member": "Groups {{name}} is in"
+    },
+    "count": "In {{count}} of {{total}} groups.",
+    "save": "Save groups",
+    "discard": "Discard changes",
+    "saving": "Saving…",
+    "saved": "Groups of {{name}} saved.",
+    "reconnect": "Computers that are connected now may need to connect again to use the new groups.",
+    "loadFailed": "Could not read the groups.",
+    "empty": "There are no groups yet.",
+    "emptyLink": "Add a group",
+    "filtered": "No groups match \"{{search}}\".",
+    "failed": "The groups were not saved."
+  },
+  "personAccess": {
+    "title": "Shared folders",
+    "intro": "Choose which shared folders <name></name> may open from other computers. The same choices are on each shared folder's page.",
+    "col": {
+      "folder": "Shared folder",
+      "sharing": "Sharing"
+    },
+    "notShared": "Not shared",
+    "open": "Open shared folder {{folder}}",
+    "guests": "Anyone on your network can open it, without a password.",
+    "search": "Search shared folders",
+    "show": {
+      "all": "All folders"
+    },
+    "count": "{{shown}} of {{total}} shared folders.",
+    "progress": "Saving access to {{done}} of {{count}} folders…",
+    "saved": "Access of {{name}} saved.",
+    "lastAccess": "<name></name> is the only one with access to <folder></folder>, which is shared with Windows and Mac computers. Give someone else access on its page, or stop sharing it, first.",
+    "partial": "Access to {{saved}} saved. Access to {{failed}} could not be saved: {{message}}",
+    "loading": "Loading shared folders…",
+    "loadFailed": "Could not read the shared folders.",
+    "empty": "There are no shared folders yet. Make one, then choose who may open it.",
+    "emptyLink": "Add a shared folder",
+    "filtered": "No shared folders match \"{{search}}\".",
+    "failed": "Access to {{failed}} could not be saved.",
+    "gone": "Access to {{folders}} was not saved: no shared folder of that name is on this NAS any more."
+  },
+  "password": {
+    "title": "Password",
+    "intro": "The password is never shown. Setting a new one replaces the old one at once.",
+    "open": "Set a new password…",
+    "self": "This is you. Change your own password under Your account.",
+    "selfLink": "Change your password",
+    "dialog": {
+      "title": "Set a new password for {{name}}",
+      "body": "<name></name> signs in with the new password from now on, here and from their computers. Computers and phones that saved the old password to open shared folders must be given the new one."
+    },
+    "new": "New password",
+    "newHint": "A long password that <name></name> uses nowhere else is hardest to guess.",
+    "again": "Type it again",
+    "show": "Show password",
+    "hide": "Hide password",
+    "notEncrypted": "This connection is not encrypted, so this password can be read by others on your network.",
+    "notEncryptedLink": "Turn on HTTPS",
+    "empty": "Enter a new password.",
+    "lineBreak": "A password cannot contain a line break.",
+    "mismatch": "The two passwords are not the same.",
+    "cancel": "Cancel",
+    "set": "Set password",
+    "setting": "Setting…",
+    "done": "The password of {{name}} is changed. It works now.",
+    "failed": "The password was not changed.",
+    "unknown": "Could not tell whether the password was changed. Set it again to be sure."
+  },
+  "addPerson": {
+    "title": "Add a person",
+    "breadcrumb": "Add a person",
+    "readsFailed": "Could not read what this NAS needs to add a person.",
+    "name": {
+      "label": "Name",
+      "hint": "{{name}} signs in with this name, here and from their computers. It cannot be changed later.",
+      "hintEmpty": "They sign in with this name, here and from their computers. It cannot be changed later.",
+      "placeholder": "For example: alex",
+      "length": "Use 1 to 32 characters.",
+      "chars": "Use small letters a to z, digits, and . _ or -, starting with a letter.",
+      "reserved": "{{name}} is a name the NAS or Windows keeps for itself. Choose another name.",
+      "takenPerson": "There is already a person called {{name}}.",
+      "takenSystem": "{{name}} is a name the NAS uses for itself. Choose another name.",
+      "takenGroup": "There is already a group called {{name}}. Choose a name no group uses, so the two cannot be confused.",
+      "reservedHere": "{{name}} is the address of “Add a person” in this interface, so a person cannot be called that. Choose another name."
+    },
+    "password": {
+      "label": "Password",
+      "hint": "A long password that this person uses nowhere else is hardest to guess. Anyone who knows it can open the shared folders this person can.",
+      "again": "Type it again",
+      "empty": "Enter a password."
+    },
+    "groups": {
+      "none": "There are no groups yet. You can add {{name}} to groups later."
+    },
+    "access": {
+      "intro": "Choose which shared folders they may open from other computers. You can change this later on their page or on each folder's page."
+    },
+    "accountNote": "They can sign in here to change their own password.",
+    "homeNote": "They get a private home folder in <folder></folder>.",
+    "continue": "Continue",
+    "check": {
+      "count_one": "{{count}} thing to fix",
+      "count_other": "{{count}} things to fix"
+    },
+    "sum": {
+      "title": "Ready to add {{name}}",
+      "add": "Add the person <name></name>, who signs in with the password you typed.",
+      "email": "Email for <name></name> goes to <email></email>.",
+      "description": "Described as \"<description></description>\".",
+      "groups": "Member of {{list}}.",
+      "noGroups": "Not in any group.",
+      "rw": "Read and write: {{list}}.",
+      "ro": "Read only: {{list}}.",
+      "viaGroup": "Through <group></group>: {{list}}.",
+      "noAccess": "No access to any shared folder yet.",
+      "admin": "<name></name> becomes an administrator of this NAS: they can change every setting, and read and delete every file.",
+      "ssh": "<name></name> may sign in over SSH and use the NAS's command line.",
+      "home": "A private home folder is made for <name></name> in <folder></folder>.",
+      "order": "The account works as soon as it is made. Then the changes to shared folders and email are applied. No other change is pending."
+    },
+    "confirm": "Add person",
+    "changeChoices": "Change choices",
+    "step": {
+      "check": "Check the choices",
+      "add": "Add the person",
+      "access": "Give access to shared folders",
+      "apply": "Save and finish",
+      "verify": "Check that {{name}} is ready"
+    },
+    "task": {
+      "apply": "Apply the changes for {{name}}"
+    },
+    "fail": {
+      "takenAccount": "There is now an account called <name></name>.",
+      "takenGroup": "There is now a group called <name></name>.",
+      "groupGone": "The group <group></group> no longer exists.",
+      "notAdded": "{{name}} was not added.",
+      "partlyAdded": "{{name}} was added, but not everything was set up.",
+      "finish": "Finish setting up {{name}}",
+      "deleteAgain": "Delete {{name}} again",
+      "deleteAgainBody": "Nothing of theirs is kept.",
+      "access": "{{name}} was added, but access to {{folders}} could not be saved.",
+      "stopHere": "Stop here",
+      "stopBody": "<name></name> is on the NAS and can sign in. The access saved so far is pending in the band. If you undo it there, <name></name> stays on the NAS; delete them on their page if they should not.",
+      "apply": "Applying the changes failed.",
+      "notAsChosen": "{{name}} was added, but {{what}} is not as you chose.",
+      "what": {
+        "groups": "their groups",
+        "access": "their access to {{folder}}"
+      },
+      "unknown": "Could not tell whether “{{step}}” finished.",
+      "unknownBody": "The request was cut before the NAS answered. Check again to see what was done; the run then goes on from the first step that is not done.",
+      "pending": "Other changes became pending: <list></list>.",
+      "pendingBody": "Apply or undo them first, so that only this person's changes are applied at the end. Nothing was changed.",
+      "checkRead": "Could not check the choices again.",
+      "nameUnknown": "Could not check whether the name is free, so nothing was changed.",
+      "passwordAgain": "Type the password again. It is never kept after a request.",
+      "deleteAgainTitle": "Delete {{name}} again?",
+      "deletedAgain": "{{name}} was deleted again.",
+      "deleteFailed": "{{name}} could not be deleted again."
+    },
+    "loading": "Checking what this NAS needs to add a person…",
+    "preflightBody": "Apply or undo them before you add a person, so that only their changes are applied at the end.",
+    "thisPerson": "this person",
+    "tryAgain": "Try again",
+    "tryStep": "Try this step again",
+    "tryApply": "Try applying again",
+    "checkAgain": "Check again",
+    "done": {
+      "title": "{{name}} is ready.",
+      "access": "They can open {{list}} from a Windows computer or a Mac, signing in as <name></name> with the password you set.",
+      "noAccess": "They cannot open any shared folder yet. Choose some on their page.",
+      "account": "They can also sign in here, at this address, to change their own password.",
+      "open": "Open {{name}}",
+      "another": "Add another person"
+    }
+  },
+  "personDelete": {
+    "title": "Delete this person",
+    "intro": "Deleting <name></name> removes their account: they can no longer sign in here or open shared folders from their computers. Their files stay on the NAS.",
+    "open": "Delete {{name}}…",
+    "blocked": {
+      "self": "You cannot delete the account you are signed in with. Another administrator can.",
+      "unread": "Could not check what uses <name></name>, so they cannot be deleted now.",
+      "running": "Wait for {{action}} to finish."
+    },
+    "checking": "Checking what uses {{name}}…",
+    "gone": "{{name}} is no longer on this NAS.",
+    "dialog": {
+      "title": "Delete {{name}}?"
+    },
+    "goes": {
+      "title": "What goes",
+      "account": "Their account and password: <name></name> can no longer sign in here, or open shared folders from their computers.",
+      "admin": "Their administrator rights.",
+      "ssh": "Their SSH sign-in.",
+      "keys_one": "Their SSH key.",
+      "keys_other": "Their {{count}} SSH keys.",
+      "groups": "Their membership of {{groups}}.",
+      "email": "Their email address on this NAS, <email></email>."
+    },
+    "stays": {
+      "title": "What stays",
+      "files": "Their files, wherever they are on the NAS. The files keep their old owner, who is then shown as a number. A person you add later may be given the same number and so become the owner of these files.",
+      "home": "Their home folder, <folder></folder> › <name></name>, with everything in it. A new person with this name gets the same home folder, but may not be able to open the files left in it."
+    },
+    "access_one": "Also take <name></name> off the access list of {{count}} shared folder: {{list}}.",
+    "access_other": "Also take <name></name> off the access lists of {{count}} shared folders: {{list}}.",
+    "accessHint": "If you leave this, those folders keep an entry for <name></name>, and a person you add later with the same name gets that access.",
+    "leavesNobody": "After this, nobody can open {{folders}} from other computers: <name></name> was the only one with access.",
+    "elsewhere": "Scheduled jobs, the Rsync server or add-ons set to use <name></name> stop working for them. This page cannot list them; look in the classic interface.",
+    "typePrompt": "Type {{name}} to confirm.",
+    "typeHint": "The button is available once the name matches.",
+    "confirm": "Delete person",
+    "cancel": "Cancel",
+    "checkingAgain": "Checking again…",
+    "step": {
+      "delete": "Delete the account",
+      "access": "Take {{name}} off the access lists",
+      "save": "Save the change"
+    },
+    "done": "<name></name> was deleted. Their files are still on the NAS.",
+    "toList": "Go to Users",
+    "failed": {
+      "title": "{{name}} was not deleted.",
+      "access": "<name></name> was deleted, but {{folders}} still list them.",
+      "accessStop": "The shared folders' pages drop the entry the next time access is saved there.",
+      "saveBody": "<name></name> is deleted. Saving the change failed, so it stays pending in the band.",
+      "save": "Saving the change failed.",
+      "stillThere": "{{name}} is still on this NAS."
+    },
+    "blockedTitle": "{{name}} cannot be deleted now",
+    "preflightBody": "Deleting a person saves its own change straight after, and other pending changes would be applied with it. Apply or undo them first.",
+    "unknown": "Could not tell whether {{name}} was deleted.",
+    "checkAgain": "Check again"
+  },
+  "groups": {
+    "title": "Groups",
+    "intro": "Give a group access to a shared folder, and everyone in it gets that access. Groups give no other powers on the NAS.",
+    "search": "Search groups",
+    "add": "Add a group",
+    "open": "Open group {{group}}",
+    "col": {
+      "name": "Name",
+      "description": "Description",
+      "members": "Members",
+      "folders": "Shared folders"
+    },
+    "members_one": "{{count}} member: {{list}}",
+    "members_other": "{{count}} members: {{list}}",
+    "membersCount_one": "{{count}} member",
+    "membersCount_other": "{{count}} members",
+    "nobody": "Nobody",
+    "none": "None",
+    "footer": "System groups, which the NAS and its programs make, are not listed. Importing many groups at once is in the classic interface.",
+    "classicLink": "Groups in the classic interface",
+    "loading": "Loading groups…",
+    "loadFailed": "Could not read the groups.",
+    "empty": "There are no groups yet. A group is a set of people; give it access to a shared folder, and everyone in it gets that access.",
+    "filtered": "No groups match \"{{search}}\".",
+    "savedNote": "Saved. The NAS also lists Windows and Mac sharing as not applied: applying it restarts sharing so connected computers see the change.",
+    "tableLabel": "Groups",
+    "pages": "Pages of groups",
+    "clearSearch": "Clear the search",
+    "notKnown": "Not known",
+    "refresh": "Refresh",
+    "lastRefreshed": "Read at {{time}}",
+    "membersFailed": "Could not read the people on this NAS, so members are shown by count only.",
+    "foldersFailed": "Could not read the shared folders, so how many each group can open is not known.",
+    "addNameNoPage": "This group's page cannot open here, because its name is also the address of “Add a group”. Open it in the classic interface's list of groups."
+  },
+  "group": {
+    "docTitle": "{{group}} – Groups",
+    "subtitleNone": "Group",
+    "fact": {
+      "number": "Group number",
+      "name": "Name",
+      "description": "Description",
+      "members": "Members",
+      "technical": "Technical details",
+      "descriptionNone": "None"
+    },
+    "rename": {
+      "why": "Why can't I rename {{group}}?",
+      "body": "The name is what every shared folder's access list uses. To use another name, add a new group with the same members and access, and delete this one."
+    },
+    "description": {
+      "hint": "Shown in lists, to help you tell groups apart.",
+      "saved": "Description of {{group}} saved.",
+      "edit": "Edit",
+      "label": "Description",
+      "save": "Save",
+      "cancel": "Cancel",
+      "failed": "The description was not saved."
+    },
+    "members": {
+      "title": "Members",
+      "intro": "Everyone in <group></group> gets the access the group has to shared folders.",
+      "search": "Search people",
+      "show": {
+        "all": "Everyone",
+        "members": "Members"
+      },
+      "count": "{{count}} of {{total}} people are members.",
+      "mainGroup": "This is <name></name>'s main group, set outside this interface.",
+      "save": "Save members",
+      "saved": "Members of {{group}} saved.",
+      "changedElsewhere": "The members of <group></group> were changed elsewhere since you opened this page.",
+      "showCurrent": "Show the current members",
+      "changes_one": "{{count}} change not saved.",
+      "changes_other": "{{count}} changes not saved.",
+      "empty": "There is nobody on this NAS to add yet.",
+      "emptyLink": "Add a person",
+      "failed": "The members were not saved.",
+      "saving": "Saving…",
+      "nothing": "Nothing is changed yet.",
+      "discard": "Discard changes",
+      "changed": "Changed",
+      "clearSearch": "Clear the search",
+      "filtered": "Nobody matches \"{{search}}\".",
+      "loading": "Loading people…",
+      "loadFailed": "Could not read the people on this NAS.",
+      "showLabel": "Show",
+      "noneYet": "{{group}} has no members yet.",
+      "pages": "Pages of people"
+    },
+    "access": {
+      "intro": "Choose which shared folders the members of <group></group> may open from other computers. The same choices are on each shared folder's page.",
+      "ownEntries_one": "{{count}} member also has their own access to this folder.",
+      "ownEntries_other": "{{count}} members also have their own access to this folder.",
+      "title": "Shared folders"
+    },
+    "loading": "Loading this group…",
+    "notFound": "There is no group called {{group}} on this NAS. It may have been deleted.",
+    "toList": "Go to Groups",
+    "loadFailed": "Could not read this group.",
+    "notFoundPlain": "There is no such group on this NAS.",
+    "changedElsewhere": "<group></group> was changed elsewhere since you opened this page.",
+    "showCurrent": "Show the current details",
+    "gone": "This group is no longer on this NAS.",
+    "running": "Wait for {{action}} to finish.",
+    "readAt": "Read at {{time}}",
+    "refresh": "Refresh"
+  },
+  "addGroup": {
+    "title": "Add a group",
+    "name": {
+      "hint": "Shared folders' access lists show the group by this name. It cannot be changed later.",
+      "placeholder": "For example: family",
+      "reserved": "{{group}} is a name the NAS keeps for itself. Choose another name.",
+      "taken": "There is already a group called {{group}}.",
+      "takenPerson": "There is already a person called {{group}}. Choose a name no person uses, so the two cannot be confused.",
+      "reservedHere": "{{group}} is the address of “Add a group” in this interface, so a group cannot be called that. Choose another name."
+    },
+    "sum": {
+      "title": "Ready to add the group {{group}}",
+      "add": "Add the group <group></group>.",
+      "members": "Members: {{list}}.",
+      "nobody": "Nobody is in it yet.",
+      "order": "The group and its members work as soon as it is made. Then the changes to shared folders are applied."
+    },
+    "confirm": "Add group",
+    "step": {
+      "check": "Check the choices",
+      "add": "Add the group",
+      "access": "Give access to shared folders",
+      "apply": "Save and finish",
+      "verify": "Check that it is ready"
+    },
+    "fail": {
+      "notAdded": "{{group}} was not added.",
+      "deleteAgain": "Delete {{group}} again",
+      "deleteAgainTitle": "Delete {{group}} again?",
+      "deleteAgainBody": "The group goes. Its members stay on the NAS, with their own access.",
+      "deleteFailed": "{{group}} was not deleted.",
+      "checkRead": "Could not check whether the name is free.",
+      "pending": "Other changes became pending: <list></list>.",
+      "pendingBody": "Apply or undo them first, so that only this group's changes are applied at the end. Nothing was changed.",
+      "stopBody": "<group></group> is on the NAS, with its members. The access saved so far is pending in the band. If you undo it there, <group></group> stays on the NAS; delete it on its page if it should not.",
+      "what": {
+        "members": "its members",
+        "access": "its access to {{folder}}"
+      }
+    },
+    "breadcrumb": "Add a group",
+    "loading": "Checking what this NAS needs to add a group…",
+    "readsFailed": "Could not read what this NAS needs to add a group.",
+    "preflightBody": "Apply or undo them before you add a group, so that only its changes are applied at the end.",
+    "task": {
+      "apply": "Apply the changes for {{group}}"
+    },
+    "removed": "{{group}} was deleted again. Its members are still on the NAS.",
+    "openNoPage": "{{group}} has no page here, because its name is the address of this page. Open it from the Groups list in the classic interface.",
+    "members": {
+      "intro": "Everyone in the group gets the access the group has to shared folders."
+    },
+    "access": {
+      "intro": "Choose which shared folders its members may open from other computers. You can change this later on its page or on each folder's page."
+    },
+    "done": {
+      "title": "{{group}} is ready.",
+      "access": "Its members can open {{list}}.",
+      "noAccess": "It has no access to any shared folder yet.",
+      "open": "Open {{group}}",
+      "another": "Add another group"
+    }
+  },
+  "groupDelete": {
+    "title": "Delete this group",
+    "intro": "Deleting <group></group> takes everyone out of it and removes it. The people stay on the NAS, with their own access.",
+    "open": "Delete {{group}}…",
+    "blocked": {
+      "mainGroup": "<name></name> has <group></group> as their main group, set outside this interface. It cannot be deleted here.",
+      "unread": "Could not check what uses <group></group>, so it cannot be deleted now.",
+      "running": "Wait for {{action}} to finish."
+    },
+    "dialog": {
+      "title": "Delete the group {{group}}?"
+    },
+    "members_one": "{{count}} person is taken out of it: {{list}}. They stay on the NAS, but lose the access the group gave them: {{folders}}.",
+    "members_other": "{{count}} people are taken out of it: {{list}}. They stay on the NAS, but lose the access the group gave them: {{folders}}.",
+    "membersNoAccess_one": "{{count}} person is taken out of it: {{list}}. They stay on the NAS.",
+    "membersNoAccess_other": "{{count}} people are taken out of it: {{list}}. They stay on the NAS.",
+    "nobody": "Nobody is in it.",
+    "access_one": "Also take <group></group> off the access list of {{count}} shared folder: {{list}}.",
+    "access_other": "Also take <group></group> off the access lists of {{count}} shared folders: {{list}}.",
+    "accessHint": "If you leave this, those folders keep an entry for <group></group>, and a group you add later with the same name gets that access.",
+    "leavesNobody": "After this, nobody can open {{folders}} from other computers: <group></group> was the only one with access.",
+    "confirm": "Delete group",
+    "step": {
+      "empty": "Take everyone out of {{group}}",
+      "delete": "Delete the group",
+      "access": "Take {{group}} off the access lists",
+      "save": "Save the change"
+    },
+    "done": "<group></group> was deleted. Its members are still on the NAS.",
+    "toList": "Go to Groups",
+    "failed": {
+      "empty": "{{group}} was not changed.",
+      "delete": "Everyone was taken out of <group></group>, but it was not deleted.",
+      "notDeleted": "{{group}} was not deleted.",
+      "access": "<group></group> was deleted, but {{folders}} still list it.",
+      "saveBody": "<group></group> is deleted. Saving the change failed, so it stays pending in the band.",
+      "putBack": "Could not put the members back."
+    },
+    "putBack": "Put the members back",
+    "unknown": "Could not tell whether {{group}} was deleted.",
+    "blockedTitle": "{{group}} cannot be deleted now",
+    "gone": "{{group}} is no longer on this NAS.",
+    "preflightTitle": "Some changes are not applied yet",
+    "preflightBody": "Deleting a group saves its own change straight after, and other pending changes would be applied with it. Apply or undo them first.",
+    "folderAccess": "{{folder}} ({{access}})",
+    "putBackDone": "The members of {{group}} were put back. It was not deleted.",
+    "stoppedBody": "<group></group> is deleted. What is left stays pending in the band.",
+    "deletedAt": "Deleted"
+  },
+  "homeFolders": {
+    "title": "Home folders",
+    "subtitle": "User settings",
+    "state": {
+      "off": "Home folders are off. People have no private folder on the NAS.",
+      "on": "Each person has a private home folder in <folder></folder>.",
+      "gone": "Home folders are on, but their shared folder no longer exists.",
+      "unreachable": "People cannot reach their home folders."
+    },
+    "choose": "Shared folder for home folders",
+    "cannot_one": "Shared folder that cannot hold home folders ({{count}})",
+    "cannot_other": "Shared folders that cannot hold home folders ({{count}})",
+    "reason": {
+      "notOk": "Cannot be reached.",
+      "notMounted": "Its file system is not mounted.",
+      "system": "On the system drive.",
+      "whole": "It is the whole file system <fs></fs>."
+    },
+    "none": "No shared folder can hold home folders yet.",
+    "addFolder": "Add a shared folder for home folders",
+    "turnOn": "Turn on home folders…",
+    "turnOff": "Turn off home folders…",
+    "onLine": "To stop using home folders, turn them off. Their folders and files stay in <folder></folder>.",
+    "move": "To keep home folders in another shared folder, use the classic interface: the NAS then moves every home folder, with its files, which can take a long time.",
+    "classicLink": "User settings in the classic interface",
+    "smbYes": "Windows and Mac computers can open home folders: yes. That is set with the advanced SMB options in the classic interface.",
+    "smbNo": "Windows and Mac computers can open home folders: no. That is set with the advanced SMB options in the classic interface.",
+    "on": {
+      "title": "Turn on home folders in {{folder}}?",
+      "body_one": "A private folder named after each person is made in <folder></folder> now, for the {{count}} person on this NAS, and for everyone you add later. Only that person can open their folder.",
+      "body_other": "A private folder named after each person is made in <folder></folder> now, for the {{count}} people on this NAS, and for everyone you add later. Only that person can open their folder.",
+      "move": "If a person already has a home folder elsewhere, its files are moved into the new one.",
+      "wait": "This can take a while with many people. Keep this page open.",
+      "smb": "Windows and Mac computers can open their home folders after the changes are applied.",
+      "confirm": "Turn on",
+      "progress": "Setting up home folders for {{count}} people…",
+      "done": "Home folders are on, in {{folder}}.",
+      "partly": "Some home folders may already be set up. Turning them on again finishes the rest.",
+      "unknown": "Could not tell whether home folders were turned on.",
+      "bodyNoCount": "A private folder named after each person is made in <folder></folder> now, and for everyone you add later. Only that person can open their folder."
+    },
+    "off": {
+      "title": "Turn off home folders?",
+      "body": "People no longer have a home folder on the NAS. The folders and every file in them stay in <folder></folder>, where only each person's own account could open their folder.",
+      "smb": "Windows and Mac computers can no longer open home folders after the changes are applied.",
+      "programs": "Programs that keep files in a person's home folder, such as an add-on, stop finding them.",
+      "confirm": "Turn off",
+      "done": "Home folders are off. Their files are still in {{folder}}.",
+      "bodyGone": "People no longer have a home folder on the NAS. Their folders and files stay where they are.",
+      "doneGone": "Home folders are off.",
+      "unknown": "Could not tell whether home folders were turned off."
+    },
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "loading": "Loading the home folders setting…",
+    "loadFailed": "Could not read whether home folders are on.",
+    "checkAgain": "Check again",
+    "chooseRequired": "Choose the shared folder for home folders.",
+    "changedElsewhere": "Home folders were changed elsewhere since you opened this page.",
+    "recheckFailed": "Could not check the shared folder again, so nothing was changed.",
+    "refused": "<folder></folder> cannot hold home folders now.",
+    "saveFailed": "The home folders setting was not saved."
   }
 }
