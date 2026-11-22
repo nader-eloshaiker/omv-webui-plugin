@@ -1,0 +1,10 @@
+type: object
+description: A file system's report, the pool's own folder included.
+required: [type, name]
+properties:
+  type:
+    type: string
+    enum: [Filesystem]
+  name:
+    $ref: ./ZfsDatasetName.yaml
+additionalProperties: false

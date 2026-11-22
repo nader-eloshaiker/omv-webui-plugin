@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsStopScrub
+  tags:
+    - Zfs
+  summary: Stop checking a pool
+  description: >-
+    Stop a pool's check, running or paused. Nothing on the pool changes; a later check starts
+    from the beginning. With no check in progress ZFS refuses (HTTP 500). Marks nothing dirty.
+  x-omv-rpc:
+    service: Zfs
+    method: stopScrub
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.zfs.name
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolNameRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        There is no check to stop.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notChecking:
+              $ref: ../../examples/zfsStopScrub.notChecking.yaml

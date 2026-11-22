@@ -1,0 +1,17 @@
+type: object
+description: >-
+  A file system's size limit: "none" for no limit, or a whole number of GiB or TiB ("500G",
+  "2T"). ZFS refuses a limit below what the file system holds (HTTP 500, observed on the test VM);
+  the interface checks it first.
+required: [property, value, modified]
+properties:
+  property:
+    type: string
+    enum: [quota]
+  value:
+    type: string
+    pattern: "^(?:none|[1-9][0-9]{0,5}[GT])$"
+  modified:
+    type: boolean
+    enum: [true]
+additionalProperties: false

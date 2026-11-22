@@ -73,3 +73,47 @@ export {
   UserMgmtSetUserByContextRequestSchema,
   type UserMgmtSetUserByContextFormValues,
 } from "./userMgmtSetUserByContext.ts";
+export {
+  ZfsAddObjectRequestSchema,
+  type ZfsAddObjectFormValues,
+} from "./zfsAddObject.ts";
+export {
+  ZfsAddPoolRequestSchema,
+  type ZfsAddPoolFormValues,
+} from "./zfsAddPool.ts";
+export {
+  ZfsClearPoolRequestSchema,
+  type ZfsClearPoolFormValues,
+} from "./zfsClearPool.ts";
+export {
+  ZfsDeviceOfflineRequestSchema,
+  type ZfsDeviceOfflineFormValues,
+} from "./zfsDeviceOffline.ts";
+export {
+  ZfsDeviceOnlineRequestSchema,
+  type ZfsDeviceOnlineFormValues,
+} from "./zfsDeviceOnline.ts";
+export {
+  ZfsDeviceReplaceRequestSchema,
+  type ZfsDeviceReplaceFormValues,
+} from "./zfsDeviceReplace.ts";
+export {
+  ZfsQuickSnapshotRequestSchema,
+  type ZfsQuickSnapshotFormValues,
+} from "./zfsQuickSnapshot.ts";
+export {
+  ZfsRollbackSnapshotRequestSchema,
+  type ZfsRollbackSnapshotFormValues,
+} from "./zfsRollbackSnapshot.ts";
+export {
+  ZfsScrubPoolRequestSchema,
+  type ZfsScrubPoolFormValues,
+} from "./zfsScrubPool.ts";
+export {
+  ZfsSetPropertiesRequestSchema,
+  type ZfsSetPropertiesFormValues,
+} from "./zfsSetProperties.ts";
+export {
+  ZfsStopScrubRequestSchema,
+  type ZfsStopScrubFormValues,
+} from "./zfsStopScrub.ts";

@@ -31,7 +31,11 @@ import {
 } from "../../filesystems/fsModel.ts";
 import { fsSession } from "../../filesystems/fsSession.ts";
 import { useFormat } from "../../format/useFormat.ts";
-import { useConfiguredFs, useDiskList } from "../../hooks/useDiskReads.ts";
+import {
+  useConfiguredFs,
+  useDetectedFs,
+  useDiskList,
+} from "../../hooks/useDiskReads.ts";
 import {
   useAllShares,
   useMountCandidates,
@@ -40,6 +44,7 @@ import {
 } from "../../hooks/useFsReads.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
+import { useZfsPlugin } from "../../hooks/useZfsReads.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
 import { pendingModules } from "../../pending/modules.ts";
 import { useSession } from "../../session/sessionContext.ts";
@@ -88,6 +93,19 @@ function FileSystems() {
   // ZFS file systems are never offered for mounting through OMV's settings (ZFS design 10.3): the
   // server's candidates leave them out today, and so does this page whatever it is sent.
   const found = candidates.data?.filter((fs) => !isZfs(fs));
+  // ZFS file systems the system lists that OMV has no entry for yet (made by hand, ZFS design 10.3):
+  // a line instead, pointing to the plugin's Discover in the classic interface.
+  const zfsPlugin = useZfsPlugin(true) === "installed";
+  const detected = useDetectedFs(zfsPlugin);
+  const known = new Set(
+    (configured.data?.data ?? []).filter(isZfs).map((fs) => fs.devicefile),
+  );
+  const zfsUnknown =
+    configured.data === undefined
+      ? 0
+      : (detected.data ?? []).filter(
+          (fs) => isZfs(fs) && !known.has(fs.devicefile),
+        ).length;
 
   const refresh = async () => {
     if (refreshing) {
@@ -252,6 +270,15 @@ function FileSystems() {
         onRetry={() => void candidates.refetch()}
         onMount={setMounting}
       />
+
+      {zfsUnknown > 0 ? (
+        <p className="max-w-prose text-sm">
+          {t("filesystems.zfsUnknown", { count: zfsUnknown })}{" "}
+          <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
+            {t("filesystems.zfsUnknownLink")}
+          </ExternalLink>
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-1 text-sm">
         <p className="text-muted-foreground">{t("filesystems.footerLine")}</p>

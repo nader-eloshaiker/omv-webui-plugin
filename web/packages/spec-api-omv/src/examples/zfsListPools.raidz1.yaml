@@ -1,0 +1,64 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new RAID-Z1 of sdb, sdc and sdd."
+x-omv-status: 200
+value:
+  total: 2
+  data:
+    - id: root/pool-tank
+      parentid: root
+      name: tank
+      type: Pool
+      icon: images/raid.png
+      expanded: true
+      path: tank
+      origin: n/a
+      size: 25232932864
+      used: 1327104
+      usedpercent: 0.005259412400265957
+      available: 25231605760
+      mountpoint: /tank
+      lastscrub: Never
+      state: ONLINE
+      status: OK
+      scrubstate: none
+      scrubactive: false
+      removalstate: none
+      removalactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      hasshares: false
+      fragmentation: 0
+      dedup: "1.00"
+      capacity: 0
+      devices: "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005-part1"
+      haschildren: false
+    - id: root/poolfs-tank
+      parentid: root
+      name: tank
+      type: Filesystem
+      icon: images/filesystem.png
+      path: tank
+      pool: tank
+      expanded: true
+      origin: n/a
+      size: null
+      used: 556512
+      usedpercent: 0.00341830387783116
+      available: 16279798304
+      mountpoint: /tank
+      lastscrub: n/a
+      state: n/a
+      status: n/a
+      scrubstate: n/a
+      scrubactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      isencryptionroot: false
+      hasshares: false
+      compression: lz4
+      compressratio: "1.00"
+      refer: 130944
+      mounted: true
+      poolroot: true
+      haschildren: false

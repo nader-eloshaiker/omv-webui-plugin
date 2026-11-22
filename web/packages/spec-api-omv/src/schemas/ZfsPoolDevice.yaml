@@ -1,0 +1,24 @@
+type: object
+description: >-
+  A disk of a pool, from zpool status's structured report: data disks, spares, read caches, write
+  logs and metadata disks alike.
+required: [devicefile, state, vdev, label]
+properties:
+  devicefile:
+    type: string
+    description: >-
+      The path ZFS opened it by, such as "/dev/disk/by-id/ata-…-part1" for a whole disk ZFS
+      partitioned. A disk that is missing keeps the path it was last seen at.
+  state:
+    type: string
+    description: >-
+      ZFS's word for the disk in capitals: "ONLINE", "DEGRADED", "FAULTED", "UNAVAIL", "REMOVED",
+      "OFFLINE", or for a spare "AVAIL" or "INUSE".
+  vdev:
+    type: string
+    description: >-
+      The group it is in ("mirror-0", "raidz1-0", "replacing-1" while it is being replaced), or
+      empty for a disk directly under the pool (a single disk or a stripe).
+  label:
+    type: string
+    description: Display text in English for the classic interface; not shown.

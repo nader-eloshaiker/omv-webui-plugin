@@ -1,0 +1,19 @@
+type: object
+description: One pool's state and how full it is.
+required: [name, state, status, capacity]
+properties:
+  name:
+    type: string
+  state:
+    type: string
+    description: >-
+      ZFS's word for the pool: "ONLINE", "DEGRADED", "FAULTED", "SUSPENDED", "UNAVAIL", "REMOVED"
+      or "OFFLINE".
+  status:
+    type: string
+    description: '"OK", or "Error" when ZFS counts damaged data.'
+  capacity:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: Whole percent of the disks' raw space in use.

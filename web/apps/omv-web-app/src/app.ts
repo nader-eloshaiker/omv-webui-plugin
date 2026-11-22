@@ -33,6 +33,9 @@ import {
   type SessionStore,
 } from "./session/sessionStore.ts";
 import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
+import { zfsActions } from "./zfs/zfsActions.ts";
+import { zfsFlowStore } from "./zfs/zfsRun.ts";
+import { zfsSession } from "./zfs/zfsSession.ts";
 
 /** What pages keep in memory for the session; emptied when it ends. */
 const SESSION_VIEW_STATE = [
@@ -45,6 +48,9 @@ const SESSION_VIEW_STATE = [
   fsActions,
   raidSession,
   raidFlowStore,
+  zfsSession,
+  zfsFlowStore,
+  zfsActions,
   logsView,
   processesView,
 ];

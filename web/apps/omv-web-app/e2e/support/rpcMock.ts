@@ -179,6 +179,14 @@ export class RpcMock {
 
   /** The pending-changes path: what is pending, and the last poll of an apply or undo task. */
   private signedInReply(operationId: OperationId, body: object): Reply {
+    // No ZFS plugin here, as on a NAS without it: OMV knows no Zfs service (ZFS design 0.11). The
+    // ZFS stories answer through the scenario route instead.
+    if (operationId.startsWith("zfs")) {
+      return errorReply(404, {
+        code: 0,
+        message: "RPC service 'Zfs' not found.",
+      });
+    }
     switch (operationId) {
       case "systemGetInformation":
         return exampleReply(

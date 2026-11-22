@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a second snapshot of tank/media in the same second."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zfs snapshot 'tank/media@2026-11-21_12-00-01' 2>&1' with exit code '1': cannot create snapshot 'tank/media@2026-11-21_12-00-01': dataset already exists"

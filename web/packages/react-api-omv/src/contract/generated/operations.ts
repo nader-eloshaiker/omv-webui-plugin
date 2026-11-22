@@ -827,6 +827,199 @@ export const OPERATIONS = {
       $ref: "MountEntry",
     },
   },
+  "/rpc/Zfs/listCompressionTypes": {
+    operationId: "zfsListCompressionTypes",
+    service: "Zfs",
+    method: "listCompressionTypes",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsCompressionTypeList",
+    },
+  },
+  "/rpc/Zfs/listPools": {
+    operationId: "zfsListPools",
+    service: "Zfs",
+    method: "listPools",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsObjectList",
+    },
+  },
+  "/rpc/Zfs/getObjectDetails": {
+    operationId: "zfsGetObjectDetails",
+    service: "Zfs",
+    method: "getObjectDetails",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsReport",
+    },
+  },
+  "/rpc/Zfs/getPoolDevices": {
+    operationId: "zfsGetPoolDevices",
+    service: "Zfs",
+    method: "getPoolDevices",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsPoolDeviceList",
+    },
+  },
+  "/rpc/Zfs/getPoolStatus": {
+    operationId: "zfsGetPoolStatus",
+    service: "Zfs",
+    method: "getPoolStatus",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsPoolStatusList",
+    },
+  },
+  "/rpc/Zfs/getAllSnapshots": {
+    operationId: "zfsGetAllSnapshots",
+    service: "Zfs",
+    method: "getAllSnapshots",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsSnapshotList",
+    },
+  },
+  "/rpc/Zfs/getEmptyCandidates": {
+    operationId: "zfsGetEmptyCandidates",
+    service: "Zfs",
+    method: "getEmptyCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "ZfsCandidateList",
+    },
+  },
+  "/rpc/Zfs/addPool": {
+    operationId: "zfsAddPool",
+    service: "Zfs",
+    method: "addPool",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "data",
+    response: null,
+  },
+  "/rpc/Zfs/addObject": {
+    operationId: "zfsAddObject",
+    service: "Zfs",
+    method: "addObject",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: null,
+  },
+  "/rpc/Zfs/setProperties": {
+    operationId: "zfsSetProperties",
+    service: "Zfs",
+    method: "setProperties",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: null,
+  },
+  "/rpc/Zfs/quickSnapshot": {
+    operationId: "zfsQuickSnapshot",
+    service: "Zfs",
+    method: "quickSnapshot",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/Zfs/rollbackSnapshot": {
+    operationId: "zfsRollbackSnapshot",
+    service: "Zfs",
+    method: "rollbackSnapshot",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    destructive: "data",
+    response: null,
+  },
+  "/rpc/Zfs/deleteObjectBg": {
+    operationId: "zfsDeleteObjectBg",
+    service: "Zfs",
+    method: "deleteObjectBg",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/Zfs/scrubPool": {
+    operationId: "zfsScrubPool",
+    service: "Zfs",
+    method: "scrubPool",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/Zfs/stopScrub": {
+    operationId: "zfsStopScrub",
+    service: "Zfs",
+    method: "stopScrub",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/Zfs/deviceReplace": {
+    operationId: "zfsDeviceReplace",
+    service: "Zfs",
+    method: "deviceReplace",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    destructive: "data",
+    response: null,
+  },
+  "/rpc/Zfs/deviceOffline": {
+    operationId: "zfsDeviceOffline",
+    service: "Zfs",
+    method: "deviceOffline",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    destructive: "service",
+    response: null,
+  },
+  "/rpc/Zfs/deviceOnline": {
+    operationId: "zfsDeviceOnline",
+    service: "Zfs",
+    method: "deviceOnline",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
+  "/rpc/Zfs/clearPool": {
+    operationId: "zfsClearPool",
+    service: "Zfs",
+    method: "clearPool",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    response: null,
+  },
 } as const satisfies OperationTable;
 
 export type OperationUrl = keyof typeof OPERATIONS;
@@ -3144,6 +3337,319 @@ export const SCHEMAS: SchemaTable = {
         type: "integer",
         minimum: 0,
         maximum: 1440,
+      },
+    },
+  },
+  ZfsCandidate: {
+    type: "object",
+    required: [
+      "devicefile",
+      "size",
+      "vendor",
+      "serialnumber",
+      "description",
+      "label",
+    ],
+    properties: {
+      devicefile: {
+        type: "string",
+      },
+      size: {
+        type: "string",
+        "x-omv-int64": true,
+      },
+      vendor: {
+        type: "string",
+      },
+      serialnumber: {
+        type: "string",
+      },
+      description: {
+        type: "string",
+      },
+      label: {
+        type: "string",
+      },
+    },
+  },
+  ZfsCandidateList: {
+    type: "array",
+    items: {
+      $ref: "ZfsCandidate",
+    },
+  },
+  ZfsCompressionTypeList: {
+    type: "array",
+    items: {
+      type: "string",
+    },
+  },
+  ZfsObject: {
+    type: "object",
+    required: [
+      "id",
+      "parentid",
+      "name",
+      "type",
+      "icon",
+      "expanded",
+      "path",
+      "origin",
+      "size",
+      "used",
+      "usedpercent",
+      "available",
+      "mountpoint",
+      "lastscrub",
+      "state",
+      "status",
+      "scrubstate",
+      "scrubactive",
+      "encryption",
+      "keystatus",
+      "autounlock",
+      "hasshares",
+      "haschildren",
+    ],
+    properties: {
+      id: {
+        type: "string",
+      },
+      parentid: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      expanded: {
+        type: "boolean",
+      },
+      path: {
+        type: "string",
+      },
+      pool: {
+        type: "string",
+      },
+      origin: {
+        type: "string",
+      },
+      size: {
+        type: "integer",
+        nullable: true,
+      },
+      used: {
+        type: "integer",
+      },
+      usedpercent: {
+        type: "number",
+      },
+      available: {
+        type: "integer",
+      },
+      mountpoint: {
+        type: "string",
+      },
+      lastscrub: {
+        type: "string",
+      },
+      state: {
+        type: "string",
+      },
+      status: {
+        type: "string",
+      },
+      scrubstate: {
+        type: "string",
+      },
+      scrubactive: {
+        type: "boolean",
+      },
+      removalstate: {
+        type: "string",
+      },
+      removalactive: {
+        type: "boolean",
+      },
+      encryption: {
+        type: "string",
+      },
+      keystatus: {
+        type: "string",
+      },
+      autounlock: {
+        type: "boolean",
+      },
+      isencryptionroot: {
+        type: "boolean",
+      },
+      hasshares: {
+        type: "boolean",
+      },
+      fragmentation: {
+        type: "number",
+      },
+      dedup: {
+        type: "string",
+      },
+      capacity: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+      },
+      devices: {
+        type: "string",
+      },
+      compression: {
+        type: "string",
+      },
+      compressratio: {
+        type: "string",
+      },
+      refer: {
+        type: "integer",
+      },
+      mounted: {
+        type: "boolean",
+      },
+      poolroot: {
+        type: "boolean",
+      },
+      haschildren: {
+        type: "boolean",
+      },
+    },
+  },
+  ZfsObjectList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+        minimum: 0,
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "ZfsObject",
+        },
+      },
+    },
+  },
+  ZfsPoolDevice: {
+    type: "object",
+    required: ["devicefile", "state", "vdev", "label"],
+    properties: {
+      devicefile: {
+        type: "string",
+      },
+      state: {
+        type: "string",
+      },
+      vdev: {
+        type: "string",
+      },
+      label: {
+        type: "string",
+      },
+    },
+  },
+  ZfsPoolDeviceList: {
+    type: "array",
+    items: {
+      $ref: "ZfsPoolDevice",
+    },
+  },
+  ZfsPoolStatus: {
+    type: "object",
+    required: ["name", "state", "status", "capacity"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      state: {
+        type: "string",
+      },
+      status: {
+        type: "string",
+      },
+      capacity: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+      },
+    },
+  },
+  ZfsPoolStatusList: {
+    type: "array",
+    items: {
+      $ref: "ZfsPoolStatus",
+    },
+  },
+  ZfsReport: {
+    type: "string",
+  },
+  ZfsSnapshot: {
+    type: "object",
+    required: [
+      "id",
+      "parent",
+      "name",
+      "type",
+      "icon",
+      "path",
+      "used",
+      "refer",
+      "encryption",
+    ],
+    properties: {
+      id: {
+        type: "string",
+      },
+      parent: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      icon: {
+        type: "string",
+      },
+      path: {
+        type: "string",
+      },
+      used: {
+        type: "integer",
+      },
+      refer: {
+        type: "integer",
+      },
+      encryption: {
+        type: "string",
+      },
+    },
+  },
+  ZfsSnapshotList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+        minimum: 0,
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "ZfsSnapshot",
+        },
       },
     },
   },

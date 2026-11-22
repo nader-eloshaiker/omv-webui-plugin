@@ -1,0 +1,11 @@
+type: object
+description: >-
+  One disk of a pool (rpc.zfs.pooldevice). Stricter than the plugin, which checks nothing: the
+  pool by its name and the disk by the by-id name Zfs.getPoolDevices gives for it.
+required: [pool, device]
+properties:
+  pool:
+    $ref: ./ZfsPoolName.yaml
+  device:
+    $ref: ./ZfsDiskById.yaml
+additionalProperties: false

@@ -151,7 +151,7 @@ describe("the wipe section", () => {
       // disk out or deleting the array, each with its own refusals; a pool's in the classic pages.
       for (const link of within(section).queryAllByRole("link")) {
         expect(link.getAttribute("href")).toMatch(
-          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/#\/storage\/zfs\/pools|\/ui\/storage\/filesystems\/[0-9a-f-]+|\/ui\/storage\/md\/md[0-9]+)$/,
+          /^(\/#\/storage\/filesystems|\/#\/storage\/md|\/#\/storage\/zfs\/pools|\/ui\/storage\/filesystems\/[0-9a-f-]+|\/ui\/storage\/md\/md[0-9]+|\/ui\/storage\/zfs\/pools\/[A-Za-z][A-Za-z0-9_.:-]*)$/,
         );
       }
       expect(wipeCalls()).toHaveLength(0);

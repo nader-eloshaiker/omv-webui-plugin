@@ -1,0 +1,14 @@
+type: object
+description: >-
+  A disk of a pool and the disk to put in its place (rpc.zfs.pooltwodevices). Stricter than the
+  plugin, which checks nothing: the old disk by the by-id name Zfs.getPoolDevices gives for it, the
+  new one by the by-id name Zfs.getEmptyCandidates gives.
+required: [pool, olddevice, newdevice]
+properties:
+  pool:
+    $ref: ./ZfsPoolName.yaml
+  olddevice:
+    $ref: ./ZfsDiskById.yaml
+  newdevice:
+    $ref: ./ZfsDiskById.yaml
+additionalProperties: false

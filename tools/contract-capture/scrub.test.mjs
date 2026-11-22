@@ -566,3 +566,180 @@ test("a documentation mdadm UUID in a by-id link is not taken for a disk identif
     [],
   );
 });
+
+// ---- ZFS (openmediavault-zfs) -------------------------------------------------------------------
+
+// A pool's report as Zfs.getObjectDetails returns it (lines joined by "\n\r"), with a disk that
+// zpool status can only name by its GUID. Invented disks and numbers.
+const ZFS_POOL_REPORT = [
+  "Pool status (zpool status -v):",
+  "",
+  "  pool: tank",
+  " state: DEGRADED",
+  "  scan: resilver in progress since Fri Nov 20 09:14:07 2026",
+  "\t1.20G / 3.00G scanned at 300M/s, 600M / 3.00G issued at 150M/s",
+  "\t590M resilvered, 20.00% done, 00:00:16 to go",
+  "config:",
+  "",
+  "\tNAME                             STATE     READ WRITE CKSUM",
+  "\ttank                             DEGRADED     0     0     0",
+  "\t  mirror-0                       DEGRADED     0     0     0",
+  "\t    ata-ACME_Disk_ZX81TEST0001   ONLINE       0     0     0",
+  "\t    5813342277894411042          UNAVAIL      0     0     0  was /dev/disk/by-id/ata-ACME_Disk_ZX81TEST0002-part1",
+  "",
+  "errors: No known data errors",
+].join("\n\r");
+
+test("a ZFS pool report loses its dates, GUIDs and disk serial numbers, and keeps the rest", () => {
+  const { scrub, verify } = createScrubber({
+    ...known,
+    serials: ["ZX81TEST0001", "ZX81TEST0002"],
+  });
+  const out = scrub({ report: ZFS_POOL_REPORT });
+  assert.deepEqual(verify(out), []);
+  const lines = out.report.split("\n\r");
+  assert.equal(lines[4], `  scan: resilver in progress since ${DOC.zfsDate}`);
+  assert.equal(lines[6], "\t590M resilvered, 20.00% done, 00:00:16 to go");
+  assert.equal(
+    lines[12],
+    "\t    ata-ACME_Disk_EXAMPLE-SERIAL-0001   ONLINE       0     0     0",
+  );
+  assert.equal(
+    lines[13],
+    "\t    1000000000000000001          UNAVAIL      0     0     0  was /dev/disk/by-id/ata-ACME_Disk_EXAMPLE-SERIAL-0002-part1",
+  );
+  assert.equal(lines.at(-1), "errors: No known data errors");
+});
+
+test("a ZFS file system report loses its creation date and GUID, the same GUID one placeholder", () => {
+  const { scrub, verify } = createScrubber(known);
+  const report = [
+    "Filesystem status (zfs list):",
+    "",
+    "NAME        TYPE         USED  AVAIL  REFER  MOUNTPOINT",
+    "tank/media  filesystem    96K  7.27G    96K  /tank/media",
+    "",
+    "Filesystem details (zfs get all):",
+    "",
+    "tank/media  creation                Fri Nov 20 09:14 2026                 -",
+    "tank/media  createtxg               15                                    -",
+    "tank/media  guid                    15777511494256409461                  -",
+    "tank/media  objsetid                138                                   -",
+    "tank/media  omvzfsplugin:uuid       3f2b1c4e-9a8d-4e7f-b6c5-1d2e3f4a5b6c  local",
+  ].join("\n\r");
+  const out = scrub({ a: report, b: report });
+  assert.deepEqual(verify(out), []);
+  assert.equal(out.a, out.b);
+  const lines = out.a.split("\n\r");
+  assert.equal(
+    lines[7],
+    "tank/media  creation                Sat Nov 21 12:00 2026                 -",
+  );
+  assert.equal(lines[8], report.split("\n\r")[8]);
+  assert.equal(
+    lines[9],
+    "tank/media  guid                    1000000000000000001                  -",
+  );
+  assert.equal(lines[10], report.split("\n\r")[10]);
+  assert.match(lines[11], /00000000-0000-4000-8000-000000000001/);
+});
+
+test("dates and long numbers outside a ZFS report are left alone", () => {
+  const { scrub } = createScrubber(known);
+  const raw = {
+    log: "Fri Nov 20 09:14:07 2026 something happened",
+    size: "15777511494256409461",
+  };
+  assert.deepEqual(scrub(raw), raw);
+});
+
+const LASTSCRUB_CASES = [
+  ["Fri Nov 20 09:14:07 CET 2026", `Sat Nov 21 12:00:00 UTC 2026`],
+  [
+    "in progress since Fri Nov 20 09:14:07 2026",
+    `in progress since ${DOC.zfsDate}`,
+  ],
+  ["canceled on Fri Nov 20 09:14:07 2026", `canceled on ${DOC.zfsDate}`],
+  ["Never", "Never"],
+  ["n/a", "n/a"],
+];
+for (const [raw, want] of LASTSCRUB_CASES) {
+  test(`the plugin's last-check date is a documentation one: ${raw}`, () => {
+    const { scrub, verify } = createScrubber(known);
+    const out = scrub({ lastscrub: raw });
+    assert.equal(out.lastscrub, want);
+    assert.deepEqual(verify(out), []);
+  });
+}
+
+test("a snapshot's name by date and time becomes documentation times, in order, and is no e-mail address", () => {
+  const { scrub, verify } = createScrubber(known);
+  const out = scrub({
+    data: [
+      { name: "2026-11-20_21-20-40", path: "tank/media@2026-11-20_21-20-40" },
+      { name: "2026-11-20_21-20-41", path: "tank/media@2026-11-20_21-20-41" },
+      { name: "2026-11-20_22-05-00", path: "tank@2026-11-20_22-05-00" },
+    ],
+    message:
+      "cannot open 'tank/media@2026-11-20_21-20-41': dataset does not exist",
+    mail: "owner@corp.test",
+  });
+  assert.deepEqual(verify(out), []);
+  assert.deepEqual(out.data, [
+    { name: "2026-11-21_12-00-00", path: "tank/media@2026-11-21_12-00-00" },
+    { name: "2026-11-21_12-00-01", path: "tank/media@2026-11-21_12-00-01" },
+    { name: "2026-11-21_12-00-02", path: "tank@2026-11-21_12-00-02" },
+  ]);
+  assert.equal(
+    out.message,
+    "cannot open 'tank/media@2026-11-21_12-00-01': dataset does not exist",
+  );
+  assert.equal(out.mail, "user1@example.com");
+});
+
+const ZFS_LEFT_CASES = [
+  {
+    name: "a date in a pool report",
+    value: {
+      r: "Pool status (zpool status -v):\n\r  scan: scrub repaired 0B in 00:00:01 with 0 errors on Fri Nov 20 09:14:07 2026",
+    },
+    want: "a ZFS date at $.r",
+    secret: "09:14:07",
+  },
+  {
+    name: "a GUID in a file system report",
+    value: {
+      r: "Filesystem status (zfs list):\n\rtank/media  guid  15777511494256409461  -",
+    },
+    want: "a ZFS GUID at $.r",
+    secret: "15777511494256409461",
+  },
+  {
+    name: "a disk's serial number in a ZFS device name",
+    value: {
+      r: "Pool status (zpool status -v):\n\r\t    ata-ACME_Disk_9912345678  ONLINE  0 0 0",
+    },
+    want: "a disk identifier in a ZFS device name at $.r",
+    secret: "9912345678",
+  },
+  {
+    name: "the last-check date",
+    value: { rows: [{ lastscrub: "Fri Nov 20 09:14:07 CET 2026" }] },
+    want: "a ZFS date at $.rows[0].lastscrub",
+    secret: "09:14:07",
+  },
+  {
+    name: "a snapshot's date and time",
+    value: { name: "2026-11-20_21-20-40" },
+    want: "a snapshot's date and time at $.name",
+    secret: "21-20-40",
+  },
+];
+for (const { name, value, want, secret } of ZFS_LEFT_CASES) {
+  test(`verify reports ${name} left in place, never the value`, () => {
+    const { verify } = createScrubber(known);
+    const text = verify(value).join("\n");
+    assert.ok(text.includes(want), `missing "${want}" in:\n${text}`);
+    assert.ok(!text.includes(secret), "a failure must not repeat the value");
+  });
+}

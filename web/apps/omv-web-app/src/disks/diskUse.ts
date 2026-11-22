@@ -62,6 +62,13 @@ export type WipeBlocker =
   | { kind: "wiping" }
   | { kind: "unchecked" };
 
+/** A ZFS pool's disks, from Zfs.getPoolStatus and that pool's Zfs.getPoolDevices (the ZFS design 10.2). */
+export interface ZfsPoolDisks {
+  pool: string;
+  /** Every device path ZFS opened the pool's disks by: data disks, spares and the other classes. */
+  devices: readonly string[];
+}
+
 /** The reads 0.6 decides from. `undefined` means not read (still loading, or the read failed). */
 export interface UseInputs {
   /** FileSystemMgmt.getList: the file systems OMV has set up or is creating. */
@@ -70,6 +77,11 @@ export interface UseInputs {
   detected: readonly DetectedFilesystem[] | undefined;
   /** MdMgmt.enumerateDevices; `null` when the RAID plugin is not installed (the 404 reply). */
   arrays: readonly MdArray[] | null | undefined;
+  /**
+   * The ZFS pools' disks (the ZFS design 0.8, 10.2); `null` when the ZFS plugin is not installed (its
+   * 404). An empty list while the file-system lists report ZFS file systems is a failed read (D10).
+   */
+  zfs: readonly ZfsPoolDisks[] | null | undefined;
 }
 
 /** What this session knows about a disk beyond the reads: a wipe running now, or one that ended. */
@@ -236,11 +248,12 @@ export function diskUse(
     return { known: false, uses, blockers, unused: [] };
   };
 
-  const { configured, detected, arrays } = inputs;
+  const { configured, detected, arrays, zfs } = inputs;
   if (
     configured === undefined ||
     detected === undefined ||
-    arrays === undefined
+    arrays === undefined ||
+    zfs === undefined
   ) {
     return notKnown();
   }
@@ -250,8 +263,21 @@ export function diskUse(
   // part of that pool, whatever is mounted (the ZFS design 10.2).
   const zfsRows = [...configured, ...detected].filter(isZfs);
   const pools = zfsPoolsOn(zfsRows, names);
-  if (pools === null) {
+  // The pools' own disks, spares and caches included, also for a pool whose file systems are not
+  // listed. No pool while the lists show ZFS file systems is a failed read (fail closed, D10).
+  if (
+    pools === null ||
+    (zfs !== null && zfs.length === 0 && zfsRows.length > 0)
+  ) {
     return notKnown();
+  }
+  for (const pool of zfs ?? []) {
+    if (
+      pool.devices.some((d) => belongsTo(d, names)) &&
+      !pools.includes(pool.pool)
+    ) {
+      pools.push(pool.pool);
+    }
   }
 
   const inUse: DiskUse[] = [];

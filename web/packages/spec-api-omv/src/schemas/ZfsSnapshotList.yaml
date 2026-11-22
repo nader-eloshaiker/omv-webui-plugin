@@ -1,0 +1,11 @@
+type: object
+description: Every snapshot on every pool, in name order, paged by the backend.
+required: [total, data]
+properties:
+  total:
+    type: integer
+    minimum: 0
+  data:
+    type: array
+    items:
+      $ref: ./ZfsSnapshot.yaml

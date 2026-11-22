@@ -13,6 +13,8 @@ import {
   getMdMgmtEnumerateDevicesQueryOptions,
   getShareMgmtGetListQueryOptions,
   getSystemGetInformationQueryOptions,
+  getZfsGetPoolDevicesQueryOptions,
+  getZfsGetPoolStatusQueryOptions,
   useConfigApplyChangesBg,
   useConfigRevertChangesBg,
   useDiskMgmtRescan,
@@ -36,10 +38,16 @@ import {
   type SharedFolder,
 } from "@omv-webui/react-api-omv/generated";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
-import { CancelledError, useQueryClient } from "@tanstack/react-query";
+import {
+  CancelledError,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+import type { ZfsPoolDisks } from "../disks/diskUse.ts";
 import { isRaidPluginMissing } from "../disks/diskWords.ts";
 import { pendingModules } from "../pending/modules.ts";
 import { ALL_ROWS } from "../sharedFolders/table.ts";
+import { isPoolAddress } from "../zfs/zfsModel.ts";
 import { ALL_DISKS } from "./useDiskReads.ts";
 import { ALL_CONFIGURED } from "./useMonitoringReads.ts";
 
@@ -53,6 +61,11 @@ export interface FsApi {
   disks(): Promise<DiskDevice[]>;
   /** null when the RAID plugin is not installed. */
   arrays(): Promise<MdArray[] | null>;
+  /**
+   * The ZFS pools' disks (ZFS design 10.2); null when the ZFS plugin is not installed. A pool with no
+   * disks, or one whose name the contract cannot send, fails the read (fail closed, D10).
+   */
+  zfsDisks(): Promise<ZfsPoolDisks[] | null>;
   mountCandidates(): Promise<DetectedFilesystem[]>;
   mountEntry(fsname: string): Promise<FsTabEntryOrNone>;
   shares(): Promise<SharedFolder[]>;
@@ -85,6 +98,47 @@ async function uncancelled<T>(read: () => Promise<T>, tries = 3): Promise<T> {
     }
     throw error;
   }
+}
+
+/** The ZFS pools' disks, read fresh: getPoolStatus, then each pool's getPoolDevices (10.2, D10). */
+export async function readZfsDisks(
+  queryClient: QueryClient,
+): Promise<ZfsPoolDisks[] | null> {
+  const status = await uncancelled(() =>
+    queryClient
+      .fetchQuery({
+        ...getZfsGetPoolStatusQueryOptions(),
+        staleTime: 0,
+        retry: false,
+      })
+      .catch((error: unknown) => {
+        if (isRpcError(error) && error.status === 404) {
+          return null;
+        }
+        throw error;
+      }),
+  );
+  if (status === null) {
+    return null;
+  }
+  return Promise.all(
+    status.map(async (pool) => {
+      if (!isPoolAddress(pool.name)) {
+        throw new Error("A pool's name cannot be sent.");
+      }
+      const devices = await uncancelled(() =>
+        queryClient.fetchQuery({
+          ...getZfsGetPoolDevicesQueryOptions({ name: pool.name }),
+          staleTime: 0,
+          retry: false,
+        }),
+      );
+      if (devices.length === 0) {
+        throw new Error("A pool's disks could not be read.");
+      }
+      return { pool: pool.name, devices: devices.map((d) => d.devicefile) };
+    }),
+  );
 }
 
 export function useFsApi(): FsApi {
@@ -141,6 +195,7 @@ export function useFsApi(): FsApi {
             throw error;
           }),
       ),
+    zfsDisks: () => readZfsDisks(queryClient),
     mountCandidates: () =>
       uncancelled(() =>
         queryClient.fetchQuery({

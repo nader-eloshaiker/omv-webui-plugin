@@ -1,0 +1,27 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the four empty 8 GiB scratch disks sdb to sde."
+x-omv-status: 200
+value:
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0003
+    description: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB]"
+    label: "VMware Virtual SATA Hard Drive [/dev/sdb, 8.00 GiB], S/N: EXAMPLE-SERIAL-0003"
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0004
+    description: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB]"
+    label: "VMware Virtual SATA Hard Drive [/dev/sdc, 8.00 GiB], S/N: EXAMPLE-SERIAL-0004"
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0005
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0005
+    description: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB]"
+    label: "VMware Virtual SATA Hard Drive [/dev/sdd, 8.00 GiB], S/N: EXAMPLE-SERIAL-0005"
+  - devicefile: /dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0006
+    size: "8589934592"
+    vendor: ATA
+    serialnumber: EXAMPLE-SERIAL-0006
+    description: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB]"
+    label: "VMware Virtual SATA Hard Drive [/dev/sde, 8.00 GiB], S/N: EXAMPLE-SERIAL-0006"

@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsGetObjectDetails
+  tags:
+    - Zfs
+  summary: ZFS's report on a pool or a file system
+  description: >-
+    ZFS's own report as display text (ZfsReport): for a pool, zpool status with its device tree,
+    error counts, the scan line of the last or running check or rebuild, and the damaged files;
+    for a file system, its zfs list line and every property. It is the only reply that says what
+    each disk is doing and how far a check or rebuild has got. The server runs ZFS's status or
+    listing command; on the test VM no member disk was read while it ran (journal). Changes
+    nothing. A pool or file system that does not exist fails with HTTP 500 and ZFS's words.
+  x-omv-rpc:
+    service: Zfs
+    method: getObjectDetails
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.zfs.objectdetails
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsGetObjectDetailsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsReport.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/zfsGetObjectDetails.mirror.yaml
+            mirrorChecking:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorChecking.yaml
+            mirrorCheckStopped:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorCheckStopped.yaml
+            mirrorCheckPaused:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorCheckPaused.yaml
+            mirrorChecked:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorChecked.yaml
+            mirrorDegraded:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorDegraded.yaml
+            mirrorReplacing:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorReplacing.yaml
+            mirrorReplaced:
+              $ref: ../../examples/zfsGetObjectDetails.mirrorReplaced.yaml
+            raidz1:
+              $ref: ../../examples/zfsGetObjectDetails.raidz1.yaml
+            raidz2:
+              $ref: ../../examples/zfsGetObjectDetails.raidz2.yaml
+            stripe:
+              $ref: ../../examples/zfsGetObjectDetails.stripe.yaml
+            single:
+              $ref: ../../examples/zfsGetObjectDetails.single.yaml
+            filesystem:
+              $ref: ../../examples/zfsGetObjectDetails.filesystem.yaml
+    "500":
+      description: >-
+        There is no such pool or file system.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notFound:
+              $ref: ../../examples/zfsGetObjectDetails.notFound.yaml

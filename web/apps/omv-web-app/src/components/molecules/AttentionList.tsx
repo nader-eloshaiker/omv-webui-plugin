@@ -17,6 +17,7 @@ import { useFormat } from "../../format/useFormat.ts";
 import { useFileSystemNameText } from "../../hooks/useFileSystemNameText.ts";
 import { CLASSIC, CLASSIC_HOME } from "../../navigation/navigation.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { isPoolAddress } from "../../zfs/zfsModel.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 
 const SERVICE_SETTINGS = {
@@ -231,6 +232,39 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
           />
         );
       }
+      case "zfsPool":
+        return (
+          <Row
+            mark={critical}
+            sentence={
+              <Trans
+                i18nKey={
+                  row.health === "degraded"
+                    ? "dashboard.attention.zfsDegraded"
+                    : row.health === "unusable"
+                      ? "dashboard.attention.zfsUnusable"
+                      : "dashboard.attention.zfsDamaged"
+                }
+                components={{ pool: <IdentifierText value={row.pool} /> }}
+              />
+            }
+            action={
+              isPoolAddress(row.pool) ? (
+                <Link
+                  to="/storage/zfs/pools/$pool"
+                  params={{ pool: row.pool }}
+                  className={routerLinkClass}
+                >
+                  {t("dashboard.attention.zfsLink", { pool: row.pool })}
+                </Link>
+              ) : (
+                <ExternalLink href={CLASSIC.zfs} newTabLabel={newTab}>
+                  {t("zfs.classicLink")}
+                </ExternalLink>
+              )
+            }
+          />
+        );
       case "restart":
         return (
           <Row

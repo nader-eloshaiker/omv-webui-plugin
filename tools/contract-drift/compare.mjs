@@ -61,6 +61,17 @@ export function compareSchemas(ours, theirs, contract, at = "$") {
     });
     return problems;
   }
+  if (a.oneOf || a.anyOf) {
+    // OMV accepts one shape and the contract several narrower ones (a request whose other fields
+    // depend on its type): each of ours must be no looser than OMV's.
+    if (a.nullable && !b.nullable) {
+      looser("accepts null, which OMV does not");
+    }
+    for (const alt of a.oneOf ?? a.anyOf) {
+      problems.push(...compareSchemas(alt, b, contract, at));
+    }
+    return problems;
+  }
 
   const ourTypes = new Set(
     typesOf(a).map((t) => (t === "integer" ? "integer" : t)),
@@ -152,11 +163,16 @@ export function compareSchemas(ours, theirs, contract, at = "$") {
  */
 export function checkContract(contract, datamodels, services) {
   const findings = [];
+  // OMV finds a service by its name in lower case (RpcServiceMgr::getService), so the contract's
+  // "Zfs" is the plugin's "zfs". Method names are matched as spelt.
+  const byLowerName = new Map(
+    [...services].map(([name, methods]) => [name.toLowerCase(), methods]),
+  );
   for (const [url, item] of Object.entries(contract.paths)) {
     const op = item.post;
     const { service, method } = op["x-omv-rpc"];
     const where = `${op.operationId} (${service}.${method})`;
-    if (!services.get(service)?.has(method)) {
+    if (!byLowerName.get(service.toLowerCase())?.has(method)) {
       findings.push({
         severity: "missing",
         where,

@@ -1,0 +1,7 @@
+type: string
+description: >-
+  An existing pool's name, as Zfs.listPools gives it in `name` (design phase-5-zfs 0.7): a letter
+  first, then up to 63 letters, digits, "_", ".", ":" or "-". Stricter than the plugin, which checks
+  nothing. A pool whose name is outside this has no page in the interface and is managed in the
+  classic one.
+pattern: "^[A-Za-z][A-Za-z0-9_.:-]{0,63}$"

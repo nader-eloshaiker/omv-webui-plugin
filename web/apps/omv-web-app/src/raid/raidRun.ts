@@ -349,12 +349,13 @@ async function stepCheck(ctx: Context): Promise<boolean> {
       ctx.fs.configured(),
       ctx.fs.detected(),
       ctx.raid.arrays(),
+      ctx.fs.zfsDisks(),
     ]);
   } catch (error) {
     fail(ctx, "check", { kind: "checkRead", error });
     return false;
   }
-  const [candidates, disks, configured, detected, arrays] = reads;
+  const [candidates, disks, configured, detected, arrays, zfs] = reads;
   if (choices.kind === "add") {
     const now = arrays.find((a) => a.devicefile === choices.array.devicefile);
     if (
@@ -396,7 +397,7 @@ async function stepCheck(ctx: Context): Promise<boolean> {
     update(ctx, () => ({ array: now }));
   }
   const placed = raidChoices(
-    { candidates, disks, configured, detected, arrays },
+    { candidates, disks, configured, detected, arrays, zfs },
     marksFor,
     undefined,
     choices.kind === "add" ? choices.minSize : null,

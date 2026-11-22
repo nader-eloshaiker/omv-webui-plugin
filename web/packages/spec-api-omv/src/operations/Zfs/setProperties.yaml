@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsSetProperties
+  tags:
+    - Zfs
+  summary: Set a file system's size limit or compression
+  description: >-
+    Set a file system's size limit (quota) or compression, at once. A new compression applies to
+    what is written from then on. ZFS refuses a limit below what the file system holds (HTTP
+    500), and then nothing changes. Marks the collectd, monit and quota modules dirty (observed
+    on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: setProperties
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.zfs.setproperties
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsSetPropertiesRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        ZFS refused the value, such as a size limit below what the file system holds.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            belowUsed:
+              $ref: ../../examples/zfsSetProperties.belowUsed.yaml

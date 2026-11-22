@@ -1,0 +1,10 @@
+type: object
+description: A pool's report.
+required: [type, name]
+properties:
+  type:
+    type: string
+    enum: [Pool]
+  name:
+    $ref: ./ZfsPoolName.yaml
+additionalProperties: false

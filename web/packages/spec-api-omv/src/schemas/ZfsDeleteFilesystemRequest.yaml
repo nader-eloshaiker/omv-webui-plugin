@@ -1,0 +1,18 @@
+type: object
+description: >-
+  A file system to delete, with everything in it and all its snapshots, by its full name and the
+  folder it is mounted on.
+required: [type, name, mp, recursive]
+properties:
+  type:
+    type: string
+    enum: [Filesystem]
+  name:
+    $ref: ./ZfsFilesystemName.yaml
+  mp:
+    $ref: ./ZfsMountFolder.yaml
+  recursive:
+    type: boolean
+    description: Accepted only false.
+    enum: [false]
+additionalProperties: false

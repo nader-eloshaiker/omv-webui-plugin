@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsListPools
+  tags:
+    - Zfs
+  summary: Pools, file systems and volumes
+  description: >-
+    Every pool, file system and volume in one flat list (ZfsObject), each pool twice: its pool
+    row and its own folder. The server runs ZFS's status and list commands for every pool and
+    its listing command for every file system and volume, and reads OMV's shared folders; on the
+    test VM no member disk was read while it ran, also first after the pool was imported
+    (journal). Changes nothing. The plugin does not check the paging parameters itself; it
+    passes them to the backend's paging as getAllSnapshots does after checking them against
+    rpc.common.getlist, so the contract holds them to that datamodel.
+  x-omv-rpc:
+    service: Zfs
+    method: listPools
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsObjectList.yaml
+          examples:
+            mirror:
+              $ref: ../../examples/zfsListPools.mirror.yaml
+            none:
+              $ref: ../../examples/zfsListPools.none.yaml
+            mirrorWithFs:
+              $ref: ../../examples/zfsListPools.mirrorWithFs.yaml
+            mirrorFsSettings:
+              $ref: ../../examples/zfsListPools.mirrorFsSettings.yaml
+            mirrorChecking:
+              $ref: ../../examples/zfsListPools.mirrorChecking.yaml
+            mirrorCheckStopped:
+              $ref: ../../examples/zfsListPools.mirrorCheckStopped.yaml
+            mirrorCheckPaused:
+              $ref: ../../examples/zfsListPools.mirrorCheckPaused.yaml
+            mirrorChecked:
+              $ref: ../../examples/zfsListPools.mirrorChecked.yaml
+            mirrorDegraded:
+              $ref: ../../examples/zfsListPools.mirrorDegraded.yaml
+            mirrorReplacing:
+              $ref: ../../examples/zfsListPools.mirrorReplacing.yaml
+            mirrorReplaced:
+              $ref: ../../examples/zfsListPools.mirrorReplaced.yaml
+            raidz1:
+              $ref: ../../examples/zfsListPools.raidz1.yaml
+            raidz2:
+              $ref: ../../examples/zfsListPools.raidz2.yaml
+            stripe:
+              $ref: ../../examples/zfsListPools.stripe.yaml
+            single:
+              $ref: ../../examples/zfsListPools.single.yaml

@@ -1,0 +1,8 @@
+type: string
+description: >-
+  ZFS's own report, as display text, lines joined by a line feed and a carriage return: for a pool,
+  "Pool status (zpool status -v):" then zpool status's report (its state, the scan line of the last
+  or running check or rebuild, the device tree with each device's state and error counts, and the
+  errors line, with damaged files' paths when there are any); for a file system, "Filesystem status
+  (zfs list):", one zfs list line, and every property from zfs get all, which includes the file
+  system's GUID. Shown as preformatted text, never as markup.

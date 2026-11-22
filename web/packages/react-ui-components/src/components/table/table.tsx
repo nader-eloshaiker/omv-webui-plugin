@@ -208,6 +208,63 @@ function TableStateRow({
   );
 }
 
+interface TableGroupRowProps {
+  /** The number of columns the heading spans: all of them. */
+  colSpan: number;
+  /** The group's words, e.g. "Mirror, 2 disks". */
+  heading: React.ReactNode;
+  /** A second line under the heading, e.g. the group's protection sentence. */
+  description?: React.ReactNode;
+  /** The header cell's id, for cells that name it with `headers`. */
+  id?: string;
+  /** Classes for the row. */
+  className?: string;
+}
+
+/**
+ * A heading row inside a table body, spanning its columns, for rows that belong together (a pool's
+ * disk groups). Put each group in its own `TableBody` with this row first: the heading is a row-group
+ * header (`scope="rowgroup"`), so assistive technology reads every row of the body with its group.
+ */
+function TableGroupRow({
+  colSpan,
+  heading,
+  description,
+  id,
+  className,
+}: TableGroupRowProps) {
+  return (
+    <tr
+      data-slot="table-group-row"
+      className={cn(
+        // A line between groups, none under the header: the first body's group row opens the table.
+        "border-t border-border [tbody:first-of-type>&]:border-t-0",
+        className,
+      )}
+    >
+      <th
+        scope="rowgroup"
+        colSpan={colSpan}
+        id={id}
+        className="p-0 text-start align-bottom font-regular"
+      >
+        {/* As TableStateRow's content: as wide as the frame's visible part and held there while the
+            table scrolls sideways, so the heading wraps in view instead of running off a wide table. */}
+        <div className="sticky start-0 flex w-[100cqw] flex-col gap-0.5 px-3 pt-3 pb-1.5">
+          <span className="text-base font-semibold text-foreground [overflow-wrap:anywhere]">
+            {heading}
+          </span>
+          {description ? (
+            <span className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+              {description}
+            </span>
+          ) : null}
+        </div>
+      </th>
+    </tr>
+  );
+}
+
 /** Placeholder rows of the real height while the first page loads (5.2). Hidden from assistive tech. */
 function TableSkeletonRows({
   rows = 5,
@@ -285,6 +342,7 @@ export {
   Table,
   TableBody,
   TableCell,
+  TableGroupRow,
   TableHead,
   TableHeader,
   TableLastRefreshed,
@@ -296,6 +354,7 @@ export {
 export type {
   SortDirection,
   TableCellProps,
+  TableGroupRowProps,
   TableHeadProps,
   TableProps,
   TableRowProps,

@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the last poll of deleting tank/media: no output."
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusnpep004qsv01dmia4Ua
+  pos: 0
+  output: ""
+  pendingOutput: false
+  running: false

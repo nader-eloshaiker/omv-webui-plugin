@@ -15,6 +15,11 @@ export const DOC = {
   hostname: "nas",
   // The date every mdadm report is given, in mdadm's own spelling.
   mdadmDate: "Sat Nov 21 12:00:00 2026",
+  // The date every ZFS date is given, in zpool status's spelling; zfs get leaves out the seconds,
+  // and the plugin's last-check date adds the time zone (always given as UTC).
+  zfsDate: "Sat Nov 21 12:00:00 2026",
+  // The first documentation snapshot name; later ones count on from it by one second each.
+  zfsSnapshotTime: "2026-11-21_12-00-00",
   domain: "example.org",
   fqdn: "nas.example.org",
   sshKey:
@@ -109,6 +114,55 @@ const MD_LOCAL_HOST = /(\(local to host )([^)\s]+)(\))/g;
 const MD_DATE = /^(\s*(?:Creation|Update) Time : )(.+)$/gm;
 // A device file of an array, on the object that carries its `name` (MdMgmt rows and change records).
 const MD_DEVICEFILE = /^\/dev\/md/;
+// ---- ZFS (openmediavault-zfs) ----
+// The plugin's own reports, as Zfs.getObjectDetails returns them: a pool's (zpool status -v) or a
+// file system's (zfs list, then zfs get all). The ZFS text rules apply only inside such a report.
+const ZFS_REPORT =
+  /^(?:Pool status \(zpool status|Filesystem status \(zfs list\)|Volume details \(zfs get all\)|Snapshot details \(zfs get all\))/;
+// A date as ZFS writes it: zpool status's scan line ("Sat Nov 21 21:21:38 2026"), the plugin's
+// last-check date with a time zone ("Sat Nov 21 21:21:38 UTC 2026") and zfs get's creation
+// property ("Sat Nov 21 21:20 2026"). Captures what follows the minutes: the seconds, the zone.
+const ZFS_DATE =
+  /\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [ \d]\d \d{2}:\d{2}(:\d{2})?( [A-Z][A-Za-z0-9+-]{1,5})? \d{4}\b/g;
+const zfsDocDate = (seconds, zone) =>
+  `${DOC.zfsDate.slice(0, 16)}${seconds ? DOC.zfsDate.slice(16, 19) : ""}${zone ? " UTC" : ""} ${DOC.zfsDate.slice(-4)}`;
+const DOC_ZFS_DATES = new Set(
+  [
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false],
+  ].map(([s, z]) => zfsDocDate(s, z)),
+);
+// A 64-bit GUID in a report: zfs get's guid property, or a missing disk that zpool status can only
+// name by its GUID. No other number in a report is that long. Its documentation form is 19 digits.
+const ZFS_GUID = /(?<![\w.:-])\d{15,20}(?![\w.:-])/g;
+const DOC_ZFS_GUID = /^1000000000000\d{6}$/;
+const DOC_ZFS_GUID_IN_TEXT = /1000000000000\d{6}/g;
+// The date and time the plugin names a snapshot by (quickSnapshot: the NAS's local time, so it
+// says which time zone the NAS is in), and its documentation form.
+const ZFS_SNAPSHOT_TIME =
+  /(?<![\d-])\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?![\d-])/g;
+const DOC_ZFS_SNAPSHOT_TIME = /^2026-11-21_12-\d{2}-\d{2}$/;
+// A disk as zpool status names it inside a report: the last part of its /dev/disk/by-id/ link,
+// without the folder that the BY_ID rule looks for.
+const ZFS_SHORT_BY_ID =
+  /(?<![\w/-])(?:ata|scsi|wwn|nvme|usb|virtio|sas|ieee1394|mmc)-[^\s()]+/g;
+// The fields of Zfs.listPools that hold the plugin's last-check date ("in progress since …",
+// "canceled on …", or the date itself).
+const ZFS_DATE_KEYS = new Set(["lastscrub"]);
+/** Every ZFS date in a text, as the documentation one in the same spelling. */
+const zfsDates = (s) =>
+  s.replace(ZFS_DATE, (_m, seconds, zone) => zfsDocDate(seconds, zone));
+/** ZFS dates in a text that are not the documentation one. */
+const zfsDatesLeft = (s) =>
+  (s.match(ZFS_DATE) ?? []).some((m) => !DOC_ZFS_DATES.has(m));
+/**
+ * Whether what the e-mail pattern found is an address: its domain has a dot. A ZFS snapshot's full
+ * name ("tank/media@2026-11-21_12-00-00") has the same shape with a domain that has none, and a
+ * bare host after the "@" is the VM's own name, which the name rule replaces.
+ */
+const isMailAddress = (m) => m.slice(m.lastIndexOf("@") + 1).includes(".");
 const DOC_MAC = /^00:00:5e:00:53:[0-9a-f]{2}$/i;
 const DOC_SERIAL = /^EXAMPLE-SERIAL-\d{4}$/;
 const DOC_WWN = /^EXAMPLE-WWN-\d{4}$/;
@@ -202,6 +256,8 @@ export function createScrubber(known = {}) {
   const emails = new Map();
   const fatIds = new Map();
   const mdUuids = new Map();
+  const zfsGuids = new Map();
+  const snapshotTimes = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -209,6 +265,12 @@ export function createScrubber(known = {}) {
     return map.get(value);
   };
   const hex = (n, width) => n.toString(16).padStart(width, "0");
+  // The n-th snapshot time seen, n - 1 seconds after the documentation one, so their order stays.
+  const snapshotTimeOf = (n) => {
+    const t = n - 1;
+    const two = (v) => String(v).padStart(2, "0");
+    return `${DOC.zfsSnapshotTime.slice(0, 11)}${two(12 + Math.floor(t / 3600))}-${two(Math.floor(t / 60) % 60)}-${two(t % 60)}`;
+  };
   // One disk can be reported in more than one spelling (udev writes "_" where smartctl has a
   // space, and "0x" may be left off a WWN): each spelling gets the same placeholder.
   const serialOf = (value) =>
@@ -288,8 +350,13 @@ export function createScrubber(known = {}) {
     for (const { form, placeholder } of identifiers) {
       out = out.split(form).join(placeholder);
     }
+    out = out.replace(ZFS_SNAPSHOT_TIME, (m) =>
+      DOC_ZFS_SNAPSHOT_TIME.test(m)
+        ? m
+        : number(snapshotTimes, m, snapshotTimeOf),
+    );
     out = out.replace(EMAIL, (m) =>
-      DOC_EMAIL.test(m)
+      DOC_EMAIL.test(m) || !isMailAddress(m)
         ? m
         : number(emails, m.toLowerCase(), (n) => `user${n}@example.com`),
     );
@@ -347,6 +414,18 @@ export function createScrubber(known = {}) {
         placeholder,
       );
     }
+    if (ZFS_REPORT.test(out)) {
+      out = zfsDates(out);
+      out = out.replace(ZFS_GUID, (m) =>
+        DOC_ZFS_GUID.test(m)
+          ? m
+          : number(
+              zfsGuids,
+              m,
+              (n) => `1000000000000${String(n).padStart(6, "0")}`,
+            ),
+      );
+    }
     return out;
   }
 
@@ -388,6 +467,9 @@ export function createScrubber(known = {}) {
     }
     if (keyName && WWN_KEYS.has(keyName) && value !== "") {
       return wwnOf(value);
+    }
+    if (keyName && ZFS_DATE_KEYS.has(keyName)) {
+      return zfsDates(scrubString(value));
     }
     return scrubString(value);
   }
@@ -460,6 +542,9 @@ export function createScrubber(known = {}) {
       ) {
         failures.push(`host name at ${path}`);
       }
+      if (keyName && ZFS_DATE_KEYS.has(keyName) && zfsDatesLeft(v)) {
+        failures.push(`a ZFS date at ${path}`);
+      }
     };
     const checkString = (s, path) => {
       for (const literal of literals) {
@@ -531,8 +616,32 @@ export function createScrubber(known = {}) {
         }
       }
       for (const m of s.match(EMAIL) ?? []) {
-        if (!DOC_EMAIL.test(m)) {
+        if (!DOC_EMAIL.test(m) && isMailAddress(m)) {
           failures.push(`e-mail address at ${path}`);
+        }
+      }
+      for (const m of s.match(ZFS_SNAPSHOT_TIME) ?? []) {
+        if (!DOC_ZFS_SNAPSHOT_TIME.test(m)) {
+          failures.push(`a snapshot's date and time at ${path}`);
+        }
+      }
+      if (ZFS_REPORT.test(s)) {
+        if (zfsDatesLeft(s)) {
+          failures.push(`a ZFS date at ${path}`);
+        }
+        for (const m of s.match(ZFS_GUID) ?? []) {
+          if (!DOC_ZFS_GUID.test(m)) {
+            failures.push(`a ZFS GUID at ${path}`);
+          }
+        }
+        for (const m of s.match(ZFS_SHORT_BY_ID) ?? []) {
+          if (
+            LONG_ID.test(
+              m.replace(DOC_IDENTIFIER, "").replace(DOC_ZFS_GUID_IN_TEXT, ""),
+            )
+          ) {
+            failures.push(`a disk identifier in a ZFS device name at ${path}`);
+          }
         }
       }
       for (const m of s.match(SSH_KEY) ?? []) {

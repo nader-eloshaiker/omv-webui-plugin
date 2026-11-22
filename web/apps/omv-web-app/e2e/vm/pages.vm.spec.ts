@@ -314,7 +314,9 @@ test.describe("an administrator", () => {
     }
     // Nothing but reads (UI-4).
     expect(
-      rpcLog.calls.filter((c) => !/\.(get|is|enumerate)|^Session\./.test(c)),
+      rpcLog.calls.filter(
+        (c) => !/\.(get|is|enumerate|list)|^Session\./.test(c),
+      ),
     ).toEqual([]);
     await signOut(page, rpcLog);
   });
@@ -376,7 +378,9 @@ test.describe("a normal user", () => {
     expect(rpcLog.calls).not.toContain("ShareMgmt.getList");
     // Nothing but reads (UI-4).
     expect(
-      rpcLog.calls.filter((c) => !/\.(get|is|enumerate)|^Session\./.test(c)),
+      rpcLog.calls.filter(
+        (c) => !/\.(get|is|enumerate|list)|^Session\./.test(c),
+      ),
     ).toEqual([]);
     await signOut(page, rpcLog);
   });

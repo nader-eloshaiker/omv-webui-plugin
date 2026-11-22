@@ -211,7 +211,13 @@ describe("storageItems", () => {
       fs({ uuid: "g", label: "disk2", percentage: 10 }),
     ]);
     expect(
-      items.map((i) => (i.name.kind === "systemDrive" ? "/" : i.name.text)),
+      items.map((i) =>
+        i.kind === "zfsPool"
+          ? i.pool
+          : i.name.kind === "systemDrive"
+            ? "/"
+            : i.name.text,
+      ),
     ).toEqual([
       "c-full",
       "e-warn",
@@ -233,7 +239,8 @@ describe("storageItems", () => {
       missing,
     );
     expect(items.map((i) => i.kind)).toEqual(["mounted", "missing", "mounted"]);
-    expect(items[1]?.name).toEqual({
+    const second = items[1];
+    expect(second?.kind === "missing" && second.name).toEqual({
       kind: "device",
       text: missing[0]?.devicefile,
     });
@@ -270,19 +277,41 @@ describe("storageItems", () => {
             i.state,
             i.address,
           ]
-        : i.kind,
+        : i.kind === "zfsPool"
+          ? [`pool ${i.pool}`, i.state, i.count]
+          : i.kind,
     );
+    // The pool's file systems are one item for the pool (ZFS design 10.1, D22).
     expect(shown).toEqual(
       expect.arrayContaining([
-        ["tank", "below", null],
-        ["tank/media", "below", null],
+        ["pool tank", "below", 2],
         ["/", "below", null],
         ["/dev/sda1", "below", "00000000-0000-4000-8000-000000000001"],
       ]),
     );
-    expect(shown).toHaveLength(4);
-    // Each one keyed apart, though neither ZFS row has a UUID.
-    expect(new Set(items.map((i) => i.key)).size).toBe(4);
+    expect(shown).toHaveLength(3);
+    expect(new Set(items.map((i) => i.key)).size).toBe(3);
+  });
+
+  it("gives each pool that is not fine by getPoolStatus one attention row (ZFS design 10.1)", () => {
+    const rows = attentionRows({
+      info: undefined,
+      receivedAtMs: 0,
+      pools: [
+        { name: "tank", state: "DEGRADED", status: "OK" },
+        { name: "backup", state: "ONLINE", status: "Error" },
+        { name: "old", state: "UNAVAIL", status: "OK" },
+        { name: "fine", state: "ONLINE", status: "OK" },
+        { name: "odd", state: "UNKNOWN", status: "OK" },
+      ],
+    });
+    expect(
+      rows.map((r) => (r.kind === "zfsPool" ? [r.pool, r.health] : r.kind)),
+    ).toEqual([
+      ["tank", "degraded"],
+      ["backup", "damaged"],
+      ["old", "unusable"],
+    ]);
   });
 
   it("finds nothing missing in a set-up where every file system is there", () => {

@@ -1,0 +1,12 @@
+type: object
+description: >-
+  A file system to take a snapshot of now (rpc.zfs.quicksnapshot). Stricter than the plugin: the
+  name is an existing pool's or file system's, and recursive is always sent.
+required: [name, recursive]
+properties:
+  name:
+    $ref: ./ZfsDatasetName.yaml
+  recursive:
+    type: boolean
+    description: Whether the file systems inside it are snapshotted too, at the same moment.
+additionalProperties: false

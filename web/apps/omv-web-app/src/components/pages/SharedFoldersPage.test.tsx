@@ -366,7 +366,11 @@ describe("the shared folders table", () => {
   it("sends no state-changing call on load (UI-4)", async () => {
     await sharedFolders();
     await within(table()).findByRole("row", { name: /a4share/ });
-    expect(callNames().filter((c) => !/\.(get|is)/.test(c))).toEqual([]);
+    expect(
+      callNames().filter(
+        (c) => !/\.(get|is)/.test(c) && c !== "Zfs.listCompressionTypes",
+      ),
+    ).toEqual([]);
   });
 
   it("keeps a normal user off the page without asking the server (UI-4)", async () => {

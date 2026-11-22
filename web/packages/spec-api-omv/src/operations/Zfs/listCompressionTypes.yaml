@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsListCompressionTypes
+  tags:
+    - Zfs
+  summary: The compression names the plugin knows
+  description: >-
+    A fixed list of compression names, from the plugin's source: it runs no command and reads
+    nothing on the NAS, so the interface reads it once after an administrator signs in to learn
+    whether the ZFS plugin is installed (design phase-5-zfs 0.11, P14); the list itself is not
+    used. Changes nothing. When the plugin is not installed, OMV does not know the service and
+    the call fails with HTTP 404 "RPC service 'Zfs' not found.".
+  x-omv-rpc:
+    service: Zfs
+    method: listCompressionTypes
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/ZfsCompressionTypeList.yaml
+          examples:
+            list:
+              $ref: ../../examples/zfsListCompressionTypes.list.yaml
+    "404":
+      description: >-
+        The ZFS plugin is not installed: OMV knows no Zfs service. Code 0, message "RPC
+        service 'Zfs' not found.".
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            notInstalled:
+              $ref: ../../examples/zfsListCompressionTypes.notInstalled.yaml

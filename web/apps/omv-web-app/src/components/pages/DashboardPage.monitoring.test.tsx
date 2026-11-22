@@ -56,24 +56,24 @@ describe("the Storage card", () => {
     ).toHaveAttribute("href", "/ui/storage/filesystems");
   });
 
-  it("shows ZFS file systems, which have no UUID, with their figures and no page of their own", async () => {
+  it("shows a ZFS pool as one item for its file systems, with no link without the plugin (ZFS design 10.1)", async () => {
     await dashboard({ scenario: "fsZfs" });
     const storage = card("Storage");
     const meters = await within(storage).findAllByRole("meter");
-    expect(meters).toHaveLength(4);
-    for (const name of ["tank", "tank/media"]) {
-      const meter = within(storage).getByRole("meter", { name });
-      expect(meter).toHaveAttribute(
-        "aria-valuetext",
-        `0% full · 7.3${NBSP}GiB free of 7.3${NBSP}GiB`,
-      );
-      // Its name is text: a ZFS file system has no page here.
-      const label = within(storage).getByText(name, {
-        selector: "*:not([role=meter])",
-      });
-      expect(label.closest("a")).toBeNull();
-    }
-    // The data file system beside them keeps its link.
+    expect(meters).toHaveLength(3);
+    const meter = within(storage).getByRole("meter", { name: "ZFS pool tank" });
+    expect(meter).toHaveAttribute(
+      "aria-valuetext",
+      `0% full · 7.3${NBSP}GiB free of 7.3${NBSP}GiB`,
+    );
+    expect(
+      within(storage).getByText("2 file systems share this space"),
+    ).toBeInTheDocument();
+    // The plugin is not known to be installed in this story: the pool's name is text.
+    expect(
+      within(storage).queryByRole("link", { name: "Open pool tank" }),
+    ).not.toBeInTheDocument();
+    // The data file system beside it keeps its link.
     expect(
       within(storage)
         .getAllByRole("link")

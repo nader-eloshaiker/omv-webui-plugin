@@ -6,13 +6,15 @@
 import { Identifier, Skeleton } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { fsName, SLOT, splitSlots } from "../../disks/disksList.ts";
 import type { DiskUse, FsRef } from "../../disks/diskUse.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
+import { isPoolAddress } from "../../zfs/zfsModel.ts";
 import { ArrayLink } from "../atoms/ArrayLink.tsx";
+import { PoolLink } from "../atoms/PoolLink.tsx";
 
 const DEVICE_TAG = "<device></device>";
 const ARRAY_TAG = "<array></array>";
@@ -124,8 +126,15 @@ export function DiskUseWords({ use }: { use: DiskUse }) {
         />
       );
     case "zfs":
-      // The pool's name as text; its page comes with the ZFS slice.
-      return <>{t("disks.use.zfs", { pool: use.pool })}</>;
+      // The pool's page (ZFS design 10.2), named by the pool; as text for a name with no page.
+      return isPoolAddress(use.pool) ? (
+        <Trans
+          i18nKey="disks.use.zfsLinked"
+          components={{ pool: <PoolLink pool={use.pool} /> }}
+        />
+      ) : (
+        <>{t("disks.use.zfs", { pool: use.pool })}</>
+      );
     case "wiping":
       return <>{t("disks.use.wiping")}</>;
     case "wiped":

@@ -1,0 +1,14 @@
+description: >-
+  What to delete (rpc.zfs.deleteobject): a snapshot, a file system other than a pool's own folder,
+  or a pool. Stricter than the plugin, which also deletes volumes and deletes recursively: never a
+  volume, never recursive, and each name in the form of its kind.
+oneOf:
+  - $ref: ./ZfsDeleteSnapshotRequest.yaml
+  - $ref: ./ZfsDeleteFilesystemRequest.yaml
+  - $ref: ./ZfsDeletePoolRequest.yaml
+discriminator:
+  propertyName: type
+  mapping:
+    Snapshot: ./ZfsDeleteSnapshotRequest.yaml
+    Filesystem: ./ZfsDeleteFilesystemRequest.yaml
+    Pool: ./ZfsDeletePoolRequest.yaml

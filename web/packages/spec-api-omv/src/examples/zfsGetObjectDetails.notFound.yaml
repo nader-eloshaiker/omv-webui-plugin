@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the report of a pool that does not exist."
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; zpool status -v 'nosuchpool'' with exit code '1': "

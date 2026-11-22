@@ -1,0 +1,94 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: the mirror, a check paused (paused with zpool scrub -p, the classic interface's pause)."
+x-omv-status: 200
+value:
+  total: 3
+  data:
+    - id: root/pool-tank
+      parentid: root
+      name: tank
+      type: Pool
+      icon: images/raid.png
+      expanded: true
+      path: tank
+      origin: n/a
+      size: 8053063680
+      used: 5373534208
+      usedpercent: 66.72658284505208
+      available: 2679529472
+      mountpoint: /tank
+      lastscrub: "paused (started Sat Nov 21 12:00:00 UTC 2026)"
+      state: ONLINE
+      status: OK
+      scrubstate: paused
+      scrubactive: true
+      removalstate: none
+      removalactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      hasshares: false
+      fragmentation: 1
+      dedup: "1.00"
+      capacity: 66
+      devices: "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1"
+      haschildren: true
+    - id: root/poolfs-tank
+      parentid: root
+      name: tank
+      type: Filesystem
+      icon: images/filesystem.png
+      path: tank
+      pool: tank
+      expanded: true
+      origin: n/a
+      size: null
+      used: 5373202432
+      usedpercent: 68.87480048723118
+      available: 2428203008
+      mountpoint: /tank
+      lastscrub: n/a
+      state: n/a
+      status: n/a
+      scrubstate: n/a
+      scrubactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      isencryptionroot: false
+      hasshares: false
+      compression: lz4
+      compressratio: "1.00"
+      refer: 98304
+      mounted: true
+      poolroot: true
+      haschildren: true
+    - id: root/pool-tank/media
+      parentid: root/pool-tank
+      name: media
+      type: Filesystem
+      icon: images/filesystem.png
+      path: tank/media
+      pool: tank
+      expanded: true
+      origin: n/a
+      size: 6442450944
+      used: 5372428288
+      usedpercent: 83.39106241861978
+      available: 1070022656
+      mountpoint: /tank/media
+      lastscrub: n/a
+      state: n/a
+      status: n/a
+      scrubstate: n/a
+      scrubactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      isencryptionroot: false
+      hasshares: false
+      compression: "off"
+      compressratio: "1.00"
+      refer: 5372420096
+      mounted: true
+      poolroot: false
+      haschildren: false

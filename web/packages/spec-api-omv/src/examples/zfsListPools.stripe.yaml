@@ -1,0 +1,64 @@
+summary: "Captured from the test VM (OMV 8.6.1, openmediavault-zfs 8.1.4 with OpenZFS 2.4.4), scrubbed: a new stripe of sdb and sdc (pooltype basic): no protection."
+x-omv-status: 200
+value:
+  total: 2
+  data:
+    - id: root/pool-tank
+      parentid: root
+      name: tank
+      type: Pool
+      icon: images/raid.png
+      expanded: true
+      path: tank
+      origin: n/a
+      size: 16106127360
+      used: 663552
+      usedpercent: 0.004119873046875
+      available: 16105463808
+      mountpoint: /tank
+      lastscrub: Never
+      state: ONLINE
+      status: OK
+      scrubstate: none
+      scrubactive: false
+      removalstate: none
+      removalactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      hasshares: false
+      fragmentation: 0
+      dedup: "1.00"
+      capacity: 0
+      devices: "/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0003-part1<br/>/dev/disk/by-id/ata-VMware_Virtual_SATA_Hard_Drive_EXAMPLE-SERIAL-0004-part1"
+      haschildren: false
+    - id: root/poolfs-tank
+      parentid: root
+      name: tank
+      type: Filesystem
+      icon: images/filesystem.png
+      path: tank
+      pool: tank
+      expanded: true
+      origin: n/a
+      size: null
+      used: 430080
+      usedpercent: 0.0027564264112903223
+      available: 15602380800
+      mountpoint: /tank
+      lastscrub: n/a
+      state: n/a
+      status: n/a
+      scrubstate: n/a
+      scrubactive: false
+      encryption: "OFF"
+      keystatus: "-"
+      autounlock: false
+      isencryptionroot: false
+      hasshares: false
+      compression: lz4
+      compressratio: "1.00"
+      refer: 98304
+      mounted: true
+      poolroot: true
+      haschildren: false

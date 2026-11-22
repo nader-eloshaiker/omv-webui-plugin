@@ -1,0 +1,13 @@
+type: object
+description: >-
+  Every pool, file system and volume, in the plugin's order (each pool, then its own folder, then
+  what is inside it), paged by the backend.
+required: [total, data]
+properties:
+  total:
+    type: integer
+    minimum: 0
+  data:
+    type: array
+    items:
+      $ref: ./ZfsObject.yaml

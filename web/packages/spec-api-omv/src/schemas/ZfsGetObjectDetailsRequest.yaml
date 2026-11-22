@@ -1,0 +1,11 @@
+description: >-
+  Which report (rpc.zfs.objectdetails): a pool's, by its name, or a file system's, by its full
+  name. Stricter than the plugin, which also reports on volumes and snapshots and checks no name.
+oneOf:
+  - $ref: ./ZfsPoolDetailsRequest.yaml
+  - $ref: ./ZfsFilesystemDetailsRequest.yaml
+discriminator:
+  propertyName: type
+  mapping:
+    Pool: ./ZfsPoolDetailsRequest.yaml
+    Filesystem: ./ZfsFilesystemDetailsRequest.yaml

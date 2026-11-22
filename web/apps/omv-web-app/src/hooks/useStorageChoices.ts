@@ -21,6 +21,7 @@ import {
   useRaidArrays,
 } from "./useDiskReads.ts";
 import { useFsApi } from "./useFsApi.ts";
+import { useZfsPoolDisks } from "./useZfsReads.ts";
 
 type Candidates =
   | { state: "loading" }
@@ -34,6 +35,7 @@ export function useStorageChoices() {
   const configured = useConfiguredFs();
   const detected = useDetectedFs();
   const raid = useRaidArrays();
+  const zfs = useZfsPoolDisks();
   const session = useMemoryStore(diskSession);
   const tasks = useTasks();
   const [candidates, setCandidates] = useState<Candidates>({
@@ -76,11 +78,13 @@ export function useStorageChoices() {
   const failed =
     candidates.state === "failed" ||
     failedRead !== undefined ||
-    (raid.isError && !raidMissing);
+    (raid.isError && !raidMissing) ||
+    zfs.failed;
   const error =
     candidates.state === "failed"
       ? candidates.error
-      : (failedRead?.error ?? (raidMissing ? undefined : raid.error));
+      : (failedRead?.error ??
+        (raid.isError && !raidMissing ? raid.error : zfs.error));
 
   const running = new Set(
     tasks.filter((x) => x.state === "running").map((x) => x.id),
@@ -100,6 +104,7 @@ export function useStorageChoices() {
       configured: configured.data?.data,
       detected: detected.data,
       arrays: raidMissing ? null : raid.data,
+      zfs: zfs.value,
     },
     marks,
     { failed, error },
@@ -110,6 +115,9 @@ export function useStorageChoices() {
       if (q.isError) {
         void q.refetch();
       }
+    }
+    if (zfs.failed) {
+      void zfs.refetch();
     }
     look();
   };

@@ -242,15 +242,16 @@ async function stepCheck(ctx: Context): Promise<boolean> {
         ctx.api.configured(),
         ctx.api.detected(),
         ctx.api.arrays(),
+        ctx.api.zfsDisks(),
       ])),
     ] as const;
   } catch (error) {
     fail(ctx, "check", { kind: "checkRead", device: firstDevice(run), error });
     return false;
   }
-  const [candidates, disks, configured, detected, arrays] = reads;
+  const [candidates, disks, configured, detected, arrays, zfs] = reads;
   const choices = storageChoices(
-    { candidates, disks, configured, detected, arrays },
+    { candidates, disks, configured, detected, arrays, zfs },
     marksFor,
   );
   if (choices.state !== "known") {

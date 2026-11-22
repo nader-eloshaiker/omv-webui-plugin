@@ -1,0 +1,9 @@
+type: object
+description: >-
+  One snapshot by its full name (rpc.zfs.name). Stricter than the plugin: only a snapshot's full
+  name, in the form ZfsSnapshotPath allows.
+required: [name]
+properties:
+  name:
+    $ref: ./ZfsSnapshotPath.yaml
+additionalProperties: false

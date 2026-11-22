@@ -23,6 +23,7 @@ import {
   type FsRef,
   type SessionMarks,
   type WipeBlocker,
+  type ZfsPoolDisks,
 } from "../disks/diskUse.ts";
 import { parseByteCount } from "../format/format.ts";
 
@@ -50,13 +51,18 @@ export type RaidChoices =
     };
 
 export interface RaidChoiceInputs {
-  /** MdMgmt.getCandidates; undefined until read. */
-  candidates: readonly MdDisk[] | undefined;
+  /**
+   * The plugin's own candidates, by any of each disk's names: MdMgmt.getCandidates, or for the ZFS
+   * flows Zfs.getEmptyCandidates (by-id names); undefined until read.
+   */
+  candidates: readonly Pick<MdDisk, "devicefile">[] | undefined;
   disks: readonly DiskDevice[] | undefined;
   configured: readonly ConfiguredFilesystem[] | undefined;
   detected: readonly DetectedFilesystem[] | undefined;
   /** MdMgmt.enumerateDevices; the plugin is installed on these pages, so never null here. */
-  arrays: readonly MdArray[] | undefined;
+  arrays: readonly MdArray[] | null | undefined;
+  /** The ZFS pools' disks; null when the ZFS plugin is not installed. */
+  zfs: readonly ZfsPoolDisks[] | null | undefined;
 }
 
 /** A disk connected by USB, by the stable link udev gives it for ID_BUS=usb. */
@@ -85,13 +91,14 @@ export function raidChoices(
   if (failure.failed) {
     return { state: "failed", error: failure.error };
   }
-  const { candidates, disks, configured, detected, arrays } = inputs;
+  const { candidates, disks, configured, detected, arrays, zfs } = inputs;
   if (
     candidates === undefined ||
     disks === undefined ||
     configured === undefined ||
     detected === undefined ||
-    arrays === undefined
+    arrays === undefined ||
+    zfs === undefined
   ) {
     return { state: "loading" };
   }
@@ -102,7 +109,11 @@ export function raidChoices(
   for (const disk of byDeviceOrder(disks)) {
     const names = diskNames(disk);
     const inCandidates = [...names].some((name) => offered.has(name));
-    const use = diskUse(disk, { configured, detected, arrays }, marks(disk));
+    const use = diskUse(
+      disk,
+      { configured, detected, arrays, zfs },
+      marks(disk),
+    );
     if (!use.known) {
       return { state: "loading" };
     }
@@ -133,7 +144,7 @@ export function raidChoices(
 
 /** Whether a disk is in the plugin's list now, by any of its names (after an erase, 3.4 step 2). */
 export const isCandidate = (
-  candidates: readonly MdDisk[],
+  candidates: readonly Pick<MdDisk, "devicefile">[],
   disk: Pick<DiskDevice, "canonicaldevicefile" | "devicefile" | "devicelinks">,
 ): boolean => {
   const names = diskNames(disk);

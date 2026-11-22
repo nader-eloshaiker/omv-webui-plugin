@@ -161,7 +161,11 @@ export function fileSystemState(
   return "below";
 }
 
-/** One item of the Storage card: a mounted file system with its state, or one that is missing. */
+/**
+ * One item of the Storage card: a mounted file system with its state, one that is missing, or a ZFS
+ * pool standing for all its file systems, which each report the pool's free space as their own (the
+ * ZFS design 10.1, D22).
+ */
 export type StorageItem =
   | {
       kind: "mounted";
@@ -172,7 +176,19 @@ export type StorageItem =
       /** The file system's page in this interface, when it has one (file-systems design 9). */
       address: string | null;
     }
-  | { kind: "missing"; key: string; name: FsName; address: string | null };
+  | { kind: "missing"; key: string; name: FsName; address: string | null }
+  | {
+      kind: "zfsPool";
+      key: string;
+      pool: string;
+      /** The fullest of its file systems: its figures are the item's. */
+      fs: MountedFilesystem;
+      state: FsState;
+      /** How many of its file systems share the space. */
+      count: number;
+      /** The pool's page is linked when the ZFS plugin is known to be installed. */
+      linked: boolean;
+    };
 
 /**
  * The Storage card's items, worst first (design 1.2.4): Critical (full, then missing), Warning,
@@ -186,16 +202,43 @@ export function storageItems(
     uuid: string | null;
     devicefile: string;
   }) => string | null = () => null,
+  /** Whether a ZFS pool's item links to its page (the plugin is known to be installed). */
+  zfsLinked = false,
 ): StorageItem[] {
+  const zfs = new Map<string, MountedFilesystem[]>();
+  for (const fs of mounted) {
+    if (fs.type === "zfs") {
+      const pool =
+        (fs.devicefile || fs.canonicaldevicefile).split("/")[0] ?? "";
+      zfs.set(pool, [...(zfs.get(pool) ?? []), fs]);
+    }
+  }
+  const pools: StorageItem[] = [...zfs.entries()].map(([pool, rows]) => {
+    const fullest = rows.reduce((a, b) =>
+      b.percentage > a.percentage ? b : a,
+    );
+    return {
+      kind: "zfsPool",
+      key: `zfs:${pool}`,
+      pool,
+      fs: fullest,
+      state: fileSystemState(fullest),
+      count: rows.length,
+      linked: zfsLinked,
+    };
+  });
   const items: StorageItem[] = [
-    ...mounted.map((fs): StorageItem => ({
-      kind: "mounted",
-      key: `mounted:${fs.uuid || fs.devicefile}:${fs.mountpoint}`,
-      name: fileSystemName(fs),
-      state: fileSystemState(fs),
-      fs,
-      address: fs.mountpoint === "/" ? null : addressOf(fs),
-    })),
+    ...pools,
+    ...mounted
+      .filter((fs) => fs.type !== "zfs")
+      .map((fs): StorageItem => ({
+        kind: "mounted",
+        key: `mounted:${fs.uuid || fs.devicefile}:${fs.mountpoint}`,
+        name: fileSystemName(fs),
+        state: fileSystemState(fs),
+        fs,
+        address: fs.mountpoint === "/" ? null : addressOf(fs),
+      })),
     ...missing.map((fs): StorageItem => ({
       kind: "missing",
       key: `missing:${fs.uuid || fs.devicefile}:${fs.mountpoint}`,
@@ -207,13 +250,21 @@ export function storageItems(
     item.kind === "missing" ? SEVERITY.critical : SEVERITY[item.state];
   const fullness = (item: StorageItem) =>
     item.kind === "missing" ? -1 : item.fs.percentage;
+  const sortName = (item: StorageItem) =>
+    item.kind === "zfsPool" ? item.pool : nameText(item.name);
   return items.sort(
     (a, b) =>
       rank(b) - rank(a) ||
       // Full ones before missing ones, within Critical.
-      (a.kind === b.kind ? 0 : a.kind === "mounted" ? -1 : 1) ||
+      (a.kind === b.kind
+        ? 0
+        : a.kind === "missing"
+          ? 1
+          : b.kind === "missing"
+            ? -1
+            : 0) ||
       fullness(b) - fullness(a) ||
-      naturalCompare(nameText(a.name), nameText(b.name)),
+      naturalCompare(sortName(a), sortName(b)),
   );
 }
 
@@ -458,6 +509,28 @@ export function readingRows(samples: readonly UsageSample[]): ReadingRow[] {
 
 // ---- The attention list (design 1.7) ----
 
+/**
+ * A pool's row from Zfs.getPoolStatus alone (the ZFS design 10.1): damaged files, short of a disk, or
+ * not usable at all; null for a pool that is fine or whose state is not known (no row for Unknown).
+ */
+export function zfsPoolHealth(pool: {
+  state: string;
+  status: string;
+}): "degraded" | "unusable" | "damaged" | null {
+  const state = pool.state.trim().toUpperCase();
+  if (pool.status.trim().toLowerCase() === "error") {
+    return "damaged";
+  }
+  if (state === "DEGRADED") {
+    return "degraded";
+  }
+  return ["FAULTED", "UNAVAIL", "SUSPENDED", "REMOVED", "OFFLINE"].includes(
+    state,
+  )
+    ? "unusable"
+    : null;
+}
+
 export type AttentionRow =
   | { kind: "fsFull"; key: string; name: FsName; address: string | null }
   | { kind: "fsMissing"; key: string; name: FsName; address: string | null }
@@ -486,6 +559,12 @@ export type AttentionRow =
       percent: number;
       threshold: number;
     }
+  | {
+      kind: "zfsPool";
+      key: string;
+      pool: string;
+      health: "degraded" | "unusable" | "damaged";
+    }
   | { kind: "restart"; key: string }
   | { kind: "clock"; key: string; seconds: number };
 
@@ -502,6 +581,8 @@ export interface AttentionInput {
   services?: readonly ServiceStatus[];
   /** The pending module ids, so a service waiting to be applied is not reported as down. */
   pending?: readonly string[];
+  /** Zfs.getPoolStatus, read once per visit when the ZFS plugin is installed (ZFS design 10.1). */
+  pools?: readonly { name: string; state: string; status: string }[];
 }
 
 /**
@@ -515,6 +596,10 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
   const missing: AttentionRow[] = [];
   const nearlyFull: AttentionRow[] = [];
   for (const item of storage) {
+    if (item.kind === "zfsPool") {
+      // A pool's rows come from getPoolStatus below; how full it is gets no row (ZFS design 10.1).
+      continue;
+    }
     if (item.kind === "missing") {
       missing.push({
         kind: "fsMissing",
@@ -583,9 +668,25 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
     }
   }
 
+  // One row per pool that is not OK by state, placed with the disk rows (ZFS design 10.1). None for a
+  // pool whose state is not known, nor for how full it is (the pool row is not read here).
+  const pools: AttentionRow[] = [];
+  for (const pool of input.pools ?? []) {
+    const health = zfsPoolHealth(pool);
+    if (health !== null) {
+      pools.push({
+        kind: "zfsPool",
+        key: `zfs:${pool.name}`,
+        pool: pool.name,
+        health,
+      });
+    }
+  }
+
   const rows: AttentionRow[] = [
     ...full,
     ...missing,
+    ...pools,
     ...failing,
     ...down,
     ...nearlyFull,

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsDeviceOffline
+  tags:
+    - Zfs
+  summary: Take a disk of a pool offline
+  description: >-
+    Make ZFS stop using a disk until it is brought back, at once: the pool keeps working on its
+    other disks, without the protection that disk gave (DEGRADED). ZFS refuses when no copy of
+    the data would be left (HTTP 500). Marks nothing dirty (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: deviceOffline
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.zfs.pooldevice
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolDeviceRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.
+    "500":
+      description: >-
+        ZFS refused, such as the last disk that holds a copy.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noReplicas:
+              $ref: ../../examples/zfsDeviceOffline.noReplicas.yaml

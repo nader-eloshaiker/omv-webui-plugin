@@ -43,6 +43,7 @@ const inputs = (over: Partial<ChoiceInputs> = {}): ChoiceInputs => ({
   configured: CONFIGURED,
   detected: DETECTED,
   arrays: null,
+  zfs: null,
   ...over,
 });
 const noMarks = () => ({ wiping: false });

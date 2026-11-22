@@ -1,0 +1,168 @@
+type: object
+description: >-
+  One row of the plugin's flat list of pools, file systems and volumes. Each pool comes twice: as
+  its pool row (type "Pool", with the pool's state and its disks' raw space, parity included for
+  RAID-Z) and as the pool's own folder (type "Filesystem", poolroot true, with the space for files).
+  A field that does not apply to a row's type holds "n/a" (observed on the test VM). Sizes are
+  bytes as JSON numbers.
+required:
+  [
+    id,
+    parentid,
+    name,
+    type,
+    icon,
+    expanded,
+    path,
+    origin,
+    size,
+    used,
+    usedpercent,
+    available,
+    mountpoint,
+    lastscrub,
+    state,
+    status,
+    scrubstate,
+    scrubactive,
+    encryption,
+    keystatus,
+    autounlock,
+    hasshares,
+    haschildren,
+  ]
+properties:
+  id:
+    type: string
+    description: The plugin's tree id ("root/pool-tank/media"); not a ZFS name.
+  parentid:
+    type: string
+  name:
+    type: string
+    description: >-
+      A pool's name, the pool's own folder's name (the pool's), or the last part of a file
+      system's or volume's full name ("media").
+  type:
+    type: string
+    description: '"Pool", "Filesystem" or "Volume".'
+  icon:
+    type: string
+    description: An image of the classic interface; not used.
+  expanded:
+    type: boolean
+  path:
+    type: string
+    description: The full ZFS name ("tank", "tank/media"); the one name every other method takes.
+  pool:
+    type: string
+    description: The pool a file system or volume is on. Absent on a pool row.
+  origin:
+    type: string
+    description: >-
+      The snapshot a clone was made from ("tank/media@…"), or "n/a" for anything that is not a
+      clone.
+  size:
+    type: integer
+    nullable: true
+    description: >-
+      A pool row: the disks' raw space, parity included for RAID-Z (not space for files). A file
+      system: its size limit (quota), or null with none. A volume: its size.
+  used:
+    type: integer
+    description: >-
+      Bytes in use: a pool row, the disks' raw space allocated (parity included); a file system,
+      what it and everything inside it hold.
+  usedpercent:
+    type: number
+    description: The plugin's percentage of used, with a fraction. Not used by the interface.
+  available:
+    type: integer
+    description: >-
+      Bytes free: a pool row, the disks' raw space free; a file system, the pool's free space it
+      may use, or what is left under its size limit.
+  mountpoint:
+    type: string
+    description: >-
+      The folder it is mounted on ("/tank/media"); empty when it has none, "n/a" for a volume.
+  lastscrub:
+    type: string
+    description: >-
+      A pool row: the plugin's words for the last check: "Never", "in progress since <date>",
+      "paused (started <date>)", "canceled on <date>", or the date it ended, which may be the end of
+      a rebuild rather than of a check. "n/a" on other rows. Display text in English.
+  state:
+    type: string
+    description: >-
+      A pool row: ZFS's word for the pool ("ONLINE", "DEGRADED", "FAULTED", "SUSPENDED",
+      "UNAVAIL", "REMOVED", "OFFLINE"), or "UNKNOWN" when the plugin could not read it. "n/a" on
+      other rows.
+  status:
+    type: string
+    description: >-
+      A pool row: "OK", or "Error" when ZFS counts damaged data. "n/a" on other rows.
+  scrubstate:
+    type: string
+    description: >-
+      A pool row: "none", "running", "paused", "stopped" or "completed" (the last check or
+      rebuild). "n/a" on other rows.
+  scrubactive:
+    type: boolean
+    description: Whether a check is running or paused on the pool.
+  removalstate:
+    type: string
+    description: A pool row only.
+  removalactive:
+    type: boolean
+    description: >-
+      A pool row only: whether data is being moved off a disk group that is being removed.
+  encryption:
+    type: string
+    description: The encryption, in capitals ("OFF", "AES-256-GCM").
+  keystatus:
+    type: string
+    description: '"available", "unavailable" (locked), or "-" when not encrypted.'
+  autounlock:
+    type: boolean
+  isencryptionroot:
+    type: boolean
+    description: Not on a pool row.
+  hasshares:
+    type: boolean
+    description: Whether a shared folder uses its mount entry.
+  fragmentation:
+    type: number
+    description: A pool row only.
+  dedup:
+    type: string
+    description: A pool row only. The deduplication ratio, "1.00" for none (no "x").
+  capacity:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: >-
+      A pool row only: whole percent of the disks' raw space in use. ZFS slows down and refuses
+      writes by this figure.
+  devices:
+    type: string
+    description: >-
+      A pool row only: the disks' paths joined with a markup line break. Not used (UI-2); the
+      disks come from Zfs.getPoolDevices.
+  compression:
+    type: string
+    description: >-
+      Not on a pool row: the compression in effect ("lz4", "off", "zstd", …), inherited or its own.
+  compressratio:
+    type: string
+    description: Not on a pool row. The compression ratio, "1.00" for none (no "x").
+  refer:
+    type: integer
+    description: Not on a pool row. Bytes it refers to itself, without what is inside it.
+  mounted:
+    type: boolean
+    description: Not on a pool row.
+  poolroot:
+    type: boolean
+    description: A file system row only. True for the pool's own folder.
+  haschildren:
+    type: boolean
+    description: Whether file systems, volumes or snapshots are inside it.

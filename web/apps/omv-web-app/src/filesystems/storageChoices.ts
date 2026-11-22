@@ -21,6 +21,7 @@ import {
   type FsRef,
   type SessionMarks,
   type WipeBlocker,
+  type ZfsPoolDisks,
 } from "../disks/diskUse.ts";
 import { parseByteCount } from "../format/format.ts";
 import { arrayState, type ArrayState } from "../raid/raidModel.ts";
@@ -71,6 +72,8 @@ export interface ChoiceInputs {
   detected: readonly DetectedFilesystem[] | undefined;
   /** null when the RAID plugin is not installed. */
   arrays: readonly MdArray[] | null | undefined;
+  /** The ZFS pools' disks; null when the ZFS plugin is not installed. */
+  zfs: readonly ZfsPoolDisks[] | null | undefined;
 }
 
 /** A failed input, for its message; the first one wins. */
@@ -88,13 +91,14 @@ export function storageChoices(
   if (failure.failed) {
     return { state: "failed", error: failure.error };
   }
-  const { candidates, disks, configured, detected, arrays } = inputs;
+  const { candidates, disks, configured, detected, arrays, zfs } = inputs;
   if (
     candidates === undefined ||
     disks === undefined ||
     configured === undefined ||
     detected === undefined ||
-    arrays === undefined
+    arrays === undefined ||
+    zfs === undefined
   ) {
     return { state: "loading" };
   }
@@ -114,7 +118,11 @@ export function storageChoices(
     }
     const inCandidates = [...names].some((name) => offered.has(name));
     const sessionMarks = marks(disk);
-    const use = diskUse(disk, { configured, detected, arrays }, sessionMarks);
+    const use = diskUse(
+      disk,
+      { configured, detected, arrays, zfs },
+      sessionMarks,
+    );
     if (!use.known) {
       return { state: "loading" };
     }

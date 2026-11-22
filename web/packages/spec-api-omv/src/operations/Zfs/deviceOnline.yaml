@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: zfsDeviceOnline
+  tags:
+    - Zfs
+  summary: Bring an offline disk back
+  description: >-
+    Bring a disk taken offline back into use; ZFS copies onto it what changed meanwhile. The
+    plugin hands ZFS the whole disk for a partition path it is given. Marks nothing dirty
+    (observed on the test VM).
+  x-omv-rpc:
+    service: Zfs
+    method: deviceOnline
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-source:
+    datamodel: rpc.zfs.pooldevice
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ZfsPoolDeviceRequest.yaml
+  responses:
+    "200":
+      description: The method returns null.

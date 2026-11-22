@@ -12,6 +12,7 @@ import {
   expectNothingObserved,
   observe,
   RPC_401,
+  RPC_404_NO_PLUGIN,
   type ConsoleAllowance,
   type Observed,
 } from "./observer.ts";
@@ -61,6 +62,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     async ({ page, server, extraAllowances }, provide) => {
       const observed = await observe(page, server.origin, [
         RPC_401,
+        RPC_404_NO_PLUGIN,
         ...extraAllowances.list,
       ]);
       await provide(observed);

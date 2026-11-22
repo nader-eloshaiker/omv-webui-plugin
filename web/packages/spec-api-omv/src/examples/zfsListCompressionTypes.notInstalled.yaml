@@ -1,0 +1,5 @@
+summary: "Written from OMV's reply for a service it does not know (read from its RPC layer, and captured for MdMgmt on the test VM without the RAID plugin): every method of the Zfs service answers this when openmediavault-zfs is not installed."
+x-omv-status: 404
+value:
+  code: 0
+  message: "RPC service 'Zfs' not found."
