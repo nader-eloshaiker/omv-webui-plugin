@@ -1,0 +1,31 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 1
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000012"
+      enable: false
+      sharedfolderref: "00000000-0000-4000-8000-000000000005"
+      comment: ""
+      guest: "no"
+      readonly: false
+      browseable: true
+      recyclebin: false
+      recyclemaxsize: 0
+      recyclemaxage: 0
+      hidedotfiles: true
+      inheritacls: false
+      inheritpermissions: false
+      easupport: true
+      storedosattributes: false
+      hostsallow: ""
+      hostsdeny: ""
+      audit: false
+      macoscompat: false
+      timemachine: false
+      timemachinemaxsize: ""
+      transportencryption: false
+      followsymlinks: true
+      widelinks: false
+      extraoptions: ""
+      sharedfoldername: Photos

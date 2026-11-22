@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  - uuid: "00000000-0000-4000-8000-000000000001"
+    description: "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]"

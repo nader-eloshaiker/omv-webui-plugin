@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbGetSettings
+  tags:
+    - SMB
+  summary: Windows and Mac sharing settings
+  description: >-
+    The SMB/CIFS service's settings, without its shares: whether it is on, and the workgroup,
+    home-folder and protocol options the classic interface sets. Changes nothing.
+  x-omv-rpc:
+    service: SMB
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmbSettings.yaml
+          examples:
+            off:
+              $ref: ../../examples/smbGetSettings.off.yaml
+            on:
+              $ref: ../../examples/smbGetSettings.on.yaml

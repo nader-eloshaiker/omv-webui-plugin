@@ -1,0 +1,19 @@
+type: object
+description: >-
+  A group that is not a system group (UserMgmt.getGroupList). `comment` is present only when OMV
+  holds a record for the group.
+required: [name]
+properties:
+  name:
+    type: string
+  gid:
+    type: integer
+  members:
+    type: array
+    description: The names of the people in it as members (not those for whom it is the primary group).
+    items:
+      type: string
+  system:
+    type: boolean
+  comment:
+    type: string

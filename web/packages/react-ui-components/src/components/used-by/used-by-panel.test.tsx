@@ -56,4 +56,41 @@ describe("UsedByPanel", () => {
       screen.getByRole("heading", { level: 2, name: "Used by" }),
     ).toBeInTheDocument();
   });
+  it("shows a referrer with no action as a named entry with what it is and no control", () => {
+    render(
+      <UsedByPanel
+        {...base}
+        referrers={[
+          {
+            id: "smb-media",
+            kind: "Shared with Windows and Mac computers.",
+            name: "media",
+          },
+        ]}
+      />,
+    );
+    const item = screen.getByRole("listitem");
+    expect(item).toHaveTextContent(
+      "Shared with Windows and Mac computers.media",
+    );
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByText(base.emptyText)).toBeNull();
+  });
+
+  it("says an unknown use in words alone when no link is given", () => {
+    render(
+      <UsedByPanel
+        {...base}
+        unknownUse={{
+          message: "Used by a setting this page does not show.",
+        }}
+      />,
+    );
+    expect(
+      screen.getByText("Used by a setting this page does not show."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByText(base.emptyText)).toBeNull();
+  });
 });

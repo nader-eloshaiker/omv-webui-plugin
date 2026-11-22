@@ -1,0 +1,32 @@
+type: object
+description: >-
+  A shared folder to store (rpc.sharemgmt.set). With OMV's placeholder UUID it makes a new one,
+  and makes its folder on the disk at once if it does not exist; otherwise it rewrites the stored
+  one, keeping its access list. Stricter than OMV: the path rules of
+  SharedFolderRelPath, a description of at most 255 characters, and the file mode only "770"
+  (design phase-5-shares P4), which OMV applies only to a folder it makes. A new name and path are
+  also held to the interface's own rules (design 0.5) before they are sent.
+required: [uuid, name, reldirpath, comment, mntentref]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  name:
+    $ref: ./SharedFolderName.yaml
+  reldirpath:
+    $ref: ./SharedFolderRelPath.yaml
+  comment:
+    type: string
+    maxLength: 255
+    description: The description, shown in lists only; may be empty.
+  mntentref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    description: The UUID of the file system's mount entry, from ShareMgmt.getCandidates.
+  mode:
+    type: string
+    enum: ["770"]
+    description: >-
+      The new folder's file permissions: the owner and the group every person belongs to may read
+      and write, nobody else. Applied only when OMV makes the folder.
+additionalProperties: false

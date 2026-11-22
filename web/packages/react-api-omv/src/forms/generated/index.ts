@@ -49,6 +49,18 @@ export {
   type SessionVerifyFormValues,
 } from "./sessionVerify.ts";
 export {
+  ShareMgmtDeleteRequestSchema,
+  type ShareMgmtDeleteFormValues,
+} from "./shareMgmtDelete.ts";
+export {
+  ShareMgmtSetRequestSchema,
+  type ShareMgmtSetFormValues,
+} from "./shareMgmtSet.ts";
+export {
+  ShareMgmtSetPrivilegesRequestSchema,
+  type ShareMgmtSetPrivilegesFormValues,
+} from "./shareMgmtSetPrivileges.ts";
+export {
   SmartDeleteScheduledTestRequestSchema,
   type SmartDeleteScheduledTestFormValues,
 } from "./smartDeleteScheduledTest.ts";
@@ -64,6 +76,18 @@ export {
   SmartSetSettingsRequestSchema,
   type SmartSetSettingsFormValues,
 } from "./smartSetSettings.ts";
+export {
+  SmbDeleteShareRequestSchema,
+  type SmbDeleteShareFormValues,
+} from "./smbDeleteShare.ts";
+export {
+  SmbSetSettingsRequestSchema,
+  type SmbSetSettingsFormValues,
+} from "./smbSetSettings.ts";
+export {
+  SmbSetShareRequestSchema,
+  type SmbSetShareFormValues,
+} from "./smbSetShare.ts";
 export { SshSetRequestSchema, type SshSetFormValues } from "./sshSet.ts";
 export {
   UserMgmtSetPasswordByContextRequestSchema,

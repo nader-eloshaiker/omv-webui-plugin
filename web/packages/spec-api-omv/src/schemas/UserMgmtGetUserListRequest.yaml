@@ -1,0 +1,27 @@
+type: object
+description: >-
+  Paging, sorting and search for the list of people (rpc.usermgmt.getuserlist). `limit` null
+  returns every row. Stricter than OMV: `detail` only "basic", and `search` text only.
+required: [start, limit]
+properties:
+  start:
+    type: integer
+    minimum: 0
+  limit:
+    type: integer
+    nullable: true
+    minimum: 0
+  sortfield:
+    type: string
+    nullable: true
+  sortdir:
+    type: string
+    nullable: true
+    enum: [asc, desc]
+  search:
+    type: string
+    nullable: true
+  detail:
+    type: string
+    enum: [basic]
+additionalProperties: false

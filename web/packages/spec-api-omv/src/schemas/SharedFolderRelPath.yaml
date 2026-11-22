@@ -1,0 +1,10 @@
+type: string
+description: >-
+  The folder a shared folder uses, inside its file system: "/" for the whole file system, or a path
+  without a leading "/"; a trailing "/" is allowed, as OMV stores it, so a row read from
+  ShareMgmt.getList can be sent back. Stricter than OMV: never empty, never two full stops anywhere
+  (OMV refuses them too), no control character and no "\". A NEW path is held to the interface's
+  stricter rules before it is sent (design phase-5-shares 0.5: at most eight folders, none starting
+  with a full stop).
+minLength: 1
+pattern: '^(?:/|(?!.*\.\.)[^/\x00-\x1F\\][^\x00-\x1F\\]*)$'

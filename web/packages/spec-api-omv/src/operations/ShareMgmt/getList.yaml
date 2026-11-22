@@ -33,3 +33,9 @@ post:
               $ref: ../../examples/shareMgmtGetList.searchNoMatch.yaml
             empty:
               $ref: ../../examples/shareMgmtGetList.empty.yaml
+            withAccess:
+              $ref: ../../examples/shareMgmtGetList.withAccess.yaml
+            fsNotMounted:
+              $ref: ../../examples/shareMgmtGetList.fsNotMounted.yaml
+            afterShares:
+              $ref: ../../examples/shareMgmtGetList.afterShares.yaml

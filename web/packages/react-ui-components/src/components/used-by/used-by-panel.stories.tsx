@@ -133,3 +133,31 @@ export const HostileName: Story = {
     ],
   },
 };
+
+// A shared folder's own SMB share (phase 5 shares design 0.7): a named entry with what it is and no
+// link, since the folder's page shows the share in its own section.
+export const SharedWithWindowsAndMac: Story = {
+  args: {
+    referrers: [
+      {
+        id: "smb-media",
+        kind: "Shared with Windows and Mac computers.",
+        name: "media",
+      },
+    ],
+    blockedAction: {
+      label: "Delete shared folder",
+      reason: "Stop sharing it with Windows and Mac computers first.",
+    },
+  },
+};
+
+// Used by something this page cannot read yet, said in words with no link (shares design 0.7, P15).
+export const UsedByUnknownWithoutLink: Story = {
+  args: {
+    unknownUse: {
+      message:
+        "Used by a setting this page does not show: an NFS share, a backup job, the Rsync server, the home folders setting or an add-on. Look in the classic interface.",
+    },
+  },
+};

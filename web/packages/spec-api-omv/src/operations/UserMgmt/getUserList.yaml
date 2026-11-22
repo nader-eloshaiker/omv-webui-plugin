@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: userMgmtGetUserList
+  tags:
+    - UserMgmt
+  summary: People who can be given access
+  description: >-
+    A page of the accounts that are not system accounts, sorted and searched by the backend, each
+    with what OMV stores about it. The interface reads the whole list and shows only each name and
+    description. Changes nothing.
+  x-omv-rpc:
+    service: UserMgmt
+    method: getUserList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.usermgmt.getuserlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/UserMgmtGetUserListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/UserAccountList.yaml
+          examples:
+            several:
+              $ref: ../../examples/userMgmtGetUserList.several.yaml
+            stock:
+              $ref: ../../examples/userMgmtGetUserList.stock.yaml

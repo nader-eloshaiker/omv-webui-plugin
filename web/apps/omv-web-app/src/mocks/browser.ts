@@ -6,6 +6,7 @@ import { createRpcHandlers } from "@omv-webui/react-api-omv/mocks";
 import { setupWorker } from "msw/browser";
 import { useMockScenarioStore } from "../stores/useMockScenarioStore.ts";
 import { newMockSession, scenarioAnswers, startsDirty } from "./scenarios.ts";
+import { sharesDelayHandlers } from "./sharesScenarios.ts";
 
 export async function startMockWorker(): Promise<void> {
   const { scenario } = useMockScenarioStore.getState();
@@ -14,7 +15,9 @@ export async function startMockWorker(): Promise<void> {
     scenario === "sessionExpired",
     startsDirty(scenario),
   );
+  // A story's pass-through handlers (a slow deletion) run first, then hand the call on.
   const worker = setupWorker(
+    ...sharesDelayHandlers(scenario),
     ...createRpcHandlers(scenarioAnswers(scenario, session)),
   );
   await worker.start({

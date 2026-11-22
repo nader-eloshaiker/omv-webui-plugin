@@ -123,6 +123,102 @@ export const Summary: Story = {
   ),
 };
 
+// The add-shared-folder summary (phase 5 shares design 6.3), without and with guest access: the
+// guest item carries the warning shape in place of its bullet, in the neutral ink.
+function addFolderItems(guests: boolean) {
+  return [
+    <React.Fragment key="make">
+      Make the shared folder <Identifier>media</Identifier> on{" "}
+      <Identifier>data</Identifier>, in the folder{" "}
+      <Identifier>media/</Identifier>. Only the people you give access to can
+      open it.
+    </React.Fragment>,
+    <React.Fragment key="exists">
+      If a folder called <Identifier>media/</Identifier> already exists there,
+      it is used as it is, with its files and its own file permissions.
+    </React.Fragment>,
+    <React.Fragment key="rw">
+      Read and write: <Identifier>family</Identifier>,{" "}
+      <Identifier>alex</Identifier>.
+    </React.Fragment>,
+    <React.Fragment key="ro">
+      Read only: <Identifier>guest-laptop</Identifier>.
+    </React.Fragment>,
+    <React.Fragment key="smb">
+      Share it with Windows and Mac computers as{" "}
+      <Identifier>{"\\\\NAS_HOST\\media"}</Identifier>.
+    </React.Fragment>,
+    ...(guests
+      ? [
+          {
+            tone: "warning" as const,
+            content:
+              "Anyone on your network can open it without a password. A guest can see a folder made here but not open its files.",
+          },
+        ]
+      : []),
+    "Then apply the changes, which also applies nothing else: no other change is pending.",
+  ];
+}
+
+export const SummaryAddSharedFolder: Story = {
+  render: () => (
+    <JobRunner title="Add a shared folder">
+      <JobSummary
+        title="Ready to add the shared folder"
+        items={addFolderItems(false)}
+        confirmLabel="Add shared folder"
+        backLabel="Change choices"
+        onConfirm={noop}
+        onBack={noop}
+      />
+    </JobRunner>
+  ),
+};
+
+/**
+ * The summary's title as a heading (here an h3 under the job's h2) that takes focus when the step
+ * opens, as the add-a-shared-folder flow does. Programmatic focus draws no ring: the reader did not
+ * move it, and the heading is not a control.
+ */
+export const SummaryTitleAsHeading: Story = {
+  render: function SummaryTitleAsHeadingStory() {
+    const titleRef = React.useRef<HTMLHeadingElement>(null);
+    React.useEffect(() => {
+      titleRef.current?.focus();
+    }, []);
+    return (
+      <JobRunner title="Add a shared folder">
+        <JobSummary
+          title="Ready to add the shared folder"
+          titleLevel={3}
+          titleRef={titleRef}
+          items={addFolderItems(false)}
+          confirmLabel="Add shared folder"
+          backLabel="Change choices"
+          onConfirm={noop}
+          onBack={noop}
+        />
+      </JobRunner>
+    );
+  },
+};
+
+export const SummaryWithGuestAccess: Story = {
+  render: () => (
+    <JobRunner title="Add a shared folder">
+      <JobSummary
+        title="Ready to add the shared folder"
+        items={addFolderItems(true)}
+        confirmLabel="Add shared folder"
+        backLabel="Change choices"
+        onConfirm={noop}
+        onBack={noop}
+      />
+    </JobRunner>
+  ),
+};
+
 export const SummaryErasesData: Story = {
   render: () => (
     <JobRunner title="Add storage and share it">

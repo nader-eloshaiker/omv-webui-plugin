@@ -3,9 +3,13 @@
  * openmediavault-webui contract
  */
 import type {
+  GetListRequest,
   RpcErrorDetail,
+  UserAccountList,
   UserByContext,
   UserByContextSaved,
+  UserGroupList,
+  UserMgmtGetUserListRequest,
   UserMgmtSetPasswordByContextRequest,
   UserMgmtSetUserByContextRequest,
 } from "@omv-webui/ts-api-omv";
@@ -52,6 +56,383 @@ const withQueryKey = <T extends object, K>(
   }
   return result;
 };
+
+/**
+ * A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.
+ * @summary People who can be given access
+ */
+export const userMgmtGetUserList = (
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserAccountList>(
+    {
+      url: `/rpc/UserMgmt/getUserList`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: userMgmtGetUserListRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtGetUserListQueryKey = (
+  userMgmtGetUserListRequest?: BodyType<UserMgmtGetUserListRequest>,
+) => {
+  return [
+    "POST",
+    `/rpc/UserMgmt/getUserList`,
+    userMgmtGetUserListRequest,
+  ] as const;
+};
+
+export const getUserMgmtGetUserListQueryOptions = <
+  TData = Awaited<ReturnType<typeof userMgmtGetUserList>>,
+  TError = ErrorType<unknown>,
+>(
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUserList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getUserMgmtGetUserListQueryKey(userMgmtGetUserListRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userMgmtGetUserList>>
+  > = ({ signal }) =>
+    userMgmtGetUserList(userMgmtGetUserListRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userMgmtGetUserList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserMgmtGetUserListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtGetUserList>>
+>;
+export type UserMgmtGetUserListQueryError = ErrorType<unknown>;
+
+/**
+ * A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.
+ * @summary People who can be given access
+ */
+export function useUserMgmtGetUserList<
+  TData = Awaited<ReturnType<typeof userMgmtGetUserList>>,
+  TError = ErrorType<unknown>,
+>(
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUserList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetUserList>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetUserList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.
+ * @summary People who can be given access
+ */
+export function useUserMgmtGetUserList<
+  TData = Awaited<ReturnType<typeof userMgmtGetUserList>>,
+  TError = ErrorType<unknown>,
+>(
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUserList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetUserList>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetUserList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.
+ * @summary People who can be given access
+ */
+export function useUserMgmtGetUserList<
+  TData = Awaited<ReturnType<typeof userMgmtGetUserList>>,
+  TError = ErrorType<unknown>,
+>(
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUserList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.
+ * @summary People who can be given access
+ */
+export function useUserMgmtGetUserList<
+  TData = Awaited<ReturnType<typeof userMgmtGetUserList>>,
+  TError = ErrorType<unknown>,
+>(
+  userMgmtGetUserListRequest: BodyType<UserMgmtGetUserListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetUserList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserMgmtGetUserListQueryOptions(
+    userMgmtGetUserListRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.
+ * @summary Groups that can be given access
+ */
+export const userMgmtGetGroupList = (
+  getListRequest: BodyType<GetListRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<UserGroupList>(
+    {
+      url: `/rpc/UserMgmt/getGroupList`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: getListRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUserMgmtGetGroupListQueryKey = (
+  getListRequest?: BodyType<GetListRequest>,
+) => {
+  return ["POST", `/rpc/UserMgmt/getGroupList`, getListRequest] as const;
+};
+
+export const getUserMgmtGetGroupListQueryOptions = <
+  TData = Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getUserMgmtGetGroupListQueryKey(getListRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userMgmtGetGroupList>>
+  > = ({ signal }) =>
+    userMgmtGetGroupList(getListRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type UserMgmtGetGroupListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userMgmtGetGroupList>>
+>;
+export type UserMgmtGetGroupListQueryError = ErrorType<unknown>;
+
+/**
+ * A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.
+ * @summary Groups that can be given access
+ */
+export function useUserMgmtGetGroupList<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetGroupList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.
+ * @summary Groups that can be given access
+ */
+export function useUserMgmtGetGroupList<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+          TError,
+          Awaited<ReturnType<typeof userMgmtGetGroupList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.
+ * @summary Groups that can be given access
+ */
+export function useUserMgmtGetGroupList<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.
+ * @summary Groups that can be given access
+ */
+export function useUserMgmtGetGroupList<
+  TData = Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof userMgmtGetGroupList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getUserMgmtGetGroupListQueryOptions(
+    getListRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 /**
  * The signed-in user's own account.

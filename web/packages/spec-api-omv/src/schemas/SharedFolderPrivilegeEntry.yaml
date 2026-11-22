@@ -1,0 +1,16 @@
+type: object
+description: One entry of a shared folder's access list, as ShareMgmt.setPrivileges takes it.
+required: [type, name, perms]
+properties:
+  type:
+    type: string
+    enum: [user, group]
+  name:
+    $ref: ./Username.yaml
+  perms:
+    type: integer
+    enum: [0, 5, 7]
+    description: >-
+      7 read and write, 5 read only, 0 refused even through a group (only while guest access is
+      off). The interface stores no entry for "No access" and keeps a 0 it read (design 0.4).
+additionalProperties: false

@@ -239,7 +239,14 @@ test.describe("an administrator", () => {
         sortfield: "name",
         sortdir: "asc",
       });
-    expect(reads).toContainEqual({ start: 0, limit: null });
+    // The whole list, for the roll-up, with all five paging fields (shares design 11.2).
+    expect(reads).toContainEqual({
+      start: 0,
+      limit: null,
+      sortfield: null,
+      sortdir: null,
+      search: null,
+    });
     const first = lastPage();
     if (first === undefined) {
       throw new Error("The table's first page was not read.");

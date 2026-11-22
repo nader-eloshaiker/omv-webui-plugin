@@ -1588,7 +1588,12 @@ export function onlineDecision(
 
 export type DeleteBlocker =
   | { kind: "poolFolder" }
-  | { kind: "shares"; names: string[] }
+  | {
+      kind: "shares";
+      names: string[];
+      /** The same folders with their UUIDs, for the links to their pages (shares design 9.1). */
+      folders: { uuid: string; name: string }[];
+    }
   | { kind: "sharedUnnamed" }
   | { kind: "other" }
   | { kind: "inside"; rows: ZfsObject[] }
@@ -1618,7 +1623,11 @@ export function fsDeleteBlockers(
     blockers.push({ kind: "unread", error: used.error });
   } else {
     if (used.shares.length > 0) {
-      blockers.push({ kind: "shares", names: used.shares.map((s) => s.name) });
+      blockers.push({
+        kind: "shares",
+        names: used.shares.map((s) => s.name),
+        folders: used.shares.map((s) => ({ uuid: s.uuid, name: s.name })),
+      });
     }
     if (used.sharedUnnamed) {
       blockers.push({ kind: "sharedUnnamed" });
@@ -1676,6 +1685,7 @@ export function poolDeleteBlockers(
       blockers.push({
         kind: "shares",
         names: rootUsed.shares.map((s) => s.name),
+        folders: rootUsed.shares.map((s) => ({ uuid: s.uuid, name: s.name })),
       });
     }
     if (rootUsed.sharedUnnamed) {

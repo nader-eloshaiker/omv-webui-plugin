@@ -693,3 +693,44 @@ Built on `phase-5-zfs` to [design/phase-5-zfs.md](design/phase-5-zfs.md), as agr
 - **The library** gains `TableGroupRow` and `SizeField`.
 - **The mock remembers** creates, file systems, snapshots, checks, replacements, offline and online, and deletes, with 38 ZFS scenarios.
 - **Found while building:** the VM's facts in the contract entry above (FsTab refuses a ZFS name; `addObject` with a taken name changes nothing; a refused `addPool` can leave a partition table; deleted and replaced-out disks keep ZFS's GPT; ratios without "x"; `replacing-1` for both disks; the space shares; `lastscrub`'s time zone; by-id paths only). A pool whose disks ZFS names otherwise has no disk changes here. A pool being deleted is no longer read once its task ends, so its report is never asked for after it is gone.
+
+## 2026-11-22 — Phase 5, shares: the methods cleared for the contract
+
+The owner cleared all nine backend methods the shares domain needs: `ShareMgmt.set`, `ShareMgmt.setPrivileges`, `ShareMgmt.delete`, `UserMgmt.getUserList`, `UserMgmt.getGroupList`, `SMB.getSettings`, `SMB.setSettings`, `SMB.getShareList` and `SMB.setShare`. None is on the private review list. The design's points still need the owner's agreement before anything destructive is built.
+
+## 2026-11-22 — Phase 5, shares: the owner's agreement to the design
+
+The owner agreed [design/phase-5-shares.md](design/phase-5-shares.md) as written.
+
+- **P1, two more methods:** `SMB.deleteShare` and `ShareMgmt.getCandidates` are cleared; neither is on the private review list. `ShareMgmt.getFileACL` is not asked for now (P16).
+- **P2, the scope:** create, edit, access per person and group, delete, and sharing over SMB are built. File permissions (ACLs), NFS, the advanced SMB settings and share options, copying access, renaming, moving a working folder and BTRFS snapshots stay in the classic interface.
+- **P3 to P16:** agreed as written. That includes new folders at mode 770 with no choice, names fixed once made, guest access its own unticked checkbox warned twice, no SMB share with guests off until someone has access, Stop sharing removing the share, and two deletes, the one with files red, typed and refused in the cases section 8 lists.
+
+## 2026-11-22 — Phase 5, shares: the contract, and what the test VM showed
+
+The 11 methods of [design/phase-5-shares.md](design/phase-5-shares.md) section 11 are in the contract: `ShareMgmt.getCandidates`, `set`, `setPrivileges` and `delete`; `UserMgmt.getUserList` and `getGroupList`; `SMB.getSettings`, `setSettings`, `getShareList`, `setShare` and `deleteShare`. The examples were captured on the test VM (OMV 8.6.1) by `tools/contract-capture/shares.mjs`, on a scratch EXT4 file system, a BTRFS one and a single-disk ZFS pool, with three documentation people and a group; each access choice was also opened from a client as those people. The VM was left as it was. The request schemas are stricter than OMV's datamodels where the design asks (names, paths, a mode of 770 only, a required access list); the drift check's accepted list says why the SMB requests name the stored fields OMV's datamodels leave out.
+
+- **Pending modules:** making or changing a shared folder, and saving its access, mark sharedfolders and systemd, plus samba and avahi when the folder has an SMB share. The SMB writes mark samba and avahi. Deleting a shared folder, either way, marks sharedfolders, systemd and task.
+- **Access** behaves as the design's 0.4 reads, for every combination tried. A guest cannot open a folder made by this interface (770).
+- **Lists:** the web administrator account and the group `users` are not listed; a stock NAS lists no group. An empty access list reads as the empty string.
+- **Names:** OMV counts a name's 80 characters as bytes; it accepts names that differ only in case, and `homes` and `global`. A shared folder named `homes` becomes Samba's home-folders section once shared. The interface's own rules stay.
+- **Writes back:** an SMB share read from the list and sent back without `sharedfoldername` keeps every field; with it, OMV refuses. The SMB settings sent back whole keep every field.
+- **Deleting:** refused while an SMB share refers to the folder, even one turned off. With its files, 2 GiB in 20,000 files took 0.6 s. A BTRFS shared folder is a subvolume; its snapshot stays.
+- **Reads that fail:** the list of SMB shares fails when a share names a shared folder whose record is gone. Turning SMB on with a NAS name of 16 characters is refused with OMV's words.
+
+Design section 19 lists each fact and what it changed.
+
+## 2026-11-22 — Phase 5, shares: built, on the mock and the test VM
+
+Built on `phase-5-shares` to [design/phase-5-shares.md](design/phase-5-shares.md), as agreed by the owner (P1 to P16). Where the test VM contradicted the design, the build follows the VM, and the design's section 19 lists each change and each decision taken while building.
+
+- **The pages:**
+  - Storage > Shared folders: a Sharing column, each folder a link to its page, the line when Windows and Mac sharing is off, the unfinished work of this session's add flow, and "Add a shared folder";
+  - a shared folder's page at `/storage/shared-folders/$folder` (its UUID): its state with its file system's, what to do now, the summary with the network addresses, the description edited in place, who can use it (the access grid), its SMB share (share, change, stop, turn on), Used by, pointing a broken folder somewhere else, and the two deletes (keeping the files; with every file, typed);
+  - adding a shared folder at `/storage/shared-folders/add`, from the list and from Flow A's new handover card, with access and SMB sharing in one form, one summary and one checkpoint;
+  - Windows and Mac sharing at `/services/smb` (the menu's SMB/CIFS item): on and off, and the folders it shares.
+- **Elsewhere:** a file system's Used by panel and the unmount and ZFS refusals link each shared folder to its page; the dashboard's SMB row and the SMB service details link the new page.
+- **The library** gains `SegmentedChoice` and `AccessGrid`; `JobSummary` can mark an item with the warning shape and draw its title as a heading.
+- **The mock remembers** folders, access, shares, settings, deletes, apply and undo, with 23 shares scenarios (the design's 14 and one per failing step of the add flow).
+- **Names that carry direction controls** are shown with each control replaced by a visible mark, so a name cannot read backwards; what is sent to the NAS is unchanged.
+- **Checks:** `make test` passed (react-api-omv 1,091 tests, react-ui-components 234, omv-web-app 2,356; contract drift: 104 operations agree, 34 accepted divergences; colour audit 164 pairs, 0 failed) and `pnpm test:browser` passed 42. On the test VM the package passed the lifecycle test, and the whole VM suite, with `OMV_WEBUI_VM_SCRATCH_DISK=sdd` and the RAID and ZFS disks `sdb,sdc,sdd,sde`, gave 32 passed and 5 skipped over HTTP and over HTTPS (the skips need a second-factor administrator, the idle timeout, a wipe disk or a ready-made pool). The new `shares.vm.spec.ts` makes a file system through Flow A, adds and shares a folder through its handover, changes and stops the share, turns SMB off again, deletes both ways and wipes the disk. One HTTPS run first timed out in the ZFS journey, pressing "Stop checking…" just as the check ended; the step now carries on when the check has ended. Afterwards the VM had no pool or array, only sda1's mount entry and the original shared folder, empty scratch disks, SMB's settings as before and nothing pending.

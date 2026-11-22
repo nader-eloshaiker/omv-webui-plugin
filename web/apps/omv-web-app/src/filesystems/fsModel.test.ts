@@ -296,7 +296,13 @@ describe("the interface's own refusals (0.8)", () => {
     const shares: UsedBy = { kind: "shares", folders: [FOLDER] };
     expect(
       unmountBlockers(row({ _used: true }), shares, false, "unmount"),
-    ).toEqual([{ kind: "shared", names: ["a4share"] }]);
+    ).toEqual([
+      {
+        kind: "shared",
+        names: ["a4share"],
+        folders: [{ uuid: FOLDER.uuid, name: "a4share" }],
+      },
+    ]);
     expect(
       unmountBlockers(
         row({ _used: true }),

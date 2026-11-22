@@ -61,6 +61,28 @@ paths:
     $ref: ./operations/SSH/set.yaml
   /rpc/ShareMgmt/getList:
     $ref: ./operations/ShareMgmt/getList.yaml
+  /rpc/ShareMgmt/getCandidates:
+    $ref: ./operations/ShareMgmt/getCandidates.yaml
+  /rpc/ShareMgmt/set:
+    $ref: ./operations/ShareMgmt/set.yaml
+  /rpc/ShareMgmt/setPrivileges:
+    $ref: ./operations/ShareMgmt/setPrivileges.yaml
+  /rpc/ShareMgmt/delete:
+    $ref: ./operations/ShareMgmt/delete.yaml
+  /rpc/UserMgmt/getUserList:
+    $ref: ./operations/UserMgmt/getUserList.yaml
+  /rpc/UserMgmt/getGroupList:
+    $ref: ./operations/UserMgmt/getGroupList.yaml
+  /rpc/SMB/getSettings:
+    $ref: ./operations/SMB/getSettings.yaml
+  /rpc/SMB/setSettings:
+    $ref: ./operations/SMB/setSettings.yaml
+  /rpc/SMB/getShareList:
+    $ref: ./operations/SMB/getShareList.yaml
+  /rpc/SMB/setShare:
+    $ref: ./operations/SMB/setShare.yaml
+  /rpc/SMB/deleteShare:
+    $ref: ./operations/SMB/deleteShare.yaml
   /rpc/UserMgmt/getUserByContext:
     $ref: ./operations/UserMgmt/getUserByContext.yaml
   /rpc/WebGui/getAutoLogoutSettings:

@@ -58,8 +58,18 @@ export function listRequest(state: TableState): GetListRequest {
   return request;
 }
 
-/** Every folder, for the problem count: a second, separate read (owner, 2026-11-20). */
-export const ALL_ROWS: GetListRequest = { start: 0, limit: null };
+/**
+ * Every folder: the problem count's second, separate read (owner, 2026-11-20), which a folder's page,
+ * the add flow and the SMB page share (phase 5 shares design 2.1). All five paging fields are sent,
+ * `limit` null for the whole list (design 11.2).
+ */
+export const ALL_ROWS: GetListRequest = {
+  start: 0,
+  limit: null,
+  sortfield: null,
+  sortdir: null,
+  search: null,
+};
 
 /** Pressing a header: that column ascending, or the sorted column reversed. Always exactly one sort. */
 export function nextSort(

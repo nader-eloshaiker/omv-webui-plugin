@@ -477,6 +477,10 @@ describe("the Services card", () => {
     expect(within(list).getAllByRole("listitem")[0]).toHaveTextContent(
       "Not applied yetSMB/CIFSChanged settings are waiting to be applied.",
     );
+    // The SMB row's name leads to the Windows and Mac sharing page (shares design 9.2).
+    expect(
+      within(list).getByRole("link", { name: "SMB/CIFS" }),
+    ).toHaveAttribute("href", "/ui/services/smb");
     expect(within(services).queryByText(/Critical/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("region", { name: "Needs attention" }),

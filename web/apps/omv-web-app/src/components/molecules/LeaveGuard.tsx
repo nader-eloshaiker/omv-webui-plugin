@@ -8,7 +8,21 @@ import { useBlocker } from "@tanstack/react-router";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-export function LeaveGuard({ when }: { when: boolean }) {
+/** A page's own words for the question, where it has them (a shared folder's page, 2.8). */
+export interface LeaveWords {
+  title: string;
+  body: string;
+  confirm: string;
+  cancel: string;
+}
+
+export function LeaveGuard({
+  when,
+  words,
+}: {
+  when: boolean;
+  words?: LeaveWords;
+}) {
   const { t } = useTranslation();
   // The blocker reads the latest value, not the one of the render that registered it.
   const whenRef = useRef(when);
@@ -27,10 +41,10 @@ export function LeaveGuard({ when }: { when: boolean }) {
           blocker.reset?.();
         }
       }}
-      title={t("leave.title")}
-      description={t("leave.body")}
-      confirmLabel={t("leave.confirm")}
-      cancelLabel={t("leave.cancel")}
+      title={words?.title ?? t("leave.title")}
+      description={words?.body ?? t("leave.body")}
+      confirmLabel={words?.confirm ?? t("leave.confirm")}
+      cancelLabel={words?.cancel ?? t("leave.cancel")}
       onConfirm={() => blocker.proceed?.()}
     />
   );

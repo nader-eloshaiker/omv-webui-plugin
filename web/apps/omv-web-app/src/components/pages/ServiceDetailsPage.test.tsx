@@ -53,12 +53,12 @@ describe("Service details", () => {
     ).toBeInTheDocument();
     const heading = screen.getByRole("heading", { level: 2, name: "SMB/CIFS" });
     expect(heading.parentElement).toHaveTextContent("SMB/CIFSDisabledOff");
-    // The settings link once, as the empty state's action.
+    // The settings link once, as the empty state's action: the Windows and Mac sharing page.
     const links = screen.getAllByRole("link", {
-      name: "Open SMB/CIFS settings in the classic interface (opens in a new tab)",
+      name: "Windows and Mac sharing settings",
     });
     expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute("href", "/#/services/smb/settings");
+    expect(links[0]).toHaveAttribute("href", "/ui/services/smb");
     expect(callNames()).not.toContain("SMB.getStats");
   });
 

@@ -777,6 +777,624 @@
                   },
                   "empty": {
                     "$ref": "#/components/examples/shareMgmtGetList.empty"
+                  },
+                  "withAccess": {
+                    "$ref": "#/components/examples/shareMgmtGetList.withAccess"
+                  },
+                  "fsNotMounted": {
+                    "$ref": "#/components/examples/shareMgmtGetList.fsNotMounted"
+                  },
+                  "afterShares": {
+                    "$ref": "#/components/examples/shareMgmtGetList.afterShares"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/ShareMgmt/getCandidates": {
+      "post": {
+        "operationId": "shareMgmtGetCandidates",
+        "tags": ["ShareMgmt"],
+        "summary": "File systems that can hold a shared folder",
+        "description": "OMV's own list of the file systems a new shared folder may be made on: each mount entry that is mounted now, is not a bind mount, and whose file system type can hold a shared folder, with the mount entry's UUID that ShareMgmt.set takes. It checks each mount folder but reads no file. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "ShareMgmt",
+          "method": "getCandidates"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareCandidateList"
+                },
+                "examples": {
+                  "dataOnly": {
+                    "$ref": "#/components/examples/shareMgmtGetCandidates.dataOnly"
+                  },
+                  "several": {
+                    "$ref": "#/components/examples/shareMgmtGetCandidates.several"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/ShareMgmt/set": {
+      "post": {
+        "operationId": "shareMgmtSet",
+        "tags": ["ShareMgmt"],
+        "summary": "Make or change a shared folder",
+        "description": "Store a shared folder. With OMV's placeholder UUID it makes a new one: the record is written first, then its folder is made on the disk at once if it does not exist (on BTRFS, as a subvolume), with the file mode sent, the group every person belongs to and the setgid mark; a folder that exists is used as it is, with its files and file permissions. On an existing shared folder it rewrites the record and keeps the access list. OMV refuses a name already taken (exact case) and a path already used on the same file system. It does not check that the file system is mounted; the interface makes folders only on file systems ShareMgmt.getCandidates and its own reading offer. Marks the sharedfolders and systemd modules dirty, and on a change also the modules of what uses the folder, such as samba. Returns the stored folder.",
+        "x-omv-rpc": {
+          "service": "ShareMgmt",
+          "method": "set"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.sharemgmt.set",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareMgmtSetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFolderSaved"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/shareMgmtSet.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/shareMgmtSet.changed"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused: a shared folder with that name, or with that path on the same file system, already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "nameTaken": {
+                    "$ref": "#/components/examples/shareMgmtSet.nameTaken"
+                  },
+                  "pathTaken": {
+                    "$ref": "#/components/examples/shareMgmtSet.pathTaken"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/ShareMgmt/setPrivileges": {
+      "post": {
+        "operationId": "shareMgmtSetPrivileges",
+        "tags": ["ShareMgmt"],
+        "summary": "Set who can use a shared folder",
+        "description": "Replace a shared folder's whole access list: an entry left out is removed. Access decides who the SMB and Rsync servers let in; it changes no file permission on the disk. OMV refuses an account that does not exist and the web interface's administrator account, and then nothing changes. Nothing reaches the network until the pending changes are applied; it marks the sharedfolders and systemd modules dirty, and samba when the folder has an SMB share. It can take access away, so it is a service-level change.",
+        "x-omv-rpc": {
+          "service": "ShareMgmt",
+          "method": "setPrivileges"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.sharemgmt.setprivileges",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareMgmtSetPrivilegesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFolderSaved"
+                },
+                "examples": {
+                  "saved": {
+                    "$ref": "#/components/examples/shareMgmtSetPrivileges.saved"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused an entry: the account does not exist, or it is the web interface's administrator account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "unknownAccount": {
+                    "$ref": "#/components/examples/shareMgmtSetPrivileges.unknownAccount"
+                  },
+                  "adminRefused": {
+                    "$ref": "#/components/examples/shareMgmtSetPrivileges.adminRefused"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/ShareMgmt/delete": {
+      "post": {
+        "operationId": "shareMgmtDelete",
+        "tags": ["ShareMgmt"],
+        "summary": "Delete a shared folder, keeping its files or with them",
+        "description": "Delete a shared folder. OMV refuses while any setting refers to it: an SMB share (even one turned off), an NFS share, an Rsync server module, a backup job, the home folders setting or an add-on. With `recursive` false it removes only the shared folder's record and every file stays on the disk. With `recursive` true it first refuses when another shared folder uses the same folder or one inside it, then deletes the folder on the disk and everything in it, inside the request (not a background task; the deletion cannot be undone), then removes the record. Both mark the sharedfolders and systemd modules dirty. Returns the deleted folder.",
+        "x-omv-rpc": {
+          "service": "ShareMgmt",
+          "method": "delete"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.sharemgmt.delete",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareMgmtDeleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFolderSaved"
+                },
+                "examples": {
+                  "removed": {
+                    "$ref": "#/components/examples/shareMgmtDelete.removed"
+                  },
+                  "deletedWithFiles": {
+                    "$ref": "#/components/examples/shareMgmtDelete.deletedWithFiles"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused: a setting refers to the folder, or (with its files) another shared folder uses the same folder or one inside it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "referenced": {
+                    "$ref": "#/components/examples/shareMgmtDelete.referenced"
+                  },
+                  "otherInside": {
+                    "$ref": "#/components/examples/shareMgmtDelete.otherInside"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/getUserList": {
+      "post": {
+        "operationId": "userMgmtGetUserList",
+        "tags": ["UserMgmt"],
+        "summary": "People who can be given access",
+        "description": "A page of the accounts that are not system accounts, sorted and searched by the backend, each with what OMV stores about it. The interface reads the whole list and shows only each name and description. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getUserList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.usermgmt.getuserlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserMgmtGetUserListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccountList"
+                },
+                "examples": {
+                  "several": {
+                    "$ref": "#/components/examples/userMgmtGetUserList.several"
+                  },
+                  "stock": {
+                    "$ref": "#/components/examples/userMgmtGetUserList.stock"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/UserMgmt/getGroupList": {
+      "post": {
+        "operationId": "userMgmtGetGroupList",
+        "tags": ["UserMgmt"],
+        "summary": "Groups that can be given access",
+        "description": "A page of the groups that are not system groups, sorted and searched by the backend. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "UserMgmt",
+          "method": "getGroupList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserGroupList"
+                },
+                "examples": {
+                  "several": {
+                    "$ref": "#/components/examples/userMgmtGetGroupList.several"
+                  },
+                  "stock": {
+                    "$ref": "#/components/examples/userMgmtGetGroupList.stock"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/getSettings": {
+      "post": {
+        "operationId": "smbGetSettings",
+        "tags": ["SMB"],
+        "summary": "Windows and Mac sharing settings",
+        "description": "The SMB/CIFS service's settings, without its shares: whether it is on, and the workgroup, home-folder and protocol options the classic interface sets. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "getSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbSettings"
+                },
+                "examples": {
+                  "off": {
+                    "$ref": "#/components/examples/smbGetSettings.off"
+                  },
+                  "on": {
+                    "$ref": "#/components/examples/smbGetSettings.on"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/setSettings": {
+      "post": {
+        "operationId": "smbSetSettings",
+        "tags": ["SMB"],
+        "summary": "Turn Windows and Mac sharing on or off",
+        "description": "Store the SMB/CIFS service's settings. The interface sends the whole SMB.getSettings reply with only `enable` changed. With `enable` true OMV refuses a NAS name longer than 15 characters. Turning it off makes every shared folder unreachable from Windows and Mac computers once applied; nothing is lost. Nothing changes on the system until the pending changes are applied; it marks the samba and avahi modules dirty. Returns the stored settings.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "setSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.smb.setsettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmbSetSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbSettings"
+                },
+                "examples": {
+                  "turnedOn": {
+                    "$ref": "#/components/examples/smbSetSettings.turnedOn"
+                  },
+                  "turnedOff": {
+                    "$ref": "#/components/examples/smbSetSettings.turnedOff"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused to turn it on, such as for a NAS name longer than 15 characters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "hostTooLong": {
+                    "$ref": "#/components/examples/smbSetSettings.hostTooLong"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/getShareList": {
+      "post": {
+        "operationId": "smbGetShareList",
+        "tags": ["SMB"],
+        "summary": "Shared folders shared with Windows and Mac computers",
+        "description": "The SMB shares, each as stored with the name of its shared folder. The interface reads the whole list. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "getShareList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbShareList"
+                },
+                "examples": {
+                  "one": {
+                    "$ref": "#/components/examples/smbGetShareList.one"
+                  },
+                  "none": {
+                    "$ref": "#/components/examples/smbGetShareList.none"
+                  },
+                  "classicOptions": {
+                    "$ref": "#/components/examples/smbGetShareList.classicOptions"
+                  },
+                  "turnedOff": {
+                    "$ref": "#/components/examples/smbGetShareList.turnedOff"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The read failed because a share names a shared folder whose record is gone (removed by hand, outside OMV's own checks); the message is OMV's internal one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "folderGone": {
+                    "$ref": "#/components/examples/smbGetShareList.folderGone"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/setShare": {
+      "post": {
+        "operationId": "smbSetShare",
+        "tags": ["SMB"],
+        "summary": "Share a folder with Windows and Mac computers, or change how",
+        "description": "Store an SMB share. With OMV's placeholder UUID it makes one; otherwise it replaces the stored one with what is sent, so a field left out returns to its default. OMV refuses a second share for the same shared folder and does not check that the shared folder exists. Time Machine turns macOS compatibility on. Nothing reaches the network until the pending changes are applied; it marks the samba and avahi modules dirty. Returns the stored share.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "setShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.smb.setshare",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmbSetShareRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbShare"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/smbSetShare.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/smbSetShare.changed"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused, such as a second share for the same shared folder.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "secondShare": {
+                    "$ref": "#/components/examples/smbSetShare.secondShare"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/deleteShare": {
+      "post": {
+        "operationId": "smbDeleteShare",
+        "tags": ["SMB"],
+        "summary": "Stop sharing a folder with Windows and Mac computers",
+        "description": "Remove an SMB share's record, with every option set on it. It touches no shared folder, no access list and no file. Computers using the share lose it once the pending changes are applied; it marks the samba and avahi modules dirty. Returns the removed share.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "deleteShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbShare"
+                },
+                "examples": {
+                  "removed": {
+                    "$ref": "#/components/examples/smbDeleteShare.removed"
                   }
                 }
               }
@@ -5269,6 +5887,731 @@
           }
         }
       },
+      "ShareCandidate": {
+        "type": "object",
+        "description": "A file system that can hold a new shared folder: mounted now, not a bind mount, and of a type that can hold one (ShareMgmt.getCandidates).",
+        "required": ["uuid", "description"],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": "The UUID of the file system's mount entry, which ShareMgmt.set takes as `mntentref`."
+          },
+          "description": {
+            "type": "string",
+            "description": "Display text built by the server in English: the device and the file system's tags, or the file system's own description. Not shown."
+          }
+        }
+      },
+      "ShareCandidateList": {
+        "type": "array",
+        "description": "The file systems that can hold a new shared folder, in the server's order.",
+        "items": {
+          "$ref": "#/components/schemas/ShareCandidate"
+        }
+      },
+      "ObjectUuid": {
+        "type": "string",
+        "description": "A configuration object's UUID, in OMV's `uuidv4` format. To create an object, send OMV's placeholder for an object not yet saved, fa4b1c66-ef79-11e5-87a0-0002b3a176b4; the server gives the new object its own UUID and returns it.",
+        "x-omv-format": "uuidv4",
+        "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      },
+      "SharedFolderName": {
+        "type": "string",
+        "description": "A shared folder's name, in OMV's `sharename` format: 1 to 80 bytes (OMV counts bytes in UTF-8, so a name in another script holds fewer letters), none of \" \\ / [ ] : | < > + = ; , * ?, no control character, no space at the start or end. The contract keeps OMV's rule so that a folder made elsewhere (named `homes`, say) can be written back with its description changed; a NEW name is held to the interface's stricter rules before it is sent (design phase-5-shares 0.5: no leading full stop, no two in a row, not a name Samba keeps for itself, unique ignoring case).",
+        "x-omv-format": "sharename",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^(?! )[^\"\\x00-\\x1F\\\\/\\[\\]:|<>+=;,*?]+(?<! )$"
+      },
+      "SharedFolderRelPath": {
+        "type": "string",
+        "description": "The folder a shared folder uses, inside its file system: \"/\" for the whole file system, or a path without a leading \"/\"; a trailing \"/\" is allowed, as OMV stores it, so a row read from ShareMgmt.getList can be sent back. Stricter than OMV: never empty, never two full stops anywhere (OMV refuses them too), no control character and no \"\\\". A NEW path is held to the interface's stricter rules before it is sent (design phase-5-shares 0.5: at most eight folders, none starting with a full stop).",
+        "minLength": 1,
+        "pattern": "^(?:/|(?!.*\\.\\.)[^/\\x00-\\x1F\\\\][^\\x00-\\x1F\\\\]*)$"
+      },
+      "ShareMgmtSetRequest": {
+        "type": "object",
+        "description": "A shared folder to store (rpc.sharemgmt.set). With OMV's placeholder UUID it makes a new one, and makes its folder on the disk at once if it does not exist; otherwise it rewrites the stored one, keeping its access list. Stricter than OMV: the path rules of SharedFolderRelPath, a description of at most 255 characters, and the file mode only \"770\" (design phase-5-shares P4), which OMV applies only to a folder it makes. A new name and path are also held to the interface's own rules (design 0.5) before they are sent.",
+        "required": ["uuid", "name", "reldirpath", "comment", "mntentref"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "name": {
+            "$ref": "#/components/schemas/SharedFolderName"
+          },
+          "reldirpath": {
+            "$ref": "#/components/schemas/SharedFolderRelPath"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "The description, shown in lists only; may be empty."
+          },
+          "mntentref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": "The UUID of the file system's mount entry, from ShareMgmt.getCandidates."
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["770"],
+            "description": "The new folder's file permissions: the owner and the group every person belongs to may read and write, nobody else. Applied only when OMV makes the folder."
+          }
+        },
+        "additionalProperties": false
+      },
+      "SharedFolderSaved": {
+        "type": "object",
+        "description": "The stored shared folder (conf.system.sharedfolder) as ShareMgmt.set or ShareMgmt.delete returns it, without the fields ShareMgmt.getList computes.",
+        "required": ["uuid", "name", "comment", "mntentref", "reldirpath"],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": "The folder's UUID; for a new folder, the one the server gave it."
+          },
+          "name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "mntentref": {
+            "type": "string"
+          },
+          "reldirpath": {
+            "type": "string",
+            "description": "The folder's path inside its file system, with a trailing \"/\"."
+          },
+          "privileges": {
+            "description": "The access list as stored.",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "privilege": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SharedFolderPrivilege"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "string",
+                "enum": [""]
+              }
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "description": "The file mode ShareMgmt.set applied, or would have applied, to a folder it made."
+          }
+        }
+      },
+      "SharedFolderPrivilegeEntry": {
+        "type": "object",
+        "description": "One entry of a shared folder's access list, as ShareMgmt.setPrivileges takes it.",
+        "required": ["type", "name", "perms"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["user", "group"]
+          },
+          "name": {
+            "$ref": "#/components/schemas/Username"
+          },
+          "perms": {
+            "type": "integer",
+            "enum": [0, 5, 7],
+            "description": "7 read and write, 5 read only, 0 refused even through a group (only while guest access is off). The interface stores no entry for \"No access\" and keeps a 0 it read (design 0.4)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShareMgmtSetPrivilegesRequest": {
+        "type": "object",
+        "description": "A shared folder's whole access list (rpc.sharemgmt.setprivileges). It replaces the stored list: an entry left out is removed. Stricter than OMV: `privileges` is required (OMV does not mark it) and holds at most 10,000 entries.",
+        "required": ["uuid", "privileges"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "privileges": {
+            "type": "array",
+            "maxItems": 10000,
+            "items": {
+              "$ref": "#/components/schemas/SharedFolderPrivilegeEntry"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShareMgmtDeleteRequest": {
+        "type": "object",
+        "description": "A shared folder to delete (rpc.sharemgmt.delete). `recursive` false removes only the shared folder's record and leaves every file on the disk; `recursive` true first deletes its folder on the disk and everything in it, inside the request.",
+        "required": ["uuid", "recursive"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "recursive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserMgmtGetUserListRequest": {
+        "type": "object",
+        "description": "Paging, sorting and search for the list of people (rpc.usermgmt.getuserlist). `limit` null returns every row. Stricter than OMV: `detail` only \"basic\", and `search` text only.",
+        "required": ["start", "limit"],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0
+          },
+          "sortfield": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortdir": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["asc", "desc"]
+          },
+          "search": {
+            "type": "string",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "enum": ["basic"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserAccount": {
+        "type": "object",
+        "description": "A person's account that is not a system account (UserMgmt.getUserList), with what OMV stores about it. The interface shows only the name and the description.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The account name."
+          },
+          "uid": {
+            "type": "integer"
+          },
+          "gid": {
+            "type": "integer"
+          },
+          "comment": {
+            "type": "string",
+            "description": "The account's description; may be empty."
+          },
+          "dir": {
+            "type": "string"
+          },
+          "shell": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "description": "The names of the groups the person belongs to, their primary group included.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "system": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string"
+          },
+          "disallowusermod": {
+            "type": "boolean"
+          },
+          "sshpubkeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UserAccountList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every matching row, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserAccount"
+            }
+          }
+        }
+      },
+      "UserGroup": {
+        "type": "object",
+        "description": "A group that is not a system group (UserMgmt.getGroupList). `comment` is present only when OMV holds a record for the group.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "gid": {
+            "type": "integer"
+          },
+          "members": {
+            "type": "array",
+            "description": "The names of the people in it as members (not those for whom it is the primary group).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "system": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "UserGroupList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every matching row, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserGroup"
+            }
+          }
+        }
+      },
+      "SmbSettings": {
+        "type": "object",
+        "description": "The SMB/CIFS service's settings without its shares (SMB.getSettings, conf.service.smb). The interface changes only `enable` and sends everything else back as read (design 0.10).",
+        "required": ["enable"],
+        "properties": {
+          "enable": {
+            "type": "boolean",
+            "description": "Whether Windows and Mac sharing is on for the whole NAS."
+          },
+          "workgroup": {
+            "type": "string"
+          },
+          "serverstring": {
+            "type": "string"
+          },
+          "loglevel": {
+            "type": "integer"
+          },
+          "usesendfile": {
+            "type": "boolean"
+          },
+          "aio": {
+            "type": "boolean"
+          },
+          "timeserver": {
+            "type": "boolean"
+          },
+          "winssupport": {
+            "type": "boolean"
+          },
+          "winsserver": {
+            "type": "string"
+          },
+          "homesenable": {
+            "type": "boolean"
+          },
+          "homesbrowseable": {
+            "type": "boolean"
+          },
+          "homesrecyclebin": {
+            "type": "boolean"
+          },
+          "homesmacoscompat": {
+            "type": "boolean"
+          },
+          "homesinheritacls": {
+            "type": "boolean"
+          },
+          "homesinheritpermissions": {
+            "type": "boolean"
+          },
+          "homesextraoptions": {
+            "type": "string"
+          },
+          "homesfollowsymlinks": {
+            "type": "boolean"
+          },
+          "homeswidelinks": {
+            "type": "boolean"
+          },
+          "netbios": {
+            "type": "boolean"
+          },
+          "minprotocol": {
+            "type": "string"
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        }
+      },
+      "SmbSetSettingsRequest": {
+        "type": "object",
+        "description": "The SMB/CIFS service's settings to store (rpc.smb.setsettings). OMV writes the fields sent over the stored object and keeps the rest; the interface always sends the whole SMB.getSettings reply with only `enable` changed. The twelve fields OMV's datamodel requires are required; the stored home-folder, `netbios` and `minprotocol` fields, which OMV's datamodel does not name but stores when sent, are optional and within the bounds of conf.service.smb. With `enable` true OMV refuses a NAS name longer than 15 characters, and home-folder sharing while home folders are off.",
+        "required": [
+          "enable",
+          "workgroup",
+          "serverstring",
+          "loglevel",
+          "usesendfile",
+          "aio",
+          "timeserver",
+          "winssupport",
+          "winsserver",
+          "homesenable",
+          "homesbrowseable",
+          "extraoptions"
+        ],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "workgroup": {
+            "type": "string"
+          },
+          "serverstring": {
+            "type": "string"
+          },
+          "loglevel": {
+            "type": "integer",
+            "enum": [0, 1, 2, 3, 10]
+          },
+          "usesendfile": {
+            "type": "boolean"
+          },
+          "aio": {
+            "type": "boolean"
+          },
+          "timeserver": {
+            "type": "boolean"
+          },
+          "winssupport": {
+            "type": "boolean"
+          },
+          "winsserver": {
+            "type": "string"
+          },
+          "homesenable": {
+            "type": "boolean"
+          },
+          "homesbrowseable": {
+            "type": "boolean"
+          },
+          "homesrecyclebin": {
+            "type": "boolean"
+          },
+          "homesmacoscompat": {
+            "type": "boolean"
+          },
+          "homesinheritacls": {
+            "type": "boolean"
+          },
+          "homesinheritpermissions": {
+            "type": "boolean"
+          },
+          "homesextraoptions": {
+            "type": "string"
+          },
+          "homesfollowsymlinks": {
+            "type": "boolean"
+          },
+          "homeswidelinks": {
+            "type": "boolean"
+          },
+          "netbios": {
+            "type": "boolean"
+          },
+          "minprotocol": {
+            "type": "string",
+            "enum": ["SMB1", "SMB2", "SMB3"]
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmbShare": {
+        "type": "object",
+        "description": "An SMB share as stored (conf.service.smb.share): one shared folder reached from Windows and Mac computers. OMV allows at most one per shared folder.",
+        "required": [
+          "uuid",
+          "sharedfolderref",
+          "enable",
+          "guest",
+          "readonly",
+          "browseable"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "False when it was turned off for this folder."
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "description": "The UUID of the shared folder it shares."
+          },
+          "comment": {
+            "type": "string"
+          },
+          "guest": {
+            "type": "string",
+            "description": "no: only people given access; allow: anyone on the network too, without a password; only: everyone who opens it is treated as a guest. Open to other values from a later OMV."
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "browseable": {
+            "type": "boolean"
+          },
+          "recyclebin": {
+            "type": "boolean"
+          },
+          "recyclemaxsize": {
+            "type": "integer"
+          },
+          "recyclemaxage": {
+            "type": "integer"
+          },
+          "hidedotfiles": {
+            "type": "boolean"
+          },
+          "inheritacls": {
+            "type": "boolean"
+          },
+          "inheritpermissions": {
+            "type": "boolean"
+          },
+          "easupport": {
+            "type": "boolean"
+          },
+          "storedosattributes": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "type": "string"
+          },
+          "hostsdeny": {
+            "type": "string"
+          },
+          "audit": {
+            "type": "boolean"
+          },
+          "macoscompat": {
+            "type": "boolean"
+          },
+          "timemachine": {
+            "type": "boolean"
+          },
+          "timemachinemaxsize": {
+            "type": "string"
+          },
+          "transportencryption": {
+            "type": "boolean"
+          },
+          "followsymlinks": {
+            "type": "boolean"
+          },
+          "widelinks": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        }
+      },
+      "SmbShareRow": {
+        "description": "An SMB share as SMB.getShareList lists it, with the name of its shared folder.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SmbShare"
+          },
+          {
+            "type": "object",
+            "required": ["sharedfoldername"],
+            "properties": {
+              "sharedfoldername": {
+                "type": "string",
+                "description": "The shared folder's name, which is also the share's name on the network."
+              }
+            }
+          }
+        ]
+      },
+      "SmbShareList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every share, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SmbShareRow"
+            }
+          }
+        }
+      },
+      "SmbSetShareRequest": {
+        "type": "object",
+        "description": "An SMB share to store (rpc.smb.setshare). OMV builds a fresh object from what is sent, so a field left out returns to its default: the interface sends a share read from SMB.getShareList without `sharedfoldername`, with only the fields it changes (design 0.10), or for a new share the classic form's defaults. Every field OMV's datamodel requires is required. The stored fields OMV's datamodel does not name (`macoscompat`, `timemachinemaxsize`, `transportencryption`, `followsymlinks`, `widelinks`) are accepted and stored, so they are optional here, within the bounds of conf.service.smb.share. OMV refuses a second share for the same shared folder.",
+        "required": [
+          "uuid",
+          "enable",
+          "sharedfolderref",
+          "comment",
+          "guest",
+          "readonly",
+          "browseable",
+          "recyclebin",
+          "recyclemaxsize",
+          "recyclemaxage",
+          "hidedotfiles",
+          "inheritacls",
+          "inheritpermissions",
+          "easupport",
+          "storedosattributes",
+          "hostsallow",
+          "hostsdeny",
+          "audit",
+          "extraoptions"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "guest": {
+            "type": "string",
+            "enum": ["no", "allow", "only"],
+            "description": "The interface chooses \"no\" or \"allow\"; \"only\" is accepted so a share set to it in the classic interface keeps it until the reader changes it."
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "browseable": {
+            "type": "boolean"
+          },
+          "recyclebin": {
+            "type": "boolean"
+          },
+          "recyclemaxsize": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recyclemaxage": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hidedotfiles": {
+            "type": "boolean"
+          },
+          "inheritacls": {
+            "type": "boolean"
+          },
+          "inheritpermissions": {
+            "type": "boolean"
+          },
+          "easupport": {
+            "type": "boolean"
+          },
+          "storedosattributes": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "type": "string"
+          },
+          "hostsdeny": {
+            "type": "string"
+          },
+          "audit": {
+            "type": "boolean"
+          },
+          "timemachine": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          },
+          "macoscompat": {
+            "type": "boolean"
+          },
+          "timemachinemaxsize": {
+            "type": "string"
+          },
+          "transportencryption": {
+            "type": "boolean"
+          },
+          "followsymlinks": {
+            "type": "boolean"
+          },
+          "widelinks": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ObjectUuidRequest": {
+        "type": "object",
+        "description": "One configuration object, by its UUID (rpc.common.objectuuid).",
+        "required": ["uuid"],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "UserByContext": {
         "type": "object",
         "description": "The signed-in user's own account.",
@@ -6779,23 +8122,6 @@
             }
           }
         }
-      },
-      "ObjectUuid": {
-        "type": "string",
-        "description": "A configuration object's UUID, in OMV's `uuidv4` format. To create an object, send OMV's placeholder for an object not yet saved, fa4b1c66-ef79-11e5-87a0-0002b3a176b4; the server gives the new object its own UUID and returns it.",
-        "x-omv-format": "uuidv4",
-        "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
-      },
-      "ObjectUuidRequest": {
-        "type": "object",
-        "description": "One configuration object, by its UUID (rpc.common.objectuuid).",
-        "required": ["uuid"],
-        "properties": {
-          "uuid": {
-            "$ref": "#/components/schemas/ObjectUuid"
-          }
-        },
-        "additionalProperties": false
       },
       "DeviceFile": {
         "type": "string",
@@ -9409,6 +10735,1417 @@
         "value": {
           "total": 0,
           "data": []
+        }
+      },
+      "shareMgmtGetList.withAccess": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 10,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "name": "a4share",
+              "comment": "Phase 0 A4",
+              "mntentref": "00000000-0000-4000-8000-000000000001",
+              "reldirpath": "a4share/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sda1",
+              "description": "a4share [Phase 0 A4]",
+              "mntent": {
+                "devicefile": "/dev/sda1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000007",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007/a4share/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000005",
+              "name": "Photos",
+              "comment": "Family photos",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Photos/",
+              "privileges": {
+                "privilege": [
+                  {
+                    "type": "group",
+                    "name": "family",
+                    "perms": 5
+                  },
+                  {
+                    "type": "user",
+                    "name": "alex",
+                    "perms": 7
+                  },
+                  {
+                    "type": "user",
+                    "name": "sam",
+                    "perms": 5
+                  }
+                ]
+              },
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "Photos [Family photos]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Photos/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000009",
+              "name": "Existing",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Existing/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "Existing [on /dev/sdd1, Existing/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Existing/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000a",
+              "name": "photos",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "photos-lower/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "photos [on /dev/sdd1, photos-lower/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/photos-lower/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000b",
+              "name": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "at80/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy [on /dev/sdd1, at80/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/at80/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000c",
+              "name": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl40/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא [on /dev/sdd1, rtl40/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl40/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000d",
+              "name": "תמונות",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "תמונות [on /dev/sdd1, rtl/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000e",
+              "name": "Whole",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "reldirpath": "/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdb1",
+              "description": "Whole [on /dev/sdb1, /]",
+              "mntent": {
+                "devicefile": "/dev/sdb1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f",
+                "type": "btrfs",
+                "posixacl": true
+              },
+              "snapshots": true,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000010",
+              "name": "homes",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "homes/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "homes [on /dev/sdd1, homes/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/homes/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000011",
+              "name": "global",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "global/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "global [on /dev/sdd1, global/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/global/",
+              "status": "OK"
+            }
+          ]
+        }
+      },
+      "shareMgmtGetList.fsNotMounted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 11,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "name": "a4share",
+              "comment": "Phase 0 A4",
+              "mntentref": "00000000-0000-4000-8000-000000000001",
+              "reldirpath": "a4share/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sda1",
+              "description": "a4share [Phase 0 A4]",
+              "mntent": {
+                "devicefile": "/dev/sda1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000007",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007/a4share/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000005",
+              "name": "Photos",
+              "comment": "Family photos",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Photos/",
+              "privileges": {
+                "privilege": [
+                  {
+                    "type": "group",
+                    "name": "family",
+                    "perms": 5
+                  },
+                  {
+                    "type": "user",
+                    "name": "alex",
+                    "perms": 7
+                  },
+                  {
+                    "type": "user",
+                    "name": "sam",
+                    "perms": 5
+                  }
+                ]
+              },
+              "_used": true,
+              "device": "/dev/sdd1",
+              "description": "Photos [Family photos]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Photos/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000009",
+              "name": "Existing",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Existing/",
+              "privileges": {
+                "privilege": [
+                  {
+                    "type": "user",
+                    "name": "robin",
+                    "perms": 5
+                  }
+                ]
+              },
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "Existing [on /dev/sdd1, Existing/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Existing/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000a",
+              "name": "photos",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "photos-lower/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "photos [on /dev/sdd1, photos-lower/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/photos-lower/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000b",
+              "name": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "at80/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy [on /dev/sdd1, at80/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/at80/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000c",
+              "name": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl40/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא [on /dev/sdd1, rtl40/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl40/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000d",
+              "name": "תמונות",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "תמונות [on /dev/sdd1, rtl/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000e",
+              "name": "Whole",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "reldirpath": "/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+              "description": "Whole [on /dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f, /]",
+              "mntent": {
+                "devicefile": "",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f",
+                "type": "btrfs",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000010",
+              "name": "homes",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "homes/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "homes [on /dev/sdd1, homes/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/homes/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000011",
+              "name": "global",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "global/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "global [on /dev/sdd1, global/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/global/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000013",
+              "name": "Archive",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "reldirpath": "Archive/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+              "description": "Archive [on /dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f, Archive/]",
+              "mntent": {
+                "devicefile": "",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f",
+                "type": "btrfs",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f/Archive/",
+              "status": "ENOENT"
+            }
+          ]
+        }
+      },
+      "shareMgmtGetList.afterShares": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 10,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000006",
+              "name": "a4share",
+              "comment": "Phase 0 A4",
+              "mntentref": "00000000-0000-4000-8000-000000000001",
+              "reldirpath": "a4share/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sda1",
+              "description": "a4share [Phase 0 A4]",
+              "mntent": {
+                "devicefile": "/dev/sda1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000007",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000007/a4share/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000a",
+              "name": "photos",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "photos-lower/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "photos [on /dev/sdd1, photos-lower/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/photos-lower/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000b",
+              "name": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "at80/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy [on /dev/sdd1, at80/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/at80/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000c",
+              "name": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl40/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "אאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאאא [on /dev/sdd1, rtl40/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl40/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000d",
+              "name": "תמונות",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "rtl/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "תמונות [on /dev/sdd1, rtl/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/rtl/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000e",
+              "name": "Whole",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "reldirpath": "/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdb1",
+              "description": "Whole [on /dev/sdb1, /]",
+              "mntent": {
+                "devicefile": "/dev/sdb1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-00000000000f",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f",
+                "type": "btrfs",
+                "posixacl": true
+              },
+              "snapshots": true,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000f/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000010",
+              "name": "homes",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "homes/",
+              "privileges": {
+                "privilege": [
+                  {
+                    "type": "user",
+                    "name": "alex",
+                    "perms": 7
+                  }
+                ]
+              },
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "homes [on /dev/sdd1, homes/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/homes/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000011",
+              "name": "global",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "global/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "global [on /dev/sdd1, global/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/global/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000017",
+              "name": "Outer",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Outer/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "Outer [on /dev/sdd1, Outer/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Outer/",
+              "status": "OK"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000018",
+              "name": "Inner",
+              "comment": "",
+              "mntentref": "00000000-0000-4000-8000-000000000002",
+              "reldirpath": "Outer/Inner/",
+              "privileges": "",
+              "_used": false,
+              "device": "/dev/sdd1",
+              "description": "Inner [on /dev/sdd1, Outer/Inner/]",
+              "mntent": {
+                "devicefile": "/dev/sdd1",
+                "fsname": "/dev/disk/by-uuid/00000000-0000-4000-8000-000000000008",
+                "dir": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008",
+                "type": "ext4",
+                "posixacl": true
+              },
+              "snapshots": false,
+              "absdirpath": "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000008/Outer/Inner/",
+              "status": "OK"
+            }
+          ]
+        }
+      },
+      "shareMgmtGetCandidates.dataOnly": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]"
+          }
+        ]
+      },
+      "shareMgmtGetCandidates.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": [
+          {
+            "uuid": "00000000-0000-4000-8000-000000000001",
+            "description": "/dev/sda1 [EXT4, 2.03 MiB (1%) used, 7.75 GiB available]"
+          },
+          {
+            "uuid": "00000000-0000-4000-8000-000000000002",
+            "description": "/dev/sdd1 [Media]"
+          },
+          {
+            "uuid": "00000000-0000-4000-8000-000000000003",
+            "description": "/dev/sdb1 [Archive]"
+          },
+          {
+            "uuid": "00000000-0000-4000-8000-000000000004",
+            "description": "tank [384.00 KiB (0%) used, 7.26 GiB available]"
+          }
+        ]
+      },
+      "shareMgmtSet.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "name": "Photos",
+          "comment": "",
+          "mntentref": "00000000-0000-4000-8000-000000000002",
+          "reldirpath": "Photos/",
+          "privileges": {
+            "privilege": []
+          },
+          "mode": "770"
+        }
+      },
+      "shareMgmtSet.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "name": "Photos",
+          "comment": "Family photos",
+          "mntentref": "00000000-0000-4000-8000-000000000002",
+          "reldirpath": "Photos/",
+          "privileges": {
+            "privilege": [
+              {
+                "type": "user",
+                "name": "alex",
+                "perms": 7
+              }
+            ]
+          },
+          "mode": "775"
+        }
+      },
+      "shareMgmtSet.nameTaken": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "A shared folder with the name 'Photos' already exists."
+        }
+      },
+      "shareMgmtSet.pathTaken": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "A shared folder with the path 'Photos/' already exists for the specified file system."
+        }
+      },
+      "shareMgmtSetPrivileges.saved": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000005",
+          "name": "Photos",
+          "comment": "Family photos",
+          "mntentref": "00000000-0000-4000-8000-000000000002",
+          "reldirpath": "Photos/",
+          "privileges": {
+            "privilege": [
+              {
+                "type": "group",
+                "name": "family",
+                "perms": 5
+              },
+              {
+                "type": "user",
+                "name": "alex",
+                "perms": 7
+              },
+              {
+                "type": "user",
+                "name": "sam",
+                "perms": 5
+              }
+            ]
+          }
+        }
+      },
+      "shareMgmtSetPrivileges.unknownAccount": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The user 'nobody-here' does not exist."
+        }
+      },
+      "shareMgmtSetPrivileges.adminRefused": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The user 'admin' is not allowed."
+        }
+      },
+      "shareMgmtDelete.removed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000009",
+          "name": "Existing",
+          "comment": "",
+          "mntentref": "00000000-0000-4000-8000-000000000002",
+          "reldirpath": "Existing/",
+          "privileges": {
+            "privilege": [
+              {
+                "type": "user",
+                "name": "robin",
+                "perms": 5
+              }
+            ]
+          }
+        }
+      },
+      "shareMgmtDelete.deletedWithFiles": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000016",
+          "name": "Big",
+          "comment": "",
+          "mntentref": "00000000-0000-4000-8000-000000000002",
+          "reldirpath": "Big/",
+          "privileges": ""
+        }
+      },
+      "shareMgmtDelete.referenced": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The configuration object 'conf.system.sharedfolder' is referenced."
+        }
+      },
+      "shareMgmtDelete.otherInside": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Cannot unlink the shared folder content because another shared folder is referencing a subdirectory"
+        }
+      },
+      "userMgmtGetUserList.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 6,
+          "data": [
+            {
+              "name": "example-admin",
+              "uid": 1000,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-admin",
+              "shell": "/bin/sh",
+              "groups": ["users", "openmediavault-admin"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "example-user",
+              "uid": 1001,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-user",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "example-2fa",
+              "uid": 1002,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-2fa",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "alex",
+              "uid": 1003,
+              "gid": 100,
+              "comment": "Alex at home",
+              "dir": "/home/alex",
+              "shell": "/bin/sh",
+              "groups": ["users", "family"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "sam",
+              "uid": 1004,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/sam",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "robin",
+              "uid": 1005,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/robin",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            }
+          ]
+        }
+      },
+      "userMgmtGetUserList.stock": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "name": "example-admin",
+              "uid": 1000,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-admin",
+              "shell": "/bin/sh",
+              "groups": ["users", "openmediavault-admin"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "example-user",
+              "uid": 1001,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-user",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            },
+            {
+              "name": "example-2fa",
+              "uid": 1002,
+              "gid": 100,
+              "comment": "",
+              "dir": "/home/example-2fa",
+              "shell": "/bin/sh",
+              "groups": ["users"],
+              "system": false,
+              "email": "",
+              "disallowusermod": false,
+              "sshpubkeys": []
+            }
+          ]
+        }
+      },
+      "userMgmtGetGroupList.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "name": "family",
+              "gid": 1000,
+              "members": ["alex"],
+              "system": false,
+              "comment": "Everyone at home"
+            }
+          ]
+        }
+      },
+      "userMgmtGetGroupList.stock": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "smbGetSettings.off": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "workgroup": "WORKGROUP",
+          "serverstring": "%h server",
+          "loglevel": 0,
+          "usesendfile": true,
+          "aio": true,
+          "timeserver": false,
+          "winssupport": false,
+          "winsserver": "",
+          "homesenable": false,
+          "homesbrowseable": true,
+          "homesrecyclebin": false,
+          "homesmacoscompat": false,
+          "homesinheritacls": false,
+          "homesinheritpermissions": false,
+          "homesextraoptions": "",
+          "homesfollowsymlinks": false,
+          "homeswidelinks": false,
+          "netbios": false,
+          "minprotocol": "SMB2",
+          "extraoptions": ""
+        }
+      },
+      "smbGetSettings.on": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "workgroup": "WORKGROUP",
+          "serverstring": "%h server",
+          "loglevel": 0,
+          "usesendfile": true,
+          "aio": true,
+          "timeserver": false,
+          "winssupport": false,
+          "winsserver": "",
+          "homesenable": false,
+          "homesbrowseable": true,
+          "homesrecyclebin": false,
+          "homesmacoscompat": false,
+          "homesinheritacls": false,
+          "homesinheritpermissions": false,
+          "homesextraoptions": "",
+          "homesfollowsymlinks": false,
+          "homeswidelinks": false,
+          "netbios": false,
+          "minprotocol": "SMB2",
+          "extraoptions": ""
+        }
+      },
+      "smbSetSettings.turnedOn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "workgroup": "WORKGROUP",
+          "serverstring": "%h server",
+          "loglevel": 0,
+          "usesendfile": true,
+          "aio": true,
+          "timeserver": false,
+          "winssupport": false,
+          "winsserver": "",
+          "homesenable": false,
+          "homesbrowseable": true,
+          "homesrecyclebin": false,
+          "homesmacoscompat": false,
+          "homesinheritacls": false,
+          "homesinheritpermissions": false,
+          "homesextraoptions": "",
+          "homesfollowsymlinks": false,
+          "homeswidelinks": false,
+          "netbios": false,
+          "minprotocol": "SMB2",
+          "extraoptions": ""
+        }
+      },
+      "smbSetSettings.turnedOff": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "workgroup": "WORKGROUP",
+          "serverstring": "%h server",
+          "loglevel": 0,
+          "usesendfile": true,
+          "aio": true,
+          "timeserver": false,
+          "winssupport": false,
+          "winsserver": "",
+          "homesenable": false,
+          "homesbrowseable": true,
+          "homesrecyclebin": false,
+          "homesmacoscompat": false,
+          "homesinheritacls": false,
+          "homesinheritpermissions": false,
+          "homesextraoptions": "",
+          "homesfollowsymlinks": false,
+          "homeswidelinks": false,
+          "netbios": false,
+          "minprotocol": "SMB2",
+          "extraoptions": ""
+        }
+      },
+      "smbSetSettings.hostTooLong": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The DNS hostname is limited to 15 characters when using SMB/CIFS. Please change the hostname in the network settings page."
+        }
+      },
+      "smbGetShareList.one": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000012",
+              "enable": true,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000005",
+              "comment": "",
+              "guest": "no",
+              "readonly": false,
+              "browseable": true,
+              "recyclebin": false,
+              "recyclemaxsize": 0,
+              "recyclemaxage": 0,
+              "hidedotfiles": true,
+              "inheritacls": false,
+              "inheritpermissions": false,
+              "easupport": true,
+              "storedosattributes": false,
+              "hostsallow": "",
+              "hostsdeny": "",
+              "audit": false,
+              "macoscompat": false,
+              "timemachine": false,
+              "timemachinemaxsize": "",
+              "transportencryption": false,
+              "followsymlinks": true,
+              "widelinks": false,
+              "extraoptions": "",
+              "sharedfoldername": "Photos"
+            }
+          ]
+        }
+      },
+      "smbGetShareList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "smbGetShareList.classicOptions": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000012",
+              "enable": true,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000005",
+              "comment": "",
+              "guest": "no",
+              "readonly": false,
+              "browseable": true,
+              "recyclebin": true,
+              "recyclemaxsize": 10,
+              "recyclemaxage": 7,
+              "hidedotfiles": true,
+              "inheritacls": false,
+              "inheritpermissions": false,
+              "easupport": true,
+              "storedosattributes": false,
+              "hostsallow": "",
+              "hostsdeny": "",
+              "audit": false,
+              "macoscompat": true,
+              "timemachine": true,
+              "timemachinemaxsize": "",
+              "transportencryption": false,
+              "followsymlinks": true,
+              "widelinks": false,
+              "extraoptions": "veto files = /.DS_Store/",
+              "sharedfoldername": "Photos"
+            }
+          ]
+        }
+      },
+      "smbGetShareList.turnedOff": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000012",
+              "enable": false,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000005",
+              "comment": "",
+              "guest": "no",
+              "readonly": false,
+              "browseable": true,
+              "recyclebin": false,
+              "recyclemaxsize": 0,
+              "recyclemaxage": 0,
+              "hidedotfiles": true,
+              "inheritacls": false,
+              "inheritpermissions": false,
+              "easupport": true,
+              "storedosattributes": false,
+              "hostsallow": "",
+              "hostsdeny": "",
+              "audit": false,
+              "macoscompat": false,
+              "timemachine": false,
+              "timemachinemaxsize": "",
+              "transportencryption": false,
+              "followsymlinks": true,
+              "widelinks": false,
+              "extraoptions": "",
+              "sharedfoldername": "Photos"
+            }
+          ]
+        }
+      },
+      "smbGetShareList.folderGone": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute XPath query './/system/shares/sharedfolder[uuid='00000000-0000-4000-8000-000000000014']'."
+        }
+      },
+      "smbSetShare.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000012",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000005",
+          "comment": "",
+          "guest": "no",
+          "readonly": false,
+          "browseable": true,
+          "recyclebin": false,
+          "recyclemaxsize": 0,
+          "recyclemaxage": 0,
+          "hidedotfiles": true,
+          "inheritacls": false,
+          "inheritpermissions": false,
+          "easupport": true,
+          "storedosattributes": false,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "audit": false,
+          "macoscompat": false,
+          "timemachine": false,
+          "timemachinemaxsize": "",
+          "transportencryption": false,
+          "followsymlinks": true,
+          "widelinks": false,
+          "extraoptions": ""
+        }
+      },
+      "smbSetShare.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000012",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000005",
+          "comment": "",
+          "guest": "no",
+          "readonly": false,
+          "browseable": false,
+          "recyclebin": true,
+          "recyclemaxsize": 10,
+          "recyclemaxage": 7,
+          "hidedotfiles": true,
+          "inheritacls": false,
+          "inheritpermissions": false,
+          "easupport": true,
+          "storedosattributes": false,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "audit": false,
+          "macoscompat": true,
+          "timemachine": true,
+          "timemachinemaxsize": "",
+          "transportencryption": false,
+          "followsymlinks": true,
+          "widelinks": false,
+          "extraoptions": "veto files = /.DS_Store/"
+        }
+      },
+      "smbSetShare.secondShare": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The configuration object 'conf.service.smb.share' is not unique. An object with the property 'sharedfolderref' and value '00000000-0000-4000-8000-000000000005' already exists."
+        }
+      },
+      "smbDeleteShare.removed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000015",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000014",
+          "comment": "",
+          "guest": "no",
+          "readonly": false,
+          "browseable": true,
+          "recyclebin": false,
+          "recyclemaxsize": 0,
+          "recyclemaxage": 0,
+          "hidedotfiles": true,
+          "inheritacls": false,
+          "inheritpermissions": false,
+          "easupport": true,
+          "storedosattributes": false,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "audit": false,
+          "macoscompat": false,
+          "timemachine": false,
+          "timemachinemaxsize": "",
+          "transportencryption": false,
+          "followsymlinks": true,
+          "widelinks": false,
+          "extraoptions": ""
         }
       },
       "userMgmtGetUserByContext.user": {

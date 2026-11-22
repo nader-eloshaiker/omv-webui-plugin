@@ -51,6 +51,16 @@ describe("a file system's page (4.3)", () => {
       screen.getByRole("button", { name: "Delete file system…" }),
     ).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText(/Shared folders use it: media\./)).toBeVisible();
+    // Used by and the refusal both link the folder to its own page (shares design 9.1).
+    const links = screen.getAllByRole("link", {
+      name: "Open shared folder media",
+    });
+    expect(links.length).toBe(2);
+    for (const link of links) {
+      expect(link.getAttribute("href")).toMatch(
+        /^\/ui\/storage\/shared-folders\/[0-9a-fA-F-]{36}$/u,
+      );
+    }
   });
 });
 

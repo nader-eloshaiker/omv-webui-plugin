@@ -38,6 +38,18 @@ import {
 } from "./fsScenarios.ts";
 import { RAID_SCENARIO_LABELS, RAID_SCENARIOS } from "./raidScenarios.ts";
 import {
+  isSharesScenario,
+  newSharesMockState,
+  SHARES_MODULES,
+  SHARES_SCENARIO_LABELS,
+  SHARES_SCENARIOS,
+  sharesAnswers,
+  sharesApplied,
+  sharesReverted,
+  type SharesMockState,
+  type SharesModule,
+} from "./sharesScenarios.ts";
+import {
   ZFS_DIRTY,
   ZFS_SCENARIO_LABELS,
   ZFS_SCENARIOS,
@@ -95,6 +107,7 @@ export const SCENARIOS = [
   ...FS_SCENARIOS,
   ...RAID_SCENARIOS,
   ...ZFS_SCENARIOS,
+  ...SHARES_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -152,6 +165,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...FS_SCENARIO_LABELS,
   ...RAID_SCENARIO_LABELS,
   ...ZFS_SCENARIO_LABELS,
+  ...SHARES_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -648,6 +662,8 @@ export interface MockSession {
   disk: DiskMockState;
   /** What the file-system answers remember (fsScenarios.ts); made with the scenario's answers. */
   fs?: FsMockState;
+  /** What the shares answers remember (sharesScenarios.ts), in the shares* stories only. */
+  shares?: SharesMockState;
 }
 
 export const newMockSession = (
@@ -672,6 +688,8 @@ export const startsDirty = (name: ScenarioName): boolean =>
 
 // The handle the contract's apply example returns.
 const APPLY_HANDLE = "/tmp/bgstatus7k6uanc46kul3JYrbbi";
+// The handle the contract's undo example returns.
+const REVERT_HANDLE = CONTRACT_EXAMPLES.configRevertChangesBg.reverted.value;
 // The handle the contract's disk health example returns.
 const SMART_HANDLE = CONTRACT_EXAMPLES.smartGetListBg.smartDevices.value;
 // The handles of the contract's wipe and self-test examples.
@@ -837,6 +855,52 @@ export function scenarioAnswers(
       }
       return answer;
     };
+  /** The modules a shares write marks dirty (observed on the test VM), with OMV's descriptions. */
+  const sharesDirty = (modules: readonly SharesModule[]) => {
+    session.fsDirty = {
+      ...session.fsDirty,
+      ...Object.fromEntries(modules.map((m) => [m, SHARES_MODULES[m]])),
+    };
+  };
+  /** A shares write outside the shares* stories: its example, with its modules pending. */
+  const sharesPending =
+    <T extends string>(reply: T, modules: readonly SharesModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        sharesDirty(modules);
+      }
+      return answer;
+    };
+  // The remembering shares answers (sharesScenarios.ts), in the shares* stories.
+  if (isSharesScenario(name) && session.shares === undefined) {
+    session.shares = newSharesMockState(name);
+  }
+  const sharesState = session.shares;
+  const sharesReplies =
+    sharesState === undefined
+      ? undefined
+      : sharesAnswers(sharesState, { dirty: sharesDirty });
+  /** The remembering shares answer of an operation, behind the sign-in guard. */
+  const sharesRead = (
+    reply: (call: { params: unknown }) => FixedAnswer,
+  ): ((call: { params: unknown }) => FixedAnswer) => {
+    return ({ params }) => {
+      const gate = guarded<never>({ status: 200 })();
+      return gate.status === 200 ? reply({ params }) : gate;
+    };
+  };
+  /** The NAS's name in the shares stories (sharesLongHost has a long one). */
+  const withHost = (answer: FixedAnswer): FixedAnswer =>
+    sharesState === undefined || answer.status !== 200
+      ? answer
+      : {
+          ...answer,
+          value: {
+            ...(answer.value as object),
+            hostname: sharesState.host,
+          },
+        };
   /**
    * A ZFS answer (zfsScenarios.ts) outside the zfs* stories: OMV's 404. In the zfs* stories the
    * remembering ZFS answers, merged into the file-system mock's, take their place below.
@@ -997,19 +1061,21 @@ export function scenarioAnswers(
       name === "servicePending" && session.dirty
         ? guarded<never>(sambaPending())()
         : guarded<never>(
-            withSmartDirty(
-              information(
-                user
-                  ? "user"
-                  : session.dirty
-                    ? "adminPendingChanges"
-                    : name === "checklistHidden" || session.welcomeDismissed
-                      ? "adminWelcomeDismissed"
-                      : "admin",
-                {
-                  now: name !== "attention",
-                  rebootRequired: name === "attention",
-                },
+            withHost(
+              withSmartDirty(
+                information(
+                  user
+                    ? "user"
+                    : session.dirty
+                      ? "adminPendingChanges"
+                      : name === "checklistHidden" || session.welcomeDismissed
+                        ? "adminWelcomeDismissed"
+                        : "admin",
+                  {
+                    now: name !== "attention",
+                    rebootRequired: name === "attention",
+                  },
+                ),
               ),
             ),
           )(),
@@ -1074,6 +1140,14 @@ export function scenarioAnswers(
       const apply = filename === APPLY_HANDLE;
       if (apply && name === "applyFails") {
         return guarded("applyFailed")();
+      }
+      if (sharesState !== undefined && session.signedIn) {
+        if (apply && !sharesApplied(sharesState)) {
+          return guarded("applyFailed")();
+        }
+        if (filename === REVERT_HANDLE) {
+          sharesReverted(sharesState);
+        }
       }
       if (apply && fsState !== undefined && session.signedIn) {
         if (!fsApplied(name, fsState)) {
@@ -1256,6 +1330,35 @@ export function scenarioAnswers(
         fsRead(operationId),
       ]),
     ),
+    // Shared folders, access and SMB (phase 5 shares design 11): stateless captured examples outside
+    // the shares* stories, each write marking what it marks on the VM; the remembering answers below in
+    // the shares* stories.
+    shareMgmtGetCandidates: guarded("dataOnly"),
+    shareMgmtSet: sharesPending("created", ["sharedfolders", "systemd"]),
+    shareMgmtSetPrivileges: sharesPending("saved", [
+      "sharedfolders",
+      "systemd",
+    ]),
+    shareMgmtDelete: sharesPending("removed", [
+      "sharedfolders",
+      "systemd",
+      "task",
+    ]),
+    userMgmtGetUserList: guarded("several"),
+    userMgmtGetGroupList: guarded("several"),
+    smbGetSettings: guarded("off"),
+    smbSetSettings: sharesPending("turnedOn", ["samba", "avahi"]),
+    smbGetShareList: guarded("none"),
+    smbSetShare: sharesPending("created", ["samba", "avahi"]),
+    smbDeleteShare: sharesPending("removed", ["samba", "avahi"]),
+    ...(sharesReplies === undefined
+      ? {}
+      : Object.fromEntries(
+          Object.entries(sharesReplies).map(([operationId, reply]) => [
+            operationId,
+            sharesRead(reply),
+          ]),
+        )),
     smbGetStats: () =>
       guarded(
         name === "servicePending" && session.dirty

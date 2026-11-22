@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: shareMgmtDelete
+  tags:
+    - ShareMgmt
+  summary: Delete a shared folder, keeping its files or with them
+  description: >-
+    Delete a shared folder. OMV refuses while any setting refers to it: an SMB share (even one
+    turned off), an NFS share, an Rsync server module, a backup job, the home folders setting or an
+    add-on. With `recursive` false it removes only the shared folder's record and every file stays
+    on the disk. With `recursive` true it first refuses when another shared folder uses the same
+    folder or one inside it, then deletes the folder on the disk and everything in it, inside the
+    request (not a background task; the deletion cannot be undone), then removes the record. Both
+    mark the sharedfolders and systemd modules dirty. Returns the deleted folder.
+  x-omv-rpc:
+    service: ShareMgmt
+    method: delete
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.sharemgmt.delete
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ShareMgmtDeleteRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SharedFolderSaved.yaml
+          examples:
+            removed:
+              $ref: ../../examples/shareMgmtDelete.removed.yaml
+            deletedWithFiles:
+              $ref: ../../examples/shareMgmtDelete.deletedWithFiles.yaml
+    "500":
+      description: >-
+        OMV refused: a setting refers to the folder, or (with its files) another shared folder uses
+        the same folder or one inside it.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            referenced:
+              $ref: ../../examples/shareMgmtDelete.referenced.yaml
+            otherInside:
+              $ref: ../../examples/shareMgmtDelete.otherInside.yaml

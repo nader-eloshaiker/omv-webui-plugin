@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import type { TaskStatus } from "../status/status-kinds";
 import {
@@ -164,5 +165,76 @@ describe("JobSummary with a notice", () => {
       notice.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(list).not.toContainElement(notice);
+  });
+});
+
+describe("JobSummary items", () => {
+  it("draws a warning item with the warning shape in place of its bullet, and keeps plain items as they were", () => {
+    render(
+      <JobSummary
+        title="Ready to add the shared folder"
+        items={[
+          "Make the shared folder media on data.",
+          <strong key="rw">Read and write: family.</strong>,
+          {
+            tone: "warning",
+            content: "Anyone on your network can open it without a password.",
+          },
+        ]}
+        confirmLabel="Add shared folder"
+        backLabel="Change choices"
+        onConfirm={() => undefined}
+        onBack={() => undefined}
+      />,
+    );
+    const items = screen.getAllByRole("listitem");
+    expect(items.map((item) => item.textContent)).toEqual([
+      "Make the shared folder media on data.",
+      "Read and write: family.",
+      "Anyone on your network can open it without a password.",
+    ]);
+    expect(items[0]).not.toHaveAttribute("data-tone");
+    expect(items[0]?.querySelector("svg")).toBeNull();
+    expect(items[1]?.querySelector("strong")).not.toBeNull();
+    expect(items[2]).toHaveAttribute("data-tone", "warning");
+    expect(items[2]?.querySelector("svg")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+});
+
+describe("JobSummary title", () => {
+  const summary = (extra: Partial<React.ComponentProps<typeof JobSummary>>) => (
+    <JobSummary
+      title="Ready to add the shared folder"
+      items={["Make the shared folder media on data."]}
+      confirmLabel="Add shared folder"
+      backLabel="Change choices"
+      onConfirm={() => undefined}
+      onBack={() => undefined}
+      {...extra}
+    />
+  );
+
+  it("stays a paragraph, not a heading, without a level", () => {
+    render(summary({}));
+    expect(screen.queryByRole("heading")).toBeNull();
+    const title = screen.getByText("Ready to add the shared folder");
+    expect(title.tagName).toBe("P");
+    expect(title).not.toHaveAttribute("tabindex");
+  });
+
+  it("is a heading at the given level that the page can focus through its ref", () => {
+    const titleRef = React.createRef<HTMLHeadingElement>();
+    render(summary({ titleLevel: 3, titleRef }));
+    const heading = screen.getByRole("heading", {
+      level: 3,
+      name: "Ready to add the shared folder",
+    });
+    expect(heading).toHaveAttribute("tabindex", "-1");
+    expect(titleRef.current).toBe(heading);
+    titleRef.current?.focus();
+    expect(heading).toHaveFocus();
   });
 });

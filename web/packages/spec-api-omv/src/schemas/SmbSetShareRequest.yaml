@@ -1,0 +1,91 @@
+type: object
+description: >-
+  An SMB share to store (rpc.smb.setshare). OMV builds a fresh object from what is sent, so a field
+  left out returns to its default: the interface sends a share read from SMB.getShareList without
+  `sharedfoldername`, with only the fields it changes (design 0.10), or for a new share the classic
+  form's defaults. Every field OMV's datamodel requires is required. The stored fields OMV's
+  datamodel does not name (`macoscompat`, `timemachinemaxsize`, `transportencryption`,
+  `followsymlinks`, `widelinks`) are accepted and stored, so they are optional here, within the
+  bounds of conf.service.smb.share. OMV refuses a second share for the same shared folder.
+required:
+  [
+    uuid,
+    enable,
+    sharedfolderref,
+    comment,
+    guest,
+    readonly,
+    browseable,
+    recyclebin,
+    recyclemaxsize,
+    recyclemaxage,
+    hidedotfiles,
+    inheritacls,
+    inheritpermissions,
+    easupport,
+    storedosattributes,
+    hostsallow,
+    hostsdeny,
+    audit,
+    extraoptions,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  enable:
+    type: boolean
+  sharedfolderref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  comment:
+    type: string
+  guest:
+    type: string
+    enum: ["no", allow, only]
+    description: >-
+      The interface chooses "no" or "allow"; "only" is accepted so a share set to it in the
+      classic interface keeps it until the reader changes it.
+  readonly:
+    type: boolean
+  browseable:
+    type: boolean
+  recyclebin:
+    type: boolean
+  recyclemaxsize:
+    type: integer
+    minimum: 0
+  recyclemaxage:
+    type: integer
+    minimum: 0
+  hidedotfiles:
+    type: boolean
+  inheritacls:
+    type: boolean
+  inheritpermissions:
+    type: boolean
+  easupport:
+    type: boolean
+  storedosattributes:
+    type: boolean
+  hostsallow:
+    type: string
+  hostsdeny:
+    type: string
+  audit:
+    type: boolean
+  timemachine:
+    type: boolean
+  extraoptions:
+    type: string
+  macoscompat:
+    type: boolean
+  timemachinemaxsize:
+    type: string
+  transportencryption:
+    type: boolean
+  followsymlinks:
+    type: boolean
+  widelinks:
+    type: boolean
+additionalProperties: false

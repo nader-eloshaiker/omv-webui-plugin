@@ -6,7 +6,13 @@ import { Fragment, type ReactNode } from "react";
 export function ListOf({
   items,
 }: {
-  items: readonly { key: string; text: string; after?: ReactNode }[];
+  /** `content`, when given, is shown in place of `text` (a link with the same words). */
+  items: readonly {
+    key: string;
+    text: string;
+    content?: ReactNode;
+    after?: ReactNode;
+  }[];
 }) {
   const format = new Intl.ListFormat(undefined, { type: "conjunction" });
   const parts = format.formatToParts(items.map((i) => i.key));
@@ -21,7 +27,7 @@ export function ListOf({
         index += 1;
         return item ? (
           <Fragment key={item.key}>
-            <span dir="auto">{item.text}</span>
+            {item.content ?? <span dir="auto">{item.text}</span>}
             {item.after}
           </Fragment>
         ) : null;

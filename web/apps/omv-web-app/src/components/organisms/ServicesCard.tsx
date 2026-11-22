@@ -2,7 +2,8 @@
 // The dashboard's Services card (phase 5 design 1.4): the services that are on, worst first, and one
 // line for the ones that are off. The pending check comes first: `enabled` is the saved setting, so
 // a service just turned on and saved is "Not applied yet", not "on, but not running". Titles come
-// translated from the server and are shown as text.
+// translated from the server and are shown as text. The SMB row's name leads to the Windows and Mac
+// sharing page (shares design 9.2).
 import type { ServiceStatus } from "@omv-webui/react-api-omv/generated";
 import {
   EmptyState,
@@ -20,6 +21,22 @@ import { CardStaleLine } from "../molecules/CardStaleLine.tsx";
 import { DashboardCard } from "../molecules/DashboardCard.tsx";
 import { ListOf } from "../molecules/ListOf.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
+
+/** The service whose row's name leads to its page here (shares design 9.2). */
+const SMB_SERVICE = "samba";
+
+function ServiceName({ service }: { service: ServiceStatus }) {
+  return service.name === SMB_SERVICE ? (
+    <Link
+      to="/services/smb"
+      className="text-action-label underline underline-offset-2 hover:no-underline"
+    >
+      <span dir="auto">{service.title}</span>
+    </Link>
+  ) : (
+    <>{service.title}</>
+  );
+}
 
 export function ServicesCard({
   services,
@@ -92,6 +109,10 @@ export function ServicesCard({
                           title: service.title,
                         })
                       : service.title,
+                    content:
+                      service.name === SMB_SERVICE && !running ? (
+                        <ServiceName service={service} />
+                      ) : undefined,
                     after: waiting ? (
                       <>
                         {" "}
@@ -144,7 +165,7 @@ export function ServicesCard({
                     ? t("pending.itemMark")
                     : t(`health.${state}`)
                 }
-                name={service.title}
+                name={<ServiceName service={service} />}
                 reason={
                   state === "pending"
                     ? t("dashboard.services.pending")

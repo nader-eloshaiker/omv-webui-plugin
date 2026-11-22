@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbSetSettings
+  tags:
+    - SMB
+  summary: Turn Windows and Mac sharing on or off
+  description: >-
+    Store the SMB/CIFS service's settings. The interface sends the whole SMB.getSettings reply
+    with only `enable` changed. With `enable` true OMV refuses a NAS name longer than 15
+    characters. Turning it off makes every shared folder unreachable from Windows and Mac
+    computers once applied; nothing is lost. Nothing changes on the system until the pending
+    changes are applied; it marks the samba and avahi modules dirty. Returns the stored settings.
+  x-omv-rpc:
+    service: SMB
+    method: setSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.smb.setsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/SmbSetSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmbSettings.yaml
+          examples:
+            turnedOn:
+              $ref: ../../examples/smbSetSettings.turnedOn.yaml
+            turnedOff:
+              $ref: ../../examples/smbSetSettings.turnedOff.yaml
+    "500":
+      description: OMV refused to turn it on, such as for a NAS name longer than 15 characters.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            hostTooLong:
+              $ref: ../../examples/smbSetSettings.hostTooLong.yaml

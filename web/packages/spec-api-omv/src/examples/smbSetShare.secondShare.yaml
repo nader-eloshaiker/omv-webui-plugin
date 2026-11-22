@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "The configuration object 'conf.service.smb.share' is not unique. An object with the property 'sharedfolderref' and value '00000000-0000-4000-8000-000000000005' already exists."
