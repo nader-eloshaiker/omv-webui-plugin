@@ -8,7 +8,7 @@ ordering and deleting them) and the proxy. Above all it designs the safeguard th
 what this page does when a change can cut the browser, and the administrator with it, off from the
 NAS (section 1).
 
-**Status: draft for the owner's agreement (section 21).** The methods the owner cleared on
+**Status: agreed by the owner on 2026-11-23, P1–P19 as recommended (section 21), with P1 as A, B and E and P2's two IPv6 firewall methods cleared.** The methods the owner cleared on
 2026-11-23 and the two network reads already in the contract (`getGeneralSettings`,
 `enumerateDevicesList`) cover everything here except the IPv6 firewall rules, which need two more
 methods (15.0). This slice can cut the administrator off from the NAS (an address changed or
