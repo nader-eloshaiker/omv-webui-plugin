@@ -5,6 +5,7 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   ClientField,
+  type ClientChoiceOrRange,
   type ClientFieldProps,
   type ClientFieldValue,
 } from "./client-field";
@@ -292,5 +293,147 @@ describe("ClientField", () => {
     expect(
       screen.getByText('<img src=x onerror="alert(1)">'),
     ).toBeInTheDocument();
+  });
+
+  describe("the firewall's range, family and stored negation", () => {
+    const range = {
+      label: "A range of addresses",
+      firstLabel: "First address",
+      lastLabel: "Last address",
+      firstPlaceholder: "192.0.2.10",
+      lastPlaceholder: "192.0.2.20",
+    };
+
+    function WithRange({
+      initial,
+      onValueChange,
+      ...props
+    }: Partial<ClientFieldProps<ClientChoiceOrRange>> & {
+      initial: ClientFieldValue<ClientChoiceOrRange>;
+    }) {
+      const [value, setValue] = React.useState(initial);
+      return (
+        <ClientField
+          {...words}
+          range={range}
+          family="ipv4"
+          {...props}
+          value={value}
+          onValueChange={(next) => {
+            setValue(next);
+            onValueChange?.(next);
+          }}
+        />
+      );
+    }
+
+    it("offers the range after the network, before Any computer", () => {
+      render(<WithRange initial={{ choice: "one", text: "" }} />);
+      expect(
+        screen.getAllByRole("radio").map((radio) => radio.textContent ?? ""),
+      ).toHaveLength(4);
+      const names = screen
+        .getAllByRole("radio")
+        .map((radio) => radio.closest("label")?.textContent);
+      expect(names).toEqual([
+        "One computer",
+        "Computers on one network",
+        "A range of addresses",
+        "Any computer that can reach the NAS",
+      ]);
+    });
+
+    it("takes a first and a last address, keeping the first as the text", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      render(
+        <WithRange
+          initial={{ choice: "one", text: "192.0.2.10" }}
+          onValueChange={onValueChange}
+        />,
+      );
+      await user.click(
+        screen.getByRole("radio", { name: "A range of addresses" }),
+      );
+      const first = screen.getByRole("textbox", { name: "First address" });
+      expect(first).toHaveValue("192.0.2.10");
+      expect(first).toHaveAttribute("inputmode", "decimal");
+      await user.type(
+        screen.getByRole("textbox", { name: "Last address" }),
+        "192.0.2.20",
+      );
+      expect(onValueChange).toHaveBeenLastCalledWith({
+        choice: "range",
+        text: "192.0.2.10",
+        last: "192.0.2.20",
+      });
+    });
+
+    it("shows each address's error and the pair's under both fields", () => {
+      render(
+        <WithRange
+          initial={{ choice: "range", text: "192.0.2.30", last: "192.0.2.300" }}
+          range={{
+            ...range,
+            lastError:
+              "Write one IPv4 address, a network such as 192.0.2.0/24, or a range.",
+            error: "The first address must come before the last.",
+          }}
+        />,
+      );
+      const first = screen.getByRole("textbox", { name: "First address" });
+      const last = screen.getByRole("textbox", { name: "Last address" });
+      expect(first).toHaveAttribute("aria-invalid", "true");
+      expect(first).toHaveAccessibleDescription(
+        "The first address must come before the last.",
+      );
+      expect(last).toHaveAccessibleDescription(
+        expect.stringContaining("Write one IPv4 address"),
+      );
+    });
+
+    it("leaves the touch keyboard alone for IPv6", () => {
+      render(
+        <WithRange
+          initial={{ choice: "network", text: "2001:db8::/64" }}
+          family="ipv6"
+        />,
+      );
+      expect(
+        screen.getByRole("textbox", { name: "Network" }),
+      ).not.toHaveAttribute("inputmode");
+    });
+
+    it("keeps a stored negation until Remove, then moves focus to the choices", async () => {
+      const user = userEvent.setup();
+      function WithExcept() {
+        const [except, setExcept] = React.useState(true);
+        return (
+          <WithRange
+            initial={{ choice: "network", text: "192.0.2.0/24" }}
+            except={
+              except
+                ? {
+                    label: "Every address except",
+                    description: "(set in the classic interface)",
+                    removeLabel: "Remove",
+                    onRemove: () => setExcept(false),
+                  }
+                : undefined
+            }
+          />
+        );
+      }
+      render(<WithExcept />);
+      const group = screen.getByRole("radiogroup", { name: "Who may connect" });
+      expect(group).toHaveAccessibleDescription(
+        expect.stringContaining("Every address except"),
+      );
+      await user.click(screen.getByRole("button", { name: "Remove" }));
+      expect(screen.queryByText("Every address except")).toBeNull();
+      expect(
+        screen.getByRole("radio", { name: "Computers on one network" }),
+      ).toHaveFocus();
+    });
   });
 });
