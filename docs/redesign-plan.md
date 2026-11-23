@@ -70,6 +70,10 @@ The brief, the visual language, the component skins and the composition of every
   React JSX built from props. Never raw SVG strings or `dangerouslySetInnerHTML` (`UI-2`), never a
   `<style>` inside an SVG, and no external assets (`UI-7`). Lucide stays for small interface icons.
 
+- **Real rendered charts (owner, 2026-11-24)**, with axes, tooltips and live updates, possibly
+  using Recharts. A new runtime dependency must pass `UI-1` (including Trusted Types) and `UI-11`
+  (justified, size measured). Charts still show only what the open page has sampled (A7).
+
 ## Research notes (2026-11-23)
 
 Ania Kubów's CSS posts on YouTube, Instagram and X are short effect showcases: an orbiting planet
