@@ -171,12 +171,12 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
 
 ## Status
 
-| Step                                      | State                            |
-| ----------------------------------------- | -------------------------------- |
-| 1. Network slice finished and merged      | in progress on `phase-5-network` |
-| 2. Visual foundation and three directions | in progress on `redesign-look`   |
-| 3. Lab prototypes                         | in progress on `redesign-look`   |
-| 4. Design system rewrite                  | waiting on the owner's choice    |
-| 5. Re-compose built pages                 | waiting on 4                     |
-| 6. Process change                         | in force from now                |
-| 7. Remaining domains                      | waiting on 5                     |
+| Step                                      | State                          |
+| ----------------------------------------- | ------------------------------ |
+| 1. Network slice finished and merged      | done: #20, `1a7181a`           |
+| 2. Visual foundation and three directions | in progress on `redesign-look` |
+| 3. Lab prototypes                         | in progress on `redesign-look` |
+| 4. Design system rewrite                  | waiting on the owner's choice  |
+| 5. Re-compose built pages                 | waiting on 4                   |
+| 6. Process change                         | in force from now              |
+| 7. Remaining domains                      | waiting on 5                   |
