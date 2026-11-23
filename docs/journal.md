@@ -821,3 +821,14 @@ The owner rejected the look built so far: it reads like a document, gives no rea
 - **Prototype before building.** Three visual directions of the same screens, live on the mock, for the owner to choose from before the design system is rewritten and the built pages are re-composed.
 - **Scope:** every classic-only menu item that comes with OMV is migrated in later domains, not just the planned ones: Workbench and Monitoring join the system domain; System information, Performance statistics and Report form a diagnostics domain; Scheduled tasks follows. Scheduled tasks (commands run as root) and Report (the download endpoint's fixed list in UI-4) need owner decisions first; Performance statistics depends on A7. Only menu items added by other plugins stay classic.
 - New domains wait until the new look exists; the network slice in progress is finished and merged first.
+
+## 2026-11-24 — The new look: the owner's four choices
+
+After trying the lab's three directions, the owner chose:
+
+1. **Direction:** the mix. Sky is the base (a plain-words health headline, problem cards with a next step, capacity rings, the drive-bay picture, the sidebar with collapsible groups). Atlas's connection map is the diagram language everywhere. Instrument's dense tables and monospaced readouts are the compact mode. Atlas's top tabs are not used; the sidebar scales to every page and to plugin items.
+2. **The sky-blue top bar goes.** The sky blue stays as the brand accent: the logo, the primary and selected colour in dark, the focus ring and the health ring.
+3. **Live samples are kept for the session, in memory only.** They are kept in this tab, never in browser storage, and are cleared by signing out or closing the tab. At most the last 10 minutes are kept. One combined read (CPU, memory, load, network counters) runs every 2 s while a chart is on screen, every 10 s on other pages, and not at all while the tab is hidden. These reads must not keep the session alive, so the idle sign-out still works. Charts state the real span they show.
+4. **Pending changes stay in a band under the top bar**, not a floating bar at the foot of the window. The band is slim and keeps OMV's pending yellow. On save, a mark flies into the top bar's "pending" pill, and the band can shrink to that pill while scrolling.
+
+Rendered charts are being assessed separately (Recharts against UI-1 with Trusted Types, and UI-11).
