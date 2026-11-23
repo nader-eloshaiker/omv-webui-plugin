@@ -52,6 +52,24 @@ The brief, the visual language, the component skins and the composition of every
 
   One interface serves both, through layers of progressive disclosure, not two separate modes.
 
+- **Custom SVG pictures and diagrams wherever they remove ambiguity.** A picture tells a thousand
+  words. Examples:
+  - a drive-bay picture with each disk's slot, health and role;
+  - how disks combine (RAID levels; ZFS mirror, stripe and raidz), drawn before anything is
+    committed;
+  - a map from disk to file system to shared folder to SMB or NFS share to who can reach it;
+  - the network path from this browser through an interface to the NAS, with bonds, VLANs and
+    bridges as layers;
+  - rsync's direction;
+  - capacity rings and meaningful service glyphs;
+  - empty states that teach the next step;
+  - destructive confirmations that show exactly what goes away.
+
+  The pictures are one consistent illustration language: stroke, grid and radius, themed through
+  `currentColor` and custom properties, readable at 390 px, with a text alternative. They are
+  React JSX built from props. Never raw SVG strings or `dangerouslySetInnerHTML` (`UI-2`), never a
+  `<style>` inside an SVG, and no external assets (`UI-7`). Lucide stays for small interface icons.
+
 ## Research notes (2026-11-23)
 
 Ania Kubów's CSS posts on YouTube, Instagram and X are short effect showcases: an orbiting planet
@@ -104,7 +122,7 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
    - elevation;
    - a motion system: tokens and a catalogue of named motions, each with its purpose and its
      reduced-motion version;
-   - data visualisation;
+   - data visualisation, and the illustration and diagram language for custom SVGs;
    - the shell and navigation;
    - page archetypes, with prose moved into progressive disclosure;
    - how one interface serves both newcomers and pros (affordance, guided paths, the command
