@@ -48,9 +48,16 @@ export interface OperationEntry {
   /**
    * Reply fields the transport deletes before anything else sees the reply (x-omv-omit): a secret
    * the server sends that the interface must never hold, such as the SMTP password. A path is a
-   * top-level field (`password`) or a field of each row of a list (`data[].wpapsk`).
+   * top-level field (`password`) or a field of each row of a list (`data[].wpapsk`), at any depth
+   * (`data[].users[].password`, `users.user[].password`).
    */
   omit?: readonly string[];
+  /**
+   * Reply fields the transport replaces, before anything else sees the reply, by whether they are
+   * set (x-omv-presence): `true` for a non-empty string, `false` otherwise. For a stored password
+   * the page shows as "Set" but must never hold. Paths as for `omit`; the two lists are disjoint.
+   */
+  presence?: readonly string[];
   /** The 200 response's schema; null when the method returns null. */
   response: Schema | null;
 }

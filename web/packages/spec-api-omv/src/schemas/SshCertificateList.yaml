@@ -1,0 +1,27 @@
+type: object
+description: >-
+  The NAS's SSH keys (conf.system.certificate.ssh), each with its public half. OMV removes the
+  private half before it replies.
+required: [total, data]
+properties:
+  total:
+    type: integer
+    description: Every key, before paging.
+  data:
+    type: array
+    items:
+      type: object
+      required: [uuid, comment, publickey]
+      properties:
+        uuid:
+          type: string
+          x-omv-format: uuidv4
+        comment:
+          type: string
+          description: The key's name, as given when it was made.
+        publickey:
+          type: string
+          description: The public half, in OpenSSH's one-line form, to add to another computer.
+        _used:
+          type: boolean
+          description: True when a setting (such as a copy job) refers to the key.

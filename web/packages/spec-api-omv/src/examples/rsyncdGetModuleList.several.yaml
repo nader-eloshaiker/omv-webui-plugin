@@ -1,0 +1,67 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 3
+  data:
+    - uuid: "00000000-0000-4000-8000-00000000000b"
+      enable: true
+      sharedfolderref: "00000000-0000-4000-8000-000000000002"
+      uid: nobody
+      gid: users
+      name: media
+      comment: Family media
+      readonly: false
+      writeonly: false
+      maxconnections: 0
+      list: true
+      hostsallow: "192.0.2.10"
+      hostsdeny: ""
+      extraoptions: ""
+      authusers: false
+      usechroot: true
+      users: []
+      sharedfoldername: Media
+    - uuid: "00000000-0000-4000-8000-00000000000c"
+      enable: true
+      sharedfolderref: "00000000-0000-4000-8000-000000000002"
+      uid: nobody
+      gid: users
+      name: photos
+      comment: ""
+      readonly: true
+      writeonly: false
+      maxconnections: 0
+      list: true
+      hostsallow: ""
+      hostsdeny: ""
+      extraoptions: ""
+      authusers: true
+      usechroot: true
+      users:
+        - name: copier
+          password: EXAMPLE-PASSWORD
+      sharedfoldername: Media
+    - uuid: "00000000-0000-4000-8000-00000000000d"
+      enable: true
+      sharedfolderref: "00000000-0000-4000-8000-000000000006"
+      uid: nobody
+      gid: users
+      name: archive
+      comment: ""
+      readonly: true
+      writeonly: false
+      maxconnections: 0
+      list: true
+      hostsallow: "192.0.2.0/24"
+      hostsdeny: ""
+      extraoptions: ""
+      authusers: true
+      usechroot: true
+      users:
+        - name: alex
+          password: EXAMPLE-PASSWORD
+        - name: robin
+          password: EXAMPLE-PASSWORD
+        - name: sam
+          password: EXAMPLE-PASSWORD
+      sharedfoldername: Backup

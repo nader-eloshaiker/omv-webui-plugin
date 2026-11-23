@@ -1,0 +1,32 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  enable: true
+  versions:
+    - "3"
+    - "4"
+    - "4.1"
+    - "4.2"
+  shares:
+    share:
+      - uuid: "00000000-0000-4000-8000-000000000001"
+        sharedfolderref: "00000000-0000-4000-8000-000000000002"
+        mntentref: "00000000-0000-4000-8000-000000000003"
+        client: "192.0.2.10"
+        options: rw
+        comment: ""
+        extraoptions: "subtree_check,insecure"
+      - uuid: "00000000-0000-4000-8000-000000000004"
+        sharedfolderref: "00000000-0000-4000-8000-000000000002"
+        mntentref: "00000000-0000-4000-8000-000000000003"
+        client: "192.0.2.0/24"
+        options: ro
+        comment: ""
+        extraoptions: "subtree_check,insecure"
+      - uuid: "00000000-0000-4000-8000-000000000005"
+        sharedfolderref: "00000000-0000-4000-8000-000000000006"
+        mntentref: "00000000-0000-4000-8000-000000000007"
+        client: "*"
+        options: ro
+        comment: ""
+        extraoptions: "subtree_check,insecure"

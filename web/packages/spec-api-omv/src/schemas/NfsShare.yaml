@@ -1,0 +1,28 @@
+type: object
+description: >-
+  One NFS share as stored (conf.service.nfs.share): one computer or network let in to one shared
+  folder. OMV allows several for one folder and writes them as one line of the exports file.
+required: [uuid, sharedfolderref, mntentref, client, options]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  sharedfolderref:
+    type: string
+    description: The UUID of the shared folder it shares.
+  mntentref:
+    type: string
+    description: The UUID of the folder's bind mount under the NFS export directory.
+  client:
+    type: string
+    description: >-
+      Who may connect, as stored: an address, a network, a name, "*", or other text set in the
+      classic interface.
+  options:
+    type: string
+    description: '"ro" or "rw"; other text when set elsewhere.'
+  extraoptions:
+    type: string
+    description: Further NFS export options, separated by commas.
+  comment:
+    type: string

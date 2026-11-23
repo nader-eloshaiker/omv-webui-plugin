@@ -1,0 +1,10 @@
+type: object
+description: >-
+  The NFS settings as NFS.setSettings returns them: as stored, so `versions` is the comma-separated
+  string ("3,4,4.1,4.2"), not the list NFS.getSettings returns.
+required: [enable, versions]
+properties:
+  enable:
+    type: boolean
+  versions:
+    type: string

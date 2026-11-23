@@ -9,7 +9,7 @@
     "./openapi.json": "./generated/openapi.json"
   },
   "scripts": {
-    "build": "redocly bundle src/index.yaml --skip-preprocessor omv/empty-object-as-array --skip-preprocessor omv/int64-as-number --output generated/openapi.json && prettier --write generated/openapi.json --ignore-path=",
+    "build": "redocly bundle src/index.yaml --skip-preprocessor omv/empty-object-as-array --skip-preprocessor omv/int64-as-number --skip-preprocessor omv/presence-as-string --output generated/openapi.json && prettier --write generated/openapi.json --ignore-path=",
     "lint": "redocly lint src/index.yaml",
     "test": "node --test 'redocly-plugins/*.test.js'"
   },

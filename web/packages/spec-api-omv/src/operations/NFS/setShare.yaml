@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsSetShare
+  tags:
+    - NFS
+  summary: Let a computer use a shared folder over NFS, or change how
+  description: >-
+    Store an NFS share. With OMV's placeholder UUID it makes one: it refuses a shared folder whose
+    relative path has a space, and makes or reuses the folder's bind mount under the NFS export
+    directory, so a first share for a folder also leaves the mount entries pending. Otherwise it
+    replaces the stored share with what is sent. OMV checks no uniqueness: several shares may name
+    one folder. Nothing reaches the network until the pending changes are applied; it marks the nfs
+    module dirty, and avahi for a new share. Returns the stored share.
+  x-omv-rpc:
+    service: NFS
+    method: setShare
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-source:
+    datamodel: rpc.nfs.setshare
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NfsSetShareRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NfsShare.yaml
+          examples:
+            created:
+              $ref: ../../examples/nfsSetShare.created.yaml
+            changed:
+              $ref: ../../examples/nfsSetShare.changed.yaml
+    "500":
+      description: >-
+        OMV refused, such as a shared folder whose relative path has a space, or empty extraoptions.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            blankInPath:
+              $ref: ../../examples/nfsSetShare.blankInPath.yaml
+            emptyExtraOptions:
+              $ref: ../../examples/nfsSetShare.emptyExtraOptions.yaml

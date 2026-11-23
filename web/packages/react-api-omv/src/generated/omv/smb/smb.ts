@@ -12,6 +12,7 @@ import type {
   SmbSettings,
   SmbShare,
   SmbShareList,
+  TaskHandle,
 } from "@omv-webui/ts-api-omv";
 
 import type {
@@ -816,3 +817,266 @@ export function useSmbGetStats<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+/**
+ * One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.
+ * @summary One folder shared with Windows and Mac computers
+ */
+export const smbGetShare = (
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<SmbShare>(
+    {
+      url: `/rpc/SMB/getShare`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: objectUuidRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getSmbGetShareQueryKey = (
+  objectUuidRequest?: BodyType<ObjectUuidRequest>,
+) => {
+  return ["POST", `/rpc/SMB/getShare`, objectUuidRequest] as const;
+};
+
+export const getSmbGetShareQueryOptions = <
+  TData = Awaited<ReturnType<typeof smbGetShare>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof smbGetShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getSmbGetShareQueryKey(objectUuidRequest);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof smbGetShare>>> = ({
+    signal,
+  }) => smbGetShare(objectUuidRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof smbGetShare>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SmbGetShareQueryResult = NonNullable<
+  Awaited<ReturnType<typeof smbGetShare>>
+>;
+export type SmbGetShareQueryError = ErrorType<unknown>;
+
+/**
+ * One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.
+ * @summary One folder shared with Windows and Mac computers
+ */
+export function useSmbGetShare<
+  TData = Awaited<ReturnType<typeof smbGetShare>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof smbGetShare>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof smbGetShare>>,
+          TError,
+          Awaited<ReturnType<typeof smbGetShare>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.
+ * @summary One folder shared with Windows and Mac computers
+ */
+export function useSmbGetShare<
+  TData = Awaited<ReturnType<typeof smbGetShare>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof smbGetShare>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof smbGetShare>>,
+          TError,
+          Awaited<ReturnType<typeof smbGetShare>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.
+ * @summary One folder shared with Windows and Mac computers
+ */
+export function useSmbGetShare<
+  TData = Awaited<ReturnType<typeof smbGetShare>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof smbGetShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.
+ * @summary One folder shared with Windows and Mac computers
+ */
+export function useSmbGetShare<
+  TData = Awaited<ReturnType<typeof smbGetShare>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof smbGetShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getSmbGetShareQueryOptions(objectUuidRequest, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Delete everything in an SMB share's recycle bin, for every person and whatever its age, as a background task; the parameter is the SMB share's UUID. The script exists only after Windows and Mac sharing and the share's recycle bin were turned on and applied, so OMV refuses while the samba module is pending. The files cannot be got back. Changes no configuration.
+ * @summary Empty a share's recycle bin
+ */
+export const smbEmptyRecycleBin = (
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TaskHandle>(
+    {
+      url: `/rpc/SMB/emptyRecycleBin`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: objectUuidRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getSmbEmptyRecycleBinMutationKey = () =>
+  ["smbEmptyRecycleBin"] as const;
+
+export const getSmbEmptyRecycleBinMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof smbEmptyRecycleBin>>,
+    TError,
+    SmbEmptyRecycleBinMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof smbEmptyRecycleBin>>,
+  TError,
+  SmbEmptyRecycleBinMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSmbEmptyRecycleBinMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof smbEmptyRecycleBin>>,
+    SmbEmptyRecycleBinMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return smbEmptyRecycleBin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SmbEmptyRecycleBinMutationResult = NonNullable<
+  Awaited<ReturnType<typeof smbEmptyRecycleBin>>
+>;
+export type SmbEmptyRecycleBinMutationBody = BodyType<ObjectUuidRequest>;
+export type SmbEmptyRecycleBinMutationError = ErrorType<RpcErrorDetail>;
+export type SmbEmptyRecycleBinMutationVariables = {
+  data: BodyType<ObjectUuidRequest>;
+};
+
+/**
+ * Delete everything in an SMB share's recycle bin, for every person and whatever its age, as a background task; the parameter is the SMB share's UUID. The script exists only after Windows and Mac sharing and the share's recycle bin were turned on and applied, so OMV refuses while the samba module is pending. The files cannot be got back. Changes no configuration.
+ * @summary Empty a share's recycle bin
+ */
+export const useSmbEmptyRecycleBin = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof smbEmptyRecycleBin>>,
+      TError,
+      SmbEmptyRecycleBinMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof smbEmptyRecycleBin>>,
+  TError,
+  SmbEmptyRecycleBinMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getSmbEmptyRecycleBinMutationOptions(options),
+    queryClient,
+  );
+};

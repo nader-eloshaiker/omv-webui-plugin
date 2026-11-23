@@ -61,6 +61,15 @@
       "name": "NFS"
     },
     {
+      "name": "Rsync"
+    },
+    {
+      "name": "Rsyncd"
+    },
+    {
+      "name": "CertificateMgmt"
+    },
+    {
       "name": "LogFile"
     },
     {
@@ -544,6 +553,24 @@
                   },
                   "zfsDeletePoolFinished": {
                     "$ref": "#/components/examples/execGetOutput.zfsDeletePoolFinished"
+                  },
+                  "rsyncRunFinished": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncRunFinished"
+                  },
+                  "rsyncTrialFinished": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncTrialFinished"
+                  },
+                  "rsyncStoppedRunning": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncStoppedRunning"
+                  },
+                  "rsyncPullRsyncdFinished": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncPullRsyncdFinished"
+                  },
+                  "emptyRecycleBinFinished": {
+                    "$ref": "#/components/examples/execGetOutput.emptyRecycleBinFinished"
+                  },
+                  "emptyRecycleBinNothingFinished": {
+                    "$ref": "#/components/examples/execGetOutput.emptyRecycleBinNothingFinished"
                   }
                 }
               }
@@ -571,6 +598,30 @@
                   },
                   "zfsDeletePoolWithFsFailed": {
                     "$ref": "#/components/examples/execGetOutput.zfsDeletePoolWithFsFailed"
+                  },
+                  "rsyncHostKeyFailed": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncHostKeyFailed"
+                  },
+                  "rsyncWrongPasswordFailed": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncWrongPasswordFailed"
+                  },
+                  "rsyncSecondStartFailed": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncSecondStartFailed"
+                  },
+                  "rsyncStopped": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncStopped"
+                  },
+                  "rsyncNotMountedFailed": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncNotMountedFailed"
+                  },
+                  "rsyncPushSshFailed": {
+                    "$ref": "#/components/examples/execGetOutput.rsyncPushSshFailed"
+                  },
+                  "emptyRecycleBinBinOffFailed": {
+                    "$ref": "#/components/examples/execGetOutput.emptyRecycleBinBinOffFailed"
+                  },
+                  "emptyRecycleBinSmbOffFailed": {
+                    "$ref": "#/components/examples/execGetOutput.emptyRecycleBinSmbOffFailed"
                   }
                 }
               }
@@ -1721,6 +1772,9 @@
                 "examples": {
                   "hostTooLong": {
                     "$ref": "#/components/examples/smbSetSettings.hostTooLong"
+                  },
+                  "badWorkgroup": {
+                    "$ref": "#/components/examples/smbSetSettings.badWorkgroup"
                   }
                 }
               }
@@ -2552,6 +2606,1040 @@
                 "examples": {
                   "pendingChanges": {
                     "$ref": "#/components/examples/nfsGetStats.pendingChanges"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/getSettings": {
+      "post": {
+        "operationId": "nfsGetSettings",
+        "tags": ["NFS"],
+        "summary": "Whether Linux and Unix sharing (NFS) is on, and its versions",
+        "description": "The NFS server's settings: whether it is on and which NFS versions it offers (stored as a comma- separated string, returned as a list). The reply also lists every NFS share under shares; the contract leaves that undeclared, since NFS.getShareList is the list. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "getSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsSettings"
+                },
+                "examples": {
+                  "off": {
+                    "$ref": "#/components/examples/nfsGetSettings.off"
+                  },
+                  "on": {
+                    "$ref": "#/components/examples/nfsGetSettings.on"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/setSettings": {
+      "post": {
+        "operationId": "nfsSetSettings",
+        "tags": ["NFS"],
+        "summary": "Turn Linux and Unix sharing (NFS) on or off",
+        "description": "Store whether the NFS server is on and the versions it offers. Both fields are required; the interface sends the versions as read. When it is turned off, computers lose the NFS shares once the pending changes are applied. It marks the nfs and avahi modules dirty. Returns the stored settings without the shares, with versions as the stored comma-separated string.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "setSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.nfs.setsettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NfsSetSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsSettingsSaved"
+                },
+                "examples": {
+                  "turnedOn": {
+                    "$ref": "#/components/examples/nfsSetSettings.turnedOn"
+                  },
+                  "turnedOff": {
+                    "$ref": "#/components/examples/nfsSetSettings.turnedOff"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/getShareList": {
+      "post": {
+        "operationId": "nfsGetShareList",
+        "tags": ["NFS"],
+        "summary": "Folders shared with Linux and Unix computers",
+        "description": "The NFS shares, each as stored with the name of its shared folder; several may share one folder, one computer or network each. The interface reads the whole list. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "getShareList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsShareList"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/nfsGetShareList.none"
+                  },
+                  "several": {
+                    "$ref": "#/components/examples/nfsGetShareList.several"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The read failed because a share names a shared folder whose record is gone (removed by hand, outside OMV's own checks); the message is OMV's internal one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "folderGone": {
+                    "$ref": "#/components/examples/nfsGetShareList.folderGone"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/getShare": {
+      "post": {
+        "operationId": "nfsGetShare",
+        "tags": ["NFS"],
+        "summary": "One NFS share",
+        "description": "One NFS share as stored. The interface reads it immediately before changing it. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "getShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsShare"
+                },
+                "examples": {
+                  "one": {
+                    "$ref": "#/components/examples/nfsGetShare.one"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/setShare": {
+      "post": {
+        "operationId": "nfsSetShare",
+        "tags": ["NFS"],
+        "summary": "Let a computer use a shared folder over NFS, or change how",
+        "description": "Store an NFS share. With OMV's placeholder UUID it makes one: it refuses a shared folder whose relative path has a space, and makes or reuses the folder's bind mount under the NFS export directory, so a first share for a folder also leaves the mount entries pending. Otherwise it replaces the stored share with what is sent. OMV checks no uniqueness: several shares may name one folder. Nothing reaches the network until the pending changes are applied; it marks the nfs module dirty, and avahi for a new share. Returns the stored share.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "setShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-source": {
+          "datamodel": "rpc.nfs.setshare",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NfsSetShareRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsShare"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/nfsSetShare.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/nfsSetShare.changed"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused, such as a shared folder whose relative path has a space, or empty extraoptions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "blankInPath": {
+                    "$ref": "#/components/examples/nfsSetShare.blankInPath"
+                  },
+                  "emptyExtraOptions": {
+                    "$ref": "#/components/examples/nfsSetShare.emptyExtraOptions"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/NFS/deleteShare": {
+      "post": {
+        "operationId": "nfsDeleteShare",
+        "tags": ["NFS"],
+        "summary": "Stop letting a computer use a shared folder over NFS",
+        "description": "Remove an NFS share. It touches no shared folder and no file. When no other share uses the folder's bind mount, OMV removes that mount's entry too. Computers lose access once the pending changes are applied; it marks the nfs and avahi modules dirty. Its reply is an empty list.",
+        "x-omv-rpc": {
+          "service": "NFS",
+          "method": "deleteShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfsShareRemoved"
+                },
+                "examples": {
+                  "removed": {
+                    "$ref": "#/components/examples/nfsDeleteShare.removed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/getSettings": {
+      "post": {
+        "operationId": "rsyncdGetSettings",
+        "tags": ["Rsyncd"],
+        "summary": "Whether the rsync server is on, and its port",
+        "description": "The rsync server's settings, without its modules. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "getSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdSettings"
+                },
+                "examples": {
+                  "off": {
+                    "$ref": "#/components/examples/rsyncdGetSettings.off"
+                  },
+                  "on": {
+                    "$ref": "#/components/examples/rsyncdGetSettings.on"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/setSettings": {
+      "post": {
+        "operationId": "rsyncdSetSettings",
+        "tags": ["Rsyncd"],
+        "summary": "Turn the rsync server on or off",
+        "description": "Store whether the rsync server is on, its port and its extra options; all three are required, and the interface sends the port and extra options as read. When it is turned off, other computers lose the server once the pending changes are applied. It marks the rsyncd and avahi modules dirty. Returns the stored settings without the modules.",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "setSettings"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-source": {
+          "datamodel": "rpc.rsyncd.setsettings",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RsyncdSetSettingsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdSettings"
+                },
+                "examples": {
+                  "turnedOn": {
+                    "$ref": "#/components/examples/rsyncdSetSettings.turnedOn"
+                  },
+                  "turnedOff": {
+                    "$ref": "#/components/examples/rsyncdSetSettings.turnedOff"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/getModuleList": {
+      "post": {
+        "operationId": "rsyncdGetModuleList",
+        "tags": ["Rsyncd"],
+        "summary": "Folders offered to the rsync server",
+        "description": "The rsync server's modules, each with its sign-ins as a list under users and the name of its shared folder. The transport replaces each sign-in's stored password in the reply by whether one is set, before the reply is validated, cached or returned (UI-6). The interface reads the whole list. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "getModuleList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-presence": ["data[].users[].password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, with the fields in x-omv-presence as whether they are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdModuleList"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/rsyncdGetModuleList.none"
+                  },
+                  "several": {
+                    "$ref": "#/components/examples/rsyncdGetModuleList.several"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/getModule": {
+      "post": {
+        "operationId": "rsyncdGetModule",
+        "tags": ["Rsyncd"],
+        "summary": "One folder offered to the rsync server",
+        "description": "One rsync server module, with its sign-ins as a list under users. The transport replaces each sign-in's stored password in the reply by whether one is set (UI-6). Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "getModule"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-presence": ["users[].password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, with the fields in x-omv-presence as whether they are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdModule"
+                },
+                "examples": {
+                  "withSignIn": {
+                    "$ref": "#/components/examples/rsyncdGetModule.withSignIn"
+                  },
+                  "noSignIn": {
+                    "$ref": "#/components/examples/rsyncdGetModule.noSignIn"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/setModule": {
+      "post": {
+        "operationId": "rsyncdSetModule",
+        "tags": ["Rsyncd"],
+        "summary": "Offer a folder to the rsync server, or change how",
+        "description": "Store an rsync server module. With OMV's placeholder UUID it makes one and refuses a name already used; otherwise it replaces the stored module with what is sent, including its sign-ins, so a password sent empty is stored empty. It marks the rsyncd module dirty. Returns the stored module in its stored shape; the transport removes the sign-ins' passwords from it (UI-6).",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "setModule"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-omit": ["users.user[].password"],
+        "x-omv-source": {
+          "datamodel": "rpc.rsyncd.setmodule",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RsyncdSetModuleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdModuleStored"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/rsyncdSetModule.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/rsyncdSetModule.changed"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused, such as a name another module already has.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "nameTaken": {
+                    "$ref": "#/components/examples/rsyncdSetModule.nameTaken"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsyncd/deleteModule": {
+      "post": {
+        "operationId": "rsyncdDeleteModule",
+        "tags": ["Rsyncd"],
+        "summary": "Stop offering a folder to the rsync server",
+        "description": "Remove an rsync server module with its sign-ins. It touches no shared folder and no file. Other computers lose it once the pending changes are applied; it marks the rsyncd module dirty. Returns the removed module in its stored shape; the transport removes the sign-ins' passwords from it (UI-6).",
+        "x-omv-rpc": {
+          "service": "Rsyncd",
+          "method": "deleteModule"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-destructive": "service",
+        "x-omv-omit": ["users.user[].password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncdModuleStored"
+                },
+                "examples": {
+                  "removed": {
+                    "$ref": "#/components/examples/rsyncdDeleteModule.removed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsync/getList": {
+      "post": {
+        "operationId": "rsyncGetList",
+        "tags": ["Rsync"],
+        "summary": "Copy jobs",
+        "description": "The rsync jobs, each as stored (schedule fields as comma-separated text) with srcname and destname, each a shared folder's name or the other computer's address. The transport replaces each job's stored password in the reply by whether one is set (UI-6). The interface reads the whole list. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Rsync",
+          "method": "getList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-presence": ["data[].password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, with the fields in x-omv-presence as whether they are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncJobRowList"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/rsyncGetList.none"
+                  },
+                  "several": {
+                    "$ref": "#/components/examples/rsyncGetList.several"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The read failed because a job names a shared folder whose record is gone; the message is OMV's internal one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "folderGone": {
+                    "$ref": "#/components/examples/rsyncGetList.folderGone"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsync/get": {
+      "post": {
+        "operationId": "rsyncGet",
+        "tags": ["Rsync"],
+        "summary": "One copy job",
+        "description": "One rsync job, with its schedule fields as lists and the flattened side fields that apply to its type and mode. The transport replaces the stored password in the reply by whether one is set (UI-6). Changes nothing.",
+        "x-omv-rpc": {
+          "service": "Rsync",
+          "method": "get"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-presence": ["password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, with the fields in x-omv-presence as whether they are set.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncJob"
+                },
+                "examples": {
+                  "local": {
+                    "$ref": "#/components/examples/rsyncGet.local"
+                  },
+                  "pushSsh": {
+                    "$ref": "#/components/examples/rsyncGet.pushSsh"
+                  },
+                  "pullRsyncd": {
+                    "$ref": "#/components/examples/rsyncGet.pullRsyncd"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsync/set": {
+      "post": {
+        "operationId": "rsyncSet",
+        "tags": ["Rsync"],
+        "summary": "Save a copy job",
+        "description": "Store an rsync job: all 36 fields are required, and OMV keeps only the side fields that apply to its type and mode. Saving runs nothing: the job's script and its schedule are written when the pending changes are applied, and a job runs on its schedule only when enable is true. It marks the rsync module dirty. Returns the stored job; the transport removes its password (UI-6).",
+        "x-omv-rpc": {
+          "service": "Rsync",
+          "method": "set"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-omit": ["password"],
+        "x-omv-source": {
+          "datamodel": "rpc.rsync.set",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RsyncSetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncJobStored"
+                },
+                "examples": {
+                  "created": {
+                    "$ref": "#/components/examples/rsyncSet.created"
+                  },
+                  "changed": {
+                    "$ref": "#/components/examples/rsyncSet.changed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsync/delete": {
+      "post": {
+        "operationId": "rsyncDelete",
+        "tags": ["Rsync"],
+        "summary": "Delete a copy job",
+        "description": "Remove an rsync job. It touches no file, here or on another computer. The job stops running once the pending changes are applied; it marks the rsync module dirty. Returns the removed job; the transport removes its password (UI-6).",
+        "x-omv-rpc": {
+          "service": "Rsync",
+          "method": "delete"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-dirty": true,
+        "x-omv-omit": ["password"],
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value, without the fields in x-omv-omit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsyncJobStored"
+                },
+                "examples": {
+                  "deleted": {
+                    "$ref": "#/components/examples/rsyncDelete.deleted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/Rsync/execute": {
+      "post": {
+        "operationId": "rsyncExecute",
+        "tags": ["Rsync"],
+        "summary": "Run a copy job now",
+        "description": "Run an rsync job's script now, as a background task, whether or not the job is on a schedule. The script is the one written at the last apply, so OMV refuses while the rsync module is pending. It checks that the job's shared folders are mounted and that the job is not already running (a second start ends at once), then runs rsync; the task's output is the script's and rsync's. A job that deletes at its destination deletes files there. Changes no configuration.",
+        "x-omv-rpc": {
+          "service": "Rsync",
+          "method": "execute"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/rsyncExecute.started"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused because the pending changes have not been applied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "pending": {
+                    "$ref": "#/components/examples/rsyncExecute.pending"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/getShare": {
+      "post": {
+        "operationId": "smbGetShare",
+        "tags": ["SMB"],
+        "summary": "One folder shared with Windows and Mac computers",
+        "description": "One SMB share as stored, without the shared folder's name. The interface reads it immediately before changing it, so a write sends back every option it does not change. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "getShare"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmbShare"
+                },
+                "examples": {
+                  "stock": {
+                    "$ref": "#/components/examples/smbGetShare.stock"
+                  },
+                  "recycleOn": {
+                    "$ref": "#/components/examples/smbGetShare.recycleOn"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/SMB/emptyRecycleBin": {
+      "post": {
+        "operationId": "smbEmptyRecycleBin",
+        "tags": ["SMB"],
+        "summary": "Empty a share's recycle bin",
+        "description": "Delete everything in an SMB share's recycle bin, for every person and whatever its age, as a background task; the parameter is the SMB share's UUID. The script exists only after Windows and Mac sharing and the share's recycle bin were turned on and applied, so OMV refuses while the samba module is pending. The files cannot be got back. Changes no configuration.",
+        "x-omv-rpc": {
+          "service": "SMB",
+          "method": "emptyRecycleBin"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": false,
+        "x-omv-task": {},
+        "x-omv-destructive": "data",
+        "x-omv-source": {
+          "datamodel": "rpc.common.objectuuid",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUuidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskHandle"
+                },
+                "examples": {
+                  "started": {
+                    "$ref": "#/components/examples/smbEmptyRecycleBin.started"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "OMV refused because the pending changes have not been applied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpcErrorDetail"
+                },
+                "examples": {
+                  "pending": {
+                    "$ref": "#/components/examples/smbEmptyRecycleBin.pending"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rpc/CertificateMgmt/getSshList": {
+      "post": {
+        "operationId": "certificateMgmtGetSshList",
+        "tags": ["CertificateMgmt"],
+        "summary": "The NAS's SSH keys",
+        "description": "The SSH keys the NAS keeps for signing in to other computers, each with its comment, its public half and whether a setting uses it. OMV removes the private half before it replies. Changes nothing.",
+        "x-omv-rpc": {
+          "service": "CertificateMgmt",
+          "method": "getSshList"
+        },
+        "x-omv-role": "admin",
+        "x-omv-readonly": true,
+        "x-omv-source": {
+          "datamodel": "rpc.common.getlist",
+          "omvVersion": "8.6.1"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method's response value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SshCertificateList"
+                },
+                "examples": {
+                  "none": {
+                    "$ref": "#/components/examples/certificateMgmtGetSshList.none"
+                  },
+                  "one": {
+                    "$ref": "#/components/examples/certificateMgmtGetSshList.one"
                   }
                 }
               }
@@ -8211,6 +9299,1767 @@
         "type": "string",
         "description": "Display text: the raw output of the service's status commands, in the server's language, shown as preformatted text. When the service is turned off, the text \"Service disabled\", translated by the server."
       },
+      "NfsSettings": {
+        "type": "object",
+        "description": "Whether the NFS server is on, and the NFS versions it offers (conf.service.nfs). The server's reply also lists every NFS share under `shares`; the contract leaves it undeclared and nothing reads it from here (NFS.getShareList is the list).",
+        "required": ["enable", "versions"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "versions": {
+            "type": "array",
+            "description": "The NFS versions offered, as OMV spells them (\"3\", \"4\", \"4.1\", \"4.2\"); may be empty.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "NfsSetSettingsRequest": {
+        "type": "object",
+        "description": "The NFS settings to store (rpc.nfs.setsettings). The interface sends `versions` exactly as NFS.getSettings returned them, with only `enable` changed. Stricter than OMV: at least one version, since the server cannot serve with none.",
+        "required": ["enable", "versions"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "versions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": ["2", "3", "4", "4.1", "4.2"]
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "NfsSettingsSaved": {
+        "type": "object",
+        "description": "The NFS settings as NFS.setSettings returns them: as stored, so `versions` is the comma-separated string (\"3,4,4.1,4.2\"), not the list NFS.getSettings returns.",
+        "required": ["enable", "versions"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "versions": {
+            "type": "string"
+          }
+        }
+      },
+      "NfsShare": {
+        "type": "object",
+        "description": "One NFS share as stored (conf.service.nfs.share): one computer or network let in to one shared folder. OMV allows several for one folder and writes them as one line of the exports file.",
+        "required": [
+          "uuid",
+          "sharedfolderref",
+          "mntentref",
+          "client",
+          "options"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "description": "The UUID of the shared folder it shares."
+          },
+          "mntentref": {
+            "type": "string",
+            "description": "The UUID of the folder's bind mount under the NFS export directory."
+          },
+          "client": {
+            "type": "string",
+            "description": "Who may connect, as stored: an address, a network, a name, \"*\", or other text set in the classic interface."
+          },
+          "options": {
+            "type": "string",
+            "description": "\"ro\" or \"rw\"; other text when set elsewhere."
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Further NFS export options, separated by commas."
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "NfsShareRow": {
+        "description": "An NFS share as NFS.getShareList lists it, with the name of its shared folder.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NfsShare"
+          },
+          {
+            "type": "object",
+            "required": ["sharedfoldername"],
+            "properties": {
+              "sharedfoldername": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "NfsShareList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every share, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfsShareRow"
+            }
+          }
+        }
+      },
+      "NetworkClient": {
+        "type": "string",
+        "description": "Who may connect (design phase-5-services 0.4), in one of the three forms the interface writes: one computer (an IPv4 or IPv6 address, or a computer's name of letters, digits, \".\" and \"-\"), one network (an IPv4 network from /8 to /32, or an IPv6 network from /16 to /128), or \"*\" for any computer. OMV takes any text here; the contract takes only these forms, so a value set in the classic interface in another form is replaced, never sent back. The interface also checks that a network is written with its first address, which a pattern cannot.",
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?:\\*|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})(?:/(?:[89]|[12][0-9]|3[0-2]))?|[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}(?:/(?:1[6-9]|[2-9][0-9]|1[01][0-9]|12[0-8]))?|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$"
+      },
+      "NfsSetShareRequest": {
+        "type": "object",
+        "description": "An NFS share to store (rpc.nfs.setshare). With OMV's placeholder UUID it makes one: OMV then also makes (or reuses) the folder's bind mount under the export directory and ignores the `mntentref` sent. Otherwise it replaces the stored share with what is sent. Every field is required, as in OMV's datamodel. Stricter than OMV: `client` in one of the three forms the interface writes, `options` \"ro\" or \"rw\", `extraoptions` in the stored model's pattern, the comment one line of at most 255 characters.",
+        "required": [
+          "uuid",
+          "sharedfolderref",
+          "mntentref",
+          "client",
+          "options",
+          "extraoptions",
+          "comment"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "mntentref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "client": {
+            "$ref": "#/components/schemas/NetworkClient"
+          },
+          "options": {
+            "type": "string",
+            "enum": ["ro", "rw"]
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Further export options as OMV's stored model allows them: \"key\" or \"key=value\" items separated by commas. New shares get the classic form's \"subtree_check,insecure\"; existing ones send back what was read.",
+            "pattern": "^(([a-zA-Z_]+)(=([\\w@:\\/]+))?[,])*([a-zA-Z_]+)(=([\\w@:\\/]+))?$"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 255,
+            "pattern": "^[^\\r\\n]*$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NfsShareRemoved": {
+        "type": "object",
+        "description": "NFS.deleteShare's reply. OMV returns the removed configuration object itself, which reaches the client as an empty list (observed on OMV 8.6.1); the transport reads it as an empty object. The interface reads nothing from it.",
+        "properties": {}
+      },
+      "RsyncdSettings": {
+        "type": "object",
+        "description": "Whether the rsync server is on, its port and its extra options (conf.service.rsyncd, without its modules).",
+        "required": ["enable", "port"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "integer",
+            "description": "The TCP port it listens on."
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Further server options set in the classic interface."
+          }
+        }
+      },
+      "RsyncdSetSettingsRequest": {
+        "type": "object",
+        "description": "The rsync server's settings to store (rpc.rsyncd.setsettings). The interface sends `port` and `extraoptions` exactly as Rsyncd.getSettings returned them, with only `enable` changed.",
+        "required": ["enable", "port", "extraoptions"],
+        "properties": {
+          "enable": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Sent back as read; the interface never changes it."
+          }
+        },
+        "additionalProperties": false
+      },
+      "RsyncdSignIn": {
+        "type": "object",
+        "description": "One rsync sign-in of a folder offered to the rsync server: a name and password that exist only for the rsync server. `password` is whether a password is stored; the transport replaces the stored value by that before anything else sees the reply.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "password": {
+            "type": "boolean",
+            "description": "True when a password is stored for this sign-in."
+          }
+        }
+      },
+      "RsyncdModuleRow": {
+        "type": "object",
+        "description": "A folder offered to the rsync server as Rsyncd.getModuleList lists it: RsyncdModule with the name of its shared folder. Written out in full rather than as allOf, so x-omv-presence can step into its sign-ins.",
+        "required": [
+          "uuid",
+          "enable",
+          "sharedfolderref",
+          "name",
+          "readonly",
+          "writeonly",
+          "authusers",
+          "users",
+          "sharedfoldername"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "False when it was turned off for this folder in the classic interface."
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "description": "The UUID of the shared folder it offers."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name other computers use for it (rsync's module name)."
+          },
+          "comment": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string",
+            "description": "The account that files copied in belong to."
+          },
+          "gid": {
+            "type": "string",
+            "description": "The group that files copied in belong to."
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "writeonly": {
+            "type": "boolean"
+          },
+          "maxconnections": {
+            "type": "integer"
+          },
+          "list": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "type": "string"
+          },
+          "hostsdeny": {
+            "type": "string"
+          },
+          "authusers": {
+            "type": "boolean",
+            "description": "True when a name and password are asked."
+          },
+          "usechroot": {
+            "type": "boolean"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RsyncdSignIn"
+            }
+          },
+          "extraoptions": {
+            "type": "string"
+          },
+          "sharedfoldername": {
+            "type": "string"
+          }
+        }
+      },
+      "RsyncdModuleList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every module, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RsyncdModuleRow"
+            }
+          }
+        }
+      },
+      "RsyncdModule": {
+        "type": "object",
+        "description": "A folder offered to the rsync server (conf.service.rsyncd.module), as Rsyncd.getModule and getModuleList return it: its sign-ins as a list under `users`. Each sign-in's stored password reaches the interface only as whether one is set (x-omv-presence).",
+        "required": [
+          "uuid",
+          "enable",
+          "sharedfolderref",
+          "name",
+          "readonly",
+          "writeonly",
+          "authusers",
+          "users"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "False when it was turned off for this folder in the classic interface."
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "description": "The UUID of the shared folder it offers."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name other computers use for it (rsync's module name)."
+          },
+          "comment": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string",
+            "description": "The account that files copied in belong to."
+          },
+          "gid": {
+            "type": "string",
+            "description": "The group that files copied in belong to."
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "writeonly": {
+            "type": "boolean"
+          },
+          "maxconnections": {
+            "type": "integer"
+          },
+          "list": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "type": "string"
+          },
+          "hostsdeny": {
+            "type": "string"
+          },
+          "authusers": {
+            "type": "boolean",
+            "description": "True when a name and password are asked."
+          },
+          "usechroot": {
+            "type": "boolean"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RsyncdSignIn"
+            }
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        }
+      },
+      "RsyncdHostsAllow": {
+        "type": "string",
+        "description": "Who may connect to a folder offered to the rsync server (design phase-5-services 0.4): empty (any computer, with the folder's name and password), one computer, or one network, in the forms of NetworkClient. \"*\" is not written: without a sign-in the interface requires one computer or one network. OMV takes any text here.",
+        "maxLength": 253,
+        "pattern": "^(?:|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})(?:/(?:[89]|[12][0-9]|3[0-2]))?|[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}(?:/(?:1[6-9]|[2-9][0-9]|1[01][0-9]|12[0-8]))?|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$"
+      },
+      "RsyncdSetModuleRequest": {
+        "type": "object",
+        "description": "A folder offered to the rsync server, to store (rpc.rsyncd.setmodule). With OMV's placeholder UUID it makes one, refusing a name already used; otherwise it replaces the stored module with what is sent. Every field is required, as in OMV's datamodel, and a password sent empty is stored empty, so a save of a module with a sign-in carries its password typed again (design phase-5-services 0.8). Stricter than OMV: the name in the interface's pattern; at most one sign-in, its name in the interface's pattern and its password one line and not empty; `hostsallow` empty or one computer or network; `uid` and `gid` account and group names (the interface writes `nobody` and `users` for a new module and sends existing ones back as read).",
+        "required": [
+          "uuid",
+          "enable",
+          "sharedfolderref",
+          "name",
+          "comment",
+          "uid",
+          "gid",
+          "readonly",
+          "writeonly",
+          "maxconnections",
+          "list",
+          "hostsallow",
+          "hostsdeny",
+          "authusers",
+          "usechroot",
+          "users",
+          "extraoptions"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name other computers use (rsync's module name).",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 255,
+            "pattern": "^[^\\r\\n]*$"
+          },
+          "uid": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]{0,31}$"
+          },
+          "gid": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_][A-Za-z0-9._-]{0,31}$"
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "writeonly": {
+            "type": "boolean"
+          },
+          "maxconnections": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "list": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "$ref": "#/components/schemas/RsyncdHostsAllow"
+          },
+          "hostsdeny": {
+            "type": "string",
+            "description": "Sent back as read; the interface never changes it."
+          },
+          "authusers": {
+            "type": "boolean"
+          },
+          "usechroot": {
+            "type": "boolean"
+          },
+          "users": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "password"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{1,32}$"
+                },
+                "password": {
+                  "type": "string",
+                  "format": "password",
+                  "x-omv-secret": true,
+                  "x-omv-format": "no-multi-line",
+                  "minLength": 1,
+                  "pattern": "^[^\\r\\n]*$"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Sent back as read; the interface never changes it."
+          }
+        },
+        "additionalProperties": false
+      },
+      "RsyncdModuleStored": {
+        "type": "object",
+        "description": "A folder offered to the rsync server in its stored shape, as Rsyncd.setModule and deleteModule return it: the sign-ins under `users.user`. The transport removes each sign-in's password (x-omv-omit).",
+        "required": ["uuid", "sharedfolderref", "name"],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sharedfolderref": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          },
+          "gid": {
+            "type": "string"
+          },
+          "readonly": {
+            "type": "boolean"
+          },
+          "writeonly": {
+            "type": "boolean"
+          },
+          "maxconnections": {
+            "type": "integer"
+          },
+          "list": {
+            "type": "boolean"
+          },
+          "hostsallow": {
+            "type": "string"
+          },
+          "hostsdeny": {
+            "type": "string"
+          },
+          "authusers": {
+            "type": "boolean"
+          },
+          "usechroot": {
+            "type": "boolean"
+          },
+          "users": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "extraoptions": {
+            "type": "string"
+          }
+        }
+      },
+      "RsyncJobRow": {
+        "type": "object",
+        "description": "A copy job as Rsync.getList lists it: the stored job (schedule fields as comma-separated text) with `srcname` and `destname`, each a shared folder's name or the other computer's address.",
+        "required": [
+          "uuid",
+          "enable",
+          "type",
+          "mode",
+          "src",
+          "dest",
+          "minute",
+          "hour",
+          "dayofmonth",
+          "month",
+          "dayofweek",
+          "authentication",
+          "srcname",
+          "destname"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "True when it runs on its schedule; Rsync.execute runs it either way."
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "\"local\" (both sides on this NAS) or \"remote\"."
+          },
+          "mode": {
+            "type": "string",
+            "description": "For a remote job, \"push\" (to the other computer) or \"pull\" (from it)."
+          },
+          "src": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "dest": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "minute": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "hour": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "dayofmonth": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "month": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "dayofweek": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          },
+          "authentication": {
+            "type": "string",
+            "description": "\"password\" or \"pubkey\" (an SSH key of this NAS)."
+          },
+          "sshcertificateref": {
+            "type": "string",
+            "description": "The UUID of the SSH key a job over SSH signs in with, or empty."
+          },
+          "sshport": {
+            "type": "integer"
+          },
+          "srcname": {
+            "type": "string"
+          },
+          "destname": {
+            "type": "string"
+          },
+          "password": {
+            "type": "boolean",
+            "description": "True when a password for another computer's rsync server is stored; the transport replaces the stored value by that (x-omv-presence)."
+          }
+        }
+      },
+      "RsyncJobRowList": {
+        "type": "object",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every job, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RsyncJobRow"
+            }
+          }
+        }
+      },
+      "RsyncJob": {
+        "type": "object",
+        "description": "A copy job (conf.service.rsync.job) as Rsync.get returns it: the stored job with its schedule fields as lists and, for the sides that apply to its type and mode, the flattened fields `srcsharedfolderref`, `srcuri`, `destsharedfolderref` and `desturi` that Rsync.set takes.",
+        "required": [
+          "uuid",
+          "enable",
+          "type",
+          "mode",
+          "src",
+          "dest",
+          "minute",
+          "hour",
+          "dayofmonth",
+          "month",
+          "dayofweek",
+          "authentication"
+        ],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "True when it runs on its schedule; Rsync.execute runs it either way."
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "\"local\" (both sides on this NAS) or \"remote\"."
+          },
+          "mode": {
+            "type": "string",
+            "description": "For a remote job, \"push\" (to the other computer) or \"pull\" (from it)."
+          },
+          "src": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "dest": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "minute": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hour": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dayofmonth": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "month": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dayofweek": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          },
+          "authentication": {
+            "type": "string",
+            "description": "\"password\" or \"pubkey\" (an SSH key of this NAS)."
+          },
+          "sshcertificateref": {
+            "type": "string",
+            "description": "The UUID of the SSH key a job over SSH signs in with, or empty."
+          },
+          "sshport": {
+            "type": "integer"
+          },
+          "srcsharedfolderref": {
+            "type": "string"
+          },
+          "srcuri": {
+            "type": "string"
+          },
+          "destsharedfolderref": {
+            "type": "string"
+          },
+          "desturi": {
+            "type": "string"
+          },
+          "password": {
+            "type": "boolean",
+            "description": "True when a password for another computer's rsync server is stored; the transport replaces the stored value by that (x-omv-presence)."
+          }
+        }
+      },
+      "RsyncSetLocalRequest": {
+        "type": "object",
+        "description": "A copy job to store (rpc.rsync.set), both sides a shared folder on this NAS: the sides that apply are required and well formed, the others empty.",
+        "required": [
+          "uuid",
+          "enable",
+          "sendemail",
+          "comment",
+          "type",
+          "mode",
+          "srcsharedfolderref",
+          "srcuri",
+          "destsharedfolderref",
+          "desturi",
+          "minute",
+          "hour",
+          "dayofmonth",
+          "month",
+          "dayofweek",
+          "everynminute",
+          "everynhour",
+          "everyndayofmonth",
+          "optionrecursive",
+          "optiontimes",
+          "optiongroup",
+          "optionowner",
+          "optioncompress",
+          "optionarchive",
+          "optiondelete",
+          "optionquiet",
+          "optionperms",
+          "optionacls",
+          "optionxattrs",
+          "optiondryrun",
+          "optionpartial",
+          "extraoptions",
+          "authentication",
+          "password",
+          "sshcertificateref",
+          "sshport"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[^\\r\\n]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["local"]
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["push", "pull"],
+            "description": "Not used for a local job; OMV still requires it."
+          },
+          "srcsharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "srcuri": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "destsharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "desturi": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "minute": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[0-5]?[0-9])$"
+            }
+          },
+          "hour": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[01]?[0-9]|2[0-3])$"
+            }
+          },
+          "dayofmonth": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|[12][0-9]|3[01])$"
+            }
+          },
+          "month": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|1[0-2])$"
+            }
+          },
+          "dayofweek": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[1-7])$"
+            }
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Sent back as read; the interface never writes extra options (design phase-5-services 0.6)."
+          },
+          "authentication": {
+            "type": "string",
+            "enum": ["password", "pubkey"]
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "x-omv-secret": true,
+            "x-omv-format": "no-multi-line",
+            "pattern": "^[^\\r\\n]*$",
+            "description": "The password for another computer's rsync server, or empty. Typed again for every save, since it is never read back."
+          },
+          "sshcertificateref": {
+            "description": "The UUID of one of the NAS's SSH keys, or empty.",
+            "oneOf": [
+              {
+                "type": "string",
+                "x-omv-format": "uuidv4",
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
+          },
+          "sshport": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "additionalProperties": false
+      },
+      "RsyncRemoteUri": {
+        "type": "string",
+        "description": "Another computer's folder for a copy job (design phase-5-services 5.3), in one of the two forms the interface writes: over SSH, \"user@host:/folder/\" (the port and key are separate fields), or through the other computer's rsync server, \"rsync://[user@]host[:port]/module/[folder/]\". The host is an IPv4 address, an IPv6 address in brackets, or a name of letters, digits, \".\" and \"-\"; the folder's parts are letters, digits and . _ - + @, no part \".\" or \"..\", no spaces. The interface always writes the trailing \"/\"; a job made in the classic interface may lack it.",
+        "maxLength": 1024,
+        "pattern": "^(?:[a-z_][a-z0-9._-]{0,31}@(?:\\[[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}\\]|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*):/(?:(?!\\.\\.?(?:/|$))[A-Za-z0-9._+@-]+/)*(?!\\.\\.?(?:/|$))[A-Za-z0-9._+@-]+/?|rsync://(?:[a-z_][a-z0-9._-]{0,31}@)?(?:\\[[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}\\]|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)(?::[1-9][0-9]{0,4})?/[A-Za-z0-9._-]+(?:/(?:(?!\\.\\.?(?:/|$))[A-Za-z0-9._+@-]+/)*(?!\\.\\.?(?:/|$))[A-Za-z0-9._+@-]+)?/?)$"
+      },
+      "RsyncSetPushRequest": {
+        "type": "object",
+        "description": "A copy job to store (rpc.rsync.set), from a shared folder on this NAS to another computer: the sides that apply are required and well formed, the others empty.",
+        "required": [
+          "uuid",
+          "enable",
+          "sendemail",
+          "comment",
+          "type",
+          "mode",
+          "srcsharedfolderref",
+          "srcuri",
+          "destsharedfolderref",
+          "desturi",
+          "minute",
+          "hour",
+          "dayofmonth",
+          "month",
+          "dayofweek",
+          "everynminute",
+          "everynhour",
+          "everyndayofmonth",
+          "optionrecursive",
+          "optiontimes",
+          "optiongroup",
+          "optionowner",
+          "optioncompress",
+          "optionarchive",
+          "optiondelete",
+          "optionquiet",
+          "optionperms",
+          "optionacls",
+          "optionxattrs",
+          "optiondryrun",
+          "optionpartial",
+          "extraoptions",
+          "authentication",
+          "password",
+          "sshcertificateref",
+          "sshport"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[^\\r\\n]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["remote"]
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["push"]
+          },
+          "srcsharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "srcuri": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "destsharedfolderref": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "desturi": {
+            "$ref": "#/components/schemas/RsyncRemoteUri"
+          },
+          "minute": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[0-5]?[0-9])$"
+            }
+          },
+          "hour": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[01]?[0-9]|2[0-3])$"
+            }
+          },
+          "dayofmonth": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|[12][0-9]|3[01])$"
+            }
+          },
+          "month": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|1[0-2])$"
+            }
+          },
+          "dayofweek": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[1-7])$"
+            }
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Sent back as read; the interface never writes extra options (design phase-5-services 0.6)."
+          },
+          "authentication": {
+            "type": "string",
+            "enum": ["password", "pubkey"]
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "x-omv-secret": true,
+            "x-omv-format": "no-multi-line",
+            "pattern": "^[^\\r\\n]*$",
+            "description": "The password for another computer's rsync server, or empty. Typed again for every save, since it is never read back."
+          },
+          "sshcertificateref": {
+            "description": "The UUID of one of the NAS's SSH keys, or empty.",
+            "oneOf": [
+              {
+                "type": "string",
+                "x-omv-format": "uuidv4",
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
+          },
+          "sshport": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "additionalProperties": false
+      },
+      "RsyncSetPullRequest": {
+        "type": "object",
+        "description": "A copy job to store (rpc.rsync.set), from another computer into a shared folder on this NAS: the sides that apply are required and well formed, the others empty.",
+        "required": [
+          "uuid",
+          "enable",
+          "sendemail",
+          "comment",
+          "type",
+          "mode",
+          "srcsharedfolderref",
+          "srcuri",
+          "destsharedfolderref",
+          "desturi",
+          "minute",
+          "hour",
+          "dayofmonth",
+          "month",
+          "dayofweek",
+          "everynminute",
+          "everynhour",
+          "everyndayofmonth",
+          "optionrecursive",
+          "optiontimes",
+          "optiongroup",
+          "optionowner",
+          "optioncompress",
+          "optionarchive",
+          "optiondelete",
+          "optionquiet",
+          "optionperms",
+          "optionacls",
+          "optionxattrs",
+          "optiondryrun",
+          "optionpartial",
+          "extraoptions",
+          "authentication",
+          "password",
+          "sshcertificateref",
+          "sshport"
+        ],
+        "properties": {
+          "uuid": {
+            "$ref": "#/components/schemas/ObjectUuid"
+          },
+          "enable": {
+            "type": "boolean"
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[^\\r\\n]*$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["remote"]
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["pull"]
+          },
+          "srcsharedfolderref": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "srcuri": {
+            "$ref": "#/components/schemas/RsyncRemoteUri"
+          },
+          "destsharedfolderref": {
+            "type": "string",
+            "x-omv-format": "uuidv4",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "desturi": {
+            "type": "string",
+            "maxLength": 0
+          },
+          "minute": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[0-5]?[0-9])$"
+            }
+          },
+          "hour": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[01]?[0-9]|2[0-3])$"
+            }
+          },
+          "dayofmonth": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|[12][0-9]|3[01])$"
+            }
+          },
+          "month": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|0?[1-9]|1[0-2])$"
+            }
+          },
+          "dayofweek": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(\\*|[1-7])$"
+            }
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string",
+            "description": "Sent back as read; the interface never writes extra options (design phase-5-services 0.6)."
+          },
+          "authentication": {
+            "type": "string",
+            "enum": ["password", "pubkey"]
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "x-omv-secret": true,
+            "x-omv-format": "no-multi-line",
+            "pattern": "^[^\\r\\n]*$",
+            "description": "The password for another computer's rsync server, or empty. Typed again for every save, since it is never read back."
+          },
+          "sshcertificateref": {
+            "description": "The UUID of one of the NAS's SSH keys, or empty.",
+            "oneOf": [
+              {
+                "type": "string",
+                "x-omv-format": "uuidv4",
+                "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
+          },
+          "sshport": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "additionalProperties": false
+      },
+      "RsyncSetRequest": {
+        "description": "A copy job to store (rpc.rsync.set). OMV requires all 36 fields, keeps only the side fields that apply to `type` and `mode` and blanks the others, and checks nothing else: not that a side is set, that the two differ, that an address is well formed or that a key exists. The contract is stricter: one of three shapes by direction, each requiring its sides set and well formed and the others empty; schedule items anchored; the remote address in one of the two forms the interface writes (RsyncRemoteUri); the note one line of at most 200 characters. With OMV's placeholder UUID it makes a job; otherwise it replaces the stored one. A password sent empty is stored empty.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/RsyncSetLocalRequest"
+          },
+          {
+            "$ref": "#/components/schemas/RsyncSetPushRequest"
+          },
+          {
+            "$ref": "#/components/schemas/RsyncSetPullRequest"
+          }
+        ]
+      },
+      "RsyncJobStored": {
+        "type": "object",
+        "description": "A copy job in its stored shape, as Rsync.set and Rsync.delete return it (schedule fields as comma-separated text). The transport removes the stored password (x-omv-omit).",
+        "required": ["uuid", "type", "mode", "src", "dest"],
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "x-omv-format": "uuidv4"
+          },
+          "enable": {
+            "type": "boolean",
+            "description": "True when it runs on its schedule; Rsync.execute runs it either way."
+          },
+          "sendemail": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "\"local\" (both sides on this NAS) or \"remote\"."
+          },
+          "mode": {
+            "type": "string",
+            "description": "For a remote job, \"push\" (to the other computer) or \"pull\" (from it)."
+          },
+          "src": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "dest": {
+            "type": "object",
+            "properties": {
+              "sharedfolderref": {
+                "type": "string",
+                "description": "A shared folder's UUID, or empty."
+              },
+              "uri": {
+                "type": "string",
+                "description": "The other computer's address and folder, or empty."
+              }
+            }
+          },
+          "minute": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "hour": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "dayofmonth": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "month": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "dayofweek": {
+            "type": "string",
+            "description": "Comma-separated values, or \"*\"."
+          },
+          "everynminute": {
+            "type": "boolean"
+          },
+          "everynhour": {
+            "type": "boolean"
+          },
+          "everyndayofmonth": {
+            "type": "boolean"
+          },
+          "optionrecursive": {
+            "type": "boolean"
+          },
+          "optiontimes": {
+            "type": "boolean"
+          },
+          "optiongroup": {
+            "type": "boolean"
+          },
+          "optionowner": {
+            "type": "boolean"
+          },
+          "optioncompress": {
+            "type": "boolean"
+          },
+          "optionarchive": {
+            "type": "boolean"
+          },
+          "optiondelete": {
+            "type": "boolean"
+          },
+          "optionquiet": {
+            "type": "boolean"
+          },
+          "optionperms": {
+            "type": "boolean"
+          },
+          "optionacls": {
+            "type": "boolean"
+          },
+          "optionxattrs": {
+            "type": "boolean"
+          },
+          "optiondryrun": {
+            "type": "boolean"
+          },
+          "optionpartial": {
+            "type": "boolean"
+          },
+          "extraoptions": {
+            "type": "string"
+          },
+          "authentication": {
+            "type": "string",
+            "description": "\"password\" or \"pubkey\" (an SSH key of this NAS)."
+          },
+          "sshcertificateref": {
+            "type": "string",
+            "description": "The UUID of the SSH key a job over SSH signs in with, or empty."
+          },
+          "sshport": {
+            "type": "integer"
+          }
+        }
+      },
+      "SshCertificateList": {
+        "type": "object",
+        "description": "The NAS's SSH keys (conf.system.certificate.ssh), each with its public half. OMV removes the private half before it replies.",
+        "required": ["total", "data"],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Every key, before paging."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["uuid", "comment", "publickey"],
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "x-omv-format": "uuidv4"
+                },
+                "comment": {
+                  "type": "string",
+                  "description": "The key's name, as given when it was made."
+                },
+                "publickey": {
+                  "type": "string",
+                  "description": "The public half, in OpenSSH's one-line form, to add to another computer."
+                },
+                "_used": {
+                  "type": "boolean",
+                  "description": "True when a setting (such as a copy job) refers to the key."
+                }
+              }
+            }
+          }
+        }
+      },
       "NetworkDeviceStats": {
         "type": "object",
         "description": "The interface's counters since the system started, from /proc/net/dev, each a whole number as text. The server sends [] (PHP's empty map) when it cannot read them.",
@@ -11371,6 +14220,72 @@
           "running": false
         }
       },
+      "execGetOutput.rsyncRunFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatushrhat06cetpoan0sUvl",
+          "pos": 389,
+          "output": "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Backup/> ...\n\nsending incremental file list\n./\none.txt\nreadme.txt\ntwo.txt\nopen/\nsub/\nsub/three.txt\n\nsent 414 bytes  received 107 bytes  1,042.00 bytes/sec\ntotal size is 27  speedup is 0.05\nThe synchronisation has completed successfully.\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.rsyncTrialFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusaoeovrrmdesf9cgJpDy",
+          "pos": 483,
+          "output": "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Backup/> ...\n\nsending incremental file list\ndeleting old-dir/deeper/older.txt\ndeleting old-dir/deeper/\ndeleting old-dir/old.txt\ndeleting old-dir/\ndeleting only-here.txt\nnew.txt\none.txt\n\nsent 236 bytes  received 122 bytes  716.00 bytes/sec\ntotal size is 40  speedup is 0.11 (DRY RUN)\nThe synchronisation has completed successfully.\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.rsyncStoppedRunning": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatus5hohls5v667j2i0zOCj",
+          "pos": 208,
+          "output": "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Bulk/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/BulkCopy/> ...\n\nsending incremental file list\n./\nbig.bin\n",
+          "pendingOutput": false,
+          "running": true
+        }
+      },
+      "execGetOutput.rsyncPullRsyncdFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatus66udgu4ls26kfSNbZwQ",
+          "pos": 384,
+          "output": "Please wait, syncing <rsync://copier@backup.example.org/photos/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Pulled/> ...\n\nreceiving incremental file list\n./\nmanual.txt\nnew.txt\none.txt\nreadme.txt\ntwo.txt\nInner/\nopen/\nsub/\nsub/three.txt\n\nsent 157 bytes  received 606 bytes  1,526.00 bytes/sec\ntotal size is 53  speedup is 0.07\nThe synchronisation has completed successfully.\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.emptyRecycleBinFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusoi5qpmo48me3fO6xdnT",
+          "pos": 598,
+          "output": "Please wait, empty recyle bin of </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> ...\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/docs/d.txt'\nremoved directory '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/docs'\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/c.txt'\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/b.txt'\nremoved directory '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex'\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
+      "execGetOutput.emptyRecycleBinNothingFinished": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "filename": "/tmp/bgstatusb7kajdirl7d616xjlpm",
+          "pos": 105,
+          "output": "Please wait, empty recyle bin of </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> ...\n",
+          "pendingOutput": false,
+          "running": false
+        }
+      },
       "execGetOutput.applyFailed": {
         "summary": "Written by hand from the A6 observation (OMV 8.6.1): a failed apply makes getOutput itself fail with HTTP 500, and the message is the whole Salt log. This one is shortened, with documentation names only.",
         "x-omv-status": 500,
@@ -11409,6 +14324,70 @@
         "value": {
           "code": 0,
           "message": "Cannot delete pool \"tank\": it has datasets. Delete them first."
+        }
+      },
+      "execGetOutput.rsyncHostKeyFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-000000000011 2>&1' with exit code '255': Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to <alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/> ...\n\nHost key verification failed.\nrsync: connection unexpectedly closed (0 bytes received so far) [sender]\nrsync error: unexplained error (code 255) at io.c(285) [sender=3.5.0]\n[ERROR] The synchronisation failed."
+        }
+      },
+      "execGetOutput.rsyncWrongPasswordFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-000000000013 2>&1' with exit code '5': Please wait, syncing <rsync://copier@backup.example.org/photos/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Pulled/> ...\n\n@ERROR: auth failed on module photos\nrsync error: error starting client-server protocol (code 5) at main.c(1954) [Receiver=3.5.0]\n[ERROR] The synchronisation failed."
+        }
+      },
+      "execGetOutput.rsyncSecondStartFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-000000000010 2>&1' with exit code '1': "
+        }
+      },
+      "execGetOutput.rsyncStopped": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to open file (filename=/tmp/bgstatus5hohls5v667j2i0zOCj, mode=r)."
+        }
+      },
+      "execGetOutput.rsyncNotMountedFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-00000000000f 2>&1' with exit code '1': [ERROR] Source storage device not mounted at </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/>!"
+        }
+      },
+      "execGetOutput.rsyncPushSshFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-000000000011 2>&1' with exit code '23': Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to <alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/> ...\n\nCould not chdir to home directory /home/alex: No such file or directory\nsending incremental file list\nrsync: [generator] failed to set times on \"/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/.\": Operation not permitted (1)\n./\nmanual.txt\nnew.txt\none.txt\nreadme.txt\ntwo.txt\nInner/\nopen/\nsub/\nsub/three.txt\n\nsent 625 bytes  received 153 bytes  1,556.00 bytes/sec\ntotal size is 53  speedup is 0.07\nrsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1394) [sender=3.5.0]\n[ERROR] The synchronisation failed."
+        }
+      },
+      "execGetOutput.emptyRecycleBinBinOffFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f -f 2>&1' with exit code '127': /bin/sh: 1: /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f: not found"
+        }
+      },
+      "execGetOutput.emptyRecycleBinSmbOffFailed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f -f 2>&1' with exit code '127': /bin/sh: 1: /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f: not found"
         }
       },
       "execIsRunning.running": {
@@ -12956,6 +15935,14 @@
         "value": {
           "code": 0,
           "message": "The DNS hostname is limited to 15 characters when using SMB/CIFS. Please change the hostname in the network settings page."
+        }
+      },
+      "smbSetSettings.badWorkgroup": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "workgroup: The value 'WORKGROUP-SIXTEE' is not a valid NetBIOS name."
         }
       },
       "smbGetShareList.one": {
@@ -14888,6 +17875,1013 @@
         "value": {
           "code": 0,
           "message": "Please apply the configuration changes first."
+        }
+      },
+      "nfsGetSettings.off": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "versions": ["3", "4", "4.1", "4.2"],
+          "shares": ""
+        }
+      },
+      "nfsGetSettings.on": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "versions": ["3", "4", "4.1", "4.2"],
+          "shares": {
+            "share": [
+              {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+                "mntentref": "00000000-0000-4000-8000-000000000003",
+                "client": "192.0.2.10",
+                "options": "rw",
+                "comment": "",
+                "extraoptions": "subtree_check,insecure"
+              },
+              {
+                "uuid": "00000000-0000-4000-8000-000000000004",
+                "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+                "mntentref": "00000000-0000-4000-8000-000000000003",
+                "client": "192.0.2.0/24",
+                "options": "ro",
+                "comment": "",
+                "extraoptions": "subtree_check,insecure"
+              },
+              {
+                "uuid": "00000000-0000-4000-8000-000000000005",
+                "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+                "mntentref": "00000000-0000-4000-8000-000000000007",
+                "client": "*",
+                "options": "ro",
+                "comment": "",
+                "extraoptions": "subtree_check,insecure"
+              }
+            ]
+          }
+        }
+      },
+      "nfsSetSettings.turnedOn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "versions": "3,4,4.1,4.2"
+        }
+      },
+      "nfsSetSettings.turnedOff": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "versions": "3,4,4.1,4.2"
+        }
+      },
+      "nfsGetShareList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "nfsGetShareList.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000001",
+              "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "client": "192.0.2.10",
+              "options": "rw",
+              "comment": "",
+              "extraoptions": "subtree_check,insecure",
+              "sharedfoldername": "Media"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000004",
+              "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+              "mntentref": "00000000-0000-4000-8000-000000000003",
+              "client": "192.0.2.0/24",
+              "options": "ro",
+              "comment": "",
+              "extraoptions": "subtree_check,insecure",
+              "sharedfoldername": "Media"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000005",
+              "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+              "mntentref": "00000000-0000-4000-8000-000000000007",
+              "client": "*",
+              "options": "ro",
+              "comment": "",
+              "extraoptions": "subtree_check,insecure",
+              "sharedfoldername": "Backup"
+            }
+          ]
+        }
+      },
+      "nfsGetShareList.folderGone": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute XPath query './/system/shares/sharedfolder[uuid='00000000-0000-4000-8000-000000000008']'."
+        }
+      },
+      "nfsGetShare.one": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000001",
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "mntentref": "00000000-0000-4000-8000-000000000003",
+          "client": "192.0.2.10",
+          "options": "rw",
+          "comment": "",
+          "extraoptions": "subtree_check,insecure"
+        }
+      },
+      "nfsSetShare.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000001",
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "mntentref": "00000000-0000-4000-8000-000000000003",
+          "client": "192.0.2.10",
+          "options": "rw",
+          "comment": "",
+          "extraoptions": "subtree_check,insecure"
+        }
+      },
+      "nfsSetShare.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000001",
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "mntentref": "00000000-0000-4000-8000-000000000003",
+          "client": "192.0.2.10",
+          "options": "ro",
+          "comment": "",
+          "extraoptions": "subtree_check,insecure"
+        }
+      },
+      "nfsSetShare.blankInPath": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The relative path of the shared folder 'Holiday Photos' contains blanks."
+        }
+      },
+      "nfsSetShare.emptyExtraOptions": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "extraoptions: The value '' doesn't match the pattern '^(([a-zA-Z_]+)(=([\\w@:\\/]+))?[,])*([a-zA-Z_]+)(=([\\w@:\\/]+))?$' (code=0)."
+        }
+      },
+      "nfsDeleteShare.removed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": []
+      },
+      "rsyncdGetSettings.off": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "port": 873,
+          "extraoptions": ""
+        }
+      },
+      "rsyncdGetSettings.on": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "port": 873,
+          "extraoptions": ""
+        }
+      },
+      "rsyncdSetSettings.turnedOn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": true,
+          "port": 873,
+          "extraoptions": ""
+        }
+      },
+      "rsyncdSetSettings.turnedOff": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "enable": false,
+          "port": 873,
+          "extraoptions": ""
+        }
+      },
+      "rsyncdGetModuleList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "rsyncdGetModuleList.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000b",
+              "enable": true,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+              "uid": "nobody",
+              "gid": "users",
+              "name": "media",
+              "comment": "Family media",
+              "readonly": false,
+              "writeonly": false,
+              "maxconnections": 0,
+              "list": true,
+              "hostsallow": "192.0.2.10",
+              "hostsdeny": "",
+              "extraoptions": "",
+              "authusers": false,
+              "usechroot": true,
+              "users": [],
+              "sharedfoldername": "Media"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000c",
+              "enable": true,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+              "uid": "nobody",
+              "gid": "users",
+              "name": "photos",
+              "comment": "",
+              "readonly": true,
+              "writeonly": false,
+              "maxconnections": 0,
+              "list": true,
+              "hostsallow": "",
+              "hostsdeny": "",
+              "extraoptions": "",
+              "authusers": true,
+              "usechroot": true,
+              "users": [
+                {
+                  "name": "copier",
+                  "password": "EXAMPLE-PASSWORD"
+                }
+              ],
+              "sharedfoldername": "Media"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000d",
+              "enable": true,
+              "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+              "uid": "nobody",
+              "gid": "users",
+              "name": "archive",
+              "comment": "",
+              "readonly": true,
+              "writeonly": false,
+              "maxconnections": 0,
+              "list": true,
+              "hostsallow": "192.0.2.0/24",
+              "hostsdeny": "",
+              "extraoptions": "",
+              "authusers": true,
+              "usechroot": true,
+              "users": [
+                {
+                  "name": "alex",
+                  "password": "EXAMPLE-PASSWORD"
+                },
+                {
+                  "name": "robin",
+                  "password": "EXAMPLE-PASSWORD"
+                },
+                {
+                  "name": "sam",
+                  "password": "EXAMPLE-PASSWORD"
+                }
+              ],
+              "sharedfoldername": "Backup"
+            }
+          ]
+        }
+      },
+      "rsyncdGetModule.withSignIn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000c",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "uid": "nobody",
+          "gid": "users",
+          "name": "photos",
+          "comment": "",
+          "readonly": true,
+          "writeonly": false,
+          "maxconnections": 0,
+          "list": true,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "extraoptions": "",
+          "authusers": true,
+          "usechroot": true,
+          "users": [
+            {
+              "name": "copier",
+              "password": "EXAMPLE-PASSWORD"
+            }
+          ]
+        }
+      },
+      "rsyncdGetModule.noSignIn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000b",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "uid": "nobody",
+          "gid": "users",
+          "name": "media",
+          "comment": "Family media",
+          "readonly": false,
+          "writeonly": false,
+          "maxconnections": 0,
+          "list": true,
+          "hostsallow": "192.0.2.10",
+          "hostsdeny": "",
+          "extraoptions": "",
+          "authusers": false,
+          "usechroot": true,
+          "users": []
+        }
+      },
+      "rsyncdSetModule.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000b",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "uid": "nobody",
+          "gid": "users",
+          "name": "media",
+          "comment": "Family media",
+          "readonly": false,
+          "writeonly": false,
+          "maxconnections": 0,
+          "list": true,
+          "hostsallow": "192.0.2.10",
+          "hostsdeny": "",
+          "extraoptions": "",
+          "authusers": false,
+          "usechroot": true,
+          "users": {
+            "user": []
+          }
+        }
+      },
+      "rsyncdSetModule.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000b",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "uid": "nobody",
+          "gid": "users",
+          "name": "media",
+          "comment": "Family media, offered",
+          "readonly": false,
+          "writeonly": false,
+          "maxconnections": 0,
+          "list": true,
+          "hostsallow": "192.0.2.10",
+          "hostsdeny": "",
+          "extraoptions": "",
+          "authusers": false,
+          "usechroot": true,
+          "users": {
+            "user": []
+          }
+        }
+      },
+      "rsyncdSetModule.nameTaken": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "The configuration object 'conf.service.rsyncd.module' is not unique. An object with the property 'name' and value 'media' already exists."
+        }
+      },
+      "rsyncdDeleteModule.removed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000d",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+          "uid": "nobody",
+          "gid": "users",
+          "name": "archive",
+          "comment": "",
+          "readonly": true,
+          "writeonly": false,
+          "maxconnections": 0,
+          "list": true,
+          "hostsallow": "192.0.2.0/24",
+          "hostsdeny": "",
+          "extraoptions": "",
+          "authusers": true,
+          "usechroot": true,
+          "users": {
+            "user": [
+              {
+                "name": "alex",
+                "password": "EXAMPLE-PASSWORD"
+              },
+              {
+                "name": "robin",
+                "password": "EXAMPLE-PASSWORD"
+              },
+              {
+                "name": "sam",
+                "password": "EXAMPLE-PASSWORD"
+              }
+            ]
+          }
+        }
+      },
+      "rsyncGetList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "rsyncGetList.several": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 3,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-00000000000f",
+              "enable": true,
+              "sendemail": false,
+              "comment": "Media into Backup",
+              "type": "local",
+              "src": {
+                "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+                "uri": ""
+              },
+              "dest": {
+                "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+                "uri": ""
+              },
+              "minute": "0",
+              "everynminute": false,
+              "hour": "3",
+              "everynhour": false,
+              "month": "*",
+              "dayofmonth": "*",
+              "everyndayofmonth": false,
+              "dayofweek": "*",
+              "optionrecursive": true,
+              "optiontimes": true,
+              "optiongroup": true,
+              "optionowner": true,
+              "optioncompress": false,
+              "optionarchive": true,
+              "optiondelete": false,
+              "optionquiet": false,
+              "optionperms": true,
+              "optionacls": false,
+              "optionxattrs": false,
+              "optiondryrun": false,
+              "optionpartial": false,
+              "extraoptions": "",
+              "mode": "push",
+              "authentication": "password",
+              "password": "",
+              "sshcertificateref": "",
+              "sshport": 22,
+              "srcname": "Media",
+              "destname": "Backup"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000011",
+              "enable": true,
+              "sendemail": false,
+              "comment": "Media to the other computer",
+              "type": "remote",
+              "src": {
+                "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+                "uri": ""
+              },
+              "dest": {
+                "sharedfolderref": "",
+                "uri": "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"
+              },
+              "minute": "0",
+              "everynminute": false,
+              "hour": "3",
+              "everynhour": false,
+              "month": "*",
+              "dayofmonth": "*",
+              "everyndayofmonth": false,
+              "dayofweek": "*",
+              "optionrecursive": true,
+              "optiontimes": true,
+              "optiongroup": true,
+              "optionowner": true,
+              "optioncompress": false,
+              "optionarchive": true,
+              "optiondelete": false,
+              "optionquiet": false,
+              "optionperms": true,
+              "optionacls": false,
+              "optionxattrs": false,
+              "optiondryrun": false,
+              "optionpartial": false,
+              "extraoptions": "",
+              "mode": "push",
+              "authentication": "pubkey",
+              "password": "",
+              "sshcertificateref": "00000000-0000-4000-8000-000000000012",
+              "sshport": 22,
+              "srcname": "Media",
+              "destname": "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"
+            },
+            {
+              "uuid": "00000000-0000-4000-8000-000000000013",
+              "enable": true,
+              "sendemail": false,
+              "comment": "The other computer's photos to Pulled",
+              "type": "remote",
+              "src": {
+                "sharedfolderref": "",
+                "uri": "rsync://copier@backup.example.org/photos/"
+              },
+              "dest": {
+                "sharedfolderref": "00000000-0000-4000-8000-000000000014",
+                "uri": ""
+              },
+              "minute": "0",
+              "everynminute": false,
+              "hour": "3",
+              "everynhour": false,
+              "month": "*",
+              "dayofmonth": "*",
+              "everyndayofmonth": false,
+              "dayofweek": "*",
+              "optionrecursive": true,
+              "optiontimes": true,
+              "optiongroup": true,
+              "optionowner": true,
+              "optioncompress": false,
+              "optionarchive": true,
+              "optiondelete": false,
+              "optionquiet": false,
+              "optionperms": true,
+              "optionacls": false,
+              "optionxattrs": false,
+              "optiondryrun": false,
+              "optionpartial": false,
+              "extraoptions": "",
+              "mode": "pull",
+              "authentication": "password",
+              "password": "EXAMPLE-PASSWORD",
+              "sshcertificateref": "",
+              "sshport": 22,
+              "srcname": "rsync://copier@backup.example.org/photos/",
+              "destname": "Pulled"
+            }
+          ]
+        }
+      },
+      "rsyncGetList.folderGone": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Failed to execute XPath query './/system/shares/sharedfolder[uuid='00000000-0000-4000-8000-000000000015']'."
+        }
+      },
+      "rsyncGet.local": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000f",
+          "enable": true,
+          "sendemail": false,
+          "comment": "Media to Backup",
+          "type": "local",
+          "src": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+            "uri": ""
+          },
+          "dest": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+            "uri": ""
+          },
+          "minute": ["0"],
+          "everynminute": false,
+          "hour": ["3"],
+          "everynhour": false,
+          "month": ["*"],
+          "dayofmonth": ["*"],
+          "everyndayofmonth": false,
+          "dayofweek": ["*"],
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "push",
+          "authentication": "password",
+          "password": "",
+          "sshcertificateref": "",
+          "sshport": 22,
+          "srcsharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "destsharedfolderref": "00000000-0000-4000-8000-000000000006"
+        }
+      },
+      "rsyncGet.pushSsh": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000011",
+          "enable": true,
+          "sendemail": false,
+          "comment": "Media to the other computer",
+          "type": "remote",
+          "src": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+            "uri": ""
+          },
+          "dest": {
+            "sharedfolderref": "",
+            "uri": "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"
+          },
+          "minute": ["0"],
+          "everynminute": false,
+          "hour": ["3"],
+          "everynhour": false,
+          "month": ["*"],
+          "dayofmonth": ["*"],
+          "everyndayofmonth": false,
+          "dayofweek": ["*"],
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "push",
+          "authentication": "pubkey",
+          "password": "",
+          "sshcertificateref": "00000000-0000-4000-8000-000000000012",
+          "sshport": 22,
+          "srcsharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "desturi": "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"
+        }
+      },
+      "rsyncGet.pullRsyncd": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000013",
+          "enable": true,
+          "sendemail": false,
+          "comment": "The other computer's photos to Pulled",
+          "type": "remote",
+          "src": {
+            "sharedfolderref": "",
+            "uri": "rsync://copier@backup.example.org/photos/"
+          },
+          "dest": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000014",
+            "uri": ""
+          },
+          "minute": ["0"],
+          "everynminute": false,
+          "hour": ["3"],
+          "everynhour": false,
+          "month": ["*"],
+          "dayofmonth": ["*"],
+          "everyndayofmonth": false,
+          "dayofweek": ["*"],
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "pull",
+          "authentication": "password",
+          "password": "EXAMPLE-PASSWORD",
+          "sshcertificateref": "",
+          "sshport": 22,
+          "srcuri": "rsync://copier@backup.example.org/photos/",
+          "destsharedfolderref": "00000000-0000-4000-8000-000000000014"
+        }
+      },
+      "rsyncSet.created": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000f",
+          "enable": true,
+          "sendemail": false,
+          "comment": "Media to Backup",
+          "type": "local",
+          "src": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+            "uri": ""
+          },
+          "dest": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+            "uri": ""
+          },
+          "minute": "0",
+          "everynminute": false,
+          "hour": "3",
+          "everynhour": false,
+          "month": "*",
+          "dayofmonth": "*",
+          "everyndayofmonth": false,
+          "dayofweek": "*",
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "push",
+          "authentication": "password",
+          "password": "",
+          "sshcertificateref": "",
+          "sshport": 22
+        }
+      },
+      "rsyncSet.changed": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000000f",
+          "enable": true,
+          "sendemail": false,
+          "comment": "Media into Backup",
+          "type": "local",
+          "src": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+            "uri": ""
+          },
+          "dest": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000006",
+            "uri": ""
+          },
+          "minute": "0",
+          "everynminute": false,
+          "hour": "3",
+          "everynhour": false,
+          "month": "*",
+          "dayofmonth": "*",
+          "everyndayofmonth": false,
+          "dayofweek": "*",
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "push",
+          "authentication": "password",
+          "password": "",
+          "sshcertificateref": "",
+          "sshport": 22
+        }
+      },
+      "rsyncDelete.deleted": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-000000000013",
+          "enable": true,
+          "sendemail": false,
+          "comment": "The other computer's photos to Pulled",
+          "type": "remote",
+          "src": {
+            "sharedfolderref": "",
+            "uri": "rsync://copier@backup.example.org/photos/"
+          },
+          "dest": {
+            "sharedfolderref": "00000000-0000-4000-8000-000000000014",
+            "uri": ""
+          },
+          "minute": "0",
+          "everynminute": false,
+          "hour": "3",
+          "everynhour": false,
+          "month": "*",
+          "dayofmonth": "*",
+          "everyndayofmonth": false,
+          "dayofweek": "*",
+          "optionrecursive": true,
+          "optiontimes": true,
+          "optiongroup": true,
+          "optionowner": true,
+          "optioncompress": false,
+          "optionarchive": true,
+          "optiondelete": false,
+          "optionquiet": false,
+          "optionperms": true,
+          "optionacls": false,
+          "optionxattrs": false,
+          "optiondryrun": false,
+          "optionpartial": false,
+          "extraoptions": "",
+          "mode": "pull",
+          "authentication": "password",
+          "password": "EXAMPLE-PASSWORD",
+          "sshcertificateref": "",
+          "sshport": 22
+        }
+      },
+      "rsyncExecute.started": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatushrhat06cetpoan0sUvl"
+      },
+      "rsyncExecute.pending": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Please apply the configuration changes first."
+        }
+      },
+      "smbGetShare.stock": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000001f",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "comment": "",
+          "guest": "no",
+          "readonly": false,
+          "browseable": true,
+          "recyclebin": false,
+          "recyclemaxsize": 0,
+          "recyclemaxage": 0,
+          "hidedotfiles": true,
+          "inheritacls": false,
+          "inheritpermissions": false,
+          "easupport": true,
+          "storedosattributes": false,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "audit": false,
+          "macoscompat": false,
+          "timemachine": false,
+          "timemachinemaxsize": "",
+          "transportencryption": false,
+          "followsymlinks": true,
+          "widelinks": false,
+          "extraoptions": ""
+        }
+      },
+      "smbGetShare.recycleOn": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "uuid": "00000000-0000-4000-8000-00000000001f",
+          "enable": true,
+          "sharedfolderref": "00000000-0000-4000-8000-000000000002",
+          "comment": "",
+          "guest": "no",
+          "readonly": false,
+          "browseable": true,
+          "recyclebin": true,
+          "recyclemaxsize": 0,
+          "recyclemaxage": 30,
+          "hidedotfiles": true,
+          "inheritacls": false,
+          "inheritpermissions": false,
+          "easupport": true,
+          "storedosattributes": false,
+          "hostsallow": "",
+          "hostsdeny": "",
+          "audit": false,
+          "macoscompat": false,
+          "timemachine": false,
+          "timemachinemaxsize": "",
+          "transportencryption": false,
+          "followsymlinks": true,
+          "widelinks": false,
+          "extraoptions": ""
+        }
+      },
+      "smbEmptyRecycleBin.started": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": "/tmp/bgstatusoi5qpmo48me3fO6xdnT"
+      },
+      "smbEmptyRecycleBin.pending": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 500,
+        "value": {
+          "code": 0,
+          "message": "Please apply the configuration changes first."
+        }
+      },
+      "certificateMgmtGetSshList.none": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 0,
+          "data": []
+        }
+      },
+      "certificateMgmtGetSshList.one": {
+        "summary": "Captured from the test VM (OMV 8.6.1), scrubbed",
+        "x-omv-status": 200,
+        "value": {
+          "total": 1,
+          "data": [
+            {
+              "uuid": "00000000-0000-4000-8000-000000000012",
+              "publickey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl example-key",
+              "comment": "example-key",
+              "_used": true
+            }
+          ]
         }
       },
       "sshGetStats.noConnections": {

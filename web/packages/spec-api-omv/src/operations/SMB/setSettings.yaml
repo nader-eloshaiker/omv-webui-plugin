@@ -47,3 +47,5 @@ post:
           examples:
             hostTooLong:
               $ref: ../../examples/smbSetSettings.hostTooLong.yaml
+            badWorkgroup:
+              $ref: ../../examples/smbSetSettings.badWorkgroup.yaml

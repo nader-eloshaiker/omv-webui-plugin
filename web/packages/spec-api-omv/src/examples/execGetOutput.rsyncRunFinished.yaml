@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatushrhat06cetpoan0sUvl
+  pos: 389
+  output: "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Backup/> ...\n\nsending incremental file list\n./\none.txt\nreadme.txt\ntwo.txt\nopen/\nsub/\nsub/three.txt\n\nsent 414 bytes  received 107 bytes  1,042.00 bytes/sec\ntotal size is 27  speedup is 0.05\nThe synchronisation has completed successfully.\n"
+  pendingOutput: false
+  running: false

@@ -542,6 +542,242 @@ export const OPERATIONS = {
       $ref: "ServiceStatsText",
     },
   },
+  "/rpc/NFS/getSettings": {
+    operationId: "nfsGetSettings",
+    service: "NFS",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NfsSettings",
+    },
+  },
+  "/rpc/NFS/setSettings": {
+    operationId: "nfsSetSettings",
+    service: "NFS",
+    method: "setSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "NfsSettingsSaved",
+    },
+  },
+  "/rpc/NFS/getShareList": {
+    operationId: "nfsGetShareList",
+    service: "NFS",
+    method: "getShareList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NfsShareList",
+    },
+  },
+  "/rpc/NFS/getShare": {
+    operationId: "nfsGetShare",
+    service: "NFS",
+    method: "getShare",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NfsShare",
+    },
+  },
+  "/rpc/NFS/setShare": {
+    operationId: "nfsSetShare",
+    service: "NFS",
+    method: "setShare",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    response: {
+      $ref: "NfsShare",
+    },
+  },
+  "/rpc/NFS/deleteShare": {
+    operationId: "nfsDeleteShare",
+    service: "NFS",
+    method: "deleteShare",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "NfsShareRemoved",
+    },
+  },
+  "/rpc/Rsyncd/getSettings": {
+    operationId: "rsyncdGetSettings",
+    service: "Rsyncd",
+    method: "getSettings",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "RsyncdSettings",
+    },
+  },
+  "/rpc/Rsyncd/setSettings": {
+    operationId: "rsyncdSetSettings",
+    service: "Rsyncd",
+    method: "setSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    response: {
+      $ref: "RsyncdSettings",
+    },
+  },
+  "/rpc/Rsyncd/getModuleList": {
+    operationId: "rsyncdGetModuleList",
+    service: "Rsyncd",
+    method: "getModuleList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["data[].users[].password"],
+    response: {
+      $ref: "RsyncdModuleList",
+    },
+  },
+  "/rpc/Rsyncd/getModule": {
+    operationId: "rsyncdGetModule",
+    service: "Rsyncd",
+    method: "getModule",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["users[].password"],
+    response: {
+      $ref: "RsyncdModule",
+    },
+  },
+  "/rpc/Rsyncd/setModule": {
+    operationId: "rsyncdSetModule",
+    service: "Rsyncd",
+    method: "setModule",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    omit: ["users.user[].password"],
+    response: {
+      $ref: "RsyncdModuleStored",
+    },
+  },
+  "/rpc/Rsyncd/deleteModule": {
+    operationId: "rsyncdDeleteModule",
+    service: "Rsyncd",
+    method: "deleteModule",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "service",
+    omit: ["users.user[].password"],
+    response: {
+      $ref: "RsyncdModuleStored",
+    },
+  },
+  "/rpc/Rsync/getList": {
+    operationId: "rsyncGetList",
+    service: "Rsync",
+    method: "getList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["data[].password"],
+    response: {
+      $ref: "RsyncJobRowList",
+    },
+  },
+  "/rpc/Rsync/get": {
+    operationId: "rsyncGet",
+    service: "Rsync",
+    method: "get",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["password"],
+    response: {
+      $ref: "RsyncJob",
+    },
+  },
+  "/rpc/Rsync/set": {
+    operationId: "rsyncSet",
+    service: "Rsync",
+    method: "set",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    omit: ["password"],
+    response: {
+      $ref: "RsyncJobStored",
+    },
+  },
+  "/rpc/Rsync/delete": {
+    operationId: "rsyncDelete",
+    service: "Rsync",
+    method: "delete",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    omit: ["password"],
+    response: {
+      $ref: "RsyncJobStored",
+    },
+  },
+  "/rpc/Rsync/execute": {
+    operationId: "rsyncExecute",
+    service: "Rsync",
+    method: "execute",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/SMB/getShare": {
+    operationId: "smbGetShare",
+    service: "SMB",
+    method: "getShare",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SmbShare",
+    },
+  },
+  "/rpc/SMB/emptyRecycleBin": {
+    operationId: "smbEmptyRecycleBin",
+    service: "SMB",
+    method: "emptyRecycleBin",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "data",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/CertificateMgmt/getSshList": {
+    operationId: "certificateMgmtGetSshList",
+    service: "CertificateMgmt",
+    method: "getSshList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "SshCertificateList",
+    },
+  },
   "/rpc/SSH/getStats": {
     operationId: "sshGetStats",
     service: "SSH",
@@ -2387,6 +2623,95 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  NfsSettings: {
+    type: "object",
+    required: ["enable", "versions"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      versions: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+    },
+  },
+  NfsSettingsSaved: {
+    type: "object",
+    required: ["enable", "versions"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      versions: {
+        type: "string",
+      },
+    },
+  },
+  NfsShare: {
+    type: "object",
+    required: ["uuid", "sharedfolderref", "mntentref", "client", "options"],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      sharedfolderref: {
+        type: "string",
+      },
+      mntentref: {
+        type: "string",
+      },
+      client: {
+        type: "string",
+      },
+      options: {
+        type: "string",
+      },
+      extraoptions: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+    },
+  },
+  NfsShareList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "NfsShareRow",
+        },
+      },
+    },
+  },
+  NfsShareRemoved: {
+    type: "object",
+    properties: {},
+  },
+  NfsShareRow: {
+    allOf: [
+      {
+        $ref: "NfsShare",
+      },
+      {
+        type: "object",
+        required: ["sharedfoldername"],
+        properties: {
+          sharedfoldername: {
+            type: "string",
+          },
+        },
+      },
+    ],
+  },
   ObjectUuid: {
     type: "string",
     pattern:
@@ -2395,6 +2720,705 @@ export const SCHEMAS: SchemaTable = {
   Role: {
     type: "string",
     enum: ["admin", "user"],
+  },
+  RsyncJob: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "type",
+      "mode",
+      "src",
+      "dest",
+      "minute",
+      "hour",
+      "dayofmonth",
+      "month",
+      "dayofweek",
+      "authentication",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sendemail: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mode: {
+        type: "string",
+      },
+      src: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      dest: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      minute: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      hour: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      dayofmonth: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      month: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      dayofweek: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      everynminute: {
+        type: "boolean",
+      },
+      everynhour: {
+        type: "boolean",
+      },
+      everyndayofmonth: {
+        type: "boolean",
+      },
+      optionrecursive: {
+        type: "boolean",
+      },
+      optiontimes: {
+        type: "boolean",
+      },
+      optiongroup: {
+        type: "boolean",
+      },
+      optionowner: {
+        type: "boolean",
+      },
+      optioncompress: {
+        type: "boolean",
+      },
+      optionarchive: {
+        type: "boolean",
+      },
+      optiondelete: {
+        type: "boolean",
+      },
+      optionquiet: {
+        type: "boolean",
+      },
+      optionperms: {
+        type: "boolean",
+      },
+      optionacls: {
+        type: "boolean",
+      },
+      optionxattrs: {
+        type: "boolean",
+      },
+      optiondryrun: {
+        type: "boolean",
+      },
+      optionpartial: {
+        type: "boolean",
+      },
+      extraoptions: {
+        type: "string",
+      },
+      authentication: {
+        type: "string",
+      },
+      sshcertificateref: {
+        type: "string",
+      },
+      sshport: {
+        type: "integer",
+      },
+      srcsharedfolderref: {
+        type: "string",
+      },
+      srcuri: {
+        type: "string",
+      },
+      destsharedfolderref: {
+        type: "string",
+      },
+      desturi: {
+        type: "string",
+      },
+      password: {
+        type: "boolean",
+      },
+    },
+  },
+  RsyncJobRow: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "type",
+      "mode",
+      "src",
+      "dest",
+      "minute",
+      "hour",
+      "dayofmonth",
+      "month",
+      "dayofweek",
+      "authentication",
+      "srcname",
+      "destname",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sendemail: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mode: {
+        type: "string",
+      },
+      src: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      dest: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      minute: {
+        type: "string",
+      },
+      hour: {
+        type: "string",
+      },
+      dayofmonth: {
+        type: "string",
+      },
+      month: {
+        type: "string",
+      },
+      dayofweek: {
+        type: "string",
+      },
+      everynminute: {
+        type: "boolean",
+      },
+      everynhour: {
+        type: "boolean",
+      },
+      everyndayofmonth: {
+        type: "boolean",
+      },
+      optionrecursive: {
+        type: "boolean",
+      },
+      optiontimes: {
+        type: "boolean",
+      },
+      optiongroup: {
+        type: "boolean",
+      },
+      optionowner: {
+        type: "boolean",
+      },
+      optioncompress: {
+        type: "boolean",
+      },
+      optionarchive: {
+        type: "boolean",
+      },
+      optiondelete: {
+        type: "boolean",
+      },
+      optionquiet: {
+        type: "boolean",
+      },
+      optionperms: {
+        type: "boolean",
+      },
+      optionacls: {
+        type: "boolean",
+      },
+      optionxattrs: {
+        type: "boolean",
+      },
+      optiondryrun: {
+        type: "boolean",
+      },
+      optionpartial: {
+        type: "boolean",
+      },
+      extraoptions: {
+        type: "string",
+      },
+      authentication: {
+        type: "string",
+      },
+      sshcertificateref: {
+        type: "string",
+      },
+      sshport: {
+        type: "integer",
+      },
+      srcname: {
+        type: "string",
+      },
+      destname: {
+        type: "string",
+      },
+      password: {
+        type: "boolean",
+      },
+    },
+  },
+  RsyncJobRowList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "RsyncJobRow",
+        },
+      },
+    },
+  },
+  RsyncJobStored: {
+    type: "object",
+    required: ["uuid", "type", "mode", "src", "dest"],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sendemail: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      mode: {
+        type: "string",
+      },
+      src: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      dest: {
+        type: "object",
+        properties: {
+          sharedfolderref: {
+            type: "string",
+          },
+          uri: {
+            type: "string",
+          },
+        },
+      },
+      minute: {
+        type: "string",
+      },
+      hour: {
+        type: "string",
+      },
+      dayofmonth: {
+        type: "string",
+      },
+      month: {
+        type: "string",
+      },
+      dayofweek: {
+        type: "string",
+      },
+      everynminute: {
+        type: "boolean",
+      },
+      everynhour: {
+        type: "boolean",
+      },
+      everyndayofmonth: {
+        type: "boolean",
+      },
+      optionrecursive: {
+        type: "boolean",
+      },
+      optiontimes: {
+        type: "boolean",
+      },
+      optiongroup: {
+        type: "boolean",
+      },
+      optionowner: {
+        type: "boolean",
+      },
+      optioncompress: {
+        type: "boolean",
+      },
+      optionarchive: {
+        type: "boolean",
+      },
+      optiondelete: {
+        type: "boolean",
+      },
+      optionquiet: {
+        type: "boolean",
+      },
+      optionperms: {
+        type: "boolean",
+      },
+      optionacls: {
+        type: "boolean",
+      },
+      optionxattrs: {
+        type: "boolean",
+      },
+      optiondryrun: {
+        type: "boolean",
+      },
+      optionpartial: {
+        type: "boolean",
+      },
+      extraoptions: {
+        type: "string",
+      },
+      authentication: {
+        type: "string",
+      },
+      sshcertificateref: {
+        type: "string",
+      },
+      sshport: {
+        type: "integer",
+      },
+    },
+  },
+  RsyncdModule: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "sharedfolderref",
+      "name",
+      "readonly",
+      "writeonly",
+      "authusers",
+      "users",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sharedfolderref: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      uid: {
+        type: "string",
+      },
+      gid: {
+        type: "string",
+      },
+      readonly: {
+        type: "boolean",
+      },
+      writeonly: {
+        type: "boolean",
+      },
+      maxconnections: {
+        type: "integer",
+      },
+      list: {
+        type: "boolean",
+      },
+      hostsallow: {
+        type: "string",
+      },
+      hostsdeny: {
+        type: "string",
+      },
+      authusers: {
+        type: "boolean",
+      },
+      usechroot: {
+        type: "boolean",
+      },
+      users: {
+        type: "array",
+        items: {
+          $ref: "RsyncdSignIn",
+        },
+      },
+      extraoptions: {
+        type: "string",
+      },
+    },
+  },
+  RsyncdModuleList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "RsyncdModuleRow",
+        },
+      },
+    },
+  },
+  RsyncdModuleRow: {
+    type: "object",
+    required: [
+      "uuid",
+      "enable",
+      "sharedfolderref",
+      "name",
+      "readonly",
+      "writeonly",
+      "authusers",
+      "users",
+      "sharedfoldername",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sharedfolderref: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      uid: {
+        type: "string",
+      },
+      gid: {
+        type: "string",
+      },
+      readonly: {
+        type: "boolean",
+      },
+      writeonly: {
+        type: "boolean",
+      },
+      maxconnections: {
+        type: "integer",
+      },
+      list: {
+        type: "boolean",
+      },
+      hostsallow: {
+        type: "string",
+      },
+      hostsdeny: {
+        type: "string",
+      },
+      authusers: {
+        type: "boolean",
+      },
+      usechroot: {
+        type: "boolean",
+      },
+      users: {
+        type: "array",
+        items: {
+          $ref: "RsyncdSignIn",
+        },
+      },
+      extraoptions: {
+        type: "string",
+      },
+      sharedfoldername: {
+        type: "string",
+      },
+    },
+  },
+  RsyncdModuleStored: {
+    type: "object",
+    required: ["uuid", "sharedfolderref", "name"],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      enable: {
+        type: "boolean",
+      },
+      sharedfolderref: {
+        type: "string",
+      },
+      name: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+      uid: {
+        type: "string",
+      },
+      gid: {
+        type: "string",
+      },
+      readonly: {
+        type: "boolean",
+      },
+      writeonly: {
+        type: "boolean",
+      },
+      maxconnections: {
+        type: "integer",
+      },
+      list: {
+        type: "boolean",
+      },
+      hostsallow: {
+        type: "string",
+      },
+      hostsdeny: {
+        type: "string",
+      },
+      authusers: {
+        type: "boolean",
+      },
+      usechroot: {
+        type: "boolean",
+      },
+      users: {
+        type: "object",
+        properties: {
+          user: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+      },
+      extraoptions: {
+        type: "string",
+      },
+    },
+  },
+  RsyncdSettings: {
+    type: "object",
+    required: ["enable", "port"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      port: {
+        type: "integer",
+      },
+      extraoptions: {
+        type: "string",
+      },
+    },
+  },
+  RsyncdSignIn: {
+    type: "object",
+    required: ["name"],
+    properties: {
+      name: {
+        type: "string",
+      },
+      password: {
+        type: "boolean",
+      },
+    },
   },
   ServiceStatsText: {
     type: "string",
@@ -3381,6 +4405,36 @@ export const SCHEMAS: SchemaTable = {
         },
       },
     ],
+  },
+  SshCertificateList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["uuid", "comment", "publickey"],
+          properties: {
+            uuid: {
+              type: "string",
+            },
+            comment: {
+              type: "string",
+            },
+            publickey: {
+              type: "string",
+            },
+            _used: {
+              type: "boolean",
+            },
+          },
+        },
+      },
+    },
   },
   SshSettings: {
     type: "object",

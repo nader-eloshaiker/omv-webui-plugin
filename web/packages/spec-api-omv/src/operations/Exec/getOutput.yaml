@@ -55,6 +55,18 @@ post:
               $ref: ../../examples/execGetOutput.zfsDeleteFilesystemFinished.yaml
             zfsDeletePoolFinished:
               $ref: ../../examples/execGetOutput.zfsDeletePoolFinished.yaml
+            rsyncRunFinished:
+              $ref: ../../examples/execGetOutput.rsyncRunFinished.yaml
+            rsyncTrialFinished:
+              $ref: ../../examples/execGetOutput.rsyncTrialFinished.yaml
+            rsyncStoppedRunning:
+              $ref: ../../examples/execGetOutput.rsyncStoppedRunning.yaml
+            rsyncPullRsyncdFinished:
+              $ref: ../../examples/execGetOutput.rsyncPullRsyncdFinished.yaml
+            emptyRecycleBinFinished:
+              $ref: ../../examples/execGetOutput.emptyRecycleBinFinished.yaml
+            emptyRecycleBinNothingFinished:
+              $ref: ../../examples/execGetOutput.emptyRecycleBinNothingFinished.yaml
     "500":
       description: "The task failed: the message is the task's whole output (for an apply, the Salt log). Also the answer for a handle the server has already deleted (A6)."
       content:
@@ -72,3 +84,19 @@ post:
               $ref: ../../examples/execGetOutput.createBtrfsFailed.yaml
             zfsDeletePoolWithFsFailed:
               $ref: ../../examples/execGetOutput.zfsDeletePoolWithFsFailed.yaml
+            rsyncHostKeyFailed:
+              $ref: ../../examples/execGetOutput.rsyncHostKeyFailed.yaml
+            rsyncWrongPasswordFailed:
+              $ref: ../../examples/execGetOutput.rsyncWrongPasswordFailed.yaml
+            rsyncSecondStartFailed:
+              $ref: ../../examples/execGetOutput.rsyncSecondStartFailed.yaml
+            rsyncStopped:
+              $ref: ../../examples/execGetOutput.rsyncStopped.yaml
+            rsyncNotMountedFailed:
+              $ref: ../../examples/execGetOutput.rsyncNotMountedFailed.yaml
+            rsyncPushSshFailed:
+              $ref: ../../examples/execGetOutput.rsyncPushSshFailed.yaml
+            emptyRecycleBinBinOffFailed:
+              $ref: ../../examples/execGetOutput.emptyRecycleBinBinOffFailed.yaml
+            emptyRecycleBinSmbOffFailed:
+              $ref: ../../examples/execGetOutput.emptyRecycleBinSmbOffFailed.yaml

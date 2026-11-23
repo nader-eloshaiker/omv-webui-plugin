@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsSetSettings
+  tags:
+    - NFS
+  summary: Turn Linux and Unix sharing (NFS) on or off
+  description: >-
+    Store whether the NFS server is on and the versions it offers. Both fields are required; the
+    interface sends the versions as read. When it is turned off, computers lose the NFS shares once
+    the pending changes are applied. It marks the nfs and avahi modules dirty. Returns the stored
+    settings without the shares, with versions as the stored comma-separated string.
+  x-omv-rpc:
+    service: NFS
+    method: setSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.nfs.setsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NfsSetSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NfsSettingsSaved.yaml
+          examples:
+            turnedOn:
+              $ref: ../../examples/nfsSetSettings.turnedOn.yaml
+            turnedOff:
+              $ref: ../../examples/nfsSetSettings.turnedOff.yaml

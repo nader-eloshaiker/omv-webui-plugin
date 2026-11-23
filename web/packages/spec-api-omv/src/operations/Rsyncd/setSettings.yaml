@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncdSetSettings
+  tags:
+    - Rsyncd
+  summary: Turn the rsync server on or off
+  description: >-
+    Store whether the rsync server is on, its port and its extra options; all three are required,
+    and the interface sends the port and extra options as read. When it is turned off, other
+    computers lose the server once the pending changes are applied. It marks the rsyncd and avahi
+    modules dirty. Returns the stored settings without the modules.
+  x-omv-rpc:
+    service: Rsyncd
+    method: setSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.rsyncd.setsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/RsyncdSetSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncdSettings.yaml
+          examples:
+            turnedOn:
+              $ref: ../../examples/rsyncdSetSettings.turnedOn.yaml
+            turnedOff:
+              $ref: ../../examples/rsyncdSetSettings.turnedOff.yaml

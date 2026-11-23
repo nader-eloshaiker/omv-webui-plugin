@@ -1,0 +1,12 @@
+description: >-
+  A copy job to store (rpc.rsync.set). OMV requires all 36 fields, keeps only the side fields that
+  apply to `type` and `mode` and blanks the others, and checks nothing else: not that a side is set,
+  that the two differ, that an address is well formed or that a key exists. The contract is
+  stricter: one of three shapes by direction, each requiring its sides set and well formed and the
+  others empty; schedule items anchored; the remote address in one of the two forms the interface
+  writes (RsyncRemoteUri); the note one line of at most 200 characters. With OMV's placeholder UUID
+  it makes a job; otherwise it replaces the stored one. A password sent empty is stored empty.
+oneOf:
+  - $ref: ./RsyncSetLocalRequest.yaml
+  - $ref: ./RsyncSetPushRequest.yaml
+  - $ref: ./RsyncSetPullRequest.yaml

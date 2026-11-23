@@ -1,0 +1,6 @@
+type: object
+description: >-
+  NFS.deleteShare's reply. OMV returns the removed configuration object itself, which reaches the
+  client as an empty list (observed on OMV 8.6.1); the transport reads it as an empty object. The
+  interface reads nothing from it.
+properties: {}

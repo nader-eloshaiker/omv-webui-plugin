@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsDeleteShare
+  tags:
+    - NFS
+  summary: Stop letting a computer use a shared folder over NFS
+  description: >-
+    Remove an NFS share. It touches no shared folder and no file. When no other share uses the
+    folder's bind mount, OMV removes that mount's entry too. Computers lose access once the pending
+    changes are applied; it marks the nfs and avahi modules dirty. Its reply is an empty list.
+  x-omv-rpc:
+    service: NFS
+    method: deleteShare
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NfsShareRemoved.yaml
+          examples:
+            removed:
+              $ref: ../../examples/nfsDeleteShare.removed.yaml

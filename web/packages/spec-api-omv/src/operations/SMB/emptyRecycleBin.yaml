@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbEmptyRecycleBin
+  tags:
+    - SMB
+  summary: Empty a share's recycle bin
+  description: >-
+    Delete everything in an SMB share's recycle bin, for every person and whatever its age, as a
+    background task; the parameter is the SMB share's UUID. The script exists only after Windows and
+    Mac sharing and the share's recycle bin were turned on and applied, so OMV refuses while the
+    samba module is pending. The files cannot be got back. Changes no configuration.
+  x-omv-rpc:
+    service: SMB
+    method: emptyRecycleBin
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/smbEmptyRecycleBin.started.yaml
+    "500":
+      description: >-
+        OMV refused because the pending changes have not been applied.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            pending:
+              $ref: ../../examples/smbEmptyRecycleBin.pending.yaml

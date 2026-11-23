@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsGetShareList
+  tags:
+    - NFS
+  summary: Folders shared with Linux and Unix computers
+  description: >-
+    The NFS shares, each as stored with the name of its shared folder; several may share one folder,
+    one computer or network each. The interface reads the whole list. Changes nothing.
+  x-omv-rpc:
+    service: NFS
+    method: getShareList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NfsShareList.yaml
+          examples:
+            none:
+              $ref: ../../examples/nfsGetShareList.none.yaml
+            several:
+              $ref: ../../examples/nfsGetShareList.several.yaml
+    "500":
+      description: >-
+        The read failed because a share names a shared folder whose record is gone (removed by hand,
+        outside OMV's own checks); the message is OMV's internal one.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            folderGone:
+              $ref: ../../examples/nfsGetShareList.folderGone.yaml

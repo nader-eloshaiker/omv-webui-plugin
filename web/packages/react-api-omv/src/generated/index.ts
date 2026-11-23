@@ -1,4 +1,5 @@
 export * from "@omv-webui/ts-api-omv";
+export * from "./omv/certificate-mgmt/certificate-mgmt.ts";
 export * from "./omv/config/config.ts";
 export * from "./omv/disk-mgmt/disk-mgmt.ts";
 export * from "./omv/email-notification/email-notification.ts";
@@ -10,6 +11,8 @@ export * from "./omv/log-file/log-file.ts";
 export * from "./omv/md-mgmt/md-mgmt.ts";
 export * from "./omv/network/network.ts";
 export * from "./omv/nfs/nfs.ts";
+export * from "./omv/rsync/rsync.ts";
+export * from "./omv/rsyncd/rsyncd.ts";
 export * from "./omv/services/services.ts";
 export * from "./omv/session/session.ts";
 export * from "./omv/share-mgmt/share-mgmt.ts";

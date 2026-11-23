@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: certificateMgmtGetSshList
+  tags:
+    - CertificateMgmt
+  summary: The NAS's SSH keys
+  description: >-
+    The SSH keys the NAS keeps for signing in to other computers, each with its comment, its public
+    half and whether a setting uses it. OMV removes the private half before it replies. Changes
+    nothing.
+  x-omv-rpc:
+    service: CertificateMgmt
+    method: getSshList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SshCertificateList.yaml
+          examples:
+            none:
+              $ref: ../../examples/certificateMgmtGetSshList.none.yaml
+            one:
+              $ref: ../../examples/certificateMgmtGetSshList.one.yaml

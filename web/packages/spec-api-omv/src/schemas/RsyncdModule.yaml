@@ -1,0 +1,51 @@
+type: object
+description: >-
+  A folder offered to the rsync server (conf.service.rsyncd.module), as Rsyncd.getModule and
+  getModuleList return it: its sign-ins as a list under `users`. Each sign-in's stored password
+  reaches the interface only as whether one is set (x-omv-presence).
+required:
+  [uuid, enable, sharedfolderref, name, readonly, writeonly, authusers, users]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+    description: False when it was turned off for this folder in the classic interface.
+  sharedfolderref:
+    type: string
+    description: The UUID of the shared folder it offers.
+  name:
+    type: string
+    description: The name other computers use for it (rsync's module name).
+  comment:
+    type: string
+  uid:
+    type: string
+    description: The account that files copied in belong to.
+  gid:
+    type: string
+    description: The group that files copied in belong to.
+  readonly:
+    type: boolean
+  writeonly:
+    type: boolean
+  maxconnections:
+    type: integer
+  list:
+    type: boolean
+  hostsallow:
+    type: string
+  hostsdeny:
+    type: string
+  authusers:
+    type: boolean
+    description: True when a name and password are asked.
+  usechroot:
+    type: boolean
+  users:
+    type: array
+    items:
+      $ref: ./RsyncdSignIn.yaml
+  extraoptions:
+    type: string

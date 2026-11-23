@@ -110,6 +110,7 @@ export function buildOperationTable(contract) {
       }),
       ...(op["x-omv-destructive"] && { destructive: op["x-omv-destructive"] }),
       ...(op["x-omv-omit"] && { omit: op["x-omv-omit"] }),
+      ...(op["x-omv-presence"] && { presence: op["x-omv-presence"] }),
       response: response ? slim(response.schema, used) : null,
     };
   }

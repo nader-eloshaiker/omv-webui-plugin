@@ -1,0 +1,16 @@
+type: object
+description: >-
+  The rsync server's settings to store (rpc.rsyncd.setsettings). The interface sends `port` and
+  `extraoptions` exactly as Rsyncd.getSettings returned them, with only `enable` changed.
+required: [enable, port, extraoptions]
+properties:
+  enable:
+    type: boolean
+  port:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  extraoptions:
+    type: string
+    description: Sent back as read; the interface never changes it.
+additionalProperties: false

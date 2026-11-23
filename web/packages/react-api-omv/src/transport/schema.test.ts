@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { OPERATIONS, SCHEMAS } from "../contract/generated/operations.ts";
 import type { OperationEntry, Schema } from "../contract/types.ts";
 import { CONTRACT_EXAMPLES } from "../examples/generated/examples.ts";
+import { withoutOmitted } from "./omit.ts";
+import { withPresence } from "./presence.ts";
 import { normalise, validate } from "./schema.ts";
 
 const none = {};
@@ -213,8 +215,14 @@ describe("every example of the contract", () => {
 
   it.each(cases)(
     "%s normalises to a value its schema accepts",
-    (_label, operationId, value) => {
-      const schema = byOperationId.get(operationId)?.response;
+    (_label, operationId, raw) => {
+      const entry = byOperationId.get(operationId);
+      const schema = entry?.response;
+      // As the transport does: the omitted fields go, the presence fields become booleans, first.
+      const value = withPresence(
+        withoutOmitted(raw, entry?.omit),
+        entry?.presence,
+      );
       if (!schema) {
         expect(value).toBeNull();
         return;

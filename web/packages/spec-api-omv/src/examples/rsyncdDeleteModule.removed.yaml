@@ -1,0 +1,27 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-00000000000d"
+  enable: true
+  sharedfolderref: "00000000-0000-4000-8000-000000000006"
+  uid: nobody
+  gid: users
+  name: archive
+  comment: ""
+  readonly: true
+  writeonly: false
+  maxconnections: 0
+  list: true
+  hostsallow: "192.0.2.0/24"
+  hostsdeny: ""
+  extraoptions: ""
+  authusers: true
+  usechroot: true
+  users:
+    user:
+      - name: alex
+        password: EXAMPLE-PASSWORD
+      - name: robin
+        password: EXAMPLE-PASSWORD
+      - name: sam
+        password: EXAMPLE-PASSWORD

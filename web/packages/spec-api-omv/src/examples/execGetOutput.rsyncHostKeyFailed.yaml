@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/rsync-00000000-0000-4000-8000-000000000011 2>&1' with exit code '255': Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to <alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/> ...\n\nHost key verification failed.\nrsync: connection unexpectedly closed (0 bytes received so far) [sender]\nrsync error: unexplained error (code 255) at io.c(285) [sender=3.5.0]\n[ERROR] The synchronisation failed."

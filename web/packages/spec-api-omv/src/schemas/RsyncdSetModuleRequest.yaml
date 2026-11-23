@@ -1,0 +1,93 @@
+type: object
+description: >-
+  A folder offered to the rsync server, to store (rpc.rsyncd.setmodule). With OMV's placeholder UUID
+  it makes one, refusing a name already used; otherwise it replaces the stored module with what is
+  sent. Every field is required, as in OMV's datamodel, and a password sent empty is stored empty,
+  so a save of a module with a sign-in carries its password typed again (design phase-5-services
+  0.8). Stricter than OMV: the name in the interface's pattern; at most one sign-in, its name in
+  the interface's pattern and its password one line and not empty; `hostsallow` empty or one
+  computer or network; `uid` and `gid` account and group names (the interface writes `nobody` and
+  `users` for a new module and sends existing ones back as read).
+required:
+  [
+    uuid,
+    enable,
+    sharedfolderref,
+    name,
+    comment,
+    uid,
+    gid,
+    readonly,
+    writeonly,
+    maxconnections,
+    list,
+    hostsallow,
+    hostsdeny,
+    authusers,
+    usechroot,
+    users,
+    extraoptions,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  enable:
+    type: boolean
+  sharedfolderref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  name:
+    type: string
+    description: The name other computers use (rsync's module name).
+    pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+  comment:
+    type: string
+    maxLength: 255
+    pattern: '^[^\r\n]*$'
+  uid:
+    type: string
+    pattern: "^[A-Za-z0-9_][A-Za-z0-9._-]{0,31}$"
+  gid:
+    type: string
+    pattern: "^[A-Za-z0-9_][A-Za-z0-9._-]{0,31}$"
+  readonly:
+    type: boolean
+  writeonly:
+    type: boolean
+  maxconnections:
+    type: integer
+    minimum: 0
+  list:
+    type: boolean
+  hostsallow:
+    $ref: ./RsyncdHostsAllow.yaml
+  hostsdeny:
+    type: string
+    description: Sent back as read; the interface never changes it.
+  authusers:
+    type: boolean
+  usechroot:
+    type: boolean
+  users:
+    type: array
+    maxItems: 1
+    items:
+      type: object
+      required: [name, password]
+      properties:
+        name:
+          type: string
+          pattern: "^[A-Za-z0-9._-]{1,32}$"
+        password:
+          type: string
+          format: password
+          x-omv-secret: true
+          x-omv-format: no-multi-line
+          minLength: 1
+          pattern: '^[^\r\n]*$'
+      additionalProperties: false
+  extraoptions:
+    type: string
+    description: Sent back as read; the interface never changes it.
+additionalProperties: false

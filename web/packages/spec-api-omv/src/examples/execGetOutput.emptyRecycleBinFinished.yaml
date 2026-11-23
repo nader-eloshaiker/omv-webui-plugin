@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusoi5qpmo48me3fO6xdnT
+  pos: 598
+  output: "Please wait, empty recyle bin of </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> ...\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/docs/d.txt'\nremoved directory '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/docs'\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/c.txt'\nremoved '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex/b.txt'\nremoved directory '/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/.recycle/alex'\n"
+  pendingOutput: false
+  running: false

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncGet
+  tags:
+    - Rsync
+  summary: One copy job
+  description: >-
+    One rsync job, with its schedule fields as lists and the flattened side fields that apply to its
+    type and mode. The transport replaces the stored password in the reply by whether one is set
+    (UI-6). Changes nothing.
+  x-omv-rpc:
+    service: Rsync
+    method: get
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-presence: ["password"]
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, with the fields in x-omv-presence as whether they are set."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncJob.yaml
+          examples:
+            local:
+              $ref: ../../examples/rsyncGet.local.yaml
+            pushSsh:
+              $ref: ../../examples/rsyncGet.pushSsh.yaml
+            pullRsyncd:
+              $ref: ../../examples/rsyncGet.pullRsyncd.yaml

@@ -104,6 +104,92 @@ describe("withoutOmitted", () => {
       want: { data: [{ peers: [{ name: "a" }] }] },
     },
     {
+      name: "a list inside every row (Rsyncd.getModuleList)",
+      value: {
+        total: 2,
+        data: [
+          {
+            name: "a",
+            users: [
+              { name: "u", password: SECRET },
+              { name: "v", password: "" },
+            ],
+          },
+          { name: "b", users: [] },
+        ],
+      },
+      paths: ["data[].users[].password"],
+      want: {
+        total: 2,
+        data: [
+          { name: "a", users: [{ name: "u" }, { name: "v" }] },
+          { name: "b", users: [] },
+        ],
+      },
+    },
+    {
+      name: "a list inside an object (Rsyncd.setModule's stored shape)",
+      value: {
+        uuid: "x",
+        users: { user: [{ name: "u", password: SECRET }] },
+      },
+      paths: ["users.user[].password"],
+      want: { uuid: "x", users: { user: [{ name: "u" }] } },
+    },
+    {
+      name: "PHP's object form of a list at both levels",
+      value: {
+        data: {
+          "0": { users: { "1": { name: "u", password: SECRET } } },
+          "3": { users: [{ password: SECRET }] },
+        },
+      },
+      paths: ["data[].users[].password"],
+      want: {
+        data: { "0": { users: { "1": { name: "u" } } }, "3": { users: [{}] } },
+      },
+    },
+    {
+      name: "PHP's object form of the list inside an object",
+      value: { users: { user: { "0": { name: "u", password: SECRET } } } },
+      paths: ["users.user[].password"],
+      want: { users: { user: { "0": { name: "u" } } } },
+    },
+    {
+      name: "a row without the inner list, and one with something else there",
+      value: {
+        data: [
+          { name: "a" },
+          { name: "b", users: "none" },
+          { name: "c", users: null },
+          { name: "d", users: [{ password: SECRET }] },
+        ],
+      },
+      paths: ["data[].users[].password"],
+      want: {
+        data: [
+          { name: "a" },
+          { name: "b", users: "none" },
+          { name: "c", users: null },
+          { name: "d", users: [{}] },
+        ],
+      },
+    },
+    {
+      name: "the object that holds the list is absent, or PHP's [] for an empty map",
+      value: { a: { uuid: "x" }, b: { users: [] } },
+      paths: ["a.users.user[].password", "b.users.user[].password"],
+      want: { a: { uuid: "x" }, b: { users: [] } },
+    },
+    {
+      name: "rows and inner items that are not objects",
+      value: {
+        data: ["lo", null, { users: [3, "u", null, [], { password: SECRET }] }],
+      },
+      paths: ["data[].users[].password"],
+      want: { data: ["lo", null, { users: [3, "u", null, [], {}] }] },
+    },
+    {
       name: "several paths",
       value: { password: SECRET, data: [{ wpapsk: SECRET, a: 1 }] },
       paths: ["password", "data[].wpapsk"],

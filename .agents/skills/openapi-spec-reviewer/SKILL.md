@@ -40,8 +40,12 @@ Read the contract before asserting a convention.
   between levels, take the stronger.
 - `x-omv-omit`: reply fields the transport deletes before anything else sees them, for a secret the
   server sends (the SMTP password). A path is a top-level field (`password`) or a field of each row
-  (`data[].wpapsk`). Never declared in the response schema; examples keep the field with a
-  documentation value.
+  (`data[].wpapsk`), at any depth (`data[].users[].password`, `users.user[].password`). Never
+  declared in the response schema; examples keep the field with a documentation value.
+- `x-omv-presence`: reply fields the transport replaces by whether they are set (`true` for a
+  non-empty string, `false` otherwise), for a stored password the page shows as "Set". Paths as for
+  `x-omv-omit`, never one it names. Declared in the response schema as `type: boolean`; examples keep
+  the stored string, which lint accepts there.
 - Schema properties: `x-omv-secret` (and `format: password`), `x-omv-int64`, `x-omv-coerce`,
   `x-omv-format`.
 - `x-omv-source {datamodel, omvVersion}` on bootstrapped request schemas.
