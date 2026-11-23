@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetInterfaceList
+  tags:
+    - Network
+  summary: Interfaces with settings
+  description: >-
+    A page of the interfaces that have settings, of every kind, as stored: the name servers and search
+    domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of
+    a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces
+    each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6).
+    Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getInterfaceList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-presence: ["data[].wpapsk"]
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, with the fields in x-omv-presence as whether they are set."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceList.yaml
+          examples:
+            onePort:
+              $ref: ../../examples/networkGetInterfaceList.onePort.yaml
+            twoPorts:
+              $ref: ../../examples/networkGetInterfaceList.twoPorts.yaml
+            twoPortsNameServers:
+              $ref: ../../examples/networkGetInterfaceList.twoPortsNameServers.yaml
+            layers:
+              $ref: ../../examples/networkGetInterfaceList.layers.yaml
+            bridge:
+              $ref: ../../examples/networkGetInterfaceList.bridge.yaml
+            portAndWifi:
+              $ref: ../../examples/networkGetInterfaceList.portAndWifi.yaml

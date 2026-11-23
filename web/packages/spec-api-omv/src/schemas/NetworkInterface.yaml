@@ -1,0 +1,126 @@
+type: object
+description: >-
+  One interface's stored settings (conf.system.network.interface), as Network.getInterface returns
+  them: every field of every kind, the kind's own meaningful, the others at OMV's stored defaults.
+  The name servers and search domains come back separated by commas, as the forms send them.
+required:
+  [
+    uuid,
+    type,
+    devicename,
+    method,
+    address,
+    netmask,
+    gateway,
+    routemetric,
+    method6,
+    address6,
+    netmask6,
+    gateway6,
+    routemetric6,
+    dnsnameservers,
+    dnssearch,
+    mtu,
+    wol,
+    comment,
+    altmacaddress,
+    slaves,
+    bondprimary,
+    bondmode,
+    bondmiimon,
+    bonddowndelay,
+    bondupdelay,
+    bondtransmithashpolicy,
+    vlanid,
+    vlanrawdevice,
+    band,
+    wpassid,
+    keymanagement,
+    hidden,
+  ]
+properties:
+  uuid:
+    type: string
+  type:
+    type: string
+    description: ethernet, bond, vlan, wifi or bridge. Open to other values.
+  devicename:
+    type: string
+    description: The kernel's name for the interface, such as "enp2s0", "bond0" or "bond0.10".
+  method:
+    type: string
+    description: How IPv4 is set up - dhcp, static or manual (off).
+  address:
+    type: string
+    description: The fixed IPv4 address as stored; empty unless method is static.
+  netmask:
+    type: string
+  gateway:
+    type: string
+  routemetric:
+    type: integer
+  method6:
+    type: string
+    description: How IPv6 is set up - auto, dhcp, static or manual (off).
+  address6:
+    type: string
+  netmask6:
+    type: integer
+    description: The IPv6 prefix length as stored (64 unless changed).
+  gateway6:
+    type: string
+  routemetric6:
+    type: integer
+  dnsnameservers:
+    type: string
+    description: The name servers, separated by commas; empty for none.
+  dnssearch:
+    type: string
+    description: The search domains, separated by commas; empty for none.
+  mtu:
+    type: integer
+    description: The packet size as stored; 0 for the kernel's default.
+  wol:
+    type: boolean
+  comment:
+    type: string
+  altmacaddress:
+    type: string
+    description: A hardware address used instead of the port's own, or empty.
+  slaves:
+    type: array
+    description: A bond's ports or a bridge's interfaces, by device name; empty for other kinds.
+    items:
+      type: string
+  bondprimary:
+    type: string
+  bondmode:
+    type: integer
+  bondmiimon:
+    type: integer
+  bonddowndelay:
+    type: integer
+  bondupdelay:
+    type: integer
+  bondtransmithashpolicy:
+    type: string
+  vlanid:
+    type: integer
+    description: The VLAN ID of a VLAN; OMV's stored default (1) for other kinds.
+  vlanrawdevice:
+    type: string
+    description: The interface a VLAN runs on; empty for other kinds.
+  band:
+    type: string
+  wpassid:
+    type: string
+    description: The Wi-Fi network's name; empty for other kinds.
+  keymanagement:
+    type: string
+  hidden:
+    type: boolean
+  wpapsk:
+    type: boolean
+    description: >-
+      Whether a Wi-Fi password is stored. The transport replaces the stored password by this before
+      anything else sees the reply (x-omv-presence, UI-6); always false for other kinds.

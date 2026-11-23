@@ -1,0 +1,14 @@
+type: object
+description: >-
+  Blink a port's light (rpc.network.identify). Stricter than OMV: the device name a kernel name
+  (OMV takes any text); the time one of 5, 10, 15 or 30 seconds (OMV takes 1 to 30).
+required: [devicename, seconds]
+properties:
+  devicename:
+    $ref: ./NetworkDeviceName.yaml
+  seconds:
+    type: integer
+    enum: [5, 10, 15, 30]
+    minimum: 5
+    maximum: 30
+additionalProperties: false

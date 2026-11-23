@@ -8,7 +8,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { checkDist } from "./check.mjs";
+import {
+  checkDist,
+  checkFirstLoadStrings,
+  firstLoadScripts,
+} from "./check.mjs";
 
 const CHECK = fileURLToPath(new URL("./check.mjs", import.meta.url));
 const root = mkdtempSync(join(tmpdir(), "build-check-"));
@@ -300,6 +304,19 @@ const CASES = [
     ],
   },
   {
+    name: "the mock's apparent page address",
+    changes: {
+      "assets/chunk-def.js":
+        'let a=null;function s(e){if(e.protocol!=="http:")throw new Error("mock apparent page address: the protocol must be http: or https:");a=e}',
+    },
+    expected: [
+      [
+        "UI-11",
+        'contains "mock apparent page address": the mock\'s apparent page address, src/network/pageLocation.ts (D17, UI-11)',
+      ],
+    ],
+  },
+  {
     name: "a test id",
     changes: { "assets/chunk-def.js": 'h("div",{"data-testid":"x"});' },
     expected: [["UI-11", 'contains "data-testid": a test id (UI-11)']],
@@ -424,3 +441,39 @@ for (const { name, dir, status, output } of CLI) {
     assert.match(run.stdout + run.stderr, output);
   });
 }
+
+// 1.6 of the network design: the recovery card's words are in a script the page loads first.
+const RECOVERY = "This page cannot reach the NAS since the change.";
+
+test("build-check 1.6: the first-loaded scripts follow static imports and preloads, not dynamic ones", () => {
+  assert.deepEqual(firstLoadScripts(bundle({})), [
+    "assets/chunk-def.js",
+    "assets/index-abc.js",
+  ]);
+});
+
+test('build-check 1.6: a sentence in the entry passes, also inside JSON.parse("…")', () => {
+  const plain = bundle({
+    "assets/chunk-def.js": `export const a={netRecover:{lost:${JSON.stringify(RECOVERY)}}};`,
+  });
+  assert.deepEqual(checkFirstLoadStrings(plain, [RECOVERY]), []);
+  const parsed = bundle({
+    "assets/chunk-def.js": `export const a=JSON.parse(${JSON.stringify(JSON.stringify({ lost: RECOVERY }))});`,
+  });
+  assert.deepEqual(checkFirstLoadStrings(parsed, [RECOVERY]), []);
+});
+
+test("build-check 1.6: a sentence only in a chunk loaded later fails", () => {
+  const lazy = bundle({
+    "assets/lazy-jkl.js": `export default ${JSON.stringify(RECOVERY)};`,
+  });
+  assert.deepEqual(
+    checkFirstLoadStrings(lazy, [RECOVERY]).map((f) => [f.rule, f.message]),
+    [
+      [
+        "1.6",
+        `the recovery card's words are not in a script loaded first: "${RECOVERY}"`,
+      ],
+    ],
+  );
+});

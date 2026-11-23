@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkDeleteInterface
+  tags:
+    - Network
+  summary: Remove an interface's settings
+  description: >-
+    Remove an interface's settings. It also queues a job, run at the next apply before the network is
+    set up again, that switches the interface off and clears its addresses (and removes a bond, VLAN or
+    bridge); Undo of the pending changes does not remove that job, which then runs at a later apply
+    that includes task (observed). It marks systemd-networkd, hosts, avahi, halt, issue, collectd and
+    task dirty (observed). It does not check that a VLAN runs on the interface. Returns the removed
+    settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: deleteInterface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            removed:
+              $ref: ../../examples/networkDeleteInterface.removed.yaml
+            removedVlan:
+              $ref: ../../examples/networkDeleteInterface.removedVlan.yaml

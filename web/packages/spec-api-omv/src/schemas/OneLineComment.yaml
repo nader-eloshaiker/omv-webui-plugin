@@ -1,0 +1,4 @@
+type: string
+description: A note of one line, at most 255 characters. OMV takes any text.
+maxLength: 255
+pattern: '^[^\r\n]*$'

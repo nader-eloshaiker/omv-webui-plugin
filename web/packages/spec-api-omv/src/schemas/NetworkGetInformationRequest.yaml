@@ -1,0 +1,9 @@
+type: object
+description: >-
+  One device the system has, by its kernel name (rpc.network.getInformation). OMV takes any text;
+  the contract only a kernel interface name.
+required: [devicename]
+properties:
+  devicename:
+    $ref: ./NetworkDeviceName.yaml
+additionalProperties: false

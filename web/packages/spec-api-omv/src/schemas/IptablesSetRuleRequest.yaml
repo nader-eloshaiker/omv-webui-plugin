@@ -1,0 +1,6 @@
+description: >-
+  One firewall rule to add or change (rpc.iptables.setrule), IPv4 or IPv6 by its family; each
+  family's addresses and kinds of traffic are its own.
+oneOf:
+  - $ref: ./IptablesRuleInetRequest.yaml
+  - $ref: ./IptablesRuleInet6Request.yaml

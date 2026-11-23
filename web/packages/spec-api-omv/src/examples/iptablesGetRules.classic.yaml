@@ -1,0 +1,75 @@
+summary: "Written by hand from the captured rules (OMV 8.6.1) and OMV's firewall script: rules as the classic interface can store them - every address except a network, a range, a source port, other options, not TCP, count only (no action) and a gap in the numbering."
+x-omv-status: 200
+value:
+  - uuid: "00000000-0000-4000-8000-000000000111"
+    family: inet
+    rulenum: 0
+    chain: INPUT
+    action: "DROP"
+    source: "!192.0.2.0/24"
+    sport: ""
+    destination: ""
+    dport: "22"
+    protocol: "tcp"
+    extraoptions: ""
+    comment: "Only the office network may sign in over SSH"
+  - uuid: "00000000-0000-4000-8000-000000000112"
+    family: inet
+    rulenum: 1
+    chain: INPUT
+    action: "ACCEPT"
+    source: "198.51.100.10-198.51.100.20"
+    sport: ""
+    destination: ""
+    dport: "8000-8100"
+    protocol: "tcp"
+    extraoptions: ""
+    comment: ""
+  - uuid: "00000000-0000-4000-8000-000000000113"
+    family: inet
+    rulenum: 2
+    chain: INPUT
+    action: "ACCEPT"
+    source: ""
+    sport: "53"
+    destination: ""
+    dport: ""
+    protocol: "udp"
+    extraoptions: ""
+    comment: "Name lookups answered"
+  - uuid: "00000000-0000-4000-8000-000000000114"
+    family: inet
+    rulenum: 4
+    chain: INPUT
+    action: "REJECT"
+    source: "203.0.113.0/24"
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "!tcp"
+    extraoptions: ""
+    comment: ""
+  - uuid: "00000000-0000-4000-8000-000000000115"
+    family: inet
+    rulenum: 5
+    chain: INPUT
+    action: ""
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: ""
+    comment: "Count everything"
+  - uuid: "00000000-0000-4000-8000-000000000116"
+    family: inet
+    rulenum: 6
+    chain: OUTPUT
+    action: "ACCEPT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "tcp"
+    extraoptions: "--match owner --uid-owner 0"
+    comment: "Set in the classic interface"

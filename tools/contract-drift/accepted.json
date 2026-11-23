@@ -168,5 +168,95 @@
     "where": "smbSetShare (SMB.setShare)",
     "message": "$: has a field widelinks that OMV's datamodel does not declare",
     "reason": "rpc.smb.setshare does not declare widelinks, but SMB::setShare builds the stored conf.service.smb.share object from the params, which has it, so a value left out returns to its default (read from source; sent back, every field was kept on the test VM). The contract makes it optional, within conf.service.smb.share's bounds, so a share read from SMB.getShareList keeps it when written back (design phase-5-shares 0.10)."
+  },
+  {
+    "where": "networkSetGeneralSettings (Network.setGeneralSettings)",
+    "message": "$.hostname: its pattern differs from OMV's",
+    "reason": "The contract takes OMV's hostname format in lower case only (^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$): OMV sets the system name in lower case whatever it is sent, and stores capitals as sent (observed on OMV 8.6.1), so the interface sends the name as the system will use it (design phase-5-network 0.9). Every such value also matches OMV's format."
+  },
+  {
+    "where": "networkSetEthernetIface (Network.setEthernetIface)",
+    "message": "$.dnsnameservers: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only IPv4 or IPv6 addresses separated by commas without spaces, the form Network.getInterface gives them back in and the interface sends (design phase-5-network 0.9); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetEthernetIface (Network.setEthernetIface)",
+    "message": "$.dnssearch: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only domain names in OMV's domainname form separated by commas without spaces, the form Network.getInterface gives them back in; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetEthernetIface (Network.setEthernetIface)",
+    "message": "$.altmacaddress: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any six colon-separated pairs of hexadecimal digits, or empty. The contract takes only an individual (unicast) address that is not all zeros, or empty (design phase-5-network 0.8); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetBondIface (Network.setBondIface)",
+    "message": "$.dnsnameservers: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only IPv4 or IPv6 addresses separated by commas without spaces, the form Network.getInterface gives them back in and the interface sends (design phase-5-network 0.9); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetBondIface (Network.setBondIface)",
+    "message": "$.dnssearch: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only domain names in OMV's domainname form separated by commas without spaces, the form Network.getInterface gives them back in; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetBondIface (Network.setBondIface)",
+    "message": "$: has a field bondtransmithashpolicy that OMV's datamodel does not declare",
+    "reason": "rpc.network.setbondiface does not declare bondtransmithashpolicy, but Network::setBondIface reads $params['bondtransmithashpolicy'] and stores it, and validation ignores keys a datamodel does not declare; a bond sent without it is refused (\"bondtransmithashpolicy: Invalid value ''\", observed on OMV 8.6.1). The contract requires it, as one of the five values of conf.system.network.interface."
+  },
+  {
+    "where": "networkSetVlanIface (Network.setVlanIface)",
+    "message": "$.dnsnameservers: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only IPv4 or IPv6 addresses separated by commas without spaces, the form Network.getInterface gives them back in and the interface sends (design phase-5-network 0.9); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetVlanIface (Network.setVlanIface)",
+    "message": "$.dnssearch: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only domain names in OMV's domainname form separated by commas without spaces, the form Network.getInterface gives them back in; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetVlanIface (Network.setVlanIface)",
+    "message": "$.altmacaddress: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any six colon-separated pairs of hexadecimal digits, or empty. The contract takes only an individual (unicast) address that is not all zeros, or empty (design phase-5-network 0.8); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetWirelessIface (Network.setWirelessIface)",
+    "message": "$.dnsnameservers: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only IPv4 or IPv6 addresses separated by commas without spaces, the form Network.getInterface gives them back in and the interface sends (design phase-5-network 0.9); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetWirelessIface (Network.setWirelessIface)",
+    "message": "$.dnssearch: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only domain names in OMV's domainname form separated by commas without spaces, the form Network.getInterface gives them back in; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetWirelessIface (Network.setWirelessIface)",
+    "message": "$.altmacaddress: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any six colon-separated pairs of hexadecimal digits, or empty. The contract takes only an individual (unicast) address that is not all zeros, or empty (design phase-5-network 0.8); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetBridgeIface (Network.setBridgeIface)",
+    "message": "$.dnsnameservers: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only IPv4 or IPv6 addresses separated by commas without spaces, the form Network.getInterface gives them back in and the interface sends (design phase-5-network 0.9); every such value also matches OMV's pattern."
+  },
+  {
+    "where": "networkSetBridgeIface (Network.setBridgeIface)",
+    "message": "$.dnssearch: its pattern differs from OMV's",
+    "reason": "OMV's pattern takes any non-space entries separated by commas or semicolons and spaces. The contract takes only domain names in OMV's domainname form separated by commas without spaces, the form Network.getInterface gives them back in; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "iptablesSetRule (Iptables.setRule)",
+    "message": "$.protocol: its pattern differs from OMV's",
+    "reason": "OMV's pattern ^(!?(tcp|udp|icmp|icmpv6))|all$ is anchored at one end only in each alternative, so it takes any text starting with a protocol name or ending in all. The contract takes exactly tcp, udp, icmp (IPv4) or icmpv6 (IPv6), or all, each optionally preceded by !, the values OMV's firewall script writes correctly; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "iptablesSetRules (Iptables.setRules)",
+    "message": "$[].protocol: its pattern differs from OMV's",
+    "reason": "OMV's pattern ^(!?(tcp|udp|icmp|icmpv6))|all$ is anchored at one end only in each alternative, so it takes any text starting with a protocol name or ending in all. The contract takes exactly tcp, udp, icmp (IPv4) or icmpv6 (IPv6), or all, each optionally preceded by !, the values OMV's firewall script writes correctly; every such value also matches OMV's pattern."
+  },
+  {
+    "where": "iptablesSetRules6 (Iptables.setRules6)",
+    "message": "$[].protocol: its pattern differs from OMV's",
+    "reason": "OMV's pattern ^(!?(tcp|udp|icmp|icmpv6))|all$ is anchored at one end only in each alternative, so it takes any text starting with a protocol name or ending in all. The contract takes exactly tcp, udp, icmp (IPv4) or icmpv6 (IPv6), or all, each optionally preceded by !, the values OMV's firewall script writes correctly; every such value also matches OMV's pattern."
   }
 ]

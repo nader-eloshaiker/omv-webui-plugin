@@ -35,3 +35,11 @@ post:
               $ref: ../../examples/networkEnumerateDevicesList.ethernetAndLoopback.yaml
             wifi:
               $ref: ../../examples/networkEnumerateDevicesList.wifi.yaml
+            portsNotSetUp:
+              $ref: ../../examples/networkEnumerateDevicesList.portsNotSetUp.yaml
+            fixedAndNotSetUp:
+              $ref: ../../examples/networkEnumerateDevicesList.fixedAndNotSetUp.yaml
+            layers:
+              $ref: ../../examples/networkEnumerateDevicesList.layers.yaml
+            bridge:
+              $ref: ../../examples/networkEnumerateDevicesList.bridge.yaml

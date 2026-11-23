@@ -1,0 +1,90 @@
+type: object
+description: >-
+  A bridge's settings, to store (rpc.network.setbridgeiface). With OMV's placeholder UUID it makes a
+  bridge and chooses its name ("br" and the next free number), refusing an interface already in
+  another bridge; otherwise it replaces the stored bridge. Every field is required, as in OMV's datamodel, and the object sent replaces the stored one
+  (design phase-5-network 0.9). Stricter than OMV: the device name a kernel name; each address an
+  address of its family or empty, the netmask a dotted netmask; name servers addresses and search
+  domains domain names, separated by commas; the packet size 0 or 576 to 9216; the comment one line
+  of at most 255 characters. The interfaces keep OMV's
+  names (ports, bonds and VLANs), each once; the interface checks that none has settings of its own.
+required:
+  [
+    uuid,
+    devicename,
+    method,
+    address,
+    netmask,
+    gateway,
+    routemetric,
+    method6,
+    address6,
+    netmask6,
+    gateway6,
+    routemetric6,
+    dnsnameservers,
+    dnssearch,
+    mtu,
+    wol,
+    comment,
+    slaves,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  devicename:
+    type: string
+    description: 'Empty for a new bridge, otherwise its name as read ("br" and a number).'
+    maxLength: 15
+    pattern: '^(br\d+)?$'
+  method:
+    type: string
+    description: How IPv4 is set up - dhcp (automatic), static (a fixed address) or manual (off).
+    enum: [dhcp, static, manual]
+  address:
+    $ref: ./IPv4AddressOrEmpty.yaml
+  netmask:
+    $ref: ./IPv4NetmaskOrEmpty.yaml
+  gateway:
+    $ref: ./IPv4AddressOrEmpty.yaml
+  routemetric:
+    type: integer
+    minimum: 0
+    maximum: 65535
+  method6:
+    type: string
+    description: How IPv6 is set up - auto (router advertisements), dhcp, static or manual (off).
+    enum: [auto, static, manual, dhcp]
+  address6:
+    $ref: ./IPv6AddressOrEmpty.yaml
+  netmask6:
+    type: integer
+    description: The IPv6 prefix length.
+    minimum: 0
+    maximum: 128
+  gateway6:
+    $ref: ./IPv6AddressOrEmpty.yaml
+  routemetric6:
+    type: integer
+    minimum: 0
+    maximum: 65535
+  dnsnameservers:
+    $ref: ./NetworkNameServers.yaml
+  dnssearch:
+    $ref: ./NetworkSearchDomains.yaml
+  mtu:
+    $ref: ./NetworkMtu.yaml
+  wol:
+    type: boolean
+    description: Wake-on-LAN.
+  comment:
+    $ref: ./OneLineComment.yaml
+  slaves:
+    type: array
+    description: The bridge's interfaces, by device name.
+    uniqueItems: true
+    items:
+      type: string
+      maxLength: 15
+      pattern: '^((eth|venet)\d+|(en|veth)\S+|(bond)\d+)(\.\d+)?$'
+additionalProperties: false

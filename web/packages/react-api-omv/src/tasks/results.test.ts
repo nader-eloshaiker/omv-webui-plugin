@@ -39,6 +39,7 @@ const FINISHES = {
   rsyncPullRsyncdFinished: "rsyncExecute",
   emptyRecycleBinFinished: "smbEmptyRecycleBin",
   emptyRecycleBinNothingFinished: "smbEmptyRecycleBin",
+  identifyFinished: "networkIdentify",
 } as const satisfies Partial<Record<PollExample, string>>;
 
 /** Tasks with no result whose output is a log to show: the commands' text, never parsed. */
@@ -76,8 +77,8 @@ describe("task result examples", () => {
         CONTRACT_EXAMPLES.execGetOutput[name as keyof typeof FINISHES];
       const resultSchema = resultSchemaOf(operationId);
       if (resultSchema === undefined) {
-        // A task without a result schema has no result to check: an undo prints nothing, a wipe or
-        // a self-test prints a log.
+        // A task without a result schema has no result to check: an undo, or a port's light
+        // blinked, prints nothing; a wipe or a self-test prints a log.
         if (LOG_OUTPUT.has(name as keyof typeof FINISHES)) {
           expect(example.value.output).not.toBe("");
         } else {

@@ -9,13 +9,17 @@
 //          absolute http(s), ws(s) or protocol-relative URL appears in a script, stylesheet or page
 //          unless it is one of the inert strings in ALLOWED_URLS.
 //   UI-11  no mock, MSW, example data, test or development-server code, and no source map.
+//   1.6    the recovery card's words (phase 5 network design 1.6, 18.1): every `netRecover.*`
+//          sentence of the catalogue is in a script the page loads first (the entry and what it
+//          imports statically or preloads), not only in a chunk loaded later, so the card can be
+//          shown when the NAS no longer answers.
 //
 //   node tools/build-check/check.mjs web/apps/omv-web-app/dist
 //
 // It reads every file itself (no grep: dist/ is git-ignored, and a harness may skip such files), and
 // says how much it looked at, because a check that finds nothing is only evidence if it looked.
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { extname, join, relative, sep } from "node:path";
+import { extname, join, posix, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** The page's URL prefix (Vite `base`), and a stand-in origin to resolve references against. */
@@ -84,6 +88,10 @@ export const FORBIDDEN_MARKERS = [
   },
   { text: "EXAMPLE-SERIAL-", what: "scrubbed example data (UI-11)" },
   { text: "nas.example.org", what: "scrubbed example data (UI-11)" },
+  {
+    text: "mock apparent page address",
+    what: "the mock's apparent page address, src/network/pageLocation.ts (D17, UI-11)",
+  },
   { text: "data-testid", what: "a test id (UI-11)" },
   { text: "TestingLibraryElementError", what: "Testing Library (UI-11)" },
   { text: "__vitest_", what: "Vitest (UI-11)" },
@@ -237,6 +245,108 @@ function htmlElements(html) {
     }
     out.push({ name, closing: slash === "/", attributes, content });
   }
+  return out;
+}
+
+/**
+ * The scripts the page loads first: index.html's module scripts and preloads, and what they import
+ * statically, transitively. A dynamic `import("…")` is a chunk loaded later and is not followed.
+ * @param {string} dist
+ * @returns {string[]} dist paths
+ */
+export function firstLoadScripts(dist) {
+  const html = readFileSync(join(dist, "index.html"), "utf8");
+  /** @type {string[]} */
+  const queue = [];
+  for (const element of htmlElements(html)) {
+    const attrs = new Map(element.attributes);
+    const src =
+      element.name === "script"
+        ? attrs.get("src")
+        : element.name === "link" &&
+            attrs.get("rel")?.toLowerCase() === "modulepreload"
+          ? attrs.get("href")
+          : undefined;
+    const target = src === undefined ? null : bundlePath(src, "index.html");
+    if (target !== null) {
+      queue.push(target);
+    }
+  }
+  const seen = new Set();
+  const STATIC_IMPORT =
+    /\b(?:import|export)\s*(?:[\w$*{}\s,]+?\s*from\s*)?["']([^"']+\.js)["']/g;
+  while (queue.length > 0) {
+    const file = /** @type {string} */ (queue.shift());
+    if (seen.has(file)) {
+      continue;
+    }
+    seen.add(file);
+    let text;
+    try {
+      text = readFileSync(join(dist, file), "utf8");
+    } catch {
+      continue;
+    }
+    for (const [, spec] of text.matchAll(STATIC_IMPORT)) {
+      if (spec.startsWith(".")) {
+        queue.push(posix.normalize(posix.join(posix.dirname(file), spec)));
+      }
+    }
+  }
+  return [...seen].sort();
+}
+
+/** The forms a catalogue string takes in a script: as is, in a JS string, or in JSON.parse("…"). */
+function encodings(/** @type {string} */ text) {
+  const once = JSON.stringify(text).slice(1, -1);
+  const twice = JSON.stringify(once).slice(1, -1);
+  const ascii = (/** @type {string} */ s) =>
+    s.replace(
+      /[\u0080-\uffff]/g,
+      (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`,
+    );
+  return [...new Set([text, once, twice, ascii(once), ascii(twice)])];
+}
+
+/**
+ * 1.6: every string is in a script the page loads first.
+ * @param {string} dist
+ * @param {readonly string[]} strings
+ * @returns {Finding[]}
+ */
+export function checkFirstLoadStrings(dist, strings) {
+  if (strings.length === 0) {
+    return [];
+  }
+  const texts = firstLoadScripts(dist).map((file) =>
+    readFileSync(join(dist, file), "utf8"),
+  );
+  return strings
+    .filter((s) => !encodings(s).some((e) => texts.some((t) => t.includes(e))))
+    .map((s) => ({
+      rule: "1.6",
+      file: "index.html",
+      message: `the recovery card's words are not in a script loaded first: "${s}"`,
+    }));
+}
+
+/** The `netRecover.*` sentences of the catalogue next to the build output, or [] when there is none. */
+export function recoveryStrings(/** @type {string} */ dist) {
+  const catalogue = join(dist, "..", "src", "locales", "en", "common.json");
+  if (!statSync(catalogue, { throwIfNoEntry: false })?.isFile()) {
+    return [];
+  }
+  const block = JSON.parse(readFileSync(catalogue, "utf8")).netRecover ?? {};
+  /** @type {string[]} */
+  const out = [];
+  const walk = (/** @type {unknown} */ value) => {
+    if (typeof value === "string") {
+      out.push(value);
+    } else if (typeof value === "object" && value !== null) {
+      Object.values(value).forEach(walk);
+    }
+  };
+  walk(block);
   return out;
 }
 
@@ -405,6 +515,9 @@ export function checkDist(dist) {
   };
 }
 
+const present = (/** @type {string} */ dist, /** @type {string} */ file) =>
+  statSync(join(dist, file), { throwIfNoEntry: false })?.isFile() === true;
+
 function main(/** @type {string[]} */ argv) {
   const dist = argv[0];
   if (!dist || argv.length !== 1) {
@@ -420,11 +533,15 @@ function main(/** @type {string[]} */ argv) {
     return 2;
   }
   const { findings, summary } = checkDist(dist);
+  const recovery = recoveryStrings(dist);
+  if (present(dist, "index.html")) {
+    findings.push(...checkFirstLoadStrings(dist, recovery));
+  }
   const allowed =
     [...summary.allowedUrls].map(([u, n]) => `${u} (${n})`).join(", ") ||
     "none";
   process.stdout.write(
-    `build-check: ${summary.files} files, ${summary.scanned} read as text, ${summary.references} references followed; allowed URLs seen: ${allowed}\n`,
+    `build-check: ${summary.files} files, ${summary.scanned} read as text, ${summary.references} references followed; allowed URLs seen: ${allowed}; recovery card sentences checked in the first-loaded scripts: ${recovery.length}\n`,
   );
   for (const f of findings) {
     process.stdout.write(`  ${f.rule}  ${f.file}: ${f.message}\n`);
@@ -434,7 +551,7 @@ function main(/** @type {string[]} */ argv) {
     return 1;
   }
   process.stdout.write(
-    "build-check: UI-1, UI-7 and UI-11 hold for this bundle\n",
+    "build-check: UI-1, UI-7 and UI-11 hold for this bundle, and the recovery card's words load first\n",
   );
   return 0;
 }

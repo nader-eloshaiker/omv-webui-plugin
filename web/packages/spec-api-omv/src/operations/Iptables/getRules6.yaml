@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: iptablesGetRules6
+  tags:
+    - Iptables
+  summary: The IPv6 firewall rules
+  description: >-
+    Every IPv6 firewall rule as stored, in no guaranteed order. No secret. Changes nothing.
+  x-omv-rpc:
+    service: Iptables
+    method: getRules6
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/IptablesRuleList.yaml
+          examples:
+            none:
+              $ref: ../../examples/iptablesGetRules6.none.yaml
+            one:
+              $ref: ../../examples/iptablesGetRules6.one.yaml
+            two:
+              $ref: ../../examples/iptablesGetRules6.two.yaml

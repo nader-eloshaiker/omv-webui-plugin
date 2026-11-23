@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetVlanIface
+  tags:
+    - Network
+  summary: Add or change a VLAN
+  description: >-
+    Store a VLAN's settings. OMV names it "parent.id" itself, whatever device name is sent, and does
+    not check that the parent has settings or already has a VLAN with that ID. It marks
+    systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new VLAN (observed). Returns
+    the stored settings; the transport removes the Wi-Fi password from it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setVlanIface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.network.setvlaniface
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetVlanIfaceRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/networkSetVlanIface.created.yaml

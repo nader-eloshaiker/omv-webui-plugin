@@ -1,0 +1,36 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000005"
+  type: vlan
+  devicename: bond0.10
+  method: static
+  address: "203.0.113.20"
+  netmask: "255.255.255.0"
+  gateway: ""
+  routemetric: 0
+  method6: manual
+  address6: ""
+  netmask6: 64
+  gateway6: ""
+  routemetric6: 1
+  dnsnameservers: ""
+  dnssearch: ""
+  mtu: 0
+  wol: false
+  comment: Example VLAN
+  altmacaddress: ""
+  slaves: ""
+  bondprimary: ""
+  bondmode: 1
+  bondmiimon: 0
+  bonddowndelay: 0
+  bondupdelay: 0
+  bondtransmithashpolicy: layer2
+  vlanid: 10
+  vlanrawdevice: bond0
+  band: auto
+  wpassid: ""
+  wpapsk: ""
+  keymanagement: psk
+  hidden: false

@@ -1,0 +1,39 @@
+summary: "Written by hand from the captured rules (OMV 8.6.1): rules that would cut this page off - the web ports refused for every computer, and every reply going out dropped."
+x-omv-status: 200
+value:
+  - uuid: "00000000-0000-4000-8000-000000000121"
+    family: inet
+    rulenum: 0
+    chain: INPUT
+    action: "REJECT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: "80"
+    protocol: "tcp"
+    extraoptions: ""
+    comment: "No web interface"
+  - uuid: "00000000-0000-4000-8000-000000000122"
+    family: inet
+    rulenum: 1
+    chain: INPUT
+    action: "REJECT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: "443"
+    protocol: "tcp"
+    extraoptions: ""
+    comment: "No web interface"
+  - uuid: "00000000-0000-4000-8000-000000000123"
+    family: inet
+    rulenum: 2
+    chain: OUTPUT
+    action: "DROP"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: ""
+    comment: "Nothing goes out"

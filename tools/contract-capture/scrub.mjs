@@ -82,7 +82,7 @@ const withoutMdHost = (name) => name.replace(/^[^:\s]+:/, `${DOC.hostname}:`);
 export const KEY_PLACEHOLDERS = {
   password: "EXAMPLE-PASSWORD",
   // A Wi-Fi interface's network name and pre-shared key.
-  wpassid: "example-ssid",
+  wpassid: "EXAMPLE-NETWORK",
   wpapsk: "EXAMPLE-PASSWORD",
 };
 
@@ -239,8 +239,15 @@ const isKeptIPv6 = (ip) =>
  *   host, passwords, secrets), replaced by a marker if found; serials and wwns: the disks' serial
  *   numbers and WWNs, replaced wherever they appear (a reply's own serial and WWN fields are added
  *   to these as it is scrubbed).
+ *   With `ipv4Networks`, each IPv4 address keeps its last number and its network (its first three
+ *   numbers) becomes a documentation network, the first network met the first of `ranges`
+ *   (default 192.0.2 then 198.51.100), so two addresses on one network stay on one network and a
+ *   router keeps its place in it; a network more than there are ranges is an error. Without it,
+ *   every address becomes the next of 192.0.2.1, 192.0.2.2, ...
  * scrub() and verify() take, as a second argument, more field name -> placeholder rules for one
- * reply, on top of KEY_PLACEHOLDERS.
+ * reply, on top of KEY_PLACEHOLDERS. counts() says how often each rule has replaced something so
+ * far in this run ("literal", "name", "mac", "ipv4", "ipv6", "uuid", "host", "domain", and
+ * "key:<field>"), so a tool can fail a capture in which a rule that should have matched did not.
  */
 export function createScrubber(known = {}) {
   const names = Object.entries(known.names ?? {})
@@ -258,6 +265,12 @@ export function createScrubber(known = {}) {
   const mdUuids = new Map();
   const zfsGuids = new Map();
   const snapshotTimes = new Map();
+  const hits = new Map();
+  const hit = (rule) => hits.set(rule, (hits.get(rule) ?? 0) + 1);
+  const v4Ranges = known.ipv4Networks
+    ? (known.ipv4Networks.ranges ?? ["192.0.2", "198.51.100"])
+    : null;
+  const v4Networks = new Map();
   const number = (map, value, make) => {
     if (!map.has(value)) {
       map.set(value, make(map.size + 1));
@@ -285,10 +298,35 @@ export function createScrubber(known = {}) {
       value.trim().toLowerCase().replace(/\s+/g, "").replace(/^0x/, ""),
       (n) => `EXAMPLE-WWN-${String(n).padStart(4, "0")}`,
     );
-  const docMacOf = (mac) =>
-    KEPT_MACS.has(mac.toLowerCase()) || DOC_MAC.test(mac)
-      ? mac
-      : number(macs, mac.toLowerCase(), (n) => `00:00:5e:00:53:${hex(n, 2)}`);
+  const docMacOf = (mac) => {
+    if (KEPT_MACS.has(mac.toLowerCase()) || DOC_MAC.test(mac)) {
+      return mac;
+    }
+    hit("mac");
+    return number(
+      macs,
+      mac.toLowerCase(),
+      (n) => `00:00:5e:00:53:${hex(n, 2)}`,
+    );
+  };
+  /** The documentation address for a real IPv4 address (see ipv4Networks above). */
+  const docIPv4Of = (ip) => {
+    hit("ipv4");
+    if (!v4Ranges) {
+      return number(v4, ip, (n) => `192.0.2.${n}`);
+    }
+    const dot = ip.lastIndexOf(".");
+    const network = ip.slice(0, dot);
+    if (!v4Networks.has(network)) {
+      if (v4Networks.size >= v4Ranges.length) {
+        throw new Error(
+          `more IPv4 networks than the ${v4Ranges.length} documentation networks to map them to`,
+        );
+      }
+      v4Networks.set(network, v4Ranges[v4Networks.size]);
+    }
+    return `${v4Networks.get(network)}.${ip.slice(dot + 1)}`;
+  };
 
   // Disk identifiers looked for inside other text, longest first, each with its placeholder. The
   // forms udev writes them in: as reported, with other characters as "_", and a WWN in lower case
@@ -345,7 +383,10 @@ export function createScrubber(known = {}) {
   function scrubString(s) {
     let out = s;
     for (const literal of literals) {
-      out = out.split(literal).join("NAS_HOST");
+      if (out.includes(literal)) {
+        hit("literal");
+        out = out.split(literal).join("NAS_HOST");
+      }
     }
     for (const { form, placeholder } of identifiers) {
       out = out.split(form).join(placeholder);
@@ -362,15 +403,17 @@ export function createScrubber(known = {}) {
     );
     out = out.replace(RFC4716, DOC.rfc4716Key);
     out = out.replace(SSH_KEY, DOC.sshKey);
-    out = out.replace(UUID, (m) =>
-      DOC_UUID.test(m) || KEPT_UUIDS.has(m.toLowerCase())
-        ? m
-        : number(
-            uuids,
-            m.toLowerCase(),
-            (n) => `00000000-0000-4000-8000-${hex(n, 12)}`,
-          ),
-    );
+    out = out.replace(UUID, (m) => {
+      if (DOC_UUID.test(m) || KEPT_UUIDS.has(m.toLowerCase())) {
+        return m;
+      }
+      hit("uuid");
+      return number(
+        uuids,
+        m.toLowerCase(),
+        (n) => `00000000-0000-4000-8000-${hex(n, 12)}`,
+      );
+    });
     out = out.replace(MD_UUID, (m) =>
       DOC_MD_UUID.test(m)
         ? m
@@ -392,7 +435,7 @@ export function createScrubber(known = {}) {
     );
     out = out.replace(MAC, docMacOf);
     out = out.replace(IPV4, (m) =>
-      !isIPv4(m) || isKeptIPv4(m) ? m : number(v4, m, (n) => `192.0.2.${n}`),
+      !isIPv4(m) || isKeptIPv4(m) ? m : docIPv4Of(m),
     );
     out = out.replace(IPV6_CANDIDATE, (m) => {
       if (!isIPv6(m) || isKeptIPv6(m)) {
@@ -400,6 +443,7 @@ export function createScrubber(known = {}) {
       }
       // A link-local address derived from a MAC address becomes the one its documentation MAC
       // gives, so the two still agree.
+      hit("ipv6");
       const mac = macOfLinkLocal(m);
       return mac
         ? linkLocalOf(docMacOf(mac))
@@ -411,7 +455,10 @@ export function createScrubber(known = {}) {
           `(?<![\\w-])${real.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`,
           "g",
         ),
-        placeholder,
+        () => {
+          hit("name");
+          return placeholder;
+        },
       );
     }
     if (ZFS_REPORT.test(out)) {
@@ -454,12 +501,15 @@ export function createScrubber(known = {}) {
       return "EXAMPLE-SESSION-ID";
     }
     if (keyName && Object.hasOwn(keys, keyName) && value !== "") {
+      hit(`key:${keyName}`);
       return keys[keyName];
     }
     if (keyName && HOST_KEYS.has(keyName) && value !== "") {
+      hit("host");
       return value.includes(".") ? DOC.fqdn : DOC.hostname;
     }
     if (keyName && DOMAIN_KEYS.has(keyName) && value !== "") {
+      hit("domain");
       return DOC.domain;
     }
     if (keyName && SERIAL_KEY.test(keyName) && value !== "") {
@@ -654,5 +704,8 @@ export function createScrubber(known = {}) {
     return failures;
   }
 
-  return { scrub, verify };
+  /** How often each rule has replaced something in this run so far. */
+  const counts = () => Object.fromEntries(hits);
+
+  return { scrub, verify, counts };
 }

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetProxy
+  tags:
+    - Network
+  summary: The proxies
+  description: >-
+    The proxies the NAS's software updates and command line use, as fifteen flattened fields; the
+    stored nested objects are left empty ([]), also when a proxy is set (observed). The transport
+    replaces each stored password by whether one is set (UI-6). Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getProxy
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-presence: ["httppassword", "httpspassword", "ftppassword"]
+  responses:
+    "200":
+      description: "The method's response value, with the fields in x-omv-presence as whether they are set."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkProxy.yaml
+          examples:
+            none:
+              $ref: ../../examples/networkGetProxy.none.yaml
+            set:
+              $ref: ../../examples/networkGetProxy.set.yaml

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkEnumerateBondSlaves
+  tags:
+    - Network
+  summary: Ports a bond can use
+  description: >-
+    The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no
+    settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes
+    nothing.
+  x-omv-rpc:
+    service: Network
+    method: enumerateBondSlaves
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.network.enumeratebondslaves
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkEnumerateSlavesRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformationList.yaml
+          examples:
+            newBond:
+              $ref: ../../examples/networkEnumerateBondSlaves.newBond.yaml
+            existingBond:
+              $ref: ../../examples/networkEnumerateBondSlaves.existingBond.yaml

@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "bondtransmithashpolicy: Invalid value '', allowed values are 'layer2,layer2+3,layer3+4,encap2+3,encap3+4'."

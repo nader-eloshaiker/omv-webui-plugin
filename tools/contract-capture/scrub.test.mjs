@@ -262,7 +262,7 @@ test("a Wi-Fi network name and key are replaced whatever their value", () => {
     ],
   });
   assert.deepEqual(out.data, [
-    { wpassid: "example-ssid", wpapsk: "EXAMPLE-PASSWORD" },
+    { wpassid: "EXAMPLE-NETWORK", wpapsk: "EXAMPLE-PASSWORD" },
     { wpassid: "", wpapsk: "" },
   ]);
   assert.deepEqual(verify(out), []);
@@ -743,3 +743,86 @@ for (const { name, value, want, secret } of ZFS_LEFT_CASES) {
     assert.ok(!text.includes(secret), "a failure must not repeat the value");
   });
 }
+
+test("ipv4Networks keeps each address's network and its place in it", () => {
+  const { scrub, verify } = createScrubber({
+    ipv4Networks: { ranges: ["192.0.2", "198.51.100"] },
+  });
+  const out = scrub({
+    address: "172.16.5.130",
+    gateway: "172.16.5.2",
+    dns: "172.16.5.2",
+    other: "10.20.30.40",
+    sameOther: "10.20.30.1",
+    network: "10.20.30.0/24",
+    documentation: "203.0.113.10",
+    mask: "255.255.255.0",
+    loop: "127.0.0.1",
+  });
+  assert.deepEqual(out, {
+    address: "192.0.2.130",
+    gateway: "192.0.2.2",
+    dns: "192.0.2.2",
+    other: "198.51.100.40",
+    sameOther: "198.51.100.1",
+    network: "198.51.100.0/24",
+    documentation: "203.0.113.10",
+    mask: "255.255.255.0",
+    loop: "127.0.0.1",
+  });
+  assert.deepEqual(verify(out), []);
+});
+
+test("ipv4Networks refuses a network more than it has documentation ranges for", () => {
+  const { scrub } = createScrubber({ ipv4Networks: { ranges: ["192.0.2"] } });
+  scrub({ a: "172.16.5.130", b: "172.16.5.2" });
+  assert.throws(
+    () => scrub({ c: "10.20.30.40" }),
+    /more IPv4 networks than the 1 documentation networks/,
+  );
+});
+
+test("without ipv4Networks every address is numbered in 192.0.2.0/24", () => {
+  const { scrub } = createScrubber();
+  assert.deepEqual(scrub({ a: "172.16.5.130", b: "10.20.30.40" }), {
+    a: "192.0.2.1",
+    b: "192.0.2.2",
+  });
+});
+
+test("counts() says which rules replaced something, so a missed rule is seen", () => {
+  const { scrub, counts } = createScrubber({
+    names: { box17: "nas" },
+    literals: ["hunter2-not-real"],
+  });
+  assert.deepEqual(counts(), {});
+  scrub(
+    {
+      hostname: "box17",
+      domainname: "lan.internal",
+      note: "box17 at 172.16.5.4 and fd12:3456:789a::1, key hunter2-not-real",
+      ether: "52:54:00:12:34:56",
+      ref: "3f2b1c4e-9a8d-4e7f-b6c5-1d2e3f4a5b6c",
+      httppassword: "correct horse",
+      wpapsk: "",
+      kept: "192.0.2.1 00:00:5e:00:53:01 fe80::1",
+    },
+    { httppassword: "EXAMPLE-PASSWORD" },
+  );
+  assert.deepEqual(counts(), {
+    host: 1,
+    domain: 1,
+    literal: 1,
+    ipv4: 1,
+    ipv6: 1,
+    name: 1,
+    mac: 1,
+    uuid: 1,
+    "key:httppassword": 1,
+  });
+  // A value that is already a documentation value, or empty, counts for nothing.
+  scrub({ wpapsk: "", kept: "192.0.2.1 00:00:5e:00:53:01" });
+  assert.equal(counts().mac, 1);
+  assert.equal(counts().ipv4, 1);
+  assert.equal(counts()["key:wpapsk"], undefined);
+});

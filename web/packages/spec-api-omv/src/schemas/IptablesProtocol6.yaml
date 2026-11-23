@@ -1,0 +1,4 @@
+type: string
+description: >-
+  The kind of traffic of an IPv6 rule: tcp, udp, icmpv6 or all, optionally preceded by "!".
+pattern: "^!?(?:tcp|udp|icmpv6|all)$"

@@ -1,0 +1,83 @@
+type: object
+description: >-
+  The proxies the NAS's software updates and command line use (rpc.network.setproxy), all fifteen
+  fields required: OMV stores what it is sent, so a password sent empty removes the stored one and
+  a save carries each stored password typed again or empty (design phase-5-network 12.3). Stricter
+  than OMV: each host a computer's name or address, or empty.
+required:
+  [
+    httpenable,
+    httphost,
+    httpport,
+    httpusername,
+    httppassword,
+    httpsenable,
+    httpshost,
+    httpsport,
+    httpsusername,
+    httpspassword,
+    ftpenable,
+    ftphost,
+    ftpport,
+    ftpusername,
+    ftppassword,
+  ]
+properties:
+  httpenable:
+    type: boolean
+  httphost:
+    type: string
+    description: A computer's name, an IPv4 or IPv6 address, or empty.
+    maxLength: 253
+    pattern: '^(?:[a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?(?:[.][a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)*|(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:)))?$'
+  httpport:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  httpusername:
+    type: string
+  httppassword:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    pattern: '^[^\r\n]*$'
+  httpsenable:
+    type: boolean
+  httpshost:
+    type: string
+    description: A computer's name, an IPv4 or IPv6 address, or empty.
+    maxLength: 253
+    pattern: '^(?:[a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?(?:[.][a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)*|(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:)))?$'
+  httpsport:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  httpsusername:
+    type: string
+  httpspassword:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    pattern: '^[^\r\n]*$'
+  ftpenable:
+    type: boolean
+  ftphost:
+    type: string
+    description: A computer's name, an IPv4 or IPv6 address, or empty.
+    maxLength: 253
+    pattern: '^(?:[a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?(?:[.][a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)*|(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}|(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,7}:|(?:[0-9A-Fa-f]{1,4}:){1,6}:[0-9A-Fa-f]{1,4}|(?:[0-9A-Fa-f]{1,4}:){1,5}(?::[0-9A-Fa-f]{1,4}){1,2}|(?:[0-9A-Fa-f]{1,4}:){1,4}(?::[0-9A-Fa-f]{1,4}){1,3}|(?:[0-9A-Fa-f]{1,4}:){1,3}(?::[0-9A-Fa-f]{1,4}){1,4}|(?:[0-9A-Fa-f]{1,4}:){1,2}(?::[0-9A-Fa-f]{1,4}){1,5}|[0-9A-Fa-f]{1,4}:(?::[0-9A-Fa-f]{1,4}){1,6}|:(?:(?::[0-9A-Fa-f]{1,4}){1,7}|:)))?$'
+  ftpport:
+    type: integer
+    minimum: 1
+    maximum: 65535
+  ftpusername:
+    type: string
+  ftppassword:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    pattern: '^[^\r\n]*$'
+additionalProperties: false

@@ -1,0 +1,7 @@
+type: string
+description: >-
+  A kernel network interface name (as NetworkDeviceName), or empty where OMV chooses the name
+  itself: a new bond (the next free "bond" and a number) or a VLAN (always "parent.id"). An
+  existing interface's name is sent back as read.
+maxLength: 15
+pattern: '^(?:(?!\.{1,2}$)[!-.0-9;-~]{1,15})?$'
