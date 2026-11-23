@@ -31,6 +31,7 @@ import {
   useSharedFolderView,
   type SharedFolderView,
 } from "../../hooks/useSharedFolderView.ts";
+import { serviceUses } from "../../services/folderUses.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import {
   shareDeleteOf,
@@ -58,9 +59,11 @@ import { FsNameSlot } from "../atoms/FsNameSlot.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { PageTitle } from "../atoms/PageTitle.tsx";
 import { FolderStateView } from "../molecules/FolderStateView.tsx";
+import { KeepCopyLine } from "../molecules/KeepCopyLine.tsx";
 import { LeaveGuard } from "../molecules/LeaveGuard.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 import { FolderAccessSection } from "../organisms/FolderAccessSection.tsx";
+import { FolderNfsSection } from "../organisms/FolderNfsSection.tsx";
 import { FolderSmbSection } from "../organisms/FolderSmbSection.tsx";
 import { FolderTodoCard } from "../organisms/FolderTodoCard.tsx";
 import { FolderUsedBy } from "../organisms/FolderUsedBy.tsx";
@@ -357,6 +360,7 @@ function Sections({
       failed: shares.failed,
       error: shares.error,
     },
+    services: serviceUses(row.uuid, v.serviceReads.reads),
   });
   const readAt = v.folders.dataUpdatedAt;
 
@@ -455,13 +459,29 @@ function Sections({
         draft={share}
         onDraftChange={onShareChange}
         pending={mark("sharing")}
+        pendingModules={v.system.pending}
         stopOpen={stopOpen}
         onStopOpenChange={setStopOpen}
       />
 
+      <FolderNfsSection
+        folder={row}
+        folderOk={v.state.pill === "ok"}
+        hostname={v.system.hostname}
+        focus={!unsaved}
+      />
+
       {use === null ? null : (
-        <FolderUsedBy use={use} onRetry={() => void v.shares.refetch()} />
+        <FolderUsedBy
+          use={use}
+          onRetry={() => {
+            void v.shares.refetch();
+            void v.serviceReads.refetch();
+          }}
+        />
       )}
+
+      <KeepCopyLine uuid={row.uuid} />
 
       <ShareDeleteSection
         folder={row}
@@ -470,6 +490,8 @@ function Sections({
         fileSystems={list(v.fileSystems)}
         pending={pending}
         homeFolders={holdsHomes}
+        services={v.serviceReads.reads}
+        recheckServices={v.serviceReads.recheck}
         onRetry={() => void v.refresh()}
         onStopSharing={() => setStopOpen(true)}
         onDone={(outcome, way, words) => {

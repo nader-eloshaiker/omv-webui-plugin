@@ -1,0 +1,17 @@
+type: object
+description: >-
+  The NFS settings to store (rpc.nfs.setsettings). The interface sends `versions` exactly as
+  NFS.getSettings returned them, with only `enable` changed. Stricter than OMV: at least one
+  version, since the server cannot serve with none.
+required: [enable, versions]
+properties:
+  enable:
+    type: boolean
+  versions:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+      enum: ["2", "3", "4", "4.1", "4.2"]
+additionalProperties: false

@@ -152,9 +152,10 @@ Read from source (`ShareMgmt.setPrivileges`, the Samba share template):
 - Each shared folder stores a list of entries `{type: user|group, name, perms}`, with `perms` 7 (read
   and write), 5 (read only) or 0. `setPrivileges` **replaces the whole list**; a person or group left
   out of the list loses their entry.
-- **Access is for the network, not the disk.** The entries decide who Samba (and the Rsync server)
-  lets in. They do not change the file permissions on the disk. The classic page says so in one line;
-  so does this one (3.1).
+- **Access is for the network, not the disk.** The entries decide who Samba lets in. They do not
+  change the file permissions on the disk. The classic page says so in one line; so does this one
+  (3.1). (This line first said the Rsync server too; the services slice observed that the rsync
+  server's folders ignore these entries: phase-5-services.md 10.3 and 22.)
 - With **guest access off**, a person or group with 7 or 5 may open the folder; one with 5 only reads;
   anyone with **no entry** is not let in **while at least one entry gives access**; an entry with 0 is
   refused even when a group they belong to gives access (Samba's "invalid users", which wins).

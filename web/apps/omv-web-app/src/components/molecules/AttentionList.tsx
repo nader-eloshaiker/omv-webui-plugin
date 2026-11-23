@@ -195,6 +195,20 @@ export function AttentionList({ rows }: { rows: readonly AttentionRow[] }) {
               {t("dashboard.attention.serviceLink.ssh")}
             </Link>
           );
+        } else if (one && only.name === "nfs") {
+          // Linux and Unix sharing has its page here now (services design 12.2).
+          action = (
+            <Link to="/services/nfs" className={routerLinkClass}>
+              {t("dashboard.attention.serviceLink.nfs")}
+            </Link>
+          );
+        } else if (one && only.name === "rsyncd") {
+          // The rsync server has its tab here now (services design 12.2).
+          action = (
+            <Link to="/services/rsync/server" className={routerLinkClass}>
+              {t("dashboard.attention.serviceLink.rsyncd")}
+            </Link>
+          );
         } else if (one && isCoreService(only.name) && only.name !== "ssh") {
           action = (
             <ExternalLink

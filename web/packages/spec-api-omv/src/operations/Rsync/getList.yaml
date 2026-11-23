@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncGetList
+  tags:
+    - Rsync
+  summary: Copy jobs
+  description: >-
+    The rsync jobs, each as stored (schedule fields as comma-separated text) with srcname and
+    destname, each a shared folder's name or the other computer's address. The transport replaces
+    each job's stored password in the reply by whether one is set (UI-6). The interface reads the
+    whole list. Changes nothing.
+  x-omv-rpc:
+    service: Rsync
+    method: getList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-presence: ["data[].password"]
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, with the fields in x-omv-presence as whether they are set."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncJobRowList.yaml
+          examples:
+            none:
+              $ref: ../../examples/rsyncGetList.none.yaml
+            several:
+              $ref: ../../examples/rsyncGetList.several.yaml
+    "500":
+      description: >-
+        The read failed because a job names a shared folder whose record is gone; the message is
+        OMV's internal one.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            folderGone:
+              $ref: ../../examples/rsyncGetList.folderGone.yaml

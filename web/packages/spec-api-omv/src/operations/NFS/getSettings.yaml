@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: nfsGetSettings
+  tags:
+    - NFS
+  summary: Whether Linux and Unix sharing (NFS) is on, and its versions
+  description: >-
+    The NFS server's settings: whether it is on and which NFS versions it offers (stored as a comma-
+    separated string, returned as a list). The reply also lists every NFS share under shares; the
+    contract leaves that undeclared, since NFS.getShareList is the list. Changes nothing.
+  x-omv-rpc:
+    service: NFS
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NfsSettings.yaml
+          examples:
+            off:
+              $ref: ../../examples/nfsGetSettings.off.yaml
+            on:
+              $ref: ../../examples/nfsGetSettings.on.yaml

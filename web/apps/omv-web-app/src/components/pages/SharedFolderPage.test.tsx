@@ -40,7 +40,8 @@ describe("a shared folder's page (2)", () => {
       name: "Windows and Mac computers",
     });
     expect(within(smb).getByText("Shown in the network list")).toBeVisible();
-    expect(within(smb).getByText("Off")).toBeVisible();
+    // Guest access and, since the services slice, the recycle bin both read "Off".
+    expect(within(smb).getAllByText("Off")).toHaveLength(2);
   });
 
   it("makes no call for an address that is not a folder's UUID (UI-4)", async () => {
@@ -162,7 +163,7 @@ describe("used by (2.5)", () => {
     );
     expect(used).toBeVisible();
     expect(
-      screen.getAllByText(/Used by a setting this page does not show/).length,
+      screen.getAllByText(/Used by an add-on's setting/).length,
     ).toBeGreaterThan(0);
   });
 

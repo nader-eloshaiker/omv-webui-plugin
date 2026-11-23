@@ -1,0 +1,160 @@
+type: object
+description: >-
+  A copy job to store (rpc.rsync.set), from another computer into a shared folder on this NAS: the sides that apply are required and
+  well formed, the others empty.
+required:
+  [
+    uuid,
+    enable,
+    sendemail,
+    comment,
+    type,
+    mode,
+    srcsharedfolderref,
+    srcuri,
+    destsharedfolderref,
+    desturi,
+    minute,
+    hour,
+    dayofmonth,
+    month,
+    dayofweek,
+    everynminute,
+    everynhour,
+    everyndayofmonth,
+    optionrecursive,
+    optiontimes,
+    optiongroup,
+    optionowner,
+    optioncompress,
+    optionarchive,
+    optiondelete,
+    optionquiet,
+    optionperms,
+    optionacls,
+    optionxattrs,
+    optiondryrun,
+    optionpartial,
+    extraoptions,
+    authentication,
+    password,
+    sshcertificateref,
+    sshport,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  enable:
+    type: boolean
+  sendemail:
+    type: boolean
+  comment:
+    type: string
+    maxLength: 200
+    pattern: '^[^\r\n]*$'
+  type:
+    type: string
+    enum: [remote]
+  mode:
+    type: string
+    enum: [pull]
+  srcsharedfolderref:
+    type: string
+    maxLength: 0
+  srcuri:
+    $ref: ./RsyncRemoteUri.yaml
+  destsharedfolderref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  desturi:
+    type: string
+    maxLength: 0
+  minute:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      pattern: '^(\*|[0-5]?[0-9])$'
+  hour:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      pattern: '^(\*|[01]?[0-9]|2[0-3])$'
+  dayofmonth:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      pattern: '^(\*|0?[1-9]|[12][0-9]|3[01])$'
+  month:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      pattern: '^(\*|0?[1-9]|1[0-2])$'
+  dayofweek:
+    type: array
+    minItems: 1
+    items:
+      type: string
+      pattern: '^(\*|[1-7])$'
+  everynminute:
+    type: boolean
+  everynhour:
+    type: boolean
+  everyndayofmonth:
+    type: boolean
+  optionrecursive:
+    type: boolean
+  optiontimes:
+    type: boolean
+  optiongroup:
+    type: boolean
+  optionowner:
+    type: boolean
+  optioncompress:
+    type: boolean
+  optionarchive:
+    type: boolean
+  optiondelete:
+    type: boolean
+  optionquiet:
+    type: boolean
+  optionperms:
+    type: boolean
+  optionacls:
+    type: boolean
+  optionxattrs:
+    type: boolean
+  optiondryrun:
+    type: boolean
+  optionpartial:
+    type: boolean
+  extraoptions:
+    type: string
+    description: Sent back as read; the interface never writes extra options (design phase-5-services 0.6).
+  authentication:
+    type: string
+    enum: [password, pubkey]
+  password:
+    type: string
+    format: password
+    x-omv-secret: true
+    x-omv-format: no-multi-line
+    pattern: '^[^\r\n]*$'
+    description: The password for another computer's rsync server, or empty. Typed again for every save, since it is never read back.
+  sshcertificateref:
+    description: The UUID of one of the NAS's SSH keys, or empty.
+    oneOf:
+      - type: string
+        x-omv-format: uuidv4
+        pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+      - type: string
+        maxLength: 0
+  sshport:
+    type: integer
+    minimum: 1
+    maximum: 65535
+additionalProperties: false

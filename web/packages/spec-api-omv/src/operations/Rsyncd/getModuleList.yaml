@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncdGetModuleList
+  tags:
+    - Rsyncd
+  summary: Folders offered to the rsync server
+  description: >-
+    The rsync server's modules, each with its sign-ins as a list under users and the name of its
+    shared folder. The transport replaces each sign-in's stored password in the reply by whether one
+    is set, before the reply is validated, cached or returned (UI-6). The interface reads the whole
+    list. Changes nothing.
+  x-omv-rpc:
+    service: Rsyncd
+    method: getModuleList
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-presence: ["data[].users[].password"]
+  x-omv-source:
+    datamodel: rpc.common.getlist
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/GetListRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, with the fields in x-omv-presence as whether they are set."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncdModuleList.yaml
+          examples:
+            none:
+              $ref: ../../examples/rsyncdGetModuleList.none.yaml
+            several:
+              $ref: ../../examples/rsyncdGetModuleList.several.yaml

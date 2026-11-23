@@ -1,0 +1,9 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 1
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000012"
+      publickey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl example-key
+      comment: example-key
+      _used: true

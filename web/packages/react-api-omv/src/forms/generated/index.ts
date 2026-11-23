@@ -41,6 +41,35 @@ export {
   type MdMgmtSetSyncActionFormValues,
 } from "./mdMgmtSetSyncAction.ts";
 export {
+  NfsDeleteShareRequestSchema,
+  type NfsDeleteShareFormValues,
+} from "./nfsDeleteShare.ts";
+export {
+  NfsSetSettingsRequestSchema,
+  type NfsSetSettingsFormValues,
+} from "./nfsSetSettings.ts";
+export {
+  NfsSetShareRequestSchema,
+  type NfsSetShareFormValues,
+} from "./nfsSetShare.ts";
+export {
+  RsyncdDeleteModuleRequestSchema,
+  type RsyncdDeleteModuleFormValues,
+} from "./rsyncdDeleteModule.ts";
+export {
+  RsyncDeleteRequestSchema,
+  type RsyncDeleteFormValues,
+} from "./rsyncDelete.ts";
+export {
+  RsyncdSetModuleRequestSchema,
+  type RsyncdSetModuleFormValues,
+} from "./rsyncdSetModule.ts";
+export {
+  RsyncdSetSettingsRequestSchema,
+  type RsyncdSetSettingsFormValues,
+} from "./rsyncdSetSettings.ts";
+export { RsyncSetRequestSchema, type RsyncSetFormValues } from "./rsyncSet.ts";
+export {
   SessionLoginRequestSchema,
   type SessionLoginFormValues,
 } from "./sessionLogin.ts";

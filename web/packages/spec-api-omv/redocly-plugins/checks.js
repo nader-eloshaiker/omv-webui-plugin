@@ -47,12 +47,16 @@ const OPERATION_KEYS = new Set([
   "x-omv-destructive",
   "x-omv-source",
   "x-omv-omit",
+  "x-omv-presence",
 ]);
 
-// An x-omv-omit path: a top-level field, or `name.` / `name[].` steps into one nested object or into
-// every row of a list, then the field. The transport (src/transport/omit.ts) reads the same form.
-export const OMIT_PATH =
+// An x-omv-omit or x-omv-presence path: a top-level field, or `name.` / `name[].` steps into one
+// nested object or into every row of a list, then the field. Steps chain, so `data[].users[].password`
+// reaches a field of every item of a list inside every row. The transport (src/transport/replyPath.ts)
+// reads the same form.
+export const REPLY_PATH =
   /^(?:[A-Za-z_][A-Za-z0-9_]*(?:\[\])?\.)*[A-Za-z_][A-Za-z0-9_]*$/;
+export const OMIT_PATH = REPLY_PATH;
 
 const PATH = /^\/rpc\/([A-Z][A-Za-z0-9]*)\/([a-z][A-Za-z0-9]*)$/;
 
@@ -218,20 +222,35 @@ export function checkPathItem(path, item, hasSchema = () => true) {
     }
   }
 
-  if ("x-omv-omit" in op) {
-    const omit = op["x-omv-omit"];
+  const pathLists = {};
+  for (const extension of ["x-omv-omit", "x-omv-presence"]) {
+    if (!(extension in op)) {
+      continue;
+    }
+    const paths = op[extension];
     if (
-      !Array.isArray(omit) ||
-      omit.length === 0 ||
-      omit.some((k) => typeof k !== "string" || !OMIT_PATH.test(k))
+      !Array.isArray(paths) ||
+      paths.length === 0 ||
+      paths.some((k) => typeof k !== "string" || !REPLY_PATH.test(k))
     ) {
       report(
-        'x-omv-omit must be a non-empty list of response field paths: "name", or "list[].name" for a field of each row.',
+        `${extension} must be a non-empty list of response field paths: "name", or "list[].name" for a field of each row.`,
         "post",
-        "x-omv-omit",
+        extension,
       );
-    } else if (new Set(omit).size !== omit.length) {
-      report("x-omv-omit names a field twice.", "post", "x-omv-omit");
+    } else if (new Set(paths).size !== paths.length) {
+      report(`${extension} names a field twice.`, "post", extension);
+    } else {
+      pathLists[extension] = paths;
+    }
+  }
+  for (const path of pathLists["x-omv-presence"] ?? []) {
+    if ((pathLists["x-omv-omit"] ?? []).includes(path)) {
+      report(
+        `"${path}" is in both x-omv-omit and x-omv-presence: a field is either removed or replaced by whether it is set.`,
+        "post",
+        "x-omv-presence",
+      );
     }
   }
 
@@ -283,90 +302,209 @@ export function checkExampleCoverage(op, resolve = (n) => n) {
   return findings;
 }
 
+// Lint restates a schema (acceptEmptyArrayForObject, acceptIntegerForInt64, acceptStringForPresence)
+// as {anyOf: [original, ...], x-omv-lint-restated}: look inside.
+const unwrapWith = (resolve) => (node) => {
+  const resolved = node && resolve(node);
+  return resolved?.["x-omv-lint-restated"]
+    ? resolve(resolved.anyOf[0])
+    : resolved;
+};
+
+const isPlainObjectSchema = (schema) =>
+  Boolean(schema) &&
+  (schema.type === "object" || Boolean(schema.properties)) &&
+  !schema.oneOf &&
+  !schema.anyOf &&
+  !schema.allOf;
+
+/** The 200 reply's JSON schema, resolved and unwrapped; undefined when there is none. */
+const replySchemaOf = (op, resolve, unwrap) => {
+  const response = op.responses?.["200"] && resolve(op.responses["200"]);
+  return unwrap(response?.content?.["application/json"]?.schema);
+};
+
 /**
- * x-omv-omit names fields of the 200 reply that the transport deletes before anything else sees the
- * reply (docs/03, "Fields the transport removes"): top-level fields, or with `list[].name` a field
- * of each row. The contract must not describe them: a field in the schema would be a field the
- * generated types promise and never deliver. Every step before the field must be described, so the
- * path names a place the reply really has.
- * @param {object} op the resolved operation
- * @param {(node: object) => object} resolve resolves a $ref'd node, returns others unchanged
+ * Follow the steps of a reply path (all but its last segment) through the schema. Returns the
+ * object schema that should hold the leaf, or the step the schema does not describe.
  */
-export function checkOmit(op, resolve = (n) => n) {
+function parentSchemaOf(top, path, unwrap) {
+  const segments = path.split(".");
+  const leaf = segments.pop();
+  let schema = top;
+  let where = "the reply";
+  for (const segment of segments) {
+    const each = segment.endsWith("[]");
+    const field = each ? segment.slice(0, -2) : segment;
+    let next = unwrap(schema.properties?.[field]);
+    if (each) {
+      next = next?.type === "array" ? unwrap(next.items) : undefined;
+    }
+    if (!isPlainObjectSchema(next)) {
+      return {
+        leaf,
+        missing: `${where} must declare "${field}" as ${each ? "a list of objects" : "an object"}`,
+      };
+    }
+    schema = next;
+    where = `"${segment}"`;
+  }
+  return { leaf, schema, name: segments.length ? `"${path}"` : `"${leaf}"` };
+}
+
+/**
+ * The checks x-omv-omit and x-omv-presence share: the 200 reply is a plain object schema and every
+ * step of every path is described, so the path names a place the reply really has. `checkLeaf`
+ * then says what the schema must say about the field itself.
+ */
+function checkReplyPaths(op, extension, resolve, checkLeaf) {
   const findings = [];
-  const omit = op?.["x-omv-omit"];
-  if (!Array.isArray(omit)) {
+  const paths = op?.[extension];
+  if (!Array.isArray(paths)) {
     return findings;
   }
-  const at = ["x-omv-omit"];
-  // Lint restates an object schema to accept [] as well (acceptEmptyArrayForObject): look inside.
-  const unwrap = (node) => {
-    const resolved = node && resolve(node);
-    return resolved?.["x-omv-lint-restated"]
-      ? resolve(resolved.anyOf[0])
-      : resolved;
-  };
-  const isPlainObjectSchema = (schema) =>
-    Boolean(schema) &&
-    (schema.type === "object" || Boolean(schema.properties)) &&
-    !schema.oneOf &&
-    !schema.anyOf &&
-    !schema.allOf;
-  const response = op.responses?.["200"] && resolve(op.responses["200"]);
-  const json = response?.content?.["application/json"];
-  const top = unwrap(json?.schema);
+  const at = [extension];
+  const unwrap = unwrapWith(resolve);
+  const top = replySchemaOf(op, resolve, unwrap);
   if (!isPlainObjectSchema(top)) {
     findings.push({
-      message:
-        "x-omv-omit applies only to an operation whose 200 reply is a plain object schema.",
+      message: `${extension} applies only to an operation whose 200 reply is a plain object schema.`,
       at,
     });
     return findings;
   }
-  for (const path of omit) {
-    if (typeof path !== "string" || !OMIT_PATH.test(path)) {
+  for (const path of paths) {
+    if (typeof path !== "string" || !REPLY_PATH.test(path)) {
       continue; // reported by checkPathItem
     }
-    const segments = path.split(".");
-    const leaf = segments.pop();
-    let schema = top;
-    let where = "the reply";
-    for (const segment of segments) {
-      const each = segment.endsWith("[]");
-      const field = each ? segment.slice(0, -2) : segment;
-      let next = unwrap(schema.properties?.[field]);
-      if (each) {
-        next = next?.type === "array" ? unwrap(next.items) : undefined;
-      }
-      if (!isPlainObjectSchema(next)) {
-        findings.push({
-          message: `x-omv-omit "${path}": ${where} must declare "${field}" as ${each ? "a list of objects" : "an object"}.`,
-          at,
-        });
-        schema = undefined;
-        break;
-      }
-      schema = next;
-      where = `"${segment}"`;
-    }
-    if (!schema) {
+    const found = parentSchemaOf(top, path, unwrap);
+    if (!found.schema) {
+      findings.push({
+        message: `${extension} "${path}": ${found.missing}.`,
+        at,
+      });
       continue;
     }
-    const name = segments.length ? `"${path}"` : `"${leaf}"`;
-    if (Object.hasOwn(schema.properties ?? {}, leaf)) {
-      findings.push({
-        message: `x-omv-omit removes ${name}, so the response schema must not declare it.`,
-        at,
-      });
-    }
-    if ((schema.required ?? []).includes(leaf)) {
-      findings.push({
-        message: `x-omv-omit removes ${name}, so the response schema must not require it.`,
-        at,
-      });
+    for (const message of checkLeaf(
+      found.schema,
+      found.leaf,
+      found.name,
+      unwrap,
+    )) {
+      findings.push({ message, at });
     }
   }
   return findings;
+}
+
+/**
+ * x-omv-omit names fields of the 200 reply that the transport deletes before anything else sees the
+ * reply (docs/03, "Fields the transport removes"): top-level fields, or with `list[].name` a field
+ * of each row, at any depth. The contract must not describe them: a field in the schema would be a
+ * field the generated types promise and never deliver. Every step before the field must be
+ * described, so the path names a place the reply really has.
+ * @param {object} op the resolved operation
+ * @param {(node: object) => object} resolve resolves a $ref'd node, returns others unchanged
+ */
+export function checkOmit(op, resolve = (n) => n) {
+  return checkReplyPaths(op, "x-omv-omit", resolve, (schema, leaf, name) => {
+    const messages = [];
+    if (Object.hasOwn(schema.properties ?? {}, leaf)) {
+      messages.push(
+        `x-omv-omit removes ${name}, so the response schema must not declare it.`,
+      );
+    }
+    if ((schema.required ?? []).includes(leaf)) {
+      messages.push(
+        `x-omv-omit removes ${name}, so the response schema must not require it.`,
+      );
+    }
+    return messages;
+  });
+}
+
+/**
+ * x-omv-presence names fields of the 200 reply that the transport replaces, before anything else
+ * sees the reply, by whether they are set: `true` for a non-empty string, `false` for anything else
+ * or nothing (docs/03, "Fields the transport removes"). The paths are those of x-omv-omit. What
+ * the caller receives is a boolean, so the schema declares the field as one; the raw examples keep
+ * the string, which lint accepts through acceptStringForPresence.
+ * @param {object} op the resolved operation
+ * @param {(node: object) => object} resolve resolves a $ref'd node, returns others unchanged
+ */
+export function checkPresence(op, resolve = (n) => n) {
+  return checkReplyPaths(
+    op,
+    "x-omv-presence",
+    resolve,
+    (schema, leaf, name, unwrap) => {
+      if (!Object.hasOwn(schema.properties ?? {}, leaf)) {
+        return [
+          `x-omv-presence replaces ${name} by whether it is set, so the response schema must declare it, as type: boolean.`,
+        ];
+      }
+      const declared = unwrap(schema.properties[leaf]);
+      if (
+        declared?.type !== "boolean" ||
+        declared.nullable === true ||
+        "enum" in declared ||
+        declared.oneOf ||
+        declared.anyOf ||
+        declared.allOf
+      ) {
+        return [
+          `x-omv-presence replaces ${name} by true or false, so the response schema must declare it as type: boolean (not nullable, no enum).`,
+        ];
+      }
+      return [];
+    },
+  );
+}
+
+/**
+ * Lint only: restate each x-omv-presence field of an operation's 200 reply so it also accepts a
+ * string. The examples are raw replies, which carry the stored string; the transport turns it into
+ * true or false (docs/03), so lint validates them as the transport will see them. The leaf's entry
+ * in its parent's `properties` is replaced by {anyOf: [entry, {type: string}]}, so a shared boolean
+ * schema the entry refers to stays as it is. The bundle skips this, so the generated contract and
+ * types keep the boolean. Paths whose steps or leaf the schema does not describe as checkPresence
+ * wants are left alone; checkPresence reports them. Mutates in place; returns the number of fields
+ * restated.
+ * @param {object} op the resolved operation
+ * @param {(node: object) => object} resolve resolves a $ref'd node, returns others unchanged
+ */
+export function acceptStringForPresence(op, resolve = (n) => n) {
+  const paths = op?.["x-omv-presence"];
+  if (!Array.isArray(paths)) {
+    return 0;
+  }
+  const unwrap = unwrapWith(resolve);
+  const top = replySchemaOf(op, resolve, unwrap);
+  if (!isPlainObjectSchema(top)) {
+    return 0;
+  }
+  let restated = 0;
+  for (const path of paths) {
+    if (typeof path !== "string" || !REPLY_PATH.test(path)) {
+      continue;
+    }
+    const { schema, leaf } = parentSchemaOf(top, path, unwrap);
+    const entry = schema?.properties?.[leaf];
+    if (
+      !entry ||
+      typeof entry !== "object" ||
+      entry["x-omv-lint-restated"] ||
+      resolve(entry)?.type !== "boolean"
+    ) {
+      continue;
+    }
+    schema.properties[leaf] = {
+      anyOf: [entry, { type: "string" }],
+      "x-omv-lint-restated": true,
+    };
+    restated++;
+  }
+  return restated;
 }
 
 /** The x-omv-* extensions on one schema. */

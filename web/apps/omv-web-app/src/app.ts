@@ -26,6 +26,10 @@ import { processesView } from "./processes/processesViewStore.ts";
 import { raidFlowStore } from "./raid/raidRun.ts";
 import { raidSession } from "./raid/raidSession.ts";
 import { createAppRouter, type AppRouter } from "./router.ts";
+import { jobFlowStore } from "./services/addJobFlow.ts";
+import { jobsSession } from "./services/jobsSession.ts";
+import { nfsSession } from "./services/nfsSession.ts";
+import { rsyncdSession } from "./services/rsyncdSession.ts";
 import {
   createActivityClock,
   type ActivityClock,
@@ -37,6 +41,7 @@ import {
 } from "./session/sessionStore.ts";
 import { addFlowStore } from "./sharedFolders/addFlow.ts";
 import { shareDeletes } from "./sharedFolders/deleteRun.ts";
+import { recycleRuns } from "./sharedFolders/recycleRuns.ts";
 import { sharesSession } from "./sharedFolders/sharesSession.ts";
 import { sharedFoldersTable } from "./sharedFolders/tableStore.ts";
 import { addPersonStore } from "./users/addPersonFlow.ts";
@@ -71,6 +76,11 @@ const SESSION_VIEW_STATE = [
   usersSession,
   addPersonStore,
   personDeletes,
+  rsyncdSession,
+  recycleRuns,
+  nfsSession,
+  jobsSession,
+  jobFlowStore,
 ];
 const resetViewState = () => {
   for (const store of SESSION_VIEW_STATE) {

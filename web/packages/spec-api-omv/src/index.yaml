@@ -29,6 +29,9 @@ tags:
   - name: Services
   - name: SMB
   - name: NFS
+  - name: Rsync
+  - name: Rsyncd
+  - name: CertificateMgmt
   - name: LogFile
   - name: DiskMgmt
   - name: MdMgmt
@@ -131,6 +134,46 @@ paths:
     $ref: ./operations/SMB/getStats.yaml
   /rpc/NFS/getStats:
     $ref: ./operations/NFS/getStats.yaml
+  /rpc/NFS/getSettings:
+    $ref: ./operations/NFS/getSettings.yaml
+  /rpc/NFS/setSettings:
+    $ref: ./operations/NFS/setSettings.yaml
+  /rpc/NFS/getShareList:
+    $ref: ./operations/NFS/getShareList.yaml
+  /rpc/NFS/getShare:
+    $ref: ./operations/NFS/getShare.yaml
+  /rpc/NFS/setShare:
+    $ref: ./operations/NFS/setShare.yaml
+  /rpc/NFS/deleteShare:
+    $ref: ./operations/NFS/deleteShare.yaml
+  /rpc/Rsyncd/getSettings:
+    $ref: ./operations/Rsyncd/getSettings.yaml
+  /rpc/Rsyncd/setSettings:
+    $ref: ./operations/Rsyncd/setSettings.yaml
+  /rpc/Rsyncd/getModuleList:
+    $ref: ./operations/Rsyncd/getModuleList.yaml
+  /rpc/Rsyncd/getModule:
+    $ref: ./operations/Rsyncd/getModule.yaml
+  /rpc/Rsyncd/setModule:
+    $ref: ./operations/Rsyncd/setModule.yaml
+  /rpc/Rsyncd/deleteModule:
+    $ref: ./operations/Rsyncd/deleteModule.yaml
+  /rpc/Rsync/getList:
+    $ref: ./operations/Rsync/getList.yaml
+  /rpc/Rsync/get:
+    $ref: ./operations/Rsync/get.yaml
+  /rpc/Rsync/set:
+    $ref: ./operations/Rsync/set.yaml
+  /rpc/Rsync/delete:
+    $ref: ./operations/Rsync/delete.yaml
+  /rpc/Rsync/execute:
+    $ref: ./operations/Rsync/execute.yaml
+  /rpc/SMB/getShare:
+    $ref: ./operations/SMB/getShare.yaml
+  /rpc/SMB/emptyRecycleBin:
+    $ref: ./operations/SMB/emptyRecycleBin.yaml
+  /rpc/CertificateMgmt/getSshList:
+    $ref: ./operations/CertificateMgmt/getSshList.yaml
   /rpc/SSH/getStats:
     $ref: ./operations/SSH/getStats.yaml
   /rpc/Network/enumerateDevicesList:

@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatus66udgu4ls26kfSNbZwQ
+  pos: 384
+  output: "Please wait, syncing <rsync://copier@backup.example.org/photos/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Pulled/> ...\n\nreceiving incremental file list\n./\nmanual.txt\nnew.txt\none.txt\nreadme.txt\ntwo.txt\nInner/\nopen/\nsub/\nsub/three.txt\n\nsent 157 bytes  received 606 bytes  1,526.00 bytes/sec\ntotal size is 53  speedup is 0.07\nThe synchronisation has completed successfully.\n"
+  pendingOutput: false
+  running: false

@@ -38,6 +38,23 @@ import {
 } from "./fsScenarios.ts";
 import { RAID_SCENARIO_LABELS, RAID_SCENARIOS } from "./raidScenarios.ts";
 import {
+  isServicesScenario,
+  newServicesMockState,
+  SERVICES_MODULES,
+  SERVICES_SCENARIO_LABELS,
+  SERVICES_SCENARIOS,
+  servicesAnswers,
+  servicesApplied,
+  servicesInformationRead,
+  servicesReverted,
+  servicesStartsPending,
+  servicesTaskOutput,
+  servicesTaskRunning,
+  servicesTaskStop,
+  type ServicesMockState,
+  type ServicesModule,
+} from "./servicesScenarios.ts";
+import {
   isSharesScenario,
   newSharesMockState,
   SHARES_MODULES,
@@ -123,6 +140,7 @@ export const SCENARIOS = [
   ...ZFS_SCENARIOS,
   ...SHARES_SCENARIOS,
   ...USERS_SCENARIOS,
+  ...SERVICES_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -136,6 +154,7 @@ const FAMILIES = new Set<string>([
   ...ZFS_SCENARIOS,
   ...SHARES_SCENARIOS,
   ...USERS_SCENARIOS,
+  ...SERVICES_SCENARIOS,
 ]);
 /** The scenarios in the picker's groups. Development words, not the interface's. */
 export const SCENARIO_GROUPS: readonly {
@@ -152,6 +171,7 @@ export const SCENARIO_GROUPS: readonly {
   { label: "ZFS", names: ZFS_SCENARIOS },
   { label: "Shared folders and SMB", names: SHARES_SCENARIOS },
   { label: "Users and groups", names: USERS_SCENARIOS },
+  { label: "NFS, rsync and SMB extras", names: SERVICES_SCENARIOS },
 ];
 
 /** What each scenario shows, for the picker. Development words, not the interface's. */
@@ -207,6 +227,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...ZFS_SCENARIO_LABELS,
   ...SHARES_SCENARIO_LABELS,
   ...USERS_SCENARIO_LABELS,
+  ...SERVICES_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -740,6 +761,8 @@ export interface MockSession {
   shares?: SharesMockState;
   /** What the users answers remember (usersScenarios.ts), in the users* stories only. */
   users?: UsersMockState;
+  /** What the services answers remember (servicesScenarios.ts), in the services stories only. */
+  services?: ServicesMockState;
 }
 
 export const newMockSession = (
@@ -790,6 +813,15 @@ const FS_TASK_OUTPUTS: Readonly<Record<string, ExampleName<"execGetOutput">>> =
     [CONTRACT_EXAMPLES.fileSystemMgmtCreateBtrfs.started.value]:
       "createBtrfsRaid1Finished",
   };
+
+// The captured run and emptying, outside the services stories: each started handle's last poll.
+const SERVICES_TASK_OUTPUTS: Readonly<
+  Record<string, ExampleName<"execGetOutput">>
+> = {
+  [CONTRACT_EXAMPLES.rsyncExecute.started.value]: "rsyncRunFinished",
+  [CONTRACT_EXAMPLES.smbEmptyRecycleBin.started.value]:
+    "emptyRecycleBinFinished",
+};
 
 // OMV's descriptions of the modules the file-system actions mark dirty (engined/module/*.inc,
 // OMV 8.6.1): monit has collectd's words, and quota has none.
@@ -1002,8 +1034,43 @@ export function scenarioAnswers(
     usersState === undefined
       ? undefined
       : usersAnswers(usersState, { dirty: usersDirty });
-  /** The NAS's name in the shares and users stories (sharesLongHost has a long one). */
-  const host = sharesState?.host ?? usersState?.shares.host;
+  /** The modules a services write marks dirty (observed on the test VM), with OMV's descriptions. */
+  const servicesDirty = (modules: readonly ServicesModule[]) => {
+    session.fsDirty = {
+      ...session.fsDirty,
+      ...Object.fromEntries(modules.map((m) => [m, SERVICES_MODULES[m]])),
+    };
+  };
+  /** A services write outside the services stories: its example, with its modules pending. */
+  const servicesPending =
+    <T extends string>(reply: T, modules: readonly ServicesModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        servicesDirty(modules);
+      }
+      return answer;
+    };
+  // The remembering services answers (servicesScenarios.ts), in the services stories. They hold their
+  // own shared folders, SMB and file systems (the shares mock's state, built for each story).
+  if (isServicesScenario(name) && session.services === undefined) {
+    session.services = newServicesMockState(name);
+    servicesDirty(servicesStartsPending(name));
+  }
+  const servicesState = session.services;
+  const servicesReplies =
+    servicesState === undefined
+      ? undefined
+      : servicesAnswers(servicesState, { dirty: servicesDirty });
+  /** Before the pending modules are read: jobsAddFailsCheck's other change (servicesScenarios.ts). */
+  const beforePendingRead = () => {
+    if (servicesState !== undefined && session.signedIn) {
+      servicesInformationRead(servicesState, { dirty: servicesDirty });
+    }
+  };
+  /** The NAS's name in the shares, users and services stories (sharesLongHost has a long one). */
+  const host =
+    sharesState?.host ?? usersState?.shares.host ?? servicesState?.shares.host;
   const withHost = (answer: FixedAnswer): FixedAnswer =>
     host === undefined || answer.status !== 200
       ? answer
@@ -1170,8 +1237,9 @@ export function scenarioAnswers(
       session.pending = false;
       return "null";
     },
-    systemGetInformation: () =>
-      name === "servicePending" && session.dirty
+    systemGetInformation: () => {
+      beforePendingRead();
+      return name === "servicePending" && session.dirty
         ? guarded<never>(sambaPending())()
         : guarded<never>(
             withHost(
@@ -1191,7 +1259,8 @@ export function scenarioAnswers(
                 ),
               ),
             ),
-          )(),
+          )();
+    },
     userMgmtGetUserByContext: guarded(
       name === "builtInAdmin"
         ? BUILT_IN_ADMIN_ACCOUNT
@@ -1202,20 +1271,32 @@ export function scenarioAnswers(
     webGuiGetAutoLogoutSettings: guarded(
       name === "idleWarning" ? ONE_MINUTE : user ? "user" : "admin",
     ),
-    configIsDirty: () =>
-      guarded(
+    configIsDirty: () => {
+      beforePendingRead();
+      return guarded(
         session.dirty ||
           session.smartDirty ||
           Object.keys(session.fsDirty).length > 0
           ? "dirty"
           : "clean",
-      )(),
+      )();
+    },
     configApplyChangesBg: guarded("applied"),
     configRevertChangesBg: guarded("reverted"),
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
     // apply or undo, after which nothing is pending.
     execGetOutput: ({ params }) => {
       const filename = (params as { filename?: unknown } | null)?.filename;
+      if (servicesState !== undefined) {
+        const gate = guarded<never>({ status: 200 })();
+        const task =
+          gate.status === 200
+            ? servicesTaskOutput(servicesState, params)
+            : undefined;
+        if (gate.status !== 200 || task !== undefined) {
+          return task ?? gate;
+        }
+      }
       if (filename === SMART_HANDLE) {
         return guarded<ExampleName<"execGetOutput">>(
           diskCheckOutput(name) ??
@@ -1246,7 +1327,9 @@ export function scenarioAnswers(
         return guarded<ExampleName<"execGetOutput">>(selfTestOutput(name))();
       }
       const fsTask =
-        typeof filename === "string" ? FS_TASK_OUTPUTS[filename] : undefined;
+        typeof filename === "string"
+          ? (FS_TASK_OUTPUTS[filename] ?? SERVICES_TASK_OUTPUTS[filename])
+          : undefined;
       if (fsTask !== undefined) {
         return guarded(fsTask)();
       }
@@ -1270,6 +1353,14 @@ export function scenarioAnswers(
           usersReverted(usersState);
         }
       }
+      if (servicesState !== undefined && session.signedIn) {
+        if (apply && !servicesApplied(servicesState)) {
+          return guarded("applyFailed")();
+        }
+        if (filename === REVERT_HANDLE) {
+          servicesReverted(servicesState);
+        }
+      }
       if (apply && fsState !== undefined && session.signedIn) {
         if (!fsApplied(name, fsState)) {
           return guarded("applyFailed")();
@@ -1285,8 +1376,22 @@ export function scenarioAnswers(
       }
       return answer;
     },
-    execIsRunning: guarded("running"),
-    execStop: guarded("null"),
+    execIsRunning: ({ params }) => {
+      const gate = guarded<never>({ status: 200 })();
+      const own =
+        gate.status === 200 && servicesState !== undefined
+          ? servicesTaskRunning(servicesState, params)
+          : undefined;
+      return gate.status !== 200 ? gate : (own ?? "running");
+    },
+    execStop: ({ params }) => {
+      const gate = guarded<never>({ status: 200 })();
+      const own =
+        gate.status === 200 && servicesState !== undefined
+          ? servicesTaskStop(servicesState, params)
+          : undefined;
+      return gate.status !== 200 ? gate : (own ?? "null");
+    },
     sshGet: guarded("defaults"),
     // Saving marks ssh and avahi dirty on OMV, so the band appears (Phase 1).
     sshSet: () => {
@@ -1532,6 +1637,63 @@ export function scenarioAnswers(
       ? {}
       : Object.fromEntries(
           Object.entries(usersReplies).map(([operationId, reply]) => [
+            operationId,
+            sharesRead(reply),
+          ]),
+        )),
+    // NFS, the rsync server, copy jobs and the rest of SMB (phase 5 services design 16): stateless
+    // captured examples outside the services stories, each write marking what it marks on the VM; the
+    // remembering answers below in the services stories.
+    nfsGetSettings: guarded("off"),
+    nfsSetSettings: ({ params }) =>
+      (params as { enable?: unknown } | null)?.enable === true
+        ? servicesPending("turnedOn", ["avahi", "nfs"])()
+        : servicesPending("turnedOff", ["avahi", "nfs"])(),
+    nfsGetShareList: guarded("none"),
+    nfsGetShare: guarded("one"),
+    nfsSetShare: servicesPending("created", [
+      "avahi",
+      "collectd",
+      "fstab",
+      "monit",
+      "nfs",
+      "quota",
+    ]),
+    nfsDeleteShare: servicesPending("removed", [
+      "avahi",
+      "collectd",
+      "fstab",
+      "monit",
+      "nfs",
+      "quota",
+    ]),
+    rsyncdGetSettings: guarded("off"),
+    rsyncdSetSettings: ({ params }) =>
+      (params as { enable?: unknown } | null)?.enable === true
+        ? servicesPending("turnedOn", ["avahi", "rsyncd"])()
+        : servicesPending("turnedOff", ["avahi", "rsyncd"])(),
+    rsyncdGetModuleList: guarded("none"),
+    rsyncdGetModule: guarded("withSignIn"),
+    rsyncdSetModule: servicesPending("created", ["rsyncd"]),
+    rsyncdDeleteModule: servicesPending("removed", ["rsyncd"]),
+    rsyncGetList: guarded("none"),
+    rsyncGet: guarded("local"),
+    rsyncSet: servicesPending("created", ["rsync"]),
+    rsyncDelete: servicesPending("deleted", ["rsync"]),
+    rsyncExecute: guarded("started"),
+    // The shares and users stories answer it from their remembered shares (sharesScenarios.ts).
+    smbGetShare:
+      sharesReplies?.smbGetShare !== undefined
+        ? sharesRead(sharesReplies.smbGetShare)
+        : usersReplies?.smbGetShare !== undefined
+          ? sharesRead(usersReplies.smbGetShare)
+          : guarded("stock"),
+    smbEmptyRecycleBin: guarded("started"),
+    certificateMgmtGetSshList: guarded("none"),
+    ...(servicesReplies === undefined
+      ? {}
+      : Object.fromEntries(
+          Object.entries(servicesReplies).map(([operationId, reply]) => [
             operationId,
             sharesRead(reply),
           ]),

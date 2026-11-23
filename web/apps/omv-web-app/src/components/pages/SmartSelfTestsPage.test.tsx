@@ -21,6 +21,15 @@ async function selfTests(options: Parameters<typeof renderApp>[0] = {}) {
 }
 
 const table = () => screen.getByRole("table", { name: "Scheduled self-tests" });
+/** How often, a select of the schedule field (it was a radio group before the field moved). */
+async function chooseOften(
+  user: Awaited<ReturnType<typeof renderApp>>["user"],
+  dialog: HTMLElement,
+  often: string,
+) {
+  await user.click(within(dialog).getByRole("combobox", { name: "How often" }));
+  await user.click(await screen.findByRole("option", { name: often }));
+}
 const params = (call: string) => seenCalls.find((c) => c.call === call)?.params;
 /** The locale's hour, as the table writes it, escaped for a pattern. */
 const at = (hour: number) =>
@@ -223,12 +232,11 @@ describe("Scheduled self-tests", () => {
         "A self-test runs only on a watched disk. Turn on watching on the disk's page.",
       ),
     ).toBeInTheDocument();
+    // How often is the library's ScheduleField (phase 5 services design 15.3), minutes hidden.
     expect(
-      within(dialog).getByRole("radio", { name: "Every week" }),
-    ).toBeChecked();
-    await user.click(
-      within(dialog).getByRole("radio", { name: "Every month" }),
-    );
+      within(dialog).getByRole("combobox", { name: "How often" }),
+    ).toHaveTextContent("Every week");
+    await chooseOften(user, dialog, "Every month");
     await user.click(within(dialog).getByRole("combobox", { name: "On day" }));
     await user.click(await screen.findByRole("option", { name: "30" }));
     expect(
@@ -271,15 +279,15 @@ describe("Scheduled self-tests", () => {
       name: "Change the self-test",
     });
     expect(
-      within(dialog).getByRole("radio", { name: "Every month" }),
-    ).toBeChecked();
-    await user.click(within(dialog).getByRole("radio", { name: "Every day" }));
+      within(dialog).getByRole("combobox", { name: "How often" }),
+    ).toHaveTextContent("Every month");
+    await chooseOften(user, dialog, "Every day");
     expect(
       within(dialog).getByText(
         "A long test every day keeps the disk busy for hours each day.",
       ),
     ).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("radio", { name: "Custom" }));
+    await chooseOften(user, dialog, "Custom");
     expect(
       within(dialog).getByText(
         "The test runs when all four match. With both a day of the month and a weekday, it runs only on days that are both.",

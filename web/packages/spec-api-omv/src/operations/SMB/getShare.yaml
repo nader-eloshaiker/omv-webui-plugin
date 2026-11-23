@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: smbGetShare
+  tags:
+    - SMB
+  summary: One folder shared with Windows and Mac computers
+  description: >-
+    One SMB share as stored, without the shared folder's name. The interface reads it immediately
+    before changing it, so a write sends back every option it does not change. Changes nothing.
+  x-omv-rpc:
+    service: SMB
+    method: getShare
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/SmbShare.yaml
+          examples:
+            stock:
+              $ref: ../../examples/smbGetShare.stock.yaml
+            recycleOn:
+              $ref: ../../examples/smbGetShare.recycleOn.yaml

@@ -1,0 +1,14 @@
+type: object
+description: >-
+  Whether the rsync server is on, its port and its extra options (conf.service.rsyncd, without its
+  modules).
+required: [enable, port]
+properties:
+  enable:
+    type: boolean
+  port:
+    type: integer
+    description: The TCP port it listens on.
+  extraoptions:
+    type: string
+    description: Further server options set in the classic interface.

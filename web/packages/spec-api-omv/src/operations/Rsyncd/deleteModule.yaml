@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncdDeleteModule
+  tags:
+    - Rsyncd
+  summary: Stop offering a folder to the rsync server
+  description: >-
+    Remove an rsync server module with its sign-ins. It touches no shared folder and no file. Other
+    computers lose it once the pending changes are applied; it marks the rsyncd module dirty.
+    Returns the removed module in its stored shape; the transport removes the sign-ins' passwords
+    from it (UI-6).
+  x-omv-rpc:
+    service: Rsyncd
+    method: deleteModule
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: service
+  x-omv-omit: ["users.user[].password"]
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncdModuleStored.yaml
+          examples:
+            removed:
+              $ref: ../../examples/rsyncdDeleteModule.removed.yaml

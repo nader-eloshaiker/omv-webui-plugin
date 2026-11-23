@@ -3,6 +3,7 @@ import { Copy, Download } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button, IconButton } from "../button/button";
+import { ConfirmDialog } from "../confirm-dialog/confirm-dialog";
 import { stripControl } from "./strip-control";
 
 /** A line of output, optionally with its timestamp (shown in the quieter terminal ink). */
@@ -18,7 +19,48 @@ export interface TaskLogLimit {
   showAllLabel: string;
 }
 
+/**
+ * Keep only the newest lines of a long, growing output on screen (phase 5 services design 7.3, D10):
+ * a running copy job can print hundreds of thousands. Unlike `limit`, which cuts a finished snapshot
+ * at its first lines and offers the rest, a cap drops the oldest lines from view for good, so the
+ * page stays fast; copy and download still take every line passed in. (Where the browser has no
+ * clipboard, copying selects the lines on screen only; the download has the rest.)
+ */
+export interface TaskLogCap {
+  /** How many of the newest lines to keep on screen: 10,000. */
+  lines: number;
+  /**
+   * The line under the frame once older lines are hidden: "Showing the newest 10,000 lines. The
+   * download has every line received." It is also the output's description.
+   */
+  label: (shown: number, total: number) => React.ReactNode;
+}
+
+/**
+ * Stop a running task, where stopping is safe (style guide 5.7): a neutral button under the frame
+ * that opens a plain confirmation. Leave it out once the task has ended.
+ */
+export interface TaskLogStop {
+  /** The button: "Stop the copy…". */
+  label: React.ReactNode;
+  /** The confirmation's title: "Stop Photos to Backup?" */
+  title: React.ReactNode;
+  /** What stopping leaves behind: "Files copied so far stay. …" */
+  description: React.ReactNode;
+  /** The confirm button: "Stop the copy". */
+  confirmLabel: React.ReactNode;
+  cancelLabel: React.ReactNode;
+  /** Called on confirm; the dialog closes. Show the outcome through the task's state. */
+  onStop: () => void;
+  /** The stop request is running: the button shows it and ignores presses. */
+  pending?: boolean;
+}
+
 interface TaskLogProps {
+  /**
+   * Every line received, oldest first. With `cap`, pass them all: only the newest are drawn, and
+   * copy and download take every one.
+   */
   lines: readonly TaskLogLine[];
   /** The region's name: "Output of Install updates". */
   label: string;
@@ -61,9 +103,17 @@ interface TaskLogProps {
   /**
    * Show only the first `limit.lines` lines of a longer output, with the `partialLabel` line and a
    * `showAllLabel` button under the frame that show the rest. Copy and download always take every
-   * line. Output within the limit is shown whole, as without it.
+   * line. Output within the limit is shown whole, as without it. For a finished snapshot.
    */
   limit?: TaskLogLimit;
+  /**
+   * Keep only the newest `cap.lines` lines on screen, with `cap.label` under the frame. For a
+   * growing output. `limit` and `cap` answer different outputs: give one or neither; with both,
+   * `limit` applies and `cap` is ignored.
+   */
+  cap?: TaskLogCap;
+  /** A Stop control and its confirmation, while the task runs. */
+  stop?: TaskLogStop;
   className?: string;
 }
 
@@ -95,7 +145,8 @@ function selectOutput(element: HTMLElement | null) {
  * Task and log output on the terminal pair (style guide 5.7). Every line is a text node: backend
  * output is never parsed as markup, and terminal escape sequences are removed. The view follows new
  * output while the reader is at the bottom and stops when they scroll up. Copy and download take the
- * cleaned text.
+ * cleaned text. The output is not a live region (it would chatter); only the copy notice and the
+ * `endMessage` are announced.
  */
 function TaskLog({
   lines,
@@ -111,16 +162,31 @@ function TaskLog({
   follow = true,
   busy,
   limit,
+  cap,
+  stop,
   className,
 }: TaskLogProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const followRef = React.useRef(true);
   const [notice, setNotice] = React.useState("");
   const [showAll, setShowAll] = React.useState(false);
+  const [confirmingStop, setConfirmingStop] = React.useState(false);
   const partial = limit !== undefined && !showAll && lines.length > limit.lines;
-  const shownLines = partial ? lines.slice(0, limit.lines) : lines;
-  // Output lines have no identity but their position, and the list only grows at the end.
-  const rows = shownLines.map((line, position) => ({ key: position, line }));
+  const capped =
+    limit === undefined && cap !== undefined && lines.length > cap.lines;
+  // With a cap, the first line drawn is this far into `lines`.
+  const offset = capped ? lines.length - cap.lines : 0;
+  const shownLines = partial
+    ? lines.slice(0, limit.lines)
+    : capped
+      ? lines.slice(offset)
+      : lines;
+  // Output lines have no identity but their position in everything received, and the list only
+  // grows at the end; a capped view keeps each line's key as older ones leave it.
+  const rows = shownLines.map((line, position) => ({
+    key: offset + position,
+    line,
+  }));
   const partialId = `${React.useId()}-partial`;
 
   // Set when the no-clipboard copy has to show the whole output before it can select it.
@@ -208,9 +274,10 @@ function TaskLog({
           aria-label={label}
           tabIndex={0}
           aria-busy={busy || undefined}
-          aria-describedby={partial ? partialId : undefined}
+          aria-describedby={partial || capped ? partialId : undefined}
           data-wrap={wrap}
           data-partial={partial || undefined}
+          data-capped={capped || undefined}
           data-size={size}
           onScroll={onScroll}
           className={cn(
@@ -282,6 +349,40 @@ function TaskLog({
           >
             {limit.showAllLabel}
           </Button>
+        </div>
+      ) : null}
+      {capped ? (
+        <p
+          id={partialId}
+          data-slot="task-log-capped"
+          className="text-sm text-muted-foreground"
+        >
+          {cap.label(cap.lines, lines.length)}
+        </p>
+      ) : null}
+      {stop ? (
+        <div data-slot="task-log-stop">
+          <Button
+            type="button"
+            variant="neutral"
+            size="sm"
+            loading={stop.pending}
+            onClick={() => setConfirmingStop(true)}
+          >
+            {stop.label}
+          </Button>
+          <ConfirmDialog
+            open={confirmingStop}
+            onOpenChange={setConfirmingStop}
+            title={stop.title}
+            description={stop.description}
+            confirmLabel={stop.confirmLabel}
+            cancelLabel={stop.cancelLabel}
+            onConfirm={() => {
+              setConfirmingStop(false);
+              stop.onStop();
+            }}
+          />
         </div>
       ) : null}
       {download ? (

@@ -228,3 +228,133 @@ export const LimitExpanded: Story = {
   args: { ...fsckLabels, lines: FSCK },
   render: () => <Expanded />,
 };
+
+// ---- A copy job's run (phase 5 services design 7.3): the newest lines, and Stop ------------------
+
+const copyLabels = {
+  label: "Output of Copy job: Photos to Backup",
+  copyLabel: "Copy output",
+  copiedLabel: "Output copied",
+  selectedLabel: "Output selected. Press Ctrl+C to copy.",
+  download: { label: "Download output", fileName: "copy-job-photos.log" },
+};
+
+// The story caps at 200 so the frame is quick to scroll; the app caps at 10,000 (D10).
+const copyCap = {
+  lines: 200,
+  label: (shown: number, total: number) =>
+    `Showing the newest ${shown.toLocaleString("en")} of ${total.toLocaleString("en")} lines. The download has every line received.`,
+};
+
+const copyStop = {
+  label: "Stop the copy…",
+  title: "Stop Photos to Backup?",
+  description:
+    "Files copied so far stay. Files it deleted so far stay deleted. The next run carries on.",
+  confirmLabel: "Stop the copy",
+  cancelLabel: "Cancel",
+  onStop: () => undefined,
+};
+
+function rsyncLines(count: number): string[] {
+  return [
+    "Please wait ...",
+    "sending incremental file list",
+    ...Array.from(
+      { length: count },
+      (_, i) =>
+        `2026/Holiday ${String(1 + (i % 12)).padStart(2, "0")}/IMG_${String(4000 + i)}.jpg`,
+    ),
+  ];
+}
+
+/** Under the cap: every line, no notice, and Stop while it runs. */
+export const CapUnderN: Story = {
+  args: {
+    ...copyLabels,
+    lines: rsyncLines(40),
+    cap: copyCap,
+    stop: copyStop,
+  },
+};
+
+/** Over the cap: only the newest lines on screen, the notice under the frame, all in the download. */
+export const CapOverN: Story = {
+  args: {
+    ...copyLabels,
+    lines: rsyncLines(30_000),
+    cap: copyCap,
+    stop: copyStop,
+  },
+};
+
+/** The stop has been asked for and is under way. */
+export const Stopping: Story = {
+  args: {
+    ...copyLabels,
+    lines: rsyncLines(120),
+    cap: copyCap,
+    stop: { ...copyStop, pending: true },
+  },
+};
+
+// Opens the confirmation on mount, as pressing Stop does.
+function StopConfirmation() {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    ref.current
+      ?.querySelector<HTMLButtonElement>("[data-slot=task-log-stop] button")
+      ?.click();
+  }, []);
+  return (
+    <div ref={ref}>
+      <TaskLog
+        {...copyLabels}
+        lines={rsyncLines(80)}
+        cap={copyCap}
+        stop={copyStop}
+      />
+    </div>
+  );
+}
+
+/** The plain confirmation, focus on Cancel. */
+export const StopConfirm: Story = {
+  args: { ...copyLabels, lines: [] },
+  render: () => <StopConfirmation />,
+};
+
+/** Stopped: no Stop any more, and the result kept on screen. */
+export const Stopped: Story = {
+  args: {
+    ...copyLabels,
+    lines: [
+      ...rsyncLines(64),
+      "rsync error: received SIGINT, SIGTERM, or SIGHUP (code 20) at rsync.c(713) [sender=3.4.1]",
+    ],
+    cap: copyCap,
+    endMessage: (
+      <span className="flex flex-wrap items-center gap-2">
+        <StatusPill status="cancelled">Cancelled</StatusPill>Photos to Backup
+        was stopped. Files copied so far stay.
+      </span>
+    ),
+  },
+};
+
+/** Failed with no output at all (design 7.3, 0.6: it may already be running on its schedule). */
+export const FailedWithNoOutput: Story = {
+  args: {
+    ...copyLabels,
+    lines: [],
+    cap: copyCap,
+    emptyLabel: "No output.",
+    endMessage: (
+      <span className="flex flex-wrap items-center gap-2">
+        <StatusPill status="failed">Failed</StatusPill>Photos to Backup ended at
+        once without saying why. It may already be running on its schedule. Wait
+        for it to end and try again.
+      </span>
+    ),
+  },
+};

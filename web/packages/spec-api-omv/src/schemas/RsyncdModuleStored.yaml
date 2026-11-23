@@ -1,0 +1,50 @@
+type: object
+description: >-
+  A folder offered to the rsync server in its stored shape, as Rsyncd.setModule and deleteModule
+  return it: the sign-ins under `users.user`. The transport removes each sign-in's password
+  (x-omv-omit).
+required: [uuid, sharedfolderref, name]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+  sharedfolderref:
+    type: string
+  name:
+    type: string
+  comment:
+    type: string
+  uid:
+    type: string
+  gid:
+    type: string
+  readonly:
+    type: boolean
+  writeonly:
+    type: boolean
+  maxconnections:
+    type: integer
+  list:
+    type: boolean
+  hostsallow:
+    type: string
+  hostsdeny:
+    type: string
+  authusers:
+    type: boolean
+  usechroot:
+    type: boolean
+  users:
+    type: object
+    properties:
+      user:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+  extraoptions:
+    type: string

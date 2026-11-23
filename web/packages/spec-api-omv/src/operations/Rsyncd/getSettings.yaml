@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncdGetSettings
+  tags:
+    - Rsyncd
+  summary: Whether the rsync server is on, and its port
+  description: >-
+    The rsync server's settings, without its modules. Changes nothing.
+  x-omv-rpc:
+    service: Rsyncd
+    method: getSettings
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncdSettings.yaml
+          examples:
+            off:
+              $ref: ../../examples/rsyncdGetSettings.off.yaml
+            on:
+              $ref: ../../examples/rsyncdGetSettings.on.yaml

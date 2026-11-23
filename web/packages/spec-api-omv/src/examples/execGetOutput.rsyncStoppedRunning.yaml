@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatus5hohls5v667j2i0zOCj
+  pos: 208
+  output: "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Bulk/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/BulkCopy/> ...\n\nsending incremental file list\n./\nbig.bin\n"
+  pendingOutput: false
+  running: true

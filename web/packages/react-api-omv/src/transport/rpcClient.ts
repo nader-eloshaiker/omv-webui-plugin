@@ -6,6 +6,7 @@
 import { OPERATIONS, SCHEMAS } from "../contract/generated/operations.ts";
 import type { OperationEntry, Schema } from "../contract/types.ts";
 import { withoutOmitted } from "./omit.ts";
+import { withPresence } from "./presence.ts";
 import { RpcError } from "./RpcError.ts";
 import { normalise, validate } from "./schema.ts";
 
@@ -291,10 +292,14 @@ export const rpcClient = async <T>(
   }
 
   sessionLive = true;
-  // The fields the contract's x-omv-omit names go first, so normalisation, development-build
-  // validation (and its console output), the query cache and every caller see only what is left
-  // (UI-6).
-  let value = withoutOmitted(envelope.response, entry.omit);
+  // The fields the contract's x-omv-omit names go first, and those x-omv-presence names are replaced
+  // by whether they are set, so normalisation, development-build validation (and its console
+  // output), the query cache and every caller see neither (UI-6). Lint keeps the two lists disjoint,
+  // so their order does not matter.
+  let value = withPresence(
+    withoutOmitted(envelope.response, entry.omit),
+    entry.presence,
+  );
   if (entry.response) {
     // Session replies keep only the fields the contract lists: `sessionid` and the challenge's
     // `redirecturl` never leave this module (UI-3, UI-6).

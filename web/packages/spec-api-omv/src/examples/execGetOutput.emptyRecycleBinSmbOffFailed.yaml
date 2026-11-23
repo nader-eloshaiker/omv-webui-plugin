@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to execute command 'export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin; export LC_ALL=C.UTF-8; export LANGUAGE=; export SHELL=/bin/sh; sudo --shell --non-interactive -- /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f -f 2>&1' with exit code '127': /bin/sh: 1: /var/lib/openmediavault/cron.d/samba-recycle-00000000-0000-4000-8000-00000000001f: not found"

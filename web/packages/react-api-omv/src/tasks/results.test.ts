@@ -34,6 +34,11 @@ const FINISHES = {
   zfsDeleteSnapshotFinished: "zfsDeleteObjectBg",
   zfsDeleteFilesystemFinished: "zfsDeleteObjectBg",
   zfsDeletePoolFinished: "zfsDeleteObjectBg",
+  rsyncRunFinished: "rsyncExecute",
+  rsyncTrialFinished: "rsyncExecute",
+  rsyncPullRsyncdFinished: "rsyncExecute",
+  emptyRecycleBinFinished: "smbEmptyRecycleBin",
+  emptyRecycleBinNothingFinished: "smbEmptyRecycleBin",
 } as const satisfies Partial<Record<PollExample, string>>;
 
 /** Tasks with no result whose output is a log to show: the commands' text, never parsed. */
@@ -42,6 +47,11 @@ const LOG_OUTPUT: ReadonlySet<keyof typeof FINISHES> = new Set([
   "selfTestFinished",
   "createExt4Finished",
   "createBtrfsRaid1Finished",
+  "rsyncRunFinished",
+  "rsyncTrialFinished",
+  "rsyncPullRsyncdFinished",
+  "emptyRecycleBinFinished",
+  "emptyRecycleBinNothingFinished",
 ]);
 
 // The table, widened to its declared shape so every entry may carry a task.

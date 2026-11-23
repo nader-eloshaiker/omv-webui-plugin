@@ -3,7 +3,8 @@
 // line for the ones that are off. The pending check comes first: `enabled` is the saved setting, so
 // a service just turned on and saved is "Not applied yet", not "on, but not running". Titles come
 // translated from the server and are shown as text. The SMB row's name leads to the Windows and Mac
-// sharing page (shares design 9.2).
+// sharing page (shares design 9.2), the NFS row's to Linux and Unix sharing and the rsync server's to
+// its tab (services design 12.2).
 import type { ServiceStatus } from "@omv-webui/react-api-omv/generated";
 import {
   EmptyState,
@@ -22,13 +23,23 @@ import { DashboardCard } from "../molecules/DashboardCard.tsx";
 import { ListOf } from "../molecules/ListOf.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 
-/** The service whose row's name leads to its page here (shares design 9.2). */
-const SMB_SERVICE = "samba";
+/** The services whose row's name leads to their page here (shares design 9.2, services 12.2). */
+const SERVICE_PAGES = {
+  samba: "/services/smb",
+  nfs: "/services/nfs",
+  rsyncd: "/services/rsync/server",
+} as const;
+
+const pageOf = (name: string) =>
+  Object.hasOwn(SERVICE_PAGES, name)
+    ? SERVICE_PAGES[name as keyof typeof SERVICE_PAGES]
+    : undefined;
 
 function ServiceName({ service }: { service: ServiceStatus }) {
-  return service.name === SMB_SERVICE ? (
+  const page = pageOf(service.name);
+  return page !== undefined ? (
     <Link
-      to="/services/smb"
+      to={page}
       className="text-action-label underline underline-offset-2 hover:no-underline"
     >
       <span dir="auto">{service.title}</span>
@@ -110,7 +121,7 @@ export function ServicesCard({
                         })
                       : service.title,
                     content:
-                      service.name === SMB_SERVICE && !running ? (
+                      pageOf(service.name) !== undefined && !running ? (
                         <ServiceName service={service} />
                       ) : undefined,
                     after: waiting ? (

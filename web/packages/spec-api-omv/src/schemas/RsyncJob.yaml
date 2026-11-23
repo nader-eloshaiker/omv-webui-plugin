@@ -1,0 +1,128 @@
+type: object
+description: >-
+  A copy job (conf.service.rsync.job) as Rsync.get returns it: the stored job with its schedule
+  fields as lists and, for the sides that apply to its type and mode, the flattened fields
+  `srcsharedfolderref`, `srcuri`, `destsharedfolderref` and `desturi` that Rsync.set takes.
+required:
+  [
+    uuid,
+    enable,
+    type,
+    mode,
+    src,
+    dest,
+    minute,
+    hour,
+    dayofmonth,
+    month,
+    dayofweek,
+    authentication,
+  ]
+properties:
+  uuid:
+    type: string
+    x-omv-format: uuidv4
+  enable:
+    type: boolean
+    description: True when it runs on its schedule; Rsync.execute runs it either way.
+  sendemail:
+    type: boolean
+  comment:
+    type: string
+  type:
+    type: string
+    description: '"local" (both sides on this NAS) or "remote".'
+  mode:
+    type: string
+    description: For a remote job, "push" (to the other computer) or "pull" (from it).
+  src:
+    type: object
+    properties:
+      sharedfolderref:
+        type: string
+        description: A shared folder's UUID, or empty.
+      uri:
+        type: string
+        description: The other computer's address and folder, or empty.
+  dest:
+    type: object
+    properties:
+      sharedfolderref:
+        type: string
+        description: A shared folder's UUID, or empty.
+      uri:
+        type: string
+        description: The other computer's address and folder, or empty.
+  minute:
+    type: array
+    items:
+      type: string
+  hour:
+    type: array
+    items:
+      type: string
+  dayofmonth:
+    type: array
+    items:
+      type: string
+  month:
+    type: array
+    items:
+      type: string
+  dayofweek:
+    type: array
+    items:
+      type: string
+  everynminute:
+    type: boolean
+  everynhour:
+    type: boolean
+  everyndayofmonth:
+    type: boolean
+  optionrecursive:
+    type: boolean
+  optiontimes:
+    type: boolean
+  optiongroup:
+    type: boolean
+  optionowner:
+    type: boolean
+  optioncompress:
+    type: boolean
+  optionarchive:
+    type: boolean
+  optiondelete:
+    type: boolean
+  optionquiet:
+    type: boolean
+  optionperms:
+    type: boolean
+  optionacls:
+    type: boolean
+  optionxattrs:
+    type: boolean
+  optiondryrun:
+    type: boolean
+  optionpartial:
+    type: boolean
+  extraoptions:
+    type: string
+  authentication:
+    type: string
+    description: '"password" or "pubkey" (an SSH key of this NAS).'
+  sshcertificateref:
+    type: string
+    description: The UUID of the SSH key a job over SSH signs in with, or empty.
+  sshport:
+    type: integer
+  srcsharedfolderref:
+    type: string
+  srcuri:
+    type: string
+  destsharedfolderref:
+    type: string
+  desturi:
+    type: string
+  password:
+    type: boolean
+    description: True when a password for another computer's rsync server is stored; the transport replaces the stored value by that (x-omv-presence).

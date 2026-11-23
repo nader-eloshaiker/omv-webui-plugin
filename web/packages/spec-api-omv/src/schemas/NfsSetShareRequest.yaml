@@ -1,0 +1,38 @@
+type: object
+description: >-
+  An NFS share to store (rpc.nfs.setshare). With OMV's placeholder UUID it makes one: OMV then also
+  makes (or reuses) the folder's bind mount under the export directory and ignores the `mntentref`
+  sent. Otherwise it replaces the stored share with what is sent. Every field is required, as in
+  OMV's datamodel. Stricter than OMV: `client` in one of the three forms the interface writes,
+  `options` "ro" or "rw", `extraoptions` in the stored model's pattern, the comment one line of at
+  most 255 characters.
+required:
+  [uuid, sharedfolderref, mntentref, client, options, extraoptions, comment]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  sharedfolderref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  mntentref:
+    type: string
+    x-omv-format: uuidv4
+    pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+  client:
+    $ref: ./NetworkClient.yaml
+  options:
+    type: string
+    enum: [ro, rw]
+  extraoptions:
+    type: string
+    description: >-
+      Further export options as OMV's stored model allows them: "key" or "key=value" items
+      separated by commas. New shares get the classic form's "subtree_check,insecure"; existing ones
+      send back what was read.
+    pattern: '^(([a-zA-Z_]+)(=([\w@:\/]+))?[,])*([a-zA-Z_]+)(=([\w@:\/]+))?$'
+  comment:
+    type: string
+    maxLength: 255
+    pattern: '^[^\r\n]*$'
+additionalProperties: false

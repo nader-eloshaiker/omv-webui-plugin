@@ -1,0 +1,8 @@
+description: An NFS share as NFS.getShareList lists it, with the name of its shared folder.
+allOf:
+  - $ref: ./NfsShare.yaml
+  - type: object
+    required: [sharedfoldername]
+    properties:
+      sharedfoldername:
+        type: string

@@ -54,6 +54,8 @@ export interface NavPage {
 export type BuiltRoute =
   | "/services/ssh"
   | "/services/smb"
+  | "/services/nfs"
+  | "/services/rsync"
   | "/storage/shared-folders"
   | "/storage/disks"
   | "/storage/smart"
@@ -219,6 +221,7 @@ export const NAV_PAGES = [
     item: "nfs",
     labelKey: "nav.items.services.nfs",
     classic: "/#/services/nfs",
+    route: "/services/nfs",
     roles: ADMIN,
   },
   {
@@ -226,6 +229,7 @@ export const NAV_PAGES = [
     item: "rsync",
     labelKey: "nav.items.services.rsync",
     classic: "/#/services/rsync",
+    route: "/services/rsync",
     roles: ADMIN,
   },
   {
@@ -354,7 +358,8 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * set-up page) marks "Disk health"; a file system's page and the two add-storage flows mark "File
  * systems"; an array's page and the RAID flows mark "RAID"; a shared folder's page and "Add a shared
  * folder" mark "Shared folders"; a person's page and "Add a person" mark "Users", and a group's page
- * and "Add a group" mark "Groups".
+ * and "Add a group" mark "Groups"; the Rsync server tab, a copy job's page and "Add a copy job"
+ * mark "Rsync".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -362,6 +367,7 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/account/settings" && pathname === "/account/password") ||
     (route === "/diagnostics/services" &&
       pathname.startsWith("/diagnostics/services/")) ||
+    (route === "/services/rsync" && pathname.startsWith("/services/rsync/")) ||
     (route === "/storage/disks" && pathname.startsWith("/storage/disks/")) ||
     (route === "/storage/shared-folders" &&
       pathname.startsWith("/storage/shared-folders/")) ||
@@ -429,6 +435,9 @@ export const CLASSIC = {
   smbSettings: "/#/services/smb/settings",
   nfsSettings: "/#/services/nfs/settings",
   rsyncServerSettings: "/#/services/rsync/server/settings",
+  rsyncTasks: "/#/services/rsync/tasks",
+  sshCertificates: "/#/system/certificates/ssh",
+  rsyncServerModules: "/#/services/rsync/server/modules",
   systemLogs: "/#/diagnostics/system-logs/logs",
   remoteLogging: "/#/diagnostics/system-logs/remote",
 } as const satisfies Record<string, `/#/${string}`>;

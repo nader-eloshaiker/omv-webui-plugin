@@ -1,0 +1,12 @@
+type: object
+description: >-
+  One rsync sign-in of a folder offered to the rsync server: a name and password that exist only
+  for the rsync server. `password` is whether a password is stored; the transport replaces the
+  stored value by that before anything else sees the reply.
+required: [name]
+properties:
+  name:
+    type: string
+  password:
+    type: boolean
+    description: True when a password is stored for this sign-in.

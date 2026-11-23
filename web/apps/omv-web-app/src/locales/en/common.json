@@ -9,7 +9,8 @@
     "openNav": "Open navigation",
     "closeNav": "Close navigation",
     "navigation": "Main navigation",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "documentTitleJob": "{{job}} – Copy jobs"
   },
   "common": {
     "tryAgain": "Try again",
@@ -178,8 +179,8 @@
       "serviceDown_other": "{{count}} services are on, but not running: {{list}}. Computers cannot use them until they start.",
       "serviceLink": {
         "samba": "Open SMB/CIFS settings in the classic interface",
-        "nfs": "Open NFS settings in the classic interface",
-        "rsyncd": "Open Rsync server settings in the classic interface",
+        "nfs": "Open Linux and Unix sharing",
+        "rsyncd": "Open the rsync server",
         "ssh": "Open SSH settings"
       },
       "serviceLogs": "Look for the reason in the system logs",
@@ -427,7 +428,7 @@
     "issue": "Console welcome message",
     "mdadm": "RAID",
     "monit": "Service monitoring",
-    "nfs": "NFS",
+    "nfs": "Linux and Unix sharing (NFS)",
     "nginx": "Web server",
     "pam": "Sign-in rules",
     "phpfpm": "Web interface back end",
@@ -435,7 +436,7 @@
     "profile": "Command-line environment",
     "quota": "Disk quotas",
     "rrdcached": "Statistics storage",
-    "rsync": "Rsync tasks",
+    "rsync": "Copy jobs (rsync)",
     "rsyncd": "Rsync server",
     "rsyslog": "System log",
     "samba": "Windows and Mac sharing (SMB)",
@@ -659,6 +660,8 @@
     "sharing": {
       "smb": "Windows and Mac",
       "smbOff": "Windows and Mac (off)",
+      "nfs": "Linux and Unix (NFS)",
+      "nfsUnknown": "Linux and Unix (NFS): not known",
       "guests": "Guests too",
       "unknown": "Not known",
       "loadFailed": "Could not read which folders are shared with Windows and Mac computers."
@@ -753,7 +756,6 @@
     },
     "usedBy": {
       "title": "Used by",
-      "other": "Used by a setting this page does not show: an NFS share, a backup job, the Rsync server or an add-on. Look in the classic interface.",
       "homeKind": "Home folders",
       "home": "Home folders of every person"
     },
@@ -858,7 +860,8 @@
       "browseable": "Shown in the network list",
       "readonly": "Read only for everyone",
       "guest": "Guest access",
-      "other": "Other options"
+      "other": "Other options",
+      "recycle": "Recycle bin"
     },
     "yes": "Yes",
     "no": "No",
@@ -867,13 +870,13 @@
       "on": "On: anyone on your network can open it without a password.",
       "only": "Guests only: everyone who opens it is treated as a guest, so access per person does not apply."
     },
-    "otherOptions": "Some options were set in the classic interface, such as the recycle bin. They are kept.",
+    "otherOptions": "Some options were set in the classic interface, such as Time Machine. They are kept.",
     "change": "Change options…",
     "stop": {
       "open": "Stop sharing…",
       "title": "Stop sharing {{folder}} with Windows and Mac computers?",
       "body": "Computers that use <address></address> cannot reach it after the changes are applied. The files stay on the NAS. Who can use it is kept.",
-      "options": "The options set in the classic interface, such as the recycle bin, are removed with the share.",
+      "options": "The options set in the classic interface, such as Time Machine, are removed with the share.",
       "optionsKept": "Its options are kept, so you can turn it on again.",
       "cancel": "Cancel",
       "confirm": "Stop sharing"
@@ -897,7 +900,14 @@
       "share": "Share",
       "save": "Save",
       "cancel": "Cancel",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "recycle": "Keep deleted files in a recycle bin",
+      "recycleHint": "Files deleted from Windows and Mac computers go to a hidden folder .recycle inside <folder></folder> instead, so they can be got back from there. Files deleted over NFS, by copy jobs or on the NAS are deleted at once.",
+      "recycleDays": "Delete files from it after",
+      "recycleDaysUnit": "days",
+      "recycleDaysHint": "0 keeps them until you empty the recycle bin. Files in it still use space in <folder></folder>.",
+      "recycleOffWarn": "Files already in the recycle bin stay in the hidden folder .recycle inside <folder></folder>, using space. Empty it first if you want that space back: once the recycle bin is off, this page cannot empty it.",
+      "recycleDaysErr": "Use a number of days from 0 to 3650."
     },
     "saved": "{{folder}} is set to be shared. Apply the changes to share it.",
     "savedChange": "The sharing options of {{folder}} are saved. Apply the changes to use them.",
@@ -908,7 +918,39 @@
     "saveFailed": "The sharing options were not saved.",
     "stopFailed": "Sharing was not stopped.",
     "turnOnShareFailed": "<folder></folder> was not turned on for Windows and Mac computers.",
-    "turnedOnShare": "{{folder}} will be shared again when you apply the changes."
+    "turnedOnShare": "{{folder}} will be shared again when you apply the changes.",
+    "recycle": {
+      "off": "Off",
+      "days_one": "On: files are kept {{count}} day",
+      "days_other": "On: files are kept {{count}} days",
+      "forever": "On: files are kept until it is emptied"
+    },
+    "empty": {
+      "label": "Empty the recycle bin…",
+      "pending": "Apply the pending changes first.",
+      "smbOff": "Windows and Mac sharing is off, so the NAS cannot empty it now.",
+      "notApplied": "The recycle bin is not applied yet.",
+      "running": "It is being emptied now.",
+      "unread": "Could not check whether the recycle bin can be emptied now.",
+      "title": "Empty the recycle bin of {{folder}}?",
+      "body": "Every file in it is deleted for good, for every person, however recently it was deleted. This page cannot see how many files that is.",
+      "type": "Type {{folder}} to confirm",
+      "cancel": "Cancel",
+      "confirm": "Empty recycle bin",
+      "task": "Emptying the recycle bin of {{folder}}",
+      "output": "Output of emptying the recycle bin of {{folder}}",
+      "waiting": "Waiting for output…",
+      "stop": "Stop emptying…",
+      "stopTitle": "Stop emptying the recycle bin of {{folder}}?",
+      "stopBody": "Files already deleted stay deleted.",
+      "stopConfirm": "Stop emptying",
+      "stopCancel": "Keep emptying",
+      "done": "The recycle bin of {{folder}} is empty.",
+      "nothing": "Nothing was deleted. The recycle bin was empty, or the NAS was emptying it already.",
+      "failed": "The recycle bin of {{folder}} could not be emptied.",
+      "stopped": "Emptying the recycle bin of {{folder}} was stopped. Files already deleted stay deleted.",
+      "dismiss": "Dismiss"
+    }
   },
   "smb": {
     "title": "Windows and Mac sharing",
@@ -963,9 +1005,176 @@
     },
     "connected": "Who is connected now",
     "saveFailed": "Could not save the change.",
-    "footerLine": "The workgroup, home folders, protocol versions and other options are in the classic interface.",
+    "footerLine": "Home folders, protocol versions and other options are in the classic interface.",
     "classicLink": "SMB/CIFS settings in the classic interface",
-    "loading": "Loading Windows and Mac sharing…"
+    "loading": "Loading Windows and Mac sharing…",
+    "workgroup": {
+      "title": "Workgroup",
+      "field": "Workgroup",
+      "hint": "Use the same workgroup as your Windows computers. Changing it does not stop shared folders working; some computers may take a while to list the NAS under the new one.",
+      "err": "Use 1 to 15 letters, digits, spaces or ! # $ % & ' ( ) - . @ ^ _ { } ~.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "The workgroup is saved. Apply the changes to use it.",
+      "failed": "The workgroup was not saved."
+    }
+  },
+  "nfs": {
+    "title": "Linux and Unix sharing",
+    "subtitle": "NFS",
+    "intro": "Turn it on here, then choose on each folder's page which computers may use it.",
+    "state": {
+      "off": "Off. No folder can be reached over NFS.",
+      "on": "On.",
+      "down": "On, but not running. Folders shared over NFS cannot be reached. The NFS service details may say why.",
+      "downLink": "Open the NFS service details",
+      "pendingOn": "Turned on. It starts when you apply the pending changes.",
+      "unread": "Could not read whether Linux and Unix sharing is on."
+    },
+    "switch": {
+      "off": "Linux and Unix sharing is off.",
+      "on": "Linux and Unix sharing is on."
+    },
+    "turnOn": "Turn on",
+    "turnOff": "Turn off…",
+    "saving": "Saving…",
+    "saveFailed": "Could not save the change.",
+    "versions": "NFS versions offered: {{versions}}.",
+    "noVersions": "No NFS version is chosen, so it cannot be turned on. Choose them in the classic interface.",
+    "turnedOn": "Linux and Unix sharing will turn on when you apply the changes.",
+    "turnedOff": "Linux and Unix sharing will turn off when you apply the changes.",
+    "off": {
+      "title": "Turn off Linux and Unix sharing?",
+      "body_one": "After the changes are applied, no computer can reach a shared folder over NFS: {{count}} folder is shared now ({{list}}). The files stay on the NAS, and it keeps who may connect for when you turn it on again.",
+      "body_other": "After the changes are applied, no computer can reach a shared folder over NFS: {{count}} folders are shared now ({{list}}). The files stay on the NAS, and each folder keeps who may connect for when you turn it on again.",
+      "none": "No folder is shared over NFS now. Turning it off stops the NFS service.",
+      "more": "and {{count}} more",
+      "close": "Computers that use these folders may stop responding until they are told the folders are gone. Close their files first.",
+      "cancel": "Cancel",
+      "confirm": "Turn off"
+    },
+    "shares": {
+      "title": "Shared folders",
+      "add": "Share a folder…",
+      "col": {
+        "folder": "Folder",
+        "client": "Who may connect",
+        "access": "Access",
+        "address": "Address",
+        "note": "Note"
+      },
+      "rootNote": "Its administrator acts as the NAS's administrator",
+      "otherOptions": "Other NFS options set in the classic interface",
+      "classicValue": "{{value}} (set in the classic interface)",
+      "unreadFolder": "A shared folder this page could not read",
+      "empty": "No folder is shared with Linux and Unix computers yet. Share one here, or from its own page.",
+      "loadFailed": "Could not read the folders shared with Linux and Unix computers.",
+      "foldersFailed": "Could not read the shared folders."
+    },
+    "whatIsShared": "What is shared now",
+    "footerLine": "NFS versions and other NFS options are in the classic interface.",
+    "classicLink": "NFS settings in the classic interface",
+    "loading": "Loading Linux and Unix sharing…",
+    "dialog": {
+      "title": "Share a folder with Linux and Unix computers",
+      "folder": "Folder",
+      "folderSpace": "Its folder on the disk has a space in its name.",
+      "folderNameSpace": "Its name has a space in it.",
+      "folderNotOk": "It cannot be reached now."
+    }
+  },
+  "folderNfs": {
+    "title": "Linux and Unix computers",
+    "notShared": "Not shared with Linux and Unix computers.",
+    "letIn": "Let a computer in…",
+    "letAnother": "Let another computer in…",
+    "cannot": "NFS cannot share a folder whose name or folder on the disk has a space in it. Make a shared folder without spaces for the same files to share them over NFS.",
+    "noPassword": "NFS asks for no password. A computer that is let in says which person is using it, by number, and the NAS believes it. Let in only computers you trust.",
+    "accessNotUsed": "Who can use it, above, does not apply to NFS. Over NFS, the file permissions on the disk decide.",
+    "entry": {
+      "one": "The computer at <client></client>",
+      "network": "Computers on <client></client>",
+      "any": "Any computer that can reach the NAS",
+      "classic": "<client></client> (set in the classic interface)"
+    },
+    "client": {
+      "any": "any computer"
+    },
+    "sentence": {
+      "one": "the computer at {{client}}",
+      "network": "computers on {{client}}",
+      "any": "any computer that can reach the NAS",
+      "classic": "the computers set as {{client}} in the classic interface"
+    },
+    "fact": {
+      "access": "Access",
+      "address": "Address",
+      "addressAll": "Address for every computer let in",
+      "addressV4": "NFSv4",
+      "options": "Other NFS options"
+    },
+    "copy": "Copy the NFS address of {{folder}}",
+    "copyV4": "Copy the NFSv4 address of {{folder}}",
+    "optionsClassic": "(set in the classic interface)",
+    "rootWarn": "The administrator of the computers let in by this entry acts as this NAS's administrator on the files of <folder></folder>: they can read, change and delete every file, whatever its permissions. This was set in the classic interface.",
+    "change": "Change…",
+    "stop": {
+      "open": "Stop letting them in…",
+      "title": "Stop letting {{client}} use {{folder}}?",
+      "body": "After the changes are applied, {{clientSentence}} cannot reach <folder></folder> over NFS. The files stay on the NAS.",
+      "last": "<folder></folder> is then not shared over NFS at all.",
+      "options": "Its other NFS options, set in the classic interface, are removed with it.",
+      "cancel": "Cancel",
+      "confirm": "Stop letting them in"
+    },
+    "nfsOff": "Set up for Linux and Unix computers, but Linux and Unix sharing is off.",
+    "nfsOffLink": "Open Linux and Unix sharing",
+    "form": {
+      "titleNew": "Let a computer in",
+      "titleChange": "Change who may connect",
+      "who": "Who may connect",
+      "one": "One computer",
+      "oneHint": "Only the computer at this address may connect.",
+      "oneField": "Its address or name",
+      "nameHint": "The NAS looks this name up when it starts NFS. If the name changes address later, the new address is not let in until NFS restarts.",
+      "network": "Computers on one network",
+      "networkHint": "Every computer on this network may connect. Write the network's first address, a slash and its size, as your router shows it.",
+      "networkField": "Network",
+      "networkWide": "This network holds {{count}} addresses. Every computer on it may connect.",
+      "networkHuge": "This network holds a very large number of addresses. Every computer on it may connect.",
+      "any": "Any computer that can reach the NAS",
+      "anyHint": "Any computer on your network, and any that reaches it from outside, may connect.",
+      "anyWarn": "Any computer that can reach this NAS may use <folder></folder>. NFS asks for no password, so this includes visitors' computers and anything that gets into your network.",
+      "classicValue": "Now: <client></client>, set in the classic interface. Choose one of these to replace it.",
+      "access": "Access",
+      "accessHint": "Read only: they can open and copy files but not change them.",
+      "nfsOff": "Linux and Unix sharing is off for the whole NAS. Saving this turns it on.",
+      "letIn": "Let them in",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving…"
+    },
+    "err": {
+      "address": "Write one address, such as 192.0.2.10, or one computer name.",
+      "networkStart": "{{value}} is not the start of a network. Did you mean {{suggestion}}?",
+      "networkZero": "A network of /0 is every computer. Choose Any computer instead.",
+      "prefix": "Use a size from /8 to /32 for an IPv4 network, or /16 to /128 for IPv6.",
+      "network": "Write a network such as 192.0.2.0/24 or 2001:db8::/32.",
+      "duplicate": "<client></client> may already use <folder></folder>. Change that entry instead.",
+      "choose": "Choose who may connect.",
+      "access": "Choose Read only or Read and write.",
+      "running": "Another change to how this folder is shared over NFS is still being saved. Try again when it has finished.",
+      "gone": "This shared folder is not on the NAS any more."
+    },
+    "saveFailed": "Could not save who may connect.",
+    "saved": "{{folder}} is set to be shared with {{client}}. Apply the changes to share it.",
+    "savedChange": "The changes for {{client}} are saved. Apply the changes to use them.",
+    "turnOnFailed": "<folder></folder> is set up for <client></client>, but Linux and Unix sharing could not be turned on.",
+    "tryAgain": "Try again",
+    "stopped": "{{client}} will stop using {{folder}} when you apply the changes.",
+    "stoppedAny": "Any computer will stop using {{folder}} when you apply the changes.",
+    "stopFailed": "Could not stop letting them in.",
+    "loadFailed": "Could not read how this folder is shared with Linux and Unix computers."
   },
   "addShare": {
     "title": "Add a shared folder",
@@ -1387,7 +1596,7 @@
     "emptyNfs": "Nothing is shared over NFS right now.",
     "link": {
       "smbPage": "Windows and Mac sharing settings",
-      "nfs": "Open NFS settings in the classic interface",
+      "nfsPage": "Linux and Unix sharing settings",
       "ssh": "Open SSH settings"
     },
     "documentTitle": "{{tab}} – Services"
@@ -1959,7 +2168,8 @@
         "longHourly": "A long test takes hours. Choose an hour, or it would start again before it finishes.",
         "longDaily": "A long test every day keeps the disk busy for hours each day.",
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "when": "When it runs"
       },
       "saveFailed": "The self-test was not saved.",
       "deleteTitle": "Delete the {{test}} of <device></device>?",
@@ -4646,5 +4856,628 @@
     "recheckFailed": "Could not check the shared folder again, so nothing was changed.",
     "refused": "<folder></folder> cannot hold home folders now.",
     "saveFailed": "The home folders setting was not saved."
+  },
+  "rsync": {
+    "title": "Rsync",
+    "documentTitle": "{{tab}} – Rsync",
+    "tabs": "Rsync pages",
+    "tab": {
+      "jobs": "Copy jobs",
+      "server": "Rsync server"
+    }
+  },
+  "rsyncd": {
+    "noEncryption": "The rsync server does not encrypt. Files and passwords cross the network as they are. Use it only on a network you trust.",
+    "sshInstead": "Another computer can also copy files over SSH, which encrypts, with a person's SSH sign-in.",
+    "sshLink": "SSH",
+    "state": {
+      "off": "Off. No folder is offered to other computers over rsync.",
+      "on": "On.",
+      "down": "On, but not running. Other computers cannot copy to or from this NAS. The system logs may say why.",
+      "downLink": "Open System logs",
+      "pendingOn": "Turned on. It starts when you apply the pending changes.",
+      "unread": "Could not read whether the rsync server is on."
+    },
+    "switch": {
+      "off": "The rsync server is off.",
+      "on": "The rsync server is on."
+    },
+    "turnOn": "Turn on",
+    "turnOff": "Turn off…",
+    "saving": "Saving…",
+    "saveFailed": "Could not save the change.",
+    "port": "It listens on port {{port}}.",
+    "turnedOn": "The rsync server will turn on when you apply the changes.",
+    "turnedOff": "The rsync server will turn off when you apply the changes.",
+    "off": {
+      "title": "Turn off the rsync server?",
+      "body_one": "After the changes are applied, other computers cannot copy to or from this NAS over rsync: {{count}} folder is offered now ({{list}}). Copy jobs on other computers that use it fail until it is on again. The files stay, and the folder stays offered for when you turn it on again.",
+      "body_other": "After the changes are applied, other computers cannot copy to or from this NAS over rsync: {{count}} folders are offered now ({{list}}). Copy jobs on other computers that use them fail until it is on again. The files stay, and each folder stays offered for when you turn it on again.",
+      "bodyNone": "After the changes are applied, other computers cannot copy to or from this NAS over rsync. Copy jobs on other computers fail until it is on again. The files stay.",
+      "more": "and {{count}} more",
+      "cancel": "Cancel",
+      "confirm": "Turn off"
+    },
+    "modules": {
+      "title": "Folders offered",
+      "add": "Offer a folder…",
+      "empty": "No folder is offered to the rsync server yet.",
+      "loadFailed": "Could not read the folders offered to the rsync server."
+    },
+    "col": {
+      "folder": "Folder",
+      "as": "Offered as",
+      "may": "Other computers may",
+      "signIn": "Sign-in",
+      "who": "Who may connect",
+      "actions": "Actions"
+    },
+    "actionsFor": "Actions for {{folder}}",
+    "copyAddress": "Copy the address of {{name}}",
+    "folderGone": "A shared folder that no longer exists",
+    "may": {
+      "ro": "Copy from it (read only)",
+      "rw": "Copy to and from it",
+      "wo": "Copy to it only (set in the classic interface)"
+    },
+    "signIn": {
+      "one": "Name and password: <name></name>",
+      "many_one": "{{count}} sign-in (set in the classic interface)",
+      "many_other": "{{count}} sign-ins (set in the classic interface)",
+      "none": "None",
+      "noneWarn": "Anyone who may connect can use it without a password."
+    },
+    "who": {
+      "anyWithPassword": "Any computer with the name and password",
+      "any": "Any computer",
+      "one": "The computer at <client></client>",
+      "network": "Computers on <client></client>",
+      "classic": "<client></client> (set in the classic interface)"
+    },
+    "moduleOff": "Turned off for this folder",
+    "footerLine": "The port and other rsync server options are in the classic interface.",
+    "classicLink": "Rsync server settings in the classic interface",
+    "loading": "Loading the rsync server…"
+  },
+  "module": {
+    "titleNew": "Offer a folder to the rsync server",
+    "titleChange": "Change how {{folder}} is offered",
+    "folder": "Folder",
+    "folderPlaceholder": "Choose a shared folder",
+    "folderNone": "Every shared folder that can be offered is offered already.",
+    "name": "Offered as",
+    "nameHint": "Other computers use this name: <address></address>.",
+    "may": {
+      "label": "Other computers may",
+      "ro": "Copy from it (read only)",
+      "rw": "Copy to and from it",
+      "rwHint": "They can also change and delete files in <folder></folder>.",
+      "wo": "Copy to it only (set in the classic interface)"
+    },
+    "ask": "Ask for a name and password",
+    "noAskWarn": "Without a name and password, every computer allowed below can {{may}} <folder></folder> over rsync.",
+    "verb": {
+      "ro": "copy from",
+      "rw": "copy to and from",
+      "wo": "copy to"
+    },
+    "signInName": "Name",
+    "signInHint": "A name and password only for the rsync server. They are not a person on this NAS.",
+    "password": "Password",
+    "newPassword": "New password",
+    "passwordSet": "Password: Set",
+    "passwordChange": "Change",
+    "passwordKeep": "Keep the current password",
+    "passwordAgain": "Type the password again to save. The NAS does not give it back to this page.",
+    "passwordEmpty": "Enter the password.",
+    "who": "Who may connect",
+    "client": {
+      "one": "One computer",
+      "oneHint": "Only the computer at this address may connect.",
+      "oneField": "Its address or name",
+      "network": "Computers on one network",
+      "networkHint": "Every computer on this network may connect. Write the network's first address, a slash and its size, as your router shows it.",
+      "networkField": "Network",
+      "networkWide": "This network holds {{addresses}} addresses. Every computer on it may connect.",
+      "networkHuge": "This network holds a very large number of addresses. Every computer on it may connect.",
+      "classicValue": "Set in the classic interface. Choose one of these to replace it.",
+      "address": "Write one address, such as 192.0.2.10, or one computer name.",
+      "networkErr": "Write a network such as 192.0.2.0/24 or 2001:db8::/32.",
+      "prefix": "Use a size from /8 to /32 for an IPv4 network, or /16 to /128 for IPv6.",
+      "zero": "A network of /0 is every computer. Choose one computer or one network.",
+      "start": "{{value}} is not the start of a network. Did you mean {{suggestion}}?"
+    },
+    "filesBelong": "Files copied in belong to the NAS's account for the rsync server, so the people given access to <folder></folder> can use them as usual.",
+    "accessNotUsed": "Who can use it, on the folder's page, does not apply to the rsync server: only these sign-ins and who may connect decide.",
+    "many": "This folder has {{count}} sign-ins set in the classic interface. Change it there.",
+    "classicValues": "This folder has settings from the classic interface that this page cannot save. Change it there.",
+    "classicLink": "Rsync server folders in the classic interface",
+    "serverOff": "The rsync server is off. Offering a folder does not turn it on.",
+    "offer": "Offer folder",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "saving": "Saving…",
+    "loading": "Reading how this folder is offered…",
+    "loadFailed": "Could not read how this folder is offered.",
+    "err": {
+      "folder": "Choose a shared folder.",
+      "name": "Use 1 to 64 letters, digits, \".\", \"_\" or \"-\", starting with a letter or digit.",
+      "nameTaken": "Another folder is offered as {{name}}. Choose another name.",
+      "signInName": "Use 1 to 32 letters, digits, \".\", \"_\" or \"-\".",
+      "whoRequired": "Without a name and password, choose one computer or one network.",
+      "whoChoose": "Choose who may connect."
+    },
+    "refused": {
+      "folderNotOk": "<folder></folder> cannot be offered now: its folder is not available.",
+      "offered": "<folder></folder> is offered already, as <name></name>.",
+      "changed": "How <folder></folder> is offered was changed elsewhere since this dialog opened. Close it and open it again.",
+      "gone": "<folder></folder> is no longer offered to the rsync server.",
+      "running": "Wait for the change to <folder></folder> to finish.",
+      "unread": "Could not check the folders offered to the rsync server, so nothing was saved."
+    },
+    "saved": "{{folder}} will be offered as {{name}} when you apply the changes.",
+    "savedChange": "The changes to how {{folder}} is offered are saved. Apply them to use them.",
+    "failed": "The folder was not offered.",
+    "failedChange": "The changes were not saved.",
+    "stop": {
+      "title": "Stop offering {{folder}} to the rsync server?",
+      "body": "After the changes are applied, other computers cannot reach <address></address>. Copy jobs on other computers that use it fail. The files stay on the NAS.",
+      "signIn": "Its name and password are removed with it.",
+      "cancel": "Cancel",
+      "confirm": "Stop offering"
+    },
+    "stopped": "{{folder}} will stop being offered when you apply the changes.",
+    "stopFailed": "The folder is still offered.",
+    "action": {
+      "change": "Change…",
+      "stop": "Stop offering…"
+    }
+  },
+  "usedBy": {
+    "kind": {
+      "rsyncModule": "Offered to the rsync server as",
+      "jobFrom": "Copied by the copy job",
+      "jobTo": "Copied to by the copy job"
+    },
+    "openRsyncd": "Open the rsync server",
+    "openJob": "Open the copy job",
+    "openJobLabel": "Open the copy job {{job}}",
+    "addOn": "Used by an add-on's setting. Look in the classic interface."
+  },
+  "folderDelete": {
+    "blocker": {
+      "nfs": "It is shared with Linux and Unix computers.",
+      "rsyncModule": "It is offered to the rsync server as <name></name>.",
+      "jobFrom": "The copy job <job></job> copies from it.",
+      "jobTo": "The copy job <job></job> copies into it."
+    },
+    "fix": {
+      "nfs": "Stop letting every computer in first, above, and apply that change.",
+      "rsyncModule": "Open the rsync server",
+      "job": "Open the copy job"
+    }
+  },
+  "services": {
+    "term": {
+      "nfs": "Linux and Unix computers, and some media players, reach shared folders over NFS. NFS does not ask for a password: it lets in computers by their network address.",
+      "rsyncd": "The rsync server lets other computers copy files to and from this NAS with rsync, for example another NAS that keeps its copies here.",
+      "workgroup": "The name Windows computers use to group computers on a network. Most networks use WORKGROUP.",
+      "job": "A copy job copies the files of one folder into another, on this NAS or with another computer, by itself on a schedule. It keeps one copy, not earlier versions: a file changed or deleted by mistake is copied as it is."
+    }
+  },
+  "jobs": {
+    "pendingBlocksRun": "Copy jobs cannot be started here until the pending changes are applied.",
+    "add": "Add a copy job",
+    "col": {
+      "job": "Job",
+      "from": "From",
+      "to": "To",
+      "when": "When",
+      "deletes": "Also deletes",
+      "session": "This session",
+      "actions": "Actions"
+    },
+    "actionsFor": "Actions for {{job}}",
+    "action": {
+      "run": "Run now…",
+      "change": "Change…",
+      "delete": "Delete…"
+    },
+    "remote": "<path></path> on <host></host>",
+    "between": "to",
+    "name": {
+      "auto": "{{src}} to {{dest}}"
+    },
+    "trialOnly": "Trial runs only",
+    "deletes": {
+      "yes": "Yes",
+      "extra": "Yes (extra options)",
+      "no": "No"
+    },
+    "lastRunUnknown": "This page cannot tell whether a job's last run worked. Each run's output is in the Rsync jobs log.",
+    "logLink": "Open System logs",
+    "footerLine": "Advanced rsync options are in the classic interface.",
+    "classicLink": "Rsync tasks in the classic interface",
+    "loading": "Loading copy jobs…",
+    "loadFailed": "Could not read the copy jobs.",
+    "empty": "No copy jobs yet. A copy job keeps a second copy of a shared folder, on another disk of this NAS or on another computer.",
+    "tableLabel": "Copy jobs",
+    "folderUnread": "A shared folder this page could not read",
+    "when": {
+      "manual": "Only when started here",
+      "daily": "Every day at {{time}}",
+      "weekly": "Every {{weekday}} at {{time}}",
+      "monthly": "On day {{day}} of every month at {{time}}",
+      "hourly": "Every hour at {{minute}} minutes past",
+      "everyNHours": "Every {{n}} hours, at {{minute}} minutes past",
+      "everyNMinutes": "Every {{n}} minutes",
+      "everyNMinutesNote": "A copy job this often may still be running when the next one is due; the next one then does not run.",
+      "custom": "In {{months}}, on {{days}}, on {{weekdays}}, at {{hours}}, at {{minutes}} minutes past",
+      "customEveryMinute": "In {{months}}, on {{days}}, on {{weekdays}}, at {{hours}}, every minute",
+      "everyMonth": "every month",
+      "everyDay": "every day",
+      "everyWeekday": "every weekday",
+      "everyHour": "every hour",
+      "dayN": "day {{day}}",
+      "everyN": "every {{n}}",
+      "nasTime": "{{when}} (NAS time)"
+    },
+    "remoteText": "{{path}} on {{host}}"
+  },
+  "job": {
+    "subtitle": "Copy job",
+    "sentence": {
+      "local": "Copies the files of <src></src> into <dest></dest>, both on this NAS.",
+      "push": "Copies the files of <src></src> from this NAS to <path></path> on <host></host>.",
+      "pull": "Copies the files of <path></path> on <host></host> into <dest></dest> on this NAS.",
+      "folderItself": "Copies the folder <name></name> itself into <dest></dest>.",
+      "unknown": "This job copies in a way this page cannot say. Look at it in the classic interface."
+    },
+    "fromLabel": "From",
+    "toLabel": "To",
+    "now": {
+      "title": "What to do now",
+      "trialOnly": "This job only does trial runs, so it copies nothing.",
+      "turnOn": "Turn the job on…",
+      "notApplied": "Apply the pending changes before the job can run.",
+      "unreachable": "<folder></folder> cannot be reached, so the job fails until it can."
+    },
+    "state": {
+      "onSchedule": "On a schedule: {{when}}.",
+      "manual": "Not on a schedule. It runs only when you start it here.",
+      "trialOnly": "Trial runs only: it changes nothing.",
+      "notApplied": "Not applied yet."
+    },
+    "fact": {
+      "from": "Copy from",
+      "to": "Copy to",
+      "deletes": "Also deletes",
+      "when": "When",
+      "signIn": "Signs in with",
+      "email": "Email",
+      "note": "Note",
+      "other": "Other options"
+    },
+    "deletes": {
+      "no": "No.",
+      "yes": "Yes: files in <dest></dest> that are not in <src></src> are deleted on each run.",
+      "extra": "Also deletes files in <dest></dest>: set in the classic interface's extra options."
+    },
+    "removesSource": "Deletes each file from <src></src> after copying it: set in the classic interface's extra options.",
+    "signIn": {
+      "key": "The SSH key <key></key>",
+      "showKey": "Show its public key",
+      "passwordSet": "A password: Set",
+      "passwordMaybe": "A password may be set.",
+      "none": "No password",
+      "keyUnread": "The SSH key set in the classic interface",
+      "copyKey": "Copy the public key of {{key}}"
+    },
+    "email": {
+      "on": "The output is emailed after each run.",
+      "off": "Not emailed.",
+      "notSetUp": "Email notifications are not set up, so nothing is sent."
+    },
+    "note": {
+      "none": "None"
+    },
+    "other": "Some rsync options were set in the classic interface. They are kept.",
+    "run": {
+      "title": "Run it now"
+    },
+    "change": {
+      "title": "Change the job"
+    },
+    "delete": {
+      "button": "Delete this copy job…"
+    },
+    "gone": "This copy job no longer exists.",
+    "goneLink": "Open Copy jobs",
+    "loadFailed": "Could not read this copy job.",
+    "folderGone": "A shared folder that no longer exists",
+    "loading": "Loading the copy job…",
+    "turnOn": {
+      "needsTrial": "Run a trial of this job first: you see what it would delete before it deletes anything."
+    }
+  },
+  "addJob": {
+    "title": "Add a copy job",
+    "loading": "Loading…",
+    "preflight": "Other changes are waiting to be applied: {{modules}}. Adding a copy job applies its own changes, so deal with those first.",
+    "preflightBody": "Adding a copy job applies its own changes, so deal with those first.",
+    "from": "Copy from",
+    "to": "Copy to",
+    "side": {
+      "folder": "A shared folder on this NAS",
+      "remote": "Another computer",
+      "oneRemote": "One side must be a shared folder on this NAS."
+    },
+    "sentence": {
+      "incomplete": "Choose both sides to see what this job does."
+    },
+    "replace": "Files in <dest></dest> with the same name as a file in <src></src> are replaced by the version in <src></src>, even when the one in <dest></dest> is newer.",
+    "delete": "Also delete files in <dest></dest> that are not in <src></src>",
+    "deleteHint": "Makes <dest></dest> an exact copy of <src></src>. Use this only for a folder that holds nothing but this copy.",
+    "deleteWarn1": "Each run deletes every file in <dest></dest> that is not in <src></src>. On the first run, that is everything <dest></dest> holds now that did not come from <src></src>.",
+    "deleteWarn2": "If <dest></dest> is the wrong folder, or the job runs the wrong way round, those files are lost. A copy job keeps no earlier versions to get them back from.",
+    "deleteWarn3": "So the job is saved for trial runs only. You see what it would delete before it deletes anything.",
+    "placeholder": {
+      "src": "the source",
+      "dest": "the destination"
+    },
+    "when": "When",
+    "whenManual": "Only when I start it",
+    "whenSchedule": "On a schedule",
+    "howOften": "How often",
+    "howOftenOption": {
+      "hourly": "Every hour",
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthly": "Every month",
+      "custom": "Custom"
+    },
+    "at": "At",
+    "atHour": "Hour",
+    "atMinute": "Minute",
+    "on": "On",
+    "onDay": "On day",
+    "onDayHigh": "Months without this day are skipped.",
+    "minutesPast": "At minutes past",
+    "custom": {
+      "minute": "Minute",
+      "hour": "Hour",
+      "day": "Day of the month",
+      "month": "Month",
+      "weekday": "Weekday",
+      "every": {
+        "minute": "Every minute",
+        "hour": "Every hour",
+        "day": "Every day",
+        "month": "Every month",
+        "weekday": "Every weekday"
+      },
+      "either": "With both a day of the month and a weekday, it runs on days that are either.",
+      "stored": "Now: {{when}}, set in the classic interface. It is kept unless you change one of these."
+    },
+    "nasClock": "Times are the NAS's clock{{zone}}.",
+    "nasClockZone": ", {{zone}}",
+    "email": "Email the output after each run",
+    "emailNotSetUp": "Set up email notifications first.",
+    "emailLink": "Notifications in the classic interface",
+    "note": "Note",
+    "noteHint": "Names the job in lists. Without one, it is called {{auto}}.",
+    "folder": "Shared folder",
+    "folderOption": "{{name}} ({{fs}})",
+    "folderUnavailable": "{{name}}: {{reason}}",
+    "folderNone": "Choose a shared folder",
+    "folderReason": {
+      "notOk": "It cannot be reached now.",
+      "notMounted": "Its file system is not mounted."
+    },
+    "err": {
+      "same": "Choose two different folders.",
+      "inside": "Use letters, digits and . _ - + @ /, with no spaces.",
+      "missing": "Choose a shared folder.",
+      "gone": "This shared folder no longer exists.",
+      "host": "Write one address, such as 192.0.2.20, or one computer name.",
+      "port": "Use a port from 1 to 65535.",
+      "user": "Use 1 to 32 small letters, digits, \".\", \"_\" or \"-\", starting with a letter.",
+      "path": "Use letters, digits and . _ - + @ /, with no spaces, starting with \"/\".",
+      "module": "Use letters, digits and . _ - only.",
+      "key": "Choose a key.",
+      "note": "Use at most 200 characters, on one line.",
+      "classicAddress": "This address was set in the classic interface in a form this page cannot save. Write it again.",
+      "keyList": "Could not read the NAS's SSH keys.",
+      "reads": "Could not read the shared folders, so the job cannot be checked."
+    },
+    "destShared": "People and computers that use <dest></dest> see these copies. Files they add there are kept, unless the job also deletes.",
+    "how": "How the NAS reaches it",
+    "howSsh": "Over SSH, with one of the NAS's keys",
+    "howSshUnavailable": "Needs the list of SSH keys, which this interface cannot read yet.",
+    "howRsyncd": "Through its rsync server",
+    "host": "Computer",
+    "sshPort": "SSH port",
+    "port": "Port",
+    "user": "Sign in as",
+    "path": "Folder",
+    "module": "Folder offered by its rsync server",
+    "inside": "Folder inside it",
+    "pathHint": "No spaces: a copy job cannot use a folder whose name has a space.",
+    "key": "Key",
+    "keyNone": "Choose a key",
+    "keyNoKeys": "The NAS has no SSH keys yet. Make one in the classic interface first.",
+    "showKey": "Show the public key",
+    "keyHelp": "Add this public key to the account <user></user> on <host></host> before the job first runs. If the trial run then fails with \"Host key verification failed\", the NAS has not connected to <host></host> before; copying the key from the classic interface's SSH keys page (System > Certificates > SSH) connects it.",
+    "keyLink": "SSH keys in the classic interface",
+    "copyKey": "Copy the public key",
+    "password": "Password",
+    "passwordAgain": "Type the password again to save. The NAS does not give it back to this page.",
+    "noEncryption": "An rsync server does not encrypt. The files and the password cross the network as they are. Use it only on a network you trust.",
+    "review": "Review the job…",
+    "back": "Back",
+    "cancel": "Cancel",
+    "summary": {
+      "title": "Ready to save the copy job",
+      "when": "When: {{when}}.",
+      "manual": "Only when you start it.",
+      "deletes": "Also deletes files in <dest></dest> that are not in <src></src>.",
+      "ssh": "Signs in to <host></host> as <user></user> with the SSH key <key></key>.",
+      "rsyncd": "Signs in to the rsync server on <host></host>{{asUser}}{{withPassword}}.",
+      "asUser": " as {{user}}",
+      "withPassword": ", with a password",
+      "email": "The output is emailed after each run.",
+      "nextTry": "Then: the job is saved for trial runs only, the changes are applied, the trial runs, and you read what it would copy and delete. Nothing is changed until you turn the job on.",
+      "nextOn": "Or, with Save and turn on: the job is saved as chosen and the changes are applied."
+    },
+    "saveTry": "Save and try it",
+    "saveOn": "Save and turn on",
+    "steps": "Steps",
+    "step": {
+      "check": "Check",
+      "saveTrial": "Save the job for trial runs",
+      "save": "Save the job",
+      "apply": "Apply",
+      "trial": "Trial run",
+      "read": "Read the trial",
+      "saveOn": "Save the job",
+      "applyOn": "Apply"
+    },
+    "task": {
+      "apply": "Applying the changes for {{job}}"
+    },
+    "alsoBody": "Other changes are pending too: <list></list>. Applying applies them as well.",
+    "result": {
+      "on": "The job is saved and on.",
+      "left": "The job is saved for trial runs only. Its page says what to do now."
+    },
+    "trial": {
+      "ok": "The trial run finished. Nothing was changed.",
+      "copies_one": "It would copy {{count}} file.",
+      "copies_other": "It would copy {{count}} files.",
+      "copiesAbout_one": "It would copy about {{count}} file.",
+      "copiesAbout_other": "It would copy about {{count}} files.",
+      "deletes_one": "It would delete {{count}} file from <dest></dest>.",
+      "deletes_other": "It would delete {{count}} files from <dest></dest>.",
+      "deletesNone": "It would delete nothing from <dest></dest> now.",
+      "deleteList": "What it would delete",
+      "deleteListMore_one": "and {{count}} more line in the whole output.",
+      "deleteListMore_other": "and {{count}} more lines in the whole output.",
+      "showAll": "Show the whole trial output",
+      "failed": "The trial run failed.",
+      "failedSilent": "The trial ended at once without saying why. The job may already be running on its schedule. Wait for it to end and try again.",
+      "lastLines": "Its last lines",
+      "hostKey": "The NAS has not connected to <host></host> before. See the line about the key above.",
+      "denied": "<host></host> refused the sign-in. Check the account and that the key or password is right.",
+      "notMounted": "<folder></folder>'s file system is not mounted.",
+      "partial": "Some files, or their times and permissions, could not be written on <host></host>. The account the job signs in as must own the folder there.",
+      "again": "Run the trial again",
+      "change": "Change the job",
+      "leave": "Leave it for trial runs",
+      "outputLabel": "Output of the trial run of {{job}}"
+    },
+    "turnOn": {
+      "button": "Turn the job on…",
+      "title": "Turn on the copy job {{job}}?",
+      "confirm": "Turn on the job",
+      "changed": "The job was changed since its trial run. Run the trial again."
+    },
+    "turnOnDelete": {
+      "title": "Turn on {{job}}, which deletes files in {{dest}}?",
+      "body_one": "From now on, each run deletes the files in <dest></dest> that are not in <src></src>. The trial run listed {{count}} such file now. It cannot be got back afterwards.",
+      "body_other": "From now on, each run deletes the files in <dest></dest> that are not in <src></src>. The trial run listed {{count}} such files now. They cannot be got back afterwards.",
+      "type": "Type {{name}} to confirm",
+      "confirm": "Turn on and delete"
+    },
+    "turnedOn": "{{job}} is on. {{when}}",
+    "runNow": "Run it now…",
+    "openJob": "Open the job",
+    "toList": "Open Copy jobs",
+    "dismiss": "Dismiss",
+    "fail": {
+      "pending": "Other changes became pending: <list></list>.",
+      "pendingBody": "Nothing was saved. Apply or undo them in the band at the top, then try again.",
+      "refused": "The job cannot be saved as chosen.",
+      "keyGone": "The chosen SSH key is no longer one of the NAS's keys.",
+      "checkRead": "Could not check the choices again.",
+      "nothingDone": "Nothing was saved.",
+      "notSaved": "The job was not saved.",
+      "tryStep": "Try this step again",
+      "passwordStep": "Type the password again to try this step again.",
+      "apply": "Applying the changes failed.",
+      "applyBody": "The job stays saved for trial runs only, so nothing is deleted. The band at the top keeps the failure.",
+      "tryApply": "Try applying again",
+      "trialStart": "The trial run could not start.",
+      "unknown": "Whether the job was saved is not known: the connection was cut.",
+      "unknownBody": "Look at the copy jobs list before trying again.",
+      "gone": "This copy job no longer exists.",
+      "change": "Change the job"
+    }
+  },
+  "changeJob": {
+    "title": "Change the job",
+    "save": "Save",
+    "saved": "The changes to {{job}} are saved. Apply them to use them.",
+    "retrial": "Changing which folders it copies, or the way it copies, needs a new trial run before the job runs again.",
+    "deletedStay": "Files the job deleted before stay deleted.",
+    "extraStillDeletes": "Its extra options, set in the classic interface, still delete files. Change them there.",
+    "classicValue": "{{value}} (set in the classic interface)",
+    "writeAgain": "Write it again",
+    "review": "Review the change…",
+    "cancel": "Cancel",
+    "failed": "The changes were not saved.",
+    "unchanged": "Nothing was changed."
+  },
+  "runJob": {
+    "pending": "Apply the pending changes first. The NAS runs each job as it was when changes were last applied.",
+    "running": "It is running now.",
+    "show": "Show it",
+    "unreachable": "<folder></folder> cannot be reached.",
+    "trial": {
+      "title": "Run a trial of {{job}}?",
+      "body": "It lists what the job would copy and delete, and changes nothing.",
+      "confirm": "Run the trial"
+    },
+    "copy": {
+      "title": "Copy {{src}} to {{dest}} now?",
+      "body": "Files in <dest></dest> with the same name are replaced by the versions in <src></src>.",
+      "confirm": "Start copying"
+    },
+    "delete": {
+      "title": "Copy {{src}} to {{dest}} and delete there now?",
+      "body": "Files in <dest></dest> that are not in <src></src> are deleted, and cannot be got back.",
+      "confirm": "Copy and delete"
+    },
+    "cancel": "Cancel",
+    "task": {
+      "title": "Copy job: {{job}}",
+      "cap": "Showing the newest 10,000 lines. The download has every line received.",
+      "outputLabel": "Output of {{job}}",
+      "file": "copy-job.log"
+    },
+    "stop": "Stop the copy…",
+    "stopTitle": "Stop {{job}}?",
+    "stopBody": "Files copied so far stay. Files it deleted so far stay deleted. The next run carries on.",
+    "stopConfirm": "Stop the copy",
+    "done": "{{job}} finished.",
+    "kept": "The output is kept until you dismiss it.",
+    "failed": "{{job}} failed.",
+    "failedSilent": "{{job}} ended at once without saying why. It may already be running on its schedule. Wait for it to end and try again.",
+    "stopped": "{{job}} was stopped.",
+    "again": "Run again…",
+    "dismiss": "Dismiss",
+    "startFailed": "The job could not be started."
+  },
+  "deleteJob": {
+    "title": "Delete the copy job {{job}}?",
+    "body": "It no longer runs once you apply the changes. The files it copied stay in <dest></dest>, and <src></src> is not touched.",
+    "cancel": "Cancel",
+    "confirm": "Delete copy job",
+    "running": "Wait for it to finish, or stop it.",
+    "done": "{{job}} will be deleted when you apply the changes.",
+    "failed": "The copy job was not deleted."
+  },
+  "folderPage": {
+    "keepCopy": "Keep a copy of this folder…"
   }
 }

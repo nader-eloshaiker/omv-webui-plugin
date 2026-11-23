@@ -672,7 +672,7 @@ describe("Set up disk monitoring", () => {
     expect(
       screen.getByText(/^Also pending from elsewhere: /),
     ).toHaveTextContent(
-      "Also pending from elsewhere: NFS. Applying applies them too.",
+      "Also pending from elsewhere: Linux and Unix sharing (NFS). Applying applies them too.",
     );
     expect(callNames()).not.toContain("Config.applyChangesBg");
     await user.click(screen.getByRole("button", { name: "Apply them too" }));

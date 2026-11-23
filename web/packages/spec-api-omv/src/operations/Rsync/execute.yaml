@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncExecute
+  tags:
+    - Rsync
+  summary: Run a copy job now
+  description: >-
+    Run an rsync job's script now, as a background task, whether or not the job is on a schedule.
+    The script is the one written at the last apply, so OMV refuses while the rsync module is
+    pending. It checks that the job's shared folders are mounted and that the job is not already
+    running (a second start ends at once), then runs rsync; the task's output is the script's and
+    rsync's. A job that deletes at its destination deletes files there. Changes no configuration.
+  x-omv-rpc:
+    service: Rsync
+    method: execute
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: data
+  x-omv-source:
+    datamodel: rpc.common.objectuuid
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/ObjectUuidRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/rsyncExecute.started.yaml
+    "500":
+      description: >-
+        OMV refused because the pending changes have not been applied.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            pending:
+              $ref: ../../examples/rsyncExecute.pending.yaml

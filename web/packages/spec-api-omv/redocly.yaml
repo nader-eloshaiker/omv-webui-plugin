@@ -14,6 +14,10 @@ preprocessors:
   # Lint only (the build skips it): an x-omv-int64 string also accepts a JSON integer, which the
   # transport turns into the decimal string (the ZFS plugin sends its file-system sizes as numbers).
   omv/int64-as-number: on
+  # Lint only (the build skips it): a field named in an operation's x-omv-presence, declared boolean,
+  # also accepts a string: the examples carry the stored value, which the transport replaces by
+  # whether it is set.
+  omv/presence-as-string: on
 
 extends:
   - recommended

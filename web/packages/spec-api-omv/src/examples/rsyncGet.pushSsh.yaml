@@ -1,0 +1,48 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000011"
+  enable: true
+  sendemail: false
+  comment: Media to the other computer
+  type: remote
+  src:
+    sharedfolderref: "00000000-0000-4000-8000-000000000002"
+    uri: ""
+  dest:
+    sharedfolderref: ""
+    uri: "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"
+  minute:
+    - "0"
+  everynminute: false
+  hour:
+    - "3"
+  everynhour: false
+  month:
+    - "*"
+  dayofmonth:
+    - "*"
+  everyndayofmonth: false
+  dayofweek:
+    - "*"
+  optionrecursive: true
+  optiontimes: true
+  optiongroup: true
+  optionowner: true
+  optioncompress: false
+  optionarchive: true
+  optiondelete: false
+  optionquiet: false
+  optionperms: true
+  optionacls: false
+  optionxattrs: false
+  optiondryrun: false
+  optionpartial: false
+  extraoptions: ""
+  mode: push
+  authentication: pubkey
+  password: ""
+  sshcertificateref: "00000000-0000-4000-8000-000000000012"
+  sshport: 22
+  srcsharedfolderref: "00000000-0000-4000-8000-000000000002"
+  desturi: "alex@backup.example.org:/srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Copies/"

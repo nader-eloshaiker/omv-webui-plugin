@@ -18,7 +18,6 @@ import {
 import {
   Button,
   EmptyState,
-  ExternalLink,
   InlineAlert,
   PageTab,
   PageTabs,
@@ -35,7 +34,6 @@ import {
   useServiceStatus,
 } from "../../hooks/useMonitoringReads.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
 import { pendingModules } from "../../pending/modules.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { PageTitle } from "../atoms/PageTitle.tsx";
@@ -96,10 +94,11 @@ function SettingsLink({ tab }: { tab: ServiceTab }) {
       </Link>
     );
   }
+  // Linux and Unix sharing has its page here now (services design 12.3); its footer has the classic one.
   return (
-    <ExternalLink href={CLASSIC.nfsSettings} newTabLabel={t("app.newTab")}>
-      {t("serviceDetails.link.nfs")}
-    </ExternalLink>
+    <Link to="/services/nfs" className={routerLinkClass}>
+      {t("serviceDetails.link.nfsPage")}
+    </Link>
   );
 }
 

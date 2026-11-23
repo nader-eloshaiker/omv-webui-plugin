@@ -1,0 +1,14 @@
+type: object
+description: >-
+  Whether the NFS server is on, and the NFS versions it offers (conf.service.nfs). The server's
+  reply also lists every NFS share under `shares`; the contract leaves it undeclared and nothing
+  reads it from here (NFS.getShareList is the list).
+required: [enable, versions]
+properties:
+  enable:
+    type: boolean
+  versions:
+    type: array
+    description: The NFS versions offered, as OMV spells them ("3", "4", "4.1", "4.2"); may be empty.
+    items:
+      type: string

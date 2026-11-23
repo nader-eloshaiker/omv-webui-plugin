@@ -1,0 +1,8 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  filename: /tmp/bgstatusaoeovrrmdesf9cgJpDy
+  pos: 483
+  output: "Please wait, syncing </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Media/> to </srv/dev-disk-by-uuid-00000000-0000-4000-8000-00000000000e/Backup/> ...\n\nsending incremental file list\ndeleting old-dir/deeper/older.txt\ndeleting old-dir/deeper/\ndeleting old-dir/old.txt\ndeleting old-dir/\ndeleting only-here.txt\nnew.txt\none.txt\n\nsent 236 bytes  received 122 bytes  716.00 bytes/sec\ntotal size is 40  speedup is 0.11 (DRY RUN)\nThe synchronisation has completed successfully.\n"
+  pendingOutput: false
+  running: false

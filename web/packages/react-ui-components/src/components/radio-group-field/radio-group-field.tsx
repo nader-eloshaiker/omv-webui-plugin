@@ -6,6 +6,9 @@ import * as React from "react";
 import { cn } from "../../utils";
 import { OptionGroup, type OptionGroupProps } from "../field/option-group";
 
+// Set by a group that is unavailable but stays focusable, so each option takes the disabled look.
+const UnavailableContext = React.createContext(false);
+
 interface RadioGroupFieldProps {
   /** The question the choice answers, always visible: "How to wipe". It names the group. */
   legend: React.ReactNode;
@@ -16,6 +19,16 @@ interface RadioGroupFieldProps {
   value: string;
   onValueChange: (value: string) => void;
   disabled?: boolean;
+  /**
+   * With `disabled`: the options stay in the tab order and say they are unavailable (`aria-disabled`)
+   * instead of leaving it, so `disabledReason`, given as the group's description, is heard when the
+   * group is reached (style guide 5.3). Nothing can be chosen. Like `Checkbox`'s prop.
+   */
+  focusableWhenDisabled?: boolean;
+  /** Why the group is unavailable, shown under the hint while `disabled`: "Turn on NFS first." */
+  disabledReason?: React.ReactNode;
+  /** Ids of further lines that describe the group, such as a warning about the chosen option. */
+  "aria-describedby"?: string;
   readOnly?: boolean;
   /** Identifies the group's value when a form is submitted. */
   name?: string;
@@ -40,6 +53,9 @@ function RadioGroupField({
   value,
   onValueChange,
   disabled,
+  focusableWhenDisabled = false,
+  disabledReason,
+  "aria-describedby": describedByProp,
   readOnly,
   name,
   className,
@@ -48,10 +64,20 @@ function RadioGroupField({
   const id = React.useId();
   const legendId = `${id}-legend`;
   const hintId = `${id}-hint`;
+  const reasonId = `${id}-reason`;
   const errorId = `${id}-error`;
+  // Base UI's disabled group leaves the tab order; a read-only one stays and refuses every change.
+  const unavailable = disabled === true && focusableWhenDisabled;
+  const showReason = disabled === true && disabledReason !== undefined;
   const describedBy =
-    [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") ||
-    undefined;
+    [
+      hint ? hintId : null,
+      showReason ? reasonId : null,
+      error ? errorId : null,
+      describedByProp ?? null,
+    ]
+      .filter(Boolean)
+      .join(" ") || undefined;
   return (
     <div
       data-slot="radio-group-field"
@@ -71,18 +97,30 @@ function RadioGroupField({
           {hint}
         </p>
       ) : null}
+      {showReason ? (
+        <p
+          id={reasonId}
+          data-slot="radio-group-reason"
+          className="text-sm text-muted-foreground"
+        >
+          {disabledReason}
+        </p>
+      ) : null}
       <RadioGroup
         value={value}
         onValueChange={(next) => onValueChange(String(next))}
-        disabled={disabled}
-        readOnly={readOnly}
+        disabled={unavailable ? false : disabled}
+        readOnly={unavailable || readOnly}
+        // Only when set here: an undefined value would hide Base UI's own state.
+        {...(unavailable ? { "aria-disabled": true } : null)}
+        data-unavailable={unavailable || undefined}
         name={name}
         aria-labelledby={legendId}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className="mt-1 flex flex-col gap-3"
       >
-        {children}
+        <UnavailableContext value={unavailable}>{children}</UnavailableContext>
       </RadioGroup>
       {error ? (
         <p
@@ -113,6 +151,11 @@ interface RadioOptionProps {
   disabled?: boolean;
   /** Content under the option, indented to its label: the fields this choice needs. */
   children?: React.ReactNode;
+  /**
+   * Classes for the option's block: `mt-1` sets a choice apart after a 16px gap (the group's own gap
+   * is 12px), as a risky choice is (phase 5 services design 0.4).
+   */
+  className?: string;
 }
 
 /** One option of a `RadioGroupField`: the round button, its label beside it, its hint below. */
@@ -122,16 +165,22 @@ function RadioOption({
   hint,
   disabled,
   children,
+  className,
 }: RadioOptionProps) {
   const id = React.useId();
   const labelId = `${id}-label`;
   const hintId = `${id}-hint`;
+  const unavailable = React.use(UnavailableContext);
   return (
-    <div data-slot="radio-option" className="flex flex-col gap-0.5">
+    <div
+      data-slot="radio-option"
+      className={cn("flex flex-col gap-0.5", className)}
+    >
       <label
         className={cn(
           "flex w-fit items-start gap-2 text-base text-foreground",
-          disabled && "cursor-not-allowed text-muted-foreground",
+          (disabled || unavailable) &&
+            "cursor-not-allowed text-muted-foreground",
         )}
       >
         {/* The circle sits on the first line of a wrapping label; its 24px target overhangs it. */}
@@ -141,15 +190,23 @@ function RadioOption({
             disabled={disabled}
             aria-labelledby={labelId}
             aria-describedby={hint ? hintId : undefined}
+            {...(unavailable ? { "aria-disabled": true } : null)}
             className={cn(
               "relative inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-input bg-surface",
               "after:absolute after:-inset-1 after:rounded-full after:content-['']",
               "data-checked:border-action data-checked:bg-action",
               "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:bg-muted",
               "data-readonly:cursor-default",
+              unavailable &&
+                "cursor-not-allowed border-transparent bg-muted data-checked:border-transparent data-checked:bg-muted data-readonly:cursor-not-allowed",
             )}
           >
-            <Radio.Indicator className="size-1.5 rounded-full bg-action-foreground data-unchecked:hidden data-disabled:bg-subtle-foreground" />
+            <Radio.Indicator
+              className={cn(
+                "size-1.5 rounded-full bg-action-foreground data-unchecked:hidden data-disabled:bg-subtle-foreground",
+                unavailable && "bg-subtle-foreground",
+              )}
+            />
           </Radio.Root>
         </span>
         <span id={labelId} className="min-w-0 [overflow-wrap:anywhere]">

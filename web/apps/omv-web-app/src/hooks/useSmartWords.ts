@@ -3,12 +3,8 @@
 // hours and minutes, weekdays and months by name (OMV numbers weekdays 1 Monday to 7 Sunday).
 import type { SmartScheduleEntry } from "@omv-webui/react-api-omv/generated";
 import { useTranslation } from "react-i18next";
-import {
-  isTestType,
-  scheduleWords,
-  type SchedulePart,
-  type TestType,
-} from "../disks/schedule.ts";
+import { isTestType, type TestType } from "../disks/schedule.ts";
+import { scheduleWords, type SchedulePart } from "../services/jobSchedule.ts";
 
 /** 03:00 in the browser's locale. */
 export const hourText = (hour: number): string =>

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { stripControl } from "./strip-control";
@@ -314,5 +314,164 @@ describe("TaskLog with a limit", () => {
     expect(blobs).toHaveLength(1);
     expect(await blobs[0]?.text()).toBe("one\ntwo\nthree\nfour\nfive");
     vi.unstubAllGlobals();
+  });
+});
+
+describe("TaskLog with a cap", () => {
+  const cap = {
+    lines: 3,
+    label: (shown: number, total: number) =>
+      `Showing the newest ${String(shown)} of ${String(total)} lines. The download has every line received.`,
+  };
+  const five = ["one", "two", "three", "four", "five"];
+
+  it("changes nothing under the cap", () => {
+    const { container } = render(
+      <TaskLog {...labels} lines={five.slice(0, 3)} cap={cap} />,
+    );
+    expect(
+      container.querySelectorAll("[data-slot=task-log-line]"),
+    ).toHaveLength(3);
+    expect(screen.queryByText(/Showing the newest/)).toBeNull();
+    expect(
+      screen.getByRole("region", { name: labels.label }),
+    ).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("shows only the newest lines over the cap, says so, and offers no way back", () => {
+    render(<TaskLog {...labels} lines={five} cap={cap} />);
+    const region = screen.getByRole("region", { name: labels.label });
+    expect(
+      Array.from(region.querySelectorAll("[data-slot=task-log-line]")).map(
+        (line) => line.textContent,
+      ),
+    ).toEqual(["three", "four", "five"]);
+    expect(region).toHaveAccessibleDescription(
+      "Showing the newest 3 of 5 lines. The download has every line received.",
+    );
+    expect(screen.queryByRole("button", { name: /show all/i })).toBeNull();
+  });
+
+  it("is not a live region, so growing output does not chatter", () => {
+    render(<TaskLog {...labels} lines={five} cap={cap} />);
+    const region = screen.getByRole("region", { name: labels.label });
+    expect(region).not.toHaveAttribute("aria-live");
+    expect(region.closest("[aria-live]")).toBeNull();
+  });
+
+  it("downloads every line received while showing the newest", async () => {
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      "URL",
+      Object.assign(URL, {
+        createObjectURL: vi.fn((blob: Blob) => {
+          blobs.push(blob);
+          return "blob:test";
+        }),
+        revokeObjectURL: vi.fn(),
+      }),
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+    const user = userEvent.setup();
+    render(
+      <TaskLog
+        {...labels}
+        lines={five}
+        cap={cap}
+        download={{ label: "Download output", fileName: "copy-job.log" }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Download output" }));
+    expect(await blobs[0]?.text()).toBe("one\ntwo\nthree\nfour\nfive");
+    vi.unstubAllGlobals();
+  });
+
+  it("gives way to a limit when both are given", () => {
+    render(
+      <TaskLog
+        {...labels}
+        lines={five}
+        cap={cap}
+        limit={{
+          lines: 2,
+          partialLabel: () => "Showing the first 2 lines.",
+          showAllLabel: "Show all lines",
+        }}
+      />,
+    );
+    expect(screen.getByText("Showing the first 2 lines.")).toBeInTheDocument();
+    expect(screen.queryByText(/Showing the newest/)).toBeNull();
+  });
+});
+
+describe("TaskLog stop", () => {
+  const stop = {
+    label: "Stop the copy…",
+    title: "Stop Photos to Backup?",
+    description:
+      "Files copied so far stay. Files it deleted so far stay deleted. The next run carries on.",
+    confirmLabel: "Stop the copy",
+    cancelLabel: "Cancel",
+  };
+
+  it("asks first, with focus on Cancel, and stops only on confirm", async () => {
+    const user = userEvent.setup();
+    const onStop = vi.fn();
+    render(
+      <TaskLog
+        {...labels}
+        lines={["sending incremental file list"]}
+        stop={{ ...stop, onStop }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Stop the copy…" }));
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Stop Photos to Backup?",
+    });
+    expect(dialog).toHaveAccessibleDescription(stop.description);
+    const cancel = within(dialog).getByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(onStop).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Stop the copy…" }));
+    await user.click(
+      within(
+        await screen.findByRole("alertdialog", {
+          name: "Stop Photos to Backup?",
+        }),
+      ).getByRole("button", { name: "Stop the copy" }),
+    );
+    expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a stop under way and has no stop once the task has ended", () => {
+    const { rerender } = render(
+      <TaskLog
+        {...labels}
+        lines={["sending incremental file list"]}
+        stop={{ ...stop, onStop: () => undefined, pending: true }}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Stop the copy…" }),
+    ).toHaveAttribute("aria-busy", "true");
+    rerender(
+      <TaskLog
+        {...labels}
+        lines={["sending incremental file list"]}
+        endMessage="Cancelled. Photos to Backup was stopped."
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Stop the copy…" })).toBeNull();
+    expect(
+      screen
+        .getAllByRole("status")
+        .some(
+          (s) => s.textContent === "Cancelled. Photos to Backup was stopped.",
+        ),
+    ).toBe(true);
   });
 });

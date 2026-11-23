@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncSet
+  tags:
+    - Rsync
+  summary: Save a copy job
+  description: >-
+    Store an rsync job: all 36 fields are required, and OMV keeps only the side fields that apply to
+    its type and mode. Saving runs nothing: the job's script and its schedule are written when the
+    pending changes are applied, and a job runs on its schedule only when enable is true. It marks
+    the rsync module dirty. Returns the stored job; the transport removes its password (UI-6).
+  x-omv-rpc:
+    service: Rsync
+    method: set
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-omit: ["password"]
+  x-omv-source:
+    datamodel: rpc.rsync.set
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/RsyncSetRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncJobStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/rsyncSet.created.yaml
+            changed:
+              $ref: ../../examples/rsyncSet.changed.yaml

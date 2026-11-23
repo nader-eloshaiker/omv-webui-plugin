@@ -1,0 +1,48 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  uuid: "00000000-0000-4000-8000-000000000013"
+  enable: true
+  sendemail: false
+  comment: "The other computer's photos to Pulled"
+  type: remote
+  src:
+    sharedfolderref: ""
+    uri: "rsync://copier@backup.example.org/photos/"
+  dest:
+    sharedfolderref: "00000000-0000-4000-8000-000000000014"
+    uri: ""
+  minute:
+    - "0"
+  everynminute: false
+  hour:
+    - "3"
+  everynhour: false
+  month:
+    - "*"
+  dayofmonth:
+    - "*"
+  everyndayofmonth: false
+  dayofweek:
+    - "*"
+  optionrecursive: true
+  optiontimes: true
+  optiongroup: true
+  optionowner: true
+  optioncompress: false
+  optionarchive: true
+  optiondelete: false
+  optionquiet: false
+  optionperms: true
+  optionacls: false
+  optionxattrs: false
+  optiondryrun: false
+  optionpartial: false
+  extraoptions: ""
+  mode: pull
+  authentication: password
+  password: EXAMPLE-PASSWORD
+  sshcertificateref: ""
+  sshport: 22
+  srcuri: "rsync://copier@backup.example.org/photos/"
+  destsharedfolderref: "00000000-0000-4000-8000-000000000014"

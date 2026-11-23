@@ -772,3 +772,41 @@ Built on `phase-5-users` to [design/phase-5-users.md](design/phase-5-users.md), 
 ## 2026-11-22 — Phase 5, users and groups: the owner's decisions during the build
 
 `add` is reserved for new people and groups; administrator rights are said to apply from the next sign-in; deleting a person says a new person of the same name gets the home folder but may not open its files; the build's four departures are accepted (design section 23).
+
+## 2026-11-23 — Phase 5, services: the methods cleared for the contract
+
+The owner cleared the methods the services domain needs: NFS `getSettings`, `setSettings`, `getShareList`, `getShare`, `setShare` and `deleteShare`; Rsyncd `getSettings`, `setSettings`, `getModuleList`, `getModule`, `setModule` and `deleteModule`; Rsync `getList`, `get`, `set`, `delete` and `execute`; SMB `getShare` and `emptyRecycleBin`. None is on the private review list. SSH and the basic SMB methods are already in the contract. The design's points still need the owner's agreement before anything destructive is built.
+
+## 2026-11-23 — Phase 5, services: the owner's agreement to the design
+
+The owner agreed [design/phase-5-services.md](design/phase-5-services.md) P1 to P19 as written.
+
+- **P1:** `CertificateMgmt.getSshList` is cleared (a read; OMV removes the private key). Making and copying keys stays in the classic interface.
+- **P2, P3:** NFS, the rsync server and its folders, copy jobs (list, add with a trial run, edit, Run now, delete), and SMB's workgroup and recycle bins are built; the extra-options boxes, NFSv4 tuning, advanced rsync flags and the other SMB settings stay in the classic interface. They are called copy jobs, not backups.
+- **P4 to P19:** as written, including rsync passwords removed from every reply, deletion at the destination off by default with trials before a deleting job is scheduled, NFS read-only by default with "any computer" never preselected, rsync server folders needing a sign-in by default, and every user of a folder named under Used by.
+
+## 2026-11-23 — Phase 5, services: the contract, and what the test VM showed
+
+The 19 methods of [design/phase-5-services.md](design/phase-5-services.md) section 14 are in the contract: NFS `getSettings`, `setSettings`, `getShareList`, `getShare`, `setShare` and `deleteShare`; Rsyncd `getSettings`, `setSettings`, `getModuleList`, `getModule`, `setModule` and `deleteModule`; Rsync `getList`, `get`, `set`, `delete` and `execute`; SMB `getShare` and `emptyRecycleBin`; and `CertificateMgmt.getSshList`. The examples were captured on the test VM (OMV 8.6.1) by `tools/contract-capture/services.mjs`, on a scratch EXT4 file system with documentation folders and people, the VM acting as its own NFS, rsync and SSH client and an SMB client from a container. The VM was left as it was. The request schemas are stricter than OMV's datamodels: who may connect only as one computer, one network or any computer; a copy job in one of three shapes by direction, its remote address in the two forms the interface writes, its schedule items anchored; an rsync server folder with at most one sign-in. A new extension, `x-omv-presence`, has the transport replace a stored password in a reply by whether one is set, and `x-omv-omit` now reaches into lists inside rows. Contract drift: 132 operations agree.
+
+- **Pending modules:** NFS marks `nfs` and `avahi`, and a folder's first entry and the removal of its last also `fstab`, `collectd`, `monit` and `quota`; the rsync server `rsyncd` (and `avahi` for on and off); copy jobs `rsync`; the workgroup and a share's recycle bin `samba` and `avahi`.
+- **NFS:** NFSv3 mounts `/export/{folder}`, NFSv4 `/{folder}`; who may connect, read only and the squashed administrator behave as the design reads; a folder whose name has a space cannot be exported properly, so the interface's refusal stands.
+- **Copy jobs:** contents into contents; a trial lists every file and folder it would delete and changes nothing; a job not on a schedule still runs when started; a second start ends at once without a message; stopping removes the job's lock.
+- **The rsync server:** files copied in belong to `nobody:users` and stay readable by the people in `users`; the shared folder's access list does not apply to it.
+- **The recycle bin:** emptying an empty bin prints only the script's first line; with the bin or SMB off it cannot run.
+
+Design section 22 lists each fact and what it changed.
+
+## 2026-11-23 — Phase 5, services: the owner's decision during the build
+
+The stricter request schemas stay (design section 22): a value set in the classic interface for who may connect, NFS options, an rsync server folder or a copy job's remote address is never sent back or rewritten silently. Changing such an NFS entry means choosing one of the plain choices; an rsync server folder with such values opens read-only; a copy job's classic remote address is written again before the job is saved.
+
+## 2026-11-23 — Phase 5, services: built, on the mock and the test VM
+
+Built on `phase-5-services` to [design/phase-5-services.md](design/phase-5-services.md), as agreed by the owner (P1 to P19), with the changes the test VM made and the owner's decision during the build in its section 22.
+
+- **The pages:** Services > NFS as "Linux and Unix sharing" at `/services/nfs` (on and off, the folders shared, sharing a folder); a shared folder's Linux and Unix section (let in one computer, a network or any computer, read only by default, change, stop); Services > Rsync at `/services/rsync` with two tabs, Copy jobs (the list, a job's page, adding a job with its trial run and the typed turn-on when it deletes, changing, Run now with its output and Stop, deleting) and Rsync server (on and off, offering a folder with a name and password by default, stopping); on the SMB page the workgroup; on a share the recycle bin, and emptying it behind the folder's typed name.
+- **Elsewhere:** Used by and the delete refusals of a shared folder name its NFS entries, rsync server folders and copy jobs with links; the Shared folders list says which folders are shared over NFS; "Keep a copy of this folder…" opens the add flow; the dashboard and the NFS service details link the new pages; the disks slice's self-test schedule uses the library's schedule field.
+- **The library** gains `ClientField`, `ScheduleField` and `DirectionSummary`; `TaskLog` keeps the newest lines on screen with every line in the download and can stop a task; `UsedByPanel` names entries in plain text.
+- **The mock remembers** folders, NFS entries, rsync server folders, jobs, keys, SMB shares, pending changes and tasks, with the design's 15 services scenarios and one per failing step of the add flow.
+- **Checks:** `make test` passed (react-api-omv 1,208 tests, react-ui-components 312, omv-web-app 3,663, tools 137; contract drift: 132 operations agree, 34 accepted divergences; colour audit 164 pairs, 0 failed) and `pnpm test:browser` passed 57. The package built and passed the lifecycle test on the test VM (109 checks). The whole VM suite, with `OMV_WEBUI_VM_SCRATCH_DISK=sdd` and the RAID and ZFS disks `sdb,sdc,sdd,sde`, gave 39 passed and 5 skipped over HTTP and 38 passed and 5 skipped over HTTPS (the skips need a second-factor administrator, the idle timeout, a wipe disk or a ready-made pool); the one failure of each run was in a test, not a page, fixed and passed again alone: the new services journey's last check over HTTP, and over HTTPS the ZFS journey pressing "Stop checking" just as the check ended, which the page refused correctly. The new `services.vm.spec.ts` lets a network in over NFS and stops it, offers a folder to the rsync server with a sign-in and stops it, adds a local copy job that deletes through its trial and typed turn-on, runs it and deletes it, all on a scratch file system made through Flow A and removed with the disk wiped. Afterwards the VM matched its state before the slice: no pool or array, only sda1's mount entry and the original shared folder, no extra account, NFS entry, rsync server folder, job or SSH key, empty scratch disks, NFS, the rsync server, SMB and SSH as before, and nothing pending.

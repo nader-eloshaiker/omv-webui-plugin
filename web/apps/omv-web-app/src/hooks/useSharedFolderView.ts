@@ -13,6 +13,7 @@ import {
   folderTodo,
 } from "../sharedFolders/shareActions.ts";
 import { shareOf, smbOn, smbState } from "../sharedFolders/smbModel.ts";
+import { useFolderServiceReads } from "./useFolderServiceReads.ts";
 import { useHomeSettings } from "./useGroupsApi.ts";
 import {
   useSharedFoldersAll,
@@ -36,6 +37,8 @@ export function useSharedFolderView(address: string, focus: boolean) {
   const fileSystems = useShareFileSystems(options);
   // Whether the folder holds the home folders (phase 5 users design 13.1): Used by and the delete.
   const home = useHomeSettings(options);
+  // What else uses it: NFS entries, rsync server folders, copy jobs (phase 5 services design 2.7).
+  const serviceReads = useFolderServiceReads(options);
   const system = useSharesSystem();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -88,6 +91,7 @@ export function useSharedFolderView(address: string, focus: boolean) {
         groups.refetch(),
         fileSystems.refetch(),
         home.refetch(),
+        serviceReads.refetch(),
       ]);
     } finally {
       setRefreshing(false);
@@ -103,6 +107,7 @@ export function useSharedFolderView(address: string, focus: boolean) {
     groups,
     fileSystems,
     home,
+    serviceReads,
     system,
     pending,
     row,

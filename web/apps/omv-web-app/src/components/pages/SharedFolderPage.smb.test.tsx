@@ -265,7 +265,7 @@ describe("a folder that is shared (4.2)", () => {
     const { user } = await folderPage("sharesClassicOptions");
     expect(
       await within(section()).findByText(
-        "Some options were set in the classic interface, such as the recycle bin. They are kept.",
+        "Some options were set in the classic interface, such as Time Machine. They are kept.",
         {},
         LONG,
       ),

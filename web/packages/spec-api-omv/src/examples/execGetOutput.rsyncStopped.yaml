@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: "Failed to open file (filename=/tmp/bgstatus5hohls5v667j2i0zOCj, mode=r)."

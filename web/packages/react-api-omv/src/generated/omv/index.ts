@@ -1,3 +1,4 @@
+export * from "./certificate-mgmt/certificate-mgmt.ts";
 export * from "./config/config.ts";
 export * from "./disk-mgmt/disk-mgmt.ts";
 export * from "./email-notification/email-notification.ts";
@@ -8,6 +9,8 @@ export * from "./log-file/log-file.ts";
 export * from "./md-mgmt/md-mgmt.ts";
 export * from "./network/network.ts";
 export * from "./nfs/nfs.ts";
+export * from "./rsync/rsync.ts";
+export * from "./rsyncd/rsyncd.ts";
 export * from "./services/services.ts";
 export * from "./session/session.ts";
 export * from "./share-mgmt/share-mgmt.ts";

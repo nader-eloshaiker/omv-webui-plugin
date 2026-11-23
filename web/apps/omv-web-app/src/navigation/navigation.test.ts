@@ -75,6 +75,16 @@ describe("navFor", () => {
     expect(isCurrent("/usermgmt/users/alex", "/usermgmt/users")).toBe(true);
     expect(isCurrent("/usermgmt/groups/family", "/usermgmt/users")).toBe(false);
     expect(isCurrent("/storage/zfsx", "/storage/zfs")).toBe(false);
+    expect(isCurrent("/services/rsync", "/services/rsync")).toBe(true);
+    expect(isCurrent("/services/rsync/server", "/services/rsync")).toBe(true);
+    expect(isCurrent("/services/rsync/jobs/add", "/services/rsync")).toBe(true);
+    expect(
+      isCurrent(
+        "/services/rsync/jobs/00000000-0000-4000-8000-00000000000f",
+        "/services/rsync",
+      ),
+    ).toBe(true);
+    expect(isCurrent("/services/rsyncd", "/services/rsync")).toBe(false);
     // A shared folder's page and "Add a shared folder" mark Shared folders (phase 5 shares 10.2).
     expect(
       isCurrent(
@@ -145,6 +155,8 @@ describe("the table", () => {
       "/storage/zfs",
       "/storage/filesystems",
       "/storage/shared-folders",
+      "/services/nfs",
+      "/services/rsync",
       "/services/smb",
       "/services/ssh",
       "/usermgmt/settings",

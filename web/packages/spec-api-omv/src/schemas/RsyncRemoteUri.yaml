@@ -1,0 +1,10 @@
+type: string
+description: >-
+  Another computer's folder for a copy job (design phase-5-services 5.3), in one of the two forms
+  the interface writes: over SSH, "user@host:/folder/" (the port and key are separate fields), or
+  through the other computer's rsync server, "rsync://[user@]host[:port]/module/[folder/]". The
+  host is an IPv4 address, an IPv6 address in brackets, or a name of letters, digits, "." and "-";
+  the folder's parts are letters, digits and . _ - + @, no part "." or "..", no spaces. The
+  interface always writes the trailing "/"; a job made in the classic interface may lack it.
+maxLength: 1024
+pattern: '^(?:[a-z_][a-z0-9._-]{0,31}@(?:\[[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}\]|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*):/(?:(?!\.\.?(?:/|$))[A-Za-z0-9._+@-]+/)*(?!\.\.?(?:/|$))[A-Za-z0-9._+@-]+/?|rsync://(?:[a-z_][a-z0-9._-]{0,31}@)?(?:\[[0-9A-Fa-f]{0,4}(?::[0-9A-Fa-f]{0,4}){2,7}\]|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)(?::[1-9][0-9]{0,4})?/[A-Za-z0-9._-]+(?:/(?:(?!\.\.?(?:/|$))[A-Za-z0-9._+@-]+/)*(?!\.\.?(?:/|$))[A-Za-z0-9._+@-]+)?/?)$'

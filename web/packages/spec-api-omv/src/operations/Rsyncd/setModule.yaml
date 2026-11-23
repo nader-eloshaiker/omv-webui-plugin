@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: rsyncdSetModule
+  tags:
+    - Rsyncd
+  summary: Offer a folder to the rsync server, or change how
+  description: >-
+    Store an rsync server module. With OMV's placeholder UUID it makes one and refuses a name
+    already used; otherwise it replaces the stored module with what is sent, including its sign-ins,
+    so a password sent empty is stored empty. It marks the rsyncd module dirty. Returns the stored
+    module in its stored shape; the transport removes the sign-ins' passwords from it (UI-6).
+  x-omv-rpc:
+    service: Rsyncd
+    method: setModule
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-omit: ["users.user[].password"]
+  x-omv-source:
+    datamodel: rpc.rsyncd.setmodule
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/RsyncdSetModuleRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RsyncdModuleStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/rsyncdSetModule.created.yaml
+            changed:
+              $ref: ../../examples/rsyncdSetModule.changed.yaml
+    "500":
+      description: >-
+        OMV refused, such as a name another module already has.
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            nameTaken:
+              $ref: ../../examples/rsyncdSetModule.nameTaken.yaml

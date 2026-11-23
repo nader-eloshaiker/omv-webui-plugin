@@ -4,9 +4,11 @@
 import {
   acceptEmptyArrayForObject,
   acceptIntegerForInt64,
+  acceptStringForPresence,
   checkExampleCoverage,
   checkOmit,
   checkPathItem,
+  checkPresence,
   checkSchema,
 } from "./checks.js";
 
@@ -69,7 +71,9 @@ function Operation() {
     },
     Operation: {
       enter(op, ctx) {
-        reportAll(ctx, checkOmit(op, resolverFor(ctx)), ctx.location);
+        const resolve = resolverFor(ctx);
+        reportAll(ctx, checkOmit(op, resolve), ctx.location);
+        reportAll(ctx, checkPresence(op, resolve), ctx.location);
       },
     },
   };
@@ -119,6 +123,18 @@ function Int64AsNumber() {
   };
 }
 
+// Operation.leave: the schemas below the operation have been visited (and restated by the two
+// preprocessors above) by then; acceptStringForPresence looks inside either form.
+function PresenceAsString() {
+  return {
+    Operation: {
+      leave(op, ctx) {
+        acceptStringForPresence(op, resolverFor(ctx));
+      },
+    },
+  };
+}
+
 export default function omvPlugin() {
   return {
     id: "omv",
@@ -126,6 +142,7 @@ export default function omvPlugin() {
       oas3: {
         "empty-object-as-array": EmptyObjectAsArray,
         "int64-as-number": Int64AsNumber,
+        "presence-as-string": PresenceAsString,
       },
     },
     rules: {
