@@ -39,6 +39,18 @@ The brief, the visual language, the component skins and the composition of every
   what changed, what is live and what is working. It confirms a save or a toggle and guides attention.
   It is never gratuitous, slow or blocking.
 - **Dark first**, with light as the second theme. Both are first-class.
+- **Affordance first, without slowing pros down.** Systems like this intimidate new users. It must be
+  obvious what is clickable, what each thing is for, what will happen before it happens and what to
+  do next. That means clear interactive cues, guided first steps, sensible defaults, explanations
+  on demand rather than walls of prose, previews and undo where possible, and empty states that
+  teach. It must also stay fully functional for pros:
+  - a command palette, quick jump and keyboard shortcuts;
+  - dense views where they help;
+  - bulk actions;
+  - technical details (device names, paths, raw values) one disclosure away and copyable;
+  - no forced wizards for people who know what they want.
+
+  One interface serves both, through layers of progressive disclosure, not two separate modes.
 
 ## Research notes (2026-11-23)
 
@@ -95,6 +107,8 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
    - data visualisation;
    - the shell and navigation;
    - page archetypes, with prose moved into progressive disclosure;
+   - how one interface serves both newcomers and pros (affordance, guided paths, the command
+     palette, density, bulk actions);
    - **three distinct visual directions**, with a recommendation.
 3. **Live prototypes.** `/ui/lab` runs on the mock only and is never in the production bundle
    (`UI-11`). It shows the three directions in dark and light on three screens:
