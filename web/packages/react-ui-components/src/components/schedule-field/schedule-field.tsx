@@ -173,6 +173,8 @@ function ScheduleSelect({
         items={options}
         value={value}
         readOnly={unavailable}
+        // Read-only alone still let the list open on a slow runner; an unavailable select never opens.
+        {...(unavailable ? { open: false } : null)}
         onValueChange={(next) => {
           if (typeof next === "string") {
             onValueChange(next);

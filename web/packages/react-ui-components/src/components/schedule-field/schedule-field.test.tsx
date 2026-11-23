@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -320,8 +320,27 @@ describe("ScheduleField", () => {
     const often = screen.getByRole("combobox", { name: "How often" });
     expect(often).toHaveFocus();
     await user.keyboard("{Enter}");
-    await screen.findAllByRole("option");
-    await user.keyboard("{ArrowDown}{Enter}");
+    // Wait for the list to settle on the chosen option before moving, and for it to close after.
+    await waitFor(() =>
+      expect(screen.getByRole("option", { name: "Every day" })).toHaveAttribute(
+        "data-highlighted",
+      ),
+    );
+    // The list puts its highlight back on the chosen option a frame after it opens; move after that.
+    await act(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }),
+    );
+    await user.keyboard("{ArrowDown}");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: "Every week" }),
+      ).toHaveAttribute("data-highlighted"),
+    );
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.queryByRole("option")).toBeNull());
     expect(onValueChange).toHaveBeenLastCalledWith(
       expect.objectContaining({ frequency: "weekly" }),
     );
