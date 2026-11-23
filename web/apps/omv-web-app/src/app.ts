@@ -22,6 +22,8 @@ import { addGroupStore } from "./groups/addGroupFlow.ts";
 import { groupDeletes } from "./groups/deleteGroupFlow.ts";
 import { homeSession } from "./homeFolders/homeSession.ts";
 import { logsView } from "./logs/logsViewStore.ts";
+import { networkSession } from "./network/networkSession.ts";
+import { newIfaceFocus } from "./network/newIfaceFocus.ts";
 import { processesView } from "./processes/processesViewStore.ts";
 import { raidFlowStore } from "./raid/raidRun.ts";
 import { raidSession } from "./raid/raidSession.ts";
@@ -81,6 +83,8 @@ const SESSION_VIEW_STATE = [
   nfsSession,
   jobsSession,
   jobFlowStore,
+  networkSession,
+  newIfaceFocus,
 ];
 const resetViewState = () => {
   for (const store of SESSION_VIEW_STATE) {

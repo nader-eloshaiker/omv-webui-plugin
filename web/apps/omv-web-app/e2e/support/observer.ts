@@ -57,6 +57,26 @@ export const RPC_404_NO_PLUGIN: ConsoleAllowance = {
       ),
 };
 
+/**
+ * Over plain HTTP, Chromium ignores the snippet's Cross-Origin-Opener-Policy and logs it as an error
+ * for each document: COOP applies only on a potentially trustworthy origin (HTTPS or localhost; the
+ * mock browser test serves from 127.0.0.1, which is). The header is still right to send:
+ * it takes effect as soon as the same page is served over HTTPS. Allowed for an http: origin only:
+ * the VM over HTTP, and the mock browser test when a page is opened at a network story's address
+ * (fixtures.ts, `openedAt`).
+ */
+export const COOP_IGNORED_OVER_HTTP: ConsoleAllowance = {
+  reason: "COOP is ignored on an http: origin (not potentially trustworthy)",
+  matches: (message, origin) =>
+    origin.startsWith("http:") &&
+    message.location().url.startsWith(`${origin}/ui/`) &&
+    message
+      .text()
+      .startsWith(
+        "The Cross-Origin-Opener-Policy header has been ignored, because the URL's origin was untrustworthy.",
+      ),
+};
+
 /** Start observing `page`, served from `origin`. Call before the first navigation. */
 export async function observe(
   page: Page,

@@ -12,8 +12,29 @@
 // A stored value that is none of these (a wildcard, a netgroup, several entries) is "classic": shown
 // as stored and replaced only when the reader chooses one of the three.
 
-/** An address family. */
-export type Family = 4 | 6;
+import {
+  addressCount,
+  formatBits,
+  isComputerName,
+  maskOf,
+  parseAddress,
+  parseNetwork,
+  type Family,
+} from "../network/ip.ts";
+
+// The address and name parsing lives in network/ip.ts (phase 5 network design 16.3); these names
+// stay exported here for the services pages that import them.
+export {
+  addressCount,
+  formatIPv4,
+  formatIPv6,
+  isComputerName,
+  NAME_MAX,
+  parseAddress,
+  parseIPv4,
+  parseIPv6,
+  type Family,
+} from "../network/ip.ts";
 
 /** The choices of the field (the library's ClientField), `null` while none is chosen. */
 export type ClientChoice = "one" | "network" | "any" | "anyWithPassword";
@@ -56,132 +77,6 @@ export const PREFIX_RANGE = {
   6: { min: 16, max: 128 },
 } as const satisfies Record<Family, { min: number; max: number }>;
 
-/** The longest computer name (DNS). */
-export const NAME_MAX = 253;
-
-// ---- Addresses -----------------------------------------------------------------------------------
-
-const OCTET = "(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
-const IPV4 = new RegExp(`^${OCTET}(?:\\.${OCTET}){3}$`, "u");
-const HEX_GROUP = /^[0-9A-Fa-f]{1,4}$/u;
-/** A prefix as written: digits, no leading zero (the contract's pattern takes none). */
-const PREFIX_TEXT = /^(?:0|[1-9][0-9]{0,2})$/u;
-
-/** An IPv4 address as a number, or null. No leading zeros ("010" is refused, as the contract does). */
-export function parseIPv4(text: string): number | null {
-  if (!IPV4.test(text)) {
-    return null;
-  }
-  return text
-    .split(".")
-    .reduce((value, octet) => value * 256 + Number(octet), 0);
-}
-
-/**
- * An IPv6 address as a number, or null: eight groups of one to four hexadecimal digits, or fewer
- * with one "::" standing for the groups of zeros left out. No zone and no dotted IPv4 tail (the
- * contract's pattern takes neither).
- */
-export function parseIPv6(text: string): bigint | null {
-  // At most eight fields, so at most seven colons ("1:2:3:4:5:6:7::" is refused, as the contract does).
-  if (!/^[0-9A-Fa-f:]+$/u.test(text) || (text.match(/:/gu)?.length ?? 0) > 7) {
-    return null;
-  }
-  const halves = text.split("::");
-  if (halves.length > 2) {
-    return null;
-  }
-  const split = (part: string | undefined) =>
-    part === undefined || part === "" ? [] : part.split(":");
-  const head = split(halves[0]);
-  const tail = split(halves[1]);
-  const groups = [...head, ...tail];
-  if (!groups.every((g) => HEX_GROUP.test(g))) {
-    return null;
-  }
-  if (halves.length === 1 ? groups.length !== 8 : groups.length > 7) {
-    return null;
-  }
-  const all = [
-    ...head,
-    ...Array.from({ length: 8 - groups.length }, () => "0"),
-    ...tail,
-  ];
-  return all.reduce(
-    (value, group) => (value << 16n) | BigInt(Number.parseInt(group, 16)),
-    0n,
-  );
-}
-
-/** An IPv4 address written back in dotted form. */
-export function formatIPv4(value: number): string {
-  return [24, 16, 8, 0]
-    .map((shift) => String(Math.floor(value / 2 ** shift) % 256))
-    .join(".");
-}
-
-/** An IPv6 address in its shortest form (RFC 5952): lower case, the longest run of zeros as "::". */
-export function formatIPv6(value: bigint): string {
-  const groups = Array.from({ length: 8 }, (_, i) =>
-    Number((value >> BigInt((7 - i) * 16)) & 0xffffn),
-  );
-  // The longest run of two or more zero groups, the first of equal runs.
-  let best = { start: -1, length: 0 };
-  let run = { start: -1, length: 0 };
-  groups.forEach((group, i) => {
-    if (group === 0) {
-      run =
-        run.start === -1
-          ? { start: i, length: 1 }
-          : { ...run, length: run.length + 1 };
-      if (run.length > best.length) {
-        best = run;
-      }
-    } else {
-      run = { start: -1, length: 0 };
-    }
-  });
-  const hex = groups.map((g) => g.toString(16));
-  if (best.length < 2) {
-    return hex.join(":");
-  }
-  const before = hex.slice(0, best.start).join(":");
-  const after = hex.slice(best.start + best.length).join(":");
-  return `${before}::${after}`;
-}
-
-/** An address of either family, or null. */
-export function parseAddress(
-  text: string,
-): { family: 4; value: number } | { family: 6; value: bigint } | null {
-  const v4 = parseIPv4(text);
-  if (v4 !== null) {
-    return { family: 4, value: v4 };
-  }
-  const v6 = parseIPv6(text);
-  return v6 === null ? null : { family: 6, value: v6 };
-}
-
-// ---- Names --------------------------------------------------------------------------------------
-
-const LABEL = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/u;
-
-/**
- * Whether `text` is one computer's name: labels of letters, digits and "-" (not at either end, at
- * most 63 each) separated by ".", at most 253 characters, no wildcard. A last label of digits only
- * is refused: no top-level domain is all digits, so "192.0.2.300" is a mistyped address, not a name.
- */
-export function isComputerName(text: string): boolean {
-  if (text === "" || text.length > NAME_MAX) {
-    return false;
-  }
-  const labels = text.split(".");
-  if (!labels.every((l) => LABEL.test(l))) {
-    return false;
-  }
-  return !/^[0-9]+$/u.test(labels[labels.length - 1] ?? "");
-}
-
 // ---- Checks (on blur and on Save) -----------------------------------------------------------------
 
 /** One computer: an address of either family, or a name. Surrounding spaces are not part of it. */
@@ -201,43 +96,13 @@ export function checkComputer(raw: string): ClientCheck {
   return { ok: false, problem: { kind: "address" } };
 }
 
-interface Network {
-  family: Family;
-  /** The address as written, before the prefix is applied. */
-  address: bigint;
-  prefix: number;
-}
-
 /** "address/prefix" of either family, with any prefix the family can hold; or null. */
-function parseNetworkLoose(text: string): Network | null {
-  const parts = text.split("/");
-  if (parts.length !== 2 || !PREFIX_TEXT.test(parts[1] ?? "")) {
-    return null;
-  }
-  const prefix = Number(parts[1]);
-  const address = parseAddress(parts[0] ?? "");
-  if (address === null) {
-    return null;
-  }
-  const bits = address.family === 4 ? 32 : 128;
-  if (prefix > bits) {
-    return null;
-  }
-  return {
-    family: address.family,
-    address: BigInt(address.value),
-    prefix,
-  };
-}
+const parseNetworkLoose = parseNetwork;
 
-const maskOf = (family: Family, prefix: number): bigint => {
-  const bits = BigInt(family === 4 ? 32 : 128);
-  const all = (1n << bits) - 1n;
-  return all ^ ((1n << (bits - BigInt(prefix))) - 1n);
-};
+const formatAddress = formatBits;
 
-const formatAddress = (family: Family, value: bigint): string =>
-  family === 4 ? formatIPv4(Number(value)) : formatIPv6(value);
+/** A prefix as written: digits, no leading zero (the contract's pattern takes none). */
+const PREFIX_TEXT = /^(?:0|[1-9][0-9]{0,2})$/u;
 
 /**
  * One network, written with its first address (0.4): the prefix in its family's range, not /0, and
@@ -306,19 +171,6 @@ export function checkClient(value: ClientValue): ClientCheck {
 export const WIDE_IPV4 = 256;
 /** IPv6 networks shorter than this prefix are warned about; this one and shorter are "very large". */
 export const WIDE_IPV6_PREFIX = 64;
-
-/** How many addresses a network holds: a count for IPv4, "huge" for IPv6 of /64 or wider. */
-export function addressCount(
-  family: Family,
-  prefix: number,
-): { kind: "count"; count: number } | { kind: "huge" } {
-  if (family === 4) {
-    return { kind: "count", count: 2 ** (32 - prefix) };
-  }
-  return prefix <= WIDE_IPV6_PREFIX
-    ? { kind: "huge" }
-    : { kind: "count", count: 2 ** (128 - prefix) };
-}
 
 /**
  * The wide-network warning (0.4) for a valid network: more than 256 IPv4 addresses, or an IPv6

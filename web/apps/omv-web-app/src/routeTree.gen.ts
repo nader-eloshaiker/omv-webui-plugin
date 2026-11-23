@@ -19,6 +19,9 @@ import { Route as SignedInAccountPasswordRouteImport } from './routes/_signedIn/
 import { Route as SignedInAccountSettingsRouteImport } from './routes/_signedIn/account/settings'
 import { Route as SignedInDiagnosticsProcessesRouteImport } from './routes/_signedIn/diagnostics/processes'
 import { Route as SignedInDiagnosticsSystemLogsRouteImport } from './routes/_signedIn/diagnostics/system-logs'
+import { Route as SignedInNetworkFirewallRouteImport } from './routes/_signedIn/network/firewall'
+import { Route as SignedInNetworkGeneralRouteImport } from './routes/_signedIn/network/general'
+import { Route as SignedInNetworkProxyRouteImport } from './routes/_signedIn/network/proxy'
 import { Route as SignedInServicesNfsRouteImport } from './routes/_signedIn/services/nfs'
 import { Route as SignedInServicesSmbRouteImport } from './routes/_signedIn/services/smb'
 import { Route as SignedInServicesSshRouteImport } from './routes/_signedIn/services/ssh'
@@ -27,6 +30,8 @@ import { Route as SignedInDiagnosticsServicesIndexRouteImport } from './routes/_
 import { Route as SignedInDiagnosticsServicesNfsRouteImport } from './routes/_signedIn/diagnostics/services/nfs'
 import { Route as SignedInDiagnosticsServicesSmbRouteImport } from './routes/_signedIn/diagnostics/services/smb'
 import { Route as SignedInDiagnosticsServicesSshRouteImport } from './routes/_signedIn/diagnostics/services/ssh'
+import { Route as SignedInNetworkInterfacesIndexRouteImport } from './routes/_signedIn/network/interfaces/index'
+import { Route as SignedInNetworkInterfacesIfaceRouteImport } from './routes/_signedIn/network/interfaces/$iface'
 import { Route as SignedInServicesRsyncIndexRouteImport } from './routes/_signedIn/services/rsync/index'
 import { Route as SignedInServicesRsyncServerRouteImport } from './routes/_signedIn/services/rsync/server'
 import { Route as SignedInStorageDisksIndexRouteImport } from './routes/_signedIn/storage/disks/index'
@@ -53,6 +58,11 @@ import { Route as SignedInUsermgmtGroupsAddRouteImport } from './routes/_signedI
 import { Route as SignedInUsermgmtUsersIndexRouteImport } from './routes/_signedIn/usermgmt/users/index'
 import { Route as SignedInUsermgmtUsersNameRouteImport } from './routes/_signedIn/usermgmt/users/$name'
 import { Route as SignedInUsermgmtUsersAddRouteImport } from './routes/_signedIn/usermgmt/users/add'
+import { Route as SignedInNetworkInterfacesAddBondRouteImport } from './routes/_signedIn/network/interfaces/add/bond'
+import { Route as SignedInNetworkInterfacesAddBridgeRouteImport } from './routes/_signedIn/network/interfaces/add/bridge'
+import { Route as SignedInNetworkInterfacesAddPortRouteImport } from './routes/_signedIn/network/interfaces/add/port'
+import { Route as SignedInNetworkInterfacesAddVlanRouteImport } from './routes/_signedIn/network/interfaces/add/vlan'
+import { Route as SignedInNetworkInterfacesAddWifiRouteImport } from './routes/_signedIn/network/interfaces/add/wifi'
 import { Route as SignedInServicesRsyncJobsJobRouteImport } from './routes/_signedIn/services/rsync/jobs/$job'
 import { Route as SignedInServicesRsyncJobsAddRouteImport } from './routes/_signedIn/services/rsync/jobs/add'
 import { Route as SignedInStorageMdArrayIndexRouteImport } from './routes/_signedIn/storage/md/$array/index'
@@ -113,6 +123,21 @@ const SignedInDiagnosticsSystemLogsRoute =
     path: '/diagnostics/system-logs',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInNetworkFirewallRoute = SignedInNetworkFirewallRouteImport.update({
+  id: '/network/firewall',
+  path: '/network/firewall',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInNetworkGeneralRoute = SignedInNetworkGeneralRouteImport.update({
+  id: '/network/general',
+  path: '/network/general',
+  getParentRoute: () => SignedInRoute,
+} as any)
+const SignedInNetworkProxyRoute = SignedInNetworkProxyRouteImport.update({
+  id: '/network/proxy',
+  path: '/network/proxy',
+  getParentRoute: () => SignedInRoute,
+} as any)
 const SignedInServicesNfsRoute = SignedInServicesNfsRouteImport.update({
   id: '/services/nfs',
   path: '/services/nfs',
@@ -156,6 +181,18 @@ const SignedInDiagnosticsServicesSshRoute =
   SignedInDiagnosticsServicesSshRouteImport.update({
     id: '/diagnostics/services/ssh',
     path: '/diagnostics/services/ssh',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesIndexRoute =
+  SignedInNetworkInterfacesIndexRouteImport.update({
+    id: '/network/interfaces/',
+    path: '/network/interfaces/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesIfaceRoute =
+  SignedInNetworkInterfacesIfaceRouteImport.update({
+    id: '/network/interfaces/$iface',
+    path: '/network/interfaces/$iface',
     getParentRoute: () => SignedInRoute,
   } as any)
 const SignedInServicesRsyncIndexRoute =
@@ -311,6 +348,36 @@ const SignedInUsermgmtUsersAddRoute =
     path: '/usermgmt/users/add',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInNetworkInterfacesAddBondRoute =
+  SignedInNetworkInterfacesAddBondRouteImport.update({
+    id: '/network/interfaces/add/bond',
+    path: '/network/interfaces/add/bond',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesAddBridgeRoute =
+  SignedInNetworkInterfacesAddBridgeRouteImport.update({
+    id: '/network/interfaces/add/bridge',
+    path: '/network/interfaces/add/bridge',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesAddPortRoute =
+  SignedInNetworkInterfacesAddPortRouteImport.update({
+    id: '/network/interfaces/add/port',
+    path: '/network/interfaces/add/port',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesAddVlanRoute =
+  SignedInNetworkInterfacesAddVlanRouteImport.update({
+    id: '/network/interfaces/add/vlan',
+    path: '/network/interfaces/add/vlan',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInNetworkInterfacesAddWifiRoute =
+  SignedInNetworkInterfacesAddWifiRouteImport.update({
+    id: '/network/interfaces/add/wifi',
+    path: '/network/interfaces/add/wifi',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInServicesRsyncJobsJobRoute =
   SignedInServicesRsyncJobsJobRouteImport.update({
     id: '/services/rsync/jobs/$job',
@@ -370,6 +437,9 @@ export interface FileRoutesByFullPath {
   '/account/settings': typeof SignedInAccountSettingsRoute
   '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/network/firewall': typeof SignedInNetworkFirewallRoute
+  '/network/general': typeof SignedInNetworkGeneralRoute
+  '/network/proxy': typeof SignedInNetworkProxyRoute
   '/services/nfs': typeof SignedInServicesNfsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
@@ -377,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/network/interfaces/$iface': typeof SignedInNetworkInterfacesIfaceRoute
   '/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
@@ -395,6 +466,7 @@ export interface FileRoutesByFullPath {
   '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/network/interfaces/': typeof SignedInNetworkInterfacesIndexRoute
   '/services/rsync/': typeof SignedInServicesRsyncIndexRoute
   '/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
@@ -404,6 +476,11 @@ export interface FileRoutesByFullPath {
   '/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
   '/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
+  '/network/interfaces/add/bond': typeof SignedInNetworkInterfacesAddBondRoute
+  '/network/interfaces/add/bridge': typeof SignedInNetworkInterfacesAddBridgeRoute
+  '/network/interfaces/add/port': typeof SignedInNetworkInterfacesAddPortRoute
+  '/network/interfaces/add/vlan': typeof SignedInNetworkInterfacesAddVlanRoute
+  '/network/interfaces/add/wifi': typeof SignedInNetworkInterfacesAddWifiRoute
   '/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
   '/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
@@ -423,6 +500,9 @@ export interface FileRoutesByTo {
   '/account/settings': typeof SignedInAccountSettingsRoute
   '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/network/firewall': typeof SignedInNetworkFirewallRoute
+  '/network/general': typeof SignedInNetworkGeneralRoute
+  '/network/proxy': typeof SignedInNetworkProxyRoute
   '/services/nfs': typeof SignedInServicesNfsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
@@ -430,6 +510,7 @@ export interface FileRoutesByTo {
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/network/interfaces/$iface': typeof SignedInNetworkInterfacesIfaceRoute
   '/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
@@ -448,6 +529,7 @@ export interface FileRoutesByTo {
   '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
+  '/network/interfaces': typeof SignedInNetworkInterfacesIndexRoute
   '/services/rsync': typeof SignedInServicesRsyncIndexRoute
   '/storage/disks': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems': typeof SignedInStorageFilesystemsIndexRoute
@@ -457,6 +539,11 @@ export interface FileRoutesByTo {
   '/storage/zfs': typeof SignedInStorageZfsIndexRoute
   '/usermgmt/groups': typeof SignedInUsermgmtGroupsIndexRoute
   '/usermgmt/users': typeof SignedInUsermgmtUsersIndexRoute
+  '/network/interfaces/add/bond': typeof SignedInNetworkInterfacesAddBondRoute
+  '/network/interfaces/add/bridge': typeof SignedInNetworkInterfacesAddBridgeRoute
+  '/network/interfaces/add/port': typeof SignedInNetworkInterfacesAddPortRoute
+  '/network/interfaces/add/vlan': typeof SignedInNetworkInterfacesAddVlanRoute
+  '/network/interfaces/add/wifi': typeof SignedInNetworkInterfacesAddWifiRoute
   '/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
   '/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
@@ -478,6 +565,9 @@ export interface FileRoutesById {
   '/_signedIn/account/settings': typeof SignedInAccountSettingsRoute
   '/_signedIn/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/_signedIn/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/_signedIn/network/firewall': typeof SignedInNetworkFirewallRoute
+  '/_signedIn/network/general': typeof SignedInNetworkGeneralRoute
+  '/_signedIn/network/proxy': typeof SignedInNetworkProxyRoute
   '/_signedIn/services/nfs': typeof SignedInServicesNfsRoute
   '/_signedIn/services/smb': typeof SignedInServicesSmbRoute
   '/_signedIn/services/ssh': typeof SignedInServicesSshRoute
@@ -485,6 +575,7 @@ export interface FileRoutesById {
   '/_signedIn/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/_signedIn/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/_signedIn/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/_signedIn/network/interfaces/$iface': typeof SignedInNetworkInterfacesIfaceRoute
   '/_signedIn/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/_signedIn/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/_signedIn/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
@@ -503,6 +594,7 @@ export interface FileRoutesById {
   '/_signedIn/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/_signedIn/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/_signedIn/network/interfaces/': typeof SignedInNetworkInterfacesIndexRoute
   '/_signedIn/services/rsync/': typeof SignedInServicesRsyncIndexRoute
   '/_signedIn/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/_signedIn/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
@@ -512,6 +604,11 @@ export interface FileRoutesById {
   '/_signedIn/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/_signedIn/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
   '/_signedIn/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
+  '/_signedIn/network/interfaces/add/bond': typeof SignedInNetworkInterfacesAddBondRoute
+  '/_signedIn/network/interfaces/add/bridge': typeof SignedInNetworkInterfacesAddBridgeRoute
+  '/_signedIn/network/interfaces/add/port': typeof SignedInNetworkInterfacesAddPortRoute
+  '/_signedIn/network/interfaces/add/vlan': typeof SignedInNetworkInterfacesAddVlanRoute
+  '/_signedIn/network/interfaces/add/wifi': typeof SignedInNetworkInterfacesAddWifiRoute
   '/_signedIn/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
   '/_signedIn/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/_signedIn/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
@@ -533,6 +630,9 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/diagnostics/processes'
     | '/diagnostics/system-logs'
+    | '/network/firewall'
+    | '/network/general'
+    | '/network/proxy'
     | '/services/nfs'
     | '/services/smb'
     | '/services/ssh'
@@ -540,6 +640,7 @@ export interface FileRouteTypes {
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/network/interfaces/$iface'
     | '/services/rsync/server'
     | '/storage/disks/$disk'
     | '/storage/filesystems/$fs'
@@ -558,6 +659,7 @@ export interface FileRouteTypes {
     | '/usermgmt/users/$name'
     | '/usermgmt/users/add'
     | '/diagnostics/services/'
+    | '/network/interfaces/'
     | '/services/rsync/'
     | '/storage/disks/'
     | '/storage/filesystems/'
@@ -567,6 +669,11 @@ export interface FileRouteTypes {
     | '/storage/zfs/'
     | '/usermgmt/groups/'
     | '/usermgmt/users/'
+    | '/network/interfaces/add/bond'
+    | '/network/interfaces/add/bridge'
+    | '/network/interfaces/add/port'
+    | '/network/interfaces/add/vlan'
+    | '/network/interfaces/add/wifi'
     | '/services/rsync/jobs/$job'
     | '/services/rsync/jobs/add'
     | '/storage/md/$array/add'
@@ -586,6 +693,9 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/diagnostics/processes'
     | '/diagnostics/system-logs'
+    | '/network/firewall'
+    | '/network/general'
+    | '/network/proxy'
     | '/services/nfs'
     | '/services/smb'
     | '/services/ssh'
@@ -593,6 +703,7 @@ export interface FileRouteTypes {
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/network/interfaces/$iface'
     | '/services/rsync/server'
     | '/storage/disks/$disk'
     | '/storage/filesystems/$fs'
@@ -611,6 +722,7 @@ export interface FileRouteTypes {
     | '/usermgmt/users/$name'
     | '/usermgmt/users/add'
     | '/diagnostics/services'
+    | '/network/interfaces'
     | '/services/rsync'
     | '/storage/disks'
     | '/storage/filesystems'
@@ -620,6 +732,11 @@ export interface FileRouteTypes {
     | '/storage/zfs'
     | '/usermgmt/groups'
     | '/usermgmt/users'
+    | '/network/interfaces/add/bond'
+    | '/network/interfaces/add/bridge'
+    | '/network/interfaces/add/port'
+    | '/network/interfaces/add/vlan'
+    | '/network/interfaces/add/wifi'
     | '/services/rsync/jobs/$job'
     | '/services/rsync/jobs/add'
     | '/storage/md/$array/add'
@@ -640,6 +757,9 @@ export interface FileRouteTypes {
     | '/_signedIn/account/settings'
     | '/_signedIn/diagnostics/processes'
     | '/_signedIn/diagnostics/system-logs'
+    | '/_signedIn/network/firewall'
+    | '/_signedIn/network/general'
+    | '/_signedIn/network/proxy'
     | '/_signedIn/services/nfs'
     | '/_signedIn/services/smb'
     | '/_signedIn/services/ssh'
@@ -647,6 +767,7 @@ export interface FileRouteTypes {
     | '/_signedIn/diagnostics/services/nfs'
     | '/_signedIn/diagnostics/services/smb'
     | '/_signedIn/diagnostics/services/ssh'
+    | '/_signedIn/network/interfaces/$iface'
     | '/_signedIn/services/rsync/server'
     | '/_signedIn/storage/disks/$disk'
     | '/_signedIn/storage/filesystems/$fs'
@@ -665,6 +786,7 @@ export interface FileRouteTypes {
     | '/_signedIn/usermgmt/users/$name'
     | '/_signedIn/usermgmt/users/add'
     | '/_signedIn/diagnostics/services/'
+    | '/_signedIn/network/interfaces/'
     | '/_signedIn/services/rsync/'
     | '/_signedIn/storage/disks/'
     | '/_signedIn/storage/filesystems/'
@@ -674,6 +796,11 @@ export interface FileRouteTypes {
     | '/_signedIn/storage/zfs/'
     | '/_signedIn/usermgmt/groups/'
     | '/_signedIn/usermgmt/users/'
+    | '/_signedIn/network/interfaces/add/bond'
+    | '/_signedIn/network/interfaces/add/bridge'
+    | '/_signedIn/network/interfaces/add/port'
+    | '/_signedIn/network/interfaces/add/vlan'
+    | '/_signedIn/network/interfaces/add/wifi'
     | '/_signedIn/services/rsync/jobs/$job'
     | '/_signedIn/services/rsync/jobs/add'
     | '/_signedIn/storage/md/$array/add'
@@ -761,6 +888,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInDiagnosticsSystemLogsRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/network/firewall': {
+      id: '/_signedIn/network/firewall'
+      path: '/network/firewall'
+      fullPath: '/network/firewall'
+      preLoaderRoute: typeof SignedInNetworkFirewallRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/general': {
+      id: '/_signedIn/network/general'
+      path: '/network/general'
+      fullPath: '/network/general'
+      preLoaderRoute: typeof SignedInNetworkGeneralRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/proxy': {
+      id: '/_signedIn/network/proxy'
+      path: '/network/proxy'
+      fullPath: '/network/proxy'
+      preLoaderRoute: typeof SignedInNetworkProxyRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/services/nfs': {
       id: '/_signedIn/services/nfs'
       path: '/services/nfs'
@@ -815,6 +963,20 @@ declare module '@tanstack/react-router' {
       path: '/diagnostics/services/ssh'
       fullPath: '/diagnostics/services/ssh'
       preLoaderRoute: typeof SignedInDiagnosticsServicesSshRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/': {
+      id: '/_signedIn/network/interfaces/'
+      path: '/network/interfaces'
+      fullPath: '/network/interfaces/'
+      preLoaderRoute: typeof SignedInNetworkInterfacesIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/$iface': {
+      id: '/_signedIn/network/interfaces/$iface'
+      path: '/network/interfaces/$iface'
+      fullPath: '/network/interfaces/$iface'
+      preLoaderRoute: typeof SignedInNetworkInterfacesIfaceRouteImport
       parentRoute: typeof SignedInRoute
     }
     '/_signedIn/services/rsync/': {
@@ -999,6 +1161,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInUsermgmtUsersAddRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/network/interfaces/add/bond': {
+      id: '/_signedIn/network/interfaces/add/bond'
+      path: '/network/interfaces/add/bond'
+      fullPath: '/network/interfaces/add/bond'
+      preLoaderRoute: typeof SignedInNetworkInterfacesAddBondRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/add/bridge': {
+      id: '/_signedIn/network/interfaces/add/bridge'
+      path: '/network/interfaces/add/bridge'
+      fullPath: '/network/interfaces/add/bridge'
+      preLoaderRoute: typeof SignedInNetworkInterfacesAddBridgeRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/add/port': {
+      id: '/_signedIn/network/interfaces/add/port'
+      path: '/network/interfaces/add/port'
+      fullPath: '/network/interfaces/add/port'
+      preLoaderRoute: typeof SignedInNetworkInterfacesAddPortRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/add/vlan': {
+      id: '/_signedIn/network/interfaces/add/vlan'
+      path: '/network/interfaces/add/vlan'
+      fullPath: '/network/interfaces/add/vlan'
+      preLoaderRoute: typeof SignedInNetworkInterfacesAddVlanRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/network/interfaces/add/wifi': {
+      id: '/_signedIn/network/interfaces/add/wifi'
+      path: '/network/interfaces/add/wifi'
+      fullPath: '/network/interfaces/add/wifi'
+      preLoaderRoute: typeof SignedInNetworkInterfacesAddWifiRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/services/rsync/jobs/$job': {
       id: '/_signedIn/services/rsync/jobs/$job'
       path: '/services/rsync/jobs/$job'
@@ -1067,6 +1264,9 @@ interface SignedInRouteChildren {
   SignedInAccountSettingsRoute: typeof SignedInAccountSettingsRoute
   SignedInDiagnosticsProcessesRoute: typeof SignedInDiagnosticsProcessesRoute
   SignedInDiagnosticsSystemLogsRoute: typeof SignedInDiagnosticsSystemLogsRoute
+  SignedInNetworkFirewallRoute: typeof SignedInNetworkFirewallRoute
+  SignedInNetworkGeneralRoute: typeof SignedInNetworkGeneralRoute
+  SignedInNetworkProxyRoute: typeof SignedInNetworkProxyRoute
   SignedInServicesNfsRoute: typeof SignedInServicesNfsRoute
   SignedInServicesSmbRoute: typeof SignedInServicesSmbRoute
   SignedInServicesSshRoute: typeof SignedInServicesSshRoute
@@ -1074,6 +1274,7 @@ interface SignedInRouteChildren {
   SignedInDiagnosticsServicesNfsRoute: typeof SignedInDiagnosticsServicesNfsRoute
   SignedInDiagnosticsServicesSmbRoute: typeof SignedInDiagnosticsServicesSmbRoute
   SignedInDiagnosticsServicesSshRoute: typeof SignedInDiagnosticsServicesSshRoute
+  SignedInNetworkInterfacesIfaceRoute: typeof SignedInNetworkInterfacesIfaceRoute
   SignedInServicesRsyncServerRoute: typeof SignedInServicesRsyncServerRoute
   SignedInStorageDisksDiskRoute: typeof SignedInStorageDisksDiskRoute
   SignedInStorageFilesystemsFsRoute: typeof SignedInStorageFilesystemsFsRoute
@@ -1092,6 +1293,7 @@ interface SignedInRouteChildren {
   SignedInUsermgmtUsersNameRoute: typeof SignedInUsermgmtUsersNameRoute
   SignedInUsermgmtUsersAddRoute: typeof SignedInUsermgmtUsersAddRoute
   SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
+  SignedInNetworkInterfacesIndexRoute: typeof SignedInNetworkInterfacesIndexRoute
   SignedInServicesRsyncIndexRoute: typeof SignedInServicesRsyncIndexRoute
   SignedInStorageDisksIndexRoute: typeof SignedInStorageDisksIndexRoute
   SignedInStorageFilesystemsIndexRoute: typeof SignedInStorageFilesystemsIndexRoute
@@ -1101,6 +1303,11 @@ interface SignedInRouteChildren {
   SignedInStorageZfsIndexRoute: typeof SignedInStorageZfsIndexRoute
   SignedInUsermgmtGroupsIndexRoute: typeof SignedInUsermgmtGroupsIndexRoute
   SignedInUsermgmtUsersIndexRoute: typeof SignedInUsermgmtUsersIndexRoute
+  SignedInNetworkInterfacesAddBondRoute: typeof SignedInNetworkInterfacesAddBondRoute
+  SignedInNetworkInterfacesAddBridgeRoute: typeof SignedInNetworkInterfacesAddBridgeRoute
+  SignedInNetworkInterfacesAddPortRoute: typeof SignedInNetworkInterfacesAddPortRoute
+  SignedInNetworkInterfacesAddVlanRoute: typeof SignedInNetworkInterfacesAddVlanRoute
+  SignedInNetworkInterfacesAddWifiRoute: typeof SignedInNetworkInterfacesAddWifiRoute
   SignedInServicesRsyncJobsJobRoute: typeof SignedInServicesRsyncJobsJobRoute
   SignedInServicesRsyncJobsAddRoute: typeof SignedInServicesRsyncJobsAddRoute
   SignedInStorageMdArrayAddRoute: typeof SignedInStorageMdArrayAddRoute
@@ -1120,6 +1327,9 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInAccountSettingsRoute: SignedInAccountSettingsRoute,
   SignedInDiagnosticsProcessesRoute: SignedInDiagnosticsProcessesRoute,
   SignedInDiagnosticsSystemLogsRoute: SignedInDiagnosticsSystemLogsRoute,
+  SignedInNetworkFirewallRoute: SignedInNetworkFirewallRoute,
+  SignedInNetworkGeneralRoute: SignedInNetworkGeneralRoute,
+  SignedInNetworkProxyRoute: SignedInNetworkProxyRoute,
   SignedInServicesNfsRoute: SignedInServicesNfsRoute,
   SignedInServicesSmbRoute: SignedInServicesSmbRoute,
   SignedInServicesSshRoute: SignedInServicesSshRoute,
@@ -1127,6 +1337,7 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInDiagnosticsServicesNfsRoute: SignedInDiagnosticsServicesNfsRoute,
   SignedInDiagnosticsServicesSmbRoute: SignedInDiagnosticsServicesSmbRoute,
   SignedInDiagnosticsServicesSshRoute: SignedInDiagnosticsServicesSshRoute,
+  SignedInNetworkInterfacesIfaceRoute: SignedInNetworkInterfacesIfaceRoute,
   SignedInServicesRsyncServerRoute: SignedInServicesRsyncServerRoute,
   SignedInStorageDisksDiskRoute: SignedInStorageDisksDiskRoute,
   SignedInStorageFilesystemsFsRoute: SignedInStorageFilesystemsFsRoute,
@@ -1147,6 +1358,7 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInUsermgmtUsersNameRoute: SignedInUsermgmtUsersNameRoute,
   SignedInUsermgmtUsersAddRoute: SignedInUsermgmtUsersAddRoute,
   SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
+  SignedInNetworkInterfacesIndexRoute: SignedInNetworkInterfacesIndexRoute,
   SignedInServicesRsyncIndexRoute: SignedInServicesRsyncIndexRoute,
   SignedInStorageDisksIndexRoute: SignedInStorageDisksIndexRoute,
   SignedInStorageFilesystemsIndexRoute: SignedInStorageFilesystemsIndexRoute,
@@ -1157,6 +1369,12 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInStorageZfsIndexRoute: SignedInStorageZfsIndexRoute,
   SignedInUsermgmtGroupsIndexRoute: SignedInUsermgmtGroupsIndexRoute,
   SignedInUsermgmtUsersIndexRoute: SignedInUsermgmtUsersIndexRoute,
+  SignedInNetworkInterfacesAddBondRoute: SignedInNetworkInterfacesAddBondRoute,
+  SignedInNetworkInterfacesAddBridgeRoute:
+    SignedInNetworkInterfacesAddBridgeRoute,
+  SignedInNetworkInterfacesAddPortRoute: SignedInNetworkInterfacesAddPortRoute,
+  SignedInNetworkInterfacesAddVlanRoute: SignedInNetworkInterfacesAddVlanRoute,
+  SignedInNetworkInterfacesAddWifiRoute: SignedInNetworkInterfacesAddWifiRoute,
   SignedInServicesRsyncJobsJobRoute: SignedInServicesRsyncJobsJobRoute,
   SignedInServicesRsyncJobsAddRoute: SignedInServicesRsyncJobsAddRoute,
   SignedInStorageMdArrayAddRoute: SignedInStorageMdArrayAddRoute,

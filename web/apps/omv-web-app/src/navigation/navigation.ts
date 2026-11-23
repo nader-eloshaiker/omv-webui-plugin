@@ -52,6 +52,10 @@ export interface NavPage {
 
 /** The routes of the pages built in this interface, more specific than `/$group/$item`. */
 export type BuiltRoute =
+  | "/network/general"
+  | "/network/interfaces"
+  | "/network/proxy"
+  | "/network/firewall"
   | "/services/ssh"
   | "/services/smb"
   | "/services/nfs"
@@ -143,6 +147,7 @@ export const NAV_PAGES = [
     item: "general",
     labelKey: "nav.items.network.general",
     classic: "/#/network/general",
+    route: "/network/general",
     roles: ADMIN,
   },
   {
@@ -150,6 +155,7 @@ export const NAV_PAGES = [
     item: "interfaces",
     labelKey: "nav.items.network.interfaces",
     classic: "/#/network/interfaces",
+    route: "/network/interfaces",
     roles: ADMIN,
   },
   {
@@ -157,6 +163,7 @@ export const NAV_PAGES = [
     item: "proxy",
     labelKey: "nav.items.network.proxy",
     classic: "/#/network/proxy",
+    route: "/network/proxy",
     roles: ADMIN,
   },
   {
@@ -164,6 +171,7 @@ export const NAV_PAGES = [
     item: "firewall",
     labelKey: "nav.items.network.firewall",
     classic: "/#/network/firewall",
+    route: "/network/firewall",
     roles: ADMIN,
   },
   {
@@ -359,7 +367,7 @@ export const builtRoute = (page: NavPage): BuiltRoute | undefined => page.route;
  * systems"; an array's page and the RAID flows mark "RAID"; a shared folder's page and "Add a shared
  * folder" mark "Shared folders"; a person's page and "Add a person" mark "Users", and a group's page
  * and "Add a group" mark "Groups"; the Rsync server tab, a copy job's page and "Add a copy job"
- * mark "Rsync".
+ * mark "Rsync"; an interface's page and the set-up forms mark "Interfaces".
  */
 export function isCurrent(pathname: string, route: BuiltRoute): boolean {
   return (
@@ -377,7 +385,10 @@ export function isCurrent(pathname: string, route: BuiltRoute): boolean {
     (route === "/storage/md" && pathname.startsWith("/storage/md/")) ||
     (route === "/storage/zfs" && pathname.startsWith("/storage/zfs/")) ||
     (route === "/usermgmt/users" && pathname.startsWith("/usermgmt/users/")) ||
-    (route === "/usermgmt/groups" && pathname.startsWith("/usermgmt/groups/"))
+    (route === "/usermgmt/groups" &&
+      pathname.startsWith("/usermgmt/groups/")) ||
+    (route === "/network/interfaces" &&
+      pathname.startsWith("/network/interfaces/"))
   );
 }
 
@@ -432,6 +443,8 @@ export const CLASSIC = {
   zfs: "/#/storage/zfs/pools",
   notificationEvents: "/#/system/notification/events",
   networkInterfaces: "/#/network/interfaces",
+  firewall: "/#/network/firewall/rules",
+  proxy: "/#/network/proxy",
   smbSettings: "/#/services/smb/settings",
   nfsSettings: "/#/services/nfs/settings",
   rsyncServerSettings: "/#/services/rsync/server/settings",

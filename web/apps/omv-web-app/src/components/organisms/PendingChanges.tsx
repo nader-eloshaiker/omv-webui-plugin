@@ -3,45 +3,59 @@
 // System.getInformation, polled in the background (UI-14) and refetched after every x-omv-dirty
 // mutation and every finished task (react-api-omv's query.ts). Apply and Undo run as tasks through
 // the one task registry, so they keep running while the user moves between pages. Both ask first:
-// Apply lists what is applied and warns when the connection may drop; Undo names what is lost.
-import {
-  useConfigApplyChangesBg,
-  useConfigRevertChangesBg,
-} from "@omv-webui/react-api-omv/generated";
-import { taskRegistry, useTasks } from "@omv-webui/react-api-omv/tasks";
+// Apply lists what is applied and, when a network module is pending, what applying does to this page,
+// escalating to a typed confirmation or refusing (phase 5 network design 1.8); Undo names what is
+// lost. With a network module pending, the apply waits for the NAS to answer again (1.5, 13.1).
+import { useTasks } from "@omv-webui/react-api-omv/tasks";
 import {
   ConfirmDialog,
   InlineAlert,
+  IsolatedIdentifier,
   PendingBanner,
 } from "@omv-webui/react-ui-components";
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { inertBidi } from "../../format/isolate.ts";
+import { useBandActions } from "../../hooks/useBandActions.ts";
+import {
+  useNetworkApplyCheck,
+  type ApplyCheck,
+} from "../../hooks/useNetworkApplyCheck.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
+import {
+  bandConfirmation,
+  bandConfirmationMatches,
+} from "../../network/bandApply.ts";
+import { networkSession } from "../../network/networkSession.ts";
 import { mayCutConnection, pendingModules } from "../../pending/modules.ts";
 import { MAIN_ID, PENDING_BAND_ID } from "../../shell/ids.ts";
+import { useMemoryStore } from "../../shell/memoryStore.ts";
 import { useShowTask } from "../../shell/taskDialog.ts";
 import { ModuleName, ModuleNames } from "../molecules/ModuleNames.tsx";
-
-type Action = "apply" | "undo";
+import { BandWatch } from "./BandWatch.tsx";
+import { NetworkApplyFindings } from "./NetworkApplyFindings.tsx";
 
 export function PendingChanges() {
   const { t } = useTranslation();
   const info = useSystemInformation("admin");
   const tasks = useTasks();
   const showTask = useShowTask();
-  const apply = useConfigApplyChangesBg();
-  const undo = useConfigRevertChangesBg();
-  const [last, setLast] = useState<{ id: number; action: Action } | null>(null);
-  const [confirming, setConfirming] = useState<Action | null>(null);
-
   const modules = pendingModules(info.data?.dirtyModules);
+  const actions = useBandActions(modules);
+  const { last, watch } = actions;
+
   const count = modules.length;
   const dirty = info.data?.configDirty === true || count > 0;
   const task = last ? tasks.find((t) => t.id === last.id) : undefined;
-  const running = task?.state === "running";
-  const failed = task?.state === "failed";
+  const watching = watch.state !== null && actions.applied !== null;
+  const waiting = watching && watch.state?.phase !== "done";
+  const watchFailed =
+    watch.state?.phase === "done" && watch.state.outcome.kind === "applyFailed";
+  const running = task?.state === "running" || waiting;
+  // A network apply the watch is following is not failed for a failed read (1.5): only by its outcome.
+  const failed = watching ? watchFailed : task?.state === "failed";
 
-  const visible = dirty || running;
+  const visible = dirty || running || watching || actions.cameBack.length > 0;
 
   // When an apply or undo finishes, the band goes, and with it the control that had focus. Focus then
   // moves to the page title, so a keyboard user is not left on the page itself.
@@ -60,18 +74,6 @@ export function PendingChanges() {
     return null;
   }
 
-  const start = (action: Action) => {
-    setConfirming(null);
-    const id = taskRegistry.start(
-      t(action === "apply" ? "pending.applyTask" : "pending.undoTask"),
-      () =>
-        action === "apply"
-          ? apply.mutateAsync({ data: { modules: [], force: false } })
-          : undo.mutateAsync({ data: { filename: "" } }),
-    );
-    setLast({ id, action });
-  };
-
   const some = count > 0;
   const applyLabel = some
     ? t("pending.apply", { count })
@@ -89,45 +91,51 @@ export function PendingChanges() {
 
   return (
     <div id={PENDING_BAND_ID} tabIndex={-1} className="outline-hidden">
-      <PendingBanner
-        label={t("pending.label")}
-        message={message}
-        applyLabel={applyLabel}
-        undoLabel={undoLabel}
-        onApply={() => setConfirming("apply")}
-        onUndo={() => setConfirming("undo")}
-        state={running ? "applying" : failed ? "failed" : "idle"}
-        applyingMessage={t(
-          last?.action === "undo" ? "pending.undoing" : "pending.applying",
-        )}
-        failedMessage={t(
-          last?.action === "undo"
-            ? "pending.undoFailed"
-            : "pending.applyFailed",
-        )}
-        retryLabel={last?.action === "apply" ? t("pending.retry") : undefined}
-        showProgress={
-          task
-            ? {
-                label: t(
-                  running ? "pending.showProgress" : "pending.showDetails",
-                ),
-                onShow: () => showTask(task.id),
-              }
-            : undefined
-        }
-      />
+      {dirty || running || failed ? (
+        <PendingBanner
+          label={t("pending.label")}
+          message={message}
+          applyLabel={applyLabel}
+          undoLabel={undoLabel}
+          onApply={() => actions.setConfirming("apply")}
+          onUndo={() => actions.setConfirming("undo")}
+          state={running ? "applying" : failed ? "failed" : "idle"}
+          applyingMessage={t(
+            last?.action === "undo" ? "pending.undoing" : "pending.applying",
+          )}
+          failedMessage={t(
+            last?.action === "undo"
+              ? "pending.undoFailed"
+              : "pending.applyFailed",
+          )}
+          retryLabel={last?.action === "apply" ? t("pending.retry") : undefined}
+          showProgress={
+            task
+              ? {
+                  label: t(
+                    task.state === "running"
+                      ? "pending.showProgress"
+                      : "pending.showDetails",
+                  ),
+                  onShow: () => showTask(task.id),
+                }
+              : undefined
+          }
+        />
+      ) : null}
+      <BandWatch actions={actions} />
       <ApplyChangesDialog
-        open={confirming === "apply"}
-        onOpenChange={(open) => !open && setConfirming(null)}
+        open={actions.confirming === "apply"}
+        onOpenChange={(open) => !open && actions.setConfirming(null)}
         modules={modules}
-        onConfirm={() => start("apply")}
+        onConfirm={actions.apply}
+        onUndo={() => actions.setConfirming("undo")}
       />
       <UndoChangesDialog
-        open={confirming === "undo"}
-        onOpenChange={(open) => !open && setConfirming(null)}
+        open={actions.confirming === "undo"}
+        onOpenChange={(open) => !open && actions.setConfirming(null)}
         modules={modules}
-        onConfirm={() => start("undo")}
+        onConfirm={actions.undo}
       />
     </div>
   );
@@ -138,22 +146,51 @@ interface ChangesDialogProps {
   onOpenChange: (open: boolean) => void;
   /** The pending module ids, from System.getInformation's dirtyModules. */
   modules: readonly string[];
-  onConfirm: () => void;
 }
 
 /**
- * The band's confirmation before applying: what is applied, and a warning when the connection may
- * drop. Also used by flows whose pre-flight offers "Apply them now" (UX audit R1).
+ * The band's confirmation before applying: what is applied, and what applying does to this page.
+ * Whenever systemd-networkd, hosts, hostname or iptables is pending it runs the network check (1.8)
+ * when it opens and escalates: the ordinary confirmation with its lines; the typed one with the
+ * summary's "Before you apply" items and the destructive "Apply {{count}} changes"; or Apply
+ * unavailable with the reason, a link to where it can be changed and Undo. The web server's modules
+ * keep the general warning. Also used by flows whose pre-flight offers "Apply them now" (UX audit R1).
+ * `onConfirm` gets the check the reader confirmed (null when none ran), for the watch afterwards.
  */
 export function ApplyChangesDialog({
   open,
   onOpenChange,
   modules,
   onConfirm,
-}: ChangesDialogProps) {
+  onUndo,
+}: ChangesDialogProps & {
+  onConfirm: (check: ApplyCheck | null) => void;
+  /** Offered when the apply is refused (1.8). */
+  onUndo?: () => void;
+}) {
   const { t } = useTranslation();
+  const network = useNetworkApplyCheck(open, modules);
+  const [typed, setTyped] = useState("");
+  // Open empty every time (reset on the opening edge, during render).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setTyped("");
+    }
+  }
   const count = modules.length;
   const some = count > 0;
+  const result = network?.state === "done" ? network.result : null;
+  const escalation = result?.check.confirmation ?? "ordinary";
+  const confirmation =
+    result !== null && escalation === "typed"
+      ? bandConfirmation(result.check)
+      : null;
+  const matches =
+    confirmation === null || bandConfirmationMatches(confirmation, typed);
+  const blocked =
+    network?.state === "checking" || escalation === "unavailable" || !matches;
   return (
     <ConfirmDialog
       open={open}
@@ -162,11 +199,21 @@ export function ApplyChangesDialog({
         some ? t("pending.applyTitle", { count }) : t("pending.applyTitleAll")
       }
       description={t("pending.applyBody")}
+      variant={confirmation === null ? "default" : "destructive"}
       confirmLabel={
-        some ? t("pending.apply", { count }) : t("pending.applyAll")
+        confirmation !== null
+          ? t("netApply.confirm", { count })
+          : some
+            ? t("pending.apply", { count })
+            : t("pending.applyAll")
       }
+      confirmDisabled={blocked}
       cancelLabel={t("pending.cancel")}
-      onConfirm={onConfirm}
+      onConfirm={() => {
+        if (!blocked) {
+          onConfirm(result);
+        }
+      }}
     >
       {some ? (
         <div className="flex flex-col gap-1">
@@ -180,6 +227,17 @@ export function ApplyChangesDialog({
           </ul>
         </div>
       ) : null}
+      {network === undefined ? null : (
+        <NetworkApplyFindings
+          state={network}
+          pending={modules}
+          count={count}
+          confirmation={confirmation}
+          typed={typed}
+          onTypedChange={setTyped}
+          onUndo={onUndo}
+        />
+      )}
       {mayCutConnection(modules) ? (
         <InlineAlert tone="neutral">
           {t("pending.connectionWarning")}
@@ -189,16 +247,23 @@ export function ApplyChangesDialog({
   );
 }
 
-/** The band's confirmation before undoing: it names what is lost (UI-8). */
+/**
+ * The band's confirmation before undoing: it names what is lost (UI-8). When the pending changes
+ * include an interface whose settings this session removed, it says that the NAS queued a job to
+ * switch it off, which Undo cannot remove, and that the page applies the queued jobs and the network
+ * at once after undoing (10.4; useBandActions does).
+ */
 export function UndoChangesDialog({
   open,
   onOpenChange,
   modules,
   onConfirm,
-}: ChangesDialogProps) {
+}: ChangesDialogProps & { onConfirm: () => void }) {
   const { t } = useTranslation();
+  const session = useMemoryStore(networkSession);
   const count = modules.length;
   const some = count > 0;
+  const removed = modules.includes("task") ? session.ifacesRemoved : [];
   return (
     <ConfirmDialog
       open={open}
@@ -219,6 +284,17 @@ export function UndoChangesDialog({
       confirmLabel={some ? t("pending.undo", { count }) : t("pending.undoAll")}
       cancelLabel={t("pending.cancel")}
       onConfirm={onConfirm}
-    />
+    >
+      {removed.map((iface) => (
+        <p key={iface}>
+          <Trans
+            i18nKey="ifaceDelete.undoNote"
+            components={{
+              iface: <IsolatedIdentifier value={inertBidi(iface)} />,
+            }}
+          />
+        </p>
+      ))}
+    </ConfirmDialog>
   );
 }

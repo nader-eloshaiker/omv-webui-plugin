@@ -291,7 +291,8 @@ describe("the SSH page", () => {
     expect(
       callNames().filter(
         (c) =>
-          !/\.(get|is|getInformation)/.test(c) &&
+          // Reads only: the firewall line (13.4) reads the interfaces too.
+          !/\.(get|is|getInformation|enumerate)/.test(c) &&
           c !== "Zfs.listCompressionTypes",
       ),
     ).toEqual([]);
