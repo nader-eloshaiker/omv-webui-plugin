@@ -7,10 +7,23 @@ import { ServerMessage } from "../text/server-message";
 
 interface Referrer {
   id: string;
-  /** What kind of thing refers to the object, in words: "SMB share", "Rsync job", "Home folders". */
+  /**
+   * What refers to the object, in words: "SMB share", "Copied by the copy job", "Offered to the rsync
+   * server as". Or the whole entry as one sentence, with no `name`: "Holds the home folders."
+   */
   kind: React.ReactNode;
-  /** Its name, from the backend, rendered as text in the mono face and never cut short. */
-  name: string;
+  /**
+   * Its name, from the backend, rendered as text and never cut short. Leave it out for an entry that
+   * is only a sentence. An empty string is treated as no name.
+   */
+  name?: string;
+  /**
+   * How the name is set. `identifier` (the default): the mono face, for names a reader copies or
+   * compares (a share, an rsync server name, a path). `text`: the body face, medium weight, isolated
+   * with `dir="auto"`, for a name someone wrote (a copy job's note, design 0.2), which may be
+   * right-to-left.
+   */
+  nameStyle?: "identifier" | "text";
   /**
    * A control that opens it, such as a router link. Give it the full name, not just "Open":
    * `aria-label="Open SMB share media"`, since several rows sit side by side.
@@ -125,7 +138,15 @@ function UsedByPanel({
             <span className="text-sm text-muted-foreground sm:w-32 sm:shrink-0">
               {referrer.kind}
             </span>
-            <span className="min-w-0 flex-1 font-mono text-sm text-foreground [overflow-wrap:anywhere]">
+            {/* Present even without a name, so the action keeps its place at the end of the row. */}
+            <span
+              data-slot="used-by-name"
+              dir={referrer.nameStyle === "text" ? "auto" : undefined}
+              className={cn(
+                "min-w-0 flex-1 text-sm text-foreground [overflow-wrap:anywhere] empty:hidden sm:empty:block",
+                referrer.nameStyle === "text" ? "font-medium" : "font-mono",
+              )}
+            >
               {referrer.name}
             </span>
             {referrer.action}

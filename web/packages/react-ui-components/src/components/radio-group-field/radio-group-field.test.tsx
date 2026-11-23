@@ -189,3 +189,55 @@ describe("RadioGroupField with sections", () => {
     expect(sdc).toHaveFocus();
   });
 });
+
+describe("RadioGroupField unavailable but focusable", () => {
+  it("stays in the tab order, says why and refuses every change", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <RadioGroupField
+        legend="How to wipe"
+        value="quick"
+        onValueChange={onValueChange}
+        disabled
+        focusableWhenDisabled
+        disabledReason="The disk is in use by an array."
+      >
+        <RadioOption value="quick" label="Quick wipe" />
+        <RadioOption value="secure" label="Secure wipe" />
+      </RadioGroupField>,
+    );
+    const group = screen.getByRole("radiogroup", { name: "How to wipe" });
+    expect(group).toHaveAttribute("aria-disabled", "true");
+    expect(group).toHaveAccessibleDescription(
+      "The disk is in use by an array.",
+    );
+    await user.tab();
+    const quick = screen.getByRole("radio", { name: "Quick wipe" });
+    expect(quick).toHaveFocus();
+    expect(quick).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{ArrowDown}");
+    await user.click(screen.getByRole("radio", { name: "Secure wipe" }));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("adds the caller's description ids to the group's", () => {
+    render(
+      <>
+        <p id="extra">Wiping erases everything on it.</p>
+        <RadioGroupField
+          legend="How to wipe"
+          hint="Choose one."
+          value="quick"
+          onValueChange={() => undefined}
+          aria-describedby="extra"
+        >
+          <RadioOption value="quick" label="Quick wipe" />
+        </RadioGroupField>
+      </>,
+    );
+    expect(screen.getByRole("radiogroup")).toHaveAccessibleDescription(
+      "Choose one. Wiping erases everything on it.",
+    );
+  });
+});

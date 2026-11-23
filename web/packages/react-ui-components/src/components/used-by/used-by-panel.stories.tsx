@@ -161,3 +161,155 @@ export const UsedByUnknownWithoutLink: Story = {
     },
   },
 };
+
+// ---- The services slice's entries (phase 5 services design 2.7) ----------------------------------
+
+// A router link in the app; a plain anchor here. Named in full, since several sit side by side.
+function routerLink(href: string, name: string) {
+  return (
+    <a
+      href={href}
+      aria-label={name}
+      className="rounded-sm text-sm text-action-label underline underline-offset-2 hover:no-underline"
+    >
+      Open
+    </a>
+  );
+}
+
+const rsyncServerEntry = {
+  id: "rsyncd-photos",
+  kind: "Offered to the rsync server as",
+  name: "Photos",
+  action: routerLink("#/services/rsync/server", "Open the rsync server"),
+};
+
+/** Offered to the rsync server: the name it is offered as, and a link to the rsync server page. */
+export const OfferedToRsyncServer: Story = {
+  args: {
+    referrers: [rsyncServerEntry],
+    blockedAction: {
+      label: "Delete shared folder",
+      reason:
+        "It is offered to the rsync server as Photos. Stop offering it first.",
+    },
+  },
+};
+
+/** Copy jobs: the job's name as written (its note), in the body face, with a link to its page. */
+export const CopiedByCopyJobs: Story = {
+  args: {
+    referrers: [
+      {
+        id: "job-1",
+        kind: "Copied by the copy job",
+        name: "Photos to Backup",
+        nameStyle: "text",
+        action: routerLink(
+          "#/services/rsync/jobs/1",
+          "Open the copy job Photos to Backup",
+        ),
+      },
+      {
+        id: "job-2",
+        kind: "Copied to by the copy job",
+        name: "Phone uploads from the garage NAS every night",
+        nameStyle: "text",
+        action: routerLink(
+          "#/services/rsync/jobs/2",
+          "Open the copy job Phone uploads from the garage NAS every night",
+        ),
+      },
+    ],
+  },
+};
+
+/** A job named in a right-to-left language, isolated so the row's order holds. */
+export const CopyJobWithRightToLeftName: Story = {
+  args: {
+    referrers: [
+      {
+        id: "job-rtl",
+        kind: "Copied by the copy job",
+        name: "نسخ الصور إلى القرص الاحتياطي",
+        nameStyle: "text",
+        action: routerLink(
+          "#/services/rsync/jobs/3",
+          "Open the copy job نسخ الصور إلى القرص الاحتياطي",
+        ),
+      },
+    ],
+  },
+};
+
+/** An entry that is only a sentence and its link: the home folders. */
+export const HomeFoldersEntry: Story = {
+  args: {
+    referrers: [
+      {
+        id: "home",
+        kind: "Holds the home folders of everyone on this NAS.",
+        action: routerLink(
+          "#/usermgmt/settings",
+          "Open the home folders setting",
+        ),
+      },
+    ],
+  },
+};
+
+/** Used by an add-on: one sentence, no link (design 2.7). */
+export const UsedByAnAddOn: Story = {
+  args: {
+    unknownUse: {
+      message: "Used by an add-on's setting. Look in the classic interface.",
+    },
+    blockedAction: {
+      label: "Delete shared folder",
+      reason: "An add-on's setting still uses it.",
+    },
+  },
+};
+
+/** Every kind at once, and many copy jobs. */
+export const ManyEntries: Story = {
+  args: {
+    referrers: [
+      {
+        id: "smb-media",
+        kind: "Shared with Windows and Mac computers.",
+        name: "media",
+      },
+      rsyncServerEntry,
+      ...Array.from({ length: 12 }, (_, i) => {
+        const name = `Media to backup disk ${String(i + 1)}`;
+        return {
+          id: `job-${String(i)}`,
+          kind:
+            i % 3 === 0
+              ? "Copied to by the copy job"
+              : "Copied by the copy job",
+          name,
+          nameStyle: "text" as const,
+          action: routerLink(
+            `#/services/rsync/jobs/${String(i)}`,
+            `Open the copy job ${name}`,
+          ),
+        };
+      }),
+      {
+        id: "home",
+        kind: "Holds the home folders of everyone on this NAS.",
+        action: routerLink(
+          "#/usermgmt/settings",
+          "Open the home folders setting",
+        ),
+      },
+    ],
+    blockedAction: {
+      label: "Delete shared folder",
+      reason:
+        "Stop sharing it, stop offering it to the rsync server and delete the 12 copy jobs that use it first.",
+    },
+  },
+};

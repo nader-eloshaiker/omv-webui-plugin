@@ -94,3 +94,51 @@ describe("UsedByPanel", () => {
     expect(screen.queryByText(base.emptyText)).toBeNull();
   });
 });
+
+describe("UsedByPanel names", () => {
+  it("sets a written name in the body face, isolated, and an identifier in mono", () => {
+    render(
+      <UsedByPanel
+        {...base}
+        referrers={[
+          {
+            id: "job-1",
+            kind: "Copied by the copy job",
+            name: "نسخ الصور",
+            nameStyle: "text",
+          },
+          {
+            id: "module-1",
+            kind: "Offered to the rsync server as",
+            name: "Photos",
+          },
+        ]}
+      />,
+    );
+    const written = screen.getByText("نسخ الصور");
+    expect(written).toHaveAttribute("dir", "auto");
+    expect(written).toHaveClass("font-medium");
+    expect(written).not.toHaveClass("font-mono");
+    expect(screen.getByText("Photos")).toHaveClass("font-mono");
+  });
+
+  it("shows an entry that is only a sentence, with its link", () => {
+    render(
+      <UsedByPanel
+        {...base}
+        referrers={[
+          {
+            id: "home",
+            kind: "Holds the home folders.",
+            action: <a href="/usermgmt/settings">Open home folders</a>,
+          },
+        ]}
+      />,
+    );
+    const item = screen.getByRole("listitem");
+    expect(item).toHaveTextContent("Holds the home folders.Open home folders");
+    expect(
+      screen.getByRole("link", { name: "Open home folders" }),
+    ).toBeInTheDocument();
+  });
+});
