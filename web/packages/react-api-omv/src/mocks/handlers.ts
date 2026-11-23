@@ -27,6 +27,11 @@ export interface FixedAnswer {
    * script it stopped (a fatal error such as running out of memory) with 500 and an empty body.
    */
   rawBody?: string;
+  /**
+   * No reply at all: the request fails as it does when the NAS cannot be reached (the browser's fetch
+   * rejects, the transport's `network` kind). The status is then not used.
+   */
+  networkError?: true;
 }
 
 /** What the mock answers for one operation: a named example, a written reply, or a function of the call. */
@@ -71,6 +76,9 @@ function exampleAnswer(operationId: OperationId, name: string): FixedAnswer {
 }
 
 export function replyOf(answer: FixedAnswer) {
+  if (answer.networkError === true) {
+    return HttpResponse.error();
+  }
   if (answer.rawBody !== undefined) {
     return new HttpResponse(answer.rawBody, {
       status: answer.status,

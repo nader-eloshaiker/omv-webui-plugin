@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetVlanCandidates
+  tags:
+    - Network
+  summary: Interfaces a VLAN can run on
+  description: >-
+    The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it
+    uses now. Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getVlanCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformationList.yaml
+          examples:
+            onePort:
+              $ref: ../../examples/networkGetVlanCandidates.onePort.yaml
+            twoPorts:
+              $ref: ../../examples/networkGetVlanCandidates.twoPorts.yaml
+            layers:
+              $ref: ../../examples/networkGetVlanCandidates.layers.yaml

@@ -1,0 +1,11 @@
+type: integer
+description: >-
+  The packet size in bytes: 0 (the kernel's default) or 576 to 9216. OMV takes 0 to 65535; the
+  interface also refuses less than 1280 while IPv6 is on (design phase-5-network 0.8).
+oneOf:
+  - type: integer
+    minimum: 0
+    maximum: 0
+  - type: integer
+    minimum: 576
+    maximum: 9216

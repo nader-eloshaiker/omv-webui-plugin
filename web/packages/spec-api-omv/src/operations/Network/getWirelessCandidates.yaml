@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetWirelessCandidates
+  tags:
+    - Network
+  summary: Wi-Fi devices that can be set up
+  description: >-
+    The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without
+    Wi-Fi (observed on the test VM). Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getWirelessCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformationList.yaml
+          examples:
+            none:
+              $ref: ../../examples/networkGetWirelessCandidates.none.yaml
+            oneWifi:
+              $ref: ../../examples/networkGetWirelessCandidates.oneWifi.yaml

@@ -3,6 +3,10 @@ import * as React from "react";
 import { cn } from "../../utils";
 import { Button } from "../button/button";
 import { Field, FieldError, FieldHint, FieldLabel } from "../field/field";
+import {
+  RadioGroupField,
+  RadioOption,
+} from "../radio-group-field/radio-group-field";
 import { MaskedInput } from "./masked-input";
 
 interface StoredSecret {
@@ -12,6 +16,30 @@ interface StoredSecret {
   changeLabel: string;
   /** Closes it again and keeps the stored secret: "Keep the current password". */
   keepLabel: string;
+}
+
+/** The reader's answer to a stored secret this page cannot give back (`storedChoice`). */
+type StoredSecretAnswer = "keep" | "remove";
+
+/**
+ * A stored secret that a save must send again or drop (phase 5 network design 12.3, 0.6): the write
+ * replaces the whole object and the page never holds the stored value, so the reader must either type
+ * it again or remove it. A required choice; no answer is preselected.
+ */
+interface StoredSecretChoice {
+  /** Says a secret is stored, under the label: "Password: Set". */
+  setLabel?: React.ReactNode;
+  /** "Keep it: type it again". Choosing it shows the secret input under it. */
+  keepLabel: React.ReactNode;
+  /** "Remove the stored password". */
+  removeLabel: React.ReactNode;
+  /** The reader's answer, held by the caller; `null` until one is chosen. */
+  choice: StoredSecretAnswer | null;
+  onChoiceChange: (choice: StoredSecretAnswer) => void;
+  /** The refusal of an unanswered choice: "Type the stored password again, or remove it." */
+  error?: React.ReactNode;
+  /** The secret input's own label under Keep it, read with the field's label: "Password". */
+  inputLabel: React.ReactNode;
 }
 
 type SecretFieldProps = Omit<
@@ -31,6 +59,14 @@ type SecretFieldProps = Omit<
   stored?: StoredSecret;
   /** Called when the reader opens or closes the input for a new secret (only with `stored`). */
   onChangingChange?: (changing: boolean) => void;
+  /**
+   * A stored secret that must be typed again or removed before a save (design 12.3). The field is
+   * then a required choice, "Keep it: type it again" with the input under it, or "Remove the stored
+   * password"; `label` names the choice (add a `FieldRequired` inside it), `hint` describes it and
+   * `error` refuses the typed secret. Takes the place of `stored`. Choosing Remove takes the input out
+   * of the page, which empties it; after a request, give the field a new `key` to empty it too.
+   */
+  storedChoice?: StoredSecretChoice;
 };
 
 /**
@@ -47,6 +83,7 @@ function SecretField({
   revealLabel,
   stored,
   onChangingChange,
+  storedChoice,
   className,
   disabled,
   autoComplete = "new-password",
@@ -95,6 +132,62 @@ function SecretField({
       changeRef.current?.focus();
     }
   }, [changing]);
+
+  if (storedChoice) {
+    return (
+      <RadioGroupField
+        legend={label}
+        hint={
+          storedChoice.setLabel || hint ? (
+            <>
+              {storedChoice.setLabel ? (
+                <span className="block">{storedChoice.setLabel}</span>
+              ) : null}
+              {hint ? <span className="block">{hint}</span> : null}
+            </>
+          ) : undefined
+        }
+        error={storedChoice.error}
+        value={storedChoice.choice ?? ""}
+        onValueChange={(next) => {
+          if (next === "keep" || next === "remove") {
+            // A secret typed again opens masked, whatever was shown before.
+            setRevealed(false);
+            storedChoice.onChoiceChange(next);
+          }
+        }}
+        disabled={disabled}
+        className={cn("max-w-md", className)}
+      >
+        <RadioOption value="keep" label={storedChoice.keepLabel}>
+          {storedChoice.choice === "keep" ? (
+            <Field
+              data-slot="secret-field"
+              invalid={error ? true : undefined}
+              disabled={disabled}
+            >
+              <FieldLabel htmlFor={inputId} className="text-sm">
+                {storedChoice.inputLabel}
+              </FieldLabel>
+              <MaskedInput
+                {...safeProps}
+                ref={setInputRef}
+                id={inputId}
+                required
+                autoComplete={autoComplete}
+                disabled={disabled}
+                revealed={revealed}
+                onRevealedChange={setRevealed}
+                revealLabel={revealLabel}
+              />
+              {error ? <FieldError>{error}</FieldError> : null}
+            </Field>
+          ) : null}
+        </RadioOption>
+        <RadioOption value="remove" label={storedChoice.removeLabel} />
+      </RadioGroupField>
+    );
+  }
 
   if (stored && !changing) {
     return (
@@ -162,4 +255,9 @@ function SecretField({
 }
 
 export { SecretField };
-export type { SecretFieldProps, StoredSecret };
+export type {
+  SecretFieldProps,
+  StoredSecret,
+  StoredSecretAnswer,
+  StoredSecretChoice,
+};

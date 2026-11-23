@@ -36,6 +36,25 @@ import {
   usesFsMock,
   type FsMockState,
 } from "./fsScenarios.ts";
+import {
+  behindConnection,
+  isNetworkScenario,
+  NETWORK_MODULES,
+  NETWORK_SCENARIO_LABELS,
+  NETWORK_SCENARIOS,
+  networkAnswers,
+  networkApplied,
+  networkApplyStarted,
+  networkConnection,
+  networkHostname,
+  networkReverted,
+  networkTaskOutput,
+  networkTaskRunning,
+  networkTaskStop,
+  newNetworkMockState,
+  type NetworkMockState,
+  type NetworkModule,
+} from "./networkScenarios.ts";
 import { RAID_SCENARIO_LABELS, RAID_SCENARIOS } from "./raidScenarios.ts";
 import {
   isServicesScenario,
@@ -126,7 +145,7 @@ export const SCENARIOS = [
   "networkTwoPorts",
   "networkVirtual",
   "networkNoIpv6",
-  "networkWifi",
+  "networkWifiDown",
   "logsLarge",
   "logsHostile",
   "logsFail",
@@ -141,6 +160,7 @@ export const SCENARIOS = [
   ...SHARES_SCENARIOS,
   ...USERS_SCENARIOS,
   ...SERVICES_SCENARIOS,
+  ...NETWORK_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -155,6 +175,7 @@ const FAMILIES = new Set<string>([
   ...SHARES_SCENARIOS,
   ...USERS_SCENARIOS,
   ...SERVICES_SCENARIOS,
+  ...NETWORK_SCENARIOS,
 ]);
 /** The scenarios in the picker's groups. Development words, not the interface's. */
 export const SCENARIO_GROUPS: readonly {
@@ -172,6 +193,7 @@ export const SCENARIO_GROUPS: readonly {
   { label: "Shared folders and SMB", names: SHARES_SCENARIOS },
   { label: "Users and groups", names: USERS_SCENARIOS },
   { label: "NFS, rsync and SMB extras", names: SERVICES_SCENARIOS },
+  { label: "Network, firewall and proxy", names: NETWORK_SCENARIOS },
 ];
 
 /** What each scenario shows, for the picker. Development words, not the interface's. */
@@ -213,7 +235,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   networkTwoPorts: "Network: two ports, one unplugged",
   networkVirtual: "Network: twelve virtual interfaces",
   networkNoIpv6: "Network: no IPv6, speed not reported",
-  networkWifi: "Network: a Wi-Fi interface",
+  networkWifiDown: "Network: a Wi-Fi interface",
   logsLarge: "System logs: 12,000 entries, the newest 5,000 read",
   logsHostile: "System logs: long and markup-looking lines",
   logsFail: "System logs: reading fails",
@@ -228,6 +250,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...SHARES_SCENARIO_LABELS,
   ...USERS_SCENARIO_LABELS,
   ...SERVICES_SCENARIO_LABELS,
+  ...NETWORK_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -543,7 +566,7 @@ const devices = (...rows: unknown[]): FixedAnswer => ({
   status: 200,
   value: { total: rows.length, data: rows },
 });
-const NETWORK_SCENARIOS: Partial<Record<ScenarioName, FixedAnswer | "wifi">> = {
+const DASHBOARD_NETWORK: Partial<Record<ScenarioName, FixedAnswer | "wifi">> = {
   networkTwoPorts: devices(...DEVICES, {
     ...ETH,
     uuid: "00000000-0000-4000-8000-000000000007",
@@ -579,7 +602,7 @@ const NETWORK_SCENARIOS: Partial<Record<ScenarioName, FixedAnswer | "wifi">> = {
     },
     DEVICES[1],
   ),
-  networkWifi: "wifi",
+  networkWifiDown: "wifi",
 };
 
 type LogRow =
@@ -763,6 +786,8 @@ export interface MockSession {
   users?: UsersMockState;
   /** What the services answers remember (servicesScenarios.ts), in the services stories only. */
   services?: ServicesMockState;
+  /** What the network answers remember (networkScenarios.ts), in the network stories only. */
+  network?: NetworkMockState;
 }
 
 export const newMockSession = (
@@ -814,13 +839,14 @@ const FS_TASK_OUTPUTS: Readonly<Record<string, ExampleName<"execGetOutput">>> =
       "createBtrfsRaid1Finished",
   };
 
-// The captured run and emptying, outside the services stories: each started handle's last poll.
+// The captured run, emptying and blink, outside their stories: each started handle's last poll.
 const SERVICES_TASK_OUTPUTS: Readonly<
   Record<string, ExampleName<"execGetOutput">>
 > = {
   [CONTRACT_EXAMPLES.rsyncExecute.started.value]: "rsyncRunFinished",
   [CONTRACT_EXAMPLES.smbEmptyRecycleBin.started.value]:
     "emptyRecycleBinFinished",
+  [CONTRACT_EXAMPLES.networkIdentify.started.value]: "identifyFinished",
 };
 
 // OMV's descriptions of the modules the file-system actions mark dirty (engined/module/*.inc,
@@ -1068,9 +1094,39 @@ export function scenarioAnswers(
       servicesInformationRead(servicesState, { dirty: servicesDirty });
     }
   };
-  /** The NAS's name in the shares, users and services stories (sharesLongHost has a long one). */
+  /** The modules a network write marks dirty (observed on the test VM), with OMV's descriptions. */
+  const networkDirty = (modules: readonly NetworkModule[]) => {
+    session.fsDirty = {
+      ...session.fsDirty,
+      ...Object.fromEntries(modules.map((m) => [m, NETWORK_MODULES[m]])),
+    };
+  };
+  /** A network write outside the network stories: its example, with its modules pending. */
+  const networkPending =
+    <T extends string>(reply: T, modules: readonly NetworkModule[]) =>
+    (): T | FixedAnswer => {
+      const answer = guarded(reply)();
+      if (answer === reply) {
+        networkDirty(modules);
+      }
+      return answer;
+    };
+  // The remembering network answers (networkScenarios.ts), in the network stories.
+  if (isNetworkScenario(name) && session.network === undefined) {
+    session.network = newNetworkMockState(name);
+    networkDirty(session.network.pending);
+  }
+  const networkState = session.network;
+  const networkReplies =
+    networkState === undefined
+      ? undefined
+      : networkAnswers(networkState, { dirty: networkDirty });
+  /** The NAS's name in the shares, users, services and network stories (sharesLongHost has a long one). */
   const host =
-    sharesState?.host ?? usersState?.shares.host ?? servicesState?.shares.host;
+    sharesState?.host ??
+    usersState?.shares.host ??
+    servicesState?.shares.host ??
+    (networkState === undefined ? undefined : networkHostname(networkState));
   const withHost = (answer: FixedAnswer): FixedAnswer =>
     host === undefined || answer.status !== 200
       ? answer
@@ -1201,7 +1257,7 @@ export function scenarioAnswers(
     };
   };
 
-  return {
+  const answers: Answers = {
     sessionLogin: login(() => {
       switch (name) {
         case "user":
@@ -1281,7 +1337,13 @@ export function scenarioAnswers(
           : "clean",
       )();
     },
-    configApplyChangesBg: guarded("applied"),
+    configApplyChangesBg: ({ params }) => {
+      const answer = guarded("applied")();
+      if (answer === "applied" && networkState !== undefined) {
+        networkApplyStarted(networkState, params);
+      }
+      return answer;
+    },
     configRevertChangesBg: guarded("reverted"),
     // The last poll of a task: an apply that fails (A6: HTTP 500 with the Salt log), or a finished
     // apply or undo, after which nothing is pending.
@@ -1292,6 +1354,16 @@ export function scenarioAnswers(
         const task =
           gate.status === 200
             ? servicesTaskOutput(servicesState, params)
+            : undefined;
+        if (gate.status !== 200 || task !== undefined) {
+          return task ?? gate;
+        }
+      }
+      if (networkState !== undefined) {
+        const gate = guarded<never>({ status: 200 })();
+        const task =
+          gate.status === 200
+            ? networkTaskOutput(networkState, params)
             : undefined;
         if (gate.status !== 200 || task !== undefined) {
           return task ?? gate;
@@ -1361,6 +1433,13 @@ export function scenarioAnswers(
           servicesReverted(servicesState);
         }
       }
+      if (networkState !== undefined && session.signedIn) {
+        if (apply) {
+          networkApplied(networkState);
+        } else if (filename === REVERT_HANDLE) {
+          networkReverted(networkState);
+        }
+      }
       if (apply && fsState !== undefined && session.signedIn) {
         if (!fsApplied(name, fsState)) {
           return guarded("applyFailed")();
@@ -1379,17 +1458,25 @@ export function scenarioAnswers(
     execIsRunning: ({ params }) => {
       const gate = guarded<never>({ status: 200 })();
       const own =
-        gate.status === 200 && servicesState !== undefined
-          ? servicesTaskRunning(servicesState, params)
-          : undefined;
+        gate.status !== 200
+          ? undefined
+          : servicesState !== undefined
+            ? servicesTaskRunning(servicesState, params)
+            : networkState !== undefined
+              ? networkTaskRunning(networkState, params)
+              : undefined;
       return gate.status !== 200 ? gate : (own ?? "running");
     },
     execStop: ({ params }) => {
       const gate = guarded<never>({ status: 200 })();
       const own =
-        gate.status === 200 && servicesState !== undefined
-          ? servicesTaskStop(servicesState, params)
-          : undefined;
+        gate.status !== 200
+          ? undefined
+          : servicesState !== undefined
+            ? servicesTaskStop(servicesState, params)
+            : networkState !== undefined
+              ? networkTaskStop(networkState, params)
+              : undefined;
       return gate.status !== 200 ? gate : (own ?? "null");
     },
     sshGet: guarded("defaults"),
@@ -1435,7 +1522,7 @@ export function scenarioAnswers(
     smartGetListBg: guarded("smartDevices"),
     servicesGetStatus: guarded(SERVICE_SCENARIOS[name] ?? "sshOnly"),
     networkEnumerateDevicesList: guarded(
-      NETWORK_SCENARIOS[name] ?? "ethernetAndLoopback",
+      DASHBOARD_NETWORK[name] ?? "ethernetAndLoopback",
     ),
     logFileGetList: ({ params }) => {
       const log = logFor(params);
@@ -1698,5 +1785,107 @@ export function scenarioAnswers(
             sharesRead(reply),
           ]),
         )),
+    // The name, interfaces, firewall and proxy (phase 5 network design 17): stateless captured examples
+    // outside the network stories, each write marking what it marks on the VM; the remembering answers
+    // below in the network stories.
+    networkSetGeneralSettings: networkPending("saved", [
+      "avahi",
+      "hostname",
+      "hosts",
+      "postfix",
+      "samba",
+      "systemd-networkd",
+    ]),
+    networkIdentify: guarded("started"),
+    networkGetInformation: guarded("port"),
+    networkGetInterfaceList: guarded("onePort"),
+    networkGetInterface: guarded("dhcp"),
+    networkDeleteInterface: networkPending("removed", [
+      "avahi",
+      "collectd",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+      "task",
+    ]),
+    networkGetEthernetCandidates: guarded("none"),
+    networkGetWirelessCandidates: guarded("none"),
+    networkGetVlanCandidates: guarded("onePort"),
+    networkEnumerateBondSlaves: guarded("newBond"),
+    networkEnumerateBridgeSlaves: guarded("newBridge"),
+    networkSetEthernetIface: networkPending("changed", [
+      "avahi",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+    ]),
+    networkSetWirelessIface: networkPending("created", [
+      "avahi",
+      "collectd",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+    ]),
+    networkSetBondIface: networkPending("created", [
+      "avahi",
+      "collectd",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+    ]),
+    networkSetVlanIface: networkPending("created", [
+      "avahi",
+      "collectd",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+    ]),
+    networkSetBridgeIface: networkPending("created", [
+      "avahi",
+      "collectd",
+      "halt",
+      "hosts",
+      "issue",
+      "systemd-networkd",
+    ]),
+    networkGetProxy: guarded("none"),
+    networkSetProxy: networkPending("saved", ["apt", "profile"]),
+    iptablesGetRules: guarded("none"),
+    iptablesGetRules6: guarded("none"),
+    iptablesGetRule: guarded("one"),
+    iptablesSetRule: networkPending("created", ["iptables"]),
+    iptablesSetRules: networkPending("reordered", ["iptables"]),
+    iptablesSetRules6: networkPending("replaced", ["iptables"]),
+    iptablesDeleteRule: networkPending("removed", ["iptables"]),
+    ...(networkReplies === undefined
+      ? {}
+      : Object.fromEntries(
+          Object.entries(networkReplies).map(([operationId, reply]) => [
+            operationId,
+            sharesRead(reply),
+          ]),
+        )),
   };
+  if (networkState === undefined) {
+    return answers;
+  }
+  // In the network stories every call goes through the connection, which an apply may cut (1.5).
+  return behindConnection(answers, () =>
+    networkConnection(networkState, {
+      applied: () => {
+        session.dirty = false;
+        session.smartDirty = false;
+        session.fsDirty = {};
+      },
+      signOut: () => {
+        session.signedIn = false;
+        session.expiring = true;
+      },
+    }),
+  );
 }

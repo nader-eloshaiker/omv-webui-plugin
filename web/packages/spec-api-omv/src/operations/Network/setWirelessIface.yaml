@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetWirelessIface
+  tags:
+    - Network
+  summary: Set up or change a Wi-Fi interface
+  description: >-
+    Store a Wi-Fi interface's settings. OMV requires the password (HTTP 400 without it) and stores
+    whatever it is sent, without a length check: an empty one is stored empty and replaces the stored
+    password (observed). So every save carries the password typed again (design phase-5-network 0.6).
+    It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new interface
+    (observed). Returns the stored settings, the password included; the transport removes it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setWirelessIface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.network.setwirelessiface
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetWirelessIfaceRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/networkSetWirelessIface.created.yaml
+    "400":
+      description: "A field does not match what OMV accepts, such as a missing password."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noPassword:
+              $ref: ../../examples/networkSetWirelessIface.noPassword.yaml

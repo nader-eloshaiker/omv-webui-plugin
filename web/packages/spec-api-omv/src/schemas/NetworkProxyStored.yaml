@@ -1,0 +1,12 @@
+type: object
+description: >-
+  The proxies in their stored, nested shape, as Network.setProxy returns what it stored. The
+  transport removes each proxy's password from it (x-omv-omit, UI-6).
+required: [http, https, ftp]
+properties:
+  http:
+    $ref: ./NetworkProxyServerStored.yaml
+  https:
+    $ref: ./NetworkProxyServerStored.yaml
+  ftp:
+    $ref: ./NetworkProxyServerStored.yaml

@@ -9,6 +9,7 @@ import { StrictMode } from "react";
 import { afterEach } from "vitest";
 import { AppRoot } from "../AppRoot.tsx";
 import { bootApp, type App } from "../app.ts";
+import { networkPageAddress } from "../mocks/networkScenarios.ts";
 import {
   newMockSession,
   scenarioAnswers,
@@ -16,6 +17,7 @@ import {
   type MockSession,
   type ScenarioName,
 } from "../mocks/scenarios.ts";
+import { setApparentPageLocation } from "../network/pageLocation.ts";
 import "../services/i18n/index.ts";
 import { answer } from "./server.ts";
 
@@ -33,6 +35,7 @@ afterEach(() => {
   }
   // The registry is the application's one instance: forget this test's tasks.
   taskRegistry.clear();
+  setApparentPageLocation(null);
 });
 
 interface RenderAppOptions {
@@ -57,6 +60,8 @@ export async function renderApp({
 }: RenderAppOptions = {}) {
   const mock: MockSession = newMockSession(signedIn, startsDirty(scenario));
   answer({ ...scenarioAnswers(scenario, mock), ...answers });
+  // A network story says where the page appears to be opened (D17); the others leave localhost.
+  setApparentPageLocation(networkPageAddress(scenario));
   window.history.replaceState(null, "", `/ui${path}`);
   const app = await bootApp();
   running.push(app);

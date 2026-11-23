@@ -1,0 +1,64 @@
+type: object
+description: >-
+  The proxies the NAS's software updates and command line use (conf.system.network.proxy), as
+  Network.getProxy returns them: fifteen flattened fields. The transport replaces each stored
+  password by whether one is set (x-omv-presence, UI-6). OMV moves the stored fields out of
+  http, https and ftp, which are left empty ([] on the wire), also when a proxy is set.
+required:
+  [
+    httpenable,
+    httphost,
+    httpport,
+    httpusername,
+    httpsenable,
+    httpshost,
+    httpsport,
+    httpsusername,
+    ftpenable,
+    ftphost,
+    ftpport,
+    ftpusername,
+  ]
+properties:
+  http:
+    type: object
+    description: Always empty; its fields are the flattened http… ones.
+  httpenable:
+    type: boolean
+  httphost:
+    type: string
+  httpport:
+    type: integer
+  httpusername:
+    type: string
+  httppassword:
+    type: boolean
+    description: Whether a password is stored for this proxy.
+  https:
+    type: object
+    description: Always empty; its fields are the flattened https… ones.
+  httpsenable:
+    type: boolean
+  httpshost:
+    type: string
+  httpsport:
+    type: integer
+  httpsusername:
+    type: string
+  httpspassword:
+    type: boolean
+    description: Whether a password is stored for this proxy.
+  ftp:
+    type: object
+    description: Always empty; its fields are the flattened ftp… ones.
+  ftpenable:
+    type: boolean
+  ftphost:
+    type: string
+  ftpport:
+    type: integer
+  ftpusername:
+    type: string
+  ftppassword:
+    type: boolean
+    description: Whether a password is stored for this proxy.

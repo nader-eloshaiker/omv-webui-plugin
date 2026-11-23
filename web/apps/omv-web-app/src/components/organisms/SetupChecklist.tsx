@@ -5,9 +5,9 @@
 // changes as items change. Each item's read is its own: one failure shows "Not checked" with a retry
 // on that item only.
 //
-// Links go to a fixed route of this interface where one exists (the password form) and otherwise to a
-// fixed page of the classic interface (UI-3). The HTTPS item names the secure port as text and builds
-// no link from it (owner, 2026-11-20). Hiding the checklist asks first, because it hides it for every
+// Links go to a fixed route of this interface where one exists (the password form, the name of this
+// NAS: phase 5 network design 13.3) and otherwise to a fixed page of the classic interface (UI-3).
+// The HTTPS item names the secure port as text and builds no link from it (owner, 2026-11-20). Hiding the checklist asks first, because it hides it for every
 // administrator and this interface cannot bring it back.
 import {
   getSystemGetInformationQueryKey,
@@ -248,9 +248,9 @@ export function SetupChecklist({ info, username }: Props) {
       {...item("value")}
       title={t("checklist.name.title")}
       action={
-        <ClassicLink href={CLASSIC.networkGeneral}>
+        <Link to="/network/general" className="text-action-label underline">
           {t("checklist.name.link")}
-        </ClassicLink>
+        </Link>
       }
     >
       <p>

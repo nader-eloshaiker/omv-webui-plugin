@@ -1,0 +1,4 @@
+type: array
+description: Firewall rules as stored, in no guaranteed order (the interface sorts by rulenum).
+items:
+  $ref: ./IptablesRule.yaml

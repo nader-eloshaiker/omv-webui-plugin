@@ -54,17 +54,13 @@ export const isKnownModule = (id: string): id is KnownModule =>
   (KNOWN_MODULES as readonly string[]).includes(id);
 
 /**
- * Modules whose deployment can cut the connection this page runs over: the network configuration
- * (systemd-networkd), the web server (nginx, which webadmin changes also mark), the PHP back end of
- * rpc.php (phpfpm), the certificates nginx may serve, and the firewall (iptables).
+ * Modules whose deployment can cut the connection this page runs over and that the network check of
+ * the apply confirmation does not cover (phase 5 network design 13.1): the web server (nginx, which
+ * webadmin changes also mark), the PHP back end of rpc.php (phpfpm) and the certificates nginx may
+ * serve. The network modules (systemd-networkd, hosts, hostname, iptables) trigger that check
+ * instead (impact.ts `bandChecks`), which replaces the general warning for them.
  */
-const CONNECTION_MODULES = new Set<string>([
-  "systemd-networkd",
-  "nginx",
-  "phpfpm",
-  "certificates",
-  "iptables",
-]);
+const CONNECTION_MODULES = new Set<string>(["nginx", "phpfpm", "certificates"]);
 
 export const mayCutConnection = (ids: readonly string[]): boolean =>
   ids.some((id) => CONNECTION_MODULES.has(id));

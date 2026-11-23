@@ -10,6 +10,7 @@
 //   with only the console errors listed in VM_ALLOWANCES let through.
 import { test as base, expect, type Page } from "@playwright/test";
 import {
+  COOP_IGNORED_OVER_HTTP,
   expectNothingObserved,
   observe,
   RPC_401,
@@ -20,24 +21,6 @@ import { readVmTarget, type VmTarget } from "./vmTarget.ts";
 
 /** The target, or null without an env file; read once, when the suite loads. */
 export const target: VmTarget | null = readVmTarget();
-
-/**
- * Over plain HTTP, Chromium ignores the snippet's Cross-Origin-Opener-Policy and logs it as an error
- * for each document: COOP applies only on a potentially trustworthy origin (HTTPS or localhost; the
- * mock browser test serves from 127.0.0.1, so it never sees this). The header is still right to send:
- * it takes effect as soon as the same page is served over HTTPS. Allowed for an http: origin only.
- */
-const COOP_IGNORED_OVER_HTTP: ConsoleAllowance = {
-  reason: "COOP is ignored on an http: origin (not potentially trustworthy)",
-  matches: (message, origin) =>
-    origin.startsWith("http:") &&
-    message.location().url.startsWith(`${origin}/ui/`) &&
-    message
-      .text()
-      .startsWith(
-        "The Cross-Origin-Opener-Policy header has been ignored, because the URL's origin was untrustworthy.",
-      ),
-};
 
 /**
  * The console errors a real backend legitimately causes; nothing else is let through.

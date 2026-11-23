@@ -1,0 +1,12 @@
+type: object
+description: >-
+  Which devices a bond or bridge may use (rpc.network.enumeratebondslaves and
+  rpc.network.enumeratebridgeslaves). With unused, the devices nothing uses yet; with an existing
+  bond's or bridge's UUID, also its own. With OMV's placeholder UUID, only the unused ones.
+required: [uuid, unused]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  unused:
+    type: boolean
+additionalProperties: false

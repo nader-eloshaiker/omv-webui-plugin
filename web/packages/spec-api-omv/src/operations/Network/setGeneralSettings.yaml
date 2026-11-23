@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetGeneralSettings
+  tags:
+    - Network
+  summary: Change the NAS's name or domain
+  description: >-
+    Store the host name and domain name. Nothing changes on the system until the pending changes are
+    applied; it marks systemd-networkd, hosts, hostname, avahi, postfix and samba dirty (observed on
+    OMV 8.6.1). OMV stores a host name with capitals as sent (observed) and sets the system name in
+    lower case when applied (read from source). A page opened by the NAS's name loses it when the name
+    changes. Returns the stored object. OMV refuses a host name it does not accept with HTTP 400, and
+    the domains local, example, invalid and test with HTTP 500 (only as spelt: LOCAL is accepted,
+    observed); the contract refuses those four in any case.
+  x-omv-rpc:
+    service: Network
+    method: setGeneralSettings
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.network.setgeneralsettings
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetGeneralSettingsRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkGeneralSettings.yaml
+          examples:
+            saved:
+              $ref: ../../examples/networkSetGeneralSettings.saved.yaml
+    "400":
+      description: "A host name OMV does not accept."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            hyphenAtEnd:
+              $ref: ../../examples/networkSetGeneralSettings.hyphenAtEnd.yaml
+            tooLong:
+              $ref: ../../examples/networkSetGeneralSettings.tooLong.yaml
+    "500":
+      description: "A domain OMV's stored model refuses (local, example, invalid, test)."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            domainLocal:
+              $ref: ../../examples/networkSetGeneralSettings.domainLocal.yaml
+            domainExample:
+              $ref: ../../examples/networkSetGeneralSettings.domainExample.yaml

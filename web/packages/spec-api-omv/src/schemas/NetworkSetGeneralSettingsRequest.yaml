@@ -1,0 +1,25 @@
+type: object
+description: >-
+  The NAS's name and domain, to store (rpc.network.setgeneralsettings). Both are required. Stricter
+  than OMV: the host name in lower case (OMV sets the system name in lower case whatever it is
+  sent); the domain at most 253 characters and not local, example, invalid or test in any case
+  (OMV's stored model refuses those four as spelt).
+required: [hostname, domainname]
+properties:
+  hostname:
+    type: string
+    description: 1 to 63 lower-case letters, digits and hyphens, not starting or ending with a hyphen.
+    x-omv-format: hostname
+    maxLength: 63
+    pattern: "^[a-z0-9](?:[-a-z0-9]{0,61}[a-z0-9])?$"
+  domainname:
+    type: string
+    description: A domain name, or empty for none.
+    oneOf:
+      - type: string
+        x-omv-format: domainname
+        maxLength: 253
+        pattern: "^(?![Ll][Oo][Cc][Aa][Ll]$|[Ee][Xx][Aa][Mm][Pp][Ll][Ee]$|[Ii][Nn][Vv][Aa][Ll][Ii][Dd]$|[Tt][Ee][Ss][Tt]$)[a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?(?:[.][a-zA-Z0-9](?:[-a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)*$"
+      - type: string
+        maxLength: 0
+additionalProperties: false

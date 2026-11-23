@@ -94,6 +94,11 @@ export async function answerWithScenario(
       typeof answer === "function"
         ? answer({ params: body?.params, options: body?.options })
         : answer;
+    if (typeof resolved !== "string" && resolved.networkError === true) {
+      // No reply at all: the connection is lost (the network stories' apply).
+      await route.abort("connectionfailed");
+      return;
+    }
     if (typeof resolved !== "string" && resolved.rawBody !== undefined) {
       // A body that is not JSON: PHP's empty 500 when it stops a script.
       await route.fulfill({

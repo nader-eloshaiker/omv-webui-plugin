@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetBondIface
+  tags:
+    - Network
+  summary: Make or change a bond
+  description: >-
+    Store a bond's settings. With OMV's placeholder UUID it makes a bond, chooses its name (the next
+    "bond" and a number) and refuses a port already in another bond; otherwise it replaces the stored
+    bond. It refuses an empty primary port in modes 1, 5 and 6. It reads bondtransmithashpolicy
+    although its datamodel does not name it, and a bond sent without it is refused (HTTP 500,
+    observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new bond
+    (observed). Returns the stored settings, the ports as one comma-separated string; the transport
+    removes the Wi-Fi password from it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setBondIface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.network.setbondiface
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetBondIfaceRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/networkSetBondIface.created.yaml
+    "500":
+      description: "OMV refused: no transmit hash policy, no primary port in a mode that needs one, or a port already in a bond."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            noTransmitHashPolicy:
+              $ref: ../../examples/networkSetBondIface.noTransmitHashPolicy.yaml
+            noPrimary:
+              $ref: ../../examples/networkSetBondIface.noPrimary.yaml
+            portInBond:
+              $ref: ../../examples/networkSetBondIface.portInBond.yaml

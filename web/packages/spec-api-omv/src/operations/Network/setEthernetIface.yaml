@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetEthernetIface
+  tags:
+    - Network
+  summary: Set up or change a network port
+  description: >-
+    Store a network port's settings. With OMV's placeholder UUID it sets up a port and refuses a second
+    interface of the same kind and name (HTTP 500); otherwise it replaces the stored settings with what
+    is sent. Name servers and search domains sent separated by commas or semicolons are stored
+    separated by spaces (observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd
+    dirty for a new port, the same without collectd for a change (observed). Returns the stored
+    settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setEthernetIface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.network.setethernetiface
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetEthernetIfaceRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/networkSetEthernetIface.created.yaml
+            changed:
+              $ref: ../../examples/networkSetEthernetIface.changed.yaml
+    "500":
+      description: "OMV refused, such as a second interface of the same kind and name."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/RpcErrorDetail.yaml
+          examples:
+            sameName:
+              $ref: ../../examples/networkSetEthernetIface.sameName.yaml

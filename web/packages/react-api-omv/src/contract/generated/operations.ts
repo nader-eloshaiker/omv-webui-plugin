@@ -801,6 +801,304 @@ export const OPERATIONS = {
       $ref: "NetworkDeviceList",
     },
   },
+  "/rpc/Network/setGeneralSettings": {
+    operationId: "networkSetGeneralSettings",
+    service: "Network",
+    method: "setGeneralSettings",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "NetworkGeneralSettings",
+    },
+  },
+  "/rpc/Network/identify": {
+    operationId: "networkIdentify",
+    service: "Network",
+    method: "identify",
+    role: "admin",
+    readonly: false,
+    dirty: false,
+    task: {},
+    destructive: "service",
+    response: {
+      $ref: "TaskHandle",
+    },
+  },
+  "/rpc/Network/getInformation": {
+    operationId: "networkGetInformation",
+    service: "Network",
+    method: "getInformation",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformation",
+    },
+  },
+  "/rpc/Network/getInterfaceList": {
+    operationId: "networkGetInterfaceList",
+    service: "Network",
+    method: "getInterfaceList",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["data[].wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceList",
+    },
+  },
+  "/rpc/Network/getInterface": {
+    operationId: "networkGetInterface",
+    service: "Network",
+    method: "getInterface",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterface",
+    },
+  },
+  "/rpc/Network/deleteInterface": {
+    operationId: "networkDeleteInterface",
+    service: "Network",
+    method: "deleteInterface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/getEthernetCandidates": {
+    operationId: "networkGetEthernetCandidates",
+    service: "Network",
+    method: "getEthernetCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformationList",
+    },
+  },
+  "/rpc/Network/setEthernetIface": {
+    operationId: "networkSetEthernetIface",
+    service: "Network",
+    method: "setEthernetIface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/enumerateBondSlaves": {
+    operationId: "networkEnumerateBondSlaves",
+    service: "Network",
+    method: "enumerateBondSlaves",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformationList",
+    },
+  },
+  "/rpc/Network/setBondIface": {
+    operationId: "networkSetBondIface",
+    service: "Network",
+    method: "setBondIface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/getVlanCandidates": {
+    operationId: "networkGetVlanCandidates",
+    service: "Network",
+    method: "getVlanCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformationList",
+    },
+  },
+  "/rpc/Network/setVlanIface": {
+    operationId: "networkSetVlanIface",
+    service: "Network",
+    method: "setVlanIface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/getWirelessCandidates": {
+    operationId: "networkGetWirelessCandidates",
+    service: "Network",
+    method: "getWirelessCandidates",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformationList",
+    },
+  },
+  "/rpc/Network/setWirelessIface": {
+    operationId: "networkSetWirelessIface",
+    service: "Network",
+    method: "setWirelessIface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/enumerateBridgeSlaves": {
+    operationId: "networkEnumerateBridgeSlaves",
+    service: "Network",
+    method: "enumerateBridgeSlaves",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "NetworkDeviceInformationList",
+    },
+  },
+  "/rpc/Network/setBridgeIface": {
+    operationId: "networkSetBridgeIface",
+    service: "Network",
+    method: "setBridgeIface",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    omit: ["wpapsk"],
+    response: {
+      $ref: "NetworkInterfaceStored",
+    },
+  },
+  "/rpc/Network/getProxy": {
+    operationId: "networkGetProxy",
+    service: "Network",
+    method: "getProxy",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    presence: ["httppassword", "httpspassword", "ftppassword"],
+    response: {
+      $ref: "NetworkProxy",
+    },
+  },
+  "/rpc/Network/setProxy": {
+    operationId: "networkSetProxy",
+    service: "Network",
+    method: "setProxy",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    omit: ["http.password", "https.password", "ftp.password"],
+    response: {
+      $ref: "NetworkProxyStored",
+    },
+  },
+  "/rpc/Iptables/getRules": {
+    operationId: "iptablesGetRules",
+    service: "Iptables",
+    method: "getRules",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "IptablesRuleList",
+    },
+  },
+  "/rpc/Iptables/getRule": {
+    operationId: "iptablesGetRule",
+    service: "Iptables",
+    method: "getRule",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "IptablesRule",
+    },
+  },
+  "/rpc/Iptables/setRule": {
+    operationId: "iptablesSetRule",
+    service: "Iptables",
+    method: "setRule",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "IptablesRule",
+    },
+  },
+  "/rpc/Iptables/setRules": {
+    operationId: "iptablesSetRules",
+    service: "Iptables",
+    method: "setRules",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "IptablesRuleList",
+    },
+  },
+  "/rpc/Iptables/deleteRule": {
+    operationId: "iptablesDeleteRule",
+    service: "Iptables",
+    method: "deleteRule",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "IptablesRule",
+    },
+  },
+  "/rpc/Iptables/getRules6": {
+    operationId: "iptablesGetRules6",
+    service: "Iptables",
+    method: "getRules6",
+    role: "admin",
+    readonly: true,
+    dirty: false,
+    response: {
+      $ref: "IptablesRuleList",
+    },
+  },
+  "/rpc/Iptables/setRules6": {
+    operationId: "iptablesSetRules6",
+    service: "Iptables",
+    method: "setRules6",
+    role: "admin",
+    readonly: false,
+    dirty: true,
+    destructive: "access",
+    response: {
+      $ref: "IptablesRuleList",
+    },
+  },
   "/rpc/LogFile/getList": {
     operationId: "logFileGetList",
     service: "LogFile",
@@ -2060,6 +2358,67 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  IptablesRule: {
+    type: "object",
+    required: [
+      "uuid",
+      "family",
+      "rulenum",
+      "chain",
+      "action",
+      "source",
+      "sport",
+      "destination",
+      "dport",
+      "protocol",
+      "extraoptions",
+      "comment",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      family: {
+        type: "string",
+      },
+      rulenum: {
+        type: "integer",
+      },
+      chain: {
+        type: "string",
+      },
+      action: {
+        type: "string",
+      },
+      source: {
+        type: "string",
+      },
+      sport: {
+        type: "string",
+      },
+      destination: {
+        type: "string",
+      },
+      dport: {
+        type: "string",
+      },
+      protocol: {
+        type: "string",
+      },
+      extraoptions: {
+        type: "string",
+      },
+      comment: {
+        type: "string",
+      },
+    },
+  },
+  IptablesRuleList: {
+    type: "array",
+    items: {
+      $ref: "IptablesRule",
+    },
+  },
   LogRow: {
     type: "object",
     required: ["rownum"],
@@ -2556,6 +2915,94 @@ export const SCHEMAS: SchemaTable = {
       },
     },
   },
+  NetworkDeviceInformation: {
+    type: "object",
+    required: [
+      "devicename",
+      "gateway",
+      "gateway6",
+      "address",
+      "address6",
+      "prefix",
+      "prefix6",
+      "netmask",
+      "netmask6",
+      "ether",
+      "mtu",
+      "state",
+      "link",
+      "vlan",
+      "vlanid",
+      "speed",
+      "description",
+      "stats",
+    ],
+    properties: {
+      devicename: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      gateway: {
+        type: "string",
+      },
+      gateway6: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
+      address6: {
+        type: "string",
+      },
+      prefix: {
+        type: "integer",
+      },
+      prefix6: {
+        type: "integer",
+      },
+      netmask: {
+        type: "string",
+      },
+      netmask6: {
+        type: "string",
+      },
+      ether: {
+        type: "string",
+      },
+      mtu: {
+        type: "string",
+      },
+      state: {
+        type: "string",
+      },
+      link: {
+        type: "boolean",
+      },
+      vlan: {
+        type: "boolean",
+      },
+      vlanid: {
+        type: "integer",
+      },
+      speed: {
+        type: "integer",
+      },
+      description: {
+        type: "string",
+      },
+      stats: {
+        $ref: "NetworkDeviceStats",
+      },
+    },
+  },
+  NetworkDeviceInformationList: {
+    type: "array",
+    items: {
+      $ref: "NetworkDeviceInformation",
+    },
+  },
   NetworkDeviceList: {
     type: "object",
     required: ["total", "data"],
@@ -2620,6 +3067,552 @@ export const SCHEMAS: SchemaTable = {
       },
       domainname: {
         type: "string",
+      },
+    },
+  },
+  NetworkInterface: {
+    type: "object",
+    required: [
+      "uuid",
+      "type",
+      "devicename",
+      "method",
+      "address",
+      "netmask",
+      "gateway",
+      "routemetric",
+      "method6",
+      "address6",
+      "netmask6",
+      "gateway6",
+      "routemetric6",
+      "dnsnameservers",
+      "dnssearch",
+      "mtu",
+      "wol",
+      "comment",
+      "altmacaddress",
+      "slaves",
+      "bondprimary",
+      "bondmode",
+      "bondmiimon",
+      "bonddowndelay",
+      "bondupdelay",
+      "bondtransmithashpolicy",
+      "vlanid",
+      "vlanrawdevice",
+      "band",
+      "wpassid",
+      "keymanagement",
+      "hidden",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      devicename: {
+        type: "string",
+      },
+      method: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
+      netmask: {
+        type: "string",
+      },
+      gateway: {
+        type: "string",
+      },
+      routemetric: {
+        type: "integer",
+      },
+      method6: {
+        type: "string",
+      },
+      address6: {
+        type: "string",
+      },
+      netmask6: {
+        type: "integer",
+      },
+      gateway6: {
+        type: "string",
+      },
+      routemetric6: {
+        type: "integer",
+      },
+      dnsnameservers: {
+        type: "string",
+      },
+      dnssearch: {
+        type: "string",
+      },
+      mtu: {
+        type: "integer",
+      },
+      wol: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      altmacaddress: {
+        type: "string",
+      },
+      slaves: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      bondprimary: {
+        type: "string",
+      },
+      bondmode: {
+        type: "integer",
+      },
+      bondmiimon: {
+        type: "integer",
+      },
+      bonddowndelay: {
+        type: "integer",
+      },
+      bondupdelay: {
+        type: "integer",
+      },
+      bondtransmithashpolicy: {
+        type: "string",
+      },
+      vlanid: {
+        type: "integer",
+      },
+      vlanrawdevice: {
+        type: "string",
+      },
+      band: {
+        type: "string",
+      },
+      wpassid: {
+        type: "string",
+      },
+      keymanagement: {
+        type: "string",
+      },
+      hidden: {
+        type: "boolean",
+      },
+      wpapsk: {
+        type: "boolean",
+      },
+    },
+  },
+  NetworkInterfaceList: {
+    type: "object",
+    required: ["total", "data"],
+    properties: {
+      total: {
+        type: "integer",
+      },
+      data: {
+        type: "array",
+        items: {
+          $ref: "NetworkInterfaceRow",
+        },
+      },
+    },
+  },
+  NetworkInterfaceRow: {
+    type: "object",
+    required: [
+      "uuid",
+      "type",
+      "devicename",
+      "method",
+      "address",
+      "netmask",
+      "gateway",
+      "routemetric",
+      "method6",
+      "address6",
+      "netmask6",
+      "gateway6",
+      "routemetric6",
+      "dnsnameservers",
+      "dnssearch",
+      "mtu",
+      "wol",
+      "comment",
+      "altmacaddress",
+      "slaves",
+      "bondprimary",
+      "bondmode",
+      "bondmiimon",
+      "bonddowndelay",
+      "bondupdelay",
+      "bondtransmithashpolicy",
+      "vlanid",
+      "vlanrawdevice",
+      "band",
+      "wpassid",
+      "keymanagement",
+      "hidden",
+      "_used",
+      "_readonly",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      devicename: {
+        type: "string",
+      },
+      method: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
+      netmask: {
+        type: "string",
+      },
+      gateway: {
+        type: "string",
+      },
+      routemetric: {
+        type: "integer",
+      },
+      method6: {
+        type: "string",
+      },
+      address6: {
+        type: "string",
+      },
+      netmask6: {
+        type: "integer",
+      },
+      gateway6: {
+        type: "string",
+      },
+      routemetric6: {
+        type: "integer",
+      },
+      dnsnameservers: {
+        type: "string",
+      },
+      dnssearch: {
+        type: "string",
+      },
+      mtu: {
+        type: "integer",
+      },
+      wol: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      altmacaddress: {
+        type: "string",
+      },
+      slaves: {
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      bondprimary: {
+        type: "string",
+      },
+      bondmode: {
+        type: "integer",
+      },
+      bondmiimon: {
+        type: "integer",
+      },
+      bonddowndelay: {
+        type: "integer",
+      },
+      bondupdelay: {
+        type: "integer",
+      },
+      bondtransmithashpolicy: {
+        type: "string",
+      },
+      vlanid: {
+        type: "integer",
+      },
+      vlanrawdevice: {
+        type: "string",
+      },
+      band: {
+        type: "string",
+      },
+      wpassid: {
+        type: "string",
+      },
+      keymanagement: {
+        type: "string",
+      },
+      hidden: {
+        type: "boolean",
+      },
+      wpapsk: {
+        type: "boolean",
+      },
+      _used: {
+        type: "boolean",
+      },
+      _readonly: {
+        type: "boolean",
+      },
+    },
+  },
+  NetworkInterfaceStored: {
+    type: "object",
+    required: [
+      "uuid",
+      "type",
+      "devicename",
+      "method",
+      "address",
+      "netmask",
+      "gateway",
+      "routemetric",
+      "method6",
+      "address6",
+      "netmask6",
+      "gateway6",
+      "routemetric6",
+      "dnsnameservers",
+      "dnssearch",
+      "mtu",
+      "wol",
+      "comment",
+      "altmacaddress",
+      "slaves",
+      "bondprimary",
+      "bondmode",
+      "bondmiimon",
+      "bonddowndelay",
+      "bondupdelay",
+      "bondtransmithashpolicy",
+      "vlanid",
+      "vlanrawdevice",
+      "band",
+      "wpassid",
+      "keymanagement",
+      "hidden",
+    ],
+    properties: {
+      uuid: {
+        type: "string",
+      },
+      type: {
+        type: "string",
+      },
+      devicename: {
+        type: "string",
+      },
+      method: {
+        type: "string",
+      },
+      address: {
+        type: "string",
+      },
+      netmask: {
+        type: "string",
+      },
+      gateway: {
+        type: "string",
+      },
+      routemetric: {
+        type: "integer",
+      },
+      method6: {
+        type: "string",
+      },
+      address6: {
+        type: "string",
+      },
+      netmask6: {
+        type: "integer",
+      },
+      gateway6: {
+        type: "string",
+      },
+      routemetric6: {
+        type: "integer",
+      },
+      dnsnameservers: {
+        type: "string",
+      },
+      dnssearch: {
+        type: "string",
+      },
+      mtu: {
+        type: "integer",
+      },
+      wol: {
+        type: "boolean",
+      },
+      comment: {
+        type: "string",
+      },
+      altmacaddress: {
+        type: "string",
+      },
+      slaves: {
+        type: "string",
+      },
+      bondprimary: {
+        type: "string",
+      },
+      bondmode: {
+        type: "integer",
+      },
+      bondmiimon: {
+        type: "integer",
+      },
+      bonddowndelay: {
+        type: "integer",
+      },
+      bondupdelay: {
+        type: "integer",
+      },
+      bondtransmithashpolicy: {
+        type: "string",
+      },
+      vlanid: {
+        type: "integer",
+      },
+      vlanrawdevice: {
+        type: "string",
+      },
+      band: {
+        type: "string",
+      },
+      wpassid: {
+        type: "string",
+      },
+      keymanagement: {
+        type: "string",
+      },
+      hidden: {
+        type: "boolean",
+      },
+    },
+  },
+  NetworkProxy: {
+    type: "object",
+    required: [
+      "httpenable",
+      "httphost",
+      "httpport",
+      "httpusername",
+      "httpsenable",
+      "httpshost",
+      "httpsport",
+      "httpsusername",
+      "ftpenable",
+      "ftphost",
+      "ftpport",
+      "ftpusername",
+    ],
+    properties: {
+      http: {
+        type: "object",
+      },
+      httpenable: {
+        type: "boolean",
+      },
+      httphost: {
+        type: "string",
+      },
+      httpport: {
+        type: "integer",
+      },
+      httpusername: {
+        type: "string",
+      },
+      httppassword: {
+        type: "boolean",
+      },
+      https: {
+        type: "object",
+      },
+      httpsenable: {
+        type: "boolean",
+      },
+      httpshost: {
+        type: "string",
+      },
+      httpsport: {
+        type: "integer",
+      },
+      httpsusername: {
+        type: "string",
+      },
+      httpspassword: {
+        type: "boolean",
+      },
+      ftp: {
+        type: "object",
+      },
+      ftpenable: {
+        type: "boolean",
+      },
+      ftphost: {
+        type: "string",
+      },
+      ftpport: {
+        type: "integer",
+      },
+      ftpusername: {
+        type: "string",
+      },
+      ftppassword: {
+        type: "boolean",
+      },
+    },
+  },
+  NetworkProxyServerStored: {
+    type: "object",
+    required: ["enable", "host", "port", "username"],
+    properties: {
+      enable: {
+        type: "boolean",
+      },
+      host: {
+        type: "string",
+      },
+      port: {
+        type: "integer",
+      },
+      username: {
+        type: "string",
+      },
+    },
+  },
+  NetworkProxyStored: {
+    type: "object",
+    required: ["http", "https", "ftp"],
+    properties: {
+      http: {
+        $ref: "NetworkProxyServerStored",
+      },
+      https: {
+        $ref: "NetworkProxyServerStored",
+      },
+      ftp: {
+        $ref: "NetworkProxyServerStored",
       },
     },
   },

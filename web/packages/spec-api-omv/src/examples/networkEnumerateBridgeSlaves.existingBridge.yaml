@@ -1,0 +1,73 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  - devicename: enp26s0
+    gateway: ""
+    gateway6: ""
+    address: ""
+    address6: ""
+    prefix: -1
+    prefix6: -1
+    netmask: ""
+    netmask6: ""
+    ether: "00:00:5e:00:53:03"
+    mtu: "1500"
+    state: DOWN
+    link: false
+    vlan: false
+    vlanid: -1
+    speed: -1
+    description: "enp26s0 [00:00:5e:00:53:03]"
+    stats:
+      rx_bytes: "2612"
+      rx_packets: "10"
+      rx_errors: "0"
+      rx_dropped: "0"
+      rx_fifo_errors: "0"
+      rx_frame_errors: "0"
+      rx_compressed: "0"
+      rx_multicast: "0"
+      tx_bytes: "0"
+      tx_packets: "0"
+      tx_errors: "0"
+      tx_dropped: "0"
+      tx_fifo_errors: "0"
+      tx_collisions: "0"
+      tx_carrier_errors: "0"
+      tx_compressed: "0"
+    type: ethernet
+  - devicename: enp3s0
+    gateway: ""
+    gateway6: ""
+    address: ""
+    address6: ""
+    prefix: -1
+    prefix6: -1
+    netmask: ""
+    netmask6: ""
+    ether: "00:00:5e:00:53:02"
+    mtu: "1500"
+    state: UP
+    link: true
+    vlan: false
+    vlanid: -1
+    speed: 1000
+    description: "enp3s0 [00:00:5e:00:53:02]"
+    stats:
+      rx_bytes: "2484"
+      rx_packets: "12"
+      rx_errors: "0"
+      rx_dropped: "0"
+      rx_fifo_errors: "0"
+      rx_frame_errors: "0"
+      rx_compressed: "0"
+      rx_multicast: "0"
+      tx_bytes: "22170"
+      tx_packets: "99"
+      tx_errors: "0"
+      tx_dropped: "0"
+      tx_fifo_errors: "0"
+      tx_collisions: "0"
+      tx_carrier_errors: "0"
+      tx_compressed: "0"
+    type: ethernet

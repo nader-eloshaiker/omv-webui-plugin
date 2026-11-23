@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkIdentify
+  tags:
+    - Network
+  summary: Blink a port's light
+  description: >-
+    Blink the lights of a network port for the given seconds, as a background task (ethtool
+    --identify), so the port can be found by sight. OMV's own note says the system may not be reachable
+    through that port while it blinks. The task's output is ethtool's text, empty when it worked
+    (observed on the test VM's virtual port, whose driver supports it); it has no result. Changes no
+    configuration.
+  x-omv-rpc:
+    service: Network
+    method: identify
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-task: {}
+  x-omv-destructive: service
+  x-omv-source:
+    datamodel: rpc.network.identify
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkIdentifyRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/TaskHandle.yaml
+          examples:
+            started:
+              $ref: ../../examples/networkIdentify.started.yaml
