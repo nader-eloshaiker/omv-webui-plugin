@@ -17,6 +17,12 @@ installTheme();
 // below that loads mock code, so no mock module is emitted at all (UI-11).
 const MOCK = import.meta.env.DEV && import.meta.env.VITE_MOCK_API === "true";
 
+// The design lab at /ui/lab (src/lab): development only, behind the same compile-time switch, so a
+// production build emits none of it (UI-11). It does not boot the app or the mock.
+const LAB =
+  import.meta.env.DEV &&
+  window.location.pathname.startsWith(`${import.meta.env.BASE_URL}lab`);
+
 const ScenarioPicker = MOCK
   ? lazy(() => import("./mocks/ScenarioPicker.tsx"))
   : null;
@@ -27,6 +33,15 @@ async function start() {
     throw new Error("index.html has no #root.");
   }
   const root = createRoot(container);
+  if (LAB) {
+    const { default: LabRoot } = await import("./lab/LabRoot.tsx");
+    root.render(
+      <StrictMode>
+        <LabRoot />
+      </StrictMode>,
+    );
+    return;
+  }
   root.render(
     <UiProvider>
       <BootScreen />

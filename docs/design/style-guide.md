@@ -12,6 +12,10 @@ allowed to say, and the rules a component must follow. It is written for whoever
   distance number in this document is that script's output. When a token changes, rerun it and
   update the numbers quoted here in the same change.
 
+**Being re-founded.** [visual-foundation.md](visual-foundation.md) proposes the new look and lists,
+in its section 0, which sections of this guide it supersedes once the owner chooses a direction and
+which survive unchanged (status semantics, contrast, accessibility, security).
+
 **This is an unofficial community plugin.** It must not present itself as the official
 openmediavault interface. It does not use the openmediavault logo artwork (upstream's trademark);
 the product name appears as plain text, and the About screen says the UI is a community plugin and
