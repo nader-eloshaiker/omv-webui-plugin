@@ -17,6 +17,7 @@ import {
   getShareMgmtGetListQueryOptions,
   getSmbGetSettingsQueryOptions,
   getSmbGetShareListQueryOptions,
+  getSmbGetShareQueryOptions,
   getSystemGetInformationQueryOptions,
   getUserMgmtGetGroupListQueryOptions,
   getUserMgmtGetUserListQueryOptions,
@@ -34,6 +35,7 @@ import {
   type ShareCandidate,
   type SharedFolder,
   type SmbSettings,
+  type SmbShare,
   type SmbShareRow,
   type UserAccount,
   type UserGroup,
@@ -131,6 +133,11 @@ export interface SharesRereads {
   folders(): Promise<SharedFolder[]>;
   shares(): Promise<SmbShareRow[]>;
   settings(): Promise<SmbSettings>;
+  /**
+   * One SMB share as stored, read just before it is changed (services design 0.11, D12): narrower
+   * than the list, and it does not fail when another share's folder is gone.
+   */
+  share(uuid: string): Promise<SmbShare>;
   candidates(): Promise<ShareCandidate[]>;
   users(): Promise<UserAccount[]>;
   groups(): Promise<UserGroup[]>;
@@ -163,7 +170,7 @@ async function uncancelled<T>(read: () => Promise<T>, tries = 3): Promise<T> {
  * ran (a flow's form giving way to its run), resolves with the data from before: that says nothing
  * about the server either, so the read is made again, at most twice more.
  */
-async function freshRead<T>(
+export async function freshRead<T>(
   queryClient: QueryClient,
   queryKey: QueryKey,
   read: () => Promise<T>,
@@ -220,6 +227,13 @@ export function sharesRereads(queryClient: QueryClient): SharesRereads {
           ...fresh,
         }),
       ),
+    share: (uuid) =>
+      queryClient.fetchQuery({
+        ...getSmbGetShareQueryOptions({ uuid }),
+        ...fresh,
+        // Read for one write and not kept: nothing renders it.
+        gcTime: 0,
+      }),
     candidates: () =>
       freshRead(
         queryClient,

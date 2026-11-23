@@ -19,6 +19,7 @@ import { Route as SignedInAccountPasswordRouteImport } from './routes/_signedIn/
 import { Route as SignedInAccountSettingsRouteImport } from './routes/_signedIn/account/settings'
 import { Route as SignedInDiagnosticsProcessesRouteImport } from './routes/_signedIn/diagnostics/processes'
 import { Route as SignedInDiagnosticsSystemLogsRouteImport } from './routes/_signedIn/diagnostics/system-logs'
+import { Route as SignedInServicesNfsRouteImport } from './routes/_signedIn/services/nfs'
 import { Route as SignedInServicesSmbRouteImport } from './routes/_signedIn/services/smb'
 import { Route as SignedInServicesSshRouteImport } from './routes/_signedIn/services/ssh'
 import { Route as SignedInUsermgmtSettingsRouteImport } from './routes/_signedIn/usermgmt/settings'
@@ -26,6 +27,8 @@ import { Route as SignedInDiagnosticsServicesIndexRouteImport } from './routes/_
 import { Route as SignedInDiagnosticsServicesNfsRouteImport } from './routes/_signedIn/diagnostics/services/nfs'
 import { Route as SignedInDiagnosticsServicesSmbRouteImport } from './routes/_signedIn/diagnostics/services/smb'
 import { Route as SignedInDiagnosticsServicesSshRouteImport } from './routes/_signedIn/diagnostics/services/ssh'
+import { Route as SignedInServicesRsyncIndexRouteImport } from './routes/_signedIn/services/rsync/index'
+import { Route as SignedInServicesRsyncServerRouteImport } from './routes/_signedIn/services/rsync/server'
 import { Route as SignedInStorageDisksIndexRouteImport } from './routes/_signedIn/storage/disks/index'
 import { Route as SignedInStorageDisksDiskRouteImport } from './routes/_signedIn/storage/disks/$disk'
 import { Route as SignedInStorageFilesystemsIndexRouteImport } from './routes/_signedIn/storage/filesystems/index'
@@ -50,6 +53,8 @@ import { Route as SignedInUsermgmtGroupsAddRouteImport } from './routes/_signedI
 import { Route as SignedInUsermgmtUsersIndexRouteImport } from './routes/_signedIn/usermgmt/users/index'
 import { Route as SignedInUsermgmtUsersNameRouteImport } from './routes/_signedIn/usermgmt/users/$name'
 import { Route as SignedInUsermgmtUsersAddRouteImport } from './routes/_signedIn/usermgmt/users/add'
+import { Route as SignedInServicesRsyncJobsJobRouteImport } from './routes/_signedIn/services/rsync/jobs/$job'
+import { Route as SignedInServicesRsyncJobsAddRouteImport } from './routes/_signedIn/services/rsync/jobs/add'
 import { Route as SignedInStorageMdArrayIndexRouteImport } from './routes/_signedIn/storage/md/$array/index'
 import { Route as SignedInStorageMdArrayAddRouteImport } from './routes/_signedIn/storage/md/$array/add'
 import { Route as SignedInStorageZfsFsSplatRouteImport } from './routes/_signedIn/storage/zfs/fs/$'
@@ -108,6 +113,11 @@ const SignedInDiagnosticsSystemLogsRoute =
     path: '/diagnostics/system-logs',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInServicesNfsRoute = SignedInServicesNfsRouteImport.update({
+  id: '/services/nfs',
+  path: '/services/nfs',
+  getParentRoute: () => SignedInRoute,
+} as any)
 const SignedInServicesSmbRoute = SignedInServicesSmbRouteImport.update({
   id: '/services/smb',
   path: '/services/smb',
@@ -146,6 +156,18 @@ const SignedInDiagnosticsServicesSshRoute =
   SignedInDiagnosticsServicesSshRouteImport.update({
     id: '/diagnostics/services/ssh',
     path: '/diagnostics/services/ssh',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInServicesRsyncIndexRoute =
+  SignedInServicesRsyncIndexRouteImport.update({
+    id: '/services/rsync/',
+    path: '/services/rsync/',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInServicesRsyncServerRoute =
+  SignedInServicesRsyncServerRouteImport.update({
+    id: '/services/rsync/server',
+    path: '/services/rsync/server',
     getParentRoute: () => SignedInRoute,
   } as any)
 const SignedInStorageDisksIndexRoute =
@@ -289,6 +311,18 @@ const SignedInUsermgmtUsersAddRoute =
     path: '/usermgmt/users/add',
     getParentRoute: () => SignedInRoute,
   } as any)
+const SignedInServicesRsyncJobsJobRoute =
+  SignedInServicesRsyncJobsJobRouteImport.update({
+    id: '/services/rsync/jobs/$job',
+    path: '/services/rsync/jobs/$job',
+    getParentRoute: () => SignedInRoute,
+  } as any)
+const SignedInServicesRsyncJobsAddRoute =
+  SignedInServicesRsyncJobsAddRouteImport.update({
+    id: '/services/rsync/jobs/add',
+    path: '/services/rsync/jobs/add',
+    getParentRoute: () => SignedInRoute,
+  } as any)
 const SignedInStorageMdArrayIndexRoute =
   SignedInStorageMdArrayIndexRouteImport.update({
     id: '/storage/md/$array/',
@@ -336,12 +370,14 @@ export interface FileRoutesByFullPath {
   '/account/settings': typeof SignedInAccountSettingsRoute
   '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/services/nfs': typeof SignedInServicesNfsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
   '/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
   '/storage/filesystems/add': typeof SignedInStorageFilesystemsAddRoute
@@ -359,6 +395,7 @@ export interface FileRoutesByFullPath {
   '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/services/rsync/': typeof SignedInServicesRsyncIndexRoute
   '/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
   '/storage/md/': typeof SignedInStorageMdIndexRoute
@@ -367,6 +404,8 @@ export interface FileRoutesByFullPath {
   '/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
   '/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
+  '/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
+  '/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
@@ -384,12 +423,14 @@ export interface FileRoutesByTo {
   '/account/settings': typeof SignedInAccountSettingsRoute
   '/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/services/nfs': typeof SignedInServicesNfsRoute
   '/services/smb': typeof SignedInServicesSmbRoute
   '/services/ssh': typeof SignedInServicesSshRoute
   '/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
   '/storage/filesystems/add': typeof SignedInStorageFilesystemsAddRoute
@@ -407,6 +448,7 @@ export interface FileRoutesByTo {
   '/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/diagnostics/services': typeof SignedInDiagnosticsServicesIndexRoute
+  '/services/rsync': typeof SignedInServicesRsyncIndexRoute
   '/storage/disks': typeof SignedInStorageDisksIndexRoute
   '/storage/filesystems': typeof SignedInStorageFilesystemsIndexRoute
   '/storage/md': typeof SignedInStorageMdIndexRoute
@@ -415,6 +457,8 @@ export interface FileRoutesByTo {
   '/storage/zfs': typeof SignedInStorageZfsIndexRoute
   '/usermgmt/groups': typeof SignedInUsermgmtGroupsIndexRoute
   '/usermgmt/users': typeof SignedInUsermgmtUsersIndexRoute
+  '/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
+  '/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/storage/md/$array': typeof SignedInStorageMdArrayIndexRoute
@@ -434,12 +478,14 @@ export interface FileRoutesById {
   '/_signedIn/account/settings': typeof SignedInAccountSettingsRoute
   '/_signedIn/diagnostics/processes': typeof SignedInDiagnosticsProcessesRoute
   '/_signedIn/diagnostics/system-logs': typeof SignedInDiagnosticsSystemLogsRoute
+  '/_signedIn/services/nfs': typeof SignedInServicesNfsRoute
   '/_signedIn/services/smb': typeof SignedInServicesSmbRoute
   '/_signedIn/services/ssh': typeof SignedInServicesSshRoute
   '/_signedIn/usermgmt/settings': typeof SignedInUsermgmtSettingsRoute
   '/_signedIn/diagnostics/services/nfs': typeof SignedInDiagnosticsServicesNfsRoute
   '/_signedIn/diagnostics/services/smb': typeof SignedInDiagnosticsServicesSmbRoute
   '/_signedIn/diagnostics/services/ssh': typeof SignedInDiagnosticsServicesSshRoute
+  '/_signedIn/services/rsync/server': typeof SignedInServicesRsyncServerRoute
   '/_signedIn/storage/disks/$disk': typeof SignedInStorageDisksDiskRoute
   '/_signedIn/storage/filesystems/$fs': typeof SignedInStorageFilesystemsFsRoute
   '/_signedIn/storage/filesystems/add': typeof SignedInStorageFilesystemsAddRoute
@@ -457,6 +503,7 @@ export interface FileRoutesById {
   '/_signedIn/usermgmt/users/$name': typeof SignedInUsermgmtUsersNameRoute
   '/_signedIn/usermgmt/users/add': typeof SignedInUsermgmtUsersAddRoute
   '/_signedIn/diagnostics/services/': typeof SignedInDiagnosticsServicesIndexRoute
+  '/_signedIn/services/rsync/': typeof SignedInServicesRsyncIndexRoute
   '/_signedIn/storage/disks/': typeof SignedInStorageDisksIndexRoute
   '/_signedIn/storage/filesystems/': typeof SignedInStorageFilesystemsIndexRoute
   '/_signedIn/storage/md/': typeof SignedInStorageMdIndexRoute
@@ -465,6 +512,8 @@ export interface FileRoutesById {
   '/_signedIn/storage/zfs/': typeof SignedInStorageZfsIndexRoute
   '/_signedIn/usermgmt/groups/': typeof SignedInUsermgmtGroupsIndexRoute
   '/_signedIn/usermgmt/users/': typeof SignedInUsermgmtUsersIndexRoute
+  '/_signedIn/services/rsync/jobs/$job': typeof SignedInServicesRsyncJobsJobRoute
+  '/_signedIn/services/rsync/jobs/add': typeof SignedInServicesRsyncJobsAddRoute
   '/_signedIn/storage/md/$array/add': typeof SignedInStorageMdArrayAddRoute
   '/_signedIn/storage/zfs/fs/$': typeof SignedInStorageZfsFsSplatRoute
   '/_signedIn/storage/md/$array/': typeof SignedInStorageMdArrayIndexRoute
@@ -484,12 +533,14 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/diagnostics/processes'
     | '/diagnostics/system-logs'
+    | '/services/nfs'
     | '/services/smb'
     | '/services/ssh'
     | '/usermgmt/settings'
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/services/rsync/server'
     | '/storage/disks/$disk'
     | '/storage/filesystems/$fs'
     | '/storage/filesystems/add'
@@ -507,6 +558,7 @@ export interface FileRouteTypes {
     | '/usermgmt/users/$name'
     | '/usermgmt/users/add'
     | '/diagnostics/services/'
+    | '/services/rsync/'
     | '/storage/disks/'
     | '/storage/filesystems/'
     | '/storage/md/'
@@ -515,6 +567,8 @@ export interface FileRouteTypes {
     | '/storage/zfs/'
     | '/usermgmt/groups/'
     | '/usermgmt/users/'
+    | '/services/rsync/jobs/$job'
+    | '/services/rsync/jobs/add'
     | '/storage/md/$array/add'
     | '/storage/zfs/fs/$'
     | '/storage/md/$array/'
@@ -532,12 +586,14 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/diagnostics/processes'
     | '/diagnostics/system-logs'
+    | '/services/nfs'
     | '/services/smb'
     | '/services/ssh'
     | '/usermgmt/settings'
     | '/diagnostics/services/nfs'
     | '/diagnostics/services/smb'
     | '/diagnostics/services/ssh'
+    | '/services/rsync/server'
     | '/storage/disks/$disk'
     | '/storage/filesystems/$fs'
     | '/storage/filesystems/add'
@@ -555,6 +611,7 @@ export interface FileRouteTypes {
     | '/usermgmt/users/$name'
     | '/usermgmt/users/add'
     | '/diagnostics/services'
+    | '/services/rsync'
     | '/storage/disks'
     | '/storage/filesystems'
     | '/storage/md'
@@ -563,6 +620,8 @@ export interface FileRouteTypes {
     | '/storage/zfs'
     | '/usermgmt/groups'
     | '/usermgmt/users'
+    | '/services/rsync/jobs/$job'
+    | '/services/rsync/jobs/add'
     | '/storage/md/$array/add'
     | '/storage/zfs/fs/$'
     | '/storage/md/$array'
@@ -581,12 +640,14 @@ export interface FileRouteTypes {
     | '/_signedIn/account/settings'
     | '/_signedIn/diagnostics/processes'
     | '/_signedIn/diagnostics/system-logs'
+    | '/_signedIn/services/nfs'
     | '/_signedIn/services/smb'
     | '/_signedIn/services/ssh'
     | '/_signedIn/usermgmt/settings'
     | '/_signedIn/diagnostics/services/nfs'
     | '/_signedIn/diagnostics/services/smb'
     | '/_signedIn/diagnostics/services/ssh'
+    | '/_signedIn/services/rsync/server'
     | '/_signedIn/storage/disks/$disk'
     | '/_signedIn/storage/filesystems/$fs'
     | '/_signedIn/storage/filesystems/add'
@@ -604,6 +665,7 @@ export interface FileRouteTypes {
     | '/_signedIn/usermgmt/users/$name'
     | '/_signedIn/usermgmt/users/add'
     | '/_signedIn/diagnostics/services/'
+    | '/_signedIn/services/rsync/'
     | '/_signedIn/storage/disks/'
     | '/_signedIn/storage/filesystems/'
     | '/_signedIn/storage/md/'
@@ -612,6 +674,8 @@ export interface FileRouteTypes {
     | '/_signedIn/storage/zfs/'
     | '/_signedIn/usermgmt/groups/'
     | '/_signedIn/usermgmt/users/'
+    | '/_signedIn/services/rsync/jobs/$job'
+    | '/_signedIn/services/rsync/jobs/add'
     | '/_signedIn/storage/md/$array/add'
     | '/_signedIn/storage/zfs/fs/$'
     | '/_signedIn/storage/md/$array/'
@@ -697,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInDiagnosticsSystemLogsRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/services/nfs': {
+      id: '/_signedIn/services/nfs'
+      path: '/services/nfs'
+      fullPath: '/services/nfs'
+      preLoaderRoute: typeof SignedInServicesNfsRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/services/smb': {
       id: '/_signedIn/services/smb'
       path: '/services/smb'
@@ -744,6 +815,20 @@ declare module '@tanstack/react-router' {
       path: '/diagnostics/services/ssh'
       fullPath: '/diagnostics/services/ssh'
       preLoaderRoute: typeof SignedInDiagnosticsServicesSshRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/services/rsync/': {
+      id: '/_signedIn/services/rsync/'
+      path: '/services/rsync'
+      fullPath: '/services/rsync/'
+      preLoaderRoute: typeof SignedInServicesRsyncIndexRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/services/rsync/server': {
+      id: '/_signedIn/services/rsync/server'
+      path: '/services/rsync/server'
+      fullPath: '/services/rsync/server'
+      preLoaderRoute: typeof SignedInServicesRsyncServerRouteImport
       parentRoute: typeof SignedInRoute
     }
     '/_signedIn/storage/disks/': {
@@ -914,6 +999,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignedInUsermgmtUsersAddRouteImport
       parentRoute: typeof SignedInRoute
     }
+    '/_signedIn/services/rsync/jobs/$job': {
+      id: '/_signedIn/services/rsync/jobs/$job'
+      path: '/services/rsync/jobs/$job'
+      fullPath: '/services/rsync/jobs/$job'
+      preLoaderRoute: typeof SignedInServicesRsyncJobsJobRouteImport
+      parentRoute: typeof SignedInRoute
+    }
+    '/_signedIn/services/rsync/jobs/add': {
+      id: '/_signedIn/services/rsync/jobs/add'
+      path: '/services/rsync/jobs/add'
+      fullPath: '/services/rsync/jobs/add'
+      preLoaderRoute: typeof SignedInServicesRsyncJobsAddRouteImport
+      parentRoute: typeof SignedInRoute
+    }
     '/_signedIn/storage/md/$array/': {
       id: '/_signedIn/storage/md/$array/'
       path: '/storage/md/$array'
@@ -968,12 +1067,14 @@ interface SignedInRouteChildren {
   SignedInAccountSettingsRoute: typeof SignedInAccountSettingsRoute
   SignedInDiagnosticsProcessesRoute: typeof SignedInDiagnosticsProcessesRoute
   SignedInDiagnosticsSystemLogsRoute: typeof SignedInDiagnosticsSystemLogsRoute
+  SignedInServicesNfsRoute: typeof SignedInServicesNfsRoute
   SignedInServicesSmbRoute: typeof SignedInServicesSmbRoute
   SignedInServicesSshRoute: typeof SignedInServicesSshRoute
   SignedInUsermgmtSettingsRoute: typeof SignedInUsermgmtSettingsRoute
   SignedInDiagnosticsServicesNfsRoute: typeof SignedInDiagnosticsServicesNfsRoute
   SignedInDiagnosticsServicesSmbRoute: typeof SignedInDiagnosticsServicesSmbRoute
   SignedInDiagnosticsServicesSshRoute: typeof SignedInDiagnosticsServicesSshRoute
+  SignedInServicesRsyncServerRoute: typeof SignedInServicesRsyncServerRoute
   SignedInStorageDisksDiskRoute: typeof SignedInStorageDisksDiskRoute
   SignedInStorageFilesystemsFsRoute: typeof SignedInStorageFilesystemsFsRoute
   SignedInStorageFilesystemsAddRoute: typeof SignedInStorageFilesystemsAddRoute
@@ -991,6 +1092,7 @@ interface SignedInRouteChildren {
   SignedInUsermgmtUsersNameRoute: typeof SignedInUsermgmtUsersNameRoute
   SignedInUsermgmtUsersAddRoute: typeof SignedInUsermgmtUsersAddRoute
   SignedInDiagnosticsServicesIndexRoute: typeof SignedInDiagnosticsServicesIndexRoute
+  SignedInServicesRsyncIndexRoute: typeof SignedInServicesRsyncIndexRoute
   SignedInStorageDisksIndexRoute: typeof SignedInStorageDisksIndexRoute
   SignedInStorageFilesystemsIndexRoute: typeof SignedInStorageFilesystemsIndexRoute
   SignedInStorageMdIndexRoute: typeof SignedInStorageMdIndexRoute
@@ -999,6 +1101,8 @@ interface SignedInRouteChildren {
   SignedInStorageZfsIndexRoute: typeof SignedInStorageZfsIndexRoute
   SignedInUsermgmtGroupsIndexRoute: typeof SignedInUsermgmtGroupsIndexRoute
   SignedInUsermgmtUsersIndexRoute: typeof SignedInUsermgmtUsersIndexRoute
+  SignedInServicesRsyncJobsJobRoute: typeof SignedInServicesRsyncJobsJobRoute
+  SignedInServicesRsyncJobsAddRoute: typeof SignedInServicesRsyncJobsAddRoute
   SignedInStorageMdArrayAddRoute: typeof SignedInStorageMdArrayAddRoute
   SignedInStorageZfsFsSplatRoute: typeof SignedInStorageZfsFsSplatRoute
   SignedInStorageMdArrayIndexRoute: typeof SignedInStorageMdArrayIndexRoute
@@ -1016,12 +1120,14 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInAccountSettingsRoute: SignedInAccountSettingsRoute,
   SignedInDiagnosticsProcessesRoute: SignedInDiagnosticsProcessesRoute,
   SignedInDiagnosticsSystemLogsRoute: SignedInDiagnosticsSystemLogsRoute,
+  SignedInServicesNfsRoute: SignedInServicesNfsRoute,
   SignedInServicesSmbRoute: SignedInServicesSmbRoute,
   SignedInServicesSshRoute: SignedInServicesSshRoute,
   SignedInUsermgmtSettingsRoute: SignedInUsermgmtSettingsRoute,
   SignedInDiagnosticsServicesNfsRoute: SignedInDiagnosticsServicesNfsRoute,
   SignedInDiagnosticsServicesSmbRoute: SignedInDiagnosticsServicesSmbRoute,
   SignedInDiagnosticsServicesSshRoute: SignedInDiagnosticsServicesSshRoute,
+  SignedInServicesRsyncServerRoute: SignedInServicesRsyncServerRoute,
   SignedInStorageDisksDiskRoute: SignedInStorageDisksDiskRoute,
   SignedInStorageFilesystemsFsRoute: SignedInStorageFilesystemsFsRoute,
   SignedInStorageFilesystemsAddRoute: SignedInStorageFilesystemsAddRoute,
@@ -1041,6 +1147,7 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInUsermgmtUsersNameRoute: SignedInUsermgmtUsersNameRoute,
   SignedInUsermgmtUsersAddRoute: SignedInUsermgmtUsersAddRoute,
   SignedInDiagnosticsServicesIndexRoute: SignedInDiagnosticsServicesIndexRoute,
+  SignedInServicesRsyncIndexRoute: SignedInServicesRsyncIndexRoute,
   SignedInStorageDisksIndexRoute: SignedInStorageDisksIndexRoute,
   SignedInStorageFilesystemsIndexRoute: SignedInStorageFilesystemsIndexRoute,
   SignedInStorageMdIndexRoute: SignedInStorageMdIndexRoute,
@@ -1050,6 +1157,8 @@ const SignedInRouteChildren: SignedInRouteChildren = {
   SignedInStorageZfsIndexRoute: SignedInStorageZfsIndexRoute,
   SignedInUsermgmtGroupsIndexRoute: SignedInUsermgmtGroupsIndexRoute,
   SignedInUsermgmtUsersIndexRoute: SignedInUsermgmtUsersIndexRoute,
+  SignedInServicesRsyncJobsJobRoute: SignedInServicesRsyncJobsJobRoute,
+  SignedInServicesRsyncJobsAddRoute: SignedInServicesRsyncJobsAddRoute,
   SignedInStorageMdArrayAddRoute: SignedInStorageMdArrayAddRoute,
   SignedInStorageZfsFsSplatRoute: SignedInStorageZfsFsSplatRoute,
   SignedInStorageMdArrayIndexRoute: SignedInStorageMdArrayIndexRoute,

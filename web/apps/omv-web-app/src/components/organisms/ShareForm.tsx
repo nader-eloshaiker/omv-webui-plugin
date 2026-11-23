@@ -5,11 +5,15 @@
 // "Guests only" shown and kept until the reader changes it, and turning Windows and Mac sharing on in
 // the same save, refused first for a NAS name longer than 15 characters.
 //
-// "Share" (or "Save") re-reads the share list, the SMB settings and the folder's row just before the
-// writes (0.10, R4) and checks the refusals again: then SMB.setShare (a new share with the classic
-// form's defaults, or the row as read with only these fields changed), and SMB.setSettings with only
-// `enable` changed when sharing is off. When the share was saved and turning sharing on failed, the
-// form says so and "Try again" makes only the second call.
+// The recycle bin (phase 5 services design 11.3; D13): on or off, and the days files are kept (30 for
+// a bin that was off); turning a stored bin off says that what is in it stays, using space.
+//
+// "Share" (or "Save") re-reads the share itself with SMB.getShare (services design 0.11, D12: it does
+// not fail when another share's folder is gone, as the list does), the SMB settings and the folder's
+// row just before the writes (0.10, R4) and checks the refusals again: then SMB.setShare (a new share
+// with the classic form's defaults, or the share as read with only these fields changed), and
+// SMB.setSettings with only `enable` changed when sharing is off. When the share was saved and turning
+// sharing on failed, the form says so and "Try again" makes only the second call.
 import type {
   SharedFolder,
   SmbShareRow,
@@ -20,6 +24,7 @@ import {
   CheckboxField,
   ExternalLink,
   InlineAlert,
+  NumberField,
   ServerMessage,
   buttonRowClass,
   useToast,
@@ -43,8 +48,9 @@ import {
 import {
   changedShareRequest,
   newShareRequest,
+  recycleDaysOf,
+  recycleValid,
   settingsRequest,
-  shareOf,
   type ShareChoices,
 } from "../../sharedFolders/smbModel.ts";
 import { FolderNameText } from "../atoms/FolderNameText.tsx";
@@ -91,6 +97,7 @@ export function ShareForm({
   const reasonId = useId();
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
+  const [daysShown, setDaysShown] = useState(false);
   const isNew = share === undefined;
   const set = (next: ShareChoices) => {
     if (problem?.kind !== "turnOn") {
@@ -140,14 +147,20 @@ export function ShareForm({
     if (saving || refusal !== null) {
       return;
     }
+    if (!recycleValid(values.recycle)) {
+      setDaysShown(true);
+      return;
+    }
     if (!beginAction(folder.uuid, "share")) {
       return;
     }
     setSaving(true);
     setProblem(null);
     try {
-      const [shares, settings, folders] = await Promise.all([
-        api.shares(),
+      const [stored, settings, folders] = await Promise.all([
+        share === undefined
+          ? Promise.resolve(undefined)
+          : api.share(share.uuid),
         api.settings(),
         api.folders(),
       ]);
@@ -166,11 +179,10 @@ export function ShareForm({
         setProblem({ kind: "refused", refusal: again });
         return;
       }
-      const row = shareOf(shares, folder.uuid);
       await api.setShare(
-        row === undefined
+        stored === undefined
           ? newShareRequest(folder.uuid, values)
-          : changedShareRequest(row, values),
+          : changedShareRequest(stored, values),
       );
       await api.shares().catch(() => undefined);
       if (!settings.enable) {
@@ -292,6 +304,15 @@ export function ShareForm({
         guestsOnly={values.guest === "only"}
         disabled={saving}
       />
+      <RecycleFields
+        values={values}
+        storedOn={share?.recyclebin === true}
+        folder={folder.name}
+        disabled={saving}
+        daysShown={daysShown}
+        onDaysBlur={() => setDaysShown(true)}
+        onChange={(recycle) => set({ ...values, recycle })}
+      />
       {smbOn === false && shown?.kind !== "hostTooLong" ? (
         <p className="text-sm">{t("folderSmb.form.smbOff")}</p>
       ) : null}
@@ -359,5 +380,75 @@ export function ShareForm({
         )}
       </div>
     </form>
+  );
+}
+
+/** 11.3: the recycle bin's box, its days while ticked, and the line when a stored bin is turned off. */
+function RecycleFields({
+  values,
+  storedOn,
+  folder,
+  disabled,
+  daysShown,
+  onDaysBlur,
+  onChange,
+}: {
+  values: ShareChoices;
+  /** The share's recycle bin is on as stored. */
+  storedOn: boolean;
+  folder: string;
+  disabled: boolean;
+  /** The days field was left or Save was pressed: its error may show. */
+  daysShown: boolean;
+  onDaysBlur: () => void;
+  onChange: (recycle: NonNullable<ShareChoices["recycle"]>) => void;
+}) {
+  const { t } = useTranslation();
+  const recycle = values.recycle ?? { on: false, days: "30" };
+  const folderSlot = { folder: <FolderNameText value={folder} /> };
+  return (
+    <div className="flex flex-col gap-2">
+      <CheckboxField
+        label={t("folderSmb.form.recycle")}
+        hint={
+          <Trans i18nKey="folderSmb.form.recycleHint" components={folderSlot} />
+        }
+        warning={
+          storedOn && !recycle.on ? (
+            <span>
+              <Trans
+                i18nKey="folderSmb.form.recycleOffWarn"
+                components={folderSlot}
+              />
+            </span>
+          ) : undefined
+        }
+        checked={recycle.on}
+        disabled={disabled}
+        onCheckedChange={(checked) => onChange({ ...recycle, on: checked })}
+      />
+      {recycle.on ? (
+        <NumberField
+          className="ps-6"
+          label={t("folderSmb.form.recycleDays")}
+          unit={t("folderSmb.form.recycleDaysUnit")}
+          hint={
+            <Trans
+              i18nKey="folderSmb.form.recycleDaysHint"
+              components={folderSlot}
+            />
+          }
+          error={
+            daysShown && recycleDaysOf(recycle.days) === null
+              ? t("folderSmb.form.recycleDaysErr")
+              : undefined
+          }
+          value={recycle.days}
+          disabled={disabled}
+          onValueChange={(days) => onChange({ ...recycle, days })}
+          onBlur={onDaysBlur}
+        />
+      ) : null}
+    </div>
   );
 }

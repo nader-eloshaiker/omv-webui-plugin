@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Scheduled self-tests in words and the add/edit form's mapping (phase 5 disks design 6.2, 6.4).
+// Scheduled self-tests: the add/edit form's mapping (phase 5 disks design 6.4) and whether a test
+// runs (6.3). The schedule in words is tested with services/jobSchedule.ts, where it moved.
 import { describe, expect, it } from "vitest";
 import {
   blocksSave,
@@ -8,7 +9,6 @@ import {
   NEW_DRAFT,
   runsWord,
   scheduleOf,
-  scheduleWords,
   toTestDraft,
   type TestDraft,
 } from "./schedule.ts";
@@ -18,34 +18,6 @@ const job = (hour: string, month = "*", dayofmonth = "*", dayofweek = "*") => ({
   month,
   dayofmonth,
   dayofweek,
-});
-
-describe("scheduleWords", () => {
-  it.each([
-    [job("03"), { kind: "daily", hour: 3 }],
-    [job("03", "*", "*", "7"), { kind: "weekly", weekday: 7, hour: 3 }],
-    [job("02", "*", "01"), { kind: "monthly", day: 1, hour: 2 }],
-    [job("05", "03", "15"), { kind: "yearly", month: 3, day: 15, hour: 5 }],
-    [job("*"), { kind: "hourly" }],
-    [job("*", "*", "*", "6"), { kind: "hourlyOn", weekday: 6 }],
-  ])("%o", (stored, words) => {
-    expect(scheduleWords(stored)).toEqual(words);
-  });
-
-  it("writes anything else part by part, keeping values set elsewhere", () => {
-    expect(scheduleWords(job("05", "03", "15", "1"))).toEqual({
-      kind: "custom",
-      parts: { month: 3, day: 15, weekday: 1, hour: 5 },
-    });
-    expect(scheduleWords(job("*", "*", "01"))).toEqual({
-      kind: "custom",
-      parts: { month: null, day: 1, weekday: null, hour: null },
-    });
-    expect(scheduleWords(job("1,13"))).toEqual({
-      kind: "custom",
-      parts: { month: null, day: null, weekday: null, hour: { raw: "1,13" } },
-    });
-  });
 });
 
 const entry = (
@@ -184,5 +156,27 @@ describe("runsWord", () => {
   it("finds a disconnected test's disk by its empty device and size", () => {
     expect(isConnected({ devicefile: "/dev/sda", size: "1" })).toBe(true);
     expect(isConnected({ devicefile: "", size: "-1" })).toBe(false);
+  });
+});
+
+describe("the form on the library's schedule field", () => {
+  it("round-trips each preset and Custom through the field's value", async () => {
+    const { fromScheduleValue, toScheduleValue } =
+      await import("./schedule.ts");
+    for (const stored of [
+      entry(),
+      entry({ dayofweek: "*" }),
+      entry({ dayofweek: "*", dayofmonth: "28" }),
+      entry({ month: "12", dayofmonth: "31", dayofweek: "5", hour: "*" }),
+    ]) {
+      const draft = toTestDraft(stored);
+      const value = toScheduleValue(draft);
+      expect(value).toMatchObject({
+        mode: "schedule",
+        minute: "0",
+        stored: false,
+      });
+      expect(fromScheduleValue(value, draft)).toEqual(draft);
+    }
   });
 });

@@ -20,6 +20,7 @@ import type {
   SmbSetSettingsRequest,
   SmbSetShareRequest,
   SmbSettings,
+  SmbShare,
   SmbShareRow,
 } from "@omv-webui/react-api-omv/generated";
 
@@ -188,17 +189,96 @@ export interface ShareChoices {
   readonly: boolean;
   /** "allow" when ticked. "only" is kept only while the reader leaves the box as it was (P9). */
   guest: GuestMode;
+  /**
+   * The recycle bin (services design 11.3), on the folder's share form; left out where it is not
+   * asked (the add flow), so the share keeps what it holds, or a new one gets none.
+   */
+  recycle?: RecycleChoice;
 }
+
+/** The share form's recycle bin: on or off, and the days as typed (11.3). */
+export interface RecycleChoice {
+  on: boolean;
+  /** The days to keep files, as typed in the number field; checked by recycleDaysOf. */
+  days: string;
+}
+
+/** A recycle bin turned on where it was off keeps files 30 days (D13). */
+export const NEW_RECYCLE_DAYS = 30;
+/** The days the form accepts (11.3). */
+export const RECYCLE_DAYS_MAX = 3650;
 
 /** The form's first values: a new share's defaults, or what the share holds now. */
 export function shareChoicesOf(share: SmbShareRow | undefined): ShareChoices {
   if (share === undefined) {
-    return { browseable: true, readonly: false, guest: "no" };
+    return {
+      browseable: true,
+      readonly: false,
+      guest: "no",
+      recycle: { on: false, days: String(NEW_RECYCLE_DAYS) },
+    };
   }
   return {
     browseable: share.browseable,
     readonly: share.readonly,
     guest: guestMode(share.guest),
+    recycle: recycleChoiceOf(share),
+  };
+}
+
+/** A stored share's recycle bin as the form opens it: the stored days, or 30 for a bin that was off. */
+export function recycleChoiceOf(
+  share: Pick<SmbShare, "recyclebin" | "recyclemaxage">,
+): RecycleChoice {
+  return share.recyclebin === true
+    ? { on: true, days: String(share.recyclemaxage ?? 0) }
+    : { on: false, days: String(NEW_RECYCLE_DAYS) };
+}
+
+/** The days typed, as a whole number from 0 to 3650; null when it is not one (11.3's error). */
+export function recycleDaysOf(days: string): number | null {
+  const text = days.trim();
+  if (!/^[0-9]{1,4}$/u.test(text)) {
+    return null;
+  }
+  const value = Number(text);
+  return value <= RECYCLE_DAYS_MAX ? value : null;
+}
+
+/** Whether the form's recycle bin is ready to save: off, or on with valid days. */
+export const recycleValid = (recycle: RecycleChoice | undefined): boolean =>
+  recycle === undefined || !recycle.on || recycleDaysOf(recycle.days) !== null;
+
+/** The recycle bin as 0.3 says it on the folder's facts. */
+export type RecycleView =
+  { kind: "off" } | { kind: "days"; days: number } | { kind: "forever" };
+
+export function recycleView(
+  share: Pick<SmbShare, "recyclebin" | "recyclemaxage">,
+): RecycleView {
+  if (share.recyclebin !== true) {
+    return { kind: "off" };
+  }
+  const days = share.recyclemaxage ?? 0;
+  return days === 0 ? { kind: "forever" } : { kind: "days", days };
+}
+
+/** The request fields for the recycle bin: only what the form changes (11.3, 0.11). */
+function recycleFields(
+  recycle: RecycleChoice | undefined,
+  stored: Pick<SmbShare, "recyclemaxage"> | undefined,
+): Partial<SmbSetShareRequest> {
+  if (recycle === undefined) {
+    return {};
+  }
+  if (!recycle.on) {
+    // Off: the stored days are kept for when it is turned on again.
+    return { recyclebin: false };
+  }
+  const days = recycleDaysOf(recycle.days);
+  return {
+    recyclebin: true,
+    recyclemaxage: days ?? stored?.recyclemaxage ?? NEW_RECYCLE_DAYS,
   };
 }
 
@@ -246,20 +326,22 @@ export function newShareRequest(
     browseable: choices.browseable,
     readonly: choices.readonly,
     guest: choices.guest,
+    ...recycleFields(choices.recycle, undefined),
   };
 }
 
 /**
- * SMB.setShare for an existing share: the row as just read, without `sharedfoldername` (refused by
- * OMV), with only `enable`, `browseable`, `readonly` and `guest` changed; every other option keeps
- * its value (D6). The row's fields the contract does not name are dropped by nothing here: the row is
- * sent as read.
+ * SMB.setShare for an existing share: the share as just read with SMB.getShare (services design 0.11,
+ * D12), or a row of getShareList without `sharedfoldername` (refused by OMV), with only `enable`,
+ * `browseable`, `readonly`, `guest` and the recycle bin changed; every other option keeps its value
+ * (D6), the recycle bin's size limit too. The share's fields the contract does not name are dropped by
+ * nothing here: the share is sent as read.
  */
 export function changedShareRequest(
-  row: SmbShareRow,
+  row: SmbShare | SmbShareRow,
   change: Partial<ShareChoices> & { enable?: boolean },
 ): SmbSetShareRequest {
-  const { sharedfoldername: _computed, ...stored } = row;
+  const { sharedfoldername: _computed, ...stored } = row as SmbShareRow;
   return {
     ...NEW_SHARE_DEFAULTS,
     ...stored,
@@ -270,6 +352,7 @@ export function changedShareRequest(
       ? {}
       : { browseable: change.browseable }),
     ...(change.readonly === undefined ? {} : { readonly: change.readonly }),
+    ...recycleFields(change.recycle, stored),
   } as SmbSetShareRequest;
 }
 
@@ -280,9 +363,8 @@ export function changedShareRequest(
 export function otherOptionsDiffer(share: SmbShareRow): boolean {
   const fields = [
     "comment",
-    "recyclebin",
+    // The recycle bin and its days are this page's (services design 11.3); its size limit is not.
     "recyclemaxsize",
-    "recyclemaxage",
     "hidedotfiles",
     "inheritacls",
     "inheritpermissions",
@@ -319,6 +401,25 @@ export function settingsRequest(
   enable: boolean,
 ): SmbSetSettingsRequest {
   return { ...settings, enable } as SmbSetSettingsRequest;
+}
+
+// ---- The workgroup (services design 11.2) --------------------------------------------------------
+
+/**
+ * OMV's NetBIOS-name rule for the workgroup (read from source, observed refused on the test VM): 1 to
+ * 15 of letters, digits, spaces and ! # $ % & ' ( ) - . @ ^ _ { } ~.
+ */
+export const WORKGROUP = /^[A-Za-z0-9 !#$%&'()\-.@^_{}~]{1,15}$/u;
+
+export const workgroupValid = (workgroup: string): boolean =>
+  WORKGROUP.test(workgroup);
+
+/** SMB.setSettings: the whole getSettings reply as just read, with only `workgroup` changed (0.11). */
+export function workgroupRequest(
+  settings: SmbSettings,
+  workgroup: string,
+): SmbSetSettingsRequest {
+  return { ...settings, workgroup } as SmbSetSettingsRequest;
 }
 
 // ---- The NAS's name and the addresses (0.2, 4.4) ---------------------------------------------------
@@ -361,3 +462,48 @@ export function shareAddresses(
     mac: `smb://${hostname}/${encodeURIComponent(folder)}`,
   };
 }
+
+// ---- Emptying a recycle bin (services design 11.4) -----------------------------------------------
+
+/** Why "Empty the recycle bin…" is unavailable now, the first that applies; null when it may start. */
+export type EmptyBlocker =
+  /** "Apply the pending changes first." (OMV refuses while `samba` is pending.) */
+  | "pending"
+  /** The recycle bin this session saved is not applied yet. */
+  | "notApplied"
+  /** "Windows and Mac sharing is off, so the NAS cannot empty it now." */
+  | "smbOff"
+  /** An emptying of it runs in this session. */
+  | "running"
+  /** A read the rule needs failed or has not arrived. */
+  | "unread";
+
+export function emptyBlocker(input: {
+  /** The pending modules; undefined while not read. */
+  pending: readonly string[] | undefined;
+  /** Windows and Mac sharing is on for the NAS; undefined while not known. */
+  smbOn: boolean | undefined;
+  /** This session saved the folder's sharing since the last apply. */
+  savedHere: boolean;
+  /** An emptying of this share runs in this session. */
+  running: boolean;
+}): EmptyBlocker | null {
+  if (input.running) {
+    return "running";
+  }
+  if (input.pending === undefined || input.smbOn === undefined) {
+    return "unread";
+  }
+  if (input.pending.includes(SMB_MODULE)) {
+    return input.savedHere ? "notApplied" : "pending";
+  }
+  return input.smbOn ? null : "smbOff";
+}
+
+/**
+ * Whether an emptying deleted anything: its output lists each file and folder removed ("removed '…'",
+ * "removed directory '…'", observed on the test VM). An empty bin, or one the NAS was emptying already,
+ * prints only the script's own "Please wait…" line, or nothing.
+ */
+export const recycleRemovedSomething = (output: string): boolean =>
+  /^removed /mu.test(output);

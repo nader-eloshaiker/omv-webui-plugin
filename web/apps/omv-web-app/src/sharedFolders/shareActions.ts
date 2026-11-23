@@ -10,6 +10,8 @@
 // reads ENOENT.
 import type {
   ConfiguredFilesystem,
+  RsyncdModuleRow,
+  RsyncJobRow,
   ShareCandidate,
   SharedFolder,
   SmbShareRow,
@@ -20,6 +22,7 @@ import {
   type FsMountState,
   type FsUsage,
 } from "../filesystems/fsModel.ts";
+import { serviceUses, type ServiceReads } from "../services/folderUses.ts";
 import { anyoneHasAccess, entriesOf } from "./accessModel.ts";
 import {
   isSameOrInside,
@@ -394,7 +397,13 @@ export function repointRefusal(input: {
 export type DeleteBlocker =
   /** "It is shared with Windows and Mac computers." (any share, even one turned off) */
   | { kind: "smb"; share: SmbShareRow }
-  /** 0.7's "Used by a setting this page does not show…" (`_used` with no SMB share). */
+  /** "It is shared with Linux and Unix computers." (services design 2.7: any NFS entry) */
+  | { kind: "nfs" }
+  /** "It is offered to the rsync server as {{name}}." */
+  | { kind: "rsyncModule"; module: RsyncdModuleRow }
+  /** "The copy job {{job}} copies from it." / "…copies into it." */
+  | { kind: "job"; job: RsyncJobRow; into: boolean }
+  /** "Used by an add-on's setting…" (`_used` with nothing this interface knows found). */
   | { kind: "other" }
   /** "It holds every person's home folder. Turn home folders off first." (users design 13.1) */
   | { kind: "homeFolders" }
@@ -426,6 +435,11 @@ export interface DeleteInput {
   pending?: readonly string[];
   /** It holds the home folders now (UserMgmt.getSettings); unknown is false, `_used` still blocks. */
   homeFolders?: boolean;
+  /**
+   * The NFS entries, rsync server folders and copy jobs (services design 2.7), whole lists. Left out,
+   * only `_used` speaks for them.
+   */
+  services?: ServiceReads;
 }
 
 export interface DeleteBlockers {
@@ -445,22 +459,44 @@ export function deleteBlockers(input: DeleteInput): DeleteBlockers {
   if (input.running) {
     keep.push({ kind: "running", action: input.running });
   }
-  const usesRead = [input.folders, input.shares].find((r) => r.failed);
-  if (usesRead !== undefined) {
-    keep.push({ kind: "unread", error: usesRead.error });
-  } else if (
-    input.folders.data === undefined ||
-    input.shares.data === undefined
-  ) {
+  const usesRead = [
+    input.folders,
+    input.shares,
+    ...(input.services === undefined
+      ? []
+      : [input.services.nfs, input.services.modules, input.services.jobs]),
+  ];
+  const failedRead = usesRead.find((r) => r.failed);
+  if (failedRead !== undefined) {
+    keep.push({ kind: "unread", error: failedRead.error });
+  } else if (usesRead.some((r) => r.data === undefined)) {
     keep.push({ kind: "loading" });
   } else {
-    const share = shareOf(input.shares.data, input.folder.uuid);
+    const share = shareOf(input.shares.data ?? [], input.folder.uuid);
     if (share !== undefined) {
       keep.push({ kind: "smb", share });
     }
+    const services =
+      input.services === undefined
+        ? undefined
+        : serviceUses(input.folder.uuid, input.services);
+    const named = services?.kind === "read" ? services : undefined;
+    if (named !== undefined && named.nfs.length > 0) {
+      keep.push({ kind: "nfs" });
+    }
+    for (const use of named?.uses ?? []) {
+      keep.push(
+        use.kind === "rsyncModule"
+          ? { kind: "rsyncModule", module: use.module }
+          : { kind: "job", job: use.job, into: use.into },
+      );
+    }
+    const found =
+      share !== undefined ||
+      (named !== undefined && (named.nfs.length > 0 || named.uses.length > 0));
     if (input.homeFolders === true) {
       keep.push({ kind: "homeFolders" });
-    } else if (share === undefined && input.folder._used) {
+    } else if (!found && input.folder._used) {
       keep.push({ kind: "other" });
     }
   }

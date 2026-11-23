@@ -4,7 +4,8 @@
 // on is a save to the band, checked first against the 15-character name rule (4.4); turning it off is
 // a plain confirmation naming up to five of the folders that stop being reachable. Both writes send
 // the whole SMB.getSettings reply read just before, with only `enable` changed (0.10, R4). A normal
-// user who types the address gets the "only administrators" page, and nothing is called first.
+// user who types the address gets the "only administrators" page, and nothing is called first. The
+// workgroup card (phase 5 services design 11.2) follows the switch.
 import type {
   SharedFolder,
   SmbShareRow,
@@ -48,6 +49,7 @@ import { smbOnRefusal } from "../../sharedFolders/shareActions.ts";
 import {
   forgetPending,
   recordSmbSaved,
+  recordWorkgroupSaved,
   sharesSession,
   smbSwitchPending,
 } from "../../sharedFolders/sharesSession.ts";
@@ -66,6 +68,7 @@ import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { PageTitle } from "../atoms/PageTitle.tsx";
 import { PendingMark } from "../atoms/PendingMark.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
+import { SmbWorkgroupCard } from "../organisms/SmbWorkgroupCard.tsx";
 import { AdminOnlyPage } from "./AdminOnlyPage.tsx";
 
 /** At most this many folders are named in the turn-off confirmation (5.3). */
@@ -146,6 +149,11 @@ function Smb() {
           enabled={enabled}
           hostname={system.hostname}
           shares={shares.data?.data}
+        />
+        <SmbWorkgroupCard
+          settings={settings.data}
+          pending={memory.workgroupSaved && pending.includes("samba")}
+          onSaved={recordWorkgroupSaved}
         />
         <div className="flex flex-col gap-3">
           <h2 className="text-lg font-semibold">{t("smb.shares.title")}</h2>

@@ -872,6 +872,7 @@ export const SHARES_OPERATIONS = [
   "smbGetSettings",
   "smbSetSettings",
   "smbGetShareList",
+  "smbGetShare",
   "smbSetShare",
   "smbDeleteShare",
   "servicesGetStatus",
@@ -1124,6 +1125,15 @@ export function sharesAnswers(
             ?.name ?? "",
       }));
       return ok({ total: data.length, data });
+    },
+
+    // One share as stored, without its folder's name (services design 0.11, D12; observed).
+    smbGetShare: ({ params }) => {
+      const id = text(params, "uuid");
+      const found = state.config.shares.find((s) => s.uuid === id);
+      return found === undefined
+        ? fail(500, MSG.notFound("conf.service.smb.share", id))
+        : ok(clone(found));
     },
 
     smbSetShare: ({ params }) => {

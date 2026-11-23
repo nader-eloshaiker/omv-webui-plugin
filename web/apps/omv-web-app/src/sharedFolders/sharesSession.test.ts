@@ -95,6 +95,7 @@ describe("the shares session", () => {
       created: [],
       saved: {},
       smbSaved: false,
+      workgroupSaved: false,
       running: {},
       handover: null,
     });

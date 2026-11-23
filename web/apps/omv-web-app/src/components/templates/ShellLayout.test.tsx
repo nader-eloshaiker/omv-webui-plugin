@@ -79,9 +79,12 @@ describe("the side navigation", () => {
       );
     }
     // A page still in the classic interface keeps its mark.
-    expect(within(nav()).getByRole("link", { name: /^NFS/ })).toHaveTextContent(
-      "Classic",
-    );
+    expect(
+      within(nav()).getByRole("link", { name: /^Scheduled tasks/ }),
+    ).toHaveTextContent("Classic");
+    expect(
+      within(nav()).getByRole("link", { name: "NFS" }),
+    ).not.toHaveTextContent("Classic");
     expect(
       within(nav()).getByRole("link", { name: "SSH" }),
     ).not.toHaveTextContent("Classic");
@@ -108,16 +111,20 @@ describe("a page only the classic interface has", () => {
     const { user } = await shell();
     await screen.findByRole("heading", { name: "Dashboard" });
     const before = seenCalls.length;
-    await user.click(within(nav()).getByRole("link", { name: /^NFS/ }));
-    const title = await screen.findByRole("heading", { name: "NFS" });
+    await user.click(
+      within(nav()).getByRole("link", { name: /^Scheduled tasks/ }),
+    );
+    const title = await screen.findByRole("heading", {
+      name: "Scheduled tasks",
+    });
     await waitFor(() => expect(title).toHaveFocus());
-    expect(document.title).toBe("NFS – openmediavault");
-    expect(window.location.pathname).toBe("/ui/services/nfs");
+    expect(document.title).toBe("Scheduled tasks – openmediavault");
+    expect(window.location.pathname).toBe("/ui/system/cron");
     // The classic interface routes by hash: its pages are at /#/<group>/<item>.
     const link = screen.getByRole("link", {
-      name: "Open NFS in the classic interface (opens in a new tab)",
+      name: "Open Scheduled tasks in the classic interface (opens in a new tab)",
     });
-    expect(link).toHaveAttribute("href", "/#/services/nfs");
+    expect(link).toHaveAttribute("href", "/#/system/cron");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(seenCalls.slice(before)).toEqual([]);

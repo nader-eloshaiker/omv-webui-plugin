@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Why a shared folder cannot be deleted now, in words (phase 5 shares design 8.1, 0.9; P15): each
 // blocker with what to do about it, where there is something this interface can do. A blocker this
-// interface does not manage (an NFS share, a backup job, an add-on) names it with no classic link.
+// interface does not manage (an add-on) names it with no classic link. An NFS entry, the rsync server
+// folder and a copy job each say what to do here (phase 5 services design 2.7).
 import type {
   ConfiguredFilesystem,
   SharedFolder,
@@ -12,6 +13,7 @@ import { Link } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
+import { useJobWords } from "../../hooks/useJobWords.ts";
 import { fsPage } from "../../sharedFolders/folderPage.ts";
 import { displayPath } from "../../sharedFolders/nameRules.ts";
 import type { DeleteBlocker } from "../../sharedFolders/shareActions.ts";
@@ -36,6 +38,7 @@ export function ShareDeleteBlockers({
   onStopSharing?: () => void;
 }) {
   const { t } = useTranslation();
+  const { rowName } = useJobWords();
   const words = useFsWords();
   const fsSlot = (fs: ConfiguredFilesystem | undefined) => (
     <FsNameSlot fs={fs} fallback={folder.device} />
@@ -56,8 +59,61 @@ export function ShareDeleteBlockers({
                 )}
               </li>
             );
+          case "nfs":
+            return (
+              <li key={b.kind} className="flex flex-col items-start gap-1">
+                <span>{t("folderDelete.blocker.nfs")}</span>
+                <span>{t("folderDelete.fix.nfs")}</span>
+              </li>
+            );
+          case "rsyncModule":
+            return (
+              <li key={b.kind} className="flex flex-col items-start gap-1">
+                <span>
+                  <Trans
+                    i18nKey="folderDelete.blocker.rsyncModule"
+                    components={{
+                      name: <IdentifierText value={inertBidi(b.module.name)} />,
+                    }}
+                  />
+                </span>
+                <Link to="/services/rsync/server" className={routerLinkClass}>
+                  {t("folderDelete.fix.rsyncModule")}
+                </Link>
+              </li>
+            );
+          case "job": {
+            const name = rowName(b.job);
+            return (
+              <li
+                key={`job-${b.job.uuid}-${b.into ? "to" : "from"}`}
+                className="flex flex-col items-start gap-1"
+              >
+                <span>
+                  <Trans
+                    i18nKey={
+                      b.into
+                        ? "folderDelete.blocker.jobTo"
+                        : "folderDelete.blocker.jobFrom"
+                    }
+                    components={{ job: <FolderNameText value={name} /> }}
+                  />
+                </span>
+                <Link
+                  to="/services/rsync/jobs/$job"
+                  params={{ job: b.job.uuid }}
+                  aria-label={t("usedBy.openJobLabel", {
+                    job: inertBidi(name),
+                  })}
+                  className={routerLinkClass}
+                >
+                  {t("folderDelete.fix.job")}
+                </Link>
+              </li>
+            );
+          }
           case "other":
-            return <li key={b.kind}>{t("sharedFolder.usedBy.other")}</li>;
+            return <li key={b.kind}>{t("usedBy.addOn")}</li>;
           case "homeFolders":
             return (
               <li key={b.kind} className="flex flex-col items-start gap-1">

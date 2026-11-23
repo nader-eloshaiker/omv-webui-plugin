@@ -28,8 +28,7 @@ import {
   FieldHint,
   FieldLabel,
   InlineAlert,
-  RadioGroupField,
-  RadioOption,
+  ScheduleField,
   ServerMessage,
 } from "@omv-webui/react-ui-components";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,23 +37,23 @@ import { useTranslation } from "react-i18next";
 import { NEW_OBJECT_UUID } from "../../disks/diskWords.ts";
 import {
   blocksSave,
-  DAYS,
   draftProblems,
-  HOURS,
+  fromScheduleValue,
   isTestType,
   MONTHS,
   NEW_DRAFT,
   scheduleOf,
   TEST_TYPES,
+  toScheduleValue,
   toTestDraft,
   WEEKDAYS,
-  type Often,
   type TestDraft,
 } from "../../disks/schedule.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { isolate } from "../../format/isolate.ts";
 import { ALL_TESTS } from "../../hooks/useDiskReads.ts";
 import { hourText, monthText, weekdayText } from "../../hooks/useSmartWords.ts";
+import { SELF_TEST_FREQUENCIES } from "../../services/jobSchedule.ts";
 import {
   SelfTestSelect,
   type SelfTestOption,
@@ -76,8 +75,6 @@ export interface SelfTestDiskChoice {
   /** False when the disk is not watched: listed, but unavailable (6.4, field 1). */
   watched: boolean;
 }
-
-const OFTEN: readonly Often[] = ["daily", "weekly", "monthly", "custom"];
 
 export function SelfTestDialog({
   target,
@@ -141,8 +138,6 @@ function DialogForm({
   const problems = draftProblems(draft);
   const edit = (change: Partial<TestDraft>) =>
     setDraft({ ...draft, ...change });
-  const editCustom = (change: Partial<TestDraft["custom"]>) =>
-    setDraft({ ...draft, custom: { ...draft.custom, ...change } });
 
   const diskOptions: SelfTestOption[] = disks.map(({ disk, watched }) => {
     const size = parseByteCount(disk.size);
@@ -169,21 +164,6 @@ function DialogForm({
   }
   const anyUnwatched = disks.some((d) => !d.watched);
   const noDisk = devicefile === "";
-
-  const hourOptions = (every: boolean): SelfTestOption[] => [
-    ...(every
-      ? [{ value: "*", label: t("smart.tests.dialog.everyHour") }]
-      : []),
-    ...HOURS.map((h) => ({ value: h, label: hourText(Number(h)) })),
-  ];
-  /** A stored value no select offers stays visible as itself until it is changed (6.4). */
-  const withOdd = (
-    options: SelfTestOption[],
-    value: string,
-  ): SelfTestOption[] =>
-    options.some((o) => o.value === value)
-      ? options
-      : [...options, { value, label: value }];
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -255,131 +235,63 @@ function DialogForm({
         disabled={saving}
       />
 
-      <RadioGroupField
-        legend={t("smart.tests.dialog.often")}
-        value={draft.often}
-        readOnly={saving}
-        onValueChange={(often) => {
-          if ((OFTEN as readonly string[]).includes(often)) {
-            edit({ often: often as Often });
-          }
+      <ScheduleField
+        labels={{
+          legend: t("smart.tests.dialog.when"),
+          manual: "",
+          schedule: "",
+          frequency: t("smart.tests.dialog.often"),
+          frequencies: {
+            hourly: t("smart.tests.dialog.everyHour"),
+            daily: t("smart.tests.dialog.daily"),
+            weekly: t("smart.tests.dialog.weekly"),
+            monthly: t("smart.tests.dialog.monthly"),
+            custom: t("smart.tests.dialog.custom"),
+          },
+          at: t("smart.tests.dialog.at"),
+          hour: t("smart.tests.dialog.hour"),
+          minute: t("smart.tests.dialog.hour"),
+          weekday: t("smart.tests.dialog.on"),
+          day: t("smart.tests.dialog.onDay"),
+          dayNote: t("smart.tests.dialog.dayOver28"),
+          minutesPast: t("smart.tests.dialog.at"),
+          custom: {
+            minute: t("smart.tests.dialog.hour"),
+            hour: t("smart.tests.dialog.hour"),
+            day: t("smart.tests.dialog.dayOfMonth"),
+            month: t("smart.tests.dialog.month"),
+            weekday: t("smart.tests.dialog.weekday"),
+          },
+          every: {
+            minute: t("smart.tests.dialog.everyHour"),
+            hour: t("smart.tests.dialog.everyHour"),
+            day: t("smart.tests.dialog.everyDay"),
+            month: t("smart.tests.dialog.everyMonth"),
+            weekday: t("smart.tests.dialog.everyWeekday"),
+          },
+          customNote: t("smart.tests.dialog.customHint"),
         }}
-        hint={
-          problems.longDaily ? t("smart.tests.dialog.longDaily") : undefined
-        }
-      >
-        {OFTEN.map((often) => (
-          <RadioOption
-            key={often}
-            value={often}
-            label={t(`smart.tests.dialog.${often}`)}
-          />
-        ))}
-      </RadioGroupField>
-
-      {draft.often === "weekly" ? (
-        <SelfTestSelect
-          label={t("smart.tests.dialog.on")}
-          value={draft.weekday}
-          options={WEEKDAYS.map((w) => ({
-            value: w,
-            label: weekdayText(Number(w)),
-          }))}
-          onValueChange={(weekday) => edit({ weekday })}
-          disabled={saving}
-        />
-      ) : null}
-      {draft.often === "monthly" ? (
-        <SelfTestSelect
-          label={t("smart.tests.dialog.onDay")}
-          value={draft.day}
-          options={DAYS.map((d) => ({ value: d, label: d }))}
-          onValueChange={(day) => edit({ day })}
-          disabled={saving}
-          hint={
-            Number(draft.day) > 28
-              ? t("smart.tests.dialog.dayOver28")
-              : undefined
-          }
-        />
-      ) : null}
-      {draft.often === "custom" ? null : (
-        <SelfTestSelect
-          label={t("smart.tests.dialog.at")}
-          value={draft.hour}
-          options={hourOptions(false)}
-          onValueChange={(hour) => edit({ hour })}
-          disabled={saving}
-        />
-      )}
-      {draft.often === "custom" ? (
-        <fieldset className="flex flex-col gap-3">
-          <legend className="sr-only">{t("smart.tests.dialog.custom")}</legend>
-          <p className="text-sm text-muted-foreground">
-            {t("smart.tests.dialog.customHint")}
-          </p>
-          <SelfTestSelect
-            label={t("smart.tests.dialog.month")}
-            value={draft.custom.month}
-            options={withOdd(
-              [
-                { value: "*", label: t("smart.tests.dialog.everyMonth") },
-                ...MONTHS.map((m) => ({
-                  value: m,
-                  label: monthText(Number(m)),
-                })),
-              ],
-              draft.custom.month,
-            )}
-            onValueChange={(month) => editCustom({ month })}
-            disabled={saving}
-          />
-          <SelfTestSelect
-            label={t("smart.tests.dialog.dayOfMonth")}
-            value={draft.custom.day}
-            options={withOdd(
-              [
-                { value: "*", label: t("smart.tests.dialog.everyDay") },
-                ...DAYS.map((d) => ({ value: d, label: d })),
-              ],
-              draft.custom.day,
-            )}
-            onValueChange={(day) => editCustom({ day })}
-            disabled={saving}
-          />
-          <SelfTestSelect
-            label={t("smart.tests.dialog.weekday")}
-            value={draft.custom.weekday}
-            options={withOdd(
-              [
-                { value: "*", label: t("smart.tests.dialog.everyWeekday") },
-                ...WEEKDAYS.map((w) => ({
-                  value: w,
-                  label: weekdayText(Number(w)),
-                })),
-              ],
-              draft.custom.weekday,
-            )}
-            onValueChange={(weekday) => editCustom({ weekday })}
-            disabled={saving}
-          />
-          <SelfTestSelect
-            label={t("smart.tests.dialog.hour")}
-            value={draft.custom.hour}
-            options={withOdd(hourOptions(true), draft.custom.hour)}
-            onValueChange={(hour) => editCustom({ hour })}
-            disabled={saving}
-            error={
-              problems.longHourly
-                ? t("smart.tests.dialog.longHourly")
-                : problems.oddValue !== null
-                  ? t("smart.tests.dialog.oddValue", {
-                      value: problems.oddValue,
-                    })
-                  : undefined
-            }
-          />
-        </fieldset>
+        weekdayNames={WEEKDAYS.map((w) => weekdayText(Number(w)))}
+        monthNames={MONTHS.map((m) => monthText(Number(m)))}
+        value={toScheduleValue(draft)}
+        onValueChange={(value) => setDraft(fromScheduleValue(value, draft))}
+        precision="hour"
+        frequencies={SELF_TEST_FREQUENCIES}
+        offerManual={false}
+        disabled={saving}
+        formatNumber={(n, part) => (part === "hour" ? hourText(n) : String(n))}
+        errors={{
+          custom: problems.longHourly
+            ? t("smart.tests.dialog.longHourly")
+            : problems.oddValue !== null
+              ? t("smart.tests.dialog.oddValue", { value: problems.oddValue })
+              : undefined,
+        }}
+      />
+      {problems.longDaily ? (
+        <p className="text-sm text-muted-foreground">
+          {t("smart.tests.dialog.longDaily")}
+        </p>
       ) : null}
 
       <CheckboxField

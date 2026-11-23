@@ -6,6 +6,10 @@
 // the button that opened the dialog is gone, so focus moves to the section heading (15.2). Opening
 // the share form removes the button that opened it too, so focus moves to the form's heading.
 //
+// The facts include the recycle bin (phase 5 services design 11.1, 11.3) and, when it is on, "Empty the
+// recycle bin…" (11.4, RecycleBinEmpty). "Turn it on" reads the share with SMB.getShare just before
+// the write (services design 0.11, D12).
+//
 // When the share list or the SMB settings could not be read, the section says so with the server's
 // words and offers no sharing action (4.6); on the test VM the share list fails outright when a share
 // names a shared folder whose record is gone (section 19, item 13).
@@ -47,6 +51,7 @@ import {
   folderShareState,
   guestMode,
   otherOptionsDiffer,
+  recycleView,
   shareAddresses,
   shareChoicesOf,
   shareOf,
@@ -56,6 +61,7 @@ import { FolderNameText } from "../atoms/FolderNameText.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { PendingMark } from "../atoms/PendingMark.tsx";
 import { ShareAddressList } from "../molecules/ShareAddressList.tsx";
+import { RecycleBinEmpty } from "./RecycleBinEmpty.tsx";
 import { ShareForm } from "./ShareForm.tsx";
 
 interface Read<T> {
@@ -78,6 +84,7 @@ export function FolderSmbSection({
   draft,
   onDraftChange,
   pending,
+  pendingModules,
   stopOpen,
   onStopOpenChange,
 }: {
@@ -89,6 +96,8 @@ export function FolderSmbSection({
   onDraftChange: (draft: ShareDraft) => void;
   /** This session saved how it is shared and it is not applied yet (0.8). */
   pending: boolean;
+  /** The pending modules; undefined while not read (emptying the recycle bin waits for `samba`). */
+  pendingModules?: readonly string[];
   /** "Stop sharing…" is open; the delete section opens it too (8.1). */
   stopOpen: boolean;
   onStopOpenChange: (open: boolean) => void;
@@ -147,8 +156,8 @@ export function FolderSmbSection({
     }
     setBusy("turnOn");
     try {
-      const row = shareOf(await api.shares(), folder.uuid);
-      if (row !== undefined) {
+      const row = await api.share(share.uuid);
+      if (row.sharedfolderref === folder.uuid) {
         await api.setShare(changedShareRequest(row, { enable: true }));
         recordSaved(folder.uuid, "sharing");
         toast.show({
@@ -321,6 +330,12 @@ export function FolderSmbSection({
                   : t("folderSmb.guest.only")}
             </FactListValue>
           </FactListItem>
+          <FactListItem>
+            <FactListLabel>{t("folderSmb.fact.recycle")}</FactListLabel>
+            <FactListValue>
+              <RecycleWords share={row} />
+            </FactListValue>
+          </FactListItem>
           {otherOptionsDiffer(row) ? (
             <FactListItem>
               <FactListLabel>{t("folderSmb.fact.other")}</FactListLabel>
@@ -328,6 +343,15 @@ export function FolderSmbSection({
             </FactListItem>
           ) : null}
         </FactList>
+        {row.recyclebin === true && draft === null ? (
+          <RecycleBinEmpty
+            shareUuid={row.uuid}
+            folder={folder.name}
+            pending={pendingModules}
+            smbOn={on}
+            savedHere={pending}
+          />
+        ) : null}
         {problem !== null ? (
           <InlineAlert
             tone={problem.kind === "turnOnFailed" ? "critical" : "neutral"}
@@ -467,4 +491,15 @@ export function FolderSmbSection({
       )}
     </section>
   );
+}
+
+/** 0.3's words for a share's recycle bin. */
+function RecycleWords({ share }: { share: SmbShareRow }) {
+  const { t } = useTranslation();
+  const view = recycleView(share);
+  return view.kind === "off"
+    ? t("folderSmb.recycle.off")
+    : view.kind === "forever"
+      ? t("folderSmb.recycle.forever")
+      : t("folderSmb.recycle.days", { count: view.days });
 }

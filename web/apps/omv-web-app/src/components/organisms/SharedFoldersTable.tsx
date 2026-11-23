@@ -40,6 +40,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
+import { useNfsShares } from "../../hooks/useNfsReads.ts";
 import {
   useShareServices,
   useSharesSystem,
@@ -47,6 +48,10 @@ import {
   useSmbShares,
 } from "../../hooks/useSharesReads.ts";
 import { CLASSIC } from "../../navigation/navigation.ts";
+import {
+  nfsSharingCell,
+  type NfsSharingCell,
+} from "../../services/nfsModel.ts";
 import { isFolderAddress } from "../../sharedFolders/folderAddress.ts";
 import { displayPath } from "../../sharedFolders/nameRules.ts";
 import {
@@ -125,21 +130,32 @@ function DeviceText({ device }: { device: string }) {
   );
 }
 
-/** The Sharing column's words (1.3): nothing when not shared. */
-function SharingText({ cell }: { cell: SharingCell }) {
+/**
+ * The Sharing column's words (1.3; services design 12.1): Windows and Mac, and "Linux and Unix (NFS)"
+ * for a folder with an NFS entry; nothing when not shared. A failed read leaves its part "Not known".
+ */
+function SharingText({
+  cell,
+  nfs,
+}: {
+  cell: SharingCell;
+  nfs: NfsSharingCell;
+}) {
   const { t } = useTranslation();
+  let smb = null;
   switch (cell.kind) {
     case "none":
-      return null;
+      break;
     case "unknown":
-      return (
+      smb = (
         <span className="text-muted-foreground">
           {t("sharedFolders.sharing.unknown")}
         </span>
       );
+      break;
     default:
-      return (
-        <span className="flex flex-col">
+      smb = (
+        <>
           <span>
             {t(
               cell.kind === "smb"
@@ -150,9 +166,26 @@ function SharingText({ cell }: { cell: SharingCell }) {
           {cell.guests ? (
             <span className="text-sm">{t("sharedFolders.sharing.guests")}</span>
           ) : null}
-        </span>
+        </>
       );
   }
+  const linux =
+    nfs === "nfs" ? (
+      <span>{t("sharedFolders.sharing.nfs")}</span>
+    ) : nfs === "unknown" && cell.kind !== "unknown" ? (
+      <span className="text-muted-foreground">
+        {t("sharedFolders.sharing.nfsUnknown")}
+      </span>
+    ) : null;
+  if (smb === null && linux === null) {
+    return null;
+  }
+  return (
+    <span className="flex flex-col">
+      {smb}
+      {linux}
+    </span>
+  );
 }
 
 /** The folder's name: a router link to its page, when its UUID can be an address (UI-4). */
@@ -181,10 +214,13 @@ function FolderName({ folder }: { folder: SharedFolder }) {
 function FolderRow({
   folder,
   sharing,
+  nfs,
   pending,
 }: {
   folder: SharedFolder;
   sharing: SharingCell;
+  /** Whether it has an NFS entry (services design 12.1). */
+  nfs: NfsSharingCell;
   /** This session changed it and the change is not applied (0.8). */
   pending: boolean;
 }) {
@@ -201,7 +237,7 @@ function FolderRow({
         {/* Under the small breakpoint the file system, the sharing words and the path are said here. */}
         <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
           <DeviceText device={device} />
-          <SharingText cell={sharing} />
+          <SharingText cell={sharing} nfs={nfs} />
           <span className="font-mono [overflow-wrap:anywhere]">
             {displayPath(folder.reldirpath)}
           </span>
@@ -214,7 +250,7 @@ function FolderRow({
         <DeviceText device={device} />
       </TableCell>
       <TableCell className="min-w-32 py-2 max-sm:hidden">
-        <SharingText cell={sharing} />
+        <SharingText cell={sharing} nfs={nfs} />
       </TableCell>
       <TableCell
         mono
@@ -302,6 +338,7 @@ export function SharedFoldersTable() {
   const all = useShareMgmtGetList(ALL_ROWS);
   // The Sharing column's reads (1.1): with the table, on Refresh and on window focus.
   const shares = useSmbShares({ focus: true });
+  const nfsShares = useNfsShares({ focus: true });
   const settings = useSmbSettings({ focus: true });
   const services = useShareServices({ focus: true });
   const system = useSharesSystem();
@@ -358,6 +395,7 @@ export function SharedFoldersTable() {
     void table.refetch();
     void all.refetch();
     void shares.refetch();
+    void nfsShares.refetch();
     void settings.refetch();
     void services.refetch();
   };
@@ -458,6 +496,10 @@ export function SharedFoldersTable() {
         key={folder.uuid}
         folder={folder}
         sharing={sharingCell(folder.uuid, sharesRead, on)}
+        nfs={nfsSharingCell(folder.uuid, {
+          data: nfsShares.data?.data,
+          failed: nfsShares.isError,
+        })}
         pending={folderPending(memory, folder.uuid, pending)}
       />
     ));

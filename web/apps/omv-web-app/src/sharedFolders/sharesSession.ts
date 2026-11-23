@@ -41,6 +41,8 @@ export interface SharesSessionState {
   saved: Readonly<Record<string, readonly SavedSection[]>>;
   /** The SMB page saved the on or off switch since the last apply (5.2's pending mark). */
   smbSaved: boolean;
+  /** The SMB page saved the workgroup since the last apply (services design 11.2, 0.9). */
+  workgroupSaved: boolean;
   /** The action this session is running on a folder, by folder `uuid`. */
   running: Readonly<Record<string, SharesAction>>;
   /** The file system Flow A handed over, by its `devicefile` (6.7). */
@@ -51,6 +53,7 @@ const INITIAL: SharesSessionState = {
   created: [],
   saved: {},
   smbSaved: false,
+  workgroupSaved: false,
   running: {},
   handover: null,
 };
@@ -83,6 +86,10 @@ export const recordSaved = (uuid: string, section: SavedSection): void =>
 export const recordSmbSaved = (): void =>
   sharesSession.set((s) => (s.smbSaved ? {} : { smbSaved: true }));
 
+/** The SMB page saved the workgroup. */
+export const recordWorkgroupSaved = (): void =>
+  sharesSession.set((s) => (s.workgroupSaved ? {} : { workgroupSaved: true }));
+
 /**
  * Once none of the shares modules is pending any more (an apply or an undo ran), the marks are
  * forgotten. The pages call it with the pending modules they read.
@@ -92,9 +99,9 @@ export function forgetPending(pending: readonly string[]): void {
     return;
   }
   sharesSession.set((s) =>
-    Object.keys(s.saved).length === 0 && !s.smbSaved
+    Object.keys(s.saved).length === 0 && !s.smbSaved && !s.workgroupSaved
       ? {}
-      : { saved: {}, smbSaved: false },
+      : { saved: {}, smbSaved: false, workgroupSaved: false },
   );
 }
 

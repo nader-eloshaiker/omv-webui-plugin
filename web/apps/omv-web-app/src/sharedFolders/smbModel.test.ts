@@ -229,16 +229,19 @@ describe("read, change, write (0.10)", () => {
   });
 
   it("fills the form from the share, or with a new share's defaults", () => {
+    // With the recycle bin (services design 11.3): 30 days for one that is off (D13).
     expect(shareChoicesOf(undefined)).toEqual({
       browseable: true,
       readonly: false,
       guest: "no",
+      recycle: { on: false, days: "30" },
     });
     expect(shareChoicesOf({ ...SHARE, guest: "only", readonly: true })).toEqual(
       {
         browseable: true,
         readonly: true,
         guest: "only",
+        recycle: { on: false, days: "30" },
       },
     );
   });

@@ -179,6 +179,13 @@ describe("Service details", () => {
     expect(
       await screen.findByRole("region", { name: "Status of NFS" }),
     ).toHaveTextContent("Service disabled");
+    // Linux and Unix sharing has its page here now (services design 12.3); no classic link.
+    expect(
+      screen.getByRole("link", { name: "Linux and Unix sharing settings" }),
+    ).toHaveAttribute("href", "/ui/services/nfs");
+    expect(
+      screen.queryByRole("link", { name: /Open NFS settings/u }),
+    ).toBeNull();
   });
 
   it("says plainly when the output could not be read, with the server's message", async () => {

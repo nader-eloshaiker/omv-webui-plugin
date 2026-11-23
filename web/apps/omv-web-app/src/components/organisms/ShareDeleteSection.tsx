@@ -5,7 +5,9 @@
 // its blockers in words beside it, from the page's reads, failing closed. Pressing one opens the dialog,
 // which reads ShareMgmt.getList, SMB.getShareList, FileSystemMgmt.getList and the pending modules again
 // before it shows anything (8.2), and the home-folder setting (phase 5 users design 13.1): the folder
-// that holds them is refused with "Turn home folders off first.".
+// that holds them is refused with "Turn home folders off first.". The folder's NFS entries, the rsync
+// server folder that offers it and the copy jobs that use it refuse it too, each named with what to do
+// (phase 5 services design 2.7), and the check reads those three lists again.
 import type {
   ConfiguredFilesystem,
   SharedFolder,
@@ -17,6 +19,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { holdsHomeFolders } from "../../homeFolders/homeModel.ts";
 import { useGroupsRereads } from "../../hooks/useGroupsApi.ts";
 import { useSharesApi } from "../../hooks/useSharesApi.ts";
+import type { ServiceReads } from "../../services/folderUses.ts";
 import {
   isShareDeleting,
   shareDeleteOf,
@@ -53,6 +56,8 @@ export function ShareDeleteSection({
   fileSystems,
   pending,
   homeFolders = false,
+  services,
+  recheckServices,
   onRetry,
   onStopSharing,
   onDone,
@@ -64,6 +69,10 @@ export function ShareDeleteSection({
   pending: readonly string[];
   /** It holds the home folders now, as the page read the setting. */
   homeFolders?: boolean;
+  /** The NFS entries, rsync server folders and copy jobs, as the page read them (2.7). */
+  services?: ServiceReads;
+  /** Reads those three again, for the check before the dialog. */
+  recheckServices?: () => Promise<ServiceReads>;
   onRetry: () => void;
   /** Opens "Stop sharing…" in the section above (4.5). */
   onStopSharing: () => void;
@@ -96,6 +105,7 @@ export function ShareDeleteSection({
     running: deleting ? null : running,
     pending,
     homeFolders,
+    services,
   });
   // The files-only blockers: the shared ones are said once, beside the first button.
   const filesOnly = blockers.files.filter(
@@ -105,17 +115,21 @@ export function ShareDeleteSection({
   const filesBlocked = !deleting && blockers.files.length > 0;
 
   const check = async (forWay: DeleteWay): Promise<ShareDeleteCheck> => {
-    const [list, sharesNow, fsNow, pendingNow, homeNow] = await Promise.all([
-      settle(api.folders()),
-      settle(api.shares()),
-      settle(api.fileSystems()),
-      api.pending().then(
-        (p) => p,
-        () => null,
-      ),
-      // Not read: `_used` still refuses the folder that holds them (0.7's "other").
-      rereads.homeSettings().catch(() => undefined),
-    ]);
+    const [list, sharesNow, fsNow, pendingNow, homeNow, servicesNow] =
+      await Promise.all([
+        settle(api.folders()),
+        settle(api.shares()),
+        settle(api.fileSystems()),
+        api.pending().then(
+          (p) => p,
+          () => null,
+        ),
+        // Not read: `_used` still refuses the folder that holds them (0.7's "other").
+        rereads.homeSettings().catch(() => undefined),
+        recheckServices === undefined
+          ? Promise.resolve(undefined)
+          : recheckServices(),
+      ]);
     if (list.failed || list.data === undefined) {
       return {
         kind: "refused",
@@ -150,6 +164,7 @@ export function ShareDeleteSection({
       running: runningOn(folder.uuid),
       pending: pendingNow ?? [],
       homeFolders: holdsHomeFolders(homeNow, folder.uuid),
+      services: servicesNow,
     });
     const refusing = forWay === "keep" ? found.keep : found.files;
     if (refusing.length > 0) {

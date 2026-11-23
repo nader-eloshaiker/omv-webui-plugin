@@ -616,6 +616,21 @@ test.describe("ZFS journeys on the VM", () => {
     if (stopped) {
       const d = page.getByRole("alertdialog");
       await d.getByRole("button", { name: copy.zfsCheck.stopConfirm }).click();
+      // The check can also end while the confirmation is open: the page then refuses with "The pool
+      // changed…", and the dialog is closed with Cancel.
+      const refused = d.getByText(copy.zfsCheck.changed);
+      await expect(d.or(refused).first())
+        .toBeVisible()
+        .catch(() => undefined);
+      await expect
+        .poll(
+          async () => (await d.count()) === 0 || (await refused.isVisible()),
+          { timeout: 30_000 },
+        )
+        .toBe(true);
+      if (await refused.isVisible()) {
+        await d.getByRole("button", { name: copy.zfsCheck.cancel }).click();
+      }
       await expect(d).toHaveCount(0, { timeout: 30_000 });
     }
 

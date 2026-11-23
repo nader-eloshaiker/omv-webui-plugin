@@ -1,87 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Scheduled self-tests in words, and the add/edit form's mapping both ways (phase 5 disks design 6.2,
-// 6.4). A test is stored as month, day of month, weekday and hour, each a value or "*" (every). Pure,
-// so each rule is tested by itself; the components turn the parts into the locale's words.
+// Scheduled self-tests: the add/edit form's draft and its mapping both ways, and whether a test runs
+// (phase 5 disks design 6.3, 6.4). A test is stored as month, day of month, weekday and hour, each a
+// value or "*" (every). Its schedule in words, and the parts read from it, moved to
+// services/jobSchedule.ts (phase 5 services design 15.3), shared with copy jobs; the form's schedule
+// is the library's ScheduleField, minutes hidden, through `toScheduleValue` and `fromScheduleValue`
+// below. Pure, so each rule is tested by itself.
 import type {
   DiskDevice,
   SmartScheduleEntry,
   SmartSetScheduledTestRequest,
 } from "@omv-webui/react-api-omv/generated";
+import type { ScheduleFieldValue } from "@omv-webui/react-ui-components";
+import {
+  scheduleParts,
+  scheduleWords,
+  type SchedulePart,
+} from "../services/jobSchedule.ts";
 import { belongsTo, diskNames } from "./diskUse.ts";
-
-/** One stored part: every (null), a number, or a value set elsewhere that is neither ("1,15"). */
-export type SchedulePart = null | number | { raw: string };
-
-export interface ScheduleParts {
-  month: SchedulePart;
-  day: SchedulePart;
-  weekday: SchedulePart;
-  hour: SchedulePart;
-}
-
-export function parsePart(value: string): SchedulePart {
-  const text = value.trim();
-  if (text === "*") {
-    return null;
-  }
-  if (/^\d{1,2}$/.test(text)) {
-    return Number(text);
-  }
-  return { raw: text };
-}
-
-export function scheduleParts(
-  job: Pick<SmartScheduleEntry, "month" | "dayofmonth" | "dayofweek" | "hour">,
-): ScheduleParts {
-  return {
-    month: parsePart(job.month),
-    day: parsePart(job.dayofmonth),
-    weekday: parsePart(job.dayofweek),
-    hour: parsePart(job.hour),
-  };
-}
-
-/** 6.2's rows: which sentence a schedule takes. Numbers only; anything else is custom. */
-export type ScheduleWords =
-  | { kind: "daily"; hour: number }
-  | { kind: "weekly"; weekday: number; hour: number }
-  | { kind: "monthly"; day: number; hour: number }
-  | { kind: "yearly"; month: number; day: number; hour: number }
-  | { kind: "hourly" }
-  | { kind: "hourlyOn"; weekday: number }
-  | { kind: "custom"; parts: ScheduleParts };
-
-const num = (p: SchedulePart): p is number => typeof p === "number";
-
-export function scheduleWords(
-  job: Pick<SmartScheduleEntry, "month" | "dayofmonth" | "dayofweek" | "hour">,
-): ScheduleWords {
-  const parts = scheduleParts(job);
-  const { month, day, weekday, hour } = parts;
-  if (num(hour)) {
-    if (month === null && day === null && weekday === null) {
-      return { kind: "daily", hour };
-    }
-    if (month === null && day === null && num(weekday)) {
-      return { kind: "weekly", weekday, hour };
-    }
-    if (month === null && num(day) && weekday === null) {
-      return { kind: "monthly", day, hour };
-    }
-    if (num(month) && num(day) && weekday === null) {
-      return { kind: "yearly", month, day, hour };
-    }
-  }
-  if (hour === null && month === null && day === null) {
-    if (weekday === null) {
-      return { kind: "hourly" };
-    }
-    if (num(weekday)) {
-      return { kind: "hourlyOn", weekday };
-    }
-  }
-  return { kind: "custom", parts };
-}
 
 // ---- The form (6.4) ------------------------------------------------------------------------------
 
@@ -214,6 +149,38 @@ export function scheduleOf(
         dayofweek: draft.custom.weekday,
       };
   }
+}
+
+/** The draft's schedule as the library's ScheduleField holds it: hours only, no "Only when…". */
+export function toScheduleValue(draft: TestDraft): ScheduleFieldValue {
+  return {
+    mode: "schedule",
+    frequency: draft.often,
+    minute: "0",
+    hour: draft.hour,
+    weekday: draft.weekday,
+    day: draft.day,
+    custom: { minute: "0", ...draft.custom },
+    stored: false,
+  };
+}
+
+/** The field's value back into the draft; "every hour" is not offered, so it never arrives. */
+export function fromScheduleValue(
+  value: ScheduleFieldValue,
+  draft: TestDraft,
+): TestDraft {
+  const often: Often =
+    value.frequency === "hourly" ? draft.often : value.frequency;
+  const { minute: _minute, ...custom } = value.custom;
+  return {
+    ...draft,
+    often,
+    hour: value.hour,
+    weekday: value.weekday,
+    day: value.day,
+    custom,
+  };
 }
 
 /** The values each select offers, as the draft holds them. */
