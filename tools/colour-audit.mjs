@@ -4,6 +4,7 @@
 //   node tools/colour-audit.mjs                 # contrast + distinct + neutrals
 //   node tools/colour-audit.mjs contrast        # one section; add --quiet for failures only
 //   node tools/colour-audit.mjs legacy          # the measured defects of the stock OMV palette
+//   node tools/colour-audit.mjs accents         # the accent candidates (a proposal, not shipped)
 //   node tools/colour-audit.mjs measure '#fff' '#5dacdf'     # one ad-hoc pair (fg, bg)
 //   node tools/colour-audit.mjs measure '#8a4613' '#f78f00' 0.14 '#ffffff'   # fg on a wash over a base
 //   node tools/colour-audit.mjs oklch 0.55 0.12 240          # OKLCH -> hex (for building ramps)
@@ -18,6 +19,8 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CSS = path.join(ROOT, "design/tokens.css");
+// The accent candidates the owner is choosing between: a proposal, read only by the `accents` section.
+const ACCENTS_CSS = path.join(ROOT, "web/packages/react-ui-components/src/foundations/accent-candidates.css");
 const args = process.argv.slice(2);
 const QUIET = args.includes("--quiet");
 const positional = args.filter((a) => !a.startsWith("--"));
@@ -181,14 +184,23 @@ function parseColour(value, lookup) {
   }
   return null;
 }
-function loadTokens() {
-  const css = fs.readFileSync(CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+// `extra` is another stylesheet read the same way, after tokens.css. Its `[data-accent="name"]`
+// blocks are a candidate each: only the one named by `accent` applies, over both themes, the way the
+// attribute on a subtree overrides the theme it sits in.
+function loadTokens({ extra, accent } = {}) {
+  const strip = (file) => fs.readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const css = strip(CSS) + (extra ? "\n" + strip(extra) : "");
   const light = {};
   const darkOverrides = {};
+  const picked = {};
+  const accents = [];
   const blockRe = /([^{}]+)\{([^{}]*)\}/g;
   let m;
   while ((m = blockRe.exec(css))) {
-    const target = /\.dark\b/.test(m[1]) ? darkOverrides : light;
+    const candidate = m[1].match(/\[data-accent="([\w-]+)"\]/);
+    if (candidate) accents.push(candidate[1]);
+    const target = candidate ? (candidate[1] === accent ? picked : null) : /\.dark\b/.test(m[1]) ? darkOverrides : light;
+    if (!target) continue;
     for (const d of m[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].replace(/\s+/g, " ").trim();
   }
   const resolve = (map) => {
@@ -199,7 +211,12 @@ function loadTokens() {
     };
     return get;
   };
-  return { light: resolve(light), dark: resolve({ ...light, ...darkOverrides }), names: Object.keys(light) };
+  return {
+    light: resolve({ ...light, ...picked }),
+    dark: resolve({ ...light, ...darkOverrides, ...picked }),
+    names: Object.keys(light),
+    accents,
+  };
 }
 
 // ---------- the contract -------------------------------------------------------------------------
@@ -369,6 +386,52 @@ const DISTINCT = [
   ["theme-series-2", "theme-ok"],
   ["theme-series-3", "theme-critical"],
 ];
+// The accent candidates (accent-candidates.css): each points the action roles at its own hue and adds
+// a tint. Every pair above that the action roles enter is measured again, plus the tint and the places
+// the accent meets the states; and the accent is told apart from the brand, the trace, every state,
+// the pending gold and every series, which is what makes it an accent rather than one more blue.
+const ACTION_ROLES = new Set([
+  "theme-action",
+  "theme-action-hover",
+  "theme-action-foreground",
+  "theme-action-label",
+  "theme-focus-ring",
+  "theme-action-edge",
+  "theme-action-tint",
+]);
+// What must clear 3:1 against a ground is the accent's edge: the fill itself, or the stroke a light
+// fill is edged in. So a pair above that holds the fill to 3:1 holds the edge, and the fill alone is
+// reported.
+const asEdge = ([fg, g, bar, note]) =>
+  fg === "theme-action" && bar === "ui" ? ["theme-action-edge", g, bar, `${note} (the edge)`] : [fg, g, bar, note];
+const groundTokens = (g) =>
+  typeof g === "string" ? [g] : g.stops ? g.stops.flatMap(groundTokens) : [g.base, ...g.layers];
+const ACCENT_PAIRS = [
+  ...PAIRS.filter(([fg, g]) => ACTION_ROLES.has(fg) || groundTokens(g).some((t) => ACTION_ROLES.has(t))).map(asEdge),
+  ...onGrounds("theme-action", "deco", "the fill alone (a light fill is edged)"),
+  // The tint: a wash behind accent words (the next step's chip), over the card, an inset and the page.
+  ...["theme-surface", "theme-muted", "theme-page"].map((g) => ["theme-action-label", on(g, "theme-action-tint"), "text", "accent words on the accent tint"]),
+  ["theme-foreground", on("theme-surface", "theme-action-tint"), "text", "body text on the accent tint"],
+  ["theme-action-edge", on("theme-surface", "theme-action-tint"), "ui", "the accent's mark on its tint"],
+  // Where the accent meets a state: the next step on a card lit warning or critical, a link in the
+  // pending wash, and the live key figure in the ambient light (the link pair) and on a card.
+  ...["warning", "critical"].map((s) => ["theme-action-label", statusLight(s), "text", `the next step's words on the card lit ${s}`]),
+  ["theme-focus-ring", statusLight("warning"), "ui", "focus ring on the card lit warning"],
+  ["theme-action-label", on("theme-surface", "theme-pending-wash"), "text", "a link on the pending wash"],
+];
+const ACCENT_DISTINCT = [
+  ["theme-action", "theme-brand"],
+  ["theme-action", "theme-trace"],
+  ["theme-action-label", "theme-trace"],
+  ...["ok", "warning", "critical", "unknown", "pending"].map((s) => ["theme-action", `theme-${s}`]),
+  ["theme-action", "theme-destructive"],
+  ...[1, 2, 3, 4].map((n) => ["theme-action", `theme-series-${n}`]),
+  ...[1, 2, 3, 4].map((n) => ["theme-action-label", `theme-series-${n}`]),
+  ["theme-action-label", "theme-pending-label"],
+  ["theme-action-label", "theme-warning-label"],
+  ["theme-action-label", "theme-critical-label"],
+  ["theme-action-label", "theme-ok-label"],
+];
 const neutralSteps = (names) =>
   names
     .filter((n) => /^color-slate-\d+$/.test(n))
@@ -403,13 +466,13 @@ function paint(ground, get) {
   return [{ rgb, name: groundName(ground) }];
 }
 
-function contrast(themes) {
+function contrast(themes, pairs = PAIRS) {
   let fails = 0;
   let checked = 0;
   const advisory = [];
   for (const [themeName, get] of Object.entries(themes)) {
     if (!QUIET) console.log(`\n== contrast: ${themeName} ==\n${pad("foreground", 26)}${pad("ground", 44)}ratio    Lc  bar   result`);
-    for (const [fgName, ground, bar, note] of PAIRS) {
+    for (const [fgName, ground, bar, note] of pairs) {
       const fg = get(fgName);
       const stops = paint(ground, get);
       if (!fg || !stops) {
@@ -446,11 +509,11 @@ function contrast(themes) {
   return fails;
 }
 
-function distinct(themes) {
+function distinct(themes, list = DISTINCT) {
   for (const [themeName, get] of Object.entries(themes)) {
     console.log(`\n== distinct: ${themeName} ==  (OKLab dE x100; under ~10 a pair needs its word or icon to be told apart)`);
     console.log(`${pad("pair", 32)}normal  deutan  protan  tritan  grey dL`);
-    for (const [a, b] of DISTINCT) {
+    for (const [a, b] of list) {
       const [cx, cy] = [get(a), get(b)];
       if (!cx || !cy || cx.a !== 1 || cy.a !== 1) {
         console.log(`MISSING TOKEN ${a} / ${b}`);
@@ -481,6 +544,60 @@ function neutrals(themes) {
     console.log(`${pad(n, 18)}${toHex(v)}  ${f(L, 3)}  ${f(C, 3)}  ${f(H, 0).padStart(4)}  ${f(drift, 1).padStart(5)}${drift > 15 ? "  <- off-hue" : ""}`);
   }
   console.log(`neutrals: median hue ${f(median, 0)}, ${bad} step(s) off-hue.`);
+}
+
+// The accent candidates, one after another: the roles each one sets (with their OKLCH), the contrast
+// pairs the action roles enter, and how far the accent sits from everything it must not be taken for.
+// "today" is the shipped action roles, the baseline. Exits 1 if any candidate fails a required pair.
+function accents() {
+  const { accents: names } = loadTokens({ extra: ACCENTS_CSS });
+  const roles = ["theme-action", "theme-action-hover", "theme-action-foreground", "theme-action-label", "theme-focus-ring", "theme-action-edge", "theme-action-tint"];
+  let failed = 0;
+  const summary = [];
+  for (const name of names) {
+    const t = loadTokens({ extra: ACCENTS_CSS, accent: name });
+    const byTheme = { light: t.light, dark: t.dark };
+    console.log(`\n######## accent: ${name} ########`);
+    for (const [themeName, get] of Object.entries(byTheme)) {
+      const shown = roles.map((r) => {
+        const c = get(r);
+        if (!c) return `${short(r)} MISSING`;
+        const [L, C, H] = oklch(c.rgb);
+        return `${short(r)} ${toHex(c.rgb)}${c.a < 1 ? ` @${f(c.a * 100, 0)}%` : ""} (${f(L, 3)} ${f(C, 3)} ${f(H, 0)})`;
+      });
+      console.log(`${themeName}: ${shown.join(", ")}`);
+    }
+    const fails = contrast(byTheme, ACCENT_PAIRS);
+    failed += fails;
+    distinct(byTheme, ACCENT_DISTINCT);
+    // The weakest distance, over the four kinds of vision, from each group the accent must not meet.
+    const groups = {
+      "brand/trace": (a, b) => /brand|trace/.test(b),
+      "state fills": (a, b) => a === "theme-action" && /ok|warning|critical|unknown|pending|destructive/.test(b),
+      "state words": (a, b) => /label/.test(b),
+      series: (a, b) => /series/.test(b),
+    };
+    const parts = [];
+    for (const [themeName, get] of Object.entries(byTheme)) {
+      for (const [group, test] of Object.entries(groups)) {
+        let worst = { d: Infinity };
+        for (const [a, b] of ACCENT_DISTINCT.filter(([a, b]) => test(a, b))) {
+          const [x, y] = [get(a)?.rgb, get(b)?.rgb];
+          if (!x || !y) continue;
+          const views = { normal: dE(x, y), ...Object.fromEntries(["deutan", "protan", "tritan"].map((k) => [k, dE(simulate(x, k), simulate(y, k))])) };
+          for (const [view, d] of Object.entries(views)) if (d < worst.d) worst = { d, view, pair: `${short(a)}/${short(b)}` };
+        }
+        const normal = ACCENT_DISTINCT.filter(([a, b]) => test(a, b))
+          .map(([a, b]) => [get(a)?.rgb, get(b)?.rgb])
+          .filter(([x, y]) => x && y)
+          .map(([x, y]) => dE(x, y));
+        parts.push(`${themeName} ${group}: weakest ${f(worst.d, 1)} (${worst.pair}, ${worst.view}); normal vision ${f(Math.min(...normal), 1)}`);
+      }
+    }
+    summary.push(`${name}: ${fails} failed\n  ${parts.join("\n  ")}`);
+  }
+  console.log(`\n== accents: summary ==\n${summary.join("\n")}`);
+  return failed;
 }
 
 // The stock OMV workbench palette (workbench/src/scss/defaults/_colors.scss), measured so the guide
@@ -530,6 +647,8 @@ if (section === "oklch") {
   console.log(`${toHex(fg)} on ${toHex(bg)}: ${f(ratio(fg, bg))}:1, APCA Lc ${f(apca(fg, bg), 0)}; foreground OKLCH ${f(L, 3)} ${f(C, 3)} ${f(H, 0)}`);
 } else if (section === "legacy") {
   legacy();
+} else if (section === "accents") {
+  process.exit(accents() ? 1 : 0);
 } else {
   const themes = loadTokens();
   const byTheme = { light: themes.light, dark: themes.dark };
@@ -538,7 +657,7 @@ if (section === "oklch") {
   if (!section || section === "distinct") distinct(byTheme);
   if (!section || section === "neutrals") neutrals(themes);
   if (section && !["contrast", "distinct", "neutrals"].includes(section)) {
-    console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, measure, oklch)`);
+    console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, accents, measure, oklch)`);
     process.exit(2);
   }
   process.exit(fails ? 1 : 0);
