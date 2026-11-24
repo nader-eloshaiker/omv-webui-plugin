@@ -183,7 +183,7 @@ export const LongContent: Story = {
  */
 export const ActionCards: Story = {
   render: () => (
-    <ul aria-label="Storage" className="grid gap-grid sm:grid-cols-2">
+    <ul aria-label="Storage" className="grid gap-gutter sm:grid-cols-2">
       <li className="flex">
         <Card variant="action" render={<a href="#disks" />} className="flex-1">
           <CardHeader className="flex-nowrap items-center pb-card">
@@ -220,7 +220,7 @@ export const ActionCards: Story = {
  */
 export const LitInItsState: Story = {
   render: () => (
-    <div className="flex flex-col gap-grid">
+    <div className="flex flex-col gap-gutter">
       <Card tone="warning">
         <CardHeader>
           <CardTitle level={3}>Disk sdb is running warm</CardTitle>

@@ -158,7 +158,7 @@ const traffic = trafficSamples(30);
 export const HealthyDashboard: Story = {
   render: () => (
     <StoryCard title="Right now" className="max-w-5xl">
-      <div className="grid gap-grid md:grid-cols-3">
+      <div className="grid gap-gutter md:grid-cols-3">
         <Tile
           name="Processor"
           value={
@@ -251,7 +251,7 @@ export const StillFilling: Story = {
 /** Gaps: two readings that came back without a figure, and a pause while the tab was hidden. */
 export const GapInTheSamples: Story = {
   render: () => (
-    <div className="grid max-w-4xl gap-grid md:grid-cols-2">
+    <div className="grid max-w-4xl gap-gutter md:grid-cols-2">
       <StoryCard title="Processor">
         <Processor data={systemSamples(30, { missing: [12, 13, 20] })} />
       </StoryCard>

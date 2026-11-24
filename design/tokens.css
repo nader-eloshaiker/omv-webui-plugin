@@ -217,11 +217,11 @@
 }
 
 /* Density, comfortable: Sky (foundation 5). css-ui-style turns these into spacing utilities: `p-card`,
-   `gap-grid`, `py-cell-y`, `px-cell-x`, `py-row`, `h-control-sm`, `h-control`, `h-control-lg`. The
+   `gap-gutter`, `py-cell-y`, `px-cell-x`, `py-row`, `h-control-sm`, `h-control`, `h-control-lg`. The
    motion distances live here because reduced motion zeroes them. */
 :root {
   --density-card: 1.5rem; /* 24px  card padding */
-  --density-grid: 1.25rem; /* 20px  gap between cards */
+  --density-gutter: 1.25rem; /* 20px  gap between cards */
   --density-cell-y: 0.625rem; /* 10px  table cell, block */
   --density-cell-x: 0.75rem; /* 12px  table cell, inline */
   --density-row: 0.75rem; /* 12px  list and settings rows, block */
@@ -237,7 +237,7 @@
    table rows and monospaced readouts. Every name here has a default above or in `@theme`. */
 [data-density="compact"] {
   --density-card: 1rem; /* 16px */
-  --density-grid: 0.75rem; /* 12px */
+  --density-gutter: 0.75rem; /* 12px */
   --density-cell-y: 0.3125rem; /* 5px */
   --density-cell-x: 0.625rem; /* 10px */
   --density-row: 0.5rem; /* 8px */

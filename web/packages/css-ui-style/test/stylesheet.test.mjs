@@ -228,7 +228,7 @@ describe("density (foundation 5)", () => {
   it("maps the density tokens onto spacing utilities", () => {
     const css = build([
       "p-card",
-      "gap-grid",
+      "gap-gutter",
       "py-cell-y",
       "px-cell-x",
       "py-row",
@@ -237,7 +237,7 @@ describe("density (foundation 5)", () => {
       "size-control-lg",
     ]);
     assert.match(rule(css, "p-card"), /var\(--density-card\)/);
-    assert.match(rule(css, "gap-grid"), /var\(--density-grid\)/);
+    assert.match(rule(css, "gap-gutter"), /var\(--density-gutter\)/);
     assert.match(rule(css, "py-cell-y"), /var\(--density-cell-y\)/);
     assert.match(rule(css, "px-cell-x"), /var\(--density-cell-x\)/);
     assert.match(rule(css, "py-row"), /var\(--density-row\)/);

@@ -174,7 +174,7 @@ export const DiskTemperatures: Story = {
 /** A healthy NAS: every disk cool, every file system with room. */
 export const HealthyNas: Story = {
   render: () => (
-    <div className="grid max-w-5xl gap-grid md:grid-cols-2">
+    <div className="grid max-w-5xl gap-gutter md:grid-cols-2">
       <StoryCard title="Where the space is">
         <Space data={FILE_SYSTEMS.filter((f) => f.label !== "photos")} />
       </StoryCard>

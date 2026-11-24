@@ -13,7 +13,7 @@ const twMerge = extendTailwindMerge({
       text: ["display", "figure", "title", "section", "body", "caption"],
       spacing: [
         "card",
-        "grid",
+        "gutter",
         "cell-y",
         "cell-x",
         "row",

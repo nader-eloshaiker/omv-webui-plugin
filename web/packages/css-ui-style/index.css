@@ -88,12 +88,12 @@
   --default-transition-duration: var(--duration-fast);
   --default-transition-timing-function: var(--ease-standard);
 
-  /* Density (foundation 5): spacing utilities that follow `data-density`. `p-card` and `gap-grid`
+  /* Density (foundation 5): spacing utilities that follow `data-density`. `p-card` and `gap-gutter`
      for cards and the card grid, `py-cell-y` and `px-cell-x` for table cells, `py-row` for list and
      settings rows, `h-control`, `min-h-control` and `size-control` (with `-sm` and `-lg`) for
      buttons and fields. */
   --spacing-card: var(--density-card);
-  --spacing-grid: var(--density-grid);
+  --spacing-gutter: var(--density-gutter);
   --spacing-cell-y: var(--density-cell-y);
   --spacing-cell-x: var(--density-cell-x);
   --spacing-row: var(--density-row);
