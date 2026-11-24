@@ -67,7 +67,7 @@ function FormSkeleton() {
 function SshSettings() {
   const { t } = useTranslation();
   const ssh = useSshGet();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const pending = pendingModules(info.data?.dirtyModules).includes("ssh");
   // Pending when the page opened: the form shows saved settings that are not in effect yet.
   const [pendingOnArrival] = useState(pending);

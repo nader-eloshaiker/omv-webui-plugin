@@ -178,7 +178,7 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
   const format = useFormat();
   const read = useForegroundRead();
   const headingId = useId();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const status = useServiceStatus();
   const name = t(`serviceDetails.name.${tab}`);
   const module = MODULE[tab];

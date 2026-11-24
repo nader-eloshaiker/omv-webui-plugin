@@ -441,6 +441,7 @@ export function addressWithPrefix(
 
 // ---- The Usage chart (design 1.6) ----
 
+/** What the Usage chart draws of a live sample (live/liveSamples.ts SystemSample). */
 export interface UsageSample {
   /** When the reply arrived, on this computer's clock (ms). */
   t: number;
@@ -449,42 +450,10 @@ export interface UsageSample {
   memory: number | null;
 }
 
-/** Ten minutes of the shell's 20 s poll, at most 30 samples. */
+/** The chart's window: the ten minutes the live samples keep (live/liveSamples.ts, LIVE_WINDOW_MS). */
 export const CHART_WINDOW_MS = 10 * 60_000;
-export const CHART_MAX_SAMPLES = 30;
 /** Two samples further apart than this are not joined: the poll paused or failed between them. */
 export const CHART_MAX_GAP_MS = 50_000;
-
-/** A sample from a System.getInformation reply: the processor figure and memory as the meter computes it. */
-export function usageSample(
-  info: Pick<SystemInformation, "cpuUtilization" | "memUsed" | "memTotal">,
-  receivedAtMs: number,
-): UsageSample {
-  const cpu = info.cpuUtilization;
-  return {
-    t: receivedAtMs,
-    cpu: typeof cpu === "number" && Number.isFinite(cpu) ? cpu : null,
-    memory: memoryUsage(info)?.percent ?? null,
-  };
-}
-
-/**
- * The samples with one more: kept in time order, a sample no newer than the last is ignored (the same
- * reply seen twice), and only the last ten minutes and at most 30 are kept.
- */
-export function addSample(
-  samples: readonly UsageSample[],
-  sample: UsageSample,
-): readonly UsageSample[] {
-  const last = samples.at(-1);
-  if (last !== undefined && sample.t <= last.t) {
-    return samples;
-  }
-  const from = sample.t - CHART_WINDOW_MS;
-  return [...samples.filter((s) => s.t >= from), sample].slice(
-    -CHART_MAX_SAMPLES,
-  );
-}
 
 /** The readings table, newest first, with one "No readings" row where the line breaks. */
 export type ReadingRow =

@@ -10,7 +10,7 @@ import { PENDING_BAND_ID } from "../../shell/ids.ts";
 
 export function PendingIndicator() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const count = pendingModules(info.data?.dirtyModules).length;
   if (info.data?.configDirty !== true && count === 0) {
     return null;

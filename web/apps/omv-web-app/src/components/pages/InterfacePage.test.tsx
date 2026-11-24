@@ -39,9 +39,14 @@ describe("14.2: the route", () => {
     expect(
       screen.getByRole("link", { name: "Back to the network interfaces" }),
     ).toHaveAttribute("href", "/ui/network/interfaces");
-    for (const call of callNames()) {
-      expect(call.startsWith("Network.")).toBe(false);
-    }
+    // The shell's combined read lists every interface in the background for the live samples
+    // (live/useLive.ts); it names none. The page itself makes no network call.
+    const pageCalls = seenCalls.filter(
+      (c) =>
+        c.call.startsWith("Network.") &&
+        !(c.call === "Network.enumerateDevicesList" && c.background),
+    );
+    expect(pageCalls).toEqual([]);
   });
 
   it("refuses a name of 16 characters", async () => {

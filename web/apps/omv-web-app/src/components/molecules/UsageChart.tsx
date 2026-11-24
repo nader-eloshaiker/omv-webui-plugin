@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The processor and memory over the last ten minutes, on the Usage card (phase 5 design 1.6). The
-// samples are the shell's System.getInformation replies for this session (usageSamples.ts, D9), so
+// samples are the shell's System.getInformation replies for this session (live/liveSamples.ts, D9), so
 // the chart shows only what this browser has sampled (A7). Gaps are gaps. To assistive technology it
 // is one image with a summary, not a live region; every reading is in the "Show the readings" table.
 import {

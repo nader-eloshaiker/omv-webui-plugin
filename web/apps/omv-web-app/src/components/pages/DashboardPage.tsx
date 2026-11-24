@@ -48,7 +48,6 @@ import {
   storageItems,
 } from "../../dashboard/dashboard.ts";
 import { diskHealth } from "../../dashboard/diskHealth.ts";
-import { usageSamples } from "../../dashboard/usageSamples.ts";
 import { addressIn } from "../../filesystems/fsModel.ts";
 import {
   ALL_CONFIGURED,
@@ -62,6 +61,7 @@ import {
 } from "../../hooks/useMonitoringReads.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
 import { useZfsPlugin, useZfsPoolHealth } from "../../hooks/useZfsReads.ts";
+import { liveSamples } from "../../live/liveSamples.ts";
 import { pendingModules } from "../../pending/modules.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { MAIN_ID } from "../../shell/ids.ts";
@@ -150,7 +150,7 @@ function useFocusTitleWhenGone(visible: boolean) {
 
 function AdminDashboard({ username }: { username: string | null }) {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const readAgain = useReadAgain();
   const mounted = useMountedFilesystems();
   const configured = useConfiguredFilesystems();
@@ -160,7 +160,7 @@ function AdminDashboard({ username }: { username: string | null }) {
   const disks = useMemoryStore(diskHealth);
   const zfsPlugin = useZfsPlugin(true);
   const zfsPools = useZfsPoolHealth(zfsPlugin === "installed");
-  const { samples } = useMemoryStore(usageSamples);
+  const { system: samples } = useMemoryStore(liveSamples);
   const data: SystemInformation | undefined = info.data;
   const showChecklist = data?.displayWelcomeMessage === true;
   useFocusTitleWhenGone(showChecklist);
@@ -288,7 +288,7 @@ function UserDashboard({
   role: Role;
 }) {
   const { t } = useTranslation();
-  const info = useSystemInformation(role);
+  const info = useSystemInformation();
   const readAgain = useReadAgain();
   const titleId = useId();
   const roleWord = t(`role.${role}`);

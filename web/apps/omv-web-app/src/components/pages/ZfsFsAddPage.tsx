@@ -60,7 +60,7 @@ export function ZfsFsAddRoutePage() {
 
 function ZfsFsAdd({ address }: { address: string | null }) {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const v = useZfsPoolView(address);
   const { run } = useMemoryStore(zfsFlowStore);
   const pending = pendingModules(info.data?.dirtyModules);

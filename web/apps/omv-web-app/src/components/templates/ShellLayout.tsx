@@ -17,7 +17,7 @@ import { Outlet } from "@tanstack/react-router";
 import { Menu as MenuIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
+import { useLiveReads } from "../../live/useLive.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { MAIN_ID } from "../../shell/ids.ts";
 import {
@@ -51,7 +51,8 @@ function Shell({
   role: "admin" | "user";
 }) {
   const { t } = useTranslation();
-  const info = useSystemInformation(role);
+  // The one poll of System.getInformation and the interface counters (live/useLive.ts).
+  const info = useLiveReads(role);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [shownTask, setShownTask] = useState<number | null>(null);
   const pageFocus = useNavigationTracker();

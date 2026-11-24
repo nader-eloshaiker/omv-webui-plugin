@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// System.getInformation for the shell: the host name for everyone, and for an administrator the
-// pending configuration changes, polled in the background so the poll never keeps an idle session
-// alive (UI-14). One set of options, so every caller shares the one cache entry and its poll.
-import type { Role } from "@omv-webui/react-api-omv/generated";
+// System.getInformation for a page: the host name for everyone, and for an administrator the
+// pending configuration changes, processor, memory and load. It reads the shell's cache entry and
+// does not poll: the shell's combined read (live/useLive.ts) is the one poll of it, because TanStack
+// Query runs one timer per observer and every caller here would otherwise add its own. A background
+// call, so a read on mount never keeps an idle session alive (UI-14). One set of options, so every
+// caller shares the one cache entry.
 import { useSystemGetInformation } from "@omv-webui/react-api-omv/generated";
+import { LIVE_STALE_MS } from "../live/liveDemand.ts";
 
-/** How often an administrator's shell asks whether changes are pending (another tab may add some). */
-export const PENDING_POLL_MS = 20_000;
-
-export function useSystemInformation(role: Role) {
+export function useSystemInformation() {
   return useSystemGetInformation({
     request: { background: true },
-    query: {
-      refetchInterval: role === "admin" ? PENDING_POLL_MS : false,
-      staleTime: 10_000,
-    },
+    query: { staleTime: LIVE_STALE_MS },
   });
 }

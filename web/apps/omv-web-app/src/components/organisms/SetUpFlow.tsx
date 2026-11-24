@@ -257,7 +257,7 @@ function SetUpConfirmAndRun({
 
 export function SetUpFlow() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const settings = useSmartSettings();
   const schedule = useScheduleList();
   const disks = useDiskList();

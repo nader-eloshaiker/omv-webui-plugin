@@ -114,7 +114,7 @@ export const useShareServices = (options: SharesReadOptions = {}) =>
  * `pending` undefined until read.
  */
 export function useSharesSystem() {
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const dirty = info.data?.dirtyModules;
   const pending = useMemo(
     () => (info.data === undefined ? undefined : pendingModules(dirty)),
