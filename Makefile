@@ -7,7 +7,37 @@
 # Debian 13 host) or `make docker-deb` (anywhere with Docker) builds the package from it. The package
 # build itself needs no Node toolchain and no network.
 
-.PHONY: test install lint typecheck unit format-check contract tools build build-check colour drift browser deb docker-deb package-test clean
+PORT ?=
+port_arg = $(if $(PORT),--port $(PORT))
+
+.DEFAULT_GOAL := help
+
+.PHONY: help dev dev-nas storybook preview test install lint typecheck unit format-check contract tools build build-check colour drift browser deb docker-deb package-test clean
+
+help:
+	@echo "Run the app (dependencies are installed on first use):"
+	@echo "  make dev          the app on the mock backend, no NAS needed: http://localhost:5173/ui/"
+	@echo "  make dev-nas      the app against a test NAS (NAS_HOST, see README.md)"
+	@echo "  make storybook    the component library: http://localhost:6006"
+	@echo "  make preview      serve the last production build (run make build first)"
+	@echo "  Add PORT=<n> to any of them for another port, e.g. make dev PORT=5180"
+	@echo ""
+	@echo "Check and build:"
+	@echo "  make test         everything a pull request must pass"
+	@echo "  make build        the production bundle, checked for UI-1, UI-7 and UI-11"
+	@echo "  make browser      the browser tests under the plugin's real headers"
+
+dev: install
+	cd web && pnpm dev $(port_arg)
+
+dev-nas: install
+	cd web && pnpm dev:nas $(port_arg)
+
+storybook: install
+	cd web && pnpm storybook $(port_arg)
+
+preview: install
+	cd web && pnpm preview $(port_arg)
 
 install: web/node_modules/.modules.yaml
 
