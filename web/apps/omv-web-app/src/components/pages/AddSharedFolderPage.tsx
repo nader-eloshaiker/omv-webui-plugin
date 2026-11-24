@@ -36,7 +36,7 @@ export function AddSharedFolderPage() {
 
 function AddSharedFolder() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const { run } = useMemoryStore(addFlowStore);
   const pending = pendingModules(info.data?.dirtyModules);
 

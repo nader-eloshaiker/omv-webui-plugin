@@ -115,7 +115,7 @@ export function OtherRaidRun({ run }: { run: RaidRun }) {
 function RaidAdd({ address }: { address: string | null }) {
   const { t } = useTranslation();
   const v = useArrayView(address);
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(raidSession);
   const { run } = useMemoryStore(raidFlowStore);
   const blockerText = useAddBlockerText();

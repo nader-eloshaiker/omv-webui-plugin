@@ -37,7 +37,7 @@ export function AddGroupPage() {
 
 function AddGroup() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const { run } = useMemoryStore(addGroupStore);
   const pending = pendingModules(info.data?.dirtyModules);
 

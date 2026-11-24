@@ -90,7 +90,7 @@ function Zfs() {
   const email = useEmailNotificationGet({
     query: { ...ON_OPEN, retry: false },
   });
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(zfsSession);
   const [refreshing, setRefreshing] = useState(false);
   const [readAt, setReadAt] = useState("");

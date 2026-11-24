@@ -8,6 +8,6 @@ import { useSystemInformation } from "./useSystemInformation.ts";
 export const SMART_MODULE = "smartmontools";
 
 export function useSmartPending(): boolean {
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   return pendingModules(info.data?.dirtyModules).includes(SMART_MODULE);
 }

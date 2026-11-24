@@ -12,10 +12,7 @@ import { describe, expect, it } from "vitest";
 import { addressIn } from "../filesystems/fsModel.ts";
 import {
   addressWithPrefix,
-  addSample,
   attentionRows,
-  CHART_MAX_SAMPLES,
-  CHART_WINDOW_MS,
   clockDifferenceSeconds,
   diskState,
   diskTemperature,
@@ -31,7 +28,6 @@ import {
   serviceSummary,
   sortDisks,
   storageItems,
-  usageSample,
   visibleInterfaces,
 } from "./dashboard.ts";
 
@@ -429,30 +425,8 @@ describe("visibleInterfaces", () => {
   });
 });
 
-describe("the chart's samples", () => {
-  const info = CONTRACT_EXAMPLES.systemGetInformation.admin.value;
+describe("the chart's readings", () => {
   const at = (t: number, cpu = 10) => ({ t, cpu, memory: 40 });
-
-  it("takes the processor figure and memory as the meter computes it", () => {
-    const sample = usageSample(info, 1000);
-    expect(sample.t).toBe(1000);
-    expect(sample.cpu).toBe(info.cpuUtilization);
-    expect(sample.memory).toBeCloseTo(9, 0);
-  });
-
-  it("keeps ten minutes, at most 30, and ignores a reply seen twice", () => {
-    let samples = addSample([], at(0));
-    samples = addSample(samples, at(0, 99));
-    expect(samples).toHaveLength(1);
-    for (let i = 1; i <= 40; i += 1) {
-      samples = addSample(samples, at(i * 20_000));
-    }
-    expect(samples).toHaveLength(CHART_MAX_SAMPLES);
-    const last = samples.at(-1)!;
-    expect(last.t - samples[0]!.t).toBeLessThanOrEqual(CHART_WINDOW_MS);
-    samples = addSample(samples, at(last.t + CHART_WINDOW_MS + 1));
-    expect(samples).toHaveLength(1);
-  });
 
   it("lists the readings newest first, with a row where the line breaks", () => {
     const rows = readingRows([at(0), at(20_000), at(120_000)]);

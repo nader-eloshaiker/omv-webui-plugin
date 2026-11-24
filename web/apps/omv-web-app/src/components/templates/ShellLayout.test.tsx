@@ -20,6 +20,8 @@ const READS = new Set([
   "UserMgmt.getUserByContext",
   "WebGui.getAutoLogoutSettings",
   "Config.isDirty",
+  // The shell's combined read: the interface counters for the live samples (live/useLive.ts).
+  "Network.enumerateDevicesList",
   // The menu's one probe of the RAID plugin (RAID design 0.10): it reads no array member.
   "MdMgmt.getCandidates",
   // The menu's one probe of the ZFS plugin (ZFS design 0.11): it runs no command.

@@ -64,7 +64,7 @@ export function PasswordForm({
   );
   const [changed, setChanged] = useState(false);
   const admin = role === "admin";
-  const info = useSystemInformation(role);
+  const info = useSystemInformation();
   const pendingNow =
     admin && pendingModules(info.data?.dirtyModules).length > 0;
 

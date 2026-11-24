@@ -47,7 +47,7 @@ export function AddStoragePage({ kind }: { kind: FlowKind }) {
 
 function AddStorage({ kind: requested }: { kind: FlowKind }) {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const { run } = useMemoryStore(flowStore);
   const kind = run?.choices.kind ?? requested;
   const multi = kind === "multi";

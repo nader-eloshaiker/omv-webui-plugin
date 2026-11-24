@@ -236,7 +236,7 @@ function ZfsFs({ address }: { address: string | null }) {
   const shares = useAllShares(page);
   const configured = useConfiguredFs();
   const details = useZfsFsDetails(row?.path ?? "");
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(zfsSession);
   useMemoryStore(zfsActions);
   const openerRef = useRef<HTMLButtonElement>(null);

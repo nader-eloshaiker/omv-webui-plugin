@@ -3,7 +3,9 @@
 // the server, the activity clock, and the router. main.tsx boots it for the browser and renders it with
 // AppRoot; the tests boot the same thing against MSW.
 import {
+  getNetworkEnumerateDevicesListQueryKey,
   getSystemGetInformationQueryKey,
+  type NetworkDeviceList,
   type SystemInformation,
 } from "@omv-webui/react-api-omv/generated";
 import {
@@ -13,7 +15,6 @@ import {
 import { onSessionEnded } from "@omv-webui/react-api-omv/transport";
 import type { QueryClient } from "@tanstack/react-query";
 import { diskHealth } from "./dashboard/diskHealth.ts";
-import { recordUsage, usageSamples } from "./dashboard/usageSamples.ts";
 import { diskSession } from "./disks/diskSession.ts";
 import { flowStore } from "./filesystems/flowRun.ts";
 import { fsActions } from "./filesystems/fsActions.ts";
@@ -21,6 +22,12 @@ import { fsSession } from "./filesystems/fsSession.ts";
 import { addGroupStore } from "./groups/addGroupFlow.ts";
 import { groupDeletes } from "./groups/deleteGroupFlow.ts";
 import { homeSession } from "./homeFolders/homeSession.ts";
+import { ALL_INTERFACES } from "./hooks/useMonitoringReads.ts";
+import {
+  liveSamples,
+  recordCounters,
+  recordSystem,
+} from "./live/liveSamples.ts";
 import { logsView } from "./logs/logsViewStore.ts";
 import { networkSession } from "./network/networkSession.ts";
 import { newIfaceFocus } from "./network/newIfaceFocus.ts";
@@ -60,7 +67,7 @@ const SESSION_VIEW_STATE = [
   sharesSession,
   shareDeletes,
   addFlowStore,
-  usageSamples,
+  liveSamples,
   diskHealth,
   diskSession,
   fsSession,
@@ -92,6 +99,9 @@ const resetViewState = () => {
   }
 };
 const INFORMATION_KEY = JSON.stringify(getSystemGetInformationQueryKey());
+const INTERFACES_KEY = JSON.stringify(
+  getNetworkEnumerateDevicesListQueryKey(ALL_INTERFACES),
+);
 
 export interface App {
   queryClient: QueryClient;
@@ -122,7 +132,7 @@ export async function bootApp(): Promise<App> {
   });
 
   // What a page keeps in memory for the session (the shared-folders table's page, sort and search, the
-  // chart's samples, the last disk-health result, the logs and processes pages' view) is forgotten
+  // live samples, the last disk-health result, the logs and processes pages' view) is forgotten
   // when the session goes, so the next account starts with the stock view.
   const offViewState = session.subscribe(() => {
     if (session.getState().status !== "signedIn") {
@@ -130,32 +140,39 @@ export async function bootApp(): Promise<App> {
     }
   });
 
-  // The Usage chart's samples (phase 5 design 1.6.1, D9): every successful reply of the shell's
-  // System.getInformation poll, on any page, for an administrator (a normal user's shell does not
-  // poll). Stamped with this computer's time of receipt, so a wrong NAS clock cannot bend the axis.
-  const sample = (data: unknown, receivedAt: number) => {
+  // The live samples (live/liveSamples.ts; owner, 2026-11-24): every successful reply of the shell's
+  // combined read (live/useLive.ts), and of any other read of the same entries, on any page, for an
+  // administrator (a normal user's shell does not poll). Stamped with this computer's time of
+  // receipt, so a wrong NAS clock cannot bend the axis.
+  const isAdmin = () => {
     const state = session.getState();
-    if (
-      state.status === "signedIn" &&
-      state.role === "admin" &&
-      data !== undefined
-    ) {
-      recordUsage(data as SystemInformation, receivedAt);
+    return state.status === "signedIn" && state.role === "admin";
+  };
+  const sample = (key: string, data: unknown, receivedAt: number) => {
+    if (data === undefined || !isAdmin()) {
+      return;
+    }
+    // Each entry is written only by its generated query, from a reply the transport has normalised
+    // to the operation's response schema, so the data has that operation's DTO type.
+    if (key === INFORMATION_KEY) {
+      recordSystem(data as SystemInformation, receivedAt);
+    } else if (key === INTERFACES_KEY) {
+      recordCounters(data as NetworkDeviceList, receivedAt);
     }
   };
   const offSamples = queryClient.getQueryCache().subscribe((event) => {
-    if (
-      event.type === "updated" &&
-      event.action.type === "success" &&
-      JSON.stringify(event.query.queryKey) === INFORMATION_KEY
-    ) {
-      sample(event.query.state.data, event.query.state.dataUpdatedAt);
+    if (event.type === "updated" && event.action.type === "success") {
+      sample(
+        JSON.stringify(event.query.queryKey),
+        event.query.state.data,
+        event.query.state.dataUpdatedAt,
+      );
     }
   });
   // The reply the boot already read (the session probe) is the first sample.
   const booted = queryClient.getQueryState(getSystemGetInformationQueryKey());
   if (booted?.data !== undefined) {
-    sample(booted.data, booted.dataUpdatedAt);
+    sample(INFORMATION_KEY, booted.data, booted.dataUpdatedAt);
   }
 
   return {
