@@ -5,13 +5,13 @@ import type {
   SmbShareRow,
 } from "@omv-webui/react-api-omv/generated";
 import { afterEach, describe, expect, it } from "vitest";
+import { savedMarks } from "../pending/savedMarks.ts";
 import {
   beginAction,
   clearHandover,
   endAction,
   folderPending,
   forgetFolder,
-  forgetPending,
   handedOverFs,
   handOverFs,
   recordCreated,
@@ -32,7 +32,10 @@ const EXISTING = FOLDERS[2] as SharedFolder;
 const SHARE = CONTRACT_EXAMPLES.smbGetShareList.one.value
   .data[0] as SmbShareRow;
 
-afterEach(() => sharesSession.reset());
+afterEach(() => {
+  sharesSession.reset();
+  savedMarks.reset();
+});
 
 describe("the shares session", () => {
   it("runs one action per folder at a time", () => {
@@ -61,9 +64,9 @@ describe("the shares session", () => {
     expect(folderPending(state, PHOTOS.uuid, ["sharedfolders"])).toBe(true);
     expect(folderPending(state, EXISTING.uuid, ["sharedfolders"])).toBe(false);
 
-    forgetPending(["samba"]);
+    savedMarks.answered(["samba"]);
     expect(sharesSession.getState().saved[PHOTOS.uuid]).toEqual(["access"]);
-    forgetPending(["ssh"]);
+    savedMarks.answered(["ssh"]);
     expect(sharesSession.getState().saved).toEqual({});
   });
 
@@ -73,7 +76,7 @@ describe("the shares session", () => {
       true,
     );
     expect(smbSwitchPending(sharesSession.getState(), [])).toBe(false);
-    forgetPending([]);
+    savedMarks.answered([]);
     expect(sharesSession.getState().smbSaved).toBe(false);
   });
 

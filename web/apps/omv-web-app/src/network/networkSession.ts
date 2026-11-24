@@ -5,6 +5,7 @@
 // (one at a time, 0.8's last row), and the one change flow with its remembered settings for "Put back
 // how it was". In memory only (UI-13), never a password; emptied when the session ends, so a reload
 // forgets the remembered settings and Put back is no longer offered (R8).
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 import type {
   FlowObject,
@@ -62,11 +63,6 @@ export interface NetworkSessionState {
   networkSaves: NetworkSaves | null;
   /** The interfaces whose settings this session removed since the last apply (10.4's Undo line). */
   ifacesRemoved: readonly string[];
-  /**
-   * When this session last saved something that marks the network pending (Date.now()). A reading of
-   * the pending modules taken before it says nothing about that save, so it forgets nothing.
-   */
-  lastSaveAt: number;
 }
 
 const INITIAL: NetworkSessionState = {
@@ -78,29 +74,50 @@ const INITIAL: NetworkSessionState = {
   flow: null,
   networkSaves: null,
   ifacesRemoved: [],
-  lastSaveAt: 0,
 };
 
 export const networkSession = createMemoryStore<NetworkSessionState>(INITIAL);
 
-/** Stamp a save, so that an older reading of the pending modules does not forget it. */
-const stamp = (): void =>
-  networkSession.set(() => ({ lastSaveAt: Date.now() }));
+// Once their module is not pending any more (an apply or an undo ran), the marks are forgotten, each
+// on a reading asked for after its own last save (savedMarks.ts).
+const nameMarks = savedMarks.track(["hostname"], () =>
+  networkSession.set((s) => (s.nameSaved ? { nameSaved: false } : {})),
+);
+const networkMarks = savedMarks.track(["systemd-networkd"], () =>
+  networkSession.set((s) =>
+    s.ifacesSaved.length === 0 && s.networkSaves === null
+      ? {}
+      : { ifacesSaved: [], networkSaves: null },
+  ),
+);
+const rulesMarks = savedMarks.track(["iptables"], () =>
+  networkSession.set((s) =>
+    s.rulesSaved.length === 0 ? {} : { rulesSaved: [] },
+  ),
+);
+const proxyMarks = savedMarks.track(["apt"], () =>
+  networkSession.set((s) => (s.proxySaved ? { proxySaved: false } : {})),
+);
+const removedMarks = savedMarks.track(["task"], () =>
+  networkSession.set((s) =>
+    s.ifacesRemoved.length === 0 ? {} : { ifacesRemoved: [] },
+  ),
+);
 
 export const recordNameSaved = (): void => {
-  stamp();
+  nameMarks.saved();
   networkSession.set((s) => (s.nameSaved ? {} : { nameSaved: true }));
 };
 
 export const recordIfaceSaved = (key: string): void => {
-  stamp();
+  networkMarks.saved();
   networkSession.set((s) =>
     s.ifacesSaved.includes(key) ? {} : { ifacesSaved: [...s.ifacesSaved, key] },
   );
 };
 
 export const recordRulesSaved = (family: Family): void => {
-  stamp();
+  rulesMarks.saved();
   networkSession.set((s) =>
     s.rulesSaved.includes(family)
       ? {}
@@ -122,7 +139,7 @@ export function recordNetworkSave(input: {
   change: { devicename: string; impact: Impact } | null;
   same: (a: readonly IfaceSettings[], b: readonly IfaceSettings[]) => boolean;
 }): void {
-  stamp();
+  networkMarks.saved();
   networkSession.set((s) => {
     const previous = input.pendingBefore.includes("systemd-networkd")
       ? s.networkSaves
@@ -148,7 +165,7 @@ export function recordNetworkSave(input: {
 
 /** An interface's settings removed (10.2): its queued switch-off job outlives Undo (10.4). */
 export const recordIfaceRemoved = (devicename: string): void => {
-  stamp();
+  removedMarks.saved();
   networkSession.set((s) =>
     s.ifacesRemoved.includes(devicename)
       ? {}
@@ -157,27 +174,9 @@ export const recordIfaceRemoved = (devicename: string): void => {
 };
 
 export const recordProxySaved = (): void => {
-  stamp();
+  proxyMarks.saved();
   networkSession.set((s) => (s.proxySaved ? {} : { proxySaved: true }));
 };
-
-/** Once their modules are not pending any more (an apply or an undo ran), the marks are forgotten. */
-export function forgetNetworkPending(
-  pending: readonly string[],
-  readAt: number = Date.now(),
-): void {
-  if (readAt < networkSession.getState().lastSaveAt) {
-    return;
-  }
-  networkSession.set((s) => ({
-    nameSaved: s.nameSaved && pending.includes("hostname"),
-    ifacesSaved: pending.includes("systemd-networkd") ? s.ifacesSaved : [],
-    rulesSaved: pending.includes("iptables") ? s.rulesSaved : [],
-    proxySaved: s.proxySaved && pending.includes("apt"),
-    networkSaves: pending.includes("systemd-networkd") ? s.networkSaves : null,
-    ifacesRemoved: pending.includes("task") ? s.ifacesRemoved : [],
-  }));
-}
 
 /** Mark an object as being changed; false when an action on it already runs in this session. */
 export function beginAction(object: FlowObject): boolean {

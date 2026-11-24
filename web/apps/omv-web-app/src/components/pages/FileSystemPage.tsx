@@ -13,7 +13,7 @@ import {
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useParams } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { belongsTo, diskNames } from "../../disks/diskUse.ts";
 import { actionOf, fsActions } from "../../filesystems/fsActions.ts";
@@ -26,7 +26,7 @@ import {
   SETTINGS_MODULE,
   usedBy,
 } from "../../filesystems/fsModel.ts";
-import { forgetSettingsSaved, fsSession } from "../../filesystems/fsSession.ts";
+import { fsSession } from "../../filesystems/fsSession.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 import { useConfiguredFs, useDiskList } from "../../hooks/useDiskReads.ts";
 import {
@@ -185,13 +185,6 @@ function Sections({
   const readAgain = useReadFileSystemsAgain();
 
   const pending = pendingModules(info.data?.dirtyModules);
-  const monitPending = pending.includes(SETTINGS_MODULE);
-  // Once the settings are applied, this session's "saved" marks are forgotten (0.7).
-  useEffect(() => {
-    if (info.data !== undefined && !monitPending) {
-      forgetSettingsSaved();
-    }
-  }, [info.data, monitPending]);
   const state = fsState(fs, pending);
   const name = fsName(fs);
   const nameText = words.nameOf(name);

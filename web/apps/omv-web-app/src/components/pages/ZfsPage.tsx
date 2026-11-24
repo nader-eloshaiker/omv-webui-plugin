@@ -16,7 +16,7 @@ import {
   TableToolbar,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { emailSetUp } from "../../disks/smartSettingsForm.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -30,7 +30,7 @@ import { routerLinkClass } from "../../shell/linkClass.ts";
 import { useMemoryStore } from "../../shell/memoryStore.ts";
 import { onPool, worse, type Status } from "../../zfs/zfsModel.ts";
 import { zfsPending } from "../../zfs/zfsRun.ts";
-import { forgetPending, zfsSession } from "../../zfs/zfsSession.ts";
+import { zfsSession } from "../../zfs/zfsSession.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { PageTitle } from "../atoms/PageTitle.tsx";
 import { ZfsNotInstalled } from "../molecules/ZfsNotInstalled.tsx";
@@ -97,12 +97,6 @@ function Zfs() {
 
   const pending = pendingModules(info.data?.dirtyModules);
   const stillPending = zfsPending(pending);
-  const applied = info.data !== undefined && !stillPending;
-  useEffect(() => {
-    if (applied) {
-      forgetPending();
-    }
-  }, [applied]);
 
   if (list.missing) {
     return (

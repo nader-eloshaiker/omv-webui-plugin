@@ -13,14 +13,10 @@ import {
   Skeleton,
   StatusPill,
 } from "@omv-webui/react-ui-components";
-import { useEffect, useRef, type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { homeState, type HomeState } from "../../homeFolders/homeModel.ts";
-import {
-  forgetHomePending,
-  homePending,
-  homeSession,
-} from "../../homeFolders/homeSession.ts";
+import { homePending, homeSession } from "../../homeFolders/homeSession.ts";
 import { useHomeSettings } from "../../hooks/useGroupsApi.ts";
 import {
   useShareFileSystems,
@@ -66,12 +62,6 @@ function HomeFolders() {
   const memory = useMemoryStore(homeSession);
   const stateRef = useRef<HTMLParagraphElement>(null);
   const pending = system.pending ?? [];
-
-  useEffect(() => {
-    if (system.pending !== undefined) {
-      forgetHomePending(system.pending);
-    }
-  }, [system.pending]);
 
   const people = users.data?.data.length;
   const smbOn = smb.data?.enable === true;

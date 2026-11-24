@@ -33,7 +33,7 @@ import {
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useNfsApi } from "../../hooks/useNfsApi.ts";
@@ -58,7 +58,6 @@ import {
   type NfsState,
 } from "../../services/nfsModel.ts";
 import {
-  forgetNfsPending,
   nfsFolderPending,
   nfsSession,
   nfsSwitchPending,
@@ -99,12 +98,6 @@ function Nfs() {
   const pending = system.pending ?? [];
   const addRef = useRef<HTMLButtonElement>(null);
   const [adding, setAdding] = useState(false);
-
-  useEffect(() => {
-    if (system.pending !== undefined) {
-      forgetNfsPending(system.pending);
-    }
-  }, [system.pending]);
 
   const state = nfsState(
     {

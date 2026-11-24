@@ -31,6 +31,8 @@ import {
 import { logsView } from "./logs/logsViewStore.ts";
 import { networkSession } from "./network/networkSession.ts";
 import { newIfaceFocus } from "./network/newIfaceFocus.ts";
+import { connectSavedMarks } from "./pending/connectSavedMarks.ts";
+import { savedMarks } from "./pending/savedMarks.ts";
 import { processesView } from "./processes/processesViewStore.ts";
 import { raidFlowStore } from "./raid/raidRun.ts";
 import { raidSession } from "./raid/raidSession.ts";
@@ -92,6 +94,7 @@ const SESSION_VIEW_STATE = [
   jobFlowStore,
   networkSession,
   newIfaceFocus,
+  savedMarks,
 ];
 const resetViewState = () => {
   for (const store of SESSION_VIEW_STATE) {
@@ -115,6 +118,8 @@ export interface App {
 export async function bootApp(): Promise<App> {
   const queryClient = createQueryClient();
   const disconnectQuery = connectQueryClient(queryClient);
+  // The pages' "Not applied yet" marks are forgotten only on a reading asked for after their save.
+  const disconnectMarks = connectSavedMarks(queryClient);
   // Before the first call, so the probe's own reads count as activity, as they do on the server.
   const activity = createActivityClock();
   const session = createSessionStore(await probeSession(queryClient));
@@ -186,6 +191,7 @@ export async function bootApp(): Promise<App> {
       resetViewState();
       offSessionEnded();
       activity.disconnect();
+      disconnectMarks();
       disconnectQuery();
     },
   };
