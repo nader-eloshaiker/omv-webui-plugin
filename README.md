@@ -28,36 +28,29 @@ Implementing agents start with [AGENTS.md](AGENTS.md).
 
 ## Running it locally
 
-You need Node.js 24 or later and pnpm (the version is pinned in `web/package.json`; `corepack enable` provides it). Every command runs from `web/`, which is the pnpm workspace.
+You need Node.js 24 or later and pnpm (run `corepack enable` once; it provides the pinned version). Then, from the repository root:
 
 ```sh
-cd web
-pnpm install
+make dev
 ```
 
-### The app
+That installs the dependencies the first time and starts the app on a mock backend, so no NAS is needed. Open `http://localhost:5173/ui/` and sign in with any user name and password. The panel in the bottom corner switches between mock scenarios (a healthy NAS, failing disks, a normal user, and so on). `make` on its own lists every command.
 
 | Command | What it does |
 | --- | --- |
-| `pnpm --filter omv-web-app dev:mock` | The app on a mock backend (MSW) that answers from the contract's examples. No NAS needed. Open `http://localhost:5173/ui/` and sign in with any user name and password. The panel in the bottom corner switches between mock scenarios (a healthy NAS, failing disks, a normal user, and so on). |
-| `pnpm --filter omv-web-app dev` | The app against a real OMV 8 test system: `rpc.php` and `download.php` are proxied to `NAS_HOST`. Set it in the environment (`NAS_HOST=nas.example.org pnpm --filter omv-web-app dev`) or as a `NAS_HOST=` line in `~/.config/omv-webui/test.env` (or another file named by `OMV_WEBUI_ENV`). Use a disposable test system, not a NAS you depend on. |
-| `pnpm build` | The production bundle in `web/apps/omv-web-app/dist/`. |
-| `pnpm --filter omv-web-app preview` | Serves the last production build. |
+| `make dev` | The app on the mock backend. |
+| `make dev-nas` | The app against a real OMV 8 test system (see below). |
+| `make storybook` | The component library's stories, at `http://localhost:6006`. |
+| `make build` | The production bundle in `web/apps/omv-web-app/dist/`, checked for the security rules. |
+| `make preview` | Serves the last production build. |
+| `make test` | Everything a pull request must pass: lint, types, formatting, unit tests, the contract and the colour audit. |
+| `make browser` | The browser tests on the production bundle under the plugin's real headers (the first time, get the browser with `cd web && pnpm test:browser:install`). |
 
-Add `--port <n>` to a dev command to use another port. In development, the design lab (three early looks, mock only) is at `/ui/lab`.
+Add `PORT=<n>` for another port: `make dev PORT=5180`. In development, the design lab (three early looks, mock only) is at `/ui/lab`.
 
-### The component library
+**Against a test system.** `make dev-nas` sends the app's backend calls to the system named by `NAS_HOST`. Put a line `NAS_HOST=nas.example.org` in `~/.config/omv-webui/test.env`, or pass it for one run: `NAS_HOST=nas.example.org make dev-nas`. Use a disposable test system, not a NAS you depend on.
 
-`pnpm --filter @omv-webui/react-ui-components storybook` starts Storybook at `http://localhost:6006`, with the stories of every shared component.
-
-### Checks
-
-| Command | What it does |
-| --- | --- |
-| `pnpm lint`, `pnpm typecheck`, `pnpm format:check` | Lint, type check and formatting for the whole workspace. |
-| `pnpm test` | The unit tests, one package at a time, with at most four test workers. |
-| `pnpm test:browser` | Builds, then runs the browser tests on the production bundle under the plugin's real headers. Run `pnpm test:browser:install` once first to get the browser. |
-| `make test` (repository root) | Everything a pull request must pass: the commands above plus the contract checks and the colour audit. |
+**With pnpm.** The same commands exist as pnpm scripts in `web/`, the pnpm workspace: `pnpm dev`, `pnpm dev:nas`, `pnpm storybook`, `pnpm build`, `pnpm preview`, `pnpm test`, `pnpm lint`, `pnpm typecheck` and `pnpm format:check`. Run `pnpm install` there first. Add `--port <n>` for another port.
 
 The rules for what has to pass before a change is done are in [.agents/rules/verification.md](.agents/rules/verification.md).
 
