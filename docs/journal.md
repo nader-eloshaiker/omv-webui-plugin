@@ -832,3 +832,7 @@ After trying the lab's three directions, the owner chose:
 4. **Pending changes stay in a band under the top bar**, not a floating bar at the foot of the window. The band is slim and keeps OMV's pending yellow. On save, a mark flies into the top bar's "pending" pill, and the band can shrink to that pill while scrolling.
 
 Rendered charts are being assessed separately (Recharts against UI-1 with Trusted Types, and UI-11).
+
+## 2026-11-24 — Charts are drawn with Recharts (owner)
+
+Recharts 3.11.0 passed every check: no style elements, no HTML sinks, text measured with `textContent` through the CSSOM, no `eval`, no foreign requests at run time, and 28 MIT, ISC or BSD-3-Clause packages with no install scripts. Under the plugin's exact headers with Trusted Types enforced, the lab's test build showed zero violations. The components used cost about 125 KB gzip, mostly its shared state layer and seven d3 modules. The owner chose to keep it. It loads only in the route chunks that draw charts, never in the entry chunk. The PR that first ships a chart adds its four inert URL strings to `ALLOWED_URLS` in `tools/build-check/check.mjs`, and the chart components move into `react-ui-components` with stories, taking their series colours from `css-ui-style`.
