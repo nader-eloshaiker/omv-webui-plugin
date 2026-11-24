@@ -50,10 +50,7 @@ function DialogTitle({
 }: React.ComponentProps<typeof BaseDialog.Title>) {
   return (
     <BaseDialog.Title
-      className={cn(
-        "text-lg leading-tight font-semibold text-foreground",
-        className,
-      )}
+      className={cn("text-section text-foreground", className)}
       {...props}
     />
   );

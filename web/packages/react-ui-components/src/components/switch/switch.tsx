@@ -16,9 +16,10 @@ function Switch({
     <BaseSwitch.Root
       data-slot="switch"
       className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-input bg-muted p-0.5 transition-colors duration-fast",
-        // The track is 20px high; the press target is 24px (WCAG 2.5.8).
-        "after:absolute after:-inset-x-px after:-inset-y-0.5 after:content-['']",
+        "group/switch relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-input bg-muted-strong p-0.5",
+        "transition-[background-color,border-color] duration-base ease-standard",
+        // The track is 24px high, the WCAG 2.5.8 target; the pseudo-element keeps the target whole.
+        "after:absolute after:-inset-px after:content-['']",
         "data-checked:border-action data-checked:bg-action",
         "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:opacity-60",
         className,
@@ -27,8 +28,13 @@ function Switch({
     >
       <BaseSwitch.Thumb
         className={cn(
-          "block size-3.5 rounded-full bg-muted-foreground transition-transform duration-fast",
-          "data-checked:translate-x-4 data-checked:bg-action-foreground rtl:data-checked:-translate-x-4",
+          // Switch settle (foundation 7.2): the thumb travels on the settle spring, and pressing
+          // stretches it toward where it will go. Reduced motion: it moves without travel.
+          "block h-4.5 w-4.5 rounded-full bg-muted-foreground shadow-control",
+          "transition-[translate,width,background-color] duration-slow ease-settle",
+          "group-active/switch:w-5.5 group-data-disabled/switch:w-4.5",
+          "data-checked:translate-x-5 data-checked:bg-action-foreground rtl:data-checked:-translate-x-5",
+          "data-checked:group-active/switch:translate-x-4 rtl:data-checked:group-active/switch:-translate-x-4",
         )}
       />
     </BaseSwitch.Root>

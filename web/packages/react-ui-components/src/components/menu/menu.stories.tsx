@@ -22,9 +22,12 @@ import {
   MenuTrigger,
 } from "./menu";
 
-const meta = { title: "Components/Menu", component: Menu } satisfies Meta<
-  typeof Menu
->;
+const meta = {
+  title: "Components/Menu",
+  component: Menu,
+  // Two stories open the menu on mount; one open menu per story (see .storybook/preview.tsx).
+  parameters: { matrix: false },
+} satisfies Meta<typeof Menu>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

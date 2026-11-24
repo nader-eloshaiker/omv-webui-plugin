@@ -195,7 +195,7 @@ function MovedCard({
   return (
     <div
       data-slot="reconnect-watch-moved"
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
+      className="flex flex-col gap-3 rounded-card surface-raised p-card"
     >
       <Outcome icon={<ArrowRight className="rtl:-scale-x-100" />}>
         <p className="text-base font-medium text-foreground">

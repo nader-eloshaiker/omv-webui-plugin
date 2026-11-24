@@ -8,6 +8,7 @@ import type { Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
 import { answerWithScenario } from "./support/scenarioRoute.ts";
+import { openNavGroup } from "./support/shell.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -98,6 +99,7 @@ test("an administrator chooses a log by keyboard, searches it, and reads it only
     }
   });
   await signIn(page);
+  await openNavGroup(page, "diagnostics");
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
     .click();
@@ -192,6 +194,7 @@ test.describe("a log too long for the NAS to send", () => {
       (call) => call === "LogFile.getList",
     );
     await signIn(page);
+    await openNavGroup(page, "diagnostics");
     await navigation(page)
       .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
       .click();
@@ -216,6 +219,7 @@ test.describe("a log too long for the NAS to send", () => {
 test("the process list, paused and resumed", async ({ page, rpc }) => {
   rpc.loginWith("authenticated");
   await signIn(page);
+  await openNavGroup(page, "diagnostics");
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.diagnostics.processes })
     .click();
@@ -241,6 +245,7 @@ test("the service tabs, each its own address, with the output read on opening", 
 }) => {
   rpc.loginWith("authenticated");
   await signIn(page);
+  await openNavGroup(page, "diagnostics");
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.diagnostics.services })
     .click();

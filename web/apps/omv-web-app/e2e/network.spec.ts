@@ -28,6 +28,7 @@ import type { ScenarioName } from "../src/mocks/scenarios.ts";
 import { expect, test } from "./support/fixtures.ts";
 import type { ConsoleAllowance } from "./support/observer.ts";
 import { answerWithScenario } from "./support/scenarioRoute.ts";
+import { revealPendingBand } from "./support/shell.ts";
 
 // Typed into the mock only.
 const PASSWORD = "not-a-real-password";
@@ -141,6 +142,7 @@ async function choose(page: Page, select: Locator, option: RegExp | string) {
 /** Apply everything pending from the band, through its confirmation, and wait for the band to go. */
 async function applyFromBand(page: Page) {
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   const apply = band.getByRole("button", { name: /^Apply \d+ changes?$/ });
   await expect(apply).toBeVisible(LONG);
   const label = ((await apply.textContent()) ?? "").trim();
@@ -329,6 +331,7 @@ test.describe("the band's watch", () => {
     await signInWith(page, rpc, "networkApply");
     await page.goto("/ui/network/interfaces");
     const band = page.getByRole("region", { name: copy.pending.label });
+    await revealPendingBand(page);
     const apply = band.getByRole("button", { name: /^Apply \d+ changes?$/ });
     await expect(apply).toBeVisible(LONG);
     const label = ((await apply.textContent()) ?? "").trim();
@@ -353,6 +356,7 @@ test.describe("the band's watch", () => {
     await signInWith(page, rpc, "networkApplyNever");
     await page.goto("/ui/network/interfaces");
     const band = page.getByRole("region", { name: copy.pending.label });
+    await revealPendingBand(page);
     const apply = band.getByRole("button", { name: /^Apply \d+ changes?$/ });
     await expect(apply).toBeVisible(LONG);
     const label = ((await apply.textContent()) ?? "").trim();
@@ -688,6 +692,7 @@ test("refuses to apply pending firewall rules that block this page for everyone"
   const calls = await signInWith(page, rpc, "firewallBlocksPage");
   await page.goto("/ui/network/firewall");
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   const apply = band.getByRole("button", { name: /^Apply \d+ changes?$/ });
   await expect(apply).toBeVisible(LONG);
   const label = ((await apply.textContent()) ?? "").trim();
@@ -749,6 +754,7 @@ test("undoes a removal from the band, then applies the queued jobs and the netwo
   const calls = await signInWith(page, rpc, "networkPending");
   await page.goto("/ui/network/interfaces");
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   const undo = band.getByRole("button", { name: /^Undo \d+ changes?$/ });
   await expect(undo).toBeVisible(LONG);
   const label = ((await undo.textContent()) ?? "").trim();

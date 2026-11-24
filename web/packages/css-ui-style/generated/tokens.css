@@ -1,12 +1,16 @@
 /* GENERATED from design/tokens.css by web/packages/css-ui-style/scripts/tokens.mjs. Do not edit:
    change design/tokens.css and run `pnpm --filter @omv-webui/css-ui-style tokens`. The source is
-   copied verbatim first; the three derived blocks follow it. */
+   copied verbatim first; the four derived blocks follow it. */
 
 /* Design tokens for the new openmediavault web UI (unofficial community plugin).
  *
- * This file is the single source of truth for colour, type, space, radius, elevation and motion.
- * Why each value is what it is: docs/design/style-guide.md. Every colour pair that must hold a
- * contrast bar is listed in tools/colour-audit.mjs (PAIRS); change a value here, then run
+ * This file is the single source of truth for colour, type, space, density, radius, elevation and
+ * motion. The look is the one the owner chose on 2026-11-24: Sky as the base (night-sky slate grounds
+ * with light from above, raised cards with large squircle corners, generous space), Instrument's
+ * values as the compact density, both themes first-class and dark first. Why each value is what it
+ * is: docs/design/visual-foundation.md, which is normative for everything its section 0 lists, and
+ * docs/design/style-guide.md for the rest. Every colour pair that must hold a contrast bar is listed
+ * in tools/colour-audit.mjs (PAIRS); change a value here, then run
  *
  *     node tools/colour-audit.mjs
  *
@@ -14,7 +18,7 @@
  *   1. Primitives  - the static scales in `@theme` (--color-brand-*, --color-slate-*, ...).
  *   2. Semantic    - --theme-* roles on :root, redefined under `.dark`.
  *   3. Component   - the shadcn vocabulary (primary, muted, destructive, ...) mapped onto the
- *                    semantic tier in web/packages/css-ui-style/index.css (the guide, section 3.2).
+ *                    semantic tier in web/packages/css-ui-style/index.css (style guide 3.2).
  *
  * Dark mode is the `.dark` class in this file. The css-ui-style package is built from this file
  * (`pnpm --filter @omv-webui/css-ui-style tokens`) and adds, from the same `.dark` block, the dark
@@ -22,17 +26,39 @@
  * preference works from the first paint with no inline script (UI-1); a class records only an
  * explicit choice. See docs/02-architecture.md, "Cross-cutting behaviour".
  *
- * Hex only for colours: the audit script parses hex and `var(--token)` and nothing else. Scales were
- * built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex. The one exception
- * is the alpha inks nothing is ever read on, the shadows and the scrim: they are written as rgb() with
- * alpha, the audit resolves them to nothing, and a contrast pair that named one would fail as a
- * missing token.
+ * Density is `data-density="compact"` on <html>, or on any subtree (a story, a side-by-side view).
+ * Comfortable is the default and needs no attribute. It is a stored preference like the theme
+ * (UI-13). The generator adds a `[data-density="comfortable"]` block from the default values, so a
+ * comfortable subtree inside a compact one also works.
+ *
+ * Hex only for opaque colours. The audit script parses hex, `var(--token)` and, for the washes and
+ * the light that are composited over a known ground, `color-mix(in srgb, <colour> N%, transparent)`.
+ * Scales were built in OKLCH (`node tools/colour-audit.mjs oklch L C H`) and written out as hex. The
+ * alpha inks nothing is ever read on, the shadows and the scrim, are written as rgb() with alpha; the
+ * audit resolves them to nothing, and a contrast pair that named one would fail as a missing token.
  */
 
 /* ─── Tier 1: primitives ──────────────────────────────────────────────────────────────────────── */
 @theme {
+  /* One colour scheme (foundation 3.6), in OKLCH hue. Every colour below has its place in it, and a
+     new colour takes a place in it or does not come in:
+       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage, the
+         map path and the ambient light are this one hue in lightness steps, and the slate neutrals
+         lean toward it (248 to 259);
+       - the colours that ask for attention sit opposite, on the base's complementary arc: warning
+         on the complement (62), critical and pending on the split complements (27 and 87). Their
+         lightness falls with hue, gold lightest, orange, red darkest, which is what keeps them
+         apart under colour-vision deficiency;
+       - OK is a quarter turn round from the base (151), on the calm side;
+       - the four chart series take the gaps between those hues (118, 195, 292, 345), so a series
+         never looks like a state;
+       - ink on a light fill is Sky's own navy, brand-950, never a new hue.
+     A word in a hue darkens toward red and lightens toward yellow (warning's label sits at its
+     fill's hue, pending's light words are navy), so no label goes olive or brown. */
+
   /* OMV sky blue. 400 is the stock OMV "corporate" blue, unchanged; the rest of the ramp is the
-     same hue (OKLCH ~240) stepped in lightness. */
+     same hue (OKLCH ~240) stepped in lightness. It is the brand accent: the mark, the primary and
+     selected colour in dark, the focus ring, the live trace and the health ring. */
   --color-brand-50: #edf7fe;
   --color-brand-100: #daeefe;
   --color-brand-200: #b4defc;
@@ -45,20 +71,25 @@
   --color-brand-900: #052e49;
   --color-brand-950: #021d30;
 
-  /* Slate: the one neutral family. Cool, hue ~245 (between the brand's 240 and stock OMV slate's
-     248), chroma 0.003-0.024 so the tint is felt, not seen. */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f4f7;
-  --color-slate-200: #e2e7eb;
-  --color-slate-300: #ced5dc;
-  --color-slate-400: #9ca6af;
-  --color-slate-500: #76828d;
-  --color-slate-600: #586570;
-  --color-slate-700: #404c57;
-  --color-slate-800: #28323a;
-  --color-slate-850: #212930;
-  --color-slate-900: #181f25;
-  --color-slate-950: #10161a;
+  /* Slate: the one neutral family, a night sky. OKLCH hue 248 (the light steps) to 259 (the
+     darkest), chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong together.
+     Every ground, line and text tier of both themes is one step; the numbers that are skipped are
+     steps nothing uses. */
+  --color-slate-50: #f5f8fb;
+  --color-slate-100: #eef3f8;
+  --color-slate-200: #e8eef4;
+  --color-slate-300: #dbe3eb;
+  --color-slate-400: #a9b6c4;
+  --color-slate-500: #8593a1;
+  --color-slate-550: #7d8b9b;
+  --color-slate-600: #6b7885;
+  --color-slate-650: #566373;
+  --color-slate-700: #485667;
+  --color-slate-800: #233042;
+  --color-slate-850: #1d2939;
+  --color-slate-900: #16212f;
+  --color-slate-925: #111a27;
+  --color-slate-950: #0a111c;
 
   /* Status FILLS: theme-invariant, so a state reads as the same state in both themes. They draw
      (dots, meter segments, pill washes); they are never words. Words come from the -label members
@@ -68,73 +99,200 @@
   --color-status-critical: #d01d21;
   --color-status-unknown: #b6bfc7;
 
-  /* Pending configuration changes: stock OMV yellow and its coffee-brown ink, unchanged. */
-  --color-pending-fill: #f8d400;
-  --color-pending-ink: #4d2e25;
+  /* Pending configuration changes: gold on the split complement of the blue (OKLCH 0.87 0.155 87),
+     warmer and softer than OMV's lemon but as light, so it stays apart from the orange; inked in
+     Sky's navy (11.53:1). The owner's choice, 2026-11-24. */
+  --color-pending-fill: #ffcd47;
+  --color-pending-ink: var(--color-brand-950);
 
-  /* Type */
-  /* The bundled Fontsource variable builds name their families "Inter Variable" and "Roboto Mono
-     Variable"; the plain names follow for a locally installed copy (design/preview.html). */
+  /* Type (foundation 4). Inter for everything, with its optical-size axis so the headline and large
+     figures take Inter Display's tighter forms; Roboto Mono for device names, paths and addresses,
+     and for live readouts in compact density. The bundled Fontsource builds name their families
+     "Inter Variable" and "Roboto Mono Variable"; the plain names follow for a locally installed copy
+     (design/preview.html). */
   --font-sans:
     "Inter Variable", "Inter", "Roboto", "Helvetica Neue", helvetica, arial, sans-serif;
   --font-mono:
     "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
-  --text-xs: 0.75rem; /* 12px  captions, table meta */
-  --text-sm: 0.8125rem; /* 13px  dense table cells, form hints */
-  --text-base: 0.875rem; /* 14px  body: the console default */
-  --text-lg: 1rem; /* 16px  section titles */
-  --text-xl: 1.25rem; /* 20px  page titles */
-  --text-2xl: 1.5rem; /* 24px  dashboard figures */
-  --text-3xl: 1.875rem; /* 30px  the one headline figure on a tile */
+  --font-readout: var(--font-sans); /* live readouts and figures; Roboto Mono in compact density */
+
+  /* The six named steps. Each carries its line height, tracking and weight, so `text-title` is the
+     whole style. Body, caption and figure change in compact density (below). */
+  --text-display: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); /* 28-40px  the one headline answer */
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 650;
+  --text-figure: 1.875rem; /* 30px  live values and capacity figures */
+  --text-figure--line-height: 1.15;
+  --text-figure--letter-spacing: -0.02em;
+  --text-figure--font-weight: 600;
+  --text-title: 1.75rem; /* 28px  the one page title */
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 650;
+  --text-section: 1.0625rem; /* 17px  card and section titles */
+  --text-section--line-height: 1.35;
+  --text-section--letter-spacing: -0.01em;
+  --text-section--font-weight: 600;
+  --text-body: 0.9375rem; /* 15px  everything read */
+  --text-caption: 0.8125rem; /* 13px  metadata, units, help lines */
+
+  /* The plain steps, kept for page code written before the named ones. `base` is the body and
+     follows it in compact density; `lg` is the section size. Nothing is smaller than 12px. */
+  --text-xs: 0.75rem; /* 12px  pills, overlines, fine print */
+  --text-sm: 0.8125rem; /* 13px  captions, help lines, table meta */
+  --text-base: 0.9375rem; /* 15px  body */
+  --text-lg: 1.0625rem; /* 17px  section titles */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.5rem; /* 24px */
+  --text-3xl: 1.875rem; /* 30px */
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
-  /* Space: a 4px base. Density comes from choosing smaller steps, never from off-scale values. */
+  /* Space: a 4px base. Density comes from the density tokens below and from choosing smaller steps,
+     never from off-scale values. */
   --spacing: 0.25rem;
 
-  /* Radius: one per kind of thing. Controls and cards take squircle corners where the browser
-     supports them, with the radii in the block after this one. */
-  --radius-sm: 4px; /* pills' inner marks, checkboxes */
-  --radius-md: 6px; /* controls: buttons, inputs, menu items */
-  --radius-lg: 8px; /* cards, dialogs, menus, popovers, toasts, tiles */
-  --radius-full: 9999px; /* status pills, dots, meters: always round */
+  /* Radius: one per kind of thing (foundation 6). Controls and cards take squircle corners where the
+     browser supports them, with the radii in the block after this one. */
+  --radius-sm: 6px; /* checkboxes, inner marks, small chips */
+  --radius-md: 12px; /* controls: buttons, inputs, menu items */
+  --radius-lg: 20px; /* cards, dialogs, menus, popovers, toasts, tiles */
+  --radius-full: 9999px; /* status pills, dots, meters, rings: always round */
 
-  /* Motion: short and functional. Everything is disabled under prefers-reduced-motion. */
-  --duration-fast: 120ms; /* hover, focus, pressed */
-  --duration-base: 180ms; /* menus, popovers, toasts */
-  --duration-slow: 260ms; /* dialogs, page-level reveals */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Motion (foundation 7.1). Exits are shorter than entrances; nothing a reader waits for takes
+     longer than 400ms. All are 0ms under prefers-reduced-motion (the end of this file). */
+  --duration-press: 90ms; /* pressed */
+  --duration-fast: 160ms; /* hover, focus, small changes of state */
+  --duration-base: 240ms; /* toggles, menus, exits */
+  --duration-slow: 360ms; /* entrances, page change, dialogs, disclosure height */
+  --duration-glide: 640ms; /* meters, rings and number glides */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* everything by default */
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1); /* things arriving: decelerate hard */
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15); /* things leaving: accelerate away */
+  /* Springs from a damped oscillator, as native linear() curves: no library. "settle" overshoots 8%
+     (a switch thumb, a pending chip, a toast); "soft" 1.5% (heights: bars, disclosures, sections). */
+  --ease-settle: linear(
+    0,
+    0.101,
+    0.319,
+    0.561,
+    0.771,
+    0.926,
+    1.023,
+    1.071,
+    1.084,
+    1.075,
+    1.057,
+    1.037,
+    1.019,
+    1.006,
+    0.998,
+    0.994,
+    0.993,
+    0.994,
+    0.995,
+    0.997,
+    0.998,
+    0.999,
+    1
+  );
+  --ease-soft: linear(
+    0,
+    0.062,
+    0.202,
+    0.366,
+    0.526,
+    0.665,
+    0.777,
+    0.861,
+    0.922,
+    0.964,
+    0.99,
+    1.005,
+    1.012,
+    1.015,
+    1.015,
+    1.013,
+    1.01,
+    1.008,
+    1.006,
+    1.004,
+    1.002,
+    1.001,
+    1
+  );
 }
 
-/* Squircle radii (style guide 4.3). A squircle corner looks tighter than a round one of the same
+/* Squircle radii (foundation 6). A squircle corner looks tighter than a round one of the same
    radius, so where `corner-shape: squircle` is supported, controls and cards take these instead of
    --radius-md and --radius-lg. They sit outside `@theme` on purpose: on their own they would only
    draw a larger round corner, so nothing but css-ui-style's `rounded-control` and `rounded-card`
-   reads them. Chosen from equal corner area and equal 45-degree depth (6px round is
-   10.3 to 11px squircle, 8px is 13.7 to 14.7px); approved by the owner on 2026-11-20 (design/preview.html). */
+   reads them. Sky's 12 and 20px round corners are 16 and 30px squircles (the lab, chosen by the
+   owner on 2026-11-24). */
 :root {
-  --radius-squircle-md: 10px;
-  --radius-squircle-lg: 14px;
+  --radius-squircle-md: 16px;
+  --radius-squircle-lg: 30px;
+}
+
+/* Density, comfortable: Sky (foundation 5). css-ui-style turns these into spacing utilities: `p-card`,
+   `gap-gutter`, `py-cell-y`, `px-cell-x`, `py-row`, `h-control-sm`, `h-control`, `h-control-lg`. The
+   motion distances live here because reduced motion zeroes them. */
+:root {
+  --density-card: 1.5rem; /* 24px  card padding */
+  --density-gutter: 1.25rem; /* 20px  gap between cards */
+  --density-cell-y: 0.625rem; /* 10px  table cell, block */
+  --density-cell-x: 0.75rem; /* 12px  table cell, inline */
+  --density-row: 0.75rem; /* 12px  list and settings rows, block */
+  --density-control-sm: 1.75rem; /* 28px  table toolbars */
+  --density-control: 2rem; /* 32px  the default control */
+  --density-control-lg: 2.5rem; /* 40px  the sign-in form */
+  --font-features: "cv11", "tnum"; /* single-storey a; tabular figures for every number */
+  --motion-stagger: 45ms; /* list entrance, per item, capped at about 10 items */
+  --motion-rise: 12px; /* how far an entering card rises */
+}
+
+/* Density, compact: Instrument's values on Sky's colours. Its padding and gaps, a 13px body, dense
+   table rows and monospaced readouts. Every name here has a default above or in `@theme`. */
+[data-density="compact"] {
+  --density-card: 1rem; /* 16px */
+  --density-gutter: 0.75rem; /* 12px */
+  --density-cell-y: 0.3125rem; /* 5px */
+  --density-cell-x: 0.625rem; /* 10px */
+  --density-row: 0.5rem; /* 8px */
+  --density-control-sm: 1.5rem; /* 24px, the WCAG 2.5.8 minimum */
+  --density-control: 1.75rem; /* 28px */
+  --density-control-lg: 2.25rem; /* 36px */
+  --text-body: 0.8125rem; /* 13px */
+  --text-base: 0.8125rem;
+  --text-caption: 0.75rem; /* 12px */
+  --text-sm: 0.75rem;
+  --text-figure: 1.625rem; /* 26px, in Roboto Mono */
+  --font-readout: var(--font-mono);
 }
 
 /* ─── Tier 2: semantic roles, light theme ─────────────────────────────────────────────────────── */
 :root {
-  /* Grounds: the three surfaces anything can sit on. */
+  /* Grounds, stepping away from the page: the page; cards and panels on it; insets, table heads and
+     hover inside a card; hover on a control, chips and tracks. Light re-derives Sky: a cool page,
+     white cards. */
   --theme-page: var(--color-slate-100);
   --theme-surface: #ffffff;
-  --theme-muted: var(--color-slate-200); /* neutral hover, table header, inset panel */
+  --theme-muted: var(--color-slate-50);
+  --theme-muted-strong: var(--color-slate-200);
 
   /* Text tiers */
-  --theme-foreground: var(--color-slate-900);
-  --theme-muted-foreground: #4d5964; /* secondary text; between slate-600 and -700 so it clears 4.5:1 on muted */
-  --theme-subtle-foreground: var(--color-slate-500); /* placeholder, disabled */
+  --theme-foreground: var(--color-slate-925); /* body, titles, figures */
+  --theme-muted-foreground: var(--color-slate-700); /* secondary text */
+  --theme-tertiary-foreground: var(--color-slate-650); /* captions, metadata: still 4.5:1 */
+  --theme-subtle-foreground: var(--color-slate-550); /* placeholder, disabled (exempt, 1.4.3) */
 
   /* Structure */
   --theme-border: var(--color-slate-300); /* dividers: decorative */
-  --theme-border-control: #6b7782; /* the edge of an input, checkbox, meter track: 3:1 on every ground */
+  --theme-border-control: var(--color-slate-600); /* the edge of an input, checkbox, track: 3:1 on every ground */
 
   /* Action: the one interaction hue. */
   --theme-action: var(--color-brand-600);
@@ -142,73 +300,113 @@
   --theme-action-foreground: #ffffff;
   --theme-action-label: var(--color-brand-700); /* links and blue words on a ground */
   --theme-focus-ring: var(--color-brand-600);
+  /* The selected tint: a selected row, the current navigation item, a chosen option. */
+  --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
+  /* Text selection: opaque, so selected words keep their contrast. */
+  --theme-selection: var(--color-brand-200);
 
-  /* Identity: the sky-blue top bar. A container, never a control. */
-  --theme-identity: var(--color-brand-400);
-  --theme-identity-foreground: var(--color-brand-950);
-  --theme-focus-ring-on-identity: var(--color-brand-950);
+  /* Brand: the mark, the live dot and the health ring. Identity, never a state and never a control.
+     The live trace and its area fill are the brand's light on data (foundation 3.2 and 3.4). */
+  --theme-brand: var(--color-brand-600);
+  --theme-trace: var(--color-brand-600);
+  --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
 
-  /* Pending configuration changes */
+  /* Ambient light: the glow from above the page (foundation 3.4), drawn by css-ui-style's
+     `ambient-light` utility in brand hues only, never a status hue; no colour utility is made for
+     these. Each value is the brightest point the glow actually paints, at the page's top edge (the
+     ellipses are centred above the page), so the audit measures what is on screen. */
+  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
+  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
+
+  /* Pending configuration changes: the gold, inked in navy. In light, pending words are the navy on
+     the gold wash (a dark gold word would read olive or brown) and the stroke is a deep gold that
+     clears 3:1, which also edges the top bar's pill; in dark, the words are a lighter gold. */
   --theme-pending: var(--color-pending-fill);
   --theme-pending-foreground: var(--color-pending-ink);
-  --theme-pending-label: #695205;
-  --theme-pending-stroke: #8d7100;
+  --theme-pending-label: var(--color-brand-950);
+  --theme-pending-stroke: #9e7b0b;
+  --theme-pending-wash: color-mix(in srgb, var(--color-pending-fill) 14%, transparent);
 
-  /* Status: fill / stroke / label. */
+  /* Status: fill / stroke / label, and a wash behind the one element that carries a non-OK state
+     (foundation 3.3). Washes are theme-invariant, like the fills; the label clears 4.5:1 on its
+     wash over every ground. The labels sit at one weight: in light each clears 5.1 to 5.7:1 at its
+     worst. */
   --theme-ok: var(--color-status-ok);
-  --theme-ok-stroke: #007938;
-  --theme-ok-label: #00612c;
+  --theme-ok-stroke: #1d8545;
+  --theme-ok-label: #096a33;
+  --theme-ok-wash: color-mix(in srgb, var(--color-status-ok) 12%, transparent);
+  /* Words on the OK fill: only the Save button's brief "Saved" (foundation 7.2, save settle). */
+  --theme-ok-foreground: var(--color-brand-950);
   --theme-warning: var(--color-status-warning);
   --theme-warning-stroke: #ad5c15;
   --theme-warning-label: #8a4613;
+  --theme-warning-wash: color-mix(in srgb, var(--color-status-warning) 14%, transparent);
   --theme-critical: var(--color-status-critical);
   --theme-critical-stroke: #c51e21;
-  --theme-critical-label: #a91518;
+  --theme-critical-label: #a32321;
+  --theme-critical-wash: color-mix(in srgb, var(--color-status-critical) 14%, transparent);
   --theme-unknown: var(--color-status-unknown);
   --theme-unknown-stroke: #6b7782;
   --theme-unknown-label: #4d5964;
+  --theme-unknown-wash: color-mix(in srgb, var(--color-status-unknown) 10%, transparent);
 
   /* Destructive action: same red family as critical, kept apart by form (a button with a verb). */
   --theme-destructive: #b7191c;
   --theme-destructive-foreground: #ffffff;
 
-  /* Charts: four categorical series, none of them a status hue, the brand, or the yellow. */
-  --theme-series-1: #6635a3; /* violet */
-  --theme-series-2: #006c6c; /* teal */
-  --theme-series-3: #d4599b; /* pink */
-  --theme-series-4: #62691b; /* olive */
+  /* Charts: four categorical series in the gaps between the scheme's hues (OKLCH hue, then L C):
+     never a status hue, the brand or the pending gold. One chroma, and an even lightness ladder so
+     they part in greyscale too. A single-series live chart draws in --theme-trace instead. */
+  --theme-series-1: #563e98; /* violet  0.44 0.14 292 */
+  --theme-series-2: #009a9a; /* teal    0.62 0.11 195 */
+  --theme-series-3: #983c75; /* magenta 0.50 0.14 345 */
+  --theme-series-4: #6f7d1a; /* moss    0.56 0.12 118 */
 
   /* Capacity: one hue by lightness. */
   --theme-usage: var(--color-brand-600);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: #6b7782;
+  --theme-usage-track-edge: var(--color-slate-600);
 
-  /* Task and log output: a dark ground in both themes, with a faint phosphor-green tint. */
+  /* Drawings and maps (foundation 9): ink from currentColor, fills and lines from these. */
+  --theme-art-surface: var(--color-slate-50); /* the body of a part: a disk, a node */
+  --theme-art-line: var(--color-slate-600); /* outlines that must read: 3:1 */
+  --theme-art-faint: var(--color-slate-300); /* secondary structure, dimmed lines (decorative) */
+  --theme-art-path: var(--color-brand-600); /* the lineage being traced on a map */
+  --theme-art-chassis-top: var(--color-slate-50); /* material light: lit from above, one step */
+  --theme-art-chassis-bottom: var(--color-slate-200);
+
+  /* Task and log output: a piece of the night theme in both themes, a dark slate ground with the
+     slate text tiers (no green tint: green is OK's hue). */
   --theme-terminal: #131619;
-  --theme-terminal-foreground: #cde6cf;
-  --theme-terminal-muted: #8c9e8e;
+  --theme-terminal-foreground: var(--color-slate-200);
+  --theme-terminal-muted: var(--color-slate-500);
 
-  /* Elevation: light theme uses shadow; the ink is slate, never pure black. */
-  --theme-shadow-sm: 0 1px 2px rgb(16 22 26 / 0.08);
-  --theme-shadow-md: 0 4px 12px rgb(16 22 26 / 0.12);
-  --theme-shadow-lg: 0 12px 32px rgb(16 22 26 / 0.18);
-  /* The scrim under a modal dialog: the shadow ink at more strength. Nothing is read on it, so it has
-     no contrast pair; it only takes the page back so the dialog is the one thing in front. */
-  --theme-scrim: rgb(16 22 26 / 0.4);
+  /* Elevation (foundation 6), by meaning; the light theme's ink is slate, never black.
+     control: something pressable, at rest. raised: cards, panels, tables, as a layered soft shadow.
+     floating: dialogs, the palette, drawers, menus, popovers, toasts. */
+  --theme-shadow-control: 0 1px 2px rgb(17 26 39 / 0.07);
+  --theme-shadow-raised:
+    0 0 0 1px rgb(17 26 39 / 0.05), 0 1px 2px rgb(17 26 39 / 0.05), 0 10px 28px rgb(17 26 39 / 0.06);
+  --theme-shadow-floating: 0 0 0 1px rgb(17 26 39 / 0.06), 0 24px 56px rgb(17 26 39 / 0.18);
+  /* The scrim under a modal dialog. Nothing is read on it, so it has no contrast pair; it only takes
+     the page back so the dialog is the one thing in front. */
+  --theme-scrim: rgb(17 26 39 / 0.42);
 }
 
 /* ─── Tier 2: semantic roles, dark theme (re-derived, not inverted) ───────────────────────────── */
 .dark {
   --theme-page: var(--color-slate-950);
-  --theme-surface: var(--color-slate-900);
-  --theme-muted: var(--color-slate-850);
+  --theme-surface: var(--color-slate-925);
+  --theme-muted: var(--color-slate-900);
+  --theme-muted-strong: var(--color-slate-850);
 
-  --theme-foreground: #e4e8ed;
-  --theme-muted-foreground: #b3bcc3;
-  --theme-subtle-foreground: #6d767d;
+  --theme-foreground: var(--color-slate-200);
+  --theme-muted-foreground: var(--color-slate-400);
+  --theme-tertiary-foreground: var(--color-slate-500);
+  --theme-subtle-foreground: var(--color-slate-600);
 
-  --theme-border: #31363b;
-  --theme-border-control: #76828d;
+  --theme-border: var(--color-slate-800);
+  --theme-border-control: var(--color-slate-550);
 
   /* In dark, the stock OMV sky blue IS the action colour, with dark ink on it. */
   --theme-action: var(--color-brand-400);
@@ -216,50 +414,72 @@
   --theme-action-foreground: var(--color-brand-950);
   --theme-action-label: var(--color-brand-300);
   --theme-focus-ring: var(--color-brand-300);
+  --theme-selected: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
+  --theme-selection: var(--color-brand-800);
 
-  /* A large sky-blue panel glows on a dark page, so the bar takes the deep container blue. */
-  --theme-identity: var(--color-brand-800);
-  --theme-identity-foreground: var(--color-brand-50);
-  --theme-focus-ring-on-identity: var(--color-brand-50);
+  --theme-brand: var(--color-brand-400);
+  --theme-trace: var(--color-brand-300);
+  --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
 
-  --theme-pending-label: #f3d754;
+  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
+  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
+
+  --theme-pending-label: #f4d660;
   --theme-pending-stroke: var(--color-pending-fill);
 
   --theme-ok-stroke: var(--color-status-ok);
   --theme-ok-label: #70e093;
   --theme-warning-stroke: var(--color-status-warning);
-  --theme-warning-label: #fbb360;
+  --theme-warning-label: #ffa659; /* at the fill's own hue, so it parts from the pending gold */
   --theme-critical-stroke: #f66d67;
   --theme-critical-label: #fb9890;
   --theme-unknown-stroke: var(--color-status-unknown);
   --theme-unknown-label: #b3bcc3;
 
   --theme-destructive: #f66d67;
-  --theme-destructive-foreground: #2a0606;
+  --theme-destructive-foreground: var(--color-brand-950);
 
-  --theme-series-1: #9369d4;
-  --theme-series-2: #97e9e8;
-  --theme-series-3: #e97ab2;
-  --theme-series-4: #b5c06b;
+  --theme-series-1: #a58de6; /* violet  0.70 0.13 295 */
+  --theme-series-2: #70f1da; /* teal    0.88 0.12 180 */
+  --theme-series-3: #c06099; /* magenta 0.62 0.14 345 */
+  --theme-series-4: #b3c65f; /* moss    0.79 0.13 118 */
 
   --theme-usage: var(--color-brand-400);
   --theme-usage-track: var(--color-slate-850);
-  --theme-usage-track-edge: #76828d;
+  --theme-usage-track-edge: var(--color-slate-550);
+
+  --theme-art-surface: var(--color-slate-900);
+  --theme-art-line: var(--color-slate-550);
+  --theme-art-faint: var(--color-slate-800);
+  --theme-art-path: var(--color-brand-300);
+  --theme-art-chassis-top: var(--color-slate-850);
+  --theme-art-chassis-bottom: var(--color-slate-900);
 
   --theme-terminal: #0b0e11;
 
-  /* Elevation in dark is a lighter surface plus a hairline, not a shadow. */
-  --theme-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04);
-  --theme-shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
-  --theme-shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
-  --theme-scrim: rgb(0 0 0 / 0.6);
+  /* Elevation in dark: a 1px inner top highlight (light from above), a faint edge and a soft long
+     shadow. */
+  --theme-shadow-control: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --theme-shadow-raised:
+    inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.045),
+    0 10px 30px rgb(0 0 0 / 0.28);
+  --theme-shadow-floating:
+    inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.07),
+    0 24px 60px rgb(0 0 0 / 0.55);
+  --theme-scrim: rgb(0 0 0 / 0.62);
 }
 
+/* Reduced motion (foundation 7.3): every duration and distance is 0, so a transition lands at once
+   and nothing is left part-way. Keyframe animations are caught by css-ui-style's base rule. */
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --duration-press: 0ms;
     --duration-fast: 0ms;
     --duration-base: 0ms;
     --duration-slow: 0ms;
+    --duration-glide: 0ms;
+    --motion-stagger: 0ms;
+    --motion-rise: 0px;
   }
 }
 
@@ -267,45 +487,57 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --theme-page: var(--color-slate-950);
-    --theme-surface: var(--color-slate-900);
-    --theme-muted: var(--color-slate-850);
-    --theme-foreground: #e4e8ed;
-    --theme-muted-foreground: #b3bcc3;
-    --theme-subtle-foreground: #6d767d;
-    --theme-border: #31363b;
-    --theme-border-control: #76828d;
+    --theme-surface: var(--color-slate-925);
+    --theme-muted: var(--color-slate-900);
+    --theme-muted-strong: var(--color-slate-850);
+    --theme-foreground: var(--color-slate-200);
+    --theme-muted-foreground: var(--color-slate-400);
+    --theme-tertiary-foreground: var(--color-slate-500);
+    --theme-subtle-foreground: var(--color-slate-600);
+    --theme-border: var(--color-slate-800);
+    --theme-border-control: var(--color-slate-550);
     --theme-action: var(--color-brand-400);
     --theme-action-hover: var(--color-brand-300);
     --theme-action-foreground: var(--color-brand-950);
     --theme-action-label: var(--color-brand-300);
     --theme-focus-ring: var(--color-brand-300);
-    --theme-identity: var(--color-brand-800);
-    --theme-identity-foreground: var(--color-brand-50);
-    --theme-focus-ring-on-identity: var(--color-brand-50);
-    --theme-pending-label: #f3d754;
+    --theme-selected: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
+    --theme-selection: var(--color-brand-800);
+    --theme-brand: var(--color-brand-400);
+    --theme-trace: var(--color-brand-300);
+    --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
+    --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
+    --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
+    --theme-pending-label: #f4d660;
     --theme-pending-stroke: var(--color-pending-fill);
     --theme-ok-stroke: var(--color-status-ok);
     --theme-ok-label: #70e093;
     --theme-warning-stroke: var(--color-status-warning);
-    --theme-warning-label: #fbb360;
+    --theme-warning-label: #ffa659;
     --theme-critical-stroke: #f66d67;
     --theme-critical-label: #fb9890;
     --theme-unknown-stroke: var(--color-status-unknown);
     --theme-unknown-label: #b3bcc3;
     --theme-destructive: #f66d67;
-    --theme-destructive-foreground: #2a0606;
-    --theme-series-1: #9369d4;
-    --theme-series-2: #97e9e8;
-    --theme-series-3: #e97ab2;
-    --theme-series-4: #b5c06b;
+    --theme-destructive-foreground: var(--color-brand-950);
+    --theme-series-1: #a58de6;
+    --theme-series-2: #70f1da;
+    --theme-series-3: #c06099;
+    --theme-series-4: #b3c65f;
     --theme-usage: var(--color-brand-400);
     --theme-usage-track: var(--color-slate-850);
-    --theme-usage-track-edge: #76828d;
+    --theme-usage-track-edge: var(--color-slate-550);
+    --theme-art-surface: var(--color-slate-900);
+    --theme-art-line: var(--color-slate-550);
+    --theme-art-faint: var(--color-slate-800);
+    --theme-art-path: var(--color-brand-300);
+    --theme-art-chassis-top: var(--color-slate-850);
+    --theme-art-chassis-bottom: var(--color-slate-900);
     --theme-terminal: #0b0e11;
-    --theme-shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04);
-    --theme-shadow-md: 0 0 0 1px rgb(255 255 255 / 0.06);
-    --theme-shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.08), 0 16px 40px rgb(0 0 0 / 0.5);
-    --theme-scrim: rgb(0 0 0 / 0.6);
+    --theme-shadow-control: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    --theme-shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.045), 0 10px 30px rgb(0 0 0 / 0.28);
+    --theme-shadow-floating: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 60px rgb(0 0 0 / 0.55);
+    --theme-scrim: rgb(0 0 0 / 0.62);
   }
 }
 
@@ -313,53 +545,85 @@
 .light {
   --theme-page: var(--color-slate-100);
   --theme-surface: #ffffff;
-  --theme-muted: var(--color-slate-200);
-  --theme-foreground: var(--color-slate-900);
-  --theme-muted-foreground: #4d5964;
-  --theme-subtle-foreground: var(--color-slate-500);
+  --theme-muted: var(--color-slate-50);
+  --theme-muted-strong: var(--color-slate-200);
+  --theme-foreground: var(--color-slate-925);
+  --theme-muted-foreground: var(--color-slate-700);
+  --theme-tertiary-foreground: var(--color-slate-650);
+  --theme-subtle-foreground: var(--color-slate-550);
   --theme-border: var(--color-slate-300);
-  --theme-border-control: #6b7782;
+  --theme-border-control: var(--color-slate-600);
   --theme-action: var(--color-brand-600);
   --theme-action-hover: var(--color-brand-700);
   --theme-action-foreground: #ffffff;
   --theme-action-label: var(--color-brand-700);
   --theme-focus-ring: var(--color-brand-600);
-  --theme-identity: var(--color-brand-400);
-  --theme-identity-foreground: var(--color-brand-950);
-  --theme-focus-ring-on-identity: var(--color-brand-950);
-  --theme-pending-label: #695205;
-  --theme-pending-stroke: #8d7100;
-  --theme-ok-stroke: #007938;
-  --theme-ok-label: #00612c;
+  --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
+  --theme-selection: var(--color-brand-200);
+  --theme-brand: var(--color-brand-600);
+  --theme-trace: var(--color-brand-600);
+  --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
+  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
+  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
+  --theme-pending-label: var(--color-brand-950);
+  --theme-pending-stroke: #9e7b0b;
+  --theme-ok-stroke: #1d8545;
+  --theme-ok-label: #096a33;
   --theme-warning-stroke: #ad5c15;
   --theme-warning-label: #8a4613;
   --theme-critical-stroke: #c51e21;
-  --theme-critical-label: #a91518;
+  --theme-critical-label: #a32321;
   --theme-unknown-stroke: #6b7782;
   --theme-unknown-label: #4d5964;
   --theme-destructive: #b7191c;
   --theme-destructive-foreground: #ffffff;
-  --theme-series-1: #6635a3;
-  --theme-series-2: #006c6c;
-  --theme-series-3: #d4599b;
-  --theme-series-4: #62691b;
+  --theme-series-1: #563e98;
+  --theme-series-2: #009a9a;
+  --theme-series-3: #983c75;
+  --theme-series-4: #6f7d1a;
   --theme-usage: var(--color-brand-600);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: #6b7782;
+  --theme-usage-track-edge: var(--color-slate-600);
+  --theme-art-surface: var(--color-slate-50);
+  --theme-art-line: var(--color-slate-600);
+  --theme-art-faint: var(--color-slate-300);
+  --theme-art-path: var(--color-brand-600);
+  --theme-art-chassis-top: var(--color-slate-50);
+  --theme-art-chassis-bottom: var(--color-slate-200);
   --theme-terminal: #131619;
-  --theme-shadow-sm: 0 1px 2px rgb(16 22 26 / 0.08);
-  --theme-shadow-md: 0 4px 12px rgb(16 22 26 / 0.12);
-  --theme-shadow-lg: 0 12px 32px rgb(16 22 26 / 0.18);
-  --theme-scrim: rgb(16 22 26 / 0.4);
+  --theme-shadow-control: 0 1px 2px rgb(17 26 39 / 0.07);
+  --theme-shadow-raised: 0 0 0 1px rgb(17 26 39 / 0.05), 0 1px 2px rgb(17 26 39 / 0.05), 0 10px 28px rgb(17 26 39 / 0.06);
+  --theme-shadow-floating: 0 0 0 1px rgb(17 26 39 / 0.06), 0 24px 56px rgb(17 26 39 / 0.18);
+  --theme-scrim: rgb(17 26 39 / 0.42);
 }
 
-/* ─── Derived 3: one utility per semantic role, by its own name ───────────────────────────── */
+/* ─── Derived 3: comfortable density, also inside a compact subtree ───────────────────────── */
+[data-density="comfortable"] {
+  --density-card: 1.5rem;
+  --density-gutter: 1.25rem;
+  --density-cell-y: 0.625rem;
+  --density-cell-x: 0.75rem;
+  --density-row: 0.75rem;
+  --density-control-sm: 1.75rem;
+  --density-control: 2rem;
+  --density-control-lg: 2.5rem;
+  --text-body: 0.9375rem;
+  --text-base: 0.9375rem;
+  --text-caption: 0.8125rem;
+  --text-sm: 0.8125rem;
+  --text-figure: 1.875rem;
+  --font-readout: var(--font-sans);
+}
+
+/* ─── Derived 4: one utility per semantic role, by its own name ───────────────────────────── */
 @theme inline {
   --color-page: var(--theme-page);
   --color-surface: var(--theme-surface);
   --color-muted: var(--theme-muted);
+  --color-muted-strong: var(--theme-muted-strong);
   --color-foreground: var(--theme-foreground);
   --color-muted-foreground: var(--theme-muted-foreground);
+  --color-tertiary-foreground: var(--theme-tertiary-foreground);
   --color-subtle-foreground: var(--theme-subtle-foreground);
   --color-border: var(--theme-border);
   --color-border-control: var(--theme-border-control);
@@ -368,25 +632,33 @@
   --color-action-foreground: var(--theme-action-foreground);
   --color-action-label: var(--theme-action-label);
   --color-focus-ring: var(--theme-focus-ring);
-  --color-identity: var(--theme-identity);
-  --color-identity-foreground: var(--theme-identity-foreground);
-  --color-focus-ring-on-identity: var(--theme-focus-ring-on-identity);
+  --color-selected: var(--theme-selected);
+  --color-selection: var(--theme-selection);
+  --color-brand: var(--theme-brand);
+  --color-trace: var(--theme-trace);
+  --color-trace-area: var(--theme-trace-area);
   --color-pending: var(--theme-pending);
   --color-pending-foreground: var(--theme-pending-foreground);
   --color-pending-label: var(--theme-pending-label);
   --color-pending-stroke: var(--theme-pending-stroke);
+  --color-pending-wash: var(--theme-pending-wash);
   --color-ok: var(--theme-ok);
   --color-ok-stroke: var(--theme-ok-stroke);
   --color-ok-label: var(--theme-ok-label);
+  --color-ok-wash: var(--theme-ok-wash);
+  --color-ok-foreground: var(--theme-ok-foreground);
   --color-warning: var(--theme-warning);
   --color-warning-stroke: var(--theme-warning-stroke);
   --color-warning-label: var(--theme-warning-label);
+  --color-warning-wash: var(--theme-warning-wash);
   --color-critical: var(--theme-critical);
   --color-critical-stroke: var(--theme-critical-stroke);
   --color-critical-label: var(--theme-critical-label);
+  --color-critical-wash: var(--theme-critical-wash);
   --color-unknown: var(--theme-unknown);
   --color-unknown-stroke: var(--theme-unknown-stroke);
   --color-unknown-label: var(--theme-unknown-label);
+  --color-unknown-wash: var(--theme-unknown-wash);
   --color-destructive: var(--theme-destructive);
   --color-destructive-foreground: var(--theme-destructive-foreground);
   --color-series-1: var(--theme-series-1);
@@ -396,11 +668,17 @@
   --color-usage: var(--theme-usage);
   --color-usage-track: var(--theme-usage-track);
   --color-usage-track-edge: var(--theme-usage-track-edge);
+  --color-art-surface: var(--theme-art-surface);
+  --color-art-line: var(--theme-art-line);
+  --color-art-faint: var(--theme-art-faint);
+  --color-art-path: var(--theme-art-path);
+  --color-art-chassis-top: var(--theme-art-chassis-top);
+  --color-art-chassis-bottom: var(--theme-art-chassis-bottom);
   --color-terminal: var(--theme-terminal);
   --color-terminal-foreground: var(--theme-terminal-foreground);
   --color-terminal-muted: var(--theme-terminal-muted);
-  --shadow-sm: var(--theme-shadow-sm);
-  --shadow-md: var(--theme-shadow-md);
-  --shadow-lg: var(--theme-shadow-lg);
+  --shadow-control: var(--theme-shadow-control);
+  --shadow-raised: var(--theme-shadow-raised);
+  --shadow-floating: var(--theme-shadow-floating);
   --color-scrim: var(--theme-scrim);
 }

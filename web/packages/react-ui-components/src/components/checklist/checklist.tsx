@@ -79,7 +79,7 @@ function ChecklistItem({
       data-state={state}
       aria-busy={checking || undefined}
       className={cn(
-        "grid grid-cols-subgrid gap-y-1 border-t border-border py-3 first:border-t-0 first:pt-0 last:pb-0 sm:col-span-2",
+        "grid grid-cols-subgrid gap-y-1 border-t border-border py-row first:border-t-0 first:pt-0 last:pb-0 sm:col-span-2",
         className,
       )}
       {...props}

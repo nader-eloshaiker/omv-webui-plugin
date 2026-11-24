@@ -30,11 +30,11 @@ interface PageTabProps extends useRender.ComponentProps<"a"> {
 }
 
 // The side navigation's current-item cues (5.1, 3.10), with its leading bar turned to an underline
-// that sits on the row's own border. Hover is the neutral step.
+// that sits on the row's own border. Hover is the neutral step. At least the density's control height.
 const tabClass =
-  "relative -mb-px flex min-h-9 items-center rounded-t-control px-3 py-1.5 text-base text-foreground hover:bg-muted " +
-  "[overflow-wrap:anywhere] " +
-  "aria-[current=page]:bg-action/10 aria-[current=page]:font-medium aria-[current=page]:text-action-label " +
+  "relative -mb-px flex min-h-control items-center rounded-t-control px-3.5 py-1.5 text-base text-muted-foreground " +
+  "transition-colors duration-fast ease-standard hover:bg-muted-strong hover:text-foreground [overflow-wrap:anywhere] " +
+  "aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-action-label " +
   "aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:bottom-0 " +
   "aria-[current=page]:after:h-0.5 aria-[current=page]:after:rounded-full aria-[current=page]:after:bg-action aria-[current=page]:after:content-['']";
 

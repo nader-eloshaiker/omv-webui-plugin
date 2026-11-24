@@ -7,6 +7,7 @@ import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { FixedAnswer } from "@omv-webui/react-api-omv/mocks";
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { openNavGroup } from "../../test/nav.ts";
 import { nfsEntry, nfsMock } from "../../test/nfsAnswers.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 
@@ -110,6 +111,7 @@ describe("the menu (13)", () => {
   it("links NFS to its page here", async () => {
     await renderApp({ signedIn: true });
     const nav = await screen.findByRole("navigation", {}, LONG);
+    openNavGroup("Services", nav);
     expect(within(nav).getByRole("link", { name: "NFS" })).toHaveAttribute(
       "href",
       "/ui/services/nfs",

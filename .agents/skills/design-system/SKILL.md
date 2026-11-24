@@ -1,14 +1,16 @@
 ---
 name: design-system
-description: Standards for engineering the design system - the token architecture from design/tokens.css into css-ui-style, the shadcn mapping, component API design in react-ui-components (cva variants, Base UI composition), Storybook coverage, theming mechanics and the Content Security Policy constraints on styling. Triggers on design tokens, tokens.css, css-ui-style, react-ui-components internals, shadcn, cva variants, Storybook and dark-mode plumbing.
+description: Standards for engineering the design system - the token architecture from design/tokens.css into css-ui-style (grounds, density, elevation, light and motion tokens), the shadcn mapping, component API design in react-ui-components (cva variants, Base UI composition), Storybook coverage, theming mechanics and the Content Security Policy constraints on styling. Triggers on design tokens, tokens.css, css-ui-style, react-ui-components internals, shadcn, cva variants, Storybook and dark-mode plumbing.
 ---
 
 # Design system engineering standards
 
 How the token package and the shared component library are built. The
-[style guide](../../../docs/design/style-guide.md) governs what surfaces look like and why; the
-`uiux-design` skill governs how screens are designed; **this skill governs the system that produces
-them.** Colour choices go through the `colour-theory` skill.
+[visual foundation](../../../docs/design/visual-foundation.md) governs what surfaces look like and
+why (Sky as the base, Instrument's values as the compact density, Atlas's map as the diagram
+language), and is normative over the [style guide](../../../docs/design/style-guide.md) for
+everything its section 0 lists; the `uiux-design` skill governs how screens are designed; **this
+skill governs the system that produces them.** Colour choices go through the `colour-theory` skill.
 
 ---
 
@@ -34,9 +36,48 @@ Rules:
 - **Status fills are identical in both themes** (style guide 3.5); their labels and strokes flip.
 - Hex only for colours in `tokens.css`: the audit script parses hex and `var(--token)` and nothing
   else.
-- Motion durations and the easing curve are tokens; `prefers-reduced-motion` zeroes them in the
-  token file. Components reference the token, never an inline duration.
-- **The surfaces nobody drew are still ours to theme**: text selection, the caret, scrollbars, the
+- **Grounds** are four steps: `page`, `surface` (cards), `muted` (insets, table heads, hover inside
+  a card), `muted-strong` (hover on a control, chips, tracks). **Text** is `foreground`,
+  `muted-foreground`, `tertiary-foreground` (captions, still 4.5:1) and `subtle-foreground`
+  (placeholder and disabled only).
+- **There is no identity bar.** The sky blue is the brand accent: `brand` (the mark, the live dot,
+  the health ring), `trace` and `trace-area` (live data), `art-path` (the traced lineage), the
+  focus ring, and the action colour in dark. Nothing is painted sky blue as a surface; controls on the
+  top bar use the button's `quiet` variant.
+- **Washes and the selected tint are tokens**, not `x/NN` classes: `ok-wash`, `warning-wash`,
+  `critical-wash`, `unknown-wash`, `pending-wash`, `selected`. An alpha a token does not name is a
+  new pair for the audit first.
+- **Light and gradients: only the four kinds** (foundation 3.4), each with its tokens: the ambient
+  light at the top of the page (`ambient-light`, from `--theme-ambient` and `--theme-ambient-soft`,
+  which have no flat-fill utility); the area under a live line (`trace-area`); the material light of
+  a drawing (`art-chassis-top` to `art-chassis-bottom`); and the status wash, also as a card lit in
+  its state (`Card tone="warning"`). Never gradient text, borders, glow or multi-hue decoration.
+- **Elevation by meaning**: `shadow-control` (pressable, at rest), `shadow-raised` or
+  `surface-raised` (cards, panels, tables), `shadow-floating` or `surface-floating` (dialogs, menus,
+  popovers, toasts, drawers) over `bg-scrim` when modal. In dark each carries a 1px inner top
+  highlight. `shadow-sm`, `shadow-md` and `shadow-lg` no longer exist.
+- **Radii**: `rounded-control` (12px, 16px squircle) and `rounded-card` (20px, 30px squircle);
+  `rounded-sm` (6px) for checkboxes and inner marks; pills, dots, meters and rings `rounded-full`.
+- **Type**: the six named steps `text-display`, `text-figure`, `text-title`, `text-section`,
+  `text-body`, `text-caption`, each carrying its weight, tracking and leading; the plain steps stay
+  for older code (`text-base` is the 15px body). `font-readout` for live figures.
+- **Density** is `data-density="compact"` on `<html>` (or a subtree); comfortable is the default.
+  Components take their padding and heights from the density utilities, never fixed values: `p-card`,
+  `gap-grid`, `py-cell-y`, `px-cell-x`, `py-row`, `h-control`, `min-h-control`, `size-control` (with
+  `-sm` and `-lg`). Body, caption and figure sizes and `font-readout` follow it. The `compact:`
+  variant is for what a token cannot express.
+- **Motion is tokens** (foundation 7.1): durations `duration-press` (90ms), `-fast` (160, the
+  default), `-base` (240), `-slow` (360), `-glide` (640); curves `ease-standard` (the default),
+  `ease-enter`, `ease-exit`, and the springs `ease-settle` and `ease-soft` as native `linear()`; the
+  shared keyframes `animate-rise`, `animate-settle-in`, `animate-fade-in`, `animate-breathe`,
+  `animate-draw`, and `stagger` with `--stagger-index`. Exits are shorter than entrances. Under
+  `prefers-reduced-motion` every duration, the stagger and the rise are 0 in the token file, and the
+  base layer runs any keyframe once at once. Components reference the tokens, never an inline duration.
+- Entry from nothing uses Base UI's `data-starting-style` and `data-ending-style` (CSS
+  `@starting-style` semantics): dialogs rise over the scrim, popups grow from their
+  `--transform-origin`, toasts land on the settle spring, disclosures animate the height Base UI
+  measures into `--collapsible-panel-height`.
+- **The surfaces nobody drew are still ours to theme**: text selection (`selection`), the caret, the
   focus ring, link underline offset. Give each a `--theme-*` pair for both themes and apply it once in
   the base layer.
 - `css-ui-style` is built from `design/tokens.css` (`pnpm --filter @omv-webui/css-ui-style tokens`
@@ -53,8 +94,8 @@ Rules:
   follow it, do not add an inline bootstrap.
 - Prefer semantic tokens; reach for `dark:` only where a token cannot express a per-theme difference.
   Writing `dark:` twice for the same concept means it wants a token.
-- Every token or mapping change is verified in both themes, in Storybook (theme addon) and in the
-  running app.
+- Every token or mapping change is verified in both themes and both densities, in Storybook and
+  in the running app.
 
 ## 3. The Content Security Policy constrains the library
 
@@ -107,17 +148,23 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 ## 6. Storybook
 
 - Every component ships stories: one per variant and size, plus disabled, loading, error, with icon,
-  and long content.
-- Stories render correctly in both themes under the theme addon; that is the review surface for
-  token regressions.
+  and long content, and a story for each motion it has (switch settle, save settle, destructive arm).
+- **Every story renders in both themes and both densities at once** by default: the preview's
+  `withMatrix` decorator draws four panels (dark and light, comfortable and compact), each on the
+  page ground with the ambient light. A story that opens an overlay on mount sets
+  `parameters: { matrix: false }`; `layout: "fullscreen"` also opts out. The toolbar switches theme
+  (dark first), density and the layout. Stories use `React.useId()`, never fixed DOM ids, since a
+  story renders four times.
 - Realistic content: real OMV-shaped labels, sizes with units, long share names. Seed one story with
   markup-looking text to show it renders inert.
 - `build-storybook` stays green.
 
 ## 7. Charts and data display
 
-- Chart colours come from the `series-1..4` tokens and the usage ramp, never hex in a chart config.
-  No status hue, blue or yellow in a series (style guide 3.9).
+- Chart colours come from the `series-1..4` tokens, `trace` and `trace-area` for a single live
+  series, and the usage ramp, never hex in a chart config. No status hue, action blue or pending gold in a
+  categorical series (style guide 3.9); a chart showing the trace beside a series labels each line
+  directly and gives it its own dash.
 - Numeric display uses tabular numerals; callers format values and units.
 
 ## 8. Change discipline
@@ -140,11 +187,12 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 ## 10. Reviewer checklist
 
 1. [ ] No hex or primitive in components; mapping consumes `--theme-*` only?
-2. [ ] Every touched token defined for light and `.dark`; status fills theme-invariant?
+2. [ ] Every touched token defined for light and `.dark`; status fills and washes theme-invariant?
+   Density, radii, elevation and motion from tokens, never fixed values?
 3. [ ] `dark:` overrides rare and justified?
 4. [ ] cva variants, native props, `className` last, ref forwarded?
 5. [ ] No app, DTO or router import in the library; catalog-pinned, justified dependencies?
 6. [ ] No injected `<style>`, no `style=` markup, no inline script; zero CSP violations?
 7. [ ] No markup rendered from strings?
-8. [ ] Stories cover every state in both themes?
+8. [ ] Stories cover every state and motion, green in both themes and both densities?
 9. [ ] Colour audit exits 0; style guide numbers updated?

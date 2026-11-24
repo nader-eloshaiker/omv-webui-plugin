@@ -121,8 +121,8 @@ function UsedByPanel({
   if (loading) {
     body = (
       <div aria-hidden="true" className="flex flex-col gap-2">
-        <div className="h-4 w-2/3 rounded-sm bg-muted motion-safe:animate-pulse" />
-        <div className="h-4 w-1/2 rounded-sm bg-muted motion-safe:animate-pulse" />
+        <div className="h-4 w-2/3 rounded-sm bg-muted-strong motion-safe:animate-breathe" />
+        <div className="h-4 w-1/2 rounded-sm bg-muted-strong motion-safe:animate-breathe" />
       </div>
     );
   } else if (error) {
@@ -133,7 +133,7 @@ function UsedByPanel({
         {referrers.map((referrer) => (
           <li
             key={referrer.id}
-            className="flex flex-col gap-x-3 gap-y-1 border-t border-border py-2 first:border-t-0 sm:flex-row sm:items-center"
+            className="flex flex-col gap-x-3 gap-y-1 border-t border-border py-row first:border-t-0 sm:flex-row sm:items-center"
           >
             <span className="text-sm text-muted-foreground sm:w-32 sm:shrink-0">
               {referrer.kind}
@@ -175,7 +175,7 @@ function UsedByPanel({
       data-slot="used-by-panel"
       aria-busy={loading ? true : undefined}
       className={cn(
-        "flex flex-col gap-3 rounded-card border border-border bg-surface p-4",
+        "flex flex-col gap-3 rounded-card surface-raised p-card",
         className,
       )}
     >

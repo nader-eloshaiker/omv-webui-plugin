@@ -55,18 +55,18 @@ function StatusIcon({
   );
 }
 
-// A 14% wash of the fill, a 1px stroke edge, the word in the -label member (5.5). Running is neutral.
+// The status's wash token, a 1px stroke edge, the word in the -label member (5.5). Running is neutral.
 const pillVariants = cva(
-  "inline-flex min-h-5.5 max-w-full items-center gap-1 rounded-full border py-0.5 ps-1.5 pe-2 text-xs font-medium",
+  "inline-flex min-h-5.5 max-w-full items-center gap-1 rounded-full border py-0.5 ps-1.5 pe-2 text-xs font-semibold",
   {
     variants: {
       tone: {
-        ok: "border-ok-stroke bg-ok/14 text-ok-label",
-        warning: "border-warning-stroke bg-warning/14 text-warning-label",
-        critical: "border-critical-stroke bg-critical/14 text-critical-label",
-        unknown: "border-unknown-stroke bg-unknown/14 text-unknown-label",
-        pending: "border-pending-stroke bg-pending/14 text-pending-label",
-        neutral: "border-input bg-muted text-foreground",
+        ok: "border-ok-stroke bg-ok-wash text-ok-label",
+        warning: "border-warning-stroke bg-warning-wash text-warning-label",
+        critical: "border-critical-stroke bg-critical-wash text-critical-label",
+        unknown: "border-unknown-stroke bg-unknown-wash text-unknown-label",
+        pending: "border-pending-stroke bg-pending-wash text-pending-label",
+        neutral: "border-input bg-muted-strong text-foreground",
       },
     },
   },

@@ -38,7 +38,7 @@ quoted in the style guide.
 - Material 3 derives secondary and tertiary at much lower chroma than primary: a secondary is a quiet
   companion, not a second brand voice. [R] https://m3.material.io/styles/color/roles
 - Orange and amber/yellow are the caution hues in every major system. Carbon's alert set uses orange
-  for serious warning and yellow for warning. In this project orange is warning and yellow is
+  for serious warning and yellow for warning. In this project orange is warning and a gold is
   pending configuration, so the two must stay apart on lightness and carry their own words. [F] https://carbondesignsystem.com/data-visualization/color-palettes/
 - A mid-lightness orange such as OMV's `#f78f00` fails as a word on white (about 2.4:1); dark text on
   it passes. (Computed; `node tools/colour-audit.mjs legacy` reproduces it.)
@@ -146,7 +146,7 @@ quoted in the style guide.
   follow the second. This product follows the second.
 - **Overlay (M3) versus tonal step (Radix)** states: both work; do not mix them in one component.
 - **Orange**: Carbon uses it for serious warning, others use yellow/amber for warning. This project
-  follows Carbon: orange is warning, and yellow is kept for pending configuration only.
+  follows Carbon: orange is warning, and a gold is kept for pending configuration only.
 - **Pure black dark mode**: M3 avoids it; Apple's HIG permits true black for OLED. A data UI with
   elevation prefers a dark grey.
 - **Categorical count**: Carbon up to 14; Okabe-Ito and most CVD guidance 6-8. Prefer 6-8.

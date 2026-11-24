@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import * as React from "react";
 import { Checkbox } from "../checkbox/checkbox";
 import {
   Select,
@@ -92,54 +93,60 @@ export const SearchInput: Story = {
 };
 
 export const Controls: Story = {
-  render: () => (
-    <div className="flex flex-col gap-4">
-      <label className="flex items-center gap-2">
-        <Checkbox defaultChecked />
-        Enable SMART monitoring
-      </label>
-      <label className="flex items-center gap-2">
-        <Checkbox indeterminate />
-        Select all disks
-      </label>
-      <div className="flex flex-col gap-1">
+  render: function ControlsStory() {
+    const storyId = React.useId();
+    return (
+      <div className="flex flex-col gap-4">
         <label className="flex items-center gap-2">
-          <Checkbox disabled aria-describedby="controls-spin-reason" />
-          Spin down when idle
+          <Checkbox defaultChecked />
+          Enable SMART monitoring
         </label>
-        <p
-          id="controls-spin-reason"
-          className="ps-6 text-sm text-muted-foreground"
-        >
-          This disk does not support spinning down.
-        </p>
+        <label className="flex items-center gap-2">
+          <Checkbox indeterminate />
+          Select all disks
+        </label>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-center gap-2">
+            <Checkbox
+              disabled
+              aria-describedby={`${storyId}-controls-spin-reason`}
+            />
+            Spin down when idle
+          </label>
+          <p
+            id={`${storyId}-controls-spin-reason`}
+            className="ps-6 text-sm text-muted-foreground"
+          >
+            This disk does not support spinning down.
+          </p>
+        </div>
+        <label className="flex items-center gap-2">
+          <Switch defaultChecked />
+          SSH service
+        </label>
+        <label className="flex items-center gap-2">
+          <Switch />
+          Allow root login
+        </label>
+        <Field>
+          <FieldLabel>Spin-down time</FieldLabel>
+          <Select
+            defaultValue="20"
+            items={[
+              { value: "0", label: "Never" },
+              { value: "20", label: "20 minutes" },
+              { value: "60", label: "1 hour" },
+            ]}
+          >
+            <SelectTrigger />
+            <SelectContent>
+              <SelectItem value="0">Never</SelectItem>
+              <SelectItem value="20">20 minutes</SelectItem>
+              <SelectItem value="60">1 hour</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
       </div>
-      <label className="flex items-center gap-2">
-        <Switch defaultChecked />
-        SSH service
-      </label>
-      <label className="flex items-center gap-2">
-        <Switch />
-        Allow root login
-      </label>
-      <Field>
-        <FieldLabel>Spin-down time</FieldLabel>
-        <Select
-          defaultValue="20"
-          items={[
-            { value: "0", label: "Never" },
-            { value: "20", label: "20 minutes" },
-            { value: "60", label: "1 hour" },
-          ]}
-        >
-          <SelectTrigger />
-          <SelectContent>
-            <SelectItem value="0">Never</SelectItem>
-            <SelectItem value="20">20 minutes</SelectItem>
-            <SelectItem value="60">1 hour</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-    </div>
-  ),
+    );
+  },
 };

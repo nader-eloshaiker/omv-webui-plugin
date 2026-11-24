@@ -1,0 +1,99 @@
+/* The motions of the charts, meters, rings, the map and the drawings (foundation 7.2 and 9), as
+ * utilities with their keyframes. Durations and curves are the motion tokens; under
+ * prefers-reduced-motion the base rule in index.css runs every one of these once, at once, to its end
+ * state, so a meter is drawn at its value, a line is drawn and a ring is full.
+ *
+ * Geometry stays in the markup as SVG presentation attributes (a ring's dash offset, a bar's height)
+ * or as custom properties set through the CSSOM. A keyframe with only a `from` animates to the value
+ * the element already has, so none of these needs to know the data.
+ */
+@theme inline {
+  /* Meter and ring fill: grows from zero on entrance (then glides with a transition). */
+  --animate-grow-x: grow-x var(--duration-glide) var(--ease-enter) both;
+  --animate-grow-y: grow-y var(--duration-glide) var(--ease-enter) both;
+  --animate-ring-in: ring-in var(--duration-glide) var(--ease-enter) both;
+  /* A part of a drawing landing in its place (a drive slot, a map node). */
+  --animate-slot-in: slot-in var(--duration-slow) var(--ease-settle) both;
+  /* Arrival: where to look after a jump ("View disk sdb"), ringed twice in the focus blue. */
+  --animate-arrive: arrive 1.6s var(--ease-standard) 300ms both;
+}
+
+/* A bar or a meter's fill, from nothing to its length along x. Put `origin-left` (or the end side in
+   right-to-left) on it; an SVG mark also needs `transform-box: fill-box`, which `grow-box` sets. */
+@keyframes grow-x {
+  from {
+    scale: 0 1;
+  }
+}
+/* A column, from the baseline up. */
+@keyframes grow-y {
+  from {
+    scale: 1 0;
+  }
+}
+@utility grow-box {
+  transform-box: fill-box;
+}
+
+/* A ring's arc: the circle carries pathLength="100" and its own stroke-dashoffset. */
+@keyframes ring-in {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes slot-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--motion-rise);
+  }
+}
+
+/* Ringed twice, then nothing: under reduced motion the element keeps a still ring instead
+   (`motion-reduce:` in the component), so the end state still says where to look. */
+@keyframes arrive {
+  0%,
+  40%,
+  80%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  20%,
+  60% {
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
+}
+
+/* Map draw: a line drawn along its length on entrance. The path carries pathLength="1". */
+@keyframes line-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@utility line-draw {
+  stroke-dasharray: 1;
+  animation: line-draw var(--duration-glide) var(--ease-standard) both;
+  animation-delay: calc(
+    120ms + min(var(--stagger-index, 0), 12) * var(--motion-stagger) / 2
+  );
+}
+
+/* Copy direction: a dash travels from source to destination twice on arrival, then fades, leaving
+   the static arrow (the job is not running, so it never loops). */
+@keyframes travel {
+  from {
+    stroke-dashoffset: 70;
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@utility travel-dash {
+  stroke-dasharray: 10 60;
+  animation: travel 1.4s var(--ease-standard) 400ms 2 both;
+}

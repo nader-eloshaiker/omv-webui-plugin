@@ -361,6 +361,12 @@ importers:
       react-dom:
         specifier: catalog:react
         version: 19.3.1(react@19.3.1)
+      react-is:
+        specifier: catalog:charts
+        version: 19.3.1
+      recharts:
+        specifier: catalog:charts
+        version: 3.11.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react-is@19.3.1)(react@19.3.1)(redux@5.0.1)
       tailwind-merge:
         specifier: catalog:ui
         version: 3.7.0

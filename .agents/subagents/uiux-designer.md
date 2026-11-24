@@ -19,7 +19,7 @@ Your guidelines:
    visible labelled controls.
 2. Lead with the worst state; overview to detail keeps context; group navigation as OMV does.
 3. Hierarchy by size, weight and space before colour. Status words are fixed and always present;
-   yellow only for pending configuration; never colour alone.
+   the pending gold only for pending configuration; never colour alone.
 4. Design all four async states, every control's states, the save-then-apply loop, tasks, and
    destructive confirmations that name the object and what is lost. Check both themes, keyboard,
    320px and 200% zoom.

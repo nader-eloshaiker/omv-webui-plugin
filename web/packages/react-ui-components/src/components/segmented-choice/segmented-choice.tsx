@@ -17,7 +17,7 @@ interface SegmentedChoiceOption<V extends string = string> {
 const trackClass = cva(
   // The joined buttons sit in one track with the control edge (3:1 on every ground). No overflow
   // clipping anywhere, so a segment's focus ring is drawn whole, outside the track's edge.
-  "flex max-w-full gap-0.5 rounded-control border border-input bg-surface p-0.5 " +
+  "flex max-w-full gap-0.5 rounded-control border border-input bg-muted p-0.5 " +
     "aria-invalid:border-critical-stroke data-disabled:border-border data-disabled:bg-muted",
   {
     variants: {
@@ -34,10 +34,10 @@ const segmentClass = cva(
   // A segment may shrink below its label in a row: that is how "it does not fit" is measured
   // (`overflow-hidden` clips the label, never the segment's own focus ring). It then stacks.
   "relative flex min-w-0 shrink cursor-default items-center overflow-hidden rounded-sm text-foreground select-none " +
-    "hover:bg-muted focus-visible:z-10 " +
-    // Checked is more than colour: the 10% action tint, the label in the action ink and semibold,
-    // and an inset edge in the same ink (its audited pair on the tint, 3.10), plus aria-checked.
-    "data-checked:bg-action/10 data-checked:font-semibold data-checked:text-action-label data-checked:inset-ring data-checked:inset-ring-action-label " +
+    "transition-[background-color,color,box-shadow] duration-fast ease-standard hover:bg-muted-strong focus-visible:z-10 " +
+    // Checked is more than colour: a raised segment on the surface, the label in the action ink and
+    // semibold, and an inset edge in the same ink (its audited pair on the surface), plus aria-checked.
+    "data-checked:bg-surface data-checked:font-semibold data-checked:text-action-label data-checked:shadow-control data-checked:inset-ring data-checked:inset-ring-action-label data-checked:hover:bg-surface " +
     "data-disabled:cursor-not-allowed data-disabled:text-subtle-foreground data-disabled:hover:bg-transparent " +
     "data-checked:data-disabled:bg-surface data-checked:data-disabled:text-muted-foreground data-checked:data-disabled:inset-ring-input",
   {
@@ -45,7 +45,7 @@ const segmentClass = cva(
       size: {
         // In a table row (36px): a 30px track, 24px segments (the WCAG 2.5.8 minimum target).
         sm: "min-h-6 px-2 py-0.5 text-sm",
-        md: "min-h-7 px-2.5 py-0.5 text-base",
+        md: "min-h-[calc(var(--density-control)-0.375rem)] px-3 py-0.5 text-base",
       },
       layout: {
         row: "justify-center text-center",
@@ -59,7 +59,7 @@ const segmentClass = cva(
 // The sizer's labels take a segment's horizontal padding and type size.
 const sizerItemClass = cva("", {
   variants: {
-    size: { sm: "px-2 text-sm", md: "px-2.5 text-base" },
+    size: { sm: "px-2 text-sm", md: "px-3 text-base" },
   },
   defaultVariants: { size: "md" },
 });

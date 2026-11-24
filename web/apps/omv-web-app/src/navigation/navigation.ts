@@ -416,6 +416,31 @@ export function navFor(
   })).filter((g) => g.pages.length > 0);
 }
 
+/** Whether the menu entry for `page` is the current page: its own route, or its classic-only page. */
+export const isCurrentPage = (pathname: string, page: NavPage): boolean =>
+  page.route === undefined
+    ? pathname === `/${page.group}/${page.item}`
+    : isCurrent(pathname, page.route);
+
+/**
+ * The jump keys (foundation 13): `g` then the letter goes to the page from anywhere, and the command
+ * palette shows the pair beside the page so it teaches them. Only the pages people reach most often;
+ * a letter is never reused. "/" is the dashboard.
+ */
+export const JUMP_KEYS = {
+  "/": "o",
+  "/storage/disks": "d",
+  "/storage/filesystems": "f",
+  "/storage/shared-folders": "s",
+  "/network/interfaces": "n",
+  "/usermgmt/users": "u",
+  "/diagnostics/system-logs": "l",
+  "/account/settings": "a",
+} as const satisfies Partial<Record<BuiltRoute | "/", string>>;
+
+export const jumpKeyFor = (route: BuiltRoute | "/"): string | undefined =>
+  (JUMP_KEYS as Partial<Record<BuiltRoute | "/", string>>)[route];
+
 /** The classic interface's start page. */
 export const CLASSIC_HOME = "/";
 /** The page with OMV's HTTPS setting (UI-12). */

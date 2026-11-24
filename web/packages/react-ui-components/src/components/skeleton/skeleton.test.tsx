@@ -16,8 +16,8 @@ describe("Skeleton", () => {
     );
     for (const element of [line, block]) {
       expect(element).toHaveAttribute("aria-hidden", "true");
-      expect(element?.className).toContain("motion-safe:animate-pulse");
-      expect(element?.className).not.toMatch(/(^|\s)animate-pulse/);
+      expect(element?.className).toContain("motion-safe:animate-breathe");
+      expect(element?.className).not.toMatch(/(^|\s)animate-breathe/);
     }
     expect(line).toHaveAttribute("data-shape", "line");
     expect(block).toHaveAttribute("data-shape", "block");

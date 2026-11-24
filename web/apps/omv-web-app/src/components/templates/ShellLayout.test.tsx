@@ -4,16 +4,31 @@
 // apply), the tasks menu, the background poll (UI-14), the HTTP notice (UI-12), not-found, focus
 // after navigation, and no state-changing call on load (UI-4).
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
-import { act, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { installDensity } from "../../services/density/index.ts";
 import { installTheme } from "../../services/theme/index.ts";
-import { clearStorage } from "../../stores/storageSnapshot.ts";
+import { clearStorage, storageSnapshot } from "../../stores/storageSnapshot.ts";
 import { useThemeStore } from "../../stores/useThemeStore.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
 const nav = () =>
   screen.getAllByRole("navigation", { name: "Main navigation" })[0]!;
+
+/** Opens a folded group of the side navigation (only the current page's group starts open). */
+function openGroup(name: string) {
+  const head = within(nav()).getByRole("button", { name });
+  if (head.getAttribute("aria-expanded") === "false") {
+    fireEvent.click(head);
+  }
+}
 
 const READS = new Set([
   "System.getInformation",
@@ -65,11 +80,12 @@ describe("the side navigation", () => {
 
   it("links the pages built here to their own routes, without the classic mark", async () => {
     const { user } = await shell();
-    for (const [name, path] of [
-      ["SSH", "/ui/services/ssh"],
-      ["Shared folders", "/ui/storage/shared-folders"],
-      ["Your account", "/ui/account/settings"],
+    for (const [group, name, path] of [
+      ["Services", "SSH", "/ui/services/ssh"],
+      ["Storage", "Shared folders", "/ui/storage/shared-folders"],
+      ["Account", "Your account", "/ui/account/settings"],
     ] as const) {
+      openGroup(group);
       const link = within(nav()).getByRole("link", { name });
       expect(link).toHaveAttribute("href", path);
       await user.click(link);
@@ -81,6 +97,8 @@ describe("the side navigation", () => {
       );
     }
     // A page still in the classic interface keeps its mark.
+    openGroup("System");
+    openGroup("Services");
     expect(
       within(nav()).getByRole("link", { name: /^Scheduled tasks/ }),
     ).toHaveTextContent("Classic");
@@ -113,6 +131,7 @@ describe("a page only the classic interface has", () => {
     const { user } = await shell();
     await screen.findByRole("heading", { name: "Dashboard" });
     const before = seenCalls.length;
+    openGroup("System");
     await user.click(
       within(nav()).getByRole("link", { name: /^Scheduled tasks/ }),
     );
@@ -167,6 +186,7 @@ describe("not found", () => {
 
 describe("the RAID menu item (RAID design 0.10, D1)", () => {
   const storageItems = () => {
+    openGroup("Storage");
     const group = within(nav())
       .getAllByRole("group")
       .find(
@@ -312,10 +332,20 @@ describe("the pending-changes band", () => {
       within(dialog).getByRole("button", { name: "Apply 2 changes" }),
     );
 
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("region", { name: "Pending changes" }),
-      ).not.toBeInTheDocument(),
+    // It says so, with the line full, for a moment, then closes (foundation 7.2).
+    expect(
+      await within(band).findByText(
+        "Applied. The services now use the new settings.",
+        undefined,
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument();
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole("region", { name: "Pending changes" }),
+        ).not.toBeInTheDocument(),
+      { timeout: 4000 },
     );
     expect(callNames()).toContain("Config.applyChangesBg");
     // The control that had focus went with the band: focus is on the page title, not the page.
@@ -365,10 +395,12 @@ describe("the pending-changes band", () => {
         await screen.findByRole("alertdialog", { name: "Undo 2 changes?" }),
       ).getByRole("button", { name: "Undo 2 changes" }),
     );
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("region", { name: "Pending changes" }),
-      ).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole("region", { name: "Pending changes" }),
+        ).not.toBeInTheDocument(),
+      { timeout: 4000 },
     );
     expect(callNames()).toContain("Config.revertChangesBg");
     expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveFocus();
@@ -462,5 +494,105 @@ describe("the user menu", () => {
     expect(
       within(about).getByRole("link", { name: /The openmediavault project/ }),
     ).toHaveAttribute("href", "https://www.openmediavault.org/");
+  });
+});
+
+describe("the command palette and the jump keys (foundation 13)", () => {
+  it("opens with /, lists every page with classic pages marked, and goes with Enter", async () => {
+    const { user, app } = await shell();
+    await screen.findByRole("heading", { name: "Dashboard" });
+    await user.keyboard("/");
+    const input = await screen.findByRole("combobox", {
+      name: "Search pages and actions",
+    });
+    await waitFor(() => expect(input).toHaveFocus());
+    const cron = screen.getByRole("option", { name: /Scheduled tasks/ });
+    expect(cron).toHaveTextContent("System · classic interface");
+    // The shortcut beside a page teaches it.
+    expect(screen.getByRole("option", { name: /^Disks/ })).toHaveTextContent(
+      "gd",
+    );
+    await user.keyboard("shared folders{Enter}");
+    await waitFor(() =>
+      expect(app.router.state.location.pathname).toBe(
+        "/storage/shared-folders",
+      ),
+    );
+    expect(screen.queryByRole("dialog", { name: "Go to or do" })).toBeNull();
+  });
+
+  it("jumps with g then a letter, and not while typing", async () => {
+    const { user, app } = await shell();
+    await screen.findByRole("heading", { name: "Dashboard" });
+    await user.keyboard("gd");
+    await waitFor(() =>
+      expect(app.router.state.location.pathname).toBe("/storage/disks"),
+    );
+    await user.keyboard("go");
+    await waitFor(() => expect(app.router.state.location.pathname).toBe("/"));
+  });
+
+  it("offers to apply the pending changes, through the band's own confirmation", async () => {
+    const { user } = await shell({ scenario: "pendingChanges" });
+    await screen.findByRole("region", { name: "Pending changes" });
+    await user.click(screen.getByRole("button", { name: "Go to or do…" }));
+    const apply = await screen.findByRole("option", {
+      name: /Apply 2 pending changes/,
+    });
+    expect(apply).toHaveTextContent("Network discovery (Zeroconf), SSH");
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", { name: "Search pages and actions" }),
+      ).toHaveFocus(),
+    );
+    await user.keyboard("{Enter}");
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Apply 2 changes?",
+    });
+    expect(
+      within(dialog).getByRole("button", { name: "Cancel" }),
+    ).toHaveFocus();
+    expect(callNames()).not.toContain("Config.applyChangesBg");
+  });
+
+  it("gives a normal user the dashboard and their account only", async () => {
+    const { user } = await shell({ scenario: "user" });
+    await user.keyboard("{Control>}k{/Control}");
+    await screen.findByRole("combobox", { name: "Search pages and actions" });
+    expect(
+      screen.getAllByRole("option").map((o) => o.textContent?.split("g")[0]),
+    ).toEqual([
+      expect.stringContaining("Dashboard"),
+      expect.stringContaining("Your account"),
+    ]);
+  });
+});
+
+describe("the top bar's pending pill and density switch", () => {
+  it("is a quiet chip until something waits, then counts it and leads to the band", async () => {
+    const { user } = await shell({ scenario: "pendingChanges" });
+    const pill = await screen.findByRole("button", {
+      name: "2 pending changes",
+    });
+    expect(pill).toHaveTextContent("2");
+    await user.click(pill);
+    expect(
+      screen.getByRole("region", { name: "Pending changes" }),
+    ).toHaveFocus();
+  });
+
+  it("stores compact rows as a preference and puts them on <html>", async () => {
+    const uninstall = installDensity();
+    const { user } = await shell();
+    const toggle = screen.getByRole("button", { name: "Compact rows" });
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(document.documentElement.dataset.density).toBe("compact");
+    expect(Object.keys(storageSnapshot().local)).toEqual(["omv-webui.density"]);
+    await user.click(toggle);
+    expect(document.documentElement.hasAttribute("data-density")).toBe(false);
+    uninstall();
+    clearStorage();
   });
 });

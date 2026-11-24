@@ -20,7 +20,7 @@ function SkipLink({ targetId, className, children, ...props }: SkipLinkProps) {
       href={`#${targetId}`}
       className={cn(
         "sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:start-2 focus-visible:top-2 focus-visible:z-70",
-        "focus-visible:rounded-control focus-visible:bg-surface focus-visible:px-3 focus-visible:py-2 focus-visible:font-medium focus-visible:text-foreground focus-visible:shadow-md",
+        "focus-visible:rounded-control focus-visible:bg-surface focus-visible:px-3 focus-visible:py-2 focus-visible:font-medium focus-visible:text-foreground focus-visible:shadow-floating",
         className,
       )}
       {...props}

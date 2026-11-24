@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type * as React from "react";
+import * as React from "react";
 import { Button } from "../button/button";
 import {
   Card,
@@ -32,110 +32,113 @@ const args = {
 /** Every state, in the fixed order of the set-up checklist. Shape and word tell them apart. */
 export const SetUpYourNas: Story = {
   args,
-  render: () => (
-    <Card render={<section aria-labelledby="setup-title" />}>
-      <CardHeader>
-        <CardTitle id="setup-title">Set up your NAS</CardTitle>
-        <CardDescription>
-          A few things to check after installing. Each item is read from the
-          NAS&apos;s current settings.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Checklist>
-          <ChecklistItem
-            state="notChecked"
-            stateLabel="Not checked"
-            title="Change the factory password"
-            action={
-              <a
-                href="#password"
-                className="text-action-label underline underline-offset-2 hover:no-underline"
-              >
-                Change your password
-              </a>
-            }
-          >
-            <p>
-              openmediavault is installed with a password that anyone can look
-              up. If it has not been changed yet, change it now. This page
-              cannot check whether it has been.
-            </p>
-          </ChecklistItem>
-          <ChecklistItem
-            state="done"
-            stateLabel="Done"
-            title="Use a secure connection (HTTPS)"
-          >
-            <p>HTTPS is on.</p>
-          </ChecklistItem>
-          <ChecklistItem
-            state="notDone"
-            stateLabel="Not done"
-            title="Get email alerts"
-            action={
-              <ExternalLink
-                href="/#/system/notification/settings"
-                newTabLabel={NEW_TAB}
-              >
-                Open Notifications in the classic interface
-              </ExternalLink>
-            }
-          >
-            <p>
-              Alerts are off. Turn them on to hear about failing disks, full
-              file systems and available updates. You need the details of an
-              email account the NAS can send from.
-            </p>
-            <p>
-              After saving there, apply the changes, then send a test email.
-            </p>
-          </ChecklistItem>
-          <ChecklistItem
-            state="notDone"
-            stateLabel="Not done"
-            title="Install updates"
-            action={
-              <ExternalLink
-                href="/#/system/updatemgmt/updates"
-                newTabLabel={NEW_TAB}
-              >
-                Open Updates in the classic interface
-              </ExternalLink>
-            }
-          >
-            <p>3 updates are available.</p>
-          </ChecklistItem>
-          <ChecklistItem
-            state="value"
-            title="Name of your NAS"
-            action={
-              <ExternalLink href="/#/network/general" newTabLabel={NEW_TAB}>
-                Change it in the classic interface
-              </ExternalLink>
-            }
-          >
-            <p>
-              Your NAS is called <Identifier>nas01</Identifier>. Other computers
-              on your network find it by this name.
-            </p>
-          </ChecklistItem>
-          <ChecklistItem
-            state="checking"
-            stateLabel="Checking…"
-            title="Time zone"
-          />
-        </Checklist>
-      </CardContent>
-      <CardFooter>
-        <Button variant="neutral">Hide the checklist</Button>
-        <span className="text-sm text-muted-foreground">
-          Hides it for every administrator, and hides the classic
-          interface&apos;s welcome panel too.
-        </span>
-      </CardFooter>
-    </Card>
-  ),
+  render: function SetUpYourNasStory() {
+    const storyId = React.useId();
+    return (
+      <Card render={<section aria-labelledby={`${storyId}-setup-title`} />}>
+        <CardHeader>
+          <CardTitle id={`${storyId}-setup-title`}>Set up your NAS</CardTitle>
+          <CardDescription>
+            A few things to check after installing. Each item is read from the
+            NAS&apos;s current settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Checklist>
+            <ChecklistItem
+              state="notChecked"
+              stateLabel="Not checked"
+              title="Change the factory password"
+              action={
+                <a
+                  href="#password"
+                  className="text-action-label underline underline-offset-2 hover:no-underline"
+                >
+                  Change your password
+                </a>
+              }
+            >
+              <p>
+                openmediavault is installed with a password that anyone can look
+                up. If it has not been changed yet, change it now. This page
+                cannot check whether it has been.
+              </p>
+            </ChecklistItem>
+            <ChecklistItem
+              state="done"
+              stateLabel="Done"
+              title="Use a secure connection (HTTPS)"
+            >
+              <p>HTTPS is on.</p>
+            </ChecklistItem>
+            <ChecklistItem
+              state="notDone"
+              stateLabel="Not done"
+              title="Get email alerts"
+              action={
+                <ExternalLink
+                  href="/#/system/notification/settings"
+                  newTabLabel={NEW_TAB}
+                >
+                  Open Notifications in the classic interface
+                </ExternalLink>
+              }
+            >
+              <p>
+                Alerts are off. Turn them on to hear about failing disks, full
+                file systems and available updates. You need the details of an
+                email account the NAS can send from.
+              </p>
+              <p>
+                After saving there, apply the changes, then send a test email.
+              </p>
+            </ChecklistItem>
+            <ChecklistItem
+              state="notDone"
+              stateLabel="Not done"
+              title="Install updates"
+              action={
+                <ExternalLink
+                  href="/#/system/updatemgmt/updates"
+                  newTabLabel={NEW_TAB}
+                >
+                  Open Updates in the classic interface
+                </ExternalLink>
+              }
+            >
+              <p>3 updates are available.</p>
+            </ChecklistItem>
+            <ChecklistItem
+              state="value"
+              title="Name of your NAS"
+              action={
+                <ExternalLink href="/#/network/general" newTabLabel={NEW_TAB}>
+                  Change it in the classic interface
+                </ExternalLink>
+              }
+            >
+              <p>
+                Your NAS is called <Identifier>nas01</Identifier>. Other
+                computers on your network find it by this name.
+              </p>
+            </ChecklistItem>
+            <ChecklistItem
+              state="checking"
+              stateLabel="Checking…"
+              title="Time zone"
+            />
+          </Checklist>
+        </CardContent>
+        <CardFooter>
+          <Button variant="neutral">Hide the checklist</Button>
+          <span className="text-sm text-muted-foreground">
+            Hides it for every administrator, and hides the classic
+            interface&apos;s welcome panel too.
+          </span>
+        </CardFooter>
+      </Card>
+    );
+  },
 };
 
 export const Done: Story = {

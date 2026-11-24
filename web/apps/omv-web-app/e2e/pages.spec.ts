@@ -7,6 +7,7 @@
 import type { Locator, Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
+import { openNavGroup, revealPendingBand } from "./support/shell.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -143,6 +144,7 @@ test("an administrator changes an SSH setting by keyboard, saves it and applies 
 }) => {
   rpc.loginWith("authenticated");
   await signIn(page, "example-admin");
+  await openNavGroup(page, "services");
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.services.ssh })
     .click();
@@ -178,6 +180,7 @@ test("an administrator changes an SSH setting by keyboard, saves it and applies 
 
   const band = page.getByRole("region", { name: copy.pending.label });
   const apply = copy.pending.apply_other.replace("{{count}}", "2");
+  await revealPendingBand(page);
   await band.getByRole("button", { name: apply }).click();
   await page
     .getByRole("alertdialog")
@@ -193,6 +196,7 @@ test("an administrator reads, sorts and searches the shared folders by keyboard"
 }) => {
   rpc.loginWith("authenticated");
   await signIn(page, "example-admin");
+  await openNavGroup(page, "storage");
   await navigation(page)
     .getByRole("link", { name: copy.nav.items.storage["shared-folders"] })
     .click();
@@ -246,6 +250,7 @@ test("a normal user changes their password on Your account, by keyboard", async 
 }) => {
   rpc.loginWith("authenticatedUser");
   await signIn(page, "example-user");
+  await openNavGroup(page, "account");
   await expect(
     navigation(page).getByRole("link", {
       name: copy.nav.items.account.settings,

@@ -34,14 +34,12 @@ function JobRunner({
     <section
       data-slot="job-runner"
       className={cn(
-        "flex flex-col gap-4 rounded-card border border-border bg-surface p-4",
+        "flex flex-col gap-4 rounded-card surface-raised p-card",
         className,
       )}
       {...props}
     >
-      <Heading className="text-lg leading-tight font-semibold text-foreground">
-        {title}
-      </Heading>
+      <Heading className="text-section text-foreground">{title}</Heading>
       {children}
     </section>
   );
@@ -227,10 +225,7 @@ function JobResult({
       data-slot="job-result"
       role="status"
       aria-live="polite"
-      className={cn(
-        result && "rounded-card border border-border bg-surface p-3",
-        className,
-      )}
+      className={cn(result && "rounded-card surface-raised p-card", className)}
     >
       {result ? (
         <div className="flex items-start gap-3">
@@ -282,7 +277,8 @@ function PendingDecision({
     <div
       data-slot={slot}
       className={cn(
-        "flex flex-col gap-3 rounded-card border border-pending-stroke bg-surface p-4",
+        // Waiting on a decision about pending changes: the pending wash with its stroke edge.
+        "flex flex-col gap-3 rounded-card border border-pending-stroke bg-pending-wash p-card",
         className,
       )}
     >
@@ -607,7 +603,8 @@ function JobFailure({
       data-slot="job-failure"
       role="alert"
       className={cn(
-        "flex flex-col gap-3 rounded-card border border-critical-stroke bg-surface p-4",
+        // The job failed: the one element in that state takes its wash (foundation 3.3).
+        "flex flex-col gap-3 rounded-card border border-critical-stroke bg-critical-wash p-card",
         className,
       )}
     >

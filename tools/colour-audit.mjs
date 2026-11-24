@@ -5,6 +5,7 @@
 //   node tools/colour-audit.mjs contrast        # one section; add --quiet for failures only
 //   node tools/colour-audit.mjs legacy          # the measured defects of the stock OMV palette
 //   node tools/colour-audit.mjs measure '#fff' '#5dacdf'     # one ad-hoc pair (fg, bg)
+//   node tools/colour-audit.mjs measure '#8a4613' '#f78f00' 0.14 '#ffffff'   # fg on a wash over a base
 //   node tools/colour-audit.mjs oklch 0.55 0.12 240          # OKLCH -> hex (for building ramps)
 //
 // `contrast` exits 1 when a REQUIRED pair fails, so it can gate CI. The PAIRS list below is the
@@ -102,7 +103,7 @@ const dE = (a, b) => {
 };
 
 // Colour-vision deficiency simulation: Machado, Oliveira & Fernandes (2009), severity 1.0,
-// applied in linear RGB.
+// applied in linear RGB: deuteranopia, protanopia and tritanopia.
 const CVD = {
   deutan: [
     [0.367322, 0.860646, -0.227968],
@@ -114,6 +115,11 @@ const CVD = {
     [0.114503, 0.786281, 0.099216],
     [-0.003882, -0.048116, 1.051998],
   ],
+  tritan: [
+    [1.255528, -0.076749, -0.178779],
+    [-0.078411, 0.930809, 0.147602],
+    [0.004733, 0.691367, 0.3039],
+  ],
 };
 const simulate = (rgb, kind) => {
   const l = toLin(rgb);
@@ -123,7 +129,58 @@ const over = (fg, alpha, bg) => fg.map((c, i) => c * alpha + bg[i] * (1 - alpha)
 
 // ---------- token loading ------------------------------------------------------------------------
 // Everything outside a `.dark { }` block is the light theme; the dark theme is light overridden by
-// the `.dark` block. `var(--x)` references are resolved within the theme being read.
+// the `.dark` block. A value resolves to { rgb, a } within the theme being read: hex, `var(--x)`,
+// `transparent`, `rgb(r g b / a)` and `color-mix(in srgb, <colour> N%, <colour> M%)` (premultiplied,
+// as the browser mixes, so `color-mix(in srgb, X 14%, transparent)` is X at 0.14 alpha). Anything
+// else (a shadow list, a gradient, a length) resolves to nothing.
+function splitTop(text) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "(") depth++;
+    else if (text[i] === ")") depth--;
+    else if (text[i] === "," && depth === 0) {
+      parts.push(text.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.push(text.slice(start).trim());
+  return parts;
+}
+function parseColour(value, lookup) {
+  const v = value.trim();
+  let m;
+  if ((m = v.match(/^var\(--([\w-]+)\)$/))) return lookup(m[1]);
+  if (v === "transparent") return { rgb: [0, 0, 0], a: 0 };
+  const hex = parseHex(v);
+  if (hex) return { rgb: hex, a: 1 };
+  if ((m = v.match(/^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*(?:[/,]\s*([\d.]+)(%?))?\s*\)$/))) {
+    const a = m[4] === undefined ? 1 : Number(m[4]) / (m[5] ? 100 : 1);
+    return { rgb: [m[1], m[2], m[3]].map(Number), a };
+  }
+  if ((m = v.match(/^color-mix\(\s*in\s+srgb\s*,([\s\S]*)\)$/))) {
+    const args = splitTop(m[1]);
+    if (args.length !== 2) return null;
+    const parsed = args.map((arg) => {
+      const am = arg.match(/^(.+?)(?:\s+([\d.]+)%)?$/);
+      return am && { colour: parseColour(am[1], lookup), pct: am[2] === undefined ? null : Number(am[2]) / 100 };
+    });
+    if (parsed.some((p) => !p || !p.colour)) return null;
+    let [p, q] = parsed.map((x) => x.pct);
+    if (p === null && q === null) [p, q] = [0.5, 0.5];
+    else if (p === null) p = 1 - q;
+    else if (q === null) q = 1 - p;
+    const sum = p + q;
+    if (sum <= 0) return null;
+    const [A, B] = parsed.map((x) => x.colour);
+    const [wa, wb] = [(p / sum) * A.a, (q / sum) * B.a];
+    const a = wa + wb;
+    const rgb = a === 0 ? [0, 0, 0] : A.rgb.map((c, i) => (c * wa + B.rgb[i] * wb) / a);
+    return { rgb, a: a * Math.min(1, sum) };
+  }
+  return null;
+}
 function loadTokens() {
   const css = fs.readFileSync(CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
   const light = {};
@@ -132,68 +189,146 @@ function loadTokens() {
   let m;
   while ((m = blockRe.exec(css))) {
     const target = /\.dark\b/.test(m[1]) ? darkOverrides : light;
-    for (const d of m[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].trim();
+    for (const d of m[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].replace(/\s+/g, " ").trim();
   }
-  const resolve = (map) => (name, depth = 0) => {
-    let v = map[name];
-    if (v === undefined || depth > 8) return null;
-    const ref = v.match(/^var\(--([\w-]+)\)$/);
-    return ref ? resolve(map)(ref[1], depth + 1) : parseHex(v);
+  const resolve = (map) => {
+    const get = (name, depth = 0) => {
+      const v = map[name];
+      if (v === undefined || depth > 8) return null;
+      return parseColour(v, (ref) => get(ref, depth + 1));
+    };
+    return get;
   };
-  return { light: resolve(light), dark: resolve({ ...light, ...darkOverrides }) };
+  return { light: resolve(light), dark: resolve({ ...light, ...darkOverrides }), names: Object.keys(light) };
 }
 
 // ---------- the contract -------------------------------------------------------------------------
-// [foreground token, ground, bar, note]. A ground is a token name, or [tint token, alpha, base
-// token] for an alpha wash composited over a known ground. Bars: "text" 4.5:1, "ui" 3:1 (large text,
-// icons, control outlines, marks that carry meaning alone), "deco" = reported, never failed.
-const GROUNDS = ["theme-page", "theme-surface", "theme-muted"];
-const onGrounds = (fg, bar, note) => GROUNDS.map((g) => [fg, g, bar, note]);
+// [foreground token, ground, bar, note]. Bars: "text" 4.5:1, "ui" 3:1 (large text, icons, control
+// outlines, marks that carry meaning alone), "deco" = reported, never failed. A ground is:
+//   - a token name, which must be opaque;
+//   - on(base, ...layers): translucent tokens (a wash, the selected tint, the ambient light)
+//     composited bottom-up over a known opaque ground, as the browser paints them;
+//   - gradient(name, ...stops): a gradient, checked at every stop; the worst stop decides. Each stop
+//     is itself a token or an on(). A two-colour gradient's contrast with one ink changes
+//     monotonically along it when every channel moves the same way, as all of these do, so the end
+//     stops are its darkest and lightest points.
+// A translucent foreground is composited over the ground it is measured on.
+const on = (base, ...layers) => ({ base, layers });
+const gradient = (name, ...stops) => ({ name, stops });
+const GROUNDS = ["theme-page", "theme-surface", "theme-muted", "theme-muted-strong"];
+const onGrounds = (fg, bar, note, grounds = GROUNDS) => grounds.map((g) => [fg, g, bar, note]);
 const STATUS = ["ok", "warning", "critical", "unknown"];
-const wash = (fam, base) => [`theme-${fam}`, 0.14, base];
+// The light from above the page: the bare page, each glow alone, and both where they overlap. The
+// `ambient-light` utility lists the main glow first, so it paints over the soft one.
+const AMBIENT = gradient(
+  "ambient light",
+  "theme-page",
+  on("theme-page", "theme-ambient-soft"),
+  on("theme-page", "theme-ambient"),
+  on("theme-page", "theme-ambient-soft", "theme-ambient"),
+);
+// A status wash used as light: a radial wash in the card's corner fading to the bare card.
+const statusLight = (s) => gradient(`${s} light`, "theme-surface", on("theme-surface", `theme-${s}-wash`));
+// The drive-bay chassis: lit from above, one step between its stops.
+const CHASSIS = gradient("chassis", "theme-art-chassis-top", "theme-art-chassis-bottom");
+const DRAWING_GROUNDS = ["theme-surface", "theme-muted", "theme-art-surface"];
 
 const PAIRS = [
-  // Text tiers.
+  // Text tiers, on every ground and in the ambient light.
   ...onGrounds("theme-foreground", "text", "body text"),
   ...onGrounds("theme-muted-foreground", "text", "secondary text"),
+  ...onGrounds("theme-tertiary-foreground", "text", "captions and metadata"),
   ...onGrounds("theme-subtle-foreground", "deco", "placeholder / disabled (exempt, 1.4.3)"),
+  ["theme-foreground", AMBIENT, "text", "the headline and title in the ambient light"],
+  ["theme-muted-foreground", AMBIENT, "text", "secondary text in the ambient light"],
+  ["theme-tertiary-foreground", AMBIENT, "text", "captions in the ambient light"],
   // Structure.
   ...onGrounds("theme-border", "deco", "divider (decorative)"),
   ...onGrounds("theme-border-control", "ui", "control outline (1.4.11)"),
+  ["theme-border-control", AMBIENT, "ui", "control outline in the ambient light"],
   // Action blue: the one interaction hue.
   ["theme-action-foreground", "theme-action", "text", "words on the primary button"],
   ["theme-action-foreground", "theme-action-hover", "text", "words on the primary button, hovered"],
   ...onGrounds("theme-action", "ui", "primary button edge / checked control"),
+  ["theme-action", AMBIENT, "ui", "primary button edge in the ambient light"],
   ...onGrounds("theme-action-label", "text", "link and blue label"),
-  ["theme-action-label", ["theme-action", 0.1, "theme-surface"], "text", "label on the selected tint"],
-  ["theme-foreground", ["theme-action", 0.1, "theme-surface"], "text", "body text on the selected row"],
-  ["theme-action-label", ["theme-action", 0.1, "theme-page"], "text", "current side-navigation item"],
-  ["theme-action", ["theme-action", 0.1, "theme-page"], "ui", "current item's leading bar"],
+  ["theme-action-label", AMBIENT, "text", "link in the ambient light"],
   ...onGrounds("theme-focus-ring", "ui", "focus ring (2.4.11 / 1.4.11)"),
-  // Identity: the sky-blue bar.
-  ["theme-identity-foreground", "theme-identity", "text", "words and icons on the top bar"],
-  ["theme-focus-ring-on-identity", "theme-identity", "ui", "focus ring on the top bar"],
+  ["theme-focus-ring", AMBIENT, "ui", "focus ring in the ambient light"],
+  // The selected tint, and selected text.
+  ["theme-action-label", on("theme-surface", "theme-selected"), "text", "label on a selected row"],
+  ["theme-foreground", on("theme-surface", "theme-selected"), "text", "body text on a selected row"],
+  ["theme-muted-foreground", on("theme-surface", "theme-selected"), "text", "secondary text on a selected row"],
+  ["theme-action-label", on("theme-page", "theme-selected"), "text", "current side-navigation item"],
+  ["theme-foreground", on("theme-page", "theme-selected"), "text", "current side-navigation item, ink"],
+  ["theme-action", on("theme-page", "theme-selected"), "ui", "current item's leading bar"],
+  ["theme-foreground", "theme-selection", "text", "selected text"],
+  // Brand: the mark, the live dot, the health ring; and the live trace with its area fill.
+  ...onGrounds("theme-brand", "ui", "the mark, the live dot, the health ring"),
+  ...onGrounds("theme-trace", "ui", "the live trace", GROUNDS.slice(1)),
+  ["theme-trace", on("theme-surface", "theme-trace-area"), "ui", "the trace over the top of its own area fill"],
+  ["theme-trace", on("theme-muted", "theme-trace-area"), "ui", "the trace over its area fill, in an inset"],
   // Pending configuration changes: the yellow.
-  ["theme-pending-foreground", "theme-pending", "text", "words on the pending banner"],
+  ["theme-pending-foreground", "theme-pending", "text", "words on the pending band"],
   ...onGrounds("theme-pending-label", "text", "'pending' as a word on a ground"),
   ...onGrounds("theme-pending-stroke", "ui", "pending dot ring / icon"),
-  ["theme-pending-label", wash("pending", "theme-surface"), "text", "label on the pending wash"],
-  // Status: fills draw, labels are read, strokes outline.
+  ["theme-pending-label", on("theme-surface", "theme-pending-wash"), "text", "label on the pending wash"],
+  ["theme-pending-label", on("theme-page", "theme-pending-wash"), "text", "label on the pending wash (page)"],
+  ["theme-pending-label", AMBIENT, "text", "'pending' in the ambient light"],
+  // The top bar's pill: gold, edged in the stroke so it clears 3:1 where the gold alone does not (the
+  // light page); its words are the band's pair. The band's buttons are outlined in the ink, and stay
+  // outlined (dashed, never faded) while unavailable; Apply is the inverse pair.
+  ["theme-pending-stroke", AMBIENT, "ui", "the pending pill's edge on the top bar, in the ambient light"],
+  ["theme-pending-foreground", "theme-pending", "ui", "a band button's outline, also unavailable"],
+  ["theme-pending", "theme-pending-foreground", "text", "Apply on the band: gold words on the navy"],
+  // The flight's mark: a gold disc ringed in navy. One of the two always carries it (the disc in dark,
+  // the ring in light); both reported.
+  ["theme-pending", "theme-page", "deco", "the flight's gold disc on the page"],
+  ["theme-pending-foreground", "theme-page", "deco", "the flight's navy ring on the page"],
+  // A panel waiting on a pending decision (the job runner): its words on the pending wash.
+  ...GROUNDS.map((g) => ["theme-foreground", on(g, "theme-pending-wash"), "text", "body text on the pending wash"]),
+  ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, "theme-pending-wash"), "text", "secondary text on the pending wash"]),
+  ...GROUNDS.map((g) => ["theme-pending-stroke", on(g, "theme-pending-wash"), "ui", "pending mark on its wash"]),
+  // Status: fills draw, labels are read, strokes outline, washes sit behind the one element in a
+  // non-OK state.
   ...STATUS.flatMap((s) => [
     ...onGrounds(`theme-${s}-label`, "text", `${s} as a word`),
     ...onGrounds(`theme-${s}-stroke`, "ui", `${s} ring / icon (carries status with its word)`),
     ...onGrounds(`theme-${s}`, "deco", `${s} fill (always ringed by its stroke)`),
-    [`theme-${s}-label`, wash(s, "theme-surface"), "text", `${s} label on its pill wash`],
-    [`theme-${s}-label`, wash(s, "theme-page"), "text", `${s} label on its pill wash (page)`],
+    ...GROUNDS.map((g) => [`theme-${s}-label`, on(g, `theme-${s}-wash`), "text", `${s} label on its wash`]),
+    ...GROUNDS.map((g) => ["theme-foreground", on(g, `theme-${s}-wash`), "text", `body text on the ${s} wash`]),
+    ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, `theme-${s}-wash`), "text", `secondary text on the ${s} wash`]),
+    [`theme-${s}-stroke`, on("theme-surface", `theme-${s}-wash`), "ui", `${s} mark on its wash`],
+    [`theme-${s}-label`, AMBIENT, "text", `${s} as a word in the ambient light`],
   ]),
+  // A non-OK card lit in its status: a radial wash fading to the card, read at both ends.
+  ...["warning", "critical"].flatMap((s) => [
+    [`theme-${s}-label`, statusLight(s), "text", `${s} word on the card lit in its state`],
+    ["theme-foreground", statusLight(s), "text", `headline on the card lit ${s}`],
+    ["theme-muted-foreground", statusLight(s), "text", `secondary text on the card lit ${s}`],
+    ["theme-action", statusLight(s), "ui", `primary button edge on the card lit ${s}`],
+  ]),
+  // The Save button's "Saved" settle: words on the OK fill, edged in the OK stroke.
+  ["theme-ok-foreground", "theme-ok", "text", "'Saved' on the save button"],
+  ...onGrounds("theme-ok-stroke", "ui", "the saved button's edge"),
   // Destructive action.
   ["theme-destructive-foreground", "theme-destructive", "text", "words on the destructive button"],
   ...onGrounds("theme-destructive", "ui", "destructive button edge"),
   // Charts.
-  ...[1, 2, 3, 4].map((n) => [`theme-series-${n}`, "theme-surface", "ui", "chart mark on the plot ground"]),
-  ...[1, 2, 3, 4].map((n) => [`theme-series-${n}`, "theme-page", "ui", "chart mark on the page"]),
+  ...[1, 2, 3, 4].flatMap((n) => onGrounds(`theme-series-${n}`, "ui", "chart mark", GROUNDS.slice(0, 3))),
   ["theme-usage", "theme-usage-track", "ui", "capacity meter fill on its track"],
+  // A bar of a bar chart (react-ui-components/charts) stands on the card or an inset, not a track.
+  ...onGrounds("theme-usage", "ui", "a bar in a bar chart", GROUNDS.slice(1, 3)),
   ["theme-usage-track-edge", "theme-surface", "ui", "capacity meter track outline"],
+  ["theme-usage-track-edge", "theme-muted", "ui", "capacity meter track outline, in an inset"],
+  // Drawings and maps.
+  ...DRAWING_GROUNDS.map((g) => ["theme-art-line", g, "ui", "drawing outline"]),
+  ...DRAWING_GROUNDS.map((g) => ["theme-art-path", g, "ui", "the traced lineage on a map"]),
+  ...DRAWING_GROUNDS.map((g) => ["theme-art-faint", g, "deco", "secondary structure (decorative)"]),
+  ["theme-art-line", CHASSIS, "ui", "a caddy's outline on the chassis"],
+  ["theme-foreground", CHASSIS, "text", "a device name on the chassis"],
+  ["theme-tertiary-foreground", CHASSIS, "text", "the chassis caption"],
+  ...STATUS.map((s) => [`theme-${s}-stroke`, CHASSIS, "ui", `a ${s} slot light on the chassis`]),
   // Task output.
   ["theme-terminal-foreground", "theme-terminal", "text", "task and log output"],
   ["theme-terminal-muted", "theme-terminal", "text", "timestamps in task output"],
@@ -212,47 +347,94 @@ const DISTINCT = [
   ["theme-pending", "theme-critical"],
   ["theme-action", "theme-ok"],
   ["theme-action", "theme-unknown"],
-  ["theme-identity", "theme-unknown"],
+  ["theme-brand", "theme-unknown"],
   ["theme-series-1", "theme-series-2"],
   ["theme-series-1", "theme-series-3"],
   ["theme-series-1", "theme-series-4"],
   ["theme-series-2", "theme-series-3"],
   ["theme-series-2", "theme-series-4"],
   ["theme-series-3", "theme-series-4"],
+  // The live trace may share a chart with the series (the Performance page).
+  ["theme-trace", "theme-series-1"],
+  ["theme-trace", "theme-series-2"],
+  ["theme-trace", "theme-series-3"],
+  ["theme-trace", "theme-series-4"],
+  // Pending against everything it may meet, and each series against the signal hue beside it on the
+  // wheel (foundation 3.3).
+  ["theme-pending", "theme-unknown"],
+  ["theme-pending-label", "theme-warning-label"],
+  ["theme-pending-stroke", "theme-warning-stroke"],
+  ["theme-series-4", "theme-pending"],
+  ["theme-series-4", "theme-ok"],
+  ["theme-series-2", "theme-ok"],
+  ["theme-series-3", "theme-critical"],
 ];
-const NEUTRALS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 850, 900, 950].map((n) => `color-slate-${n}`);
+const neutralSteps = (names) =>
+  names
+    .filter((n) => /^color-slate-\d+$/.test(n))
+    .sort((a, b) => Number(a.split("-").pop()) - Number(b.split("-").pop()));
 
 // ---------- sections -----------------------------------------------------------------------------
 const f = (n, d = 2) => n.toFixed(d);
 const pad = (s, n) => String(s).padEnd(n);
-const groundName = (g) => (Array.isArray(g) ? `${g[0]}@${Math.round(g[1] * 100)}%/${g[2]}` : g);
 const short = (s) => s.replace(/theme-/g, "");
+const groundName = (g) =>
+  typeof g === "string" ? g : g.stops ? `${g.name} (${g.stops.length} stops)` : `${g.layers.join("+")}/${g.base}`;
+
+// The opaque colours a ground paints, one per stop, or null when a token is missing or a
+// translucent token is used without a ground under it.
+function paint(ground, get) {
+  if (typeof ground === "string") {
+    const c = get(ground);
+    return c && c.a === 1 ? [{ rgb: c.rgb, name: ground }] : null;
+  }
+  if (ground.stops) {
+    const stops = ground.stops.map((s) => paint(s, get));
+    return stops.some((s) => !s) ? null : stops.flat();
+  }
+  const base = get(ground.base);
+  if (!base || base.a !== 1) return null;
+  let rgb = base.rgb;
+  for (const layer of ground.layers) {
+    const c = get(layer);
+    if (!c) return null;
+    rgb = over(c.rgb, c.a, rgb);
+  }
+  return [{ rgb, name: groundName(ground) }];
+}
 
 function contrast(themes) {
   let fails = 0;
   let checked = 0;
   const advisory = [];
   for (const [themeName, get] of Object.entries(themes)) {
-    if (!QUIET) console.log(`\n== contrast: ${themeName} ==\n${pad("foreground", 24)}${pad("ground", 34)}ratio    Lc  bar   result`);
+    if (!QUIET) console.log(`\n== contrast: ${themeName} ==\n${pad("foreground", 26)}${pad("ground", 44)}ratio    Lc  bar   result`);
     for (const [fgName, ground, bar, note] of PAIRS) {
       const fg = get(fgName);
-      const bg = Array.isArray(ground) ? over(get(ground[0]) ?? [0, 0, 0], ground[1], get(ground[2]) ?? [0, 0, 0]) : get(ground);
-      if (!fg || !bg || (Array.isArray(ground) && (!get(ground[0]) || !get(ground[2])))) {
+      const stops = paint(ground, get);
+      if (!fg || !stops) {
         console.log(`MISSING TOKEN  ${themeName}: ${fgName} on ${groundName(ground)}`);
         fails++;
         continue;
       }
-      const r = ratio(fg, bg);
-      const lc = apca(fg, bg);
+      // The worst stop decides; a translucent foreground is composited over each stop first.
+      const [worst] = stops
+        .map((s) => {
+          const ink = fg.a === 1 ? fg.rgb : over(fg.rgb, fg.a, s.rgb);
+          return { r: ratio(ink, s.rgb), lc: apca(ink, s.rgb), stop: s.name };
+        })
+        .sort((x, y) => x.r - y.r);
+      const { r, lc } = worst;
+      const where = stops.length > 1 ? `  (worst at ${short(worst.stop)})` : "";
       const need = BAR[bar];
       const ok = need === undefined || r >= need;
       if (need !== undefined) checked++;
       if (!ok) fails++;
       // APCA advisory: body text under Lc 60 passes WCAG but reads thinner than its ratio says.
-      if (ok && bar === "text" && Math.abs(lc) < 60) advisory.push(`${themeName}: ${short(fgName)} on ${short(groundName(ground))}  ${f(r)}:1  Lc ${f(lc, 0)}  (${note})`);
+      if (ok && bar === "text" && Math.abs(lc) < 60) advisory.push(`${themeName}: ${short(fgName)} on ${short(groundName(ground))}  ${f(r)}:1  Lc ${f(lc, 0)}  (${note})${where}`);
       if (!QUIET || !ok)
         console.log(
-          `${pad(short(fgName), 24)}${pad(short(groundName(ground)), 34)}${f(r).padStart(5)}  ${f(lc, 0).padStart(4)}  ${pad(bar, 5)} ${ok ? (need ? "pass" : "-") : "FAIL"}  ${note}`,
+          `${pad(short(fgName), 26)}${pad(short(groundName(ground)), 44)}${f(r).padStart(5)}  ${f(lc, 0).padStart(4)}  ${pad(bar, 5)} ${ok ? (need ? "pass" : "-") : "FAIL"}  ${note}${where}`,
         );
     }
   }
@@ -267,17 +449,18 @@ function contrast(themes) {
 function distinct(themes) {
   for (const [themeName, get] of Object.entries(themes)) {
     console.log(`\n== distinct: ${themeName} ==  (OKLab dE x100; under ~10 a pair needs its word or icon to be told apart)`);
-    console.log(`${pad("pair", 30)}normal  deutan  protan  grey dL`);
+    console.log(`${pad("pair", 32)}normal  deutan  protan  tritan  grey dL`);
     for (const [a, b] of DISTINCT) {
-      const [x, y] = [get(a), get(b)];
-      if (!x || !y) {
+      const [cx, cy] = [get(a), get(b)];
+      if (!cx || !cy || cx.a !== 1 || cy.a !== 1) {
         console.log(`MISSING TOKEN ${a} / ${b}`);
         continue;
       }
-      const cols = [dE(x, y), dE(simulate(x, "deutan"), simulate(y, "deutan")), dE(simulate(x, "protan"), simulate(y, "protan"))];
+      const [x, y] = [cx.rgb, cy.rgb];
+      const cols = [dE(x, y), ...["deutan", "protan", "tritan"].map((k) => dE(simulate(x, k), simulate(y, k)))];
       const dL = 100 * Math.abs(oklab(x)[0] - oklab(y)[0]);
       const weakest = Math.min(...cols);
-      console.log(`${pad(short(a) + " / " + short(b), 30)}${cols.map((c) => f(c, 1).padStart(6)).join("  ")}  ${f(dL, 1).padStart(7)}${weakest < 10 ? "   <- relies on word/icon" : ""}`);
+      console.log(`${pad(short(a) + " / " + short(b), 32)}${cols.map((c) => f(c, 1).padStart(6)).join("  ")}  ${f(dL, 1).padStart(7)}${weakest < 10 ? "   <- relies on word/icon" : ""}`);
     }
   }
 }
@@ -285,7 +468,9 @@ function distinct(themes) {
 function neutrals(themes) {
   console.log(`\n== neutrals ==  (one hue, low chroma; a step > 15 degrees off the median hue reads as another colour)`);
   console.log(`${pad("step", 18)}hex       L      C      H    drift`);
-  const rows = NEUTRALS.map((n) => [n, themes.light(n)]).filter(([, v]) => v);
+  const rows = neutralSteps(themes.names)
+    .map((n) => [n, themes.light(n)?.rgb])
+    .filter(([, v]) => v);
   const hues = rows.map(([, v]) => oklch(v)[2]).sort((a, b) => a - b);
   const median = hues[Math.floor(hues.length / 2)];
   let bad = 0;
@@ -335,17 +520,22 @@ if (section === "oklch") {
   const { rgb, inGamut } = oklchToRgb(L, C, H);
   console.log(`${toHex(rgb)}${inGamut ? "" : "  (out of sRGB gamut, clipped)"}`);
 } else if (section === "measure") {
-  const [fg, bg] = positional.slice(1).map(parseHex);
-  if (!fg || !bg) throw new Error("usage: measure '#rrggbb' '#rrggbb'  (foreground, background)");
+  // measure FG BG, or measure FG TINT ALPHA BASE for text on a wash composited over a known ground.
+  const [fgArg, bgArg, alphaArg, baseArg] = positional.slice(1);
+  const fg = parseHex(fgArg);
+  const bg = alphaArg === undefined ? parseHex(bgArg) : over(parseHex(bgArg) ?? [0, 0, 0], Number(alphaArg), parseHex(baseArg) ?? [0, 0, 0]);
+  if (!fg || !bg || (alphaArg !== undefined && (!parseHex(bgArg) || !parseHex(baseArg))))
+    throw new Error("usage: measure '#fg' '#bg'  or  measure '#fg' '#tint' 0.14 '#base'");
   const [L, C, H] = oklch(fg);
   console.log(`${toHex(fg)} on ${toHex(bg)}: ${f(ratio(fg, bg))}:1, APCA Lc ${f(apca(fg, bg), 0)}; foreground OKLCH ${f(L, 3)} ${f(C, 3)} ${f(H, 0)}`);
 } else if (section === "legacy") {
   legacy();
 } else {
   const themes = loadTokens();
+  const byTheme = { light: themes.light, dark: themes.dark };
   let fails = 0;
-  if (!section || section === "contrast") fails = contrast(themes);
-  if (!section || section === "distinct") distinct(themes);
+  if (!section || section === "contrast") fails = contrast(byTheme);
+  if (!section || section === "distinct") distinct(byTheme);
   if (!section || section === "neutrals") neutrals(themes);
   if (section && !["contrast", "distinct", "neutrals"].includes(section)) {
     console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, measure, oklch)`);

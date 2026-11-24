@@ -160,7 +160,7 @@ function RecoveryCard({
       data-variant={variant}
       aria-labelledby={titleId}
       className={cn(
-        "flex min-w-0 flex-col gap-3 rounded-card border border-border bg-surface p-4 text-foreground",
+        "flex min-w-0 flex-col gap-3 rounded-card surface-raised p-card text-foreground",
         className,
       )}
       {...props}

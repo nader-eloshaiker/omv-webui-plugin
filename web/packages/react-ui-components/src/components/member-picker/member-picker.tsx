@@ -448,7 +448,7 @@ function MemberPicker({
           >
             <div className="flex min-w-0 flex-col gap-1">
               <SelectLabel>{showLabels.label}</SelectLabel>
-              <SelectTrigger className="h-7 w-auto max-w-full min-w-32 text-sm" />
+              <SelectTrigger className="h-control-sm w-auto max-w-full min-w-32 text-sm" />
             </div>
             <SelectContent>
               {showItems.map((item) => (

@@ -2,7 +2,7 @@
 // The dashboard's attention list (phase 3 design 1.4, phase 5 design 1.7), worst first, then in a fixed
 // order of kinds, shown only when it has rows. Each row is a pill (or the clock icon for advice), one
 // sentence and one action: a fixed classic page (UI-3), or a route in this interface. A needed restart
-// is a Warning, not pending yellow: the band's Apply cannot fix it. One row stands for every service
+// is a Warning, not pending gold: the band's Apply cannot fix it. One row stands for every service
 // that is on but not running, because the fix is the same. Disk rows say when they were read, since
 // disk readings do not update by themselves.
 import { Card, ExternalLink, StatusPill } from "@omv-webui/react-ui-components";

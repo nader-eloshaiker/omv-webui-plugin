@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The entry module. In order: the stylesheet, the stored theme on <html> before anything renders,
-// the catalogue, then (dev:mock only) the mock, then the session, then the app.
+// The entry module. In order: the stylesheet, the stored theme and density on <html> before anything
+// renders, the catalogue, then (dev:mock only) the mock, then the session, then the app.
 import { UiProvider } from "@omv-webui/react-ui-components";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
@@ -8,10 +8,12 @@ import { AppRoot } from "./AppRoot.tsx";
 import { bootApp } from "./app.ts";
 import { BootScreen } from "./components/atoms/BootScreen.tsx";
 import "./index.css";
+import { installDensity } from "./services/density/index.ts";
 import "./services/i18n/index.ts";
 import { installTheme } from "./services/theme/index.ts";
 
 installTheme();
+installDensity();
 
 // `import.meta.env.DEV` first: a production build replaces it with false and drops every branch
 // below that loads mock code, so no mock module is emitted at all (UI-11).

@@ -6,7 +6,7 @@
 export type HealthStatus =
   "ok" | "warning" | "critical" | "unknown" | "disabled" | "stopped";
 
-/** The steps and tasks of a job (5.7, UX audit R5). Waiting is Unknown-treated, never yellow. */
+/** The steps and tasks of a job (5.7, UX audit R5). Waiting is Unknown-treated, never the pending gold. */
 export type TaskStatus =
   "waiting" | "running" | "succeeded" | "failed" | "cancelled";
 

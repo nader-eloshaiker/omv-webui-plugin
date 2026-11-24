@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The pending-changes band (style guide 5.8), for administrators. It reads what is pending from
-// System.getInformation, polled in the background (UI-14) and refetched after every x-omv-dirty
-// mutation and every finished task (react-api-omv's query.ts). Apply and Undo run as tasks through
-// the one task registry, so they keep running while the user moves between pages. Both ask first:
-// Apply lists what is applied and, when a network module is pending, what applying does to this page,
-// escalating to a typed confirmation or refusing (phase 5 network design 1.8); Undo names what is
-// lost. With a network module pending, the apply waits for the NAS to answer again (1.5, 13.1).
+// The pending-changes band (style guide 5.8; foundation 10), for administrators: a slim band in the
+// pending gold under the top bar. It reads what is pending from System.getInformation, polled in the
+// background (UI-14) and refetched after every x-omv-dirty mutation and every finished task
+// (react-api-omv's query.ts). Apply and Undo run as tasks through the one task registry, so they keep
+// running while the user moves between pages. Both ask first: Apply lists what is applied and, when a
+// network module is pending, what applying does to this page, escalating to a typed confirmation or
+// refusing (phase 5 network design 1.8); Undo names what is lost. With a network module pending, the
+// apply waits for the NAS to answer again (1.5, 13.1). On success the band reads "Applied" (or
+// "Undone") for 1.6 seconds, then closes. The command palette's "Apply N pending changes" opens the
+// same apply confirmation (pending/requests.ts).
 import { useTasks } from "@omv-webui/react-api-omv/tasks";
 import {
   ConfirmDialog,
   InlineAlert,
   IsolatedIdentifier,
-  PendingBanner,
+  PendingBand,
 } from "@omv-webui/react-ui-components";
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -28,12 +31,16 @@ import {
 } from "../../network/bandApply.ts";
 import { networkSession } from "../../network/networkSession.ts";
 import { mayCutConnection, pendingModules } from "../../pending/modules.ts";
+import { onApplyRequested } from "../../pending/requests.ts";
 import { MAIN_ID, PENDING_BAND_ID } from "../../shell/ids.ts";
 import { useMemoryStore } from "../../shell/memoryStore.ts";
 import { useShowTask } from "../../shell/taskDialog.ts";
 import { ModuleName, ModuleNames } from "../molecules/ModuleNames.tsx";
 import { BandWatch } from "./BandWatch.tsx";
 import { NetworkApplyFindings } from "./NetworkApplyFindings.tsx";
+
+/** How long "Applied" stays before the band closes (foundation 7.2). */
+const APPLIED_MS = 1600;
 
 export function PendingChanges() {
   const { t } = useTranslation();
@@ -42,7 +49,7 @@ export function PendingChanges() {
   const showTask = useShowTask();
   const modules = pendingModules(info.data?.dirtyModules);
   const actions = useBandActions(modules);
-  const { last, watch } = actions;
+  const { last, watch, setConfirming } = actions;
 
   const count = modules.length;
   const dirty = info.data?.configDirty === true || count > 0;
@@ -55,24 +62,51 @@ export function PendingChanges() {
   // A network apply the watch is following is not failed for a failed read (1.5): only by its outcome.
   const failed = watching ? watchFailed : task?.state === "failed";
 
-  const visible = dirty || running || watching || actions.cameBack.length > 0;
-
-  // When an apply or undo finishes, the band goes, and with it the control that had focus. Focus then
-  // moves to the page title, so a keyboard user is not left on the page itself.
-  const wasVisibleRef = useRef(visible);
+  // "Applied" once the apply or undo the band started has ended well, for a moment, then the band
+  // closes. Not for an apply the network watch follows: the watch says how that one ended.
+  const [flash, setFlash] = useState<"applied" | "undone" | null>(null);
+  const [wasRunning, setWasRunning] = useState(running);
+  if (running !== wasRunning) {
+    setWasRunning(running);
+    if (!running && task?.state === "done" && !watching) {
+      setFlash(last?.action === "undo" ? "undone" : "applied");
+    }
+  }
   useEffect(() => {
-    if (wasVisibleRef.current && !visible) {
+    if (flash === null) {
+      return;
+    }
+    const timer = window.setTimeout(() => setFlash(null), APPLIED_MS);
+    return () => window.clearTimeout(timer);
+  }, [flash]);
+
+  // The palette's "Apply N pending changes" opens the same confirmation as the band's Apply.
+  useEffect(
+    () => onApplyRequested(() => setConfirming("apply")),
+    [setConfirming],
+  );
+
+  const bandOpen = dirty || running || failed || flash !== null;
+  const visible = bandOpen || watching || actions.cameBack.length > 0;
+
+  // When an apply or undo finishes, the band closes, and with it the control that had focus. Focus
+  // then moves to the page title, so a keyboard user is not left on the page itself or on a control
+  // that is leaving.
+  const wasOpenRef = useRef(bandOpen);
+  useEffect(() => {
+    if (wasOpenRef.current && !bandOpen) {
+      const band = document.getElementById(PENDING_BAND_ID);
       const active = document.activeElement;
-      if (active === null || active === document.body) {
+      if (
+        active === null ||
+        active === document.body ||
+        band?.contains(active) === true
+      ) {
         document.querySelector<HTMLElement>(`#${MAIN_ID} h1`)?.focus();
       }
     }
-    wasVisibleRef.current = visible;
-  }, [visible]);
-
-  if (!visible) {
-    return null;
-  }
+    wasOpenRef.current = bandOpen;
+  }, [bandOpen]);
 
   const some = count > 0;
   const applyLabel = some
@@ -90,54 +124,67 @@ export function PendingChanges() {
     );
 
   return (
-    <div id={PENDING_BAND_ID} tabIndex={-1} className="outline-hidden">
-      {dirty || running || failed ? (
-        <PendingBanner
-          label={t("pending.label")}
-          message={message}
-          applyLabel={applyLabel}
-          undoLabel={undoLabel}
-          onApply={() => actions.setConfirming("apply")}
-          onUndo={() => actions.setConfirming("undo")}
-          state={running ? "applying" : failed ? "failed" : "idle"}
-          applyingMessage={t(
-            last?.action === "undo" ? "pending.undoing" : "pending.applying",
-          )}
-          failedMessage={t(
-            last?.action === "undo"
-              ? "pending.undoFailed"
-              : "pending.applyFailed",
-          )}
-          retryLabel={last?.action === "apply" ? t("pending.retry") : undefined}
-          showProgress={
-            task
-              ? {
-                  label: t(
-                    task.state === "running"
-                      ? "pending.showProgress"
-                      : "pending.showDetails",
-                  ),
-                  onShow: () => showTask(task.id),
-                }
-              : undefined
-          }
-        />
-      ) : null}
-      <BandWatch actions={actions} />
+    <>
+      <PendingBand
+        id={PENDING_BAND_ID}
+        tabIndex={-1}
+        className="outline-hidden"
+        label={t("pending.label")}
+        open={bandOpen}
+        message={message}
+        applyLabel={applyLabel}
+        undoLabel={undoLabel}
+        onApply={() => setConfirming("apply")}
+        onUndo={() => setConfirming("undo")}
+        state={
+          running
+            ? "applying"
+            : failed
+              ? "failed"
+              : flash !== null
+                ? "applied"
+                : "idle"
+        }
+        applyingMessage={t(
+          last?.action === "undo" ? "pending.undoing" : "pending.applying",
+        )}
+        appliedMessage={t(
+          flash === "undone" ? "pending.undone" : "pending.applied",
+        )}
+        failedMessage={t(
+          last?.action === "undo"
+            ? "pending.undoFailed"
+            : "pending.applyFailed",
+        )}
+        retryLabel={last?.action === "apply" ? t("pending.retry") : undefined}
+        showProgress={
+          task
+            ? {
+                label: t(
+                  task.state === "running"
+                    ? "pending.showProgress"
+                    : "pending.showDetails",
+                ),
+                onShow: () => showTask(task.id),
+              }
+            : undefined
+        }
+      />
+      {visible ? <BandWatch actions={actions} /> : null}
       <ApplyChangesDialog
         open={actions.confirming === "apply"}
-        onOpenChange={(open) => !open && actions.setConfirming(null)}
+        onOpenChange={(open) => !open && setConfirming(null)}
         modules={modules}
         onConfirm={actions.apply}
-        onUndo={() => actions.setConfirming("undo")}
+        onUndo={() => setConfirming("undo")}
       />
       <UndoChangesDialog
         open={actions.confirming === "undo"}
-        onOpenChange={(open) => !open && actions.setConfirming(null)}
+        onOpenChange={(open) => !open && setConfirming(null)}
         modules={modules}
         onConfirm={actions.undo}
       />
-    </div>
+    </>
   );
 }
 

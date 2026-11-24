@@ -120,7 +120,7 @@ function ConfirmDialog({
               />
             ) : null}
             <div className="flex min-w-0 flex-col gap-1.5">
-              <AlertDialog.Title className="text-lg leading-tight font-semibold text-foreground [overflow-wrap:anywhere]">
+              <AlertDialog.Title className="text-section text-foreground [overflow-wrap:anywhere]">
                 {title}
               </AlertDialog.Title>
               {sections && sections.length > 0 ? (

@@ -12,7 +12,7 @@ export default function ScenarioPicker() {
   const scenario = useMockScenarioStore((s) => s.scenario);
   const setScenario = useMockScenarioStore((s) => s.setScenario);
   return (
-    <div className="fixed start-2 bottom-2 z-40 flex items-center gap-2 rounded-control border border-border bg-surface px-2 py-1 text-sm shadow-md">
+    <div className="fixed start-2 bottom-2 z-40 flex items-center gap-2 rounded-control border border-border bg-surface px-2 py-1 text-sm shadow-floating">
       <label htmlFor="mock-scenario" className="text-muted-foreground">
         Mock
       </label>

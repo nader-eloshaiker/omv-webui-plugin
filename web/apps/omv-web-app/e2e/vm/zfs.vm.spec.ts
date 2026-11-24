@@ -15,6 +15,7 @@
 // (support/vmFixtures.ts), except the replies listed below, each checked by its call.
 import type { ConsoleMessage, Page, Response } from "@playwright/test";
 import copy from "../../src/locales/en/common.json" with { type: "json" };
+import { openNavGroup, revealPendingBand } from "../support/shell.ts";
 import { expect, target, test } from "./support/vmFixtures.ts";
 import type { Account } from "./support/vmTarget.ts";
 
@@ -180,6 +181,7 @@ test.describe("a ZFS pool on the VM", () => {
     }
 
     // File systems: each one getList reports, managed with the pool, with no page and no action.
+    await openNavGroup(page, "storage");
     await page
       .getByRole("navigation", { name: copy.app.navigation })
       .getByRole("link", { name: copy.nav.items.storage.filesystems })
@@ -209,6 +211,7 @@ test.describe("a ZFS pool on the VM", () => {
     ).toHaveCount(0);
 
     // Disks: at least two disks, the mirror's, part of the pool.
+    await openNavGroup(page, "storage");
     await page
       .getByRole("navigation", { name: copy.app.navigation })
       .getByRole("link", { name: copy.nav.items.storage.disks, exact: true })
@@ -326,6 +329,7 @@ const times = (seen: Journey, call: string) =>
 
 async function applyBand(page: Page) {
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   await expect(band).toBeVisible({ timeout: 30_000 });
   const apply = band.getByRole("button", { name: /^Apply \d+ change/ });
   const label = ((await apply.textContent()) ?? "").trim();
@@ -460,6 +464,7 @@ test.describe("ZFS journeys on the VM", () => {
     const seen = journey(page);
     await signIn(page, vm.admin);
     const nav = page.getByRole("navigation", { name: copy.app.navigation });
+    await openNavGroup(page, "storage");
     await expect(
       nav.getByRole("link", { name: copy.nav.items.storage.zfs, exact: true }),
     ).toBeVisible({ timeout: 30_000 });

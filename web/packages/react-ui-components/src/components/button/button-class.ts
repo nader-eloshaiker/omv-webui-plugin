@@ -1,51 +1,66 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { cva } from "class-variance-authority";
 
-// Heights are minimums from the style guide (4.2): 28px in table toolbars, 32px by default, 40px on
-// the sign-in form. A label wraps instead of overflowing at 320px or at 200% zoom (WCAG 1.4.10), so a
-// long translation grows the button rather than spilling out of it. Every size clears the 24px
-// target minimum (WCAG 2.5.8).
+// Heights follow the density (foundation 5): 28, 32 and 40px comfortable, 24, 28 and 36px compact,
+// through `min-h-control-*`. A label wraps instead of overflowing at 320px or at 200% zoom (WCAG
+// 1.4.10), so a long translation grows the button rather than spilling out of it. Every size clears
+// the 24px target minimum (WCAG 2.5.8).
+//
+// Pressable looks pressable at rest (foundation 13): filled or outlined, with the resting depth of
+// `shadow-control`. Pressing sinks it by a pixel in `duration-press`; under reduced motion every
+// duration is 0, so the state changes without travel.
 /** The button look, also for Base UI parts that render their own button (a toast action). */
 export const buttonClass = cva(
-  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none transition-colors " +
-    "data-disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none " +
+    "transition-[color,background-color,border-color,box-shadow,translate,scale,background-size] duration-fast ease-standard " +
+    "active:not-data-disabled:translate-y-px active:not-data-disabled:scale-[0.985] active:duration-press " +
+    "data-disabled:cursor-not-allowed data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         // The one filled blue per view (style guide 2.1).
         primary:
-          "border-transparent bg-primary text-primary-foreground hover:bg-action-hover " +
-          "data-disabled:bg-muted data-disabled:text-subtle-foreground",
+          "border-transparent bg-primary text-primary-foreground shadow-control hover:bg-action-hover " +
+          "data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
         // A neutral control: the edge is the control token, so it clears 3:1 on every ground.
         neutral:
-          "border-input bg-surface text-foreground hover:bg-muted " +
-          "data-disabled:border-transparent data-disabled:bg-muted data-disabled:text-subtle-foreground",
+          "border-input bg-surface text-foreground shadow-control hover:bg-muted-strong " +
+          "data-popup-open:bg-muted-strong " +
+          "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
         // An action in place: blue words, a neutral hover.
         ghost:
-          "border-transparent bg-transparent text-action-label hover:bg-muted " +
+          "border-transparent bg-transparent text-action-label hover:bg-muted-strong data-popup-open:bg-muted-strong " +
           "data-disabled:bg-transparent data-disabled:text-subtle-foreground",
-        // Only the confirm button of an irreversible act (style guide 3.6), with a verb.
+        // Only the confirm button of an irreversible act (style guide 3.6), with a verb. The red is a
+        // fill painted as a background image, so the moment the act becomes possible (a typed name
+        // matches) it fills from the start edge (foundation 7.2, destructive arm); unavailable, it is
+        // an outline. Reduced motion: the fill appears.
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground " +
-          "data-disabled:bg-muted data-disabled:text-subtle-foreground",
-        // On the pending band: outlined in the coffee ink, the yellow stays the ground (5.8). The
-        // hover inverts the pair (yellow on coffee, the same 8.31:1), so no unaudited tint appears.
+          "border-transparent text-destructive-foreground shadow-control " +
+          "bg-[linear-gradient(var(--theme-destructive),var(--theme-destructive))] bg-no-repeat bg-size-[100%_100%] bg-left rtl:bg-right duration-slow " +
+          "data-disabled:border-input data-disabled:bg-size-[0%_100%] data-disabled:text-muted-foreground",
+        // On the pending band: outlined in the navy ink, the gold stays the ground (5.8). The hover
+        // inverts the pair (gold on navy, the same 11.53:1). Unavailable (while applying) the outline
+        // turns dashed and the words keep the ink: never faded, since navy at partial opacity over the
+        // gold is an unaudited khaki. Every state is the one audited pair.
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
-          "focus-visible:outline-pending-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
-        // On the top bar: never a filled button (5.1). Ink on the identity ground (6.91:1 light,
-        // 9.48:1 dark), an edge in the same ink on hover, and the bar's own focus ring.
-        onIdentity:
-          "border-transparent bg-transparent text-identity-foreground hover:border-identity-foreground " +
-          "focus-visible:outline-focus-ring-on-identity data-popup-open:border-identity-foreground data-disabled:opacity-60",
+          "focus-visible:outline-pending-foreground data-disabled:border-dashed data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
+        // A control in ink with no fill: the top bar's indicators and menus, and other places where
+        // a row of controls must stay quiet. Secondary ink at rest, a neutral ground on hover and
+        // while its menu is open. It replaces the identity bar's variant (the bar is gone,
+        // foundation 3.2).
+        quiet:
+          "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
+          "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent",
       },
       size: {
-        sm: "min-h-7 px-2.5 py-0.5 text-sm",
-        md: "min-h-8 px-3 py-1 text-base",
-        lg: "min-h-10 px-4 py-1.5 text-base",
-        "icon-sm": "size-7",
-        icon: "size-8",
-        "icon-lg": "size-10",
+        sm: "min-h-control-sm px-2.5 py-0.5 text-sm",
+        md: "min-h-control px-3.5 py-1 text-base",
+        lg: "min-h-control-lg px-4 py-1.5 text-base",
+        "icon-sm": "size-control-sm",
+        icon: "size-control",
+        "icon-lg": "size-control-lg",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

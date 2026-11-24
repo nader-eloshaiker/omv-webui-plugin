@@ -2,8 +2,9 @@
  *
  * Every colour, size and duration comes from design/tokens.css, through generated/tokens.css
  * (scripts/tokens.mjs; `pnpm test` fails if that copy is stale). This file declares none of its own.
- * It narrows Tailwind's theme to the tokens, maps the shadcn vocabulary (style guide 3.2), bundles
- * the fonts, and writes once the rules the style guide asks of every surface.
+ * It narrows Tailwind's theme to the tokens, maps the shadcn vocabulary (style guide 3.2), adds the
+ * utilities for density, elevation, light and motion (docs/design/visual-foundation.md), bundles the
+ * fonts, and writes once the rules every surface needs.
  *
  * It is plain CSS compiled at build time. Nothing here, and nothing the interface needs, is inserted
  * at run time, so it loads under `style-src 'self'` with no exception (UI-1).
@@ -14,10 +15,16 @@
 @import "tailwindcss";
 @import "./src/theme-reset.css";
 @import "./generated/tokens.css";
+/* The motions of charts, meters, rings, the map and the drawings (foundation 7.2 and 9). */
+@import "./src/visuals.css";
+@import "./src/shell.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
-   page downloads only the scripts it shows. The family names are in --font-sans and --font-mono. */
-@import "@fontsource-variable/inter";
+   page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.
+   Inter is its optical-size build (weight and optical size axes, same package, same family name):
+   `font-optical-sizing: auto` gives the headline and large figures Inter Display's forms
+   (foundation 4). Its Latin file is 73 KB against the weight-only build's 48 KB. */
+@import "@fontsource-variable/inter/opsz.css";
 @import "@fontsource-variable/roboto-mono";
 
 /* ─── Theme switching ─────────────────────────────────────────────────────────────────────────── */
@@ -37,10 +44,19 @@
   }
 }
 
+/* `compact:` for what a density token cannot express (prefer the tokens and the spacing utilities
+   below). Like `dark:`, a comfortable subtree nested inside a compact one is not resolved for the
+   variant; the tokens themselves do resolve it. */
+@custom-variant compact {
+  &:where([data-density="compact"], [data-density="compact"] *) {
+    @slot;
+  }
+}
+
 /* ─── The shadcn vocabulary (style guide 3.2) ─────────────────────────────────────────────────── */
 /* Each semantic role is already a utility by its own name (`bg-page`, `text-warning-label`, from
    generated/tokens.css). These are the shadcn names components are written in. `accent` and
-   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and yellow
+   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and gold
    would paint every hover as "pending". `inline` so each utility reads the `--theme-*` variable
    where it is used and a `.dark` or `.light` subtree flips. */
 @theme inline {
@@ -60,17 +76,89 @@
   /* foreground, muted, muted-foreground, destructive, destructive-foreground and border are
      semantic roles of the same name. */
 
-  /* Motion: `duration-fast`, `duration-base` and `duration-slow` read the tokens, and a transition
-     utility without a duration takes the fast one. All are 0ms under prefers-reduced-motion
-     (design/tokens.css). A numeric `duration-150` bypasses the token and is not used. */
+  /* Motion (foundation 7.1): `duration-press`, `-fast`, `-base`, `-slow` and `-glide` read the
+     tokens, and a transition utility without a duration takes the fast one on the standard curve.
+     The curves are utilities by their own names (`ease-enter`, `ease-exit`, `ease-settle`,
+     `ease-soft`). All durations are 0ms under prefers-reduced-motion (design/tokens.css). A numeric
+     `duration-150` bypasses the token and is not used. */
+  --transition-duration-press: var(--duration-press);
   --transition-duration-fast: var(--duration-fast);
   --transition-duration-base: var(--duration-base);
   --transition-duration-slow: var(--duration-slow);
+  --transition-duration-glide: var(--duration-glide);
   --default-transition-duration: var(--duration-fast);
-  --default-transition-timing-function: var(--ease-out);
+  --default-transition-timing-function: var(--ease-standard);
+
+  /* Density (foundation 5): spacing utilities that follow `data-density`. `p-card` and `gap-gutter`
+     for cards and the card grid, `py-cell-y` and `px-cell-x` for table cells, `py-row` for list and
+     settings rows, `h-control`, `min-h-control` and `size-control` (with `-sm` and `-lg`) for
+     buttons and fields. */
+  --spacing-card: var(--density-card);
+  --spacing-gutter: var(--density-gutter);
+  --spacing-cell-y: var(--density-cell-y);
+  --spacing-cell-x: var(--density-cell-x);
+  --spacing-row: var(--density-row);
+  --spacing-control-sm: var(--density-control-sm);
+  --spacing-control: var(--density-control);
+  --spacing-control-lg: var(--density-control-lg);
+
+  /* Shared motions (foundation 7.2), each with its keyframes below. Under reduced motion the base
+     rule runs every animation once at 0ms, so each lands on its end state: content is simply there,
+     and the skeleton is still. */
+  --animate-rise: rise var(--duration-slow) var(--ease-enter) both;
+  --animate-settle-in: settle-in var(--duration-slow) var(--ease-settle) both;
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
+  --animate-breathe: breathe 1.4s var(--ease-standard) infinite;
+  --animate-draw: draw var(--duration-slow) var(--ease-standard) both;
 }
 
-/* ─── Corners (style guide 4.3) ───────────────────────────────────────────────────────────────── */
+/* Entrance: fade and rise by --motion-rise (a list item, a card, the dialog over its scrim). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--motion-rise);
+  }
+}
+/* A thing that lands: rises a little and settles on the spring (a toast, a pending chip). */
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--motion-rise) / 2);
+    scale: 0.97;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* The skeleton: bars breathe in opacity while loading is really happening. */
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* A tick or line drawing itself along its length (the Save button's "Saved", a map line). The path
+   carries `pathLength="1"` and `stroke-dasharray: 1`. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* List entrance in reading order: the caller sets --stagger-index (0 to about 9) through the CSSOM,
+   and each item starts one --motion-stagger later. 0 under reduced motion. */
+@utility stagger {
+  animation-delay: calc(
+    min(var(--stagger-index, 0), 9) * var(--motion-stagger)
+  );
+}
+
+/* ─── Corners (foundation 6) ──────────────────────────────────────────────────────────────────── */
 /* One utility per kind of thing. Where the browser supports `corner-shape` (Chromium in 2026) the
    corner is a squircle with its own, larger radius; elsewhere it is the ordinary round corner and
    nothing may depend on the difference. Native CSS only, so borders, shadows and the focus outline
@@ -90,6 +178,43 @@
     corner-shape: squircle;
     border-radius: var(--radius-squircle-lg);
   }
+}
+
+/* ─── Surfaces, elevation and light (foundation 3.4 and 6) ────────────────────────────────────── */
+/* The three levels by meaning. Ground is `bg-page` with `ambient-light` at the top. A raised surface
+   (cards, panels, tables) is the surface colour with the raised shadow: in dark a 1px inner top
+   highlight, a faint edge and a soft long shadow; in light a layered soft shadow. A floating surface
+   (dialogs, the palette, drawers, menus, popovers, toasts) takes the stronger shadow, over
+   `bg-scrim` when it is modal. Insets inside a card are `bg-muted`; hover on a control, chips and
+   tracks are `bg-muted-strong`. `shadow-control` is the resting depth of something pressable. */
+@utility surface-raised {
+  background-color: var(--theme-surface);
+  box-shadow: var(--theme-shadow-raised);
+}
+
+@utility surface-floating {
+  background-color: var(--theme-surface);
+  box-shadow: var(--theme-shadow-floating);
+}
+
+/* The light from above the page: two brand glows whose ellipses are centred above the top edge.
+   The first colour stop sits exactly where each ellipse meets the page's top edge, so the token is
+   the brightest point actually painted, which is what the audit measures. Brand hues only, and
+   nothing is read against it that the audit has not checked (tools/colour-audit.mjs, AMBIENT). Put
+   it on the page's own layer, behind the content, at the top of the page. */
+@utility ambient-light {
+  background-image:
+    radial-gradient(
+      1100px 560px at 18% -220px,
+      var(--theme-ambient) 39.3%,
+      transparent 70%
+    ),
+    radial-gradient(
+      800px 420px at 92% -200px,
+      var(--theme-ambient-soft) 47.6%,
+      transparent 70%
+    );
+  background-repeat: no-repeat;
 }
 
 /* ─── Base rules: written once, for every surface ─────────────────────────────────────────────── */
@@ -114,12 +239,26 @@
     border-color: var(--theme-border);
   }
 
-  /* 14px is the console default (style guide 4.1); rem stays 16px so the scale and zoom hold. */
+  /* The body step (15px, 13px compact; foundation 4); rem stays 16px so the scale and zoom hold.
+     Sky's OpenType features (the single-storey a, tabular figures) and Inter's optical sizes. */
   body {
     background-color: var(--theme-page);
     color: var(--theme-foreground);
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     line-height: var(--leading-normal);
+    font-feature-settings: var(--font-features);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* The surfaces nobody drew: text selection and the caret. */
+  ::selection {
+    background-color: var(--theme-selection);
+    color: var(--theme-foreground);
+  }
+  :root {
+    caret-color: var(--theme-action);
   }
 
   /* The floor for every interactive element (style guide 4.6): a 2px ring with a 2px offset. A
@@ -140,17 +279,25 @@
     display: none;
   }
 
-  /* Reduced motion (style guide 4.5). The duration tokens are already 0ms; this is the net for
+  /* Reduced motion (foundation 7.3). The duration tokens are already 0ms; this is the net for
      anything that does not read them, such as a keyframe animation. `!important` in a layer beats
-     any utility, important or not. Indeterminate progress is a static label in the component. */
+     any utility, important or not. Each animation runs once, at once, to its end state, so nothing is
+     left invisible; view transitions are cut. Indeterminate progress is a static label in the
+     component. */
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,
     ::after {
       animation-duration: var(--duration-fast) !important;
+      animation-delay: 0ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: var(--duration-fast) !important;
       scroll-behavior: auto !important;
+    }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
     }
   }
 }

@@ -3,7 +3,11 @@ import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { Check } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
-import { itemHighlightClass } from "./item-class";
+import {
+  floatingListClass,
+  itemHighlightClass,
+  listItemClass,
+} from "./item-class";
 
 /**
  * A list of actions on one object, on Base UI's Menu. Items are neutral: an item that destroys
@@ -32,11 +36,7 @@ function MenuContent({
       >
         <BaseMenu.Popup
           data-slot="menu-content"
-          className={cn(
-            "min-w-44 rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-md outline-hidden",
-            "transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0",
-            className,
-          )}
+          className={cn("min-w-44", floatingListClass, className)}
           {...props}
         >
           {children}
@@ -55,7 +55,7 @@ function MenuItem({
     <BaseMenu.Item
       data-slot="menu-item"
       className={cn(
-        "flex cursor-default items-center gap-2 rounded-control px-2 py-1.5 text-base select-none",
+        listItemClass,
         itemHighlightClass,
         "data-disabled:text-subtle-foreground",
         "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground",
@@ -72,7 +72,7 @@ function MenuSeparator({
 }: React.ComponentProps<typeof BaseMenu.Separator>) {
   return (
     <BaseMenu.Separator
-      className={cn("-mx-1 my-1 h-px bg-border", className)}
+      className={cn("-mx-1.5 my-1.5 h-px bg-border", className)}
       {...props}
     />
   );
@@ -87,7 +87,7 @@ function MenuGroupLabel({
   return (
     <BaseMenu.GroupLabel
       className={cn(
-        "px-2 py-1 text-xs font-medium text-muted-foreground",
+        "px-2.5 pt-1.5 pb-1 text-xs font-semibold text-tertiary-foreground",
         className,
       )}
       {...props}
@@ -96,8 +96,8 @@ function MenuGroupLabel({
 }
 
 const itemLayoutClass =
-  "flex cursor-default items-center gap-2 rounded-control px-2 py-1.5 text-base select-none " +
-  "data-disabled:text-subtle-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground";
+  listItemClass +
+  " data-disabled:text-subtle-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground";
 
 /** An item that goes to an address (a fixed link written in code, UI-3). */
 function MenuLinkItem({

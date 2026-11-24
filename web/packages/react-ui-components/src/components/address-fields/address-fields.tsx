@@ -248,7 +248,7 @@ function FamilyNote({ id, note }: { id: string; note?: React.ReactNode }) {
 }
 
 const fieldsetClass = "flex min-w-0 flex-col gap-4";
-const legendClass = "mb-3 text-lg leading-tight font-semibold text-foreground";
+const legendClass = "mb-3 text-section text-foreground";
 
 /**
  * How an interface gets its addresses (phase 5 network design 5.2): the IPv4, IPv6 and name-server

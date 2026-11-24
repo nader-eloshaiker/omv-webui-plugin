@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // A file system's state and how full it is (phase 5 file-systems design 0.2, D3): two facts, each in
 // words. OK means mounted and reachable. A pending mount is the pending mark with its words, not a
-// health pill; one being created is the task pill "Running", not pending yellow. How full is the
+// health pill; one being created is the task pill "Running", not pending gold. How full is the
 // dashboard's rule: a Warning or Critical pill beside the figure when the level is crossed or it is
 // full, Unknown when it could not be read, and no pill otherwise.
 import type { ConfiguredFilesystem } from "@omv-webui/react-api-omv/generated";

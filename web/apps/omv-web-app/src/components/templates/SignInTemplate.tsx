@@ -13,7 +13,7 @@ export function SignInTemplate({ children }: { children: ReactNode }) {
           <p className="text-lg font-semibold text-foreground">
             {t("app.name")}
           </p>
-          <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-6 shadow-sm">
+          <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-6 shadow-raised">
             {children}
           </div>
         </div>

@@ -3,15 +3,21 @@
 The look of the new interface, re-founded after the owner rejected the first one (journal,
 2026-11-23, "The interface's look is re-founded"). It says what the interface should feel like, the
 principles every screen follows, and the systems that carry them: colour, type, space, surfaces,
-motion, data visualisation, illustration, navigation and page composition. It ends with three visual
-directions that all satisfy it, live in the design lab, and a recommendation. **It is a proposal
-until the owner chooses a direction**; then the chosen direction's values move into
-`design/tokens.css` through the colour audit, and the component library is rewritten to it.
+motion, data visualisation, illustration, navigation and page composition. It ends with the three
+visual directions that were prototyped in the design lab, and the owner's choice among them.
+
+**It is normative.** On 2026-11-24 the owner chose the mix (journal, "The new look: the owner's four
+choices"; section 14.4): **Sky is the base, Atlas's map is the diagram language, and Instrument's
+values are the compact density.** The values in sections 3 to 7 are the chosen ones, and they live
+in [`design/tokens.css`](../../design/tokens.css), the only place a colour, size, duration or easing
+is declared. Where this document and the style guide disagree on anything section 0 lists, this
+document wins.
 
 - The lab: `web/apps/omv-web-app/src/lab/`, at `/ui/lab` in `pnpm dev` and `pnpm dev:mock` only
-  (section 15).
-- Token values today: [`design/tokens.css`](../../design/tokens.css). Contrast numbers here come from
-  `node tools/colour-audit.mjs measure`.
+  (section 15). It keeps all three directions for reference.
+- Token values: [`design/tokens.css`](../../design/tokens.css); the specimen sheet:
+  [`design/preview.html`](../../design/preview.html). Every contrast number here is the output of
+  `node tools/colour-audit.mjs`, which checks every pair in both themes (section 3.5).
 
 ---
 
@@ -23,11 +29,15 @@ This document **supersedes** these parts of the [style guide](style-guide.md):
 | --- | --- | --- |
 | 1 (feel), 1.1 last row (Material dropped for flat) | Calm, appliance-like, "no decoration that moves" | Section 1 and 2 here |
 | 2.1 (colour budget, about 90% neutral by area) | Colour only as signal | Section 3: colour also expresses identity and depth, with rules that keep status honest |
+| 2.1 and 3.3, the identity rows (the sky-blue top bar, `identity` and its ink) | Identity is a bar | Section 3.2: no bar; the brand is the mark, the light, the trace and the focus ring. 3.3's action decision stands |
+| 3.7 neutral ramp values, three text tiers, three grounds | Graphite, flat | Section 3.1: Sky's ramp, four grounds and a readable third tier (`tertiary-foreground`) |
 | 3.10 last bullet (no gradients) | No gradients anywhere | Section 3.4: four kinds of gradient and light, each with a meaning |
+| 3.10 tints as `x/14` alpha classes | Ad hoc alpha | Section 3.3: the audited wash tokens (`warning-wash` and the others) |
 | 3.8 "elevation is a lighter surface plus a hairline" | Flat | Section 6 |
+| 3.11 audit numbers, 4.6 focus-ring numbers | Measured on the old grounds | Section 3.5 |
 | 4.1 scale table | 12 to 30px, 14px body | Section 4 |
-| 4.2 card padding and gaps | Fixed | Section 5 (per direction, plus a density setting) |
-| 4.3 "borders before shadows", three elevation levels | Flat | Section 6 |
+| 4.2 card padding and gaps | Fixed | Section 5 (Sky, plus the compact density) |
+| 4.3 radii, "borders before shadows", three elevation levels | 6 and 8px, flat | Section 6 |
 | 4.5 (motion "never entertains", 120/180/260ms, live values without animation) | Minimal | Section 7 |
 | 5.1 top bar on identity blue; 40-row side navigation | One long text list | Section 10 |
 | Page composition as practised by every slice (stacked prose sections) | Document-like | Section 11 and 12 |
@@ -38,13 +48,14 @@ These **survive unchanged** and are normative here too:
   Critical, Unknown, Disabled, Stopped; a word or a distinct shape with every status colour; Unknown
   as a hollow ring; a roll-up shows the worst child; yellow means saved-but-not-applied and nothing
   else; warning is OMV's orange; destructive is a form, not a status; no blue "info" severity.
-- **The audited colour values** of status fills, labels and strokes, pending yellow and its ink,
-  action and identity blues (tokens.css), and the fill/label/stroke split (3.5).
+- **The audited colour values** of status fills, labels and strokes, pending yellow and its ink and
+  the action blues (tokens.css), and the fill/label/stroke split (3.5). None needed to change on the
+  new grounds. The identity roles are gone with the identity bar (3.2).
 - **Contrast and colour-vision rules** (3.11, 6): WCAG 2.2 AA as the bar, APCA advisory, measured
   on real grounds, CVD-checked.
 - **Accessibility** (6), **focus** (4.6), **forms and validation** (5.3), **destructive
-  confirmation** (5.4), **tasks and output** (5.7), **the pending loop** (5.8, its behaviour; its
-  placement is now per direction), **empty states** (5.9), **toasts** (5.10).
+  confirmation** (5.4), **tasks and output** (5.7), **the pending loop** (5.8: its behaviour, and
+  its band directly under the top bar; section 10), **empty states** (5.9), **toasts** (5.10).
 - **Security rules** (7) and every `UI-*` rule in [05-security.md](../05-security.md).
 - **Squircle corners** where supported (4.3), now also on Sky's larger radii.
 - **Units and numerals** (4.1): binary units, one decimal, a non-breaking space, tabular figures.
@@ -89,69 +100,83 @@ way a well-made physical product uses them: to show what is in front, what is li
 
 ### 3.1 Grounds with depth
 
-Dark is the first theme. Each direction has five grounds stepping up in lightness, all in the slate
-family (OKLCH hue 240 to 250) with chroma at or under 0.03, so greys and blues belong together:
+Dark is the first theme. Sky's grounds step up in lightness in the slate family, a night sky: OKLCH
+hue 248 to 259 with chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong
+together. Every ground, line and text tier is one step of the `--color-slate-*` ramp. Light is
+re-derived, not inverted: a cool page and white cards.
 
-| Role | Job | Instrument | Sky | Atlas |
+| Lab name | Token | Job | Dark | Light |
 | --- | --- | --- | --- | --- |
-| `bg` | The page | `#0b0e11` | `#0a111c` | `#0f1113` |
-| `s1` | Cards, panels | `#12161a` | `#111a27` | `#15181b` |
-| `s2` | Insets, table heads, raised rows | `#171c21` | `#16212f` | `#1a1e22` |
-| `s3` | Hover, tracks, chips | `#1f252b` | `#1d2939` | `#22272c` |
-| `line` | Dividers (decorative) | `#252c33` | `#233042` | `#2a2f35` |
-| `line-2` | Control edges (3:1) | `#7a8691` | `#7d8b9b` | `#7c868f` |
+| `bg` | `page` | The page, with the ambient light at its top | `#0a111c` (slate-950) | `#eef3f8` (slate-100) |
+| `s1` | `surface` | Cards, panels, tables, dialogs, menus | `#111a27` (slate-925) | `#ffffff` |
+| `s2` | `muted` | Insets, table heads, neutral hover inside a card | `#16212f` (slate-900) | `#f5f8fb` (slate-50) |
+| `s3` | `muted-strong` | Hover on a control, chips, tracks | `#1d2939` (slate-850) | `#e8eef4` (slate-200) |
+| `line` | `border` | Dividers (decorative) | `#233042` (slate-800) | `#dbe3eb` (slate-300) |
+| `line-2` | `border-control` | Control edges, 3:1 on every ground | `#7d8b9b` (slate-550) | `#6b7885` (slate-600) |
 
-Sky's grounds lean toward blue (a night sky), Atlas's are almost neutral, Instrument's sit between.
-Light is re-derived, not inverted (lab.css has every value): a cool page, white cards, and the
-audited light labels from tokens.css.
+**Text tiers**, measured on all four grounds:
 
-**Text tiers** (dark, on the hardest ground for each):
-
-| Tier | Use | Instrument | Sky | Atlas |
+| Lab name | Token | Use | Dark | Light |
 | --- | --- | --- | --- | --- |
-| `ink` | Body, titles, figures | 15.03:1 on `s1` | 15.23:1 on `s1` | 15.32:1 on `s1` |
-| `ink-2` | Secondary text | 7.61:1 on `s2` | 8.47:1 on `s1` | 8.53:1 on `bg` |
-| `ink-3` | Captions, metadata | 4.81:1 on `s3` | 4.68:1 on `s3` | 4.58:1 on `s3` |
+| `ink` | `foreground` | Body, titles, figures | 12.58 to 16.19:1 | 14.96 to 17.49:1 |
+| `ink-2` | `muted-foreground` | Secondary text | 7.12 to 9.17:1 | 6.41 to 7.49:1 |
+| `ink-3` | `tertiary-foreground` | Captions, metadata | 4.68 to 6.02:1 | 5.24 to 6.13:1 |
+| | `subtle-foreground` | Placeholder and disabled only (exempt, WCAG 1.4.3) | 3.26 to 4.19:1 | 2.98 to 3.48:1 |
 
 `ink-3` was raised during the lab's review: the first values gave 4.02 to 4.46:1 in five places and
-captions are read. Light `ink-3` is 5.22 to 5.77:1. Dark `ink-3` sits at APCA Lc 38 to 42, so it is
-for 12px-and-up captions at medium weight and never for running text.
+captions are read. Dark `tertiary-foreground` sits at APCA Lc 40 to 43, so it is for 12px-and-up
+captions at medium weight and never for running text. Three lab values were merged into the ramp's
+nearest step, with no visible difference: dark `ink` `#eaf0f6` is `#e8eef4`, light `ink` `#0f1a26`
+is `#111a27`, and the meter track takes `muted-strong` in both themes.
 
 ### 3.2 How the brand is expressed
 
-OMV's sky blue `#5dacdf` stays the identity, and now does more:
+OMV's sky blue `#5dacdf` stays the identity, and now does more (tokens in brackets):
 
-- **As light.** An ambient glow from above the page (Sky), a power light on the drive-bay picture,
-  the focus ring, the live dot.
-- **As the trace of live data.** Single-series live charts (processor, memory, network, temperature)
-  draw in the brand blue: they are "how much", which the old guide already gave to the usage ramp.
-- **As the path.** On maps, the lineage you are tracing lights in brand blue.
-- **As action**, as before: the action blue in light (`#1272ab`, labels `#095a8a`), the sky blue
-  itself in dark with navy ink.
+- **As the mark and light** (`brand`): the logo, the live dot, the health ring, the power light on
+  the drive-bay picture; and an ambient glow from above the page (`ambient`, `ambient-soft`, section
+  3.4).
+- **As the focus ring** (`focus-ring`): brand-600 in light, brand-300 in dark.
+- **As the trace of live data** (`trace`, `trace-area`). Single-series live charts (processor,
+  memory, network, temperature) draw in the brand blue: they are "how much", which the old guide
+  already gave to the usage ramp.
+- **As the path** (`art-path`). On maps, the lineage you are tracing lights in brand blue.
+- **As action and selection**, as before: the action blue in light (`#1272ab`, labels `#095a8a`),
+  the sky blue itself in dark with navy ink; the `selected` tint is the same blue at 9% (light) and
+  14% (dark).
 
-The identity bar is gone: no direction paints the top bar sky blue. Identity comes from the mark,
-the light and the blue that runs through live data. (The light-theme top bar's contrast problem in
-style guide 3.3 disappears with it.)
+**The identity bar is gone** (owner, 2026-11-24): no surface is painted sky blue. The top bar sits
+on the page ground and identity comes from the mark, the light and the blue that runs through live
+data. The `identity`, `identity-foreground` and `focus-ring-on-identity` roles and the button's
+`onIdentity` variant are removed; controls on the bar use the `quiet` variant. (The light-theme top
+bar's contrast problem in style guide 3.3 disappears with it.)
 
 ### 3.3 Status stays honest
 
-Status hues (OK green, Warning orange, Critical red, Unknown grey) and pending yellow are used only
-for what they mean, always with a word or shape: a pill, a shaped mark, a slot light with the word
+Status hues (OK green, Warning orange, Critical red, Unknown grey) and the pending gold are used
+only for what they mean (where each sits on the colour wheel, and why, is 3.6), always with a word or shape: a pill, a shaped mark, a slot light with the word
 beside it, a node with its mark. Two kinds of status area are new and allowed: a **status-tinted
 wash** behind the one element that carries a non-OK state (the health strip's lead cell, a warning
-callout, a warning node on a map) at 7 to 14% over a known ground, and **status-coloured lines** on a
-map leading to a node in that state. Both always travel with the node's mark and word. A risk
-statement that is not a monitored state (for example "a stripe loses everything") uses a neutral
-glyph, never a status hue.
+callout, a warning node on a map) at 7 to 14% over a known ground (`ok-wash` 12%, `warning-wash`
+14%, `critical-wash` 14%, `unknown-wash` 10%, `pending-wash` 14%, theme-invariant like the fills),
+and **status-coloured lines** on a map leading to a node in that state. Both always travel with the
+node's mark and word. A risk statement that is not a monitored state (for example "a stripe loses
+everything") uses a neutral glyph, never a status hue.
 
 ### 3.4 Gradients, tints and light: four kinds, each with a meaning
 
 | Kind | Where | Means | Rule |
 | --- | --- | --- | --- |
-| Ambient light | Behind the top of the page (Sky), at most 0.28 alpha, brand hues only | Identity | Nothing is read against it that would fail at its darkest or lightest point; never a status hue |
-| Area fill under a live line | Sparklines, from 0.32 alpha to 0 | The area of the quantity | Series colour only |
-| Material light | The chassis of the drive-bay picture, top-lit, 1 step | That the picture is an object | Grounds only |
-| Status wash | One element per non-OK state | The state, with its word | Over a known ground; the label clears 4.5:1 on it |
+| Ambient light | Behind the top of the page (`ambient-light`), brand hues only | Identity | Nothing is read against it that would fail at its darkest or lightest point; never a status hue |
+| Area fill under a live line | Sparklines and live charts, from 0.32 alpha to 0 (`trace-area`) | The area of the quantity | Series or trace colour only |
+| Material light | The chassis of the drive-bay picture, lit from above, 1 step (`art-chassis-top`, `art-chassis-bottom`) | That the picture is an object | Grounds only |
+| Status wash | One element per non-OK state (`*-wash`; as light, a radial wash in a card's corner fading to the card) | The state, with its word | Over a known ground; the label clears 4.5:1 on it |
+
+The ambient light is two radial glows whose ellipses are centred above the page (the lab's
+geometry). Its tokens are the **brightest point actually painted**, where each glow meets the page's
+top edge: `ambient` is brand-400 at 10% (dark) and 12% (light), `ambient-soft` brand-300 at 3% and
+7%. The `ambient-light` utility places its first colour stop exactly there, so it looks as it did in
+the lab, and the audit measures what is on screen rather than the centre of an ellipse no one sees.
 
 Not allowed: multi-hue decorative gradients, gradient text, gradient borders, glow around text,
 glass blur over content. One exception to blur: Sky's sticky top bar blurs the page scrolling under
@@ -159,73 +184,217 @@ it, so the bar stays legible over any content.
 
 ### 3.5 The audit
 
-When a direction is chosen, every new pair (each ground with each text tier and each label, the
-status washes, the map lines) goes into `PAIRS` in `tools/colour-audit.mjs` before it reaches
-`tokens.css`, per style guide 8. The lab's values were checked with `measure`; they are not yet in
-the audited set.
+Done. Every pair is in `PAIRS` in `tools/colour-audit.mjs`: each text tier, label, stroke and
+control edge on each of the four grounds; the selected tint; the status and pending washes over each
+ground, with the body and secondary text that sits on them; the ambient light; a card lit in its
+warning or critical state; the trace over its own area fill; the chassis; the map lines; the bars of a bar chart on a card or an inset (4.90 to 7.02:1); and the
+Save button's "Saved" (`ok-foreground` on the OK fill, 12.24:1, edged in `ok-stroke`). The script
+now composites translucent tokens over their known ground, as the browser paints them (`on(ground,
+layer...)`), and checks a gradient at each of its stops, the worst stop deciding (`gradient(name,
+stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash and glow is
+written in.
+
+**Result: 436 required pairs, 0 failures, both themes** (164 before the new grounds, 430 before the
+scheme of 3.6). Highlights:
+
+- In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
+  13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus
+  ring 4.15 and 8.41:1, `border-control` 3.59 and 4.46:1.
+- Status labels on their own wash over any ground: 5.10 to 6.78:1 light, 6.08 to 9.06:1 dark; the
+  pending words, navy in light and gold in dark, 14.72 to 16.23:1 and 8.88 to 9.88:1. On a card lit
+  warning, the warning word is 6.28:1 light and 7.28:1 dark at the wash's strongest point.
+- The trace over the top of its own area fill: 3.13 to 3.30:1 light, 4.17 to 4.49:1 dark.
+- Secondary text on any wash over any ground: at least 5.11:1 (dark, on the pending wash over
+  `muted-strong`).
+- The tightest required pairs: dark `tertiary-foreground` on `muted-strong` and on the chassis,
+  4.68:1; light `series-2` on the page, 3.09:1; light trace over its fill in an inset, 3.13:1; the
+  pending pill's edge in the light ambient light, 3.15:1.
+- APCA advisory: 44 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions, secondary
+  text on a wash or words on a fill (dark `tertiary-foreground` at Lc 40 to 43 is the lowest); none
+  is running text.
+- `distinct` simulates deuteranopia, protanopia and tritanopia (Machado 2009). In light the live
+  trace beside a categorical series falls under 10 in four places (lowest: trace and `series-3`, 9.2
+  under deuteranopia) and violet against magenta is 8.2 under protanopia; in dark only trace and
+  `series-2` does, 9.3 under tritanopia. A chart that shows them together labels each line directly
+  and gives each its own dash, as style guide 3.9 already asks.
+
+### 3.6 One colour scheme (owner, 2026-11-24)
+
+The owner turned down OMV's lemon `#f8d400` with its coffee-brown ink `#4d2e25` for the pending band
+("lacks taste and doesn't really match") and asked that every colour combination follow colour
+theory and harmonise with Sky. Measured in OKLCH, most of the palette already did; what did not was
+the pending pair, the ink on the dark destructive button, the chart series' uneven weights and the
+terminal's green. The scheme below is now the rule for every colour, and `design/tokens.css` states
+it at the top of its primitives.
+
+**The scheme, by OKLCH hue:**
+
+| Place | Hue | Who sits there |
+| --- | --- | --- |
+| The base | 240 | Sky blue: brand, action, selection, the live trace, usage, the map path, the ambient light. The slate neutrals lean toward it (248 to 259) |
+| The complement | 62 | Warning, OMV's orange `#f78f00` |
+| The split complements | 27 and 87 | Critical `#d01d21`, and pending gold `#ffcd47` |
+| A quarter turn | 151 | OK `#74e791` |
+| The gaps between | 118, 195, 292, 345 | The four chart series: moss, teal, violet, magenta |
+| Ink on a light fill | 243 | Sky's navy, brand-950 `#021d30` |
+
+- **Attention is opposite the brand.** The three colours that ask for attention sit on the blue's
+  complementary arc, so they are what the eye goes to on a blue-grey screen. Their lightness falls
+  with hue (gold 0.87, orange 0.75, red 0.55), which is what keeps them apart under colour-vision
+  deficiency.
+- **Calm is beside it.** OK is a quarter turn round, on the cool side with the brand.
+- **Series live in the gaps**, never on a signal hue, at one chroma (0.11 to 0.14) and an even
+  lightness ladder (light 0.44, 0.50, 0.56, 0.62; dark 0.62, 0.70, 0.79, 0.88), so they part in
+  greyscale too.
+- **One ink.** Words on a light fill are Sky's navy: pending, "Saved" on the OK fill, the dark
+  destructive button, the dark primary button. White on the dark fills.
+- **Labels hold one weight and never go muddy.** In light, the status words clear 5.10 to 5.70:1 at
+  their worst; a word in a hue leans toward red as it darkens and toward yellow as it lightens.
+  Darkened gold reads olive or brown, so in light the pending words are the navy on the gold wash,
+  with a deep gold stroke (`#9e7b0b`) that also edges the top bar's pill; in dark they are a lighter
+  gold (`#f4d660`). Warning's dark label moves to its fill's own hue (`#ffa659`), apart from the gold.
+- **The terminal is a piece of the night theme**: its words are the slate text tiers, not a green
+  tint, since green is OK's hue.
+
+**What changed**, light / dark where they differ:
+
+| Token | Was | Now |
+| --- | --- | --- |
+| `pending` (fill, both) | `#f8d400` | `#ffcd47` |
+| `pending-foreground` (both) | `#4d2e25` | `#021d30` (brand-950) |
+| `pending-label` | `#695205` / `#f3d754` | `#021d30` / `#f4d660` |
+| `pending-stroke` (light) | `#8d7100` | `#9e7b0b` |
+| `ok-foreground` (both) | slate-950 | brand-950 |
+| `ok-label`, `ok-stroke` (light) | `#00612c`, `#007938` | `#096a33`, `#1d8545` |
+| `critical-label` (light) | `#a91518` | `#a32321` |
+| `warning-label` (dark) | `#fbb360` | `#ffa659` |
+| `destructive-foreground` (dark) | `#2a0606` | `#021d30` (brand-950) |
+| `series-1..4` (light) | `#6635a3` `#006c6c` `#d4599b` `#62691b` | `#563e98` `#009a9a` `#983c75` `#6f7d1a` |
+| `series-1..4` (dark) | `#9369d4` `#97e9e8` `#e97ab2` `#b5c06b` | `#a58de6` `#70f1da` `#c06099` `#b3c65f` |
+| `terminal-foreground`, `terminal-muted` | `#cde6cf`, `#8c9e8e` | slate-200, slate-500 |
+
+The status fills, OK, warning, critical and unknown, did not change: OMV's orange already sits on
+the complement and its red on a split complement.
+
+**Measured** (`node tools/colour-audit.mjs`):
+
+- Navy on the gold: 11.53:1 (coffee on lemon was 8.31). "Saved" on the OK fill 11.12:1; words on
+  the dark destructive button 5.98:1.
+- The pending pill clears 3:1 by its edge: the gold alone is 1.34:1 on the light page, the stroke
+  3.15:1 at the worst point of the ambient light.
+- Pending against warning (normal / deuteranopia / protanopia / tritanopia): fills 14.5 / 12.1 /
+  15.8 / 15.2; words 29.6 or more in light, 11.7 / 7.8 / 11.6 / 12.0 in dark (they were 7.0 / 2.5 /
+  1.1 / 7.7 and 9.4 / 6.3 / 9.1 / 8.7). Pending against OK stays a pair that needs its word (7.3
+  under protanopia), as before: pending is never a bare dot.
+- The weakest chart pair, series against series or the trace, over all four kinds of vision: light
+  8.2 (was 3.8), dark 9.3 (was 8.4). Every series clears 3:1 on the plot grounds: 3.09 to 8.27:1
+  light, 4.16 to 13.77:1 dark.
+- The band's buttons keep the one audited pair in every state. Unavailable while applying, they are
+  dashed outlines in the ink rather than faded, since navy at partial opacity over the gold is a
+  khaki no one measured.
+
+**For a colour added later**: name its job (style guide 2.1), give it a place in this scheme (the
+base, the attention arc, the quarter turn or a gap), ink it in navy if words sit on it, and measure
+it with the audit before it ships. A colour that has no place in the scheme does not come in.
 
 ## 4. Type
 
-Inter (bundled) for everything; Roboto Mono (bundled) for device names, paths, addresses and, in
-Instrument only, live readouts. The lab loads Inter's optical-size build (`opsz.css`, already in the
-packaged `@fontsource-variable/inter`, no new dependency), so large figures and headlines get
-Inter Display's tighter forms automatically.
+Inter (bundled, its optical-size build) for everything; Roboto Mono (bundled) for device names,
+paths and addresses, and for live readouts in compact density. The optical-size build is
+`@fontsource-variable/inter/opsz.css`, already in the packaged dependency, so the headline and large
+figures get Inter Display's tighter forms automatically. It costs 73 KB for the Latin subset against
+the weight-only build's 48 KB.
 
-| Step | Size | Weight | Use |
-| --- | --- | --- | --- |
-| Display | 36 to 64px fluid (`clamp`) | 650 to 700, tracking -0.03 to -0.045em | The one headline answer on a top page (Sky hero, Atlas) |
-| Figure | 26 to 44px | 300 (Atlas), 600 | Live values and capacity figures |
-| Page title | 20 to 36px by direction | 650 | One per page |
-| Section | 17 to 18px | 650 | Card and section titles |
-| Body | 13 / 15 / 14px (Instrument / Sky / Atlas) | 400 to 550 | Everything read |
-| Caption | 12 to 13px | 500 to 650 | Metadata, units, overlines (Instrument uppercases 12px card titles) |
+| Step | Token | Size | Weight, tracking, leading | Use |
+| --- | --- | --- | --- | --- |
+| Display | `text-display` | 28 to 40px, `clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem)` | 650, -0.03em, 1.1 | The one headline answer on a top page |
+| Figure | `text-figure` | 30px (26px compact, in mono) | 600, -0.02em, 1.15 | Live values and capacity figures |
+| Page title | `text-title` | 28px | 650, -0.02em, 1.2 | One per page |
+| Section | `text-section` | 17px | 600, -0.01em, 1.35 | Card and section titles |
+| Body | `text-body` | 15px (13px compact) | 400 to 550, 1.5 | Everything read |
+| Caption | `text-caption` | 13px (12px compact) | 500 to 650 | Metadata, units, help lines |
+
+Each named step carries its own weight, tracking and leading, so `text-title` is the whole style.
+The plain steps (`text-xs` 12, `text-sm` 13, `text-base` 15, `text-lg` 17, `text-xl` 20, `text-2xl`
+24, `text-3xl` 30px) stay for page code written before the named ones; `text-base` and `text-sm`
+follow the body and caption in compact density. Live readouts use `font-readout`, which is Inter
+and becomes Roboto Mono in compact density.
 
 Rules kept: tabular numerals for every number; units at a smaller size beside the figure; sentence
-case; nothing under 12px; text survives 200% zoom and a 40% longer translation. Each direction sets
-OpenType features: Instrument slashed zero, Sky the single-storey a (`cv11`), Atlas open digits
-(`ss01`).
+case; nothing under 12px; text survives 200% zoom and a 40% longer translation. Sky's OpenType
+features apply to the whole interface: the single-storey a (`cv11`) and tabular figures (`tnum`),
+in `--font-features`.
 
 ## 5. Space, grid and density
 
 - A 4px base. A 12-column page grid with a maximum width of 1440px; cards span 3 to 12 columns at
   1280px and above, 6 or 12 under 1024px, 12 under 640px.
 - Gutter 16px at 390px and narrower, up to 40px wide.
-- Card padding and grid gap per direction: Instrument 16 and 12, Sky 24 and 20, Atlas 20 and 16.
-- **Density is a setting, not a direction.** A compact switch in the top bar (and in the command
-  palette) tightens table rows, card padding, gaps and list rows. It is a stored preference (UI-13
-  allows it).
+- **Density is a setting, not a direction.** Comfortable is Sky; compact is Instrument's values on
+  Sky's colours: its padding and gaps, a 13px body, dense table rows and monospaced readouts. The
+  switch is in the top bar and in the command palette. It is a stored preference like the theme
+  (UI-13 allows it), applied as `data-density="compact"` on `<html>`; comfortable needs no
+  attribute. Any subtree may carry either value (a story shows both side by side). Prefer the tokens
+  and utilities below; the `compact:` variant is for what a token cannot express.
+
+| Token | Utility | Comfortable (Sky) | Compact (Instrument) |
+| --- | --- | --- | --- |
+| `--density-card` | `p-card` | 24px | 16px |
+| `--density-grid` | `gap-grid` | 20px | 12px |
+| `--density-cell-y` | `py-cell-y` | 10px | 5px |
+| `--density-cell-x` | `px-cell-x` | 12px | 10px |
+| `--density-row` | `py-row` | 12px | 8px |
+| `--density-control-sm` | `h-control-sm` | 28px | 24px |
+| `--density-control` | `h-control` | 32px | 28px |
+| `--density-control-lg` | `h-control-lg` | 40px | 36px |
+| `--text-body`, `--text-caption` | `text-body`, `text-caption` | 15px, 13px | 13px, 12px |
+| `--font-readout` | `font-readout` | Inter | Roboto Mono |
+
+Radii do not change with density (section 6). Every control height stays at or above the 24px
+target minimum (WCAG 2.5.8).
 
 ## 6. Surfaces and elevation
 
 Three levels, by meaning:
 
-1. **Ground**: the page, ambient light only.
-2. **Surface**: cards, panels, tables. Dark: one step lighter than the ground, a 1px inner top
-   highlight (light from above), and either a hairline (Instrument, Atlas) or a soft long shadow
-   (Sky). Light: white with a 1px edge (Instrument, Atlas) or a layered soft shadow (Sky).
-3. **Floating**: dialogs, the palette, drawers, toasts, the Sky pending dock. A stronger shadow over
-   a scrim (dark 0.62, light 0.42 alpha).
+1. **Ground**: the page, ambient light only (`bg-page`, `ambient-light`).
+2. **Surface**: cards, panels, tables (`surface-raised`, or `bg-surface shadow-raised`). Dark: one
+   step lighter than the ground, a 1px inner top highlight (light from above), a faint edge and a
+   soft long shadow. Light: white with a layered soft shadow. Inside a surface, insets are `muted`
+   and hover on a control, chips and tracks are `muted-strong`.
+3. **Floating**: dialogs, the palette, drawers, menus, popovers and toasts (`surface-floating`, or
+   `shadow-floating`). A stronger shadow, over the `scrim` when modal (dark 0.62, light 0.42 alpha).
 
-Radius: Instrument 8 / 6, Atlas 10 / 8, Sky 20 / 12 (30 / 16 as squircles where supported). Pills,
-dots, meters and rings stay round.
+Something pressable has `shadow-control` at rest: an inner top highlight in dark, a 1px soft shadow
+in light. The shadow ink in light is slate (`rgb(17 26 39)`), never black. The tokens `shadow-sm`,
+`shadow-md` and `shadow-lg` are gone: `shadow-raised` and `shadow-floating` replace them.
+
+Radius (Sky): controls 12px (`rounded-control`), cards, dialogs, menus, popovers and toasts 20px
+(`rounded-card`), squircles of 16 and 30px where `corner-shape` is supported; checkboxes and inner
+marks 6px. Pills, dots, meters and rings stay round.
 
 ## 7. Motion
 
 ### 7.1 Tokens
 
-| Token | Value | For |
-| --- | --- | --- |
-| `--d-1` | 90ms | Pressed |
-| `--d-2` | 160ms | Hover, focus, small changes of state |
-| `--d-3` | 240ms | Toggles, menus, exits |
-| `--d-4` | 360ms | Entrances, page change, disclosure height |
-| `--d-5` | 640ms | Meters, rings and number glides |
-| `--e-std` | `cubic-bezier(0.2, 0, 0, 1)` | Everything by default |
-| `--e-enter` | `cubic-bezier(0.05, 0.7, 0.1, 1)` | Things arriving: decelerate hard |
-| `--e-exit` | `cubic-bezier(0.3, 0, 0.8, 0.15)` | Things leaving: accelerate away |
-| `--e-settle` | a spring as CSS `linear()`, 8% overshoot | Things that land: a switch thumb, a pending chip, a toast |
-| `--e-soft` | a spring as CSS `linear()`, 1.5% overshoot | Height changes: bars, disclosures, sections |
-| `--stagger` | 22 / 45 / 32ms per item | List entrance, capped at about 10 items |
+| Token (lab name) | Utility | Value | For |
+| --- | --- | --- | --- |
+| `--duration-press` (`--d-1`) | `duration-press` | 90ms | Pressed |
+| `--duration-fast` (`--d-2`) | `duration-fast`, the default | 160ms | Hover, focus, small changes of state |
+| `--duration-base` (`--d-3`) | `duration-base` | 240ms | Toggles, menus, exits |
+| `--duration-slow` (`--d-4`) | `duration-slow` | 360ms | Entrances, page change, dialogs, disclosure height |
+| `--duration-glide` (`--d-5`) | `duration-glide` | 640ms | Meters, rings and number glides |
+| `--ease-standard` (`--e-std`) | `ease-standard`, the default | `cubic-bezier(0.2, 0, 0, 1)` | Everything by default |
+| `--ease-enter` (`--e-enter`) | `ease-enter` | `cubic-bezier(0.05, 0.7, 0.1, 1)` | Things arriving: decelerate hard |
+| `--ease-exit` (`--e-exit`) | `ease-exit` | `cubic-bezier(0.3, 0, 0.8, 0.15)` | Things leaving: accelerate away |
+| `--ease-settle` (`--e-settle`) | `ease-settle` | a spring as CSS `linear()`, 8% overshoot | Things that land: a switch thumb, a pending chip, a toast |
+| `--ease-soft` (`--e-soft`) | `ease-soft` | a spring as CSS `linear()`, 1.5% overshoot | Height changes: bars, disclosures, sections |
+| `--motion-stagger` (`--stagger`) | `stagger`, with `--stagger-index` | 45ms per item | List entrance, capped at 10 items |
+| `--motion-rise` (`--rise`) | (in `animate-rise`) | 12px | How far an entering card rises |
+
+Shared motions ship as utilities with their keyframes: `animate-rise` (fade and rise, on the enter
+curve), `animate-settle-in` (rise a little and land on the settle spring), `animate-fade-in` and
+`animate-breathe` (the skeleton, 1.4s). The old `--ease-out` is `--ease-standard`.
 
 The springs are generated from a damped oscillator and written as native `linear()` easing: no
 library. Exits are shorter than entrances. Nothing a reader waits for takes longer than 400ms; only
@@ -247,7 +416,7 @@ value glides (640ms) and the sample-paced chart scroll are longer, and neither b
 | **Apply progress** | That work is happening | A progress line runs along the pending bar; on success the bar reads "Applied" and collapses after 1.6s | A static line and the words |
 | **Destructive arm** | That the confirm is now live | Typing the name exactly fills the confirm button with the destructive red from the left | The fill appears |
 | **Dialog and palette** | What is in front now | Rise 8px and scale from 0.97 over a fading scrim | Fade only |
-| **Disclosure** | That more is there, and its size | Native `::details-content` with `interpolate-size`; the chevron turns on the settle spring | Opens at once |
+| **Disclosure** | That more is there, and its size | The height Base UI measures into `--collapsible-panel-height`, on the soft spring (works where `interpolate-size` does not yet); the chevron turns on the settle spring | Opens at once |
 | **Trace** | What depends on this | Pointing at or focusing a map node lights its whole lineage and dims the rest | Same, no transition |
 | **Map draw** | That lines are connections | Lines draw along their length on entrance | Drawn |
 | **Arrival** | Where to look after a jump | Following "View disk sdb" scrolls to that disk and rings it twice | Ring without movement |
@@ -259,11 +428,12 @@ The only loops allowed are the spinner and the skeleton, while work or loading i
 
 ### 7.3 Reduced motion
 
-Under `prefers-reduced-motion: reduce` every duration token is 0, every animation runs in 1ms to its
-end state (so nothing is left invisible; checked in the lab: no element below full opacity after
-400ms on three screens), view transitions are cut, the pending flight does not run, and JavaScript
-motion checks the same query. Meaning never depends on motion: every motion's end state says the same
-thing in words.
+Under `prefers-reduced-motion: reduce` every duration token, the stagger and the rise are 0 (in
+`tokens.css`), every animation runs once at once to its end state (css-ui-style's base rule) (so
+nothing is left invisible; checked in the lab: no element below full opacity after 400ms on three
+screens), view transitions are cut, the pending flight does not run, and JavaScript motion checks
+the same query. Meaning never depends on motion: every motion's end state says the same thing in
+words.
 
 ## 8. Data visualisation
 
@@ -328,22 +498,23 @@ creation previews using the arrangement drawing with the real disks.
 - **Grouped as OMV groups it** (System, Network, Storage, Services, Users, Diagnostics) plus
   Overview. Only the current group's pages are listed at once, so navigation is never a 40-row
   list. Classic-only pages stay listed, quieter, with "Classic" and the external mark.
-- **Per direction**: Instrument, an icon rail with labels and the chosen group's pages beside it;
-  Sky, one sidebar where only the current group is open and the others fold; Atlas, the groups as
-  tabs across the top with the group's pages as a second row and a sliding indicator.
+- **Sky's sidebar**: one sidebar where only the current group is open and the others fold. It scales
+  to every page and to plugin items. (The lab also shows Instrument's icon rail and Atlas's top
+  tabs; neither was chosen.)
 - **Under 1024px** every direction folds into a drawer.
 - **The top bar** carries the product mark and host, "Go to or do…" (the palette, `/`), the density
   switch, the pending indicator (a count chip that turns yellow) and the account.
-- **The pending changes** keep their behaviour (style guide 5.8) and their yellow. Instrument and
-  Atlas put the band under the top bar; Sky makes it a dock that rides the foot of the window,
-  sticky, so it never covers the end of the page.
+- **The pending changes** keep their behaviour (style guide 5.8) and OMV's yellow, in a **slim band
+  directly under the top bar** (owner, 2026-11-24; Sky's dock at the foot of the window was not
+  chosen). On save, a pending mark flies into the top bar's "pending" pill, and the band can shrink
+  to that pill while the page scrolls.
 - The UI-12 notice keeps its place under the top bar in all three (not drawn in the lab).
 
 ## 11. Page archetypes
 
 - **Dashboard**: the answer (worst state in words, largest type), then what needs you with a next
-  step each, then pending changes, then capacity, disks and live activity, then first steps for a new
-  owner, then the rest. Every summary links to its page.
+  step each, then pending changes, then capacity, disks and live activity, then first steps for a
+  new owner, then the rest. Every summary links to its page.
 - **List**: a short summary line with counts by state, a drawing where one helps (bay, map), a
   dense table with selection and bulk actions, technical columns behind a switch.
 - **Detail**: a summary header (what it is, where it lives, who can use it, its state, and the one
@@ -454,22 +625,28 @@ Signature motions: lines draw, lineage traces, pages slide in the direction of t
 one that best answers "what will break if I touch this?"; the most distinctive; its long typographic
 pages risk the "document" criticism if the map is not kept near the top.
 
-### 14.4 Recommendation
+### 14.4 The decision
 
-**Sky as the base, with Atlas's map as the diagram language and Instrument's dense table and
-readouts behind the density switch.**
+**The owner chose the mix on 2026-11-24** (journal, "The new look: the owner's four choices"), as
+recommended: **Sky as the base, with Atlas's map as the diagram language and Instrument's dense
+tables and readouts as the compact density.**
+
+- **Sky** gives the plain-words health headline, problem cards with a next step, capacity rings, the
+  drive-bay picture, the sidebar with collapsible groups, its grounds, light, raised cards, squircle
+  corners and 15px body. Its values are sections 3 to 7 of this document and `design/tokens.css`.
+- **Atlas's connection map** is the diagram language everywhere (section 9). Atlas's top tabs are
+  not used.
+- **Instrument** is the compact density (section 5): its padding, gaps, 13px body, dense table rows
+  and monospaced readouts, on Sky's colours.
+- **No sky-blue top bar** (section 3.2). **Pending changes** stay in a band under the top bar
+  (section 10). **Live samples** are kept for the session, in memory only (section 8, journal).
 
 Why: the people this is for are home and small-office owners who mostly open it to check that all
 is well; Sky answers that in one sentence at the largest size, makes the next step a card with a
 verb, and is the one most likely to be opened willingly, which is the owner's complaint about the
-current interface. It is also the clearest break from "reads like a document". Its weakness, density,
-is answered by the same density switch and technical columns all three share. Atlas's map is the
-single most useful drawing in the lab (dependencies before a delete, who can reach a folder) and
-works inside Sky's cards (the lab already draws Sky's share map that way). Instrument's segmented
-meters and mono readouts are a good compact mode, not a separate look.
-
-If the owner prefers one direction unmixed, Atlas is the stronger second choice for distinctiveness;
-Instrument suits a technical audience best but is the easiest to mistake for a generic dashboard.
+first interface. Its weakness, density, is answered by the compact setting and the technical
+columns. Atlas's map is the single most useful drawing in the lab (dependencies before a delete, who
+can reach a folder) and works inside Sky's cards.
 
 ## 15. The lab
 
@@ -505,11 +682,11 @@ Instrument suits a technical audience best but is the easiest to mistake for a g
   the Web Animations API. Vite's development server injects stylesheets as style elements, as it
   does for the whole app; the production build links them.
 
-## 16. Open questions for the owner
+## 16. The owner's answers (2026-11-24)
 
-1. Which direction, or the recommended mix.
-2. Whether the identity bar may go (section 3.2): no direction paints the top bar sky blue.
-3. Whether live samples may be kept for the session across pages (section 8), so charts are not
-   empty after every navigation.
-4. Whether Sky's dock placement for pending changes is acceptable in place of the band under the top
-   bar (style guide 5.1 asked for the band).
+1. **Direction**: the recommended mix (section 14.4).
+2. **The identity bar** goes; the sky blue stays as the brand accent (section 3.2).
+3. **Live samples** are kept for the session, in this tab's memory only, at most the last 10
+   minutes, cleared by signing out or closing the tab; the reads never keep the session alive
+   (journal, "The new look: the owner's four choices").
+4. **Pending changes** stay in a slim band under the top bar, not Sky's dock (section 10).

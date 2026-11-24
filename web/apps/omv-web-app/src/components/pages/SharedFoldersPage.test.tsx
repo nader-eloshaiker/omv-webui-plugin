@@ -14,6 +14,7 @@ import {
   recordCreated,
   recordSaved,
 } from "../../sharedFolders/sharesSession.ts";
+import { openNavGroup } from "../../test/nav.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls, server } from "../../test/server.ts";
 
@@ -348,6 +349,7 @@ describe("the shared folders table", () => {
     const nav = screen.getAllByRole("navigation", {
       name: "Main navigation",
     })[0]!;
+    openNavGroup("Storage", nav);
     await user.click(within(nav).getByRole("link", { name: "Shared folders" }));
     const t = await screen.findByRole("table", { name: "Shared folders" });
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -445,6 +447,7 @@ describe("the shared folders table", () => {
     })[0]!;
     await user.click(within(nav).getByRole("link", { name: "Dashboard" }));
     await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+    openNavGroup("Storage", nav);
     await user.click(within(nav).getByRole("link", { name: "Shared folders" }));
     expect(await screen.findByRole("searchbox")).toHaveValue("a4");
     expect(window.location.href).not.toContain("a4");

@@ -4,6 +4,7 @@
 // item leading to its page in this interface. Opening any of them changes nothing (UI-4).
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { openNavGroup } from "../../test/nav.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames } from "../../test/server.ts";
 
@@ -47,6 +48,7 @@ describe("the shares routes", () => {
   it("leads the SMB/CIFS menu item to Windows and Mac sharing", async () => {
     const { user } = await renderApp({ signedIn: true });
     await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+    openNavGroup("Services", nav());
     const item = within(nav()).getByRole("link", { name: "SMB/CIFS" });
     expect(item).toHaveAttribute("href", "/ui/services/smb");
     await user.click(item);

@@ -145,7 +145,10 @@ function CopyButton({
           aria-label={label}
           aria-describedby={noticeId}
           onBlur={() => setState("idle")}
-          className={cn(controlClass, "mt-1 h-7 basis-full font-mono text-sm")}
+          className={cn(
+            controlClass,
+            "mt-1 h-control-sm basis-full font-mono text-sm",
+          )}
         />
       ) : null}
     </span>
