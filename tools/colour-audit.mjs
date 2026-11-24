@@ -295,6 +295,8 @@ const PAIRS = [
   // Charts.
   ...[1, 2, 3, 4].flatMap((n) => onGrounds(`theme-series-${n}`, "ui", "chart mark", GROUNDS.slice(0, 3))),
   ["theme-usage", "theme-usage-track", "ui", "capacity meter fill on its track"],
+  // A bar of a bar chart (react-ui-components/charts) stands on the card or an inset, not a track.
+  ...onGrounds("theme-usage", "ui", "a bar in a bar chart", GROUNDS.slice(1, 3)),
   ["theme-usage-track-edge", "theme-surface", "ui", "capacity meter track outline"],
   ["theme-usage-track-edge", "theme-muted", "ui", "capacity meter track outline, in an inset"],
   // Drawings and maps.

@@ -15,6 +15,8 @@
 @import "tailwindcss";
 @import "./src/theme-reset.css";
 @import "./generated/tokens.css";
+/* The motions of charts, meters, rings, the map and the drawings (foundation 7.2 and 9). */
+@import "./src/visuals.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
    page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.

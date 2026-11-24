@@ -187,12 +187,13 @@ it, so the bar stays legible over any content.
 Done. Every pair is in `PAIRS` in `tools/colour-audit.mjs`: each text tier, label, stroke and
 control edge on each of the four grounds; the selected tint; the status and pending washes over each
 ground; the ambient light; a card lit in its warning or critical state; the trace over its own area
-fill; the chassis; and the map lines. The script now composites translucent tokens over their known
-ground, as the browser paints them (`on(ground, layer...)`), and checks a gradient at each of its
-stops, the worst stop deciding (`gradient(name, stop...)`). It reads `color-mix(in srgb, X N%,
-transparent)`, the form every wash and glow is written in.
+fill; the chassis; the map lines; and the bars of a bar chart on a card or an inset (4.90 to
+7.02:1). The script now composites translucent tokens over their known ground, as the browser paints
+them (`on(ground, layer...)`), and checks a gradient at each of its stops, the worst stop deciding
+(`gradient(name, stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash
+and glow is written in.
 
-**Result: 344 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
+**Result: 348 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
 
 - In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
   13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus

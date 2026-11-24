@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type * as React from "react";
+import { BothDensities, Phone } from "../../fixtures/story-frames";
 import { CapacityMeter } from "./capacity-meter";
 
 const meta = {
@@ -177,5 +178,48 @@ export const CompactInAColumn: Story = {
         />
       </UsageCell>
     </>
+  ),
+};
+
+/** A healthy NAS and one almost full, comfortable and compact: compact counts the amount in cells. */
+export const Densities: Story = {
+  parameters: { compact: true },
+  render: (args) => (
+    <BothDensities>
+      <div className="flex flex-col gap-4">
+        <CapacityMeter {...args} />
+        <CapacityMeter
+          {...args}
+          label="File system: photos"
+          value={3.1}
+          valueText="3.1 TiB of 3.6 TiB (86%)"
+          threshold={{ status: "warning", label: "Almost full" }}
+        />
+        <CapacityMeter
+          {...args}
+          variant="compact"
+          label="Usage of data"
+          valueText="62% full · 1.4 TiB free"
+        />
+      </div>
+    </BothDensities>
+  ),
+};
+
+export const AtPhoneWidth: Story = {
+  parameters: { compact: true },
+  render: (args) => (
+    <Phone>
+      <div className="flex flex-col gap-4">
+        <CapacityMeter {...args} />
+        <CapacityMeter
+          {...args}
+          label="File system: media-archive-2019-and-older"
+          value={3.1}
+          valueText="3.1 TiB of 3.6 TiB (86%); over the 85% threshold"
+          threshold={{ status: "warning", label: "Almost full" }}
+        />
+      </div>
+    </Phone>
   ),
 };
