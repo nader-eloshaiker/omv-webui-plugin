@@ -308,7 +308,13 @@ export function DisksCard({
       device: slot.devicename,
       kind: slot.kind,
       status: slot.health.kind === "read" ? slot.health.status : "unknown",
-      statusLabel: words.health(slot.health),
+      // Before any check the header says it once; each slot keeps the word for screen readers only.
+      statusLabel:
+        slot.health.kind === "notChecked" ? (
+          <span className="sr-only">{words.health(slot.health)}</span>
+        ) : (
+          words.health(slot.health)
+        ),
       role: slot.role === null ? undefined : words.role(slot.role),
       detail:
         slot.temperature !== null

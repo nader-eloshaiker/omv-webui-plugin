@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // First steps, the set-up checklist (UX audit Q11; phase 3 design 2; dashboard spec 10.1), for
-// administrators while OMV's own welcome flag is set. It is neutral: these are configuration choices, not monitored health, so states are
-// told apart by mark and word, never by a status colour. The order is fixed by importance and never
-// changes as items change. Each item's read is its own: one failure shows "Not checked" with a retry
-// on that item only.
+// administrators while OMV's own welcome flag is set. Each step is one row: a mark, the title, one
+// short line and the next step; why it matters is behind its "Details" (foundation 11, 12). The marks
+// are neutral: these are configuration choices, not monitored health, so states are told apart by
+// shape and a word for assistive technology, never by a status colour. The order is fixed by
+// importance and never changes as steps change. Each step's read is its own: one failure shows "Not
+// checked" with a retry on that step only.
 //
 // Links go to a fixed route of this interface where one exists (the password form, the name of this
 // NAS: phase 5 network design 13.3) and otherwise to a fixed page of the classic interface (UI-3). A
-// step that is not done draws its link as a button, so the next step looks pressable at rest.
+// step that is not done draws its link as a button, so the next step looks pressable at rest; it
+// wraps inside the card at any width. The HTTPS step names the secure port as text and builds no link
+// from it (owner, 2026-11-20).
 //
-// The progress ring counts only the steps the NAS can confirm (HTTPS and email alerts, when read):
-// the password can never be confirmed and the updates, the name and the time zone are for the reader
-// to judge, so the ring never claims progress it cannot see.
-// The HTTPS item names the secure port as text and builds no link from it (owner, 2026-11-20). Hiding the checklist asks first, because it hides it for every
-// administrator and this interface cannot bring it back.
+// Progress counts the four steps with something to do (password, HTTPS, email alerts, updates); the
+// password can never be confirmed by the NAS and says so, so the count never claims what it cannot
+// see. The name and the time zone are values for the reader to judge and are not counted. Hiding
+// asks first, because it hides the steps for every administrator and this interface cannot bring
+// them back.
 import {
   getSystemGetInformationQueryKey,
   useEmailNotificationGet,
@@ -28,17 +32,13 @@ import {
   buttonClass,
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-  Checklist,
-  ChecklistItem,
   cn,
   ConfirmDialog,
   ExternalLink,
   ProgressRing,
   useToast,
-  type ChecklistState,
 } from "@omv-webui/react-ui-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -53,7 +53,9 @@ import {
   CLASSIC,
   CLASSIC_HTTPS_SETTINGS,
 } from "../../navigation/navigation.ts";
+import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
+import { FirstStep, type StepState } from "../molecules/FirstStep.tsx";
 
 interface Props {
   info: Pick<SystemInformation, "hostname" | "availablePkgUpdates">;
@@ -64,10 +66,9 @@ interface Props {
   index?: number;
 }
 
-/** A query's state as a checklist item sees it: in flight, failed with nothing to show, or read. */
+/** A query's state as a step sees it: in flight, failed with nothing to show, or read. */
 function readState(query: {
   data: unknown;
-  isPending: boolean;
   isError: boolean;
 }): "checking" | "failed" | "read" {
   if (query.data !== undefined) {
@@ -76,10 +77,10 @@ function readState(query: {
   return query.isError ? "failed" : "checking";
 }
 
-/** A step not done: its link drawn as a button. */
+/** A step not done: its link drawn as a button that wraps rather than leave the card. */
 const stepButton = cn(
   buttonClass({ variant: "neutral", size: "sm" }),
-  "no-underline hover:no-underline",
+  "max-w-full shrink no-underline hover:no-underline",
 );
 
 function ClassicLink({
@@ -104,6 +105,9 @@ function ClassicLink({
   );
 }
 
+/** The steps with something to do, which the progress counts. */
+const COUNTED = 4;
+
 export function SetupChecklist({ info, username, className, index }: Props) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -116,77 +120,73 @@ export function SetupChecklist({ info, username, className, index }: Props) {
   const dismiss = useWebGuiDismissWelcomeMessage();
   const [confirming, setConfirming] = useState(false);
 
-  const stateWord = (state: ChecklistState) =>
+  const word = (state: StepState): string | undefined =>
     state === "value" ? undefined : t(`checklist.state.${state}`);
 
-  const item = (state: ChecklistState) => ({
-    state,
-    stateLabel: stateWord(state),
-  });
-
-  const retry = (refetch: () => unknown) => ({
-    label: t("common.tryAgain"),
-    onRetry: () => void refetch(),
-  });
-
-  // 1. The factory password: OMV cannot report it, so it is never Done.
+  // 1. The factory password: OMV cannot report it, so it is never Done, and the step says so.
   const factory = username === FACTORY_ACCOUNT;
   const password = (
-    <ChecklistItem
-      {...item("notChecked")}
+    <FirstStep
+      state="notChecked"
+      stateLabel={t("checklist.state.cannotCheck")}
       title={t("checklist.password.title")}
+      line={t("checklist.password.short")}
+      details={
+        <p>
+          {factory
+            ? t("checklist.password.body")
+            : t("checklist.password.bodyOtherAdmin")}
+        </p>
+      }
       action={
         factory ? (
-          <Link to="/account/password" className="text-action-label underline">
+          <Link
+            to="/account/password"
+            className={cn(stepButton, "text-foreground")}
+          >
             {t("checklist.password.link")}
           </Link>
         ) : undefined
       }
-    >
-      <p>
-        {factory
-          ? t("checklist.password.body")
-          : t("checklist.password.bodyOtherAdmin")}
-      </p>
-    </ChecklistItem>
+    />
   );
 
   // 2. HTTPS, from the web interface settings.
   const webGuiRead = readState(webGui);
+  let httpsStep: StepState;
   let https: ReactNode;
-  let httpsCheck: ChecklistState = "notChecked";
   if (webGuiRead !== "read" || webGui.data === undefined) {
+    httpsStep = webGuiRead === "checking" ? "checking" : "notChecked";
     https = (
-      <ChecklistItem
-        {...item(webGuiRead === "checking" ? "checking" : "notChecked")}
+      <FirstStep
+        state={httpsStep}
+        stateLabel={word(httpsStep)}
         title={t("checklist.https.title")}
-        retry={webGuiRead === "failed" ? retry(webGui.refetch) : undefined}
-      >
-        {webGuiRead === "failed" ? (
-          <p>{t("checklist.https.readFailed")}</p>
-        ) : null}
-      </ChecklistItem>
+        line={webGuiRead === "failed" ? t("checklist.https.readFailed") : null}
+        retry={
+          webGuiRead === "failed" ? () => void webGui.refetch() : undefined
+        }
+      />
     );
   } else {
     const state = httpsState(webGui.data.enablessl, window.location.protocol);
-    httpsCheck = state === "off" ? "notDone" : "done";
+    httpsStep = state === "off" ? "notDone" : "done";
     https = (
-      <ChecklistItem
-        {...item(state === "off" ? "notDone" : "done")}
+      <FirstStep
+        state={httpsStep}
+        stateLabel={word(httpsStep)}
         title={t("checklist.https.title")}
-        action={
-          state === "off" ? (
-            <ClassicLink href={CLASSIC_HTTPS_SETTINGS} next>
-              {t("checklist.https.link")}
-            </ClassicLink>
-          ) : undefined
+        line={
+          state === "off"
+            ? t("checklist.https.notDoneShort")
+            : state === "on"
+              ? t("checklist.https.done")
+              : t("checklist.https.doneOnHttp")
         }
-      >
-        {state === "off" ? <p>{t("checklist.https.notDone")}</p> : null}
-        {state === "on" ? <p>{t("checklist.https.done")}</p> : null}
-        {state === "onButNotUsed" ? (
-          <>
-            <p>{t("checklist.https.doneOnHttp")}</p>
+        details={
+          state === "off" ? (
+            <p>{t("checklist.https.notDoneWhy")}</p>
+          ) : state === "onButNotUsed" ? (
             <p>
               {t("checklist.https.secureNoLink")}{" "}
               <Trans
@@ -196,134 +196,145 @@ export function SetupChecklist({ info, username, className, index }: Props) {
                 }}
               />
             </p>
-          </>
-        ) : null}
-      </ChecklistItem>
+          ) : undefined
+        }
+        action={
+          state === "off" ? (
+            <ClassicLink href={CLASSIC_HTTPS_SETTINGS} next>
+              {t("checklist.https.link")}
+            </ClassicLink>
+          ) : undefined
+        }
+      />
     );
   }
 
   // 3. Email alerts. The transport has already removed the mail password from this reply.
   const emailRead = readState(email);
+  let alertsStep: StepState;
   let alerts: ReactNode;
-  let alertsState: ChecklistState = "notChecked";
   if (emailRead !== "read" || email.data === undefined) {
+    alertsStep = emailRead === "checking" ? "checking" : "notChecked";
     alerts = (
-      <ChecklistItem
-        {...item(emailRead === "checking" ? "checking" : "notChecked")}
+      <FirstStep
+        state={alertsStep}
+        stateLabel={word(alertsStep)}
         title={t("checklist.email.title")}
-        retry={emailRead === "failed" ? retry(email.refetch) : undefined}
-      >
-        {emailRead === "failed" ? (
-          <p>{t("checklist.email.readFailed")}</p>
-        ) : null}
-      </ChecklistItem>
+        line={emailRead === "failed" ? t("checklist.email.readFailed") : null}
+        retry={emailRead === "failed" ? () => void email.refetch() : undefined}
+      />
     );
   } else {
     const state = emailAlerts(email.data);
-    alertsState = state === "done" ? "done" : "notDone";
+    alertsStep = state === "done" ? "done" : "notDone";
     alerts = (
-      <ChecklistItem
-        {...item(state === "done" ? "done" : "notDone")}
+      <FirstStep
+        state={alertsStep}
+        stateLabel={word(alertsStep)}
         title={t("checklist.email.title")}
+        line={
+          state === "done"
+            ? t("checklist.email.done", { address: email.data.primaryemail })
+            : state === "off"
+              ? t("checklist.email.offShort")
+              : t("checklist.email.incomplete")
+        }
+        details={
+          state === "done" ? undefined : (
+            <>
+              {state === "off" ? <p>{t("checklist.email.offWhy")}</p> : null}
+              <p>{t("checklist.email.applyHint")}</p>
+            </>
+          )
+        }
         action={
           <ClassicLink href={CLASSIC.notifications} next={state !== "done"}>
             {t("checklist.email.link")}
           </ClassicLink>
         }
-      >
-        {state === "done" ? (
-          <p>
-            {t("checklist.email.done", { address: email.data.primaryemail })}
-          </p>
-        ) : (
-          <>
-            <p>
-              {state === "off"
-                ? t("checklist.email.off")
-                : t("checklist.email.incomplete")}
-            </p>
-            <p>{t("checklist.email.applyHint")}</p>
-          </>
-        )}
-      </ChecklistItem>
+      />
     );
   }
 
   // 4. Updates, from the dashboard's own read. A count of 0 can also mean the list was never fetched.
   const count = info.availablePkgUpdates ?? 0;
+  const updatesStep: StepState = count > 0 ? "notDone" : "notChecked";
   const updates = (
-    <ChecklistItem
-      {...item(count > 0 ? "notDone" : "notChecked")}
+    <FirstStep
+      state={updatesStep}
+      stateLabel={word(updatesStep)}
       title={t("checklist.updates.title")}
+      line={
+        count > 0
+          ? t("checklist.updates.available", { count })
+          : t("checklist.updates.noneShort")
+      }
+      details={count > 0 ? undefined : <p>{t("checklist.updates.noneWhy")}</p>}
       action={
         <ClassicLink href={CLASSIC.updates} next={count > 0}>
           {t("checklist.updates.link")}
         </ClassicLink>
       }
-    >
-      <p>
-        {count > 0
-          ? t("checklist.updates.available", { count })
-          : t("checklist.updates.none")}
-      </p>
-    </ChecklistItem>
+    />
   );
 
   // 5. The name: only the reader can judge it.
   const name = (
-    <ChecklistItem
-      {...item("value")}
+    <FirstStep
+      state="value"
       title={t("checklist.name.title")}
-      action={
-        <Link to="/network/general" className="text-action-label underline">
-          {t("checklist.name.link")}
-        </Link>
-      }
-    >
-      <p>
+      line={
         <Trans
           i18nKey="checklist.name.body"
           components={{ name: <IdentifierText value={info.hostname} /> }}
         />
-      </p>
-    </ChecklistItem>
+      }
+      details={<p>{t("checklist.name.why")}</p>}
+      action={
+        <Link to="/network/general" className={routerLinkClass}>
+          {t("checklist.name.link")}
+        </Link>
+      }
+    />
   );
 
   // 6. The time zone, from the date and time settings.
   const timeRead = readState(time);
   const zone =
     timeRead !== "read" || time.data === undefined ? (
-      <ChecklistItem
-        {...item(timeRead === "checking" ? "checking" : "notChecked")}
+      <FirstStep
+        state={timeRead === "checking" ? "checking" : "notChecked"}
+        stateLabel={word(timeRead === "checking" ? "checking" : "notChecked")}
         title={t("checklist.timezone.title")}
-        retry={timeRead === "failed" ? retry(time.refetch) : undefined}
-      >
-        {timeRead === "failed" ? (
-          <p>{t("checklist.timezone.readFailed")}</p>
-        ) : null}
-      </ChecklistItem>
+        line={timeRead === "failed" ? t("checklist.timezone.readFailed") : null}
+        retry={timeRead === "failed" ? () => void time.refetch() : undefined}
+      />
     ) : (
-      <ChecklistItem
-        {...item("value")}
+      <FirstStep
+        state="value"
         title={t("checklist.timezone.title")}
+        line={
+          <Trans
+            i18nKey="checklist.timezone.body"
+            components={{ zone: <IdentifierText value={time.data.timezone} /> }}
+          />
+        }
+        details={
+          <>
+            <p>{t("checklist.timezone.why")}</p>
+            <p>
+              {time.data.ntpenable
+                ? t("checklist.timezone.ntpOn")
+                : t("checklist.timezone.ntpOff")}
+            </p>
+          </>
+        }
         action={
           <ClassicLink href={CLASSIC.dateTime}>
             {t("checklist.timezone.link")}
           </ClassicLink>
         }
-      >
-        <p>
-          <Trans
-            i18nKey="checklist.timezone.body"
-            components={{ zone: <IdentifierText value={time.data.timezone} /> }}
-          />
-        </p>
-        <p>
-          {time.data.ntpenable
-            ? t("checklist.timezone.ntpOn")
-            : t("checklist.timezone.ntpOff")}
-        </p>
-      </ChecklistItem>
+      />
     );
 
   const hide = () => {
@@ -344,11 +355,11 @@ export function SetupChecklist({ info, username, className, index }: Props) {
   };
 
   const failure = dismiss.error;
-  // Only the steps the NAS can confirm, once read.
-  const confirmable = [httpsCheck, alertsState].filter(
-    (state) => state === "done" || state === "notDone",
-  );
-  const done = confirmable.filter((state) => state === "done").length;
+  // The password is never done: the NAS cannot tell.
+  const done = [httpsStep, alertsStep, updatesStep].filter(
+    (state) => state === "done",
+  ).length;
+  const progress = { done, total: COUNTED };
 
   return (
     <Card
@@ -363,30 +374,19 @@ export function SetupChecklist({ info, username, className, index }: Props) {
           : ({ "--stagger-index": Math.min(index, 6) } as CSSProperties)
       }
     >
-      <CardHeader className="flex-nowrap items-start gap-x-3">
-        {confirmable.length > 0 ? (
-          <ProgressRing
-            aria-labelledby={titleId}
-            value={done}
-            max={confirmable.length}
-            valueText={t("checklist.progress", {
-              done,
-              total: confirmable.length,
-            })}
-            figure={t("checklist.progressFigure", {
-              done,
-              total: confirmable.length,
-            })}
-          />
-        ) : null}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <CardHeader className="flex-nowrap items-center gap-x-3">
+        <ProgressRing
+          aria-labelledby={titleId}
+          value={done}
+          max={COUNTED}
+          valueText={t("checklist.progress", progress)}
+          figure={t("checklist.progressFigure", progress)}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
           <CardTitle id={titleId}>{t("checklist.title")}</CardTitle>
-          <CardDescription>{t("checklist.intro")}</CardDescription>
-          {confirmable.length > 0 ? (
-            <p className="text-caption text-tertiary-foreground">
-              {t("checklist.progressHint")}
-            </p>
-          ) : null}
+          <p aria-hidden="true" className="text-sm text-muted-foreground">
+            {t("checklist.progress", progress)}
+          </p>
         </div>
         <Button
           variant="quiet"
@@ -402,14 +402,14 @@ export function SetupChecklist({ info, username, className, index }: Props) {
         </Button>
       </CardHeader>
       <CardContent>
-        <Checklist>
+        <ul className="flex flex-col">
           {password}
           {https}
           {alerts}
           {updates}
           {name}
           {zone}
-        </Checklist>
+        </ul>
         {/* Before the button is pressed, what hiding does: the dialog says it again. */}
         <p id={hintId} className="text-caption text-tertiary-foreground">
           {t("checklist.hideHint")}

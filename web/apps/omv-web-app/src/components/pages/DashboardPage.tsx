@@ -137,24 +137,28 @@ function useFocusTitleWhenGone(visible: boolean) {
 /**
  * The page grid (spec 3.1): one column on a narrow page, twelve from 600px of content, and the wide
  * spans from 880px. The page's own width decides, not the window's, since the sidebar takes its
- * share. Spans follow the DOM order, so nothing is reordered. Rows align at the top.
+ * share. Under the answer, two stacks that each keep their own height, so a tall card on one side
+ * never leaves a hole on the other: capacity and the disks on the left (is my data safe?), live
+ * activity and the first steps, or the services, on the right. Then the rest in one row. Nothing is
+ * reordered by placement: the reading order is the DOM order.
  */
 const PAGE_GRID =
   "grid grid-cols-1 items-start gap-gutter @min-[37.5rem]/dash:grid-cols-12";
+const STACK = {
+  left: "col-span-full flex min-w-0 flex-col gap-gutter @min-[55rem]/dash:col-span-7",
+  right:
+    "col-span-full flex min-w-0 flex-col gap-gutter @min-[55rem]/dash:col-span-5",
+} as const;
 const SPAN = {
-  storage: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-7",
-  live: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-5",
-  disks: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-7",
-  steps: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-5",
   withSteps: {
     services: "@min-[37.5rem]/dash:col-span-6 @min-[55rem]/dash:col-span-4",
     network: "@min-[37.5rem]/dash:col-span-6 @min-[55rem]/dash:col-span-4",
     system: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-4",
   },
   withoutSteps: {
-    services: "@min-[37.5rem]/dash:col-span-6 @min-[55rem]/dash:col-span-5",
-    network: "@min-[37.5rem]/dash:col-span-6 @min-[55rem]/dash:col-span-6",
-    system: "@min-[37.5rem]/dash:col-span-12 @min-[55rem]/dash:col-span-6",
+    services: undefined,
+    network: "@min-[37.5rem]/dash:col-span-6",
+    system: "@min-[37.5rem]/dash:col-span-6",
   },
 } as const;
 
@@ -267,6 +271,21 @@ function AdminDashboard({ username }: { username: string | null }) {
   // A card's own stale line only when the answer's kicker does not already say it.
   const pageStale = info.isRefetchError;
   const span = showChecklist ? SPAN.withSteps : SPAN.withoutSteps;
+  // Services: under the first steps' row when they show, else at the foot of the right-hand stack.
+  const servicesCard = (className: string | undefined) => (
+    <ServicesCard
+      className={className}
+      index={4}
+      services={services.data?.data}
+      pending={pending}
+      loading={services.isPending}
+      error={services.error}
+      stale={services.isRefetchError && !pageStale}
+      updatedAt={services.dataUpdatedAt}
+      retrying={services.isFetching}
+      onRetry={readServices}
+    />
+  );
 
   return (
     <div className="@container/dash">
@@ -291,46 +310,34 @@ function AdminDashboard({ username }: { username: string | null }) {
         <div className="col-span-full empty:hidden">
           <AttentionList rows={rows} />
         </div>
-        <StorageCard
-          className={SPAN.storage}
-          index={0}
-          items={storage}
-          loading={mounted.isPending}
-          error={mounted.error}
-          stale={mounted.isRefetchError && !pageStale}
-          updatedAt={mounted.dataUpdatedAt}
-          retrying={mounted.isFetching}
-          onRetry={readStorage}
-        />
-        <LiveCard
-          className={SPAN.live}
-          index={1}
-          info={data}
-          stale={info.isRefetchError}
-          updatedAt={info.dataUpdatedAt}
-          devices={network.data?.data}
-        />
-        <DisksCard className={SPAN.disks} index={2} hostname={data?.hostname} />
-        {showChecklist ? (
-          <SetupChecklist
-            className={SPAN.steps}
-            index={3}
-            info={data}
-            username={username}
+        <div className={STACK.left}>
+          <StorageCard
+            index={0}
+            items={storage}
+            loading={mounted.isPending}
+            error={mounted.error}
+            stale={mounted.isRefetchError && !pageStale}
+            updatedAt={mounted.dataUpdatedAt}
+            retrying={mounted.isFetching}
+            onRetry={readStorage}
           />
-        ) : null}
-        <ServicesCard
-          className={span.services}
-          index={4}
-          services={services.data?.data}
-          pending={pending}
-          loading={services.isPending}
-          error={services.error}
-          stale={services.isRefetchError && !pageStale}
-          updatedAt={services.dataUpdatedAt}
-          retrying={services.isFetching}
-          onRetry={readServices}
-        />
+          <DisksCard index={2} hostname={data?.hostname} />
+        </div>
+        <div className={STACK.right}>
+          <LiveCard
+            index={1}
+            info={data}
+            stale={info.isRefetchError}
+            updatedAt={info.dataUpdatedAt}
+            devices={network.data?.data}
+          />
+          {showChecklist ? (
+            <SetupChecklist index={3} info={data} username={username} />
+          ) : (
+            servicesCard(undefined)
+          )}
+        </div>
+        {showChecklist ? servicesCard(SPAN.withSteps.services) : null}
         <NetworkCard
           className={span.network}
           index={5}

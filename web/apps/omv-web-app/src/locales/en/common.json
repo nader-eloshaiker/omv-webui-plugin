@@ -133,13 +133,13 @@
       "toFix": "to fix",
       "checked": "checked",
       "ok": "OK",
-      "worst": "Worst first: <title></title>.",
       "readFailedList": "Could not read: {{list}}.",
       "disksNotChecked": "Disk health has not been checked since you signed in.",
       "noStorage": "There is no file system yet, so the NAS has nowhere to keep files.",
       "readingList": "Still reading: {{list}}.",
       "unknownList": "Not everything could be checked: {{list}}.",
-      "allChecked": "Disk health was checked at {{time}}. The rest is read while this page is open."
+      "allChecked": "Disk health was checked at {{time}}. The rest is read while this page is open.",
+      "worst": "Worst first: <title></title>."
     },
     "headline": {
       "many_one": "{{count}} thing needs you",
@@ -230,7 +230,9 @@
         "serviceDown_other": "{{count}} services are not running",
         "restart": "The NAS needs a restart",
         "clock": "The clocks differ by {{duration}}"
-      }
+      },
+      "systemDrive": "The system drive",
+      "quoted": "“<name></name>”"
     },
     "user": {
       "title": "This NAS",
@@ -629,18 +631,19 @@
   },
   "checklist": {
     "title": "First steps",
-    "intro": "Six things to check on a new NAS, each read from its current settings.",
     "state": {
       "done": "Done",
       "notDone": "Not done",
       "notChecked": "Not checked",
-      "checking": "Checking…"
+      "checking": "Checking…",
+      "cannotCheck": "The NAS cannot check this"
     },
     "password": {
       "title": "Change the factory password",
       "body": "openmediavault is installed with a password that anyone can look up. If it has not been changed yet, change it now. This page cannot check whether it has been.",
       "bodyOtherAdmin": "openmediavault is installed with a password for the admin account that anyone can look up. This page cannot check whether it has been changed. To change it, sign in as admin and open Your account.",
-      "link": "Change your password"
+      "link": "Change your password",
+      "short": "The NAS cannot tell whether it has been changed."
     },
     "https": {
       "title": "Use a secure connection (HTTPS)",
@@ -648,38 +651,43 @@
       "doneOnHttp": "HTTPS is on, but this page was opened without it.",
       "secureNoLink": "Open this page with an address that starts with https://.",
       "securePort": "The secure connection uses port <port></port>.",
-      "notDone": "HTTPS is off. The notice at the top of the page says why that matters. Turning it on needs a certificate, which the classic interface can create.",
       "link": "Open Web interface settings in the classic interface",
-      "readFailed": "Could not read the web interface settings."
+      "readFailed": "Could not read the web interface settings.",
+      "notDoneShort": "HTTPS is off.",
+      "notDoneWhy": "The notice at the top of the page says why that matters. Turning it on needs a certificate, which the classic interface can create."
     },
     "email": {
       "title": "Get email alerts",
       "done": "Alerts go to {{address}}.",
-      "off": "Alerts are off. Turn them on to hear about failing disks, full file systems and available updates. You need the details of an email account the NAS can send from.",
       "incomplete": "Alerts are on, but some details are missing, so none can be sent.",
       "applyHint": "After saving there, apply the changes, then send a test email.",
       "link": "Open Notifications in the classic interface",
-      "readFailed": "Could not read the email alert settings."
+      "readFailed": "Could not read the email alert settings.",
+      "offShort": "Alerts are off.",
+      "offWhy": "Turn them on to hear about failing disks, full file systems and available updates. You need the details of an email account the NAS can send from."
     },
     "updates": {
       "title": "Install updates",
       "available_one": "{{count}} update is available.",
       "available_other": "{{count}} updates are available.",
-      "none": "No updates were found the last time the NAS looked. This page cannot tell when that was, so check for updates once to be sure.",
-      "link": "Open Updates in the classic interface"
+      "link": "Open Updates in the classic interface",
+      "noneShort": "No updates were found the last time the NAS looked.",
+      "noneWhy": "This page cannot tell when that was, so check for updates once to be sure."
     },
     "name": {
       "title": "Name of your NAS",
-      "body": "Your NAS is called <name></name>. Other computers on your network find it by this name.",
-      "link": "Change the name"
+      "body": "Your NAS is called <name></name>.",
+      "link": "Change the name",
+      "why": "Other computers on your network find it by this name."
     },
     "timezone": {
       "title": "Time zone",
-      "body": "Time zone: <zone></zone>. Schedules, logs and the clock use it.",
+      "body": "Time zone: <zone></zone>.",
       "ntpOn": "The clock is set automatically from the internet.",
       "ntpOff": "The clock is not set automatically.",
       "link": "Change it in the classic interface",
-      "readFailed": "Could not read the date and time settings."
+      "readFailed": "Could not read the date and time settings.",
+      "why": "Schedules, logs and the clock use it."
     },
     "hide": "Hide first steps",
     "hideHint": "Hides them for every administrator, and hides the classic interface's welcome panel too.",
@@ -690,7 +698,8 @@
     "hidden": "First steps hidden.",
     "progress": "{{done}} of {{total}} done",
     "progressFigure": "{{done}}/{{total}}",
-    "progressHint": "Counts the steps the NAS can check for itself."
+    "details": "Details",
+    "detailsFor": "Details: {{title}}"
   },
   "ssh": {
     "title": "SSH",

@@ -100,6 +100,14 @@ function ChartFailed({ onRetry }: { onRetry: (() => void) | undefined }) {
   );
 }
 
+/**
+ * The three tiles lay out alike: in a row, the name and figure take one fixed column and the plot
+ * the rest, and the sub-line runs under both, so a long load line never narrows one plot and no two
+ * plots differ in width.
+ */
+const TILE =
+  "@xs/tile:[&>div]:grid-cols-[minmax(0,9rem)_minmax(0,1fr)] [&_[data-part=sub]]:col-span-full";
+
 const percentFigure = (value: number): string => {
   const whole = wholePercent(value);
   return whole === "under1" ? "<1" : String(whole);
@@ -193,6 +201,7 @@ export function LiveCard({
   if (devices === undefined) {
     network = (
       <LiveTile
+        className={TILE}
         name={t("dashboard.live.network")}
         figure={<Skeleton className="w-24 text-lg" />}
         plot={<LivePlotSkeleton />}
@@ -201,6 +210,7 @@ export function LiveCard({
   } else if (iface === null) {
     network = (
       <LiveTile
+        className={TILE}
         name={t("dashboard.live.network")}
         figure={
           <span className="text-base text-muted-foreground">
@@ -218,6 +228,7 @@ export function LiveCard({
     const waiting = t("dashboard.live.waitingRate");
     network = (
       <LiveTile
+        className={TILE}
         name={t("dashboard.live.network")}
         figure={
           newestRate === undefined ? (
@@ -275,6 +286,7 @@ export function LiveCard({
       <div className="@container/live">
         <div className="grid gap-x-gutter gap-y-6 @min-[35rem]/live:grid-cols-3">
           <LiveTile
+            className={TILE}
             name={t("dashboard.live.cpu")}
             figure={
               <LiveFigure
@@ -305,6 +317,7 @@ export function LiveCard({
             </Disclosure>
           </LiveTile>
           <LiveTile
+            className={TILE}
             name={t("dashboard.live.memory")}
             figure={
               <LiveFigure

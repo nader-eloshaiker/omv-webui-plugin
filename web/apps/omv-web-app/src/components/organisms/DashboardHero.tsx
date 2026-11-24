@@ -165,10 +165,19 @@ export function DashboardHero({
       break;
     case "problems": {
       const { count, first } = answer;
-      if (count === 1 && first !== undefined) {
-        headline = <AttentionTitle row={first} />;
-      } else if (count > 1 && first !== undefined) {
+      if (count > 0) {
+        // The count, never the card's own title: the card below says what, once.
         headline = t("dashboard.headline.many", { count });
+      } else {
+        headline = t("dashboard.headline.look", {
+          list: areaList(
+            areas
+              .filter((a) => a.status === "warning" || a.status === "critical")
+              .map((a) => a.id),
+          ),
+        });
+      }
+      if (count > 1 && first !== undefined) {
         lines.push({
           key: "worst",
           node: (
@@ -178,14 +187,6 @@ export function DashboardHero({
                 title: <NodeSlot value={<AttentionTitle row={first} />} />,
               }}
             />
-          ),
-        });
-      } else {
-        headline = t("dashboard.headline.look", {
-          list: areaList(
-            areas
-              .filter((a) => a.status === "warning" || a.status === "critical")
-              .map((a) => a.id),
           ),
         });
       }
@@ -308,7 +309,12 @@ export function DashboardHero({
         ) : (
           <>
             <PageAnswerKicker>
-              <StatusPill status={overall}>{t(`health.${overall}`)}</StatusPill>
+              {/* Only a pill that agrees with the headline: none while an area is not known. */}
+              {overall === "unknown" ? null : (
+                <StatusPill status={overall}>
+                  {t(`health.${overall}`)}
+                </StatusPill>
+              )}
               {hostname === undefined ? null : (
                 <Identifier className="text-muted-foreground">
                   {hostname}

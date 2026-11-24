@@ -143,7 +143,9 @@ describe("the administrator's dashboard", () => {
       }),
     ).toHaveAttribute("href", "/#/system/date-time");
     // The one card with a status is the answer; the clock advice is not counted.
-    expect(answer()).toHaveTextContent("The NAS needs a restart");
+    // The answer counts; the card below says what, once.
+    expect(answer()).toHaveTextContent("1 thing needs you");
+    expect(answer()).not.toHaveTextContent("The NAS needs a restart");
     expect(
       within(answer()).getByRole("group", { name: "Health of this NAS" }),
     ).toHaveTextContent("1to fix");
@@ -262,13 +264,13 @@ describe("a normal user's dashboard", () => {
 
 describe("first steps", () => {
   it("lists the six items in their fixed order, each with its state in words", async () => {
-    await dashboard();
+    const { user } = await dashboard();
     await within(checklist()).findByText("Etc/UTC");
     const titles = within(checklist())
       .getAllByRole("listitem")
       .map((li) => li.querySelector("p")?.textContent);
     expect(titles).toEqual([
-      "Change the factory password: Not checked.",
+      "Change the factory password: The NAS cannot check this.",
       "Use a secure connection (HTTPS): Not done.",
       "Get email alerts: Not done.",
       "Install updates: Not done.",
@@ -296,10 +298,11 @@ describe("first steps", () => {
       "href",
       "/#/system/notification/settings",
     );
-    // Only the steps the NAS can confirm are counted: HTTPS and email alerts.
+    // The four steps with something to do are counted; the name and time zone are values.
     expect(
       within(checklist()).getByRole("meter", { name: "First steps" }),
-    ).toHaveAttribute("aria-valuetext", "0 of 2 done");
+    ).toHaveAttribute("aria-valuetext", "0 of 4 done");
+    expect(checklist()).toHaveTextContent("0 of 4 done");
     expect(item("Install updates")).toHaveTextContent(
       "33 updates are available.",
     );
@@ -315,9 +318,18 @@ describe("first steps", () => {
         name: "Change the name",
       }),
     ).toHaveAttribute("href", "/ui/network/general");
-    expect(item("Time zone")).toHaveTextContent(
-      "Time zone: Etc/UTC. Schedules, logs and the clock use it.",
+    expect(item("Time zone")).toHaveTextContent("Time zone: Etc/UTC.");
+    // Each step is one short line; why it matters is behind its Details.
+    const why = within(item("Time zone")).getByText(
+      "Schedules, logs and the clock use it.",
     );
+    expect(why).not.toBeVisible();
+    await user.click(
+      within(item("Time zone")).getByRole("button", {
+        name: "Details: Time zone",
+      }),
+    );
+    expect(why).toBeVisible();
     expect(item("Time zone")).toHaveTextContent(
       "The clock is set automatically",
     );
@@ -365,7 +377,7 @@ describe("first steps", () => {
     );
     expect(
       within(checklist()).getByRole("meter", { name: "First steps" }),
-    ).toHaveAttribute("aria-valuetext", "1 of 2 done");
+    ).toHaveAttribute("aria-valuetext", "1 of 4 done");
     const cached = JSON.stringify(
       app.queryClient
         .getQueryCache()
@@ -399,7 +411,7 @@ describe("first steps", () => {
     // A step not read is not counted either way.
     expect(
       within(checklist()).getByRole("meter", { name: "First steps" }),
-    ).toHaveAttribute("aria-valuetext", "0 of 1 done");
+    ).toHaveAttribute("aria-valuetext", "0 of 4 done");
     fail = false;
     await user.click(within(https).getByRole("button", { name: "Try again" }));
     await waitFor(() =>

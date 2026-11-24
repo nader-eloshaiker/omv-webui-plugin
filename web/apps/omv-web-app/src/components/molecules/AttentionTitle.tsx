@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // An attention row's short title (dashboard spec 5.2): what is wrong, in a few words, with the
-// server's names as text in their own direction (UI-2). The card's heading, and the page's headline
-// when it is the only thing that needs the reader.
+// server's names as text in their own direction (UI-2). A file system's label is quoted, so a title
+// that starts with it still reads as a sentence ("“backups” is full"); a device is in the mono face,
+// and the system drive is named in words. The card's heading, and the worst one in the answer.
+import { Identifier } from "@omv-webui/react-ui-components";
 import { Trans, useTranslation } from "react-i18next";
-import type { AttentionRow } from "../../dashboard/dashboard.ts";
+import type { AttentionRow, FsName } from "../../dashboard/dashboard.ts";
 import { useFormat } from "../../format/useFormat.ts";
-import { FileSystemName } from "../atoms/FileSystemName.tsx";
 import { IdentifierText } from "../atoms/IdentifierText.tsx";
 import { NodeSlot } from "../atoms/NodeSlot.tsx";
 
@@ -14,6 +15,34 @@ const ZFS_TITLE = {
   unusable: "dashboard.attention.title.zfsUnusable",
   damaged: "dashboard.attention.title.zfsDamaged",
 } as const;
+
+/** A file system's name at the start of a title. */
+function TitleName({ name }: { name: FsName }) {
+  const { t } = useTranslation();
+  switch (name.kind) {
+    case "systemDrive":
+      return <>{t("dashboard.attention.systemDrive")}</>;
+    case "device":
+      return <Identifier>{name.text}</Identifier>;
+    case "label":
+      return (
+        <Trans
+          i18nKey="dashboard.attention.quoted"
+          components={{
+            name: (
+              <NodeSlot
+                value={
+                  <span dir="auto" className="break-words">
+                    {name.text}
+                  </span>
+                }
+              />
+            ),
+          }}
+        />
+      );
+  }
+}
 
 export function AttentionTitle({ row }: { row: AttentionRow }) {
   const { t } = useTranslation();
@@ -26,7 +55,7 @@ export function AttentionTitle({ row }: { row: AttentionRow }) {
         <Trans
           i18nKey={`dashboard.attention.title.${row.kind}`}
           components={{
-            name: <NodeSlot value={<FileSystemName name={row.name} />} />,
+            name: <NodeSlot value={<TitleName name={row.name} />} />,
           }}
         />
       );

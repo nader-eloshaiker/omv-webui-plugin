@@ -122,9 +122,9 @@ describe("the Storage card", () => {
     await dashboard({ scenario: "storageFull" });
     const rows = within(await attention()).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent(
-      "Criticalbackups is fullNothing more can be saved on it until you delete or move some files.",
+      "Critical“backups” is fullNothing more can be saved on it until you delete or move some files.",
     );
-    expect(answer()).toHaveTextContent("backups is full");
+    expect(answer()).toHaveTextContent("1 thing needs you");
     expect(
       within(card("Storage")).getByText("1 of 3 file systems: Critical"),
     ).toBeInTheDocument();
@@ -252,8 +252,9 @@ describe("the Disks card", () => {
     });
     const slots = within(bay).getAllByRole("listitem");
     expect(slots).toHaveLength(6);
+    // Said once in the header; each slot keeps the word for screen readers only.
     for (const slot of slots) {
-      expect(slot).toHaveTextContent("Not checked");
+      expect(within(slot).getByText("Not checked")).toHaveClass("sr-only");
     }
     expect(slots[0]).toHaveTextContent(/^nvme0n1Not checked/);
     expect(within(bay).getByRole("link", { name: /^sda/ })).toHaveAttribute(
