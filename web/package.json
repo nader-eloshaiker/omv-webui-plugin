@@ -23,6 +23,7 @@
     "test:vm": "pnpm --filter @omv-webui/react-api-omv test:vm",
     "test:browser": "pnpm build && pnpm --filter omv-web-app test:browser",
     "test:browser:install": "pnpm --filter omv-web-app test:browser:install",
+    "test:browser:lab": "pnpm --filter omv-web-app build:lab && pnpm --filter omv-web-app test:browser:lab",
     "test:browser:vm": "pnpm --filter omv-web-app test:browser:vm"
   },
   "devDependencies": {

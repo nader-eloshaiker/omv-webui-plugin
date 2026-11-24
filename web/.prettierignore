@@ -1,4 +1,5 @@
 **/dist
+**/dist-lab
 **/storybook-static
 **/node_modules
 **/generated

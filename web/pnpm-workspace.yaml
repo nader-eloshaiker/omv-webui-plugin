@@ -36,6 +36,14 @@ catalogs:
   forms:
     valibot: ^1.5.0
 
+  # Charts: SVG drawn through React; no style element, no HTML sink, no eval; text is measured with
+  # a span styled through the CSSOM. Checked under the snippet's headers with Trusted Types enforced
+  # (pnpm test:browser:lab). Pinned to a release that had been public for a week when it was added.
+  # react-is is its peer dependency, kept at React's own version.
+  charts:
+    recharts: 3.11.0
+    react-is: ^19.3.0
+
   # Every user-facing string comes from a catalogue (docs/02, "i18n").
   i18n:
     i18next: ^26.4.2

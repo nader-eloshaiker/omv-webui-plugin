@@ -97,6 +97,11 @@ export const FORBIDDEN_MARKERS = [
   { text: "__vitest_", what: "Vitest (UI-11)" },
   { text: "/@vite/client", what: "the Vite dev server client (UI-11)" },
   { text: "$RefreshReg$", what: "React Refresh, development only (UI-11)" },
+  {
+    text: "omv-lab",
+    what: "the design lab, src/lab, development only (UI-11)",
+  },
+  { text: "lx-labbar", what: "the design lab's controls (UI-11)" },
 ];
 
 const TEXT_TYPES = new Set([

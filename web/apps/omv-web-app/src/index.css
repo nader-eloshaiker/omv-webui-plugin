@@ -2,4 +2,6 @@
 @import "@omv-webui/css-ui-style";
 
 @source ".";
+/* The design lab is development only; its words must not become production utilities. */
+@source not "./lab";
 @source "../../../packages/react-ui-components/src";
