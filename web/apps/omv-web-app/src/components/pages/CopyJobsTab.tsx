@@ -33,7 +33,7 @@ import {
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useJobWords } from "../../hooks/useJobWords.ts";
 import { useNasTime, useRsyncJobs } from "../../hooks/useJobsReads.ts";
@@ -52,7 +52,6 @@ import {
   unreachableFolders,
 } from "../../services/jobModel.ts";
 import {
-  forgetJobsPending,
   jobPending,
   jobsSession,
   requestChange,
@@ -85,12 +84,6 @@ export function CopyJobsTab() {
   const pending = system.pending;
   const [running, setRunning] = useState<RunTarget | null>(null);
   const [deleting, setDeleting] = useState<DeleteTarget | null>(null);
-
-  useEffect(() => {
-    if (pending !== undefined) {
-      forgetJobsPending(pending);
-    }
-  }, [pending]);
 
   let table;
   if (jobs.data === undefined && jobs.isError) {

@@ -5,6 +5,7 @@
 // (7.2: in memory, never in the address), how many snapshots a file system's page last counted (2.6),
 // and the pools an action of this session is changing now (0.10, one action at a time). In memory only
 // (UI-13); emptied when the session ends (app.ts).
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 
 export interface CreatedPool {
@@ -43,23 +44,31 @@ export const recordCreatedPool = (pool: CreatedPool): void =>
     created: [...s.created.filter((p) => p.pool !== pool.pool), pool],
   }));
 
-export const recordTouched = (pool: string): void =>
-  zfsSession.set((s) =>
-    s.touched.includes(pool) ? {} : { touched: [...s.touched, pool] },
-  );
+/** What adding or removing a file system marks pending (observed on the test VM, 0.9). */
+export const ZFS_MODULES = ["fstab", "collectd", "monit", "quota"] as const;
 
-export const recordSaved = (fs: string): void =>
-  zfsSession.set((s) =>
-    s.saved.includes(fs) ? {} : { saved: [...s.saved, fs] },
-  );
-
-/** Once nothing of ZFS's is pending any more, the marks are forgotten. */
-export const forgetPending = (): void =>
+/** Once nothing of ZFS's is pending any more, the marks are forgotten (savedMarks.ts). */
+const marks = savedMarks.track(ZFS_MODULES, () =>
   zfsSession.set((s) =>
     s.touched.length === 0 && s.saved.length === 0
       ? {}
       : { touched: [], saved: [] },
+  ),
+);
+
+export const recordTouched = (pool: string): void => {
+  marks.saved();
+  zfsSession.set((s) =>
+    s.touched.includes(pool) ? {} : { touched: [...s.touched, pool] },
   );
+};
+
+export const recordSaved = (fs: string): void => {
+  marks.saved();
+  zfsSession.set((s) =>
+    s.saved.includes(fs) ? {} : { saved: [...s.saved, fs] },
+  );
+};
 
 export const handOffReplace = (pool: string, path: string): void =>
   zfsSession.set({ handoff: { pool, path } });

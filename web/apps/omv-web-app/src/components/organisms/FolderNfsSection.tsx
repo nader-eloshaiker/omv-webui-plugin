@@ -51,7 +51,6 @@ import {
 import {
   beginNfsAction,
   endNfsAction,
-  forgetNfsPending,
   nfsFolderPending,
   nfsSession,
   recordNfsSaved,
@@ -134,12 +133,6 @@ export function FolderNfsSection({
       element.focus();
     }
   });
-
-  useEffect(() => {
-    if (pending !== undefined) {
-      forgetNfsPending(pending);
-    }
-  }, [pending]);
 
   const failed =
     shares.isError && shares.data === undefined

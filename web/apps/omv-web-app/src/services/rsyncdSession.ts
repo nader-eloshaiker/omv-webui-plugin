@@ -4,6 +4,7 @@
 // mark beside their row), and the action running on each folder (one at a time). In memory only
 // (UI-13); emptied when the session ends (app.ts). Folders are kept by their `uuid`, an identifier the
 // server gave.
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 import { RSYNCD_MODULE } from "./rsyncdModel.ts";
 
@@ -26,25 +27,26 @@ const INITIAL: RsyncdSessionState = {
 
 export const rsyncdSession = createMemoryStore<RsyncdSessionState>(INITIAL);
 
-export const recordSwitchSaved = (): void =>
-  rsyncdSession.set((s) => (s.switchSaved ? {} : { switchSaved: true }));
-
-export const recordModuleSaved = (folderUuid: string): void =>
-  rsyncdSession.set((s) =>
-    s.saved.includes(folderUuid) ? {} : { saved: [...s.saved, folderUuid] },
-  );
-
-/** Once `rsyncd` is not pending any more (an apply or an undo ran), the marks are forgotten. */
-export function forgetRsyncdPending(pending: readonly string[]): void {
-  if (pending.includes(RSYNCD_MODULE)) {
-    return;
-  }
+/** Once `rsyncd` is not pending any more (an apply or an undo ran), the marks are forgotten (savedMarks.ts). */
+const marks = savedMarks.track([RSYNCD_MODULE], () =>
   rsyncdSession.set((s) =>
     !s.switchSaved && s.saved.length === 0
       ? {}
       : { switchSaved: false, saved: [] },
+  ),
+);
+
+export const recordSwitchSaved = (): void => {
+  marks.saved();
+  rsyncdSession.set((s) => (s.switchSaved ? {} : { switchSaved: true }));
+};
+
+export const recordModuleSaved = (folderUuid: string): void => {
+  marks.saved();
+  rsyncdSession.set((s) =>
+    s.saved.includes(folderUuid) ? {} : { saved: [...s.saved, folderUuid] },
   );
-}
+};
 
 /** Mark a folder's offer as being changed; false when an action on it already runs (0.10). */
 export function beginRsyncdAction(
