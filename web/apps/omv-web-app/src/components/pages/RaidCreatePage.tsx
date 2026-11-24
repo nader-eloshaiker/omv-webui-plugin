@@ -38,7 +38,7 @@ export function RaidCreatePage() {
 
 function RaidCreate() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const { missing } = useArraysRead();
   const { run } = useMemoryStore(raidFlowStore);
   const pending = pendingModules(info.data?.dirtyModules);

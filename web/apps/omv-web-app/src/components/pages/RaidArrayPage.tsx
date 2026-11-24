@@ -103,7 +103,7 @@ function RaidArray({ address }: { address: string | null }) {
   const disks = useDiskList();
   const row = v.view?.row;
   const slaves = useArraySlaves(row?.devicefile ?? "", row !== undefined);
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(raidSession);
   const disksRef = useRef<ArrayDisksHandle>(null);
   const [deleted, setDeleted] = useState<Deleted | null>(null);

@@ -35,7 +35,7 @@ export function AddPersonPage() {
 
 function AddPerson() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const { run } = useMemoryStore(addPersonStore);
   const pending = pendingModules(info.data?.dirtyModules);
 

@@ -37,7 +37,7 @@ import { NetworkApplyFindings } from "./NetworkApplyFindings.tsx";
 
 export function PendingChanges() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const tasks = useTasks();
   const showTask = useShowTask();
   const modules = pendingModules(info.data?.dirtyModules);

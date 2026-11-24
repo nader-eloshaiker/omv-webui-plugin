@@ -36,7 +36,7 @@ function Proxy() {
   const { t } = useTranslation();
   const [dirty, setDirty] = useState(false);
   const proxy = useProxySettings({ focus: !dirty });
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(networkSession);
   const modules = pendingModules(info.data?.dirtyModules);
   const pending =

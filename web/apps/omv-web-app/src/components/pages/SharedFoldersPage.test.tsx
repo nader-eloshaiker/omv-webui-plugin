@@ -456,7 +456,11 @@ describe("the shared folders table", () => {
     await within(table()).findByRole("row", { name: /a4share/ });
     expect(
       callNames().filter(
-        (c) => !/\.(get|is)/.test(c) && c !== "Zfs.listCompressionTypes",
+        (c) =>
+          !/\.(get|is)/.test(c) &&
+          c !== "Zfs.listCompressionTypes" &&
+          // The shell's combined read: the interface counters (live/useLive.ts), a read.
+          c !== "Network.enumerateDevicesList",
       ),
     ).toEqual([]);
   });

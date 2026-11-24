@@ -77,7 +77,7 @@ function FileSystems() {
   const candidates = useMountCandidates();
   const mounted = useMountedWithRoot();
   const disks = useDiskList();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(fsSession);
   const shares = useAllShares(memory.created.length > 0);
   const readAgain = useReadFileSystemsAgain();

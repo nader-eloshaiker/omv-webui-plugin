@@ -34,7 +34,11 @@ describe("the shares routes", () => {
       ).toHaveAttribute("aria-current", "page");
       expect(
         callNames().filter(
-          (c) => !/\.(get|is)/.test(c) && c !== "Zfs.listCompressionTypes",
+          (c) =>
+            !/\.(get|is)/.test(c) &&
+            c !== "Zfs.listCompressionTypes" &&
+            // The shell's combined read: the interface counters (live/useLive.ts), a read.
+            c !== "Network.enumerateDevicesList",
         ),
       ).toEqual([]);
     },

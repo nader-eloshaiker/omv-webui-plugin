@@ -53,7 +53,7 @@ function Firewall() {
   const unsaved = orders[4] !== null || orders[6] !== null;
   // While an order is unsaved, the page does not read again on focus: what it shows stays put.
   const context = useFirewallContext({ focus: !unsaved });
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const memory = useMemoryStore(networkSession);
   const pending =
     pendingModules(info.data?.dirtyModules).includes("iptables") &&

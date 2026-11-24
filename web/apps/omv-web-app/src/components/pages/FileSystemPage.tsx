@@ -177,7 +177,7 @@ function Sections({
 }) {
   const { t } = useTranslation();
   const words = useFsWords();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const disks = useDiskList();
   const entry = useMountEntry(fs.devicefile);
   const shares = useAllShares();

@@ -19,6 +19,7 @@ import {
   type FetchQueryOptions,
   type QueryKey,
 } from "@tanstack/react-query";
+import { LIVE_STALE_MS } from "../live/liveDemand.ts";
 
 /** One rhythm for every dashboard poll (D6): gentler than the stock dashboard's 10 s. */
 export const DASHBOARD_POLL_MS = 20_000;
@@ -70,10 +71,14 @@ export const useConfiguredFilesystems = () =>
 export const useServiceStatus = () =>
   useServicesGetStatus({ request: background, query: poll });
 
+/**
+ * Every interface. Read, not polled: the shell's combined read (live/useLive.ts) polls this entry
+ * for the interface counters, and a second timer on it would double the reads.
+ */
 export const useNetworkInterfaces = () =>
   useNetworkEnumerateDevicesList(ALL_INTERFACES, {
     request: background,
-    query: poll,
+    query: { staleTime: LIVE_STALE_MS },
   });
 
 /**

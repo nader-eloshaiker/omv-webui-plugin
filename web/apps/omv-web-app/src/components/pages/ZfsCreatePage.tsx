@@ -65,7 +65,7 @@ export function OtherZfsRun({ run }: { run: ZfsRun }) {
 
 function ZfsCreate() {
   const { t } = useTranslation();
-  const info = useSystemInformation("admin");
+  const info = useSystemInformation();
   const plugin = useZfsPlugin(true);
   const { run } = useMemoryStore(zfsFlowStore);
   const pending = pendingModules(info.data?.dirtyModules);
