@@ -9,6 +9,7 @@
 // Account names, the host name and addresses come from the env file or the VM and are never printed.
 import type { Page, Request } from "@playwright/test";
 import copy from "../../src/locales/en/common.json" with { type: "json" };
+import { openNavGroup } from "../support/shell.ts";
 import { expect, target, test } from "./support/vmFixtures.ts";
 import type { Account } from "./support/vmTarget.ts";
 
@@ -241,6 +242,7 @@ test.describe("an administrator", () => {
       const replies = recordReplies(page);
       const failed = recordFailedReplies(page);
       await signIn(page, vm.admin);
+      await openNavGroup(page, "diagnostics");
       await navigation(page)
         .getByRole("link", { name: copy.nav.items.diagnostics["system-logs"] })
         .click();
@@ -320,6 +322,7 @@ test.describe("an administrator", () => {
   }) => {
     const calls = recordCalls(page);
     await signIn(page, vm.admin);
+    await openNavGroup(page, "diagnostics");
     await navigation(page)
       .getByRole("link", { name: copy.nav.items.diagnostics.processes })
       .click();
@@ -353,6 +356,7 @@ test.describe("an administrator", () => {
     const calls = recordCalls(page);
     const replies = recordReplies(page);
     await signIn(page, vm.admin);
+    await openNavGroup(page, "diagnostics");
     await navigation(page)
       .getByRole("link", { name: copy.nav.items.diagnostics.services })
       .click();

@@ -7,6 +7,8 @@ import {
   CLASSIC_HTTPS_SETTINGS,
   findNavPage,
   isCurrent,
+  isCurrentPage,
+  JUMP_KEYS,
   NAV_PAGES,
   navFor,
 } from "./navigation.ts";
@@ -247,5 +249,29 @@ describe("isCurrent", () => {
       expect(isCurrent(`/storage/smart/${page}`, "/storage/smart")).toBe(true);
     }
     expect(isCurrent("/storage/smart/overview", "/storage/disks")).toBe(false);
+  });
+});
+
+describe("the jump keys", () => {
+  it("use each letter once, never g, and only for pages that exist", () => {
+    const letters = Object.values(JUMP_KEYS);
+    expect(new Set(letters).size).toBe(letters.length);
+    expect(letters).not.toContain("g");
+    for (const route of Object.keys(JUMP_KEYS)) {
+      expect(
+        route === "/" ||
+          NAV_PAGES.some((p) => "route" in p && p.route === route),
+      ).toBe(true);
+    }
+  });
+});
+
+describe("isCurrentPage", () => {
+  it("marks a built page by its routes and a classic-only page by its own address", () => {
+    const disks = findNavPage("storage", "disks")!;
+    const cron = findNavPage("system", "cron")!;
+    expect(isCurrentPage("/storage/disks/sdb", disks)).toBe(true);
+    expect(isCurrentPage("/system/cron", cron)).toBe(true);
+    expect(isCurrentPage("/system/cron", disks)).toBe(false);
   });
 });

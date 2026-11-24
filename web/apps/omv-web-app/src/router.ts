@@ -26,6 +26,12 @@ export function createAppRouter(context: RouterContext) {
     // Off: the router would keep visited paths and scroll positions in sessionStorage, and storage
     // holds preferences only (UI-13). A path can carry an object's identifier.
     scrollRestoration: false,
+    // Page changes run in a view transition where the browser has one (foundation 7.2): the shell is
+    // named and stays still while the page fades and scales up (css-ui-style's shell.css). Only for a
+    // change of page; under reduced motion the stylesheet cuts it.
+    defaultViewTransition: {
+      types: ({ pathChanged }) => (pathChanged ? ["page"] : false),
+    },
   });
 }
 

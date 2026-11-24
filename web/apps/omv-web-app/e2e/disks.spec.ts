@@ -8,6 +8,7 @@
 import type { Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
+import { openNavGroup } from "./support/shell.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -75,6 +76,7 @@ test("the Disks list from the menu, by keyboard, with no waking read", async ({
   rpc,
 }) => {
   await signIn(page);
+  await openNavGroup(page, "storage");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: copy.nav.items.storage.disks })

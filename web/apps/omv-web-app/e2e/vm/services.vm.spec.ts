@@ -25,6 +25,7 @@
 import type { Page, Response } from "@playwright/test";
 import { randomBytes } from "node:crypto";
 import copy from "../../src/locales/en/common.json" with { type: "json" };
+import { revealPendingBand } from "../support/shell.ts";
 import { expect, target, test } from "./support/vmFixtures.ts";
 import type { Account } from "./support/vmTarget.ts";
 
@@ -182,6 +183,7 @@ const pendingCount = (seen: Watch) => {
 /** Apply what is pending through the band, and wait until it has gone. */
 async function applyPending(page: Page) {
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   await expect(band).toBeVisible({ timeout: 30_000 });
   const apply = band.getByRole("button", { name: /^Apply \d+ change/ });
   const label = ((await apply.textContent()) ?? "").trim();

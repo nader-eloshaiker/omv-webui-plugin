@@ -394,3 +394,33 @@ describe("the content security policy (UI-1) and local assets (UI-7)", () => {
     );
   });
 });
+
+describe("the shell's motion (foundation 7.2)", () => {
+  it("keeps the named shell still and moves only the page on a page change", () => {
+    const css = build([]);
+    assert.match(
+      css,
+      /::view-transition-group\(shell-top\),\s*::view-transition-group\(shell-nav\),\s*::view-transition-group\(shell-pending\),\s*::view-transition-group\(shell-main\) \{\s*animation-duration: 0s;/,
+    );
+    assert.match(
+      css,
+      /::view-transition-new\(shell-main\) \{\s*animation: shell-page-in var\(--duration-slow\) var\(--ease-enter\)/,
+    );
+    assert.match(
+      css,
+      /@keyframes shell-page-in \{\s*from \{\s*opacity: 0;\s*scale: 0\.985;/,
+    );
+  });
+
+  it("runs the apply line once, on the tokens, never in a loop", () => {
+    const declarations = rule(
+      build(["animate-pending-apply"]),
+      "animate-pending-apply",
+    );
+    assert.match(
+      declarations,
+      /animation: pending-apply calc\(var\(--duration-glide\) \* 4\) var\(--ease-standard\)\s*forwards/,
+    );
+    assert.doesNotMatch(declarations, /infinite/);
+  });
+});
