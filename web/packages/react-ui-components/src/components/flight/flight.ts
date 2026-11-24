@@ -82,7 +82,7 @@ export function whenLanded(target: Element | null): Promise<void> {
   return (target && inFlight.get(target)) ?? Promise.resolve();
 }
 
-/** The pending mark: OMV's yellow with its coffee ink around it, the band's pair (8.31:1). */
+/** The pending mark: the gold with its navy ink around it, the band's pair (11.53:1). */
 const PENDING_MARK_CLASS =
   "pointer-events-none fixed top-0 left-0 z-[100] size-3 rounded-full bg-pending ring-2 ring-pending-foreground";
 

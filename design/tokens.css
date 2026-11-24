@@ -36,6 +36,22 @@
 
 /* ─── Tier 1: primitives ──────────────────────────────────────────────────────────────────────── */
 @theme {
+  /* One colour scheme (foundation 3.6), in OKLCH hue. Every colour below has its place in it, and a
+     new colour takes a place in it or does not come in:
+       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage, the
+         map path and the ambient light are this one hue in lightness steps, and the slate neutrals
+         lean toward it (248 to 259);
+       - the colours that ask for attention sit opposite, on the base's complementary arc: warning
+         on the complement (62), critical and pending on the split complements (27 and 87). Their
+         lightness falls with hue, gold lightest, orange, red darkest, which is what keeps them
+         apart under colour-vision deficiency;
+       - OK is a quarter turn round from the base (151), on the calm side;
+       - the four chart series take the gaps between those hues (118, 195, 292, 345), so a series
+         never looks like a state;
+       - ink on a light fill is Sky's own navy, brand-950, never a new hue.
+     A word in a hue darkens toward red and lightens toward yellow (warning's label sits at its
+     fill's hue, pending's light words are navy), so no label goes olive or brown. */
+
   /* OMV sky blue. 400 is the stock OMV "corporate" blue, unchanged; the rest of the ramp is the
      same hue (OKLCH ~240) stepped in lightness. It is the brand accent: the mark, the primary and
      selected colour in dark, the focus ring, the live trace and the health ring. */
@@ -79,9 +95,11 @@
   --color-status-critical: #d01d21;
   --color-status-unknown: #b6bfc7;
 
-  /* Pending configuration changes: stock OMV yellow and its coffee-brown ink, unchanged. */
-  --color-pending-fill: #f8d400;
-  --color-pending-ink: #4d2e25;
+  /* Pending configuration changes: gold on the split complement of the blue (OKLCH 0.87 0.155 87),
+     warmer and softer than OMV's lemon but as light, so it stays apart from the orange; inked in
+     Sky's navy (11.53:1). The owner's choice, 2026-11-24. */
+  --color-pending-fill: #ffcd47;
+  --color-pending-ink: var(--color-brand-950);
 
   /* Type (foundation 4). Inter for everything, with its optical-size axis so the headline and large
      figures take Inter Display's tighter forms; Roboto Mono for device names, paths and addresses,
@@ -296,29 +314,32 @@
   --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
   --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
 
-  /* Pending configuration changes */
+  /* Pending configuration changes: the gold, inked in navy. In light, pending words are the navy on
+     the gold wash (a dark gold word would read olive or brown) and the stroke is a deep gold that
+     clears 3:1, which also edges the top bar's pill; in dark, the words are a lighter gold. */
   --theme-pending: var(--color-pending-fill);
   --theme-pending-foreground: var(--color-pending-ink);
-  --theme-pending-label: #695205;
-  --theme-pending-stroke: #8d7100;
+  --theme-pending-label: var(--color-brand-950);
+  --theme-pending-stroke: #9e7b0b;
   --theme-pending-wash: color-mix(in srgb, var(--color-pending-fill) 14%, transparent);
 
   /* Status: fill / stroke / label, and a wash behind the one element that carries a non-OK state
      (foundation 3.3). Washes are theme-invariant, like the fills; the label clears 4.5:1 on its
-     wash over every ground. */
+     wash over every ground. The labels sit at one weight: in light each clears 5.1 to 5.7:1 at its
+     worst. */
   --theme-ok: var(--color-status-ok);
-  --theme-ok-stroke: #007938;
-  --theme-ok-label: #00612c;
+  --theme-ok-stroke: #1d8545;
+  --theme-ok-label: #096a33;
   --theme-ok-wash: color-mix(in srgb, var(--color-status-ok) 12%, transparent);
   /* Words on the OK fill: only the Save button's brief "Saved" (foundation 7.2, save settle). */
-  --theme-ok-foreground: var(--color-slate-950);
+  --theme-ok-foreground: var(--color-brand-950);
   --theme-warning: var(--color-status-warning);
   --theme-warning-stroke: #ad5c15;
   --theme-warning-label: #8a4613;
   --theme-warning-wash: color-mix(in srgb, var(--color-status-warning) 14%, transparent);
   --theme-critical: var(--color-status-critical);
   --theme-critical-stroke: #c51e21;
-  --theme-critical-label: #a91518;
+  --theme-critical-label: #a32321;
   --theme-critical-wash: color-mix(in srgb, var(--color-status-critical) 14%, transparent);
   --theme-unknown: var(--color-status-unknown);
   --theme-unknown-stroke: #6b7782;
@@ -329,12 +350,13 @@
   --theme-destructive: #b7191c;
   --theme-destructive-foreground: #ffffff;
 
-  /* Charts: four categorical series, none of them a status hue, the brand, or the yellow. A
-     single-series live chart draws in --theme-trace instead. */
-  --theme-series-1: #6635a3; /* violet */
-  --theme-series-2: #006c6c; /* teal */
-  --theme-series-3: #d4599b; /* pink */
-  --theme-series-4: #62691b; /* olive */
+  /* Charts: four categorical series in the gaps between the scheme's hues (OKLCH hue, then L C):
+     never a status hue, the brand or the pending gold. One chroma, and an even lightness ladder so
+     they part in greyscale too. A single-series live chart draws in --theme-trace instead. */
+  --theme-series-1: #563e98; /* violet  0.44 0.14 292 */
+  --theme-series-2: #009a9a; /* teal    0.62 0.11 195 */
+  --theme-series-3: #983c75; /* magenta 0.50 0.14 345 */
+  --theme-series-4: #6f7d1a; /* moss    0.56 0.12 118 */
 
   /* Capacity: one hue by lightness. */
   --theme-usage: var(--color-brand-600);
@@ -349,10 +371,11 @@
   --theme-art-chassis-top: var(--color-slate-50); /* material light: lit from above, one step */
   --theme-art-chassis-bottom: var(--color-slate-200);
 
-  /* Task and log output: a dark ground in both themes, with a faint phosphor-green tint. */
+  /* Task and log output: a piece of the night theme in both themes, a dark slate ground with the
+     slate text tiers (no green tint: green is OK's hue). */
   --theme-terminal: #131619;
-  --theme-terminal-foreground: #cde6cf;
-  --theme-terminal-muted: #8c9e8e;
+  --theme-terminal-foreground: var(--color-slate-200);
+  --theme-terminal-muted: var(--color-slate-500);
 
   /* Elevation (foundation 6), by meaning; the light theme's ink is slate, never black.
      control: something pressable, at rest. raised: cards, panels, tables, as a layered soft shadow.
@@ -397,25 +420,25 @@
   --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
   --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
 
-  --theme-pending-label: #f3d754;
+  --theme-pending-label: #f4d660;
   --theme-pending-stroke: var(--color-pending-fill);
 
   --theme-ok-stroke: var(--color-status-ok);
   --theme-ok-label: #70e093;
   --theme-warning-stroke: var(--color-status-warning);
-  --theme-warning-label: #fbb360;
+  --theme-warning-label: #ffa659; /* at the fill's own hue, so it parts from the pending gold */
   --theme-critical-stroke: #f66d67;
   --theme-critical-label: #fb9890;
   --theme-unknown-stroke: var(--color-status-unknown);
   --theme-unknown-label: #b3bcc3;
 
   --theme-destructive: #f66d67;
-  --theme-destructive-foreground: #2a0606;
+  --theme-destructive-foreground: var(--color-brand-950);
 
-  --theme-series-1: #9369d4;
-  --theme-series-2: #97e9e8;
-  --theme-series-3: #e97ab2;
-  --theme-series-4: #b5c06b;
+  --theme-series-1: #a58de6; /* violet  0.70 0.13 295 */
+  --theme-series-2: #70f1da; /* teal    0.88 0.12 180 */
+  --theme-series-3: #c06099; /* magenta 0.62 0.14 345 */
+  --theme-series-4: #b3c65f; /* moss    0.79 0.13 118 */
 
   --theme-usage: var(--color-brand-400);
   --theme-usage-track: var(--color-slate-850);

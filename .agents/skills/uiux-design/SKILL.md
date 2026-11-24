@@ -143,7 +143,7 @@ Where a domain has destructive actions, agree the design with the owner before i
 
 1. [ ] Calm, dense, appliance-like; every element earns its place; affordances obvious?
 2. [ ] Worst first; overview to detail keeps context?
-3. [ ] Status words fixed; never colour alone; yellow only for pending?
+3. [ ] Status words fixed; never colour alone; the pending gold only for pending?
 4. [ ] Four async states and seven control states designed?
 5. [ ] Save versus apply clear; pending loop designed end to end?
 6. [ ] Destructive actions name the object and what is lost; type-to-confirm where irreversible?

@@ -874,3 +874,11 @@ Recharts 3.11.0 passed every check: no style elements, no HTML sinks, text measu
 ## 2026-11-24 — Test runs are capped (owner)
 
 Test runs pinned the owner's computer: `pnpm test` ran up to four packages at once, and each Vitest run started a worker for nearly every core. The owner asked for a practical limit on the computer and on CI. Each Vitest run now uses at most four workers on a developer's computer and two on CI (`maxWorkers` in the three test configs; `VITEST_MAX_WORKERS` overrides it for one run), and `pnpm test` runs the packages one after another. `.agents/rules/verification.md` says so.
+
+## 2026-11-24 — Colours follow one scheme (owner)
+
+The owner rejected the pending pair kept from stock OMV, lemon `#f8d400` with coffee-brown ink `#4d2e25` ("lacks taste and doesn't really match"), and asked that every colour combination follow colour theory and harmonise with Sky, not only pending. Measured in OKLCH, most of the palette already belonged to one scheme on Sky's blue (hue 240): warning's orange sits on its complement and critical's red on a split complement. What did not belong was the coffee ink (a low-chroma hue 37, neither side), the lemon (the brightest and most saturated fill, out of step with its siblings), the olive pending label, the dark destructive button's red-black ink, the chart series' uneven weights, and the terminal's green tint, which borrowed OK's hue.
+
+Three pending treatments were compared in Storybook in both themes: gold and navy in a solid band, a slate night band with gold accents, and the lemon kept with navy ink. The owner chose **gold `#ffcd47` with Sky's navy `#021d30`** and **all of the palette-wide changes**: navy as the one ink on every light fill, the status labels at one weight, the series re-spaced into the gaps between the scheme's hues at one chroma, and the terminal's words in slate. The pending pill takes its edge in `pending-stroke` so it clears 3:1 on the light page, and the band's buttons, unavailable while applying, become dashed outlines rather than fading into an unaudited khaki.
+
+The scheme is now the rule for any colour added later ([visual foundation 3.6](design/visual-foundation.md)). The colour audit simulates tritanopia as well as deuteranopia and protanopia, and checks 436 pairs with no failure.

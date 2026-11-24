@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The pending-changes band (style guide 5.8; foundation 10), for administrators: a slim band in OMV's
-// yellow under the top bar. It reads what is pending from System.getInformation, polled in the
+// The pending-changes band (style guide 5.8; foundation 10), for administrators: a slim band in the
+// pending gold under the top bar. It reads what is pending from System.getInformation, polled in the
 // background (UI-14) and refetched after every x-omv-dirty mutation and every finished task
 // (react-api-omv's query.ts). Apply and Undo run as tasks through the one task registry, so they keep
 // running while the user moves between pages. Both ask first: Apply lists what is applied and, when a

@@ -72,8 +72,8 @@ function usePresence(open: boolean): boolean {
 }
 
 /**
- * The pending-changes band (style guide 5.8, foundation 10): a slim band in OMV's pending yellow
- * directly under the top bar, the only place the yellow appears at size. It says what is waiting,
+ * The pending-changes band (style guide 5.8, foundation 10): a slim band in the pending gold with
+ * navy ink directly under the top bar, the only place the gold appears at size. It says what is waiting,
  * with Apply and Undo; while applying a progress line runs along its foot; on success it reads
  * "Applied" and the caller closes it. It sticks under the top bar, and while the page scrolls it
  * shrinks into the bar's pending pill, coming back near the top. Its words sit in a polite live
@@ -203,7 +203,8 @@ function PendingBand({
               </Button>
             ) : null}
             {/* Kept while applying and once applied, unavailable but focusable, so focus is never
-                dropped from under a keyboard user while the band finishes. */}
+                dropped from under a keyboard user while the band finishes. Unavailable, both are
+                dashed outlines in the ink: Apply gives up its fill rather than fading. */}
             <Button
               variant="onPending"
               size="sm"
@@ -219,7 +220,7 @@ function PendingBand({
               disabled={applying || applied}
               focusableWhenDisabled
               onClick={onApply}
-              className="bg-pending-foreground text-pending hover:bg-transparent hover:text-pending-foreground"
+              className="bg-pending-foreground text-pending hover:bg-transparent hover:text-pending-foreground data-disabled:bg-transparent data-disabled:text-pending-foreground"
             >
               {failed && retryLabel ? retryLabel : applyLabel}
             </Button>

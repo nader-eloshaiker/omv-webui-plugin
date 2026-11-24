@@ -59,11 +59,11 @@ broke. The first two should be quick and quiet. The third must be unmistakable.
 | Sky "corporate" blue `#5dacdf` | **Kept, exactly**, as the brand accent (the mark, the light, the live trace, the focus ring) and the action colour in dark. No longer a top bar (foundation 3.2) | It is the most recognisable thing about OMV. It cannot be the light-theme action colour: see 3.3 |
 | White text on the blue bar | **Gone with the bar** (foundation 3.2) | White on `#5dacdf` is 2.49:1 |
 | Slate-gray neutrals | **Kept as a family**, rebuilt as one ramp at one hue with lower chroma | Stock slate is already cool and near the brand hue; the ramp is made even so steps read as greys |
-| Yellow `#f8d400` with coffee ink `#4d2e25` | **Kept, exactly**, with exactly one job: pending configuration changes | It is OMV's signature banner. In stock OMV the same yellow is also "accent" and "warning": one hue, three jobs |
-| Dark orange `#f78f00` | **Kept, exactly**, as the warning fill | It frees yellow from the warning job |
+| Yellow `#f8d400` with coffee ink `#4d2e25` | **Kept as the idea, warmed to gold `#ffcd47` with Sky's navy ink** (foundation 3.6, owner, 2026-11-24), with exactly one job: pending configuration changes | It is OMV's signature banner. In stock OMV the same yellow is also "accent" and "warning": one hue, three jobs. The coffee ink sat on neither side of the colour wheel |
+| Dark orange `#f78f00` | **Kept, exactly**, as the warning fill | It frees the pending gold from the warning job, and it sits on the exact complement of the blue |
 | Green / red status | **Kept as hues**, retuned, and split into fill, stroke and label | The stock fills are used as words and fail (3.6) |
 | Inter and Roboto Mono | **Kept** | Already the OMV faces; Inter has tabular numerals |
-| Green-on-black terminal | **Kept as an idea**: a dark output ground with a faint green tint to the text | Neon `#33ff33` glares, and saturated green means "OK" here |
+| Green-on-black terminal | **Kept as an idea**: a dark output ground in both themes, now with the slate text tiers (foundation 3.6) | Neon `#33ff33` glares, and green, even as a tint, is OK's hue |
 | Material look (ripples, floating buttons, elevation everywhere) | **Dropped** (the flat replacement is itself superseded: foundation 6 and 7) | Depth and motion now mean hierarchy and change, never decoration |
 
 ---
@@ -102,13 +102,13 @@ nothing around it is shouting. Each hue has one job.
 | **Slate neutrals** | Every surface, border, divider and word that is not a signal | A second neutral temperature; a warm grey; an off-hue step |
 | **Action blue** (`action`, `action-label`, `focus-ring`) | The primary button, links, the focus ring, checked and selected states | A status; a chart series; an "info" severity; decoration |
 | **Brand sky blue** (`brand`, `trace`, `art-path`, `ambient`) | The mark, the live dot, the health ring, the live trace, the traced path on a map, the ambient light (foundation 3.2) | A surface fill or bar; a button or anything that looks pressable in light theme; a status |
-| **Pending yellow** (`pending`) | Configuration saved but not applied: the banner, and a mark on the item that is pending | Warning; "accent"; highlight; a hover; a badge count; anything decorative |
+| **Pending gold** (`pending`) | Configuration saved but not applied: the banner, and a mark on the item that is pending | Warning; "accent"; highlight; a hover; a badge count; anything decorative |
 | **OK green** | A monitored thing is healthy | "Success" confetti; a positive button; decoration; a chart series |
 | **Warning orange** | A monitored thing needs attention soon (a threshold crossed, a degraded-but-working state) | Emphasis; a hover; a "new" badge; pending changes |
 | **Critical red** | A monitored thing has failed or is failing | Emphasis; decoration; a gradient; a chart series |
 | **Destructive red** (`destructive`) | The confirm button of an irreversible action | A status mark; a cancel button; a link |
 | **Unknown grey** (`unknown`) | No reading, not monitored, disabled, stopped on purpose | "Fine"; plain secondary text |
-| **Chart categorical** (`series-1..4`: violet, teal, pink, olive) | Telling series apart | Blue, yellow, green, orange, red; a fifth generated hue |
+| **Chart categorical** (`series-1..4`: violet, teal, magenta, moss, in the gaps of the scheme, foundation 3.6) | Telling series apart | Blue, gold, green, orange, red; a fifth generated hue |
 | **Usage ramp** (action blue by lightness) | How full something is, on a meter or a sequential chart | A status; thresholds are the status hues with words (5.6) |
 | **Terminal pair** | Task and log output | Any other surface |
 
@@ -147,7 +147,7 @@ Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind 
 | `primary` / `primary-foreground` | `action` / `action-foreground` | |
 | `secondary` / `secondary-foreground` | `muted` / `foreground` | A neutral button. There is no chromatic secondary |
 | `muted` / `muted-foreground` | `muted` / `muted-foreground` | |
-| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here. Mapping it to yellow would paint every menu hover as "pending" |
+| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here. Mapping it to the pending gold would paint every menu hover as "pending" |
 | `destructive` / `destructive-foreground` | `destructive` / `destructive-foreground` | |
 | `border` | `border` | Dividers |
 | `input` | `border-control` | The edge of a control must clear 3:1 |
@@ -182,39 +182,47 @@ the surrounding greys fixes that. So the hue is split by job, staying at one OKL
   `#87c6f2` is the link colour (7.97 to 10.26:1). The dark theme is where OMV's blue does the most
   work.
 
-### 3.4 Decision: yellow means "pending", and only that
+### 3.4 Decision: gold means "pending", and only that
+
+**Values superseded** by [visual foundation](visual-foundation.md), section 3.6 (owner, 2026-11-24):
+the pending colour is gold `#ffcd47` with Sky's navy ink `#021d30` (11.53:1), on the split
+complement of the blue. The decision below, one hue with one job, stands; the table is the measured
+result for the gold.
 
 In stock OMV, `$omv-color-accent`, `$omv-color-warning` and the pending-changes banner are all
 `#f8d400`: OKLab distance 0.0 between "accent" and "warning". A yellow chip could mean "selected",
 "careful" or "not applied yet".
 
-- **Yellow keeps one job: configuration that is saved but not applied.** This is OMV's most
-  distinctive piece of interface and the reason to keep the hue at all. `pending` is `#f8d400` with
-  the stock coffee ink `#4d2e25`: 8.31:1.
+- **Gold keeps one job: configuration that is saved but not applied.** This is OMV's most
+  distinctive piece of interface and the reason to keep the hue at all. `pending` was OMV's
+  `#f8d400` with the coffee ink `#4d2e25` (8.31:1); it is now the warmer gold `#ffcd47`, as light as
+  the lemon, with navy ink (11.53:1).
 - **Warning moves to OMV's own dark orange `#f78f00`.**
 - **There is no accent colour.** shadcn's `accent` is neutral (3.2).
 
-Is orange far enough from yellow, and from red? From `node tools/colour-audit.mjs distinct` (OKLab
+Is orange far enough from the gold, and from red? From `node tools/colour-audit.mjs distinct` (OKLab
 distance x100; about 2 is one just-noticeable difference, and under 10 a pair needs its word or
 icon):
 
-| Pair | Normal | Deuteranopia | Protanopia | Greyscale lightness gap |
-| --- | --- | --- | --- | --- |
-| pending / warning | 16.6 | 12.8 | 17.3 | 12.9 |
-| pending / critical | 39.4 | 32.5 | 43.1 | 32.5 |
-| pending / ok | 15.8 | 11.6 | **8.3** | 3.5 |
-| warning / critical | 23.0 | 19.7 | 25.8 | 19.6 |
-| ok / warning | 24.9 | 11.9 | 19.7 | 9.4 |
-| ok / critical | 43.6 | 27.7 | 44.1 | 29.0 |
-| ok / unknown | 16.7 | **9.5** | 13.1 | 3.9 |
-| warning / unknown | 19.4 | 17.6 | 19.6 | 5.5 |
-| critical / unknown | 33.5 | 26.3 | 37.8 | 25.1 |
+| Pair | Normal | Deuteranopia | Protanopia | Tritanopia | Greyscale lightness gap |
+| --- | --- | --- | --- | --- | --- |
+| pending / warning | 14.5 | 12.1 | 15.8 | 15.2 | 12.5 |
+| pending / critical | 37.2 | 31.7 | 41.5 | 31.3 | 32.0 |
+| pending / ok | 16.6 | **9.4** | **7.3** | 19.7 | 3.1 |
+| pending / unknown | 18.3 | 18.9 | 17.7 | 11.0 | 7.0 |
+| warning / critical | 23.0 | 19.7 | 25.8 | 16.5 | 19.6 |
+| ok / warning | 24.9 | 11.9 | 19.7 | 30.4 | 9.4 |
+| ok / critical | 43.6 | 27.7 | 44.1 | 43.4 | 29.0 |
+| ok / unknown | 16.7 | **9.5** | 13.1 | 11.2 | 3.9 |
+| warning / unknown | 19.4 | 17.6 | 19.6 | 19.6 | 5.5 |
+| critical / unknown | 33.5 | 26.3 | 37.8 | 33.3 | 25.1 |
 
-The suggestion holds: yellow and orange stay apart under both simulated deficiencies, mostly on
-lightness (yellow is the lightest chromatic colour in the system). Two pairs fall under 10 and are
-carried by form instead: **pending / ok** under protanopia (pending is a banner or a labelled chip
-with its own icon, never a bare dot beside status dots), and **ok / unknown** under deuteranopia
-(the reason the Unknown mark is a hollow ring and OK is a filled disc: 5.5).
+The suggestion holds: the gold and the orange stay apart under all three simulated deficiencies,
+mostly on lightness (the gold is the lightest chromatic colour in the system, and the attention
+colours step down in lightness from gold to orange to red). Two pairs fall under 10 and are carried
+by form instead: **pending / ok** under deuteranopia and protanopia (pending is a banner or a
+labelled chip with its own icon, never a bare dot beside status dots), and **ok / unknown** under
+deuteranopia (the reason the Unknown mark is a hollow ring and OK is a filled disc: 5.5).
 
 The status fills were chosen for this table, not for looks. With the stock green `#4cd964` and red
 `#ff3b30` the green / red distance under deuteranopia is 11.7; a mid-lightness green tested during
@@ -238,7 +246,7 @@ Every chromatic family has members with different jobs, and each job has its own
 | Stock usage | Ratio |
 | --- | --- |
 | Status green `#4cd964` as a word on white | 1.84:1 |
-| Warning yellow `#f8d400` as a word on white | 1.46:1 |
+| Warning yellow `#f8d400` as a word on white (stock) | 1.46:1 |
 | Dark orange `#f78f00` as a word on white | 2.36:1 |
 | Status red `#ff3b30` as a word on white | 3.55:1 |
 | White text on the red fill | 3.55:1 |
@@ -249,14 +257,15 @@ takes the `-label` member:
 
 | Label | Light: page / surface / muted / muted-strong | Light: on its wash over surface | Dark: page / surface / muted / muted-strong | Dark: on its wash over surface |
 | --- | --- | --- | --- | --- |
-| `ok-label` | 6.85 / 7.65 / 7.17 / 6.54 | 7.23 | 11.51 / 10.64 / 9.88 / 8.94 | 8.15 |
-| `warning-label` | 6.34 / 7.08 / 6.64 / 6.06 | 6.28 | 10.56 / 9.76 / 9.07 / 8.20 | 7.86 |
-| `critical-label` | 6.70 / 7.48 / 7.02 / 6.40 | 5.94 | 9.01 / 8.32 / 7.73 / 7.00 | 7.77 |
+| `ok-label` | 6.03 / 6.73 / 6.31 / 5.76 | 6.37 | 11.51 / 10.64 / 9.88 / 8.94 | 8.15 |
+| `warning-label` | 6.34 / 7.08 / 6.64 / 6.06 | 6.28 | 9.78 / 9.04 / 8.39 / 7.60 | 7.28 |
+| `critical-label` | 6.67 / 7.45 / 6.99 / 6.37 | 5.91 | 9.01 / 8.32 / 7.73 / 7.00 | 7.77 |
 | `unknown-label` | 6.42 / 7.17 / 6.73 / 6.14 | 6.78 | 9.82 / 9.07 / 8.43 / 7.63 | 7.47 |
-| `pending-label` | 6.69 / 7.47 / 7.01 / 6.39 | 7.04 | 13.21 / 12.21 / 11.34 / 10.26 | 8.90 |
+| `pending-label` (navy in light) | 15.41 / 17.20 / 16.14 / 14.72 | 16.23 | 13.19 / 12.19 / 11.32 / 10.24 | 8.88 |
 
 The washes are 14% (warning, critical, pending), 12% (ok) and 10% (unknown) of the fill. On every
-ground, each label clears 5.13:1 light and 6.17:1 dark on its own wash (foundation 3.5).
+ground, each status label clears 5.10:1 light and 6.08:1 dark on its own wash (foundation 3.5). The
+light labels sit at one weight, 5.10 to 5.70:1 at their worst (foundation 3.6).
 
 Status **fills are identical in both themes** so a state reads as the same state everywhere; the
 labels and strokes flip.
@@ -267,7 +276,7 @@ labels and strokes flip.
   whose shape differs per status. See 5.5 for the anatomy.
 - **Same meaning, same treatment.** One pill, one dot and one icon per status, on every surface.
 - **Destructive is a form, not a status.** `destructive` (`#b7191c` with white, 6.63:1; in dark
-  `#f66d67` with near-black ink, 6.48:1) is used only on the confirm button of an irreversible
+  `#f66d67` with Sky's navy ink, 5.98:1) is used only on the confirm button of an irreversible
   action, with a verb ("Wipe disk"). Critical is a pill or a ring with a status word. The two never
   share a shape.
 - **Blue is not a severity.** There is no blue "info" tier between OK and Warning.
@@ -308,16 +317,17 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 ### 3.9 Charts
 
 - **Categorical: at most four series** (`series-1..4`). A fifth folds into "Other" or the chart
-  becomes small multiples. The palette avoids blue (action), yellow (pending) and the three status
-  hues, so a line can never be mistaken for an alarm.
-- Each series clears 3:1 against the plot ground (page, surface or an inset): 3.30 to 8.07:1 light,
-  4.03 to 13.64:1 dark. A single-series live chart draws in `trace` with its `trace-area` fill
+  becomes small multiples. **The hues and values are [visual foundation](visual-foundation.md),
+  section 3.6**: violet, teal, magenta and moss sit in the gaps between the scheme's hues, never on
+  blue (action), the pending gold or the three status hues, so a line can never be mistaken for an
+  alarm.
+- Each series clears 3:1 against the plot ground (page, surface or an inset): 3.09 to 8.27:1 light,
+  4.16 to 13.77:1 dark. A single-series live chart draws in `trace` with its `trace-area` fill
   instead (foundation 3.2 and 8).
-- **Series are staggered in lightness** so they survive colour-vision deficiency, but not every
-  pair is safe on colour alone: in light, teal / pink falls to 8.1 under protanopia, and
-  violet / teal and teal / olive are within 3.0 and 1.8 of each other in greyscale. So **label
-  lines directly** and give each series its own dash pattern or marker shape. The legend is never
-  the only link.
+- **Series share one chroma and an even lightness ladder** so they survive colour-vision
+  deficiency, but not every pair is safe on colour alone: in light, violet / magenta falls to 8.2
+  under protanopia, and the trace beside a series to 9.2 at worst. So **label lines directly** and
+  give each series its own dash pattern or marker shape. The legend is never the only link.
 - **Sequential (how full, how much): one hue by lightness**, the action blue. Darker is more in
   light; lighter is more in dark.
 - **Grey for context, colour for the series being discussed.**
@@ -349,7 +359,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - About 8% of men have a red-green deficiency. The design does not depend on telling green from
   red by hue: lightness separates them, and words and shapes carry every status.
 
-Current audit result: **430 required pairs, 0 failures**, both themes (foundation 3.5).
+Current audit result: **436 required pairs, 0 failures**, both themes (foundation 3.5).
 Forty-four text pairs pass 4.5:1 but sit under Lc 60 (the terminal timestamps at Lc 46 to 47, one
 light label on its wash at Lc 60, and the dark pairs listed in 3.8, among them secondary text on the
 washes); all are labels, captions, secondary text or deliberately quiet metadata.
@@ -574,7 +584,7 @@ One anatomy per status, used everywhere:
   (Waiting, Running, Succeeded, Failed, Cancelled) as a pill, a progress bar where progress is known,
   elapsed time, and a cancel control where cancelling is safe. Waiting is a step in a list that has
   not started yet because an earlier step is still running ([UX audit](ux-audit.md), R5). It uses the
-  Unknown treatment with its own word, as Disabled and Stopped do (5.5); it is never pending yellow.
+  Unknown treatment with its own word, as Disabled and Stopped do (5.5); it is never pending gold.
 - **Output is shown on the terminal pair** in both themes: `terminal` ground,
   `terminal-foreground` text (13.68:1 light theme, 14.57:1 dark), `terminal-muted` for timestamps
   (6.40 and 6.82:1), Roboto Mono 13px. The text has a faint green tint as a nod to OMV's terminal;
@@ -590,23 +600,28 @@ One anatomy per status, used everywhere:
 
 ### 5.8 The pending-changes banner
 
-OMV's signature, and the only place the yellow appears at size.
+OMV's signature, and the only place the pending gold appears at size. Its colours are
+[visual foundation](visual-foundation.md), section 3.6: gold `#ffcd47`, navy ink.
 
 - A full-width band on `pending` with `pending-foreground` text, directly under the top bar, shown
   whenever there are saved-but-unapplied changes. It is not dismissible while changes are pending.
 - It says what is pending in words ("3 pending changes: SMB, SSH, Network"), with **Apply** and
   **Undo** controls that carry the count ("Apply 3 changes", "Undo 3 changes"). "Undo" is the one
   verb for discarding pending changes everywhere, the job runner included; the backend method is
-  still `Config.revertChangesBg`. Buttons on the band are outlined in the coffee ink; the yellow is
-  the ground, not the button.
+  still `Config.revertChangesBg`. Buttons on the band are outlined in the navy ink; the gold is the
+  ground, not the button. Apply is the inverse pair (gold words on navy).
 - Undo asks first: a plain confirmation that names what is lost ("The saved changes to SMB, SSH
   and Network are discarded"), focus on Cancel, no typing, since nothing on disk is lost.
 - Apply opens a confirmation that lists the affected services and warns when applying may cut the
   current connection (network and web-server changes).
 - The item that is pending carries a small pending mark (the pending icon with `pending-stroke`,
-  4.00 to 4.67:1 light) and, as text, `pending-label`.
-- While changes are being applied the band shows progress, both controls are disabled, and a
-  "Show progress" control opens the apply task's output.
+  3.26 to 3.97:1 light) and, as text, `pending-label`.
+- The top bar's pill is the gold edged in `pending-stroke`, so it clears 3:1 on the light page
+  where the gold alone does not (1.34:1).
+- While changes are being applied the band shows progress, both controls are unavailable, and a
+  "Show progress" control opens the apply task's output. Unavailable, the controls are dashed
+  outlines in the navy ink, never faded: navy at partial opacity over the gold is an unaudited
+  khaki.
 - If applying fails, the band says so and its first offer is "Try applying again" (UX audit R7);
   Undo stays available.
 - The same indicator sits in the top bar, so the state is visible when the band is scrolled away.
@@ -696,18 +711,21 @@ The rules below are the ones that shape components; where the two differ, that d
 ## 8. Adding or changing a colour
 
 1. **Name its job** from the table in 2.1. If none fits, it does not get a hue.
-2. **Reuse a family.** If a new one is unavoidable, give it the full shape (fill, foreground,
+2. **Give it its place in the scheme** of [visual foundation](visual-foundation.md), section 3.6: the
+   blue base, the attention arc opposite it, the quarter turn, or a gap between them. Words on a
+   light fill are Sky's navy. A colour with no place in the scheme does not come in.
+3. **Reuse a family.** If a new one is unavoidable, give it the full shape (fill, foreground,
    label, stroke) with light and dark values. Build values in OKLCH so the hue stays put:
    `node tools/colour-audit.mjs oklch 0.55 0.12 240`.
-3. **Declare it in `design/tokens.css`** as a primitive plus semantic roles, hex only.
-4. **Add its pairs to `PAIRS`** in `tools/colour-audit.mjs` in the same change: every ground the
+4. **Declare it in `design/tokens.css`** as a primitive plus semantic roles, hex only.
+5. **Add its pairs to `PAIRS`** in `tools/colour-audit.mjs` in the same change: every ground the
    colour can land on, with the right bar (`text`, `ui`, or `deco` with the reason). If it must be
    told apart from another colour, add the pair to `DISTINCT`.
-5. **Run the audit.** `contrast` must exit 0. A new hue within 10 of an existing one with a
+6. **Run the audit.** `contrast` must exit 0. A new hue within 10 of an existing one with a
    different meaning, in any column of `distinct`, needs a non-colour cue wherever both can appear.
-6. **Look at it** in `design/preview.html` (mirror the token there) and in the app: both themes,
+7. **Look at it** in `design/preview.html` (mirror the token there) and in the app: both themes,
    greyscale, deuteranopia.
-7. **Update the numbers in this guide** that the change affects.
+8. **Update the numbers in this guide** that the change affects.
 
 ### Running the audit
 
@@ -732,7 +750,8 @@ proof that a pair is safe.
 
 - [ ] Every chromatic element names one of the five jobs (section 2); the rest is neutral.
 - [ ] Blue is the only interaction hue; hover is neutral; one filled primary per view.
-- [ ] Yellow appears only for pending configuration; nothing else is yellow.
+- [ ] The pending gold appears only for pending configuration; nothing else is gold or yellow.
+- [ ] Every colour has its place in the scheme of foundation 3.6; ink on a light fill is navy.
 - [ ] Status hues mean only status; there is no blue "info" severity.
 - [ ] Words use `-label` (or `-foreground` on a solid fill); fills and strokes are not text colours.
 - [ ] Every status has its word or a distinct icon shape; Unknown is hollow; greyscale and
@@ -741,7 +760,7 @@ proof that a pair is safe.
 - [ ] No literal colours, raw palette classes or primitives in components.
 - [ ] No gradients; alpha tints only on the audited grounds.
 - [ ] Charts: at most four series, directly labelled, each with its own dash or marker; no status
-      hues, blue or yellow in a series.
+      hues, blue or the pending gold in a series.
 - [ ] Both themes checked; dark is not an inversion.
 - [ ] Focus ring visible on every control, on every ground, including the top bar.
 - [ ] Keyboard-only pass of the screen; targets at least 24 by 24.

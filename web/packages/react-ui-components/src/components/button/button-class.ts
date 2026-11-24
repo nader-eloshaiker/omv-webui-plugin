@@ -39,11 +39,13 @@ export const buttonClass = cva(
           "border-transparent text-destructive-foreground shadow-control " +
           "bg-[linear-gradient(var(--theme-destructive),var(--theme-destructive))] bg-no-repeat bg-size-[100%_100%] bg-left rtl:bg-right duration-slow " +
           "data-disabled:border-input data-disabled:bg-size-[0%_100%] data-disabled:text-muted-foreground",
-        // On the pending band: outlined in the coffee ink, the yellow stays the ground (5.8). The
-        // hover inverts the pair (yellow on coffee, the same 8.31:1), so no unaudited tint appears.
+        // On the pending band: outlined in the navy ink, the gold stays the ground (5.8). The hover
+        // inverts the pair (gold on navy, the same 11.53:1). Unavailable (while applying) the outline
+        // turns dashed and the words keep the ink: never faded, since navy at partial opacity over the
+        // gold is an unaudited khaki. Every state is the one audited pair.
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
-          "focus-visible:outline-pending-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
+          "focus-visible:outline-pending-foreground data-disabled:border-dashed data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
         // A control in ink with no fill: the top bar's indicators and menus, and other places where
         // a row of controls must stay quiet. Secondary ink at rest, a neutral ground on hover and
         // while its menu is open. It replaces the identity bar's variant (the bar is gone,

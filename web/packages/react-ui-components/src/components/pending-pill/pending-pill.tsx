@@ -16,9 +16,11 @@ const pillClass = cva(
         quiet:
           "border-border bg-transparent text-tertiary-foreground hover:bg-muted-strong hover:text-foreground " +
           "data-disabled:cursor-default data-disabled:hover:bg-transparent data-disabled:hover:text-tertiary-foreground",
-        // Something waits: OMV's yellow and its coffee ink (style guide 5.8), its only other place.
+        // Something waits: the pending gold and its navy ink (style guide 5.8), its only other place.
+        // The edge is the pending stroke, so the pill clears 3:1 on the light page, where the gold
+        // alone does not; in dark the stroke is the gold itself.
         pending:
-          "border-pending bg-pending text-pending-foreground hover:border-pending-foreground",
+          "border-pending-stroke bg-pending text-pending-foreground hover:border-pending-foreground",
       },
     },
     defaultVariants: { tone: "quiet" },
@@ -42,7 +44,7 @@ interface PendingPillProps extends Omit<
   applying?: boolean;
 }
 
-/** The pending mark: a yellow disc with its ink, the same shape the band and the flight use. */
+/** The pending mark: a gold disc with its ink, the same shape the band and the flight use. */
 function PendingDot({ on }: { on: boolean }) {
   return (
     <span
@@ -58,7 +60,7 @@ function PendingDot({ on }: { on: boolean }) {
 }
 
 /**
- * The top bar's pending pill (foundation 10): a count chip that turns pending yellow when saved
+ * The top bar's pending pill (foundation 10): a count chip that turns pending gold when saved
  * settings wait to be applied, and pops on the settle spring as the count rises. A pending flight on
  * its way to the pill lands first (`whenLanded`). It is a button: the app moves the reader to the
  * band with it.

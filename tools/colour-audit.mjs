@@ -103,7 +103,7 @@ const dE = (a, b) => {
 };
 
 // Colour-vision deficiency simulation: Machado, Oliveira & Fernandes (2009), severity 1.0,
-// applied in linear RGB.
+// applied in linear RGB: deuteranopia, protanopia and tritanopia.
 const CVD = {
   deutan: [
     [0.367322, 0.860646, -0.227968],
@@ -114,6 +114,11 @@ const CVD = {
     [0.152286, 1.052583, -0.204868],
     [0.114503, 0.786281, 0.099216],
     [-0.003882, -0.048116, 1.051998],
+  ],
+  tritan: [
+    [1.255528, -0.076749, -0.178779],
+    [-0.078411, 0.930809, 0.147602],
+    [0.004733, 0.691367, 0.3039],
   ],
 };
 const simulate = (rgb, kind) => {
@@ -270,6 +275,16 @@ const PAIRS = [
   ["theme-pending-label", on("theme-surface", "theme-pending-wash"), "text", "label on the pending wash"],
   ["theme-pending-label", on("theme-page", "theme-pending-wash"), "text", "label on the pending wash (page)"],
   ["theme-pending-label", AMBIENT, "text", "'pending' in the ambient light"],
+  // The top bar's pill: gold, edged in the stroke so it clears 3:1 where the gold alone does not (the
+  // light page); its words are the band's pair. The band's buttons are outlined in the ink, and stay
+  // outlined (dashed, never faded) while unavailable; Apply is the inverse pair.
+  ["theme-pending-stroke", AMBIENT, "ui", "the pending pill's edge on the top bar, in the ambient light"],
+  ["theme-pending-foreground", "theme-pending", "ui", "a band button's outline, also unavailable"],
+  ["theme-pending", "theme-pending-foreground", "text", "Apply on the band: gold words on the navy"],
+  // The flight's mark: a gold disc ringed in navy. One of the two always carries it (the disc in dark,
+  // the ring in light); both reported.
+  ["theme-pending", "theme-page", "deco", "the flight's gold disc on the page"],
+  ["theme-pending-foreground", "theme-page", "deco", "the flight's navy ring on the page"],
   // A panel waiting on a pending decision (the job runner): its words on the pending wash.
   ...GROUNDS.map((g) => ["theme-foreground", on(g, "theme-pending-wash"), "text", "body text on the pending wash"]),
   ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, "theme-pending-wash"), "text", "secondary text on the pending wash"]),
@@ -344,6 +359,15 @@ const DISTINCT = [
   ["theme-trace", "theme-series-2"],
   ["theme-trace", "theme-series-3"],
   ["theme-trace", "theme-series-4"],
+  // Pending against everything it may meet, and each series against the signal hue beside it on the
+  // wheel (foundation 3.3).
+  ["theme-pending", "theme-unknown"],
+  ["theme-pending-label", "theme-warning-label"],
+  ["theme-pending-stroke", "theme-warning-stroke"],
+  ["theme-series-4", "theme-pending"],
+  ["theme-series-4", "theme-ok"],
+  ["theme-series-2", "theme-ok"],
+  ["theme-series-3", "theme-critical"],
 ];
 const neutralSteps = (names) =>
   names
@@ -425,7 +449,7 @@ function contrast(themes) {
 function distinct(themes) {
   for (const [themeName, get] of Object.entries(themes)) {
     console.log(`\n== distinct: ${themeName} ==  (OKLab dE x100; under ~10 a pair needs its word or icon to be told apart)`);
-    console.log(`${pad("pair", 30)}normal  deutan  protan  grey dL`);
+    console.log(`${pad("pair", 32)}normal  deutan  protan  tritan  grey dL`);
     for (const [a, b] of DISTINCT) {
       const [cx, cy] = [get(a), get(b)];
       if (!cx || !cy || cx.a !== 1 || cy.a !== 1) {
@@ -433,10 +457,10 @@ function distinct(themes) {
         continue;
       }
       const [x, y] = [cx.rgb, cy.rgb];
-      const cols = [dE(x, y), dE(simulate(x, "deutan"), simulate(y, "deutan")), dE(simulate(x, "protan"), simulate(y, "protan"))];
+      const cols = [dE(x, y), ...["deutan", "protan", "tritan"].map((k) => dE(simulate(x, k), simulate(y, k)))];
       const dL = 100 * Math.abs(oklab(x)[0] - oklab(y)[0]);
       const weakest = Math.min(...cols);
-      console.log(`${pad(short(a) + " / " + short(b), 30)}${cols.map((c) => f(c, 1).padStart(6)).join("  ")}  ${f(dL, 1).padStart(7)}${weakest < 10 ? "   <- relies on word/icon" : ""}`);
+      console.log(`${pad(short(a) + " / " + short(b), 32)}${cols.map((c) => f(c, 1).padStart(6)).join("  ")}  ${f(dL, 1).padStart(7)}${weakest < 10 ? "   <- relies on word/icon" : ""}`);
     }
   }
 }

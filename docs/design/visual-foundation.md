@@ -153,8 +153,8 @@ bar's contrast problem in style guide 3.3 disappears with it.)
 
 ### 3.3 Status stays honest
 
-Status hues (OK green, Warning orange, Critical red, Unknown grey) and pending yellow are used only
-for what they mean, always with a word or shape: a pill, a shaped mark, a slot light with the word
+Status hues (OK green, Warning orange, Critical red, Unknown grey) and the pending gold are used
+only for what they mean (where each sits on the colour wheel, and why, is 3.6), always with a word or shape: a pill, a shaped mark, a slot light with the word
 beside it, a node with its mark. Two kinds of status area are new and allowed: a **status-tinted
 wash** behind the one element that carries a non-OK state (the health strip's lead cell, a warning
 callout, a warning node on a map) at 7 to 14% over a known ground (`ok-wash` 12%, `warning-wash`
@@ -194,24 +194,108 @@ layer...)`), and checks a gradient at each of its stops, the worst stop deciding
 stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash and glow is
 written in.
 
-**Result: 430 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
+**Result: 436 required pairs, 0 failures, both themes** (164 before the new grounds, 430 before the
+scheme of 3.6). Highlights:
 
 - In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
   13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus
   ring 4.15 and 8.41:1, `border-control` 3.59 and 4.46:1.
-- Status labels on their own wash over any ground: 5.13 to 7.23:1 light, 6.17 to 9.06:1 dark. On a
-  card lit warning, the warning word is 6.28:1 light and 7.86:1 dark at the wash's strongest point.
+- Status labels on their own wash over any ground: 5.10 to 6.78:1 light, 6.08 to 9.06:1 dark; the
+  pending words, navy in light and gold in dark, 14.72 to 16.23:1 and 8.88 to 9.88:1. On a card lit
+  warning, the warning word is 6.28:1 light and 7.28:1 dark at the wash's strongest point.
 - The trace over the top of its own area fill: 3.13 to 3.30:1 light, 4.17 to 4.49:1 dark.
-- Secondary text on any wash over any ground: at least 5.12:1 (dark, on the pending wash over
+- Secondary text on any wash over any ground: at least 5.11:1 (dark, on the pending wash over
   `muted-strong`).
 - The tightest required pairs: dark `tertiary-foreground` on `muted-strong` and on the chassis,
-  4.68:1; light `series-3` on the page, 3.30:1; light trace over its fill in an inset, 3.13:1.
+  4.68:1; light `series-2` on the page, 3.09:1; light trace over its fill in an inset, 3.13:1; the
+  pending pill's edge in the light ambient light, 3.15:1.
 - APCA advisory: 44 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions, secondary
   text on a wash or words on a fill (dark `tertiary-foreground` at Lc 40 to 43 is the lowest); none
   is running text.
-- `distinct`: the live trace beside a categorical series falls under 10 in four places (for example
-  light trace and `series-2`, 10.2 normal and 9.7 deuteranopia), so a chart that shows both labels
-  each line directly and gives each its own dash, as style guide 3.9 already asks.
+- `distinct` simulates deuteranopia, protanopia and tritanopia (Machado 2009). In light the live
+  trace beside a categorical series falls under 10 in four places (lowest: trace and `series-3`, 9.2
+  under deuteranopia) and violet against magenta is 8.2 under protanopia; in dark only trace and
+  `series-2` does, 9.3 under tritanopia. A chart that shows them together labels each line directly
+  and gives each its own dash, as style guide 3.9 already asks.
+
+### 3.6 One colour scheme (owner, 2026-11-24)
+
+The owner turned down OMV's lemon `#f8d400` with its coffee-brown ink `#4d2e25` for the pending band
+("lacks taste and doesn't really match") and asked that every colour combination follow colour
+theory and harmonise with Sky. Measured in OKLCH, most of the palette already did; what did not was
+the pending pair, the ink on the dark destructive button, the chart series' uneven weights and the
+terminal's green. The scheme below is now the rule for every colour, and `design/tokens.css` states
+it at the top of its primitives.
+
+**The scheme, by OKLCH hue:**
+
+| Place | Hue | Who sits there |
+| --- | --- | --- |
+| The base | 240 | Sky blue: brand, action, selection, the live trace, usage, the map path, the ambient light. The slate neutrals lean toward it (248 to 259) |
+| The complement | 62 | Warning, OMV's orange `#f78f00` |
+| The split complements | 27 and 87 | Critical `#d01d21`, and pending gold `#ffcd47` |
+| A quarter turn | 151 | OK `#74e791` |
+| The gaps between | 118, 195, 292, 345 | The four chart series: moss, teal, violet, magenta |
+| Ink on a light fill | 243 | Sky's navy, brand-950 `#021d30` |
+
+- **Attention is opposite the brand.** The three colours that ask for attention sit on the blue's
+  complementary arc, so they are what the eye goes to on a blue-grey screen. Their lightness falls
+  with hue (gold 0.87, orange 0.75, red 0.55), which is what keeps them apart under colour-vision
+  deficiency.
+- **Calm is beside it.** OK is a quarter turn round, on the cool side with the brand.
+- **Series live in the gaps**, never on a signal hue, at one chroma (0.11 to 0.14) and an even
+  lightness ladder (light 0.44, 0.50, 0.56, 0.62; dark 0.62, 0.70, 0.79, 0.88), so they part in
+  greyscale too.
+- **One ink.** Words on a light fill are Sky's navy: pending, "Saved" on the OK fill, the dark
+  destructive button, the dark primary button. White on the dark fills.
+- **Labels hold one weight and never go muddy.** In light, the status words clear 5.10 to 5.70:1 at
+  their worst; a word in a hue leans toward red as it darkens and toward yellow as it lightens.
+  Darkened gold reads olive or brown, so in light the pending words are the navy on the gold wash,
+  with a deep gold stroke (`#9e7b0b`) that also edges the top bar's pill; in dark they are a lighter
+  gold (`#f4d660`). Warning's dark label moves to its fill's own hue (`#ffa659`), apart from the gold.
+- **The terminal is a piece of the night theme**: its words are the slate text tiers, not a green
+  tint, since green is OK's hue.
+
+**What changed**, light / dark where they differ:
+
+| Token | Was | Now |
+| --- | --- | --- |
+| `pending` (fill, both) | `#f8d400` | `#ffcd47` |
+| `pending-foreground` (both) | `#4d2e25` | `#021d30` (brand-950) |
+| `pending-label` | `#695205` / `#f3d754` | `#021d30` / `#f4d660` |
+| `pending-stroke` (light) | `#8d7100` | `#9e7b0b` |
+| `ok-foreground` (both) | slate-950 | brand-950 |
+| `ok-label`, `ok-stroke` (light) | `#00612c`, `#007938` | `#096a33`, `#1d8545` |
+| `critical-label` (light) | `#a91518` | `#a32321` |
+| `warning-label` (dark) | `#fbb360` | `#ffa659` |
+| `destructive-foreground` (dark) | `#2a0606` | `#021d30` (brand-950) |
+| `series-1..4` (light) | `#6635a3` `#006c6c` `#d4599b` `#62691b` | `#563e98` `#009a9a` `#983c75` `#6f7d1a` |
+| `series-1..4` (dark) | `#9369d4` `#97e9e8` `#e97ab2` `#b5c06b` | `#a58de6` `#70f1da` `#c06099` `#b3c65f` |
+| `terminal-foreground`, `terminal-muted` | `#cde6cf`, `#8c9e8e` | slate-200, slate-500 |
+
+The status fills, OK, warning, critical and unknown, did not change: OMV's orange already sits on
+the complement and its red on a split complement.
+
+**Measured** (`node tools/colour-audit.mjs`):
+
+- Navy on the gold: 11.53:1 (coffee on lemon was 8.31). "Saved" on the OK fill 11.12:1; words on
+  the dark destructive button 5.98:1.
+- The pending pill clears 3:1 by its edge: the gold alone is 1.34:1 on the light page, the stroke
+  3.15:1 at the worst point of the ambient light.
+- Pending against warning (normal / deuteranopia / protanopia / tritanopia): fills 14.5 / 12.1 /
+  15.8 / 15.2; words 29.6 or more in light, 11.7 / 7.8 / 11.6 / 12.0 in dark (they were 7.0 / 2.5 /
+  1.1 / 7.7 and 9.4 / 6.3 / 9.1 / 8.7). Pending against OK stays a pair that needs its word (7.3
+  under protanopia), as before: pending is never a bare dot.
+- The weakest chart pair, series against series or the trace, over all four kinds of vision: light
+  8.2 (was 3.8), dark 9.3 (was 8.4). Every series clears 3:1 on the plot grounds: 3.09 to 8.27:1
+  light, 4.16 to 13.77:1 dark.
+- The band's buttons keep the one audited pair in every state. Unavailable while applying, they are
+  dashed outlines in the ink rather than faded, since navy at partial opacity over the gold is a
+  khaki no one measured.
+
+**For a colour added later**: name its job (style guide 2.1), give it a place in this scheme (the
+base, the attention arc, the quarter turn or a gap), ink it in navy if words sit on it, and measure
+it with the audit before it ships. A colour that has no place in the scheme does not come in.
 
 ## 4. Type
 

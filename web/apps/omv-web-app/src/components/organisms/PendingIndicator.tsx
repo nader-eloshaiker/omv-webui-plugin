@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The pending pill in the top bar (foundation 10; style guide 5.8), for administrators: a quiet chip
-// while nothing waits, OMV's yellow with the count once something does, popping as the count rises.
+// while nothing waits, the pending gold with the count once something does, popping as the count rises.
 // The pending flight lands here (pending/flight.ts). Pressing it brings the reader to the band: to the
 // top of the page, where the band comes back out of the pill, with focus on the band.
 import { useTasks } from "@omv-webui/react-api-omv/tasks";

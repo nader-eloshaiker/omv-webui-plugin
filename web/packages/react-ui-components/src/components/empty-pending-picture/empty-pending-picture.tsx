@@ -12,7 +12,7 @@ interface EmptyPendingPictureProps extends React.ComponentProps<"div"> {
 }
 
 /**
- * The empty state of pending changes (foundation 9): a form, an arrow, and the yellow band where
+ * The empty state of pending changes (foundation 9): a form, an arrow, and the gold band where
  * saved settings wait. Decorative; the words beside it say the same. Yellow here means what it
  * always means: saved but not applied.
  */

@@ -162,7 +162,7 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 ## 7. Charts and data display
 
 - Chart colours come from the `series-1..4` tokens, `trace` and `trace-area` for a single live
-  series, and the usage ramp, never hex in a chart config. No status hue, action blue or yellow in a
+  series, and the usage ramp, never hex in a chart config. No status hue, action blue or pending gold in a
   categorical series (style guide 3.9); a chart showing the trace beside a series labels each line
   directly and gives it its own dash.
 - Numeric display uses tabular numerals; callers format values and units.

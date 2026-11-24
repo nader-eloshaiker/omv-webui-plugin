@@ -56,7 +56,7 @@
 /* ─── The shadcn vocabulary (style guide 3.2) ─────────────────────────────────────────────────── */
 /* Each semantic role is already a utility by its own name (`bg-page`, `text-warning-label`, from
    generated/tokens.css). These are the shadcn names components are written in. `accent` and
-   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and yellow
+   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and gold
    would paint every hover as "pending". `inline` so each utility reads the `--theme-*` variable
    where it is used and a `.dark` or `.light` subtree flips. */
 @theme inline {

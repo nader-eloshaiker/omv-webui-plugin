@@ -620,7 +620,7 @@ export const ManyGroupsWithPluginItems: Story = {
   ),
 };
 
-/** One change waiting: the band in OMV's yellow under the top bar, and the pill turned yellow. */
+/** One change waiting: the band in the pending gold under the top bar, and the pill turned gold. */
 export const PendingOne: Story = {
   globals: { theme: "Light" },
   render: () => <DemoShell pending={1} />,

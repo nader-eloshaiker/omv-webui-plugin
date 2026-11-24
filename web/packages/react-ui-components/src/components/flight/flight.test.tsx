@@ -124,7 +124,7 @@ describe("flyPendingMark", () => {
 });
 
 describe("PendingPill", () => {
-  it("turns yellow with the count, and pops on the spring when the count rises", async () => {
+  it("turns gold with the count, and pops on the spring when the count rises", async () => {
     reducedMotion(false);
     const { animate } = stubAnimate();
     const { rerender } = render(

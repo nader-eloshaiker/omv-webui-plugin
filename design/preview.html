@@ -19,7 +19,7 @@
   --slate-550:#7d8b9b; --slate-600:#6b7885; --slate-650:#566373; --slate-700:#485667; --slate-800:#233042; --slate-850:#1d2939;
   --slate-900:#16212f; --slate-925:#111a27; --slate-950:#0a111c;
   --status-ok:#74e791; --status-warning:#f78f00; --status-critical:#d01d21; --status-unknown:#b6bfc7;
-  --pending-fill:#f8d400; --pending-ink:#4d2e25;
+  --pending-fill:#ffcd47; --pending-ink:var(--brand-950);
 
   --page:var(--slate-100); --surface:#ffffff; --muted:var(--slate-50); --muted-strong:var(--slate-200);
   --foreground:var(--slate-925); --muted-foreground:var(--slate-700); --tertiary-foreground:var(--slate-650); --subtle-foreground:var(--slate-550);
@@ -29,16 +29,16 @@
   --selected:color-mix(in srgb, var(--brand-600) 9%, transparent); --selection:var(--brand-200);
   --brand:var(--brand-600); --trace:var(--brand-600); --trace-area:color-mix(in srgb, var(--brand-600) 32%, transparent);
   --ambient:color-mix(in srgb, var(--brand-400) 12%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 7%, transparent);
-  --pending:var(--pending-fill); --pending-foreground:var(--pending-ink); --pending-label:#695205; --pending-stroke:#8d7100;
+  --pending:var(--pending-fill); --pending-foreground:var(--pending-ink); --pending-label:var(--brand-950); --pending-stroke:#9e7b0b;
   --pending-wash:color-mix(in srgb, var(--pending-fill) 14%, transparent);
-  --ok:var(--status-ok); --ok-stroke:#007938; --ok-label:#00612c; --ok-wash:color-mix(in srgb, var(--status-ok) 12%, transparent); --ok-foreground:var(--slate-950);
+  --ok:var(--status-ok); --ok-stroke:#1d8545; --ok-label:#096a33; --ok-wash:color-mix(in srgb, var(--status-ok) 12%, transparent); --ok-foreground:var(--brand-950);
   --warning:var(--status-warning); --warning-stroke:#ad5c15; --warning-label:#8a4613; --warning-wash:color-mix(in srgb, var(--status-warning) 14%, transparent);
-  --critical:var(--status-critical); --critical-stroke:#c51e21; --critical-label:#a91518; --critical-wash:color-mix(in srgb, var(--status-critical) 14%, transparent);
+  --critical:var(--status-critical); --critical-stroke:#c51e21; --critical-label:#a32321; --critical-wash:color-mix(in srgb, var(--status-critical) 14%, transparent);
   --unknown:var(--status-unknown); --unknown-stroke:#6b7782; --unknown-label:#4d5964; --unknown-wash:color-mix(in srgb, var(--status-unknown) 10%, transparent);
   --destructive:#b7191c; --destructive-foreground:#ffffff;
-  --series-1:#6635a3; --series-2:#006c6c; --series-3:#d4599b; --series-4:#62691b;
+  --series-1:#563e98; --series-2:#009a9a; --series-3:#983c75; --series-4:#6f7d1a;
   --usage:var(--brand-600); --usage-track:var(--slate-200); --usage-track-edge:var(--slate-600);
-  --terminal:#131619; --terminal-foreground:#cde6cf; --terminal-muted:#8c9e8e;
+  --terminal:#131619; --terminal-foreground:var(--slate-200); --terminal-muted:var(--slate-500);
   --shadow-control:0 1px 2px rgb(17 26 39 / 0.07);
   --shadow-raised:0 0 0 1px rgb(17 26 39 / 0.05), 0 1px 2px rgb(17 26 39 / 0.05), 0 10px 28px rgb(17 26 39 / 0.06);
   --shadow-floating:0 0 0 1px rgb(17 26 39 / 0.06), 0 24px 56px rgb(17 26 39 / 0.18);
@@ -63,13 +63,13 @@
   --selected:color-mix(in srgb, var(--brand-400) 14%, transparent); --selection:var(--brand-800);
   --brand:var(--brand-400); --trace:var(--brand-300); --trace-area:color-mix(in srgb, var(--brand-300) 32%, transparent);
   --ambient:color-mix(in srgb, var(--brand-400) 10%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 3%, transparent);
-  --pending-label:#f3d754; --pending-stroke:var(--pending-fill);
+  --pending-label:#f4d660; --pending-stroke:var(--pending-fill);
   --ok-stroke:var(--status-ok); --ok-label:#70e093;
-  --warning-stroke:var(--status-warning); --warning-label:#fbb360;
+  --warning-stroke:var(--status-warning); --warning-label:#ffa659;
   --critical-stroke:#f66d67; --critical-label:#fb9890;
   --unknown-stroke:var(--status-unknown); --unknown-label:#b3bcc3;
-  --destructive:#f66d67; --destructive-foreground:#2a0606;
-  --series-1:#9369d4; --series-2:#97e9e8; --series-3:#e97ab2; --series-4:#b5c06b;
+  --destructive:#f66d67; --destructive-foreground:var(--brand-950);
+  --series-1:#a58de6; --series-2:#70f1da; --series-3:#c06099; --series-4:#b3c65f;
   --usage:var(--brand-400); --usage-track:var(--slate-850); --usage-track-edge:var(--slate-550);
   --terminal:#0b0e11;
   --shadow-control:inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -357,7 +357,7 @@ input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
       <span><i style="border-color:var(--series-3);border-top-style:dotted"></i>Receive</span>
       <span><i style="border-color:var(--series-4);border-top-style:dashed"></i>Transmit</span>
     </div>
-    <p class="note">No status hue, blue or yellow is ever a series.</p>
+    <p class="note">No status hue, blue or the pending gold is ever a series.</p>
   </div>
   <section id="corners">
   <h2>Corners: Sky's radii, round and squircle (foundation 6)</h2>
