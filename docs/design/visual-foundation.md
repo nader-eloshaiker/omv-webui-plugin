@@ -194,7 +194,7 @@ layer...)`), and checks a gradient at each of its stops, the worst stop deciding
 stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash and glow is
 written in.
 
-**Result: 426 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
+**Result: 430 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
 
 - In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
   13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus
