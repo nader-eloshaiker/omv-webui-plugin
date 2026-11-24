@@ -6,6 +6,7 @@
 // seen here (what a deleting job is turned on against, 0.10) and, for a job saved for trial runs,
 // whether the reader chose a schedule for it. In memory only (UI-13); emptied when the session ends
 // (app.ts). Jobs are kept by the UUID the server gave, never by text typed or taken from the address.
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 
 /** A trial run seen in this session: what it was of (jobModel.trialKey) and what it listed. */
@@ -52,18 +53,17 @@ export const handedOverSource = (): string | null =>
 export const clearHandover = (): void =>
   jobsSession.set((s) => (s.handover === null ? {} : { handover: null }));
 
-export const recordJobSaved = (uuid: string): void =>
+/** Once `rsync` is no longer pending (applied or undone), the marks go (savedMarks.ts). */
+const marks = savedMarks.track(["rsync"], () =>
+  jobsSession.set((s) => (s.saved.length === 0 ? {} : { saved: [] })),
+);
+
+export const recordJobSaved = (uuid: string): void => {
+  marks.saved();
   jobsSession.set((s) =>
     s.saved.includes(uuid) ? {} : { saved: [...s.saved, uuid] },
   );
-
-/** Once `rsync` is no longer pending (applied or undone), the marks go. */
-export function forgetJobsPending(pending: readonly string[]): void {
-  if (pending.includes("rsync")) {
-    return;
-  }
-  jobsSession.set((s) => (s.saved.length === 0 ? {} : { saved: [] }));
-}
+};
 
 /** The pending mark beside a job: this session saved it and `rsync` is pending (0.3). */
 export const jobPending = (

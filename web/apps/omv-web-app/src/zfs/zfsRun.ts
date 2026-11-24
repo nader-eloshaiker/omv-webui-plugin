@@ -62,10 +62,11 @@ import {
   endChanging,
   recordCreatedPool,
   recordTouched,
+  ZFS_MODULES,
 } from "./zfsSession.ts";
 
-/** What adding or removing a file system marks pending (observed on the test VM, 0.9). */
-export const ZFS_MODULES = ["fstab", "collectd", "monit", "quota"] as const;
+/** What adding or removing a file system marks pending (kept in zfsSession.ts, which its marks follow). */
+export { ZFS_MODULES };
 /** Whether something ZFS marks pending is still pending (0.9). */
 export const zfsPending = (pending: readonly string[]): boolean =>
   pending.some((m) => (ZFS_MODULES as readonly string[]).includes(m));

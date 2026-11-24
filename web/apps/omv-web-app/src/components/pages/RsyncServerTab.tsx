@@ -44,7 +44,7 @@ import {
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi, isolateName } from "../../format/isolate.ts";
 import { useRsyncdApi } from "../../hooks/useRsyncdApi.ts";
@@ -70,7 +70,6 @@ import {
 import {
   beginRsyncdAction,
   endRsyncdAction,
-  forgetRsyncdPending,
   moduleRowPending,
   recordSwitchSaved,
   rsyncdSession,
@@ -103,12 +102,6 @@ export function RsyncServerTab() {
   const system = useSharesSystem();
   const memory = useMemoryStore(rsyncdSession);
   const pending = system.pending ?? [];
-
-  useEffect(() => {
-    if (system.pending !== undefined) {
-      forgetRsyncdPending(system.pending);
-    }
-  }, [system.pending]);
 
   const state = rsyncdState(
     {

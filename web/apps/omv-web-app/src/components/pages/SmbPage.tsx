@@ -32,7 +32,7 @@ import {
   useToast,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useSharesApi } from "../../hooks/useSharesApi.ts";
@@ -47,7 +47,6 @@ import { CLASSIC } from "../../navigation/navigation.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { smbOnRefusal } from "../../sharedFolders/shareActions.ts";
 import {
-  forgetPending,
   recordSmbSaved,
   recordWorkgroupSaved,
   sharesSession,
@@ -95,12 +94,6 @@ function Smb() {
   const system = useSharesSystem();
   const memory = useMemoryStore(sharesSession);
   const pending = system.pending ?? [];
-
-  useEffect(() => {
-    if (system.pending !== undefined) {
-      forgetPending(system.pending);
-    }
-  }, [system.pending]);
 
   const state = smbState(
     {

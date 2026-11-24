@@ -4,6 +4,7 @@
 // mark: "Not applied yet." beside a folder's NFS section and its rows on the NFS page, while `nfs` is
 // pending), and the NFS action running on each folder (one at a time, 0.10's last row). In memory
 // only (UI-13); emptied when the session ends (app.ts). Folders are kept by their `uuid`.
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 import { NFS_MODULE } from "./nfsModel.ts";
 
@@ -23,27 +24,28 @@ const INITIAL: NfsSessionState = { switchSaved: false, saved: [], running: {} };
 
 export const nfsSession = createMemoryStore<NfsSessionState>(INITIAL);
 
-/** The switch was saved (on or off). */
-export const recordNfsSwitch = (): void =>
-  nfsSession.set((s) => (s.switchSaved ? {} : { switchSaved: true }));
-
-/** A folder's entries were saved (let in, changed, stopped). */
-export const recordNfsSaved = (folderUuid: string): void =>
-  nfsSession.set((s) =>
-    s.saved.includes(folderUuid) ? {} : { saved: [...s.saved, folderUuid] },
-  );
-
-/** Once `nfs` is not pending any more (an apply or an undo ran), the marks are forgotten. */
-export function forgetNfsPending(pending: readonly string[]): void {
-  if (pending.includes(NFS_MODULE)) {
-    return;
-  }
+/** Once `nfs` is not pending any more (an apply or an undo ran), the marks are forgotten (savedMarks.ts). */
+const marks = savedMarks.track([NFS_MODULE], () =>
   nfsSession.set((s) =>
     s.saved.length === 0 && !s.switchSaved
       ? {}
       : { saved: [], switchSaved: false },
+  ),
+);
+
+/** The switch was saved (on or off). */
+export const recordNfsSwitch = (): void => {
+  marks.saved();
+  nfsSession.set((s) => (s.switchSaved ? {} : { switchSaved: true }));
+};
+
+/** A folder's entries were saved (let in, changed, stopped). */
+export const recordNfsSaved = (folderUuid: string): void => {
+  marks.saved();
+  nfsSession.set((s) =>
+    s.saved.includes(folderUuid) ? {} : { saved: [...s.saved, folderUuid] },
   );
-}
+};
 
 /** The switch's pending mark (1.2 item 3). */
 export const nfsSwitchPending = (

@@ -73,7 +73,6 @@ import {
 import {
   changeRequested,
   clearChangeRequest,
-  forgetJobsPending,
   jobPending,
   jobsSession,
   recordJobSaved,
@@ -164,12 +163,6 @@ function JobView({ uuid }: { uuid: string }) {
   const reads = useJobFormReads();
   const system = useSharesSystem();
   const pending = system.pending;
-
-  useEffect(() => {
-    if (pending !== undefined) {
-      forgetJobsPending(pending);
-    }
-  }, [pending]);
 
   const listed = list.data?.data.some((j) => j.uuid === uuid);
   if (list.data !== undefined && listed === false && job.data === undefined) {

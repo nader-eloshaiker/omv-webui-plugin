@@ -19,10 +19,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { bandExpectation, bandWaits } from "../network/bandApply.ts";
 import { UNDO_REMOVAL_APPLY } from "../network/changeFlow.ts";
-import {
-  forgetNetworkPending,
-  networkSession,
-} from "../network/networkSession.ts";
+import { networkSession } from "../network/networkSession.ts";
 import { useNetworkApi } from "./useNetworkApi.ts";
 import type { ApplyCheck } from "./useNetworkApplyCheck.ts";
 import { useReconnectWatch } from "./useReconnectWatch.ts";
@@ -66,14 +63,6 @@ export function useBandActions(modules: readonly string[]) {
   /** Interfaces whose settings came back with an Undo this session did not see removed (10.4). */
   const [cameBack, setCameBack] = useState<readonly string[]>([]);
 
-  const forgetApplied = async () => {
-    try {
-      forgetNetworkPending(await api.rereads.pending());
-    } catch {
-      // Read again on the next settle; the marks only decorate.
-    }
-  };
-
   const startApply = (
     label: string,
     modulesToApply: readonly string[],
@@ -95,11 +84,6 @@ export function useBandActions(modules: readonly string[]) {
       setApplied(null);
       watch.reset();
     }
-    void whenSettled(id).then((task) => {
-      if (task?.state === "done") {
-        void forgetApplied();
-      }
-    });
   };
 
   const apply = (check: ApplyCheck | null) => {
@@ -139,7 +123,6 @@ export function useBandActions(modules: readonly string[]) {
     if (task?.state !== "done") {
       return;
     }
-    void forgetApplied();
     if (known.length > 0) {
       applyQueued();
       return;

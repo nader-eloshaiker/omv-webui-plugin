@@ -2,15 +2,12 @@
 // The band's apply confirmation from what this session saved (1.8 as built): the session's classes
 // when every pending network change was saved here; 1.8's server-state rules otherwise.
 import { afterEach, describe, expect, it } from "vitest";
+import { savedMarks } from "../pending/savedMarks.ts";
 import { sameInterfaces, sessionInterfaceLines } from "./bandSession.ts";
 import { failed, ok } from "./dto.ts";
 import { KNOWN, device, settings } from "./fixtures.testing.ts";
 import { bandCheck, type Impact } from "./impact.ts";
-import {
-  forgetNetworkPending,
-  networkSession,
-  recordNetworkSave,
-} from "./networkSession.ts";
+import { networkSession, recordNetworkSave } from "./networkSession.ts";
 
 const DHCP = settings("enp2s0", { method: "dhcp" });
 const DNS = { ...DHCP, dnsnameservers: "192.0.2.53" };
@@ -23,7 +20,11 @@ const LIVE = device("enp2s0", {
   prefix: 24,
 });
 
-afterEach(() => networkSession.reset());
+afterEach(() => {
+  networkSession.reset();
+  savedMarks.reset();
+  savedMarks.readsInFlight(0);
+});
 
 const save = (
   pendingBefore: string[],
@@ -105,18 +106,19 @@ describe("the session's classes for the band (1.8 as built)", () => {
     const theirs = { ...DNS, comment: "theirs" };
     save(["systemd-networkd"], [theirs], [{ ...theirs, wol: true }]);
     expect(networkSession.getState().networkSaves?.owned).toBe(false);
-    forgetNetworkPending([]);
+    savedMarks.answered([]);
     expect(networkSession.getState().networkSaves).toBeNull();
     save([], [DHCP], [DNS]);
     expect(networkSession.getState().networkSaves?.owned).toBe(true);
   });
 
-  it("a reading of the pending modules from before the save forgets nothing (a page mounting on the shell's last read)", () => {
-    const before = Date.now() - 1_000;
+  it("a reading of the pending modules asked for before the save forgets nothing", () => {
+    savedMarks.readsInFlight(1);
     save([], [DHCP], [DNS]);
-    forgetNetworkPending([], before);
+    savedMarks.answered([]);
+    savedMarks.readsInFlight(0);
     expect(networkSession.getState().networkSaves?.owned).toBe(true);
-    forgetNetworkPending([]);
+    savedMarks.answered([]);
     expect(networkSession.getState().networkSaves).toBeNull();
   });
 

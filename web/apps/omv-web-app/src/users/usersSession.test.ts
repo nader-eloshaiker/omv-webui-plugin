@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { SharedFolder } from "@omv-webui/react-api-omv/generated";
 import { afterEach, describe, expect, it } from "vitest";
+import { savedMarks } from "../pending/savedMarks.ts";
 import {
   accountId,
   accountSectionPending,
@@ -8,7 +9,6 @@ import {
   deletedInSession,
   endAccountAction,
   forgetAdded,
-  forgetUsersPending,
   recordAccountSaved,
   recordAdded,
   recordDeleted,
@@ -18,7 +18,10 @@ import {
   usersSession,
 } from "./usersSession.ts";
 
-afterEach(() => usersSession.reset());
+afterEach(() => {
+  usersSession.reset();
+  savedMarks.reset();
+});
 
 const folder = (
   uuid: string,
@@ -61,9 +64,9 @@ describe("pending marks (0.4)", () => {
     expect(accountSectionPending(state, id, "email", ["postfix"])).toBe(true);
     expect(accountSectionPending(state, id, "email", ["ssh"])).toBe(false);
     expect(accountSectionPending(state, id, "access", ["samba"])).toBe(true);
-    forgetUsersPending(["postfix"]);
+    savedMarks.answered(["postfix"]);
     expect(usersSession.getState().saved[id]).toHaveLength(2);
-    forgetUsersPending(["ssh"]);
+    savedMarks.answered(["ssh"]);
     expect(usersSession.getState().saved).toEqual({});
   });
 });
