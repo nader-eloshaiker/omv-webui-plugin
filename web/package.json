@@ -9,6 +9,11 @@
     "node": ">=24"
   },
   "scripts": {
+    "dev": "pnpm --filter omv-web-app dev:mock",
+    "dev:mock": "pnpm --filter omv-web-app dev:mock",
+    "dev:nas": "pnpm --filter omv-web-app dev",
+    "preview": "pnpm --filter omv-web-app preview",
+    "storybook": "pnpm --filter @omv-webui/react-ui-components storybook",
     "build": "pnpm --filter omv-web-app build",
     "typecheck": "pnpm --no-bail -r typecheck",
     "test": "pnpm -r --workspace-concurrency=1 test",
