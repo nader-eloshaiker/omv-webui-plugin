@@ -1,0 +1,12 @@
+type: object
+description: One proxy as stored, without its password.
+required: [enable, host, port, username]
+properties:
+  enable:
+    type: boolean
+  host:
+    type: string
+  port:
+    type: integer
+  username:
+    type: string

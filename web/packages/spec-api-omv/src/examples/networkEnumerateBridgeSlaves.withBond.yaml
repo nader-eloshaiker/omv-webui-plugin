@@ -1,0 +1,38 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  - devicename: bond0
+    gateway: ""
+    gateway6: ""
+    address: "198.51.100.128"
+    address6: ""
+    prefix: 24
+    prefix6: -1
+    netmask: "255.255.255.0"
+    netmask6: ""
+    ether: "00:00:5e:00:53:04"
+    mtu: "1500"
+    state: UP
+    link: true
+    vlan: false
+    vlanid: -1
+    speed: 1000
+    description: "bond0 [00:00:5e:00:53:04]"
+    stats:
+      rx_bytes: "2548"
+      rx_packets: "9"
+      rx_errors: "0"
+      rx_dropped: "0"
+      rx_fifo_errors: "0"
+      rx_frame_errors: "0"
+      rx_compressed: "0"
+      rx_multicast: "0"
+      tx_bytes: "3433"
+      tx_packets: "13"
+      tx_errors: "0"
+      tx_dropped: "0"
+      tx_fifo_errors: "0"
+      tx_collisions: "0"
+      tx_carrier_errors: "0"
+      tx_compressed: "0"
+    type: bond

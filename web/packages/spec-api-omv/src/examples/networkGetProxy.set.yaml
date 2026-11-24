@@ -1,0 +1,21 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  http: []
+  https: []
+  ftp: []
+  httpenable: true
+  httphost: proxy.example.org
+  httpport: 3128
+  httpusername: example-user
+  httppassword: EXAMPLE-PASSWORD
+  httpsenable: true
+  httpshost: proxy.example.org
+  httpsport: 3129
+  httpsusername: example-user
+  httpspassword: EXAMPLE-PASSWORD
+  ftpenable: true
+  ftphost: proxy.example.org
+  ftpport: 2121
+  ftpusername: ""
+  ftppassword: ""

@@ -276,7 +276,17 @@ describe("the pending-changes band", () => {
       name: "Apply 2 changes?",
     });
     expect(dialog).toHaveTextContent("Network");
-    expect(dialog).toHaveTextContent(
+    // The network has its own check now (phase 5 network design 1.8): at localhost the page cannot
+    // tell which interface it uses, so applying the network may cut it, with the typed confirmation.
+    expect(
+      await within(dialog).findByText(
+        "If this setting is wrong, this page loses the NAS, and you need another way in to put it right.",
+      ),
+    ).toBeVisible();
+    expect(
+      within(dialog).getByRole("textbox", { name: "Type apply to confirm" }),
+    ).toBeVisible();
+    expect(dialog).not.toHaveTextContent(
       "this page may lose its connection while they restart",
     );
   });

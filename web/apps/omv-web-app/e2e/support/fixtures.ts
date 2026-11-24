@@ -7,8 +7,14 @@
 //   test). Any of them fails the test.
 // - `extraAllowances` (option): console errors a test's own failing replies cause, each with its
 //   reason; none by default.
+// - `openedAt` (option): the host the page is opened at, such as a network story's address
+//   ("192.0.2.10"); null (the default) opens it at the server's own loopback origin. The production
+//   build reads where it was opened from `location` only (src/network/pageLocation.ts), so the network
+//   pages need a real address: the browser then reaches the server as its HTTP proxy, and the page's
+//   origin is `http://<openedAt>`. Nothing leaves the computer: every request goes to the server.
 import { test as base, expect } from "@playwright/test";
 import {
+  COOP_IGNORED_OVER_HTTP,
   expectNothingObserved,
   observe,
   RPC_401,
@@ -33,6 +39,9 @@ interface TestFixtures {
   rpc: RpcMock;
   observed: Observed;
   extraAllowances: { list: readonly ConsoleAllowance[] };
+  openedAt: string | null;
+  /** The page's origin: the server's, or `http://<openedAt>`. */
+  pageOrigin: string;
 }
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -45,13 +54,23 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { scope: "worker" },
   ],
 
-  baseURL: async ({ server }, provide) => {
-    await provide(server.origin);
+  openedAt: [null, { option: true }],
+
+  pageOrigin: async ({ server, openedAt }, provide) => {
+    await provide(openedAt === null ? server.origin : `http://${openedAt}`);
   },
 
-  rpc: async ({ page, server }, provide) => {
+  proxy: async ({ server, openedAt }, provide) => {
+    await provide(openedAt === null ? undefined : { server: server.origin });
+  },
+
+  baseURL: async ({ pageOrigin }, provide) => {
+    await provide(pageOrigin);
+  },
+
+  rpc: async ({ page, pageOrigin }, provide) => {
     const rpc = new RpcMock();
-    await rpc.install(page, server.origin);
+    await rpc.install(page, pageOrigin);
     await provide(rpc);
     expect.soft(rpc.problems, "requests to rpc.php").toEqual([]);
   },
@@ -59,10 +78,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   extraAllowances: [{ list: [] }, { option: true }],
 
   observed: [
-    async ({ page, server, extraAllowances }, provide) => {
-      const observed = await observe(page, server.origin, [
+    async ({ page, pageOrigin, openedAt, extraAllowances }, provide) => {
+      const observed = await observe(page, pageOrigin, [
         RPC_401,
         RPC_404_NO_PLUGIN,
+        ...(openedAt === null ? [] : [COOP_IGNORED_OVER_HTTP]),
         ...extraAllowances.list,
       ]);
       await provide(observed);

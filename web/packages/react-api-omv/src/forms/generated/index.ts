@@ -17,6 +17,22 @@ export {
 } from "./fileSystemMgmtUmountByDir.ts";
 export { FsTabSetRequestSchema, type FsTabSetFormValues } from "./fsTabSet.ts";
 export {
+  IptablesDeleteRuleRequestSchema,
+  type IptablesDeleteRuleFormValues,
+} from "./iptablesDeleteRule.ts";
+export {
+  IptablesSetRuleRequestSchema,
+  type IptablesSetRuleFormValues,
+} from "./iptablesSetRule.ts";
+export {
+  IptablesSetRulesRequestSchema,
+  type IptablesSetRulesFormValues,
+} from "./iptablesSetRules.ts";
+export {
+  IptablesSetRules6RequestSchema,
+  type IptablesSetRules6FormValues,
+} from "./iptablesSetRules6.ts";
+export {
   MdMgmtAddRequestSchema,
   type MdMgmtAddFormValues,
 } from "./mdMgmtAdd.ts";
@@ -40,6 +56,38 @@ export {
   MdMgmtSetSyncActionRequestSchema,
   type MdMgmtSetSyncActionFormValues,
 } from "./mdMgmtSetSyncAction.ts";
+export {
+  NetworkDeleteInterfaceRequestSchema,
+  type NetworkDeleteInterfaceFormValues,
+} from "./networkDeleteInterface.ts";
+export {
+  NetworkSetBondIfaceRequestSchema,
+  type NetworkSetBondIfaceFormValues,
+} from "./networkSetBondIface.ts";
+export {
+  NetworkSetBridgeIfaceRequestSchema,
+  type NetworkSetBridgeIfaceFormValues,
+} from "./networkSetBridgeIface.ts";
+export {
+  NetworkSetEthernetIfaceRequestSchema,
+  type NetworkSetEthernetIfaceFormValues,
+} from "./networkSetEthernetIface.ts";
+export {
+  NetworkSetGeneralSettingsRequestSchema,
+  type NetworkSetGeneralSettingsFormValues,
+} from "./networkSetGeneralSettings.ts";
+export {
+  NetworkSetProxyRequestSchema,
+  type NetworkSetProxyFormValues,
+} from "./networkSetProxy.ts";
+export {
+  NetworkSetVlanIfaceRequestSchema,
+  type NetworkSetVlanIfaceFormValues,
+} from "./networkSetVlanIface.ts";
+export {
+  NetworkSetWirelessIfaceRequestSchema,
+  type NetworkSetWirelessIfaceFormValues,
+} from "./networkSetWirelessIface.ts";
 export {
   NfsDeleteShareRequestSchema,
   type NfsDeleteShareFormValues,

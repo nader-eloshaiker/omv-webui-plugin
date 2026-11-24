@@ -1,0 +1,76 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  total: 2
+  data:
+    - uuid: "00000000-0000-4000-8000-000000000001"
+      type: ethernet
+      devicename: enp2s0
+      method: dhcp
+      address: ""
+      netmask: ""
+      gateway: ""
+      routemetric: 0
+      method6: dhcp
+      address6: ""
+      netmask6: 64
+      gateway6: ""
+      routemetric6: 1
+      dnsnameservers: ""
+      dnssearch: ""
+      mtu: 0
+      wol: false
+      comment: ""
+      altmacaddress: ""
+      slaves: []
+      bondprimary: ""
+      bondmode: 1
+      bondmiimon: 0
+      bonddowndelay: 0
+      bondupdelay: 0
+      bondtransmithashpolicy: layer2
+      vlanid: 1
+      vlanrawdevice: ""
+      band: auto
+      wpassid: ""
+      wpapsk: ""
+      keymanagement: psk
+      hidden: false
+      _used: false
+      _readonly: false
+    - uuid: "00000000-0000-4000-8000-000000000006"
+      type: bridge
+      devicename: br0
+      method: dhcp
+      address: ""
+      netmask: ""
+      gateway: ""
+      routemetric: 0
+      method6: manual
+      address6: ""
+      netmask6: 64
+      gateway6: ""
+      routemetric6: 1
+      dnsnameservers: ""
+      dnssearch: ""
+      mtu: 0
+      wol: false
+      comment: Example bridge
+      altmacaddress: ""
+      slaves:
+        - enp3s0
+      bondprimary: ""
+      bondmode: 1
+      bondmiimon: 0
+      bonddowndelay: 0
+      bondupdelay: 0
+      bondtransmithashpolicy: layer2
+      vlanid: 1
+      vlanrawdevice: ""
+      band: auto
+      wpassid: ""
+      wpapsk: ""
+      keymanagement: psk
+      hidden: false
+      _used: false
+      _readonly: false

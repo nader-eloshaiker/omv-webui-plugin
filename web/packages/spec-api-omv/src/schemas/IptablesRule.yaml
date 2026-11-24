@@ -1,0 +1,47 @@
+type: object
+description: >-
+  One firewall rule as stored (conf.system.network.iptables.rule). Rules apply in rulenum order;
+  OMV keeps the numbers it is sent, so they may have gaps.
+required:
+  [
+    uuid,
+    family,
+    rulenum,
+    chain,
+    action,
+    source,
+    sport,
+    destination,
+    dport,
+    protocol,
+    extraoptions,
+    comment,
+  ]
+properties:
+  uuid:
+    type: string
+  family:
+    type: string
+    description: inet (IPv4) or inet6 (IPv6).
+  rulenum:
+    type: integer
+  chain:
+    type: string
+    description: INPUT or OUTPUT.
+  action:
+    type: string
+    description: ACCEPT, REJECT, DROP, LOG, or empty (count only).
+  source:
+    type: string
+  sport:
+    type: string
+  destination:
+    type: string
+  dport:
+    type: string
+  protocol:
+    type: string
+  extraoptions:
+    type: string
+  comment:
+    type: string

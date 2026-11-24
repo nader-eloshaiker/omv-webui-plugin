@@ -1,0 +1,6 @@
+type: array
+description: >-
+  Devices, each with what it uses now (NetworkDeviceInformation): the candidates for a new port,
+  VLAN or Wi-Fi interface, or the devices a bond or bridge may use.
+items:
+  $ref: ./NetworkDeviceInformation.yaml

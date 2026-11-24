@@ -45,6 +45,8 @@ post:
               $ref: ../../examples/execGetOutput.fsCandidatesFinished.yaml
             fsCandidatesNoneFinished:
               $ref: ../../examples/execGetOutput.fsCandidatesNoneFinished.yaml
+            identifyFinished:
+              $ref: ../../examples/execGetOutput.identifyFinished.yaml
             createExt4Finished:
               $ref: ../../examples/execGetOutput.createExt4Finished.yaml
             createBtrfsRaid1Finished:

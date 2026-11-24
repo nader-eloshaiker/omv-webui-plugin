@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetProxy
+  tags:
+    - Network
+  summary: Change the proxies
+  description: >-
+    Store the proxies, all fifteen fields: a password sent empty removes the stored one, so a save
+    carries each stored password typed again or empty (design phase-5-network 12.3). It marks apt and
+    profile dirty (observed). Returns what it stored in the nested shape, the passwords included; the
+    transport removes them (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setProxy
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-omit: ["http.password", "https.password", "ftp.password"]
+  x-omv-source:
+    datamodel: rpc.network.setproxy
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetProxyRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkProxyStored.yaml
+          examples:
+            saved:
+              $ref: ../../examples/networkSetProxy.saved.yaml

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: iptablesSetRule
+  tags:
+    - Iptables
+  summary: Add or change one firewall rule
+  description: >-
+    Store one firewall rule, IPv4 or IPv6. With OMV's placeholder UUID and rulenum -1 it is added at
+    the end (its rulenum the number of rules of its family, observed); another rulenum is kept as sent,
+    without renumbering the rest. It marks iptables dirty (observed). Applying restarts the firewall
+    with the stored rules, which can cut this page off. Returns the stored rule.
+  x-omv-rpc:
+    service: Iptables
+    method: setRule
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.iptables.setrule
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/IptablesSetRuleRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/IptablesRule.yaml
+          examples:
+            created:
+              $ref: ../../examples/iptablesSetRule.created.yaml
+            changed:
+              $ref: ../../examples/iptablesSetRule.changed.yaml
+            created6:
+              $ref: ../../examples/iptablesSetRule.created6.yaml

@@ -1,0 +1,8 @@
+type: string
+description: >-
+  A kernel network interface name, such as "enp2s0", "bond0" or "bond0.10": 1 to 15 printable ASCII
+  characters, without "/", ":" or a space, and not "." or "..". OMV takes any text here; the
+  contract takes only what the kernel accepts as a name.
+minLength: 1
+maxLength: 15
+pattern: '^(?!\.{1,2}$)[!-.0-9;-~]{1,15}$'

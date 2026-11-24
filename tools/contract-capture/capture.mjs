@@ -26,6 +26,7 @@
 // scrubbed as data, field by field, before it is written back as text.
 import { createHmac, randomBytes } from "node:crypto";
 import fs from "node:fs";
+import { isIPv4 } from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -173,9 +174,11 @@ async function discardChanges(admin, what) {
  * Sign in once to learn the VM's own names (version, host name, disks' serial numbers and WWNs) so
  * the scrubber knows them, and return a recorder that scrubs, verifies and writes each reply, with
  * the run's scrubber for anything else a tool prints. Nothing raw is written; credentials and host
- * are never printed.
+ * are never printed. `options.scrub` adds scrubber options (createScrubber's `ipv4Networks`); with
+ * `ipv4Networks`, a host given as an IPv4 address is mapped by that rule like any other address
+ * instead of becoming the literal NAS_HOST, so it stays an address (verify still refuses it left).
  */
-export async function openCapture(env) {
+export async function openCapture(env, options = {}) {
   if (!env.NAS_HOST) {
     throw new Error(`NAS_HOST is not set in ${ENV_PATH}`);
   }
@@ -209,13 +212,21 @@ export async function openCapture(env) {
   if (ownHost) {
     names[host.split(".")[0]] = "nas";
   }
+  const hostIsMappedAddress =
+    Boolean(options.scrub?.ipv4Networks) && isIPv4(env.NAS_HOST);
   const literals = [
-    env.NAS_HOST,
+    hostIsMappedAddress ? "" : env.NAS_HOST,
     ownHost ? host : "",
     env.OMV_2FA_TOTP_SECRET,
     ...Object.values(ACCOUNTS).map(([, p]) => env[p]),
   ].filter((literal) => literal !== PRODUCT_NAME);
-  const { scrub, verify } = createScrubber({ names, literals, serials, wwns });
+  const { scrub, verify, counts } = createScrubber({
+    ...options.scrub,
+    names,
+    literals,
+    serials,
+    wwns,
+  });
 
   const results = [];
   /**
@@ -276,7 +287,7 @@ export async function openCapture(env) {
       `${same ? "same " : "DIFF "} ${file}: committed example kept; draft in scratch/captures/`,
     );
   };
-  return { base, version, record, results, scrub };
+  return { base, version, record, results, scrub, counts };
 }
 
 /**

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkSetBridgeIface
+  tags:
+    - Network
+  summary: Make or change a bridge
+  description: >-
+    Store a bridge's settings. With OMV's placeholder UUID it makes a bridge, chooses its name ("br"
+    and the next number) and refuses an interface already in another bridge; otherwise it replaces the
+    stored bridge. It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new
+    bridge (observed). Returns the stored settings, the interfaces as one comma-separated string; the
+    transport removes the Wi-Fi password from it (UI-6).
+  x-omv-rpc:
+    service: Network
+    method: setBridgeIface
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-omit: ["wpapsk"]
+  x-omv-source:
+    datamodel: rpc.network.setbridgeiface
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkSetBridgeIfaceRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value, without the fields in x-omv-omit."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkInterfaceStored.yaml
+          examples:
+            created:
+              $ref: ../../examples/networkSetBridgeIface.created.yaml

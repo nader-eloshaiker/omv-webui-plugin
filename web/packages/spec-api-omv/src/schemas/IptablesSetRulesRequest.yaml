@@ -1,0 +1,7 @@
+type: array
+description: >-
+  Every IPv4 firewall rule, in a new order (rpc.iptables.setrules): OMV removes every IPv4 rule and
+  stores these, each with a new identifier. The interface sends the whole list it read, every field
+  as read, rulenum renumbered from 0.
+items:
+  $ref: ./IptablesRulesInetItem.yaml

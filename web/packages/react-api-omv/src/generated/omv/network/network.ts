@@ -4,22 +4,45 @@
  */
 import type {
   GetListRequest,
+  NetworkDeviceInformation,
+  NetworkDeviceInformationList,
   NetworkDeviceList,
+  NetworkEnumerateSlavesRequest,
   NetworkGeneralSettings,
+  NetworkGetInformationRequest,
+  NetworkIdentifyRequest,
+  NetworkInterface,
+  NetworkInterfaceList,
+  NetworkInterfaceStored,
+  NetworkProxy,
+  NetworkProxyStored,
+  NetworkSetBondIfaceRequest,
+  NetworkSetBridgeIfaceRequest,
+  NetworkSetEthernetIfaceRequest,
+  NetworkSetGeneralSettingsRequest,
+  NetworkSetProxyRequest,
+  NetworkSetVlanIfaceRequest,
+  NetworkSetWirelessIfaceRequest,
+  ObjectUuidRequest,
+  RpcErrorDetail,
+  TaskHandle,
 } from "@omv-webui/ts-api-omv";
 
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import type { BodyType, ErrorType } from "../../../transport/rpcClient.ts";
 import { rpcClient } from "../../../transport/rpcClient.ts";
@@ -400,3 +423,2515 @@ export function useNetworkEnumerateDevicesList<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+/**
+ * Store the host name and domain name. Nothing changes on the system until the pending changes are applied; it marks systemd-networkd, hosts, hostname, avahi, postfix and samba dirty (observed on OMV 8.6.1). OMV stores a host name with capitals as sent (observed) and sets the system name in lower case when applied (read from source). A page opened by the NAS's name loses it when the name changes. Returns the stored object. OMV refuses a host name it does not accept with HTTP 400, and the domains local, example, invalid and test with HTTP 500 (only as spelt: LOCAL is accepted, observed); the contract refuses those four in any case.
+ * @summary Change the NAS's name or domain
+ */
+export const networkSetGeneralSettings = (
+  networkSetGeneralSettingsRequest: BodyType<NetworkSetGeneralSettingsRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkGeneralSettings>(
+    {
+      url: `/rpc/Network/setGeneralSettings`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetGeneralSettingsRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetGeneralSettingsMutationKey = () =>
+  ["networkSetGeneralSettings"] as const;
+
+export const getNetworkSetGeneralSettingsMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetGeneralSettings>>,
+    TError,
+    NetworkSetGeneralSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetGeneralSettings>>,
+  TError,
+  NetworkSetGeneralSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetGeneralSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetGeneralSettings>>,
+    NetworkSetGeneralSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetGeneralSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetGeneralSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetGeneralSettings>>
+>;
+export type NetworkSetGeneralSettingsMutationBody =
+  BodyType<NetworkSetGeneralSettingsRequest>;
+export type NetworkSetGeneralSettingsMutationError = ErrorType<RpcErrorDetail>;
+export type NetworkSetGeneralSettingsMutationVariables = {
+  data: BodyType<NetworkSetGeneralSettingsRequest>;
+};
+
+/**
+ * Store the host name and domain name. Nothing changes on the system until the pending changes are applied; it marks systemd-networkd, hosts, hostname, avahi, postfix and samba dirty (observed on OMV 8.6.1). OMV stores a host name with capitals as sent (observed) and sets the system name in lower case when applied (read from source). A page opened by the NAS's name loses it when the name changes. Returns the stored object. OMV refuses a host name it does not accept with HTTP 400, and the domains local, example, invalid and test with HTTP 500 (only as spelt: LOCAL is accepted, observed); the contract refuses those four in any case.
+ * @summary Change the NAS's name or domain
+ */
+export const useNetworkSetGeneralSettings = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetGeneralSettings>>,
+      TError,
+      NetworkSetGeneralSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetGeneralSettings>>,
+  TError,
+  NetworkSetGeneralSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetGeneralSettingsMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * Blink the lights of a network port for the given seconds, as a background task (ethtool --identify), so the port can be found by sight. OMV's own note says the system may not be reachable through that port while it blinks. The task's output is ethtool's text, empty when it worked (observed on the test VM's virtual port, whose driver supports it); it has no result. Changes no configuration.
+ * @summary Blink a port's light
+ */
+export const networkIdentify = (
+  networkIdentifyRequest: BodyType<NetworkIdentifyRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<TaskHandle>(
+    {
+      url: `/rpc/Network/identify`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkIdentifyRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkIdentifyMutationKey = () => ["networkIdentify"] as const;
+
+export const getNetworkIdentifyMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkIdentify>>,
+    TError,
+    NetworkIdentifyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkIdentify>>,
+  TError,
+  NetworkIdentifyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkIdentifyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkIdentify>>,
+    NetworkIdentifyMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkIdentify(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkIdentifyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkIdentify>>
+>;
+export type NetworkIdentifyMutationBody = BodyType<NetworkIdentifyRequest>;
+export type NetworkIdentifyMutationError = ErrorType<unknown>;
+export type NetworkIdentifyMutationVariables = {
+  data: BodyType<NetworkIdentifyRequest>;
+};
+
+/**
+ * Blink the lights of a network port for the given seconds, as a background task (ethtool --identify), so the port can be found by sight. OMV's own note says the system may not be reachable through that port while it blinks. The task's output is ethtool's text, empty when it worked (observed on the test VM's virtual port, whose driver supports it); it has no result. Changes no configuration.
+ * @summary Blink a port's light
+ */
+export const useNetworkIdentify = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkIdentify>>,
+      TError,
+      NetworkIdentifyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkIdentify>>,
+  TError,
+  NetworkIdentifyMutationVariables,
+  TContext
+> => {
+  return useMutation(getNetworkIdentifyMutationOptions(options), queryClient);
+};
+/**
+ * What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6 falls back to the link-local address, observed), router addresses, hardware address, packet size, state, link, speed and counters. No stored setting and no secret. A name the system does not have is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed). Changes nothing.
+ * @summary What a device uses now
+ */
+export const networkGetInformation = (
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformation>(
+    {
+      url: `/rpc/Network/getInformation`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkGetInformationRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkGetInformationQueryKey = (
+  networkGetInformationRequest?: BodyType<NetworkGetInformationRequest>,
+) => {
+  return [
+    "POST",
+    `/rpc/Network/getInformation`,
+    networkGetInformationRequest,
+  ] as const;
+};
+
+export const getNetworkGetInformationQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetInformation>>,
+  TError = ErrorType<unknown>,
+>(
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInformation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNetworkGetInformationQueryKey(networkGetInformationRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetInformation>>
+  > = ({ signal }) =>
+    networkGetInformation(networkGetInformationRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetInformation>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetInformationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetInformation>>
+>;
+export type NetworkGetInformationQueryError = ErrorType<unknown>;
+
+/**
+ * What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6 falls back to the link-local address, observed), router addresses, hardware address, packet size, state, link, speed and counters. No stored setting and no secret. A name the system does not have is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed). Changes nothing.
+ * @summary What a device uses now
+ */
+export function useNetworkGetInformation<
+  TData = Awaited<ReturnType<typeof networkGetInformation>>,
+  TError = ErrorType<unknown>,
+>(
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInformation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInformation>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInformation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6 falls back to the link-local address, observed), router addresses, hardware address, packet size, state, link, speed and counters. No stored setting and no secret. A name the system does not have is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed). Changes nothing.
+ * @summary What a device uses now
+ */
+export function useNetworkGetInformation<
+  TData = Awaited<ReturnType<typeof networkGetInformation>>,
+  TError = ErrorType<unknown>,
+>(
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInformation>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInformation>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInformation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6 falls back to the link-local address, observed), router addresses, hardware address, packet size, state, link, speed and counters. No stored setting and no secret. A name the system does not have is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed). Changes nothing.
+ * @summary What a device uses now
+ */
+export function useNetworkGetInformation<
+  TData = Awaited<ReturnType<typeof networkGetInformation>>,
+  TError = ErrorType<unknown>,
+>(
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInformation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6 falls back to the link-local address, observed), router addresses, hardware address, packet size, state, link, speed and counters. No stored setting and no secret. A name the system does not have is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed). Changes nothing.
+ * @summary What a device uses now
+ */
+export function useNetworkGetInformation<
+  TData = Awaited<ReturnType<typeof networkGetInformation>>,
+  TError = ErrorType<unknown>,
+>(
+  networkGetInformationRequest: BodyType<NetworkGetInformationRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInformation>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetInformationQueryOptions(
+    networkGetInformationRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * A page of the interfaces that have settings, of every kind, as stored: the name servers and search domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6). Changes nothing.
+ * @summary Interfaces with settings
+ */
+export const networkGetInterfaceList = (
+  getListRequest: BodyType<GetListRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceList>(
+    {
+      url: `/rpc/Network/getInterfaceList`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: getListRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkGetInterfaceListQueryKey = (
+  getListRequest?: BodyType<GetListRequest>,
+) => {
+  return ["POST", `/rpc/Network/getInterfaceList`, getListRequest] as const;
+};
+
+export const getNetworkGetInterfaceListQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetInterfaceList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterfaceList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNetworkGetInterfaceListQueryKey(getListRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetInterfaceList>>
+  > = ({ signal }) =>
+    networkGetInterfaceList(getListRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetInterfaceList>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetInterfaceListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetInterfaceList>>
+>;
+export type NetworkGetInterfaceListQueryError = ErrorType<unknown>;
+
+/**
+ * A page of the interfaces that have settings, of every kind, as stored: the name servers and search domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6). Changes nothing.
+ * @summary Interfaces with settings
+ */
+export function useNetworkGetInterfaceList<
+  TData = Awaited<ReturnType<typeof networkGetInterfaceList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterfaceList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInterfaceList>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInterfaceList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the interfaces that have settings, of every kind, as stored: the name servers and search domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6). Changes nothing.
+ * @summary Interfaces with settings
+ */
+export function useNetworkGetInterfaceList<
+  TData = Awaited<ReturnType<typeof networkGetInterfaceList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterfaceList>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInterfaceList>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInterfaceList>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the interfaces that have settings, of every kind, as stored: the name servers and search domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6). Changes nothing.
+ * @summary Interfaces with settings
+ */
+export function useNetworkGetInterfaceList<
+  TData = Awaited<ReturnType<typeof networkGetInterfaceList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterfaceList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * A page of the interfaces that have settings, of every kind, as stored: the name servers and search domains separated by spaces, a bond's or bridge's ports as a list, and _readonly true for a port of a bond. A bond's ports have no settings of their own and are not rows here. The transport replaces each row's stored Wi-Fi password by whether one is set before anything else sees the reply (UI-6). Changes nothing.
+ * @summary Interfaces with settings
+ */
+export function useNetworkGetInterfaceList<
+  TData = Awaited<ReturnType<typeof networkGetInterfaceList>>,
+  TError = ErrorType<unknown>,
+>(
+  getListRequest: BodyType<GetListRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterfaceList>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetInterfaceListQueryOptions(
+    getListRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * One interface's stored settings, of any kind, with the name servers and search domains separated by commas and a bond's or bridge's ports as a list, ready to be changed and sent back. The transport replaces the stored Wi-Fi password by whether one is set (UI-6). Changes nothing.
+ * @summary One interface's settings
+ */
+export const networkGetInterface = (
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterface>(
+    {
+      url: `/rpc/Network/getInterface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: objectUuidRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkGetInterfaceQueryKey = (
+  objectUuidRequest?: BodyType<ObjectUuidRequest>,
+) => {
+  return ["POST", `/rpc/Network/getInterface`, objectUuidRequest] as const;
+};
+
+export const getNetworkGetInterfaceQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetInterface>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterface>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getNetworkGetInterfaceQueryKey(objectUuidRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetInterface>>
+  > = ({ signal }) =>
+    networkGetInterface(objectUuidRequest, requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetInterface>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetInterfaceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetInterface>>
+>;
+export type NetworkGetInterfaceQueryError = ErrorType<unknown>;
+
+/**
+ * One interface's stored settings, of any kind, with the name servers and search domains separated by commas and a bond's or bridge's ports as a list, ready to be changed and sent back. The transport replaces the stored Wi-Fi password by whether one is set (UI-6). Changes nothing.
+ * @summary One interface's settings
+ */
+export function useNetworkGetInterface<
+  TData = Awaited<ReturnType<typeof networkGetInterface>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterface>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInterface>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInterface>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One interface's stored settings, of any kind, with the name servers and search domains separated by commas and a bond's or bridge's ports as a list, ready to be changed and sent back. The transport replaces the stored Wi-Fi password by whether one is set (UI-6). Changes nothing.
+ * @summary One interface's settings
+ */
+export function useNetworkGetInterface<
+  TData = Awaited<ReturnType<typeof networkGetInterface>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterface>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetInterface>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetInterface>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One interface's stored settings, of any kind, with the name servers and search domains separated by commas and a bond's or bridge's ports as a list, ready to be changed and sent back. The transport replaces the stored Wi-Fi password by whether one is set (UI-6). Changes nothing.
+ * @summary One interface's settings
+ */
+export function useNetworkGetInterface<
+  TData = Awaited<ReturnType<typeof networkGetInterface>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterface>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * One interface's stored settings, of any kind, with the name servers and search domains separated by commas and a bond's or bridge's ports as a list, ready to be changed and sent back. The transport replaces the stored Wi-Fi password by whether one is set (UI-6). Changes nothing.
+ * @summary One interface's settings
+ */
+export function useNetworkGetInterface<
+  TData = Awaited<ReturnType<typeof networkGetInterface>>,
+  TError = ErrorType<unknown>,
+>(
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetInterface>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetInterfaceQueryOptions(
+    objectUuidRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Remove an interface's settings. It also queues a job, run at the next apply before the network is set up again, that switches the interface off and clears its addresses (and removes a bond, VLAN or bridge); Undo of the pending changes does not remove that job, which then runs at a later apply that includes task (observed). It marks systemd-networkd, hosts, avahi, halt, issue, collectd and task dirty (observed). It does not check that a VLAN runs on the interface. Returns the removed settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Remove an interface's settings
+ */
+export const networkDeleteInterface = (
+  objectUuidRequest: BodyType<ObjectUuidRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/deleteInterface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: objectUuidRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkDeleteInterfaceMutationKey = () =>
+  ["networkDeleteInterface"] as const;
+
+export const getNetworkDeleteInterfaceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkDeleteInterface>>,
+    TError,
+    NetworkDeleteInterfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkDeleteInterface>>,
+  TError,
+  NetworkDeleteInterfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkDeleteInterfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkDeleteInterface>>,
+    NetworkDeleteInterfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkDeleteInterface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkDeleteInterfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkDeleteInterface>>
+>;
+export type NetworkDeleteInterfaceMutationBody = BodyType<ObjectUuidRequest>;
+export type NetworkDeleteInterfaceMutationError = ErrorType<unknown>;
+export type NetworkDeleteInterfaceMutationVariables = {
+  data: BodyType<ObjectUuidRequest>;
+};
+
+/**
+ * Remove an interface's settings. It also queues a job, run at the next apply before the network is set up again, that switches the interface off and clears its addresses (and removes a bond, VLAN or bridge); Undo of the pending changes does not remove that job, which then runs at a later apply that includes task (observed). It marks systemd-networkd, hosts, avahi, halt, issue, collectd and task dirty (observed). It does not check that a VLAN runs on the interface. Returns the removed settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Remove an interface's settings
+ */
+export const useNetworkDeleteInterface = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkDeleteInterface>>,
+      TError,
+      NetworkDeleteInterfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkDeleteInterface>>,
+  TError,
+  NetworkDeleteInterfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkDeleteInterfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when every port is set up or in a bond (observed). Changes nothing.
+ * @summary Ports that can be set up
+ */
+export const networkGetEthernetCandidates = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformationList>(
+    { url: `/rpc/Network/getEthernetCandidates`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getNetworkGetEthernetCandidatesQueryKey = () => {
+  return ["POST", `/rpc/Network/getEthernetCandidates`] as const;
+};
+
+export const getNetworkGetEthernetCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getNetworkGetEthernetCandidatesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetEthernetCandidates>>
+  > = ({ signal }) => networkGetEthernetCandidates(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetEthernetCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetEthernetCandidates>>
+>;
+export type NetworkGetEthernetCandidatesQueryError = ErrorType<unknown>;
+
+/**
+ * The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when every port is set up or in a bond (observed). Changes nothing.
+ * @summary Ports that can be set up
+ */
+export function useNetworkGetEthernetCandidates<
+  TData = Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetEthernetCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when every port is set up or in a bond (observed). Changes nothing.
+ * @summary Ports that can be set up
+ */
+export function useNetworkGetEthernetCandidates<
+  TData = Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetEthernetCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when every port is set up or in a bond (observed). Changes nothing.
+ * @summary Ports that can be set up
+ */
+export function useNetworkGetEthernetCandidates<
+  TData = Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when every port is set up or in a bond (observed). Changes nothing.
+ * @summary Ports that can be set up
+ */
+export function useNetworkGetEthernetCandidates<
+  TData = Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetEthernetCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetEthernetCandidatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store a network port's settings. With OMV's placeholder UUID it sets up a port and refuses a second interface of the same kind and name (HTTP 500); otherwise it replaces the stored settings with what is sent. Name servers and search domains sent separated by commas or semicolons are stored separated by spaces (observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new port, the same without collectd for a change (observed). Returns the stored settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Set up or change a network port
+ */
+export const networkSetEthernetIface = (
+  networkSetEthernetIfaceRequest: BodyType<NetworkSetEthernetIfaceRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/setEthernetIface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetEthernetIfaceRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetEthernetIfaceMutationKey = () =>
+  ["networkSetEthernetIface"] as const;
+
+export const getNetworkSetEthernetIfaceMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetEthernetIface>>,
+    TError,
+    NetworkSetEthernetIfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetEthernetIface>>,
+  TError,
+  NetworkSetEthernetIfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetEthernetIfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetEthernetIface>>,
+    NetworkSetEthernetIfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetEthernetIface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetEthernetIfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetEthernetIface>>
+>;
+export type NetworkSetEthernetIfaceMutationBody =
+  BodyType<NetworkSetEthernetIfaceRequest>;
+export type NetworkSetEthernetIfaceMutationError = ErrorType<RpcErrorDetail>;
+export type NetworkSetEthernetIfaceMutationVariables = {
+  data: BodyType<NetworkSetEthernetIfaceRequest>;
+};
+
+/**
+ * Store a network port's settings. With OMV's placeholder UUID it sets up a port and refuses a second interface of the same kind and name (HTTP 500); otherwise it replaces the stored settings with what is sent. Name servers and search domains sent separated by commas or semicolons are stored separated by spaces (observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new port, the same without collectd for a change (observed). Returns the stored settings in their stored shape; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Set up or change a network port
+ */
+export const useNetworkSetEthernetIface = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetEthernetIface>>,
+      TError,
+      NetworkSetEthernetIfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetEthernetIface>>,
+  TError,
+  NetworkSetEthernetIfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetEthernetIfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes nothing.
+ * @summary Ports a bond can use
+ */
+export const networkEnumerateBondSlaves = (
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformationList>(
+    {
+      url: `/rpc/Network/enumerateBondSlaves`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkEnumerateSlavesRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkEnumerateBondSlavesQueryKey = (
+  networkEnumerateSlavesRequest?: BodyType<NetworkEnumerateSlavesRequest>,
+) => {
+  return [
+    "POST",
+    `/rpc/Network/enumerateBondSlaves`,
+    networkEnumerateSlavesRequest,
+  ] as const;
+};
+
+export const getNetworkEnumerateBondSlavesQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNetworkEnumerateBondSlavesQueryKey(networkEnumerateSlavesRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkEnumerateBondSlaves>>
+  > = ({ signal }) =>
+    networkEnumerateBondSlaves(
+      networkEnumerateSlavesRequest,
+      requestOptions,
+      signal,
+    );
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkEnumerateBondSlavesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkEnumerateBondSlaves>>
+>;
+export type NetworkEnumerateBondSlavesQueryError = ErrorType<unknown>;
+
+/**
+ * The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes nothing.
+ * @summary Ports a bond can use
+ */
+export function useNetworkEnumerateBondSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+          TError,
+          Awaited<ReturnType<typeof networkEnumerateBondSlaves>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes nothing.
+ * @summary Ports a bond can use
+ */
+export function useNetworkEnumerateBondSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+          TError,
+          Awaited<ReturnType<typeof networkEnumerateBondSlaves>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes nothing.
+ * @summary Ports a bond can use
+ */
+export function useNetworkEnumerateBondSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Ethernet ports a bond may use, each with what it uses now: with unused, the ports with no settings that are in no bond, bridge or VLAN; for an existing bond, also its own ports. Changes nothing.
+ * @summary Ports a bond can use
+ */
+export function useNetworkEnumerateBondSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBondSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkEnumerateBondSlavesQueryOptions(
+    networkEnumerateSlavesRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store a bond's settings. With OMV's placeholder UUID it makes a bond, chooses its name (the next "bond" and a number) and refuses a port already in another bond; otherwise it replaces the stored bond. It refuses an empty primary port in modes 1, 5 and 6. It reads bondtransmithashpolicy although its datamodel does not name it, and a bond sent without it is refused (HTTP 500, observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new bond (observed). Returns the stored settings, the ports as one comma-separated string; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Make or change a bond
+ */
+export const networkSetBondIface = (
+  networkSetBondIfaceRequest: BodyType<NetworkSetBondIfaceRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/setBondIface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetBondIfaceRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetBondIfaceMutationKey = () =>
+  ["networkSetBondIface"] as const;
+
+export const getNetworkSetBondIfaceMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetBondIface>>,
+    TError,
+    NetworkSetBondIfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetBondIface>>,
+  TError,
+  NetworkSetBondIfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetBondIfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetBondIface>>,
+    NetworkSetBondIfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetBondIface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetBondIfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetBondIface>>
+>;
+export type NetworkSetBondIfaceMutationBody =
+  BodyType<NetworkSetBondIfaceRequest>;
+export type NetworkSetBondIfaceMutationError = ErrorType<RpcErrorDetail>;
+export type NetworkSetBondIfaceMutationVariables = {
+  data: BodyType<NetworkSetBondIfaceRequest>;
+};
+
+/**
+ * Store a bond's settings. With OMV's placeholder UUID it makes a bond, chooses its name (the next "bond" and a number) and refuses a port already in another bond; otherwise it replaces the stored bond. It refuses an empty primary port in modes 1, 5 and 6. It reads bondtransmithashpolicy although its datamodel does not name it, and a bond sent without it is refused (HTTP 500, observed). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new bond (observed). Returns the stored settings, the ports as one comma-separated string; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Make or change a bond
+ */
+export const useNetworkSetBondIface = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetBondIface>>,
+      TError,
+      NetworkSetBondIfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetBondIface>>,
+  TError,
+  NetworkSetBondIfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetBondIfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it uses now. Changes nothing.
+ * @summary Interfaces a VLAN can run on
+ */
+export const networkGetVlanCandidates = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformationList>(
+    { url: `/rpc/Network/getVlanCandidates`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getNetworkGetVlanCandidatesQueryKey = () => {
+  return ["POST", `/rpc/Network/getVlanCandidates`] as const;
+};
+
+export const getNetworkGetVlanCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getNetworkGetVlanCandidatesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetVlanCandidates>>
+  > = ({ signal }) => networkGetVlanCandidates(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetVlanCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetVlanCandidates>>
+>;
+export type NetworkGetVlanCandidatesQueryError = ErrorType<unknown>;
+
+/**
+ * The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it uses now. Changes nothing.
+ * @summary Interfaces a VLAN can run on
+ */
+export function useNetworkGetVlanCandidates<
+  TData = Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetVlanCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it uses now. Changes nothing.
+ * @summary Interfaces a VLAN can run on
+ */
+export function useNetworkGetVlanCandidates<
+  TData = Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetVlanCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it uses now. Changes nothing.
+ * @summary Interfaces a VLAN can run on
+ */
+export function useNetworkGetVlanCandidates<
+  TData = Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces with settings that are not VLANs (ports, bonds, bridges, Wi-Fi), each with what it uses now. Changes nothing.
+ * @summary Interfaces a VLAN can run on
+ */
+export function useNetworkGetVlanCandidates<
+  TData = Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetVlanCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetVlanCandidatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store a VLAN's settings. OMV names it "parent.id" itself, whatever device name is sent, and does not check that the parent has settings or already has a VLAN with that ID. It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new VLAN (observed). Returns the stored settings; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Add or change a VLAN
+ */
+export const networkSetVlanIface = (
+  networkSetVlanIfaceRequest: BodyType<NetworkSetVlanIfaceRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/setVlanIface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetVlanIfaceRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetVlanIfaceMutationKey = () =>
+  ["networkSetVlanIface"] as const;
+
+export const getNetworkSetVlanIfaceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetVlanIface>>,
+    TError,
+    NetworkSetVlanIfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetVlanIface>>,
+  TError,
+  NetworkSetVlanIfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetVlanIfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetVlanIface>>,
+    NetworkSetVlanIfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetVlanIface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetVlanIfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetVlanIface>>
+>;
+export type NetworkSetVlanIfaceMutationBody =
+  BodyType<NetworkSetVlanIfaceRequest>;
+export type NetworkSetVlanIfaceMutationError = ErrorType<unknown>;
+export type NetworkSetVlanIfaceMutationVariables = {
+  data: BodyType<NetworkSetVlanIfaceRequest>;
+};
+
+/**
+ * Store a VLAN's settings. OMV names it "parent.id" itself, whatever device name is sent, and does not check that the parent has settings or already has a VLAN with that ID. It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new VLAN (observed). Returns the stored settings; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Add or change a VLAN
+ */
+export const useNetworkSetVlanIface = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetVlanIface>>,
+      TError,
+      NetworkSetVlanIfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetVlanIface>>,
+  TError,
+  NetworkSetVlanIfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetVlanIfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without Wi-Fi (observed on the test VM). Changes nothing.
+ * @summary Wi-Fi devices that can be set up
+ */
+export const networkGetWirelessCandidates = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformationList>(
+    { url: `/rpc/Network/getWirelessCandidates`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getNetworkGetWirelessCandidatesQueryKey = () => {
+  return ["POST", `/rpc/Network/getWirelessCandidates`] as const;
+};
+
+export const getNetworkGetWirelessCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getNetworkGetWirelessCandidatesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkGetWirelessCandidates>>
+  > = ({ signal }) => networkGetWirelessCandidates(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetWirelessCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetWirelessCandidates>>
+>;
+export type NetworkGetWirelessCandidatesQueryError = ErrorType<unknown>;
+
+/**
+ * The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without Wi-Fi (observed on the test VM). Changes nothing.
+ * @summary Wi-Fi devices that can be set up
+ */
+export function useNetworkGetWirelessCandidates<
+  TData = Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetWirelessCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without Wi-Fi (observed on the test VM). Changes nothing.
+ * @summary Wi-Fi devices that can be set up
+ */
+export function useNetworkGetWirelessCandidates<
+  TData = Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetWirelessCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without Wi-Fi (observed on the test VM). Changes nothing.
+ * @summary Wi-Fi devices that can be set up
+ */
+export function useNetworkGetWirelessCandidates<
+  TData = Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The Wi-Fi devices that have no settings, each with what it uses now. Empty on a system without Wi-Fi (observed on the test VM). Changes nothing.
+ * @summary Wi-Fi devices that can be set up
+ */
+export function useNetworkGetWirelessCandidates<
+  TData = Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetWirelessCandidates>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetWirelessCandidatesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store a Wi-Fi interface's settings. OMV requires the password (HTTP 400 without it) and stores whatever it is sent, without a length check: an empty one is stored empty and replaces the stored password (observed). So every save carries the password typed again (design phase-5-network 0.6). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new interface (observed). Returns the stored settings, the password included; the transport removes it (UI-6).
+ * @summary Set up or change a Wi-Fi interface
+ */
+export const networkSetWirelessIface = (
+  networkSetWirelessIfaceRequest: BodyType<NetworkSetWirelessIfaceRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/setWirelessIface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetWirelessIfaceRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetWirelessIfaceMutationKey = () =>
+  ["networkSetWirelessIface"] as const;
+
+export const getNetworkSetWirelessIfaceMutationOptions = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetWirelessIface>>,
+    TError,
+    NetworkSetWirelessIfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetWirelessIface>>,
+  TError,
+  NetworkSetWirelessIfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetWirelessIfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetWirelessIface>>,
+    NetworkSetWirelessIfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetWirelessIface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetWirelessIfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetWirelessIface>>
+>;
+export type NetworkSetWirelessIfaceMutationBody =
+  BodyType<NetworkSetWirelessIfaceRequest>;
+export type NetworkSetWirelessIfaceMutationError = ErrorType<RpcErrorDetail>;
+export type NetworkSetWirelessIfaceMutationVariables = {
+  data: BodyType<NetworkSetWirelessIfaceRequest>;
+};
+
+/**
+ * Store a Wi-Fi interface's settings. OMV requires the password (HTTP 400 without it) and stores whatever it is sent, without a length check: an empty one is stored empty and replaces the stored password (observed). So every save carries the password typed again (design phase-5-network 0.6). It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new interface (observed). Returns the stored settings, the password included; the transport removes it (UI-6).
+ * @summary Set up or change a Wi-Fi interface
+ */
+export const useNetworkSetWirelessIface = <
+  TError = ErrorType<RpcErrorDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetWirelessIface>>,
+      TError,
+      NetworkSetWirelessIfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetWirelessIface>>,
+  TError,
+  NetworkSetWirelessIfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetWirelessIfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The interfaces a bridge may use, each with what it uses now: with unused, the devices with no Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an existing bridge, also its own interfaces. Changes nothing.
+ * @summary Interfaces a bridge can use
+ */
+export const networkEnumerateBridgeSlaves = (
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkDeviceInformationList>(
+    {
+      url: `/rpc/Network/enumerateBridgeSlaves`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkEnumerateSlavesRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkEnumerateBridgeSlavesQueryKey = (
+  networkEnumerateSlavesRequest?: BodyType<NetworkEnumerateSlavesRequest>,
+) => {
+  return [
+    "POST",
+    `/rpc/Network/enumerateBridgeSlaves`,
+    networkEnumerateSlavesRequest,
+  ] as const;
+};
+
+export const getNetworkEnumerateBridgeSlavesQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getNetworkEnumerateBridgeSlavesQueryKey(networkEnumerateSlavesRequest);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>
+  > = ({ signal }) =>
+    networkEnumerateBridgeSlaves(
+      networkEnumerateSlavesRequest,
+      requestOptions,
+      signal,
+    );
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkEnumerateBridgeSlavesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>
+>;
+export type NetworkEnumerateBridgeSlavesQueryError = ErrorType<unknown>;
+
+/**
+ * The interfaces a bridge may use, each with what it uses now: with unused, the devices with no Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an existing bridge, also its own interfaces. Changes nothing.
+ * @summary Interfaces a bridge can use
+ */
+export function useNetworkEnumerateBridgeSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+          TError,
+          Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces a bridge may use, each with what it uses now: with unused, the devices with no Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an existing bridge, also its own interfaces. Changes nothing.
+ * @summary Interfaces a bridge can use
+ */
+export function useNetworkEnumerateBridgeSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+          TError,
+          Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces a bridge may use, each with what it uses now: with unused, the devices with no Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an existing bridge, also its own interfaces. Changes nothing.
+ * @summary Interfaces a bridge can use
+ */
+export function useNetworkEnumerateBridgeSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The interfaces a bridge may use, each with what it uses now: with unused, the devices with no Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an existing bridge, also its own interfaces. Changes nothing.
+ * @summary Interfaces a bridge can use
+ */
+export function useNetworkEnumerateBridgeSlaves<
+  TData = Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+  TError = ErrorType<unknown>,
+>(
+  networkEnumerateSlavesRequest: BodyType<NetworkEnumerateSlavesRequest>,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkEnumerateBridgeSlaves>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkEnumerateBridgeSlavesQueryOptions(
+    networkEnumerateSlavesRequest,
+    options,
+  );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store a bridge's settings. With OMV's placeholder UUID it makes a bridge, chooses its name ("br" and the next number) and refuses an interface already in another bridge; otherwise it replaces the stored bridge. It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new bridge (observed). Returns the stored settings, the interfaces as one comma-separated string; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Make or change a bridge
+ */
+export const networkSetBridgeIface = (
+  networkSetBridgeIfaceRequest: BodyType<NetworkSetBridgeIfaceRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkInterfaceStored>(
+    {
+      url: `/rpc/Network/setBridgeIface`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetBridgeIfaceRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetBridgeIfaceMutationKey = () =>
+  ["networkSetBridgeIface"] as const;
+
+export const getNetworkSetBridgeIfaceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetBridgeIface>>,
+    TError,
+    NetworkSetBridgeIfaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetBridgeIface>>,
+  TError,
+  NetworkSetBridgeIfaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetBridgeIfaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetBridgeIface>>,
+    NetworkSetBridgeIfaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetBridgeIface(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetBridgeIfaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetBridgeIface>>
+>;
+export type NetworkSetBridgeIfaceMutationBody =
+  BodyType<NetworkSetBridgeIfaceRequest>;
+export type NetworkSetBridgeIfaceMutationError = ErrorType<unknown>;
+export type NetworkSetBridgeIfaceMutationVariables = {
+  data: BodyType<NetworkSetBridgeIfaceRequest>;
+};
+
+/**
+ * Store a bridge's settings. With OMV's placeholder UUID it makes a bridge, chooses its name ("br" and the next number) and refuses an interface already in another bridge; otherwise it replaces the stored bridge. It marks systemd-networkd, hosts, avahi, halt, issue and collectd dirty for a new bridge (observed). Returns the stored settings, the interfaces as one comma-separated string; the transport removes the Wi-Fi password from it (UI-6).
+ * @summary Make or change a bridge
+ */
+export const useNetworkSetBridgeIface = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetBridgeIface>>,
+      TError,
+      NetworkSetBridgeIfaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetBridgeIface>>,
+  TError,
+  NetworkSetBridgeIfaceMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getNetworkSetBridgeIfaceMutationOptions(options),
+    queryClient,
+  );
+};
+/**
+ * The proxies the NAS's software updates and command line use, as fifteen flattened fields; the stored nested objects are left empty ([]), also when a proxy is set (observed). The transport replaces each stored password by whether one is set (UI-6). Changes nothing.
+ * @summary The proxies
+ */
+export const networkGetProxy = (
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkProxy>(
+    { url: `/rpc/Network/getProxy`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getNetworkGetProxyQueryKey = () => {
+  return ["POST", `/rpc/Network/getProxy`] as const;
+};
+
+export const getNetworkGetProxyQueryOptions = <
+  TData = Awaited<ReturnType<typeof networkGetProxy>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof networkGetProxy>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getNetworkGetProxyQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof networkGetProxy>>> = ({
+    signal,
+  }) => networkGetProxy(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof networkGetProxy>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type NetworkGetProxyQueryResult = NonNullable<
+  Awaited<ReturnType<typeof networkGetProxy>>
+>;
+export type NetworkGetProxyQueryError = ErrorType<unknown>;
+
+/**
+ * The proxies the NAS's software updates and command line use, as fifteen flattened fields; the stored nested objects are left empty ([]), also when a proxy is set (observed). The transport replaces each stored password by whether one is set (UI-6). Changes nothing.
+ * @summary The proxies
+ */
+export function useNetworkGetProxy<
+  TData = Awaited<ReturnType<typeof networkGetProxy>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetProxy>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetProxy>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetProxy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The proxies the NAS's software updates and command line use, as fifteen flattened fields; the stored nested objects are left empty ([]), also when a proxy is set (observed). The transport replaces each stored password by whether one is set (UI-6). Changes nothing.
+ * @summary The proxies
+ */
+export function useNetworkGetProxy<
+  TData = Awaited<ReturnType<typeof networkGetProxy>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetProxy>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof networkGetProxy>>,
+          TError,
+          Awaited<ReturnType<typeof networkGetProxy>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The proxies the NAS's software updates and command line use, as fifteen flattened fields; the stored nested objects are left empty ([]), also when a proxy is set (observed). The transport replaces each stored password by whether one is set (UI-6). Changes nothing.
+ * @summary The proxies
+ */
+export function useNetworkGetProxy<
+  TData = Awaited<ReturnType<typeof networkGetProxy>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetProxy>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * The proxies the NAS's software updates and command line use, as fifteen flattened fields; the stored nested objects are left empty ([]), also when a proxy is set (observed). The transport replaces each stored password by whether one is set (UI-6). Changes nothing.
+ * @summary The proxies
+ */
+export function useNetworkGetProxy<
+  TData = Awaited<ReturnType<typeof networkGetProxy>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof networkGetProxy>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getNetworkGetProxyQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Store the proxies, all fifteen fields: a password sent empty removes the stored one, so a save carries each stored password typed again or empty (design phase-5-network 12.3). It marks apt and profile dirty (observed). Returns what it stored in the nested shape, the passwords included; the transport removes them (UI-6).
+ * @summary Change the proxies
+ */
+export const networkSetProxy = (
+  networkSetProxyRequest: BodyType<NetworkSetProxyRequest>,
+  options?: SecondParameter<typeof rpcClient>,
+  signal?: AbortSignal,
+) => {
+  return rpcClient<NetworkProxyStored>(
+    {
+      url: `/rpc/Network/setProxy`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: networkSetProxyRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getNetworkSetProxyMutationKey = () => ["networkSetProxy"] as const;
+
+export const getNetworkSetProxyMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof networkSetProxy>>,
+    TError,
+    NetworkSetProxyMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof rpcClient>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof networkSetProxy>>,
+  TError,
+  NetworkSetProxyMutationVariables,
+  TContext
+> => {
+  const mutationKey = getNetworkSetProxyMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof networkSetProxy>>,
+    NetworkSetProxyMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return networkSetProxy(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NetworkSetProxyMutationResult = NonNullable<
+  Awaited<ReturnType<typeof networkSetProxy>>
+>;
+export type NetworkSetProxyMutationBody = BodyType<NetworkSetProxyRequest>;
+export type NetworkSetProxyMutationError = ErrorType<unknown>;
+export type NetworkSetProxyMutationVariables = {
+  data: BodyType<NetworkSetProxyRequest>;
+};
+
+/**
+ * Store the proxies, all fifteen fields: a password sent empty removes the stored one, so a save carries each stored password typed again or empty (design phase-5-network 12.3). It marks apt and profile dirty (observed). Returns what it stored in the nested shape, the passwords included; the transport removes them (UI-6).
+ * @summary Change the proxies
+ */
+export const useNetworkSetProxy = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof networkSetProxy>>,
+      TError,
+      NetworkSetProxyMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof rpcClient>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof networkSetProxy>>,
+  TError,
+  NetworkSetProxyMutationVariables,
+  TContext
+> => {
+  return useMutation(getNetworkSetProxyMutationOptions(options), queryClient);
+};

@@ -555,7 +555,7 @@ describe("the Network card", () => {
   });
 
   it("names a Wi-Fi interface and never shows its key", async () => {
-    await dashboard({ scenario: "networkWifi" });
+    await dashboard({ scenario: "networkWifiDown" });
     const network = card("Network");
     expect(await within(network).findByText("wlp3s0")).toBeInTheDocument();
     expect(network).toHaveTextContent("wlp3s0Wi-FiNot connected");

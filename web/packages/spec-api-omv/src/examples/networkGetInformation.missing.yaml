@@ -1,0 +1,21 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  devicename: enp9s9
+  gateway: ""
+  gateway6: ""
+  address: ""
+  address6: ""
+  prefix: -1
+  prefix6: -1
+  netmask: ""
+  netmask6: ""
+  ether: ""
+  mtu: ""
+  state: UNKNOWN
+  link: false
+  vlan: false
+  vlanid: -1
+  speed: -1
+  description: ""
+  stats: []

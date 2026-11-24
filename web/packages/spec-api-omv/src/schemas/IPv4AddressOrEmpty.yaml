@@ -1,0 +1,6 @@
+type: string
+description: >-
+  An IPv4 address in dotted decimal form without leading zeros, or empty (the interface sends empty
+  where the method does not use the field). OMV takes any text here.
+maxLength: 15
+pattern: '^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?:\.(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3})?$'

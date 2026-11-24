@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkEnumerateBridgeSlaves
+  tags:
+    - Network
+  summary: Interfaces a bridge can use
+  description: >-
+    The interfaces a bridge may use, each with what it uses now: with unused, the devices with no
+    Ethernet settings in no bond, bridge or VLAN, except bridges, Wi-Fi and the loopback interface. A
+    bond with settings is listed, unless a VLAN runs on it, and then the VLAN is (observed). For an
+    existing bridge, also its own interfaces. Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: enumerateBridgeSlaves
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.network.enumeratebridgeslaves
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkEnumerateSlavesRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformationList.yaml
+          examples:
+            newBridge:
+              $ref: ../../examples/networkEnumerateBridgeSlaves.newBridge.yaml
+            withBond:
+              $ref: ../../examples/networkEnumerateBridgeSlaves.withBond.yaml
+            existingBridge:
+              $ref: ../../examples/networkEnumerateBridgeSlaves.existingBridge.yaml

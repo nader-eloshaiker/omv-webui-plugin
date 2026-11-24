@@ -149,6 +149,10 @@ describe("the table", () => {
         return route ? [route] : [];
       }),
     ).toEqual([
+      "/network/general",
+      "/network/interfaces",
+      "/network/proxy",
+      "/network/firewall",
       "/storage/disks",
       "/storage/smart",
       "/storage/md",
@@ -179,6 +183,23 @@ describe("the table", () => {
 });
 
 describe("isCurrent", () => {
+  it("marks Interfaces on an interface's page and on the set-up forms, and General on its own", () => {
+    for (const path of [
+      "/network/interfaces",
+      "/network/interfaces/enp2s0",
+      "/network/interfaces/add/port",
+      "/network/interfaces/add/bond",
+    ]) {
+      expect(isCurrent(path, "/network/interfaces")).toBe(true);
+    }
+    expect(isCurrent("/network/interfacesx", "/network/interfaces")).toBe(
+      false,
+    );
+    expect(isCurrent("/network/general", "/network/interfaces")).toBe(false);
+    expect(isCurrent("/network/general", "/network/general")).toBe(true);
+    expect(isCurrent("/network/general/x", "/network/general")).toBe(false);
+  });
+
   it("marks File systems on a file system's page and on both add-storage flows", () => {
     for (const path of [
       "/storage/filesystems",

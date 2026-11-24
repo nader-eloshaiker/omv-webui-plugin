@@ -23,6 +23,7 @@ tags:
   - name: UserMgmt
   - name: WebGui
   - name: Network
+  - name: Iptables
   - name: EmailNotification
   - name: FileSystemMgmt
   - name: Smart
@@ -178,6 +179,56 @@ paths:
     $ref: ./operations/SSH/getStats.yaml
   /rpc/Network/enumerateDevicesList:
     $ref: ./operations/Network/enumerateDevicesList.yaml
+  /rpc/Network/setGeneralSettings:
+    $ref: ./operations/Network/setGeneralSettings.yaml
+  /rpc/Network/identify:
+    $ref: ./operations/Network/identify.yaml
+  /rpc/Network/getInformation:
+    $ref: ./operations/Network/getInformation.yaml
+  /rpc/Network/getInterfaceList:
+    $ref: ./operations/Network/getInterfaceList.yaml
+  /rpc/Network/getInterface:
+    $ref: ./operations/Network/getInterface.yaml
+  /rpc/Network/deleteInterface:
+    $ref: ./operations/Network/deleteInterface.yaml
+  /rpc/Network/getEthernetCandidates:
+    $ref: ./operations/Network/getEthernetCandidates.yaml
+  /rpc/Network/setEthernetIface:
+    $ref: ./operations/Network/setEthernetIface.yaml
+  /rpc/Network/enumerateBondSlaves:
+    $ref: ./operations/Network/enumerateBondSlaves.yaml
+  /rpc/Network/setBondIface:
+    $ref: ./operations/Network/setBondIface.yaml
+  /rpc/Network/getVlanCandidates:
+    $ref: ./operations/Network/getVlanCandidates.yaml
+  /rpc/Network/setVlanIface:
+    $ref: ./operations/Network/setVlanIface.yaml
+  /rpc/Network/getWirelessCandidates:
+    $ref: ./operations/Network/getWirelessCandidates.yaml
+  /rpc/Network/setWirelessIface:
+    $ref: ./operations/Network/setWirelessIface.yaml
+  /rpc/Network/enumerateBridgeSlaves:
+    $ref: ./operations/Network/enumerateBridgeSlaves.yaml
+  /rpc/Network/setBridgeIface:
+    $ref: ./operations/Network/setBridgeIface.yaml
+  /rpc/Network/getProxy:
+    $ref: ./operations/Network/getProxy.yaml
+  /rpc/Network/setProxy:
+    $ref: ./operations/Network/setProxy.yaml
+  /rpc/Iptables/getRules:
+    $ref: ./operations/Iptables/getRules.yaml
+  /rpc/Iptables/getRule:
+    $ref: ./operations/Iptables/getRule.yaml
+  /rpc/Iptables/setRule:
+    $ref: ./operations/Iptables/setRule.yaml
+  /rpc/Iptables/setRules:
+    $ref: ./operations/Iptables/setRules.yaml
+  /rpc/Iptables/deleteRule:
+    $ref: ./operations/Iptables/deleteRule.yaml
+  /rpc/Iptables/getRules6:
+    $ref: ./operations/Iptables/getRules6.yaml
+  /rpc/Iptables/setRules6:
+    $ref: ./operations/Iptables/setRules6.yaml
   /rpc/LogFile/getList:
     $ref: ./operations/LogFile/getList.yaml
   /rpc/System/getTopInfo:

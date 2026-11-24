@@ -1,0 +1,27 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 200
+value:
+  - uuid: "00000000-0000-4000-8000-000000000009"
+    family: inet
+    rulenum: 0
+    chain: INPUT
+    action: LOG
+    source: "203.0.113.7"
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: all
+    extraoptions: ""
+    comment: "Example: log what one documentation address sends"
+  - uuid: "00000000-0000-4000-8000-00000000000a"
+    family: inet
+    rulenum: 1
+    chain: INPUT
+    action: ACCEPT
+    source: "203.0.113.0/24"
+    sport: ""
+    destination: ""
+    dport: "8443"
+    protocol: tcp
+    extraoptions: ""
+    comment: "Example: a documentation network may reach port 8443"

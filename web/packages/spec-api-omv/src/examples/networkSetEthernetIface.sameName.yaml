@@ -1,0 +1,5 @@
+summary: "Captured from the test VM (OMV 8.6.1), scrubbed"
+x-omv-status: 500
+value:
+  code: 0
+  message: 'The configuration object ''conf.system.network.interface'' with the filter ''{"operator":"and","arg0":{"operator":"stringEquals","arg0":"type","arg1":"ethernet"},"arg1":{"operator":"stringEquals","arg0":"devicename","arg1":"enp3s0"}}'' is not unique.'

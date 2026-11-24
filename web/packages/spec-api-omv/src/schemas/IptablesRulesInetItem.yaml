@@ -1,0 +1,56 @@
+type: object
+description: >-
+  One IPv4 firewall rule to store in a whole list (rpc.iptables.setrules); every rule gets a new identifier. Every field is required, as in
+  OMV's datamodel. Stricter than OMV: addresses, ports and the kind of traffic in the forms
+  OMV's firewall script writes correctly; the comment one line.
+required:
+  [
+    uuid,
+    rulenum,
+    chain,
+    action,
+    family,
+    source,
+    sport,
+    destination,
+    dport,
+    protocol,
+    extraoptions,
+    comment,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  rulenum:
+    type: integer
+    description: The rule's place; rules are applied in this order.
+    minimum: 0
+  chain:
+    type: string
+    description: INPUT (traffic to the NAS) or OUTPUT (traffic from it).
+    enum: [INPUT, OUTPUT]
+  action:
+    type: string
+    description: ACCEPT, REJECT, DROP, LOG, or empty (count only).
+    enum: [ACCEPT, REJECT, DROP, LOG, ""]
+  family:
+    type: string
+    enum: [inet]
+  source:
+    $ref: ./IptablesAddress4.yaml
+  sport:
+    $ref: ./IptablesPort.yaml
+  destination:
+    $ref: ./IptablesAddress4.yaml
+  dport:
+    $ref: ./IptablesPort.yaml
+  protocol:
+    $ref: ./IptablesProtocol4.yaml
+  extraoptions:
+    type: string
+    description: >-
+      More iptables options, written into the rule as they are. The interface writes only empty,
+      the two values of Block everything else (design phase-5-network 11.6) or the value it read.
+  comment:
+    $ref: ./OneLineComment.yaml
+additionalProperties: false

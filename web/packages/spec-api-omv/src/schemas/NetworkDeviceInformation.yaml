@@ -1,0 +1,84 @@
+type: object
+description: >-
+  What a device the system has uses now, read from the kernel (Network.getInformation, and each row
+  of the candidate and port lists): one address per family (IPv6 falls back to the link-local
+  address), the router addresses, hardware address, packet size, state, link, speed and counters. No
+  stored setting and no secret. For a name the system does not have, the defaults: state UNKNOWN,
+  empty strings, -1 numbers, no type, and [] for the counters.
+required:
+  [
+    devicename,
+    gateway,
+    gateway6,
+    address,
+    address6,
+    prefix,
+    prefix6,
+    netmask,
+    netmask6,
+    ether,
+    mtu,
+    state,
+    link,
+    vlan,
+    vlanid,
+    speed,
+    description,
+    stats,
+  ]
+properties:
+  devicename:
+    type: string
+  type:
+    type: string
+    description: >-
+      ethernet, wifi, vlan, bond, bridge, virtual, loopback or unknown; absent for a name the system
+      does not have. Open to other values.
+  gateway:
+    type: string
+    description: The IPv4 router address in use; empty when none.
+  gateway6:
+    type: string
+  address:
+    type: string
+    description: The IPv4 address in use; empty when none.
+  address6:
+    type: string
+    description: The first global IPv6 address, else the link-local one; empty when none.
+  prefix:
+    type: integer
+    description: The IPv4 prefix length; -1 when no address.
+  prefix6:
+    type: integer
+    description: The IPv6 prefix length; -1 when no address.
+  netmask:
+    type: string
+  netmask6:
+    type: string
+    description: The IPv6 netmask in full colon form.
+  ether:
+    type: string
+    description: The hardware address; empty for a name the system does not have.
+  mtu:
+    type: string
+    description: The packet size in bytes as text; empty for a name the system does not have.
+  state:
+    type: string
+    description: >-
+      The kernel's operational state: UP, DOWN, LOWERLAYERDOWN, NOTPRESENT, TESTING, DORMANT or
+      UNKNOWN (also for a name the system does not have). Open to other values.
+  link:
+    type: boolean
+  vlan:
+    type: boolean
+  vlanid:
+    type: integer
+    description: The VLAN ID; -1 when the device is not a VLAN.
+  speed:
+    type: integer
+    description: Mbit/s; -1 when unknown (no link, a virtual device).
+  description:
+    type: string
+    description: Display text, the name and hardware address, such as "enp3s0 [00:00:5e:00:53:02]".
+  stats:
+    $ref: ./NetworkDeviceStats.yaml

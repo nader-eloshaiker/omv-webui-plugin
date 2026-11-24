@@ -1,0 +1,38 @@
+summary: "Written by hand from the captured port's reply (OMV 8.6.1) and OMV's source: a Wi-Fi interface in use with an address from its network's router, its link-local IPv6 address and the speed -1 that a Wi-Fi driver commonly reports. Not captured: the test VM has no Wi-Fi."
+x-omv-status: 200
+value:
+  devicename: wlp3s0
+  gateway: "198.51.100.1"
+  gateway6: ""
+  address: "198.51.100.140"
+  address6: "fe80::200:5eff:fe00:5310"
+  prefix: 24
+  prefix6: 64
+  netmask: "255.255.255.0"
+  netmask6: "ffff:ffff:ffff:ffff:0000:0000:0000:0000"
+  ether: "00:00:5e:00:53:10"
+  mtu: "1500"
+  state: UP
+  link: true
+  vlan: false
+  vlanid: -1
+  speed: -1
+  description: "wlp3s0 [00:00:5e:00:53:10]"
+  stats:
+    rx_bytes: "5820114"
+    rx_packets: "6402"
+    rx_errors: "0"
+    rx_dropped: "0"
+    rx_fifo_errors: "0"
+    rx_frame_errors: "0"
+    rx_compressed: "0"
+    rx_multicast: "0"
+    tx_bytes: "1048211"
+    tx_packets: "3977"
+    tx_errors: "0"
+    tx_dropped: "0"
+    tx_fifo_errors: "0"
+    tx_collisions: "0"
+    tx_carrier_errors: "0"
+    tx_compressed: "0"
+  type: wifi

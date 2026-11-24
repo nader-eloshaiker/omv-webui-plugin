@@ -1,0 +1,51 @@
+summary: "Written by hand from the captured rules (OMV 8.6.1) and design phase-5-network 11.6: computers on 192.0.2.0/24 allowed, then Block everything else with its three rules - the NAS talking to itself and replies to its own connections allowed by the two fixed other options, all other traffic coming in refused."
+x-omv-status: 200
+value:
+  - uuid: "00000000-0000-4000-8000-000000000101"
+    family: inet
+    rulenum: 0
+    chain: INPUT
+    action: "ACCEPT"
+    source: "192.0.2.0/24"
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: ""
+    comment: "Computers on the office network"
+  - uuid: "00000000-0000-4000-8000-000000000102"
+    family: inet
+    rulenum: 1
+    chain: INPUT
+    action: "ACCEPT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: "-i lo"
+    comment: ""
+  - uuid: "00000000-0000-4000-8000-000000000103"
+    family: inet
+    rulenum: 2
+    chain: INPUT
+    action: "ACCEPT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: "-m conntrack --ctstate ESTABLISHED,RELATED"
+    comment: ""
+  - uuid: "00000000-0000-4000-8000-000000000104"
+    family: inet
+    rulenum: 3
+    chain: INPUT
+    action: "REJECT"
+    source: ""
+    sport: ""
+    destination: ""
+    dport: ""
+    protocol: "all"
+    extraoptions: ""
+    comment: ""

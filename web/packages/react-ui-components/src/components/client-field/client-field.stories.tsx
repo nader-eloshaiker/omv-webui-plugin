@@ -4,6 +4,7 @@ import * as React from "react";
 import { FieldRequired } from "../field/field";
 import {
   ClientField,
+  type ClientChoiceOrRange,
   type ClientFieldProps,
   type ClientFieldValue,
 } from "./client-field";
@@ -246,6 +247,132 @@ export const HostileStoredValue: Story = {
         value: '<img src=x onerror="alert(1)">',
         description: "Set in the classic interface.",
       }}
+    />
+  ),
+};
+
+// The firewall's rule form (phase 5 network design 11.4, 11.10: `fwRule.*`).
+const firewallWords = {
+  legend: "From",
+  one: {
+    label: "One computer",
+    fieldLabel: "Its address",
+    placeholder: "192.0.2.10",
+  },
+  network: {
+    label: "Computers on one network",
+    fieldLabel: "Network",
+    placeholder: "192.0.2.0/24",
+  },
+  range: {
+    label: "A range of addresses",
+    firstLabel: "First address",
+    lastLabel: "Last address",
+    firstPlaceholder: "192.0.2.10",
+    lastPlaceholder: "192.0.2.20",
+  },
+  any: { label: "Any computer" },
+} satisfies Partial<ClientFieldProps<ClientChoiceOrRange>>;
+
+function LiveRule({
+  initial,
+  ...props
+}: Partial<ClientFieldProps<ClientChoiceOrRange>> & {
+  initial: ClientFieldValue<ClientChoiceOrRange>;
+}) {
+  const [value, setValue] = React.useState(initial);
+  return (
+    <ClientField
+      {...firewallWords}
+      family="ipv4"
+      {...props}
+      value={value}
+      onValueChange={setValue}
+    />
+  );
+}
+
+/** The firewall's fourth choice, a range of addresses, on the IPv4 list. */
+export const Range: Story = {
+  render: () => (
+    <LiveRule
+      initial={{ choice: "range", text: "192.0.2.100", last: "192.0.2.150" }}
+    />
+  ),
+};
+
+export const RangeInvalid: Story = {
+  render: () => (
+    <LiveRule
+      initial={{ choice: "range", text: "192.0.2.150", last: "192.0.2.300" }}
+      range={{
+        ...firewallWords.range,
+        lastError:
+          "Write one IPv4 address, a network such as 192.0.2.0/24, or a range.",
+        error: "The first address must come before the last.",
+      }}
+    />
+  ),
+};
+
+/** The IPv4 list: the touch keyboard offers digits and dots. */
+export const IPv4Only: Story = {
+  render: () => (
+    <LiveRule
+      initial={{ choice: "network", text: "192.0.2.0/24" }}
+      network={{
+        ...firewallWords.network,
+        error: undefined,
+      }}
+    />
+  ),
+};
+
+/** The IPv6 list: IPv6 words and placeholders from the caller. */
+export const IPv6Only: Story = {
+  render: () => (
+    <LiveRule
+      family="ipv6"
+      initial={{ choice: "one", text: "2001:db8::10" }}
+      one={{ ...firewallWords.one, placeholder: "2001:db8::10" }}
+      network={{ ...firewallWords.network, placeholder: "2001:db8::/64" }}
+      range={{
+        ...firewallWords.range,
+        firstPlaceholder: "2001:db8::10",
+        lastPlaceholder: "2001:db8::20",
+      }}
+    />
+  ),
+};
+
+/** A stored "every address except" set in the classic interface, kept until Remove. */
+export const ClassicExcept: Story = {
+  render: function Render() {
+    const [except, setExcept] = React.useState(true);
+    return (
+      <LiveRule
+        initial={{ choice: "network", text: "192.0.2.0/24" }}
+        except={
+          except
+            ? {
+                label: "Every address except",
+                description: "(set in the classic interface)",
+                removeLabel: "Remove",
+                onRemove: () => setExcept(false),
+              }
+            : undefined
+        }
+      />
+    );
+  },
+};
+
+/** The range at 320px: the two fields stack. */
+export const RangeAt320px: Story = {
+  decorators: [(Story) => <div className="w-80">{Story()}</div>],
+  render: () => (
+    <LiveRule
+      initial={{ choice: "range", text: "192.0.2.100", last: "192.0.2.150" }}
     />
   ),
 };

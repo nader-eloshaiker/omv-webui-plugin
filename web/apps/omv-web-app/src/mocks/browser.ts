@@ -4,7 +4,9 @@
 // build contains none of it (UI-11). Everything else (the app's own files) passes through.
 import { createRpcHandlers } from "@omv-webui/react-api-omv/mocks";
 import { setupWorker } from "msw/browser";
+import { setApparentPageLocation } from "../network/pageLocation.ts";
 import { useMockScenarioStore } from "../stores/useMockScenarioStore.ts";
+import { networkPageAddress } from "./networkScenarios.ts";
 import {
   newMockSession,
   scenarioAnswers,
@@ -16,6 +18,8 @@ import { usersDelayHandlers } from "./usersScenarios.ts";
 
 export async function startMockWorker(): Promise<void> {
   const { scenario } = useMockScenarioStore.getState();
+  // The address the page appears to be opened at in a network story (D17); none in the others.
+  setApparentPageLocation(networkPageAddress(scenario));
   // "Session ends after loading" and usersSelfUnknown start signed in; every other scenario starts
   // at sign-in.
   const session = newMockSession(

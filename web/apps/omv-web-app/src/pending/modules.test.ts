@@ -22,14 +22,16 @@ describe("the module names", () => {
   });
 });
 
-describe("mayCutConnection", () => {
+describe("mayCutConnection: the web server, not the network (its own check, 13.1)", () => {
   it.each([
     [["ssh", "avahi"], false],
-    [["ssh", "systemd-networkd"], true],
+    [["ssh", "systemd-networkd"], false],
+    [["hostname", "hosts"], false],
     [["nginx"], true],
     [["certificates"], true],
     [["phpfpm"], true],
-    [["iptables"], true],
+    [["iptables"], false],
+    [["iptables", "nginx"], true],
     [[], false],
   ])("%j: %s", (ids, cuts) => {
     expect(mayCutConnection(ids)).toBe(cuts);

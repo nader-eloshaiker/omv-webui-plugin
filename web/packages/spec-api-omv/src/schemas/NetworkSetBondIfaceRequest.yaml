@@ -1,0 +1,121 @@
+type: object
+description: >-
+  A bond's settings, to store (rpc.network.setbondiface). With OMV's placeholder UUID it makes a
+  bond and chooses its name (the device name sent is ignored), refusing a port already in another
+  bond; otherwise it replaces the stored bond. It refuses an empty primary port in modes 1, 5 and 6.
+  Every field is required, as in OMV's datamodel, and the object sent replaces the stored one
+  (design phase-5-network 0.9). Stricter than OMV: the device name a kernel name; each address an
+  address of its family or empty, the netmask a dotted netmask; name servers addresses and search
+  domains domain names, separated by commas; the packet size 0 or 576 to 9216; the comment one line
+  of at most 255 characters. Also stricter: at least one port, each once; the primary port a port name or empty
+  (the interface checks it is one of the ports). bondtransmithashpolicy is read by the method
+  although OMV's datamodel does not name it, and stored, so the contract requires it.
+required:
+  [
+    uuid,
+    devicename,
+    method,
+    address,
+    netmask,
+    gateway,
+    routemetric,
+    method6,
+    address6,
+    netmask6,
+    gateway6,
+    routemetric6,
+    dnsnameservers,
+    dnssearch,
+    mtu,
+    wol,
+    comment,
+    slaves,
+    bondprimary,
+    bondmode,
+    bondmiimon,
+    bonddowndelay,
+    bondupdelay,
+    bondtransmithashpolicy,
+  ]
+properties:
+  uuid:
+    $ref: ./ObjectUuid.yaml
+  devicename:
+    $ref: ./NetworkDeviceNameOrEmpty.yaml
+  method:
+    type: string
+    description: How IPv4 is set up - dhcp (automatic), static (a fixed address) or manual (off).
+    enum: [dhcp, static, manual]
+  address:
+    $ref: ./IPv4AddressOrEmpty.yaml
+  netmask:
+    $ref: ./IPv4NetmaskOrEmpty.yaml
+  gateway:
+    $ref: ./IPv4AddressOrEmpty.yaml
+  routemetric:
+    type: integer
+    minimum: 0
+    maximum: 65535
+  method6:
+    type: string
+    description: How IPv6 is set up - auto (router advertisements), dhcp, static or manual (off).
+    enum: [auto, static, manual, dhcp]
+  address6:
+    $ref: ./IPv6AddressOrEmpty.yaml
+  netmask6:
+    type: integer
+    description: The IPv6 prefix length.
+    minimum: 0
+    maximum: 128
+  gateway6:
+    $ref: ./IPv6AddressOrEmpty.yaml
+  routemetric6:
+    type: integer
+    minimum: 0
+    maximum: 65535
+  dnsnameservers:
+    $ref: ./NetworkNameServers.yaml
+  dnssearch:
+    $ref: ./NetworkSearchDomains.yaml
+  mtu:
+    $ref: ./NetworkMtu.yaml
+  wol:
+    type: boolean
+    description: Wake-on-LAN.
+  comment:
+    $ref: ./OneLineComment.yaml
+  slaves:
+    type: array
+    description: The bond's ports, by device name.
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: string
+      maxLength: 15
+      pattern: '^((eth|venet)\d+|(en|veth)\S+)$'
+  bondprimary:
+    type: string
+    description: The port used while it works (modes 1, 5 and 6), or empty.
+    maxLength: 15
+    pattern: '^(?:(?:eth|venet)\d+|(?:en|veth)\S+)?$'
+  bondmode:
+    type: integer
+    description: >-
+      The bonding mode, as the kernel numbers them - 0 balance-rr, 1 active-backup, 2 balance-xor,
+      3 broadcast, 4 802.3ad, 5 balance-tlb, 6 balance-alb.
+    enum: [0, 1, 2, 3, 4, 5, 6]
+  bondmiimon:
+    type: integer
+    description: How often the links are checked, in milliseconds; 0 checks none.
+    minimum: 0
+  bonddowndelay:
+    type: integer
+    minimum: 0
+  bondupdelay:
+    type: integer
+    minimum: 0
+  bondtransmithashpolicy:
+    type: string
+    description: How traffic is spread over the ports in modes 2 and 4 (conf.system.network.interface).
+    enum: [layer2, layer2+3, layer3+4, encap2+3, encap3+4]
+additionalProperties: false

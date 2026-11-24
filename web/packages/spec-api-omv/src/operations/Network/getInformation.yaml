@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetInformation
+  tags:
+    - Network
+  summary: What a device uses now
+  description: >-
+    What one device the system has uses now, read from the kernel: its addresses (one per family; IPv6
+    falls back to the link-local address, observed), router addresses, hardware address, packet size,
+    state, link, speed and counters. No stored setting and no secret. A name the system does not have
+    is not refused: the reply has the defaults (state UNKNOWN, no type, [] for the counters; observed).
+    Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getInformation
+  x-omv-role: admin
+  x-omv-readonly: true
+  x-omv-source:
+    datamodel: rpc.network.getInformation
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/NetworkGetInformationRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformation.yaml
+          examples:
+            port:
+              $ref: ../../examples/networkGetInformation.port.yaml
+            fixed:
+              $ref: ../../examples/networkGetInformation.fixed.yaml
+            bond:
+              $ref: ../../examples/networkGetInformation.bond.yaml
+            vlan:
+              $ref: ../../examples/networkGetInformation.vlan.yaml
+            bridge:
+              $ref: ../../examples/networkGetInformation.bridge.yaml
+            wifi:
+              $ref: ../../examples/networkGetInformation.wifi.yaml
+            missing:
+              $ref: ../../examples/networkGetInformation.missing.yaml

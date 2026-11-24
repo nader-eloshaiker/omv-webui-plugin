@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: networkGetEthernetCandidates
+  tags:
+    - Network
+  summary: Ports that can be set up
+  description: >-
+    The Ethernet ports that have no settings and are in no bond, each with what it uses now. Empty when
+    every port is set up or in a bond (observed). Changes nothing.
+  x-omv-rpc:
+    service: Network
+    method: getEthernetCandidates
+  x-omv-role: admin
+  x-omv-readonly: true
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/NetworkDeviceInformationList.yaml
+          examples:
+            twoPorts:
+              $ref: ../../examples/networkGetEthernetCandidates.twoPorts.yaml
+            onePort:
+              $ref: ../../examples/networkGetEthernetCandidates.onePort.yaml
+            none:
+              $ref: ../../examples/networkGetEthernetCandidates.none.yaml

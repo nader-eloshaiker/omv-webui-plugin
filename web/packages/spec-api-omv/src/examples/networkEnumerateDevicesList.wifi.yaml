@@ -94,7 +94,7 @@ value:
       vlanid: -1
       vlanrawdevice: ""
       band: auto
-      wpassid: example-ssid
+      wpassid: EXAMPLE-NETWORK
       wpapsk: EXAMPLE-PASSWORD
       keymanagement: psk
       hidden: false

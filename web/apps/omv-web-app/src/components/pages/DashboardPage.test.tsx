@@ -253,10 +253,12 @@ describe("the set-up checklist", () => {
     expect(within(item("Name of your NAS")).getByText("nas").tagName).toBe(
       "CODE",
     );
-    expect(within(item("Name of your NAS")).getByRole("link")).toHaveAttribute(
-      "href",
-      "/#/network/general",
-    );
+    // The name page is built here now (phase 5 network design 13.3): a router link.
+    expect(
+      within(item("Name of your NAS")).getByRole("link", {
+        name: "Change the name",
+      }),
+    ).toHaveAttribute("href", "/ui/network/general");
     expect(item("Time zone")).toHaveTextContent(
       "Time zone: Etc/UTC. Schedules, logs and the clock use it.",
     );

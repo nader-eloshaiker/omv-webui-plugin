@@ -1,0 +1,5 @@
+type: array
+description: >-
+  Every IPv6 firewall rule, in a new order (rpc.iptables.setrules6), as IptablesSetRulesRequest.
+items:
+  $ref: ./IptablesRulesInet6Item.yaml

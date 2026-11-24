@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+post:
+  operationId: iptablesSetRules
+  tags:
+    - Iptables
+  summary: Put the IPv4 firewall rules in a new order
+  description: >-
+    Replace every IPv4 firewall rule with the list sent: OMV removes them all and stores the list,
+    every rule with a new identifier (observed), so nothing keeps a rule's identifier across a reorder.
+    It marks iptables dirty (observed). Returns the stored rules.
+  x-omv-rpc:
+    service: Iptables
+    method: setRules
+  x-omv-role: admin
+  x-omv-readonly: false
+  x-omv-dirty: true
+  x-omv-destructive: access
+  x-omv-source:
+    datamodel: rpc.iptables.setrules
+    omvVersion: "8.6.1"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../schemas/IptablesSetRulesRequest.yaml
+  responses:
+    "200":
+      description: "The method's response value."
+      content:
+        application/json:
+          schema:
+            $ref: ../../schemas/IptablesRuleList.yaml
+          examples:
+            reordered:
+              $ref: ../../examples/iptablesSetRules.reordered.yaml
