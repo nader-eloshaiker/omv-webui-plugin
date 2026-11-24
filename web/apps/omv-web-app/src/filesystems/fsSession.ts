@@ -4,7 +4,9 @@
 // created (1.6, 2.4), and the file systems whose settings this session saved since the last apply
 // (0.7). In memory only (UI-13); emptied when the session ends (app.ts). The technical details live in
 // the query cache instead (useFsReads.ts), as the disks slice keeps its health details.
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
+import { SETTINGS_MODULE } from "./fsModel.ts";
 
 export interface FsSessionState {
   /** The stable device file of the disk a disk's page handed to Flow A; taken once by the flow. */
@@ -49,15 +51,18 @@ export const recordCreated = (uuid: string): void =>
     s.created.includes(uuid) ? {} : { created: [...s.created, uuid] },
   );
 
-export const recordSettingsSaved = (uuid: string): void =>
+/** Once nothing of the settings is pending any more, the marks are forgotten (savedMarks.ts). */
+const marks = savedMarks.track([SETTINGS_MODULE], () =>
+  fsSession.set((s) =>
+    s.settingsSaved.length === 0 ? {} : { settingsSaved: [] },
+  ),
+);
+
+export const recordSettingsSaved = (uuid: string): void => {
+  marks.saved();
   fsSession.set((s) =>
     s.settingsSaved.includes(uuid)
       ? {}
       : { settingsSaved: [...s.settingsSaved, uuid] },
   );
-
-/** Once nothing of the settings is pending any more, the marks are forgotten. */
-export const forgetSettingsSaved = (): void =>
-  fsSession.set((s) =>
-    s.settingsSaved.length === 0 ? {} : { settingsSaved: [] },
-  );
+};

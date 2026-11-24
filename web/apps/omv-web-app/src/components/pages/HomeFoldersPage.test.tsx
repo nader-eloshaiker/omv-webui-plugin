@@ -2,15 +2,20 @@
 // Users > Settings, "Home folders" (phase 5 users design 12) through the whole app on MSW: the states
 // of 12.7, which shared folders are offered and why the others are not (a whole file system never,
 // change 10 of the test VM), turning them on (the re-read, the request, the toast, the pending mark)
-// and off (the folder kept), a refused and a cut request, hostile names as text, and a normal user
-// kept off the page without a call (UI-4). The shares stories give the folders; the setting is
-// answered here until the users stories are ready.
-import type { Answers } from "@omv-webui/react-api-omv/mocks";
-import { screen, waitFor, within } from "@testing-library/react";
+// and off (the folder kept), a refused and a cut request, hostile names as text, the pending mark
+// against readings of the pending modules from before the save, and a normal user kept off the page
+// without a call (UI-4). The shares stories give the folders; the setting is answered here until the
+// users stories are ready.
+import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
+import { getSystemGetInformationQueryKey } from "@omv-webui/react-api-omv/generated";
+import { replyOf, type Answers } from "@omv-webui/react-api-omv/mocks";
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { http } from "msw";
 import { describe, expect, it } from "vitest";
+import { recordHomeSaved } from "../../homeFolders/homeSession.ts";
 import type { ScenarioName } from "../../mocks/scenarios.ts";
 import { renderApp } from "../../test/renderApp.tsx";
-import { callNames } from "../../test/server.ts";
+import { callNames, server } from "../../test/server.ts";
 import {
   calls,
   folderUuid,
@@ -59,6 +64,51 @@ const stateLine = () =>
   screen
     .getByText(/Home folders are off|Each person has|Home folders are on/)
     .closest("p") as HTMLElement;
+
+const isInformation = (body: { service?: unknown; method?: unknown }) =>
+  body.service === "System" && body.method === "getInformation";
+
+/**
+ * Hold each System.getInformation request that `hold` picks when it arrives, until the returned
+ * release; `reply` answers it then (by default the story's answer as the mock state is at release).
+ */
+function holdInformation(
+  hold: () => boolean,
+  reply?: () => Response,
+): () => void {
+  let release: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  server.use(
+    http.post("*/rpc.php", async ({ request }) => {
+      const body = (await request.clone().json()) as {
+        service?: unknown;
+        method?: unknown;
+      };
+      if (!isInformation(body) || !hold()) {
+        return undefined;
+      }
+      await held;
+      return reply?.();
+    }),
+  );
+  return release;
+}
+
+/** What the mock's System.getInformation reports pending once OMV marked Windows and Mac sharing. */
+const SAMBA_PENDING = { samba: "SMB/CIFS file sharing." };
+
+const informationCalls = () =>
+  callNames().filter((c) => c === "System.getInformation").length;
+
+/** A fresh reading of the pending modules, as the shell's poll makes one. */
+const readPending = (app: Awaited<ReturnType<typeof homePage>>["app"]) =>
+  act(() =>
+    app.queryClient.refetchQueries({
+      queryKey: getSystemGetInformationQueryKey(),
+    }),
+  );
 
 describe("the home folders page: states (12.7)", () => {
   it("is loading before the setting is read", async () => {
@@ -291,14 +341,13 @@ describe("turning them on (12.5)", () => {
       {},
       LONG,
     );
-    // The mark follows the pending-changes read, which can come with the next poll (about 5 s);
-    // a busy machine needs more than LONG for it.
+    // The mark comes with the read of the pending changes made after the write, not a later poll.
     await waitFor(
       () =>
         expect(within(stateLine()).getByText("Not applied yet")).toBeVisible(),
-      { timeout: 30_000 },
+      LONG,
     );
-  }, 60000);
+  });
 
   it("keeps the dialog with the server's words when it fails", async () => {
     const { user } = await homePage("sharesSome", {
@@ -386,6 +435,118 @@ describe("turning them on (12.5)", () => {
       ),
     ).toBeVisible();
     expect(calls("UserMgmt.setSettings")).toHaveLength(0);
+  });
+});
+
+describe("the pending mark against readings from before the save (12.3)", () => {
+  it("is not forgotten by a reading without samba that was asked for before the save and answered after it", async () => {
+    const { app, mock } = await homePage("sharesSome");
+    await screen.findByText(/Home folders are off/, {}, LONG);
+    // A reading of the pending modules is on its way. The NAS answers it from before the write: no
+    // samba pending (a time of its own, so it is a new reply and not the one the page has).
+    let holding = true;
+    const release = holdInformation(
+      () => holding,
+      () =>
+        replyOf({
+          status: 200,
+          value: {
+            ...CONTRACT_EXAMPLES.systemGetInformation.admin.value,
+            ts: 1,
+          },
+        }),
+    );
+    const before = informationCalls();
+    let stale: Promise<void> = Promise.resolve();
+    act(() => {
+      stale = app.queryClient.refetchQueries({
+        queryKey: getSystemGetInformationQueryKey(),
+      });
+    });
+    await waitFor(() => expect(informationCalls()).toBe(before + 1), LONG);
+    // The save lands meanwhile (OMV marks Windows and Mac sharing pending), as turning them on
+    // records it.
+    mock.fsDirty = SAMBA_PENDING;
+    act(() => recordHomeSaved());
+    // Then the old reading comes back.
+    holding = false;
+    await act(async () => {
+      release();
+      await stale;
+    });
+    await waitFor(() => expect(informationCalls()).toBe(before + 1));
+    // The next reading shows samba pending: the mark is still there to show.
+    await readPending(app);
+    await waitFor(
+      () =>
+        expect(within(stateLine()).getByText("Not applied yet")).toBeVisible(),
+      LONG,
+    );
+    // Applied (here or elsewhere): the next reading forgets it...
+    mock.fsDirty = {};
+    await readPending(app);
+    await waitFor(
+      () =>
+        expect(within(stateLine()).queryByText("Not applied yet")).toBeNull(),
+      LONG,
+    );
+    // ...so a later change to Windows and Mac sharing made elsewhere is not labelled as this one.
+    mock.fsDirty = SAMBA_PENDING;
+    await readPending(app);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "1 pending change" }),
+      ).toBeVisible(),
+    );
+    expect(within(stateLine()).queryByText("Not applied yet")).toBeNull();
+  });
+
+  it("is not forgotten when the page opens again on the reading from before the save", async () => {
+    const { app, user } = await homePage("sharesSome", {
+      userMgmtGetSettings: () =>
+        calls("UserMgmt.setSettings").length > 0 ? onIn(BACKUPS) : OFF,
+    });
+    const group = await screen.findByRole("radiogroup", {}, LONG);
+    // Every reading of the pending modules after the write waits until the test lets it go.
+    const release = holdInformation(
+      () => calls("UserMgmt.setSettings").length > 0,
+    );
+    await user.click(within(group).getByRole("radio", { name: "Backups" }));
+    await user.click(
+      screen.getByRole("button", { name: "Turn on home folders…" }),
+    );
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(within(dialog).getByRole("button", { name: "Turn on" }));
+    await waitFor(
+      () => expect(calls("UserMgmt.setSettings")).toHaveLength(1),
+      LONG,
+    );
+    // Away and back while the page still holds the reading from before the write.
+    await act(() => app.router.navigate({ to: "/usermgmt/users" }));
+    await act(() => app.router.navigate({ to: "/usermgmt/settings" }));
+    await screen.findByRole(
+      "heading",
+      { level: 1, name: "Home folders" },
+      LONG,
+    );
+    const onLine = () =>
+      screen
+        .getByText(/Each person has a private home folder in/)
+        .closest("p") as HTMLElement;
+    await screen.findByText(
+      /Each person has a private home folder in/,
+      {},
+      LONG,
+    );
+    expect(within(onLine()).queryByText("Not applied yet")).toBeNull();
+    await act(async () => {
+      release();
+      await Promise.resolve();
+    });
+    await waitFor(
+      () => expect(within(onLine()).getByText("Not applied yet")).toBeVisible(),
+      LONG,
+    );
   });
 });
 

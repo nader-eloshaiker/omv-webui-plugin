@@ -13,6 +13,7 @@ import type {
   SharedFolder,
   UserAccount,
 } from "@omv-webui/react-api-omv/generated";
+import { savedMarks } from "../pending/savedMarks.ts";
 import {
   accessOf,
   entriesOf,
@@ -99,18 +100,6 @@ export const endAccountAction = (id: AccountId): void =>
 export const runningOnAccount = (id: AccountId): AccountAction | null =>
   usersSession.getState().running[id] ?? null;
 
-/** A section was saved; its mark shows while its module is pending. */
-export const recordAccountSaved = (
-  id: AccountId,
-  section: AccountSection,
-): void =>
-  usersSession.set((s) => {
-    const now = s.saved[id] ?? [];
-    return now.includes(section)
-      ? {}
-      : { saved: { ...s.saved, [id]: [...now, section] } };
-  });
-
 /** The modules each section's save waits for (0.9). */
 const SECTION_MODULES: Record<AccountSection, readonly string[]> = {
   email: ["postfix"],
@@ -122,6 +111,27 @@ const SECTION_MODULES: Record<AccountSection, readonly string[]> = {
 /** Every module the marks follow. */
 export const USERS_MODULES = ["postfix", "sharedfolders", "samba"] as const;
 
+/** Once none of the modules is pending any more (applied or undone), the marks are forgotten (savedMarks.ts). */
+const marks = savedMarks.track(USERS_MODULES, () =>
+  usersSession.set((s) =>
+    Object.keys(s.saved).length === 0 ? {} : { saved: {} },
+  ),
+);
+
+/** A section was saved; its mark shows while its module is pending. */
+export const recordAccountSaved = (
+  id: AccountId,
+  section: AccountSection,
+): void => {
+  marks.saved();
+  usersSession.set((s) => {
+    const now = s.saved[id] ?? [];
+    return now.includes(section)
+      ? {}
+      : { saved: { ...s.saved, [id]: [...now, section] } };
+  });
+};
+
 /** The pending mark beside a section (0.4): this session saved it and its module is still pending. */
 export function accountSectionPending(
   state: Pick<UsersSessionState, "saved">,
@@ -132,16 +142,6 @@ export function accountSectionPending(
   return (
     (state.saved[id] ?? []).includes(section) &&
     SECTION_MODULES[section].some((m) => pending.includes(m))
-  );
-}
-
-/** Once none of the modules is pending any more (applied or undone), the marks are forgotten. */
-export function forgetUsersPending(pending: readonly string[]): void {
-  if (USERS_MODULES.some((m) => pending.includes(m))) {
-    return;
-  }
-  usersSession.set((s) =>
-    Object.keys(s.saved).length === 0 ? {} : { saved: {} },
   );
 }
 

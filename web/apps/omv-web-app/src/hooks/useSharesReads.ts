@@ -123,8 +123,6 @@ export function useSharesSystem() {
   return {
     hostname: info.data?.hostname,
     pending,
-    /** When the pending modules were read (the query's dataUpdatedAt). */
-    readAt: info.dataUpdatedAt,
     failed: info.isError && info.data === undefined,
     error: info.error,
   };

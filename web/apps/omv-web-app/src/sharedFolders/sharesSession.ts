@@ -12,6 +12,7 @@ import type {
   SharedFolder,
   SmbShareRow,
 } from "@omv-webui/react-api-omv/generated";
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 
 /** A folder this session created (6.4 step 2), and whether its flow chose to share it over SMB. */
@@ -73,37 +74,43 @@ export const forgetFolder = (uuid: string): void =>
     return { created: s.created.filter((f) => f.uuid !== uuid), saved };
   });
 
+/** The modules whose pending state the shares marks follow. */
+export const SHARES_MODULES = ["sharedfolders", "samba"] as const;
+
+/**
+ * Once none of the shares modules is pending any more (an apply or an undo ran), the marks are
+ * forgotten (savedMarks.ts).
+ */
+const marks = savedMarks.track(SHARES_MODULES, () =>
+  sharesSession.set((s) =>
+    Object.keys(s.saved).length === 0 && !s.smbSaved && !s.workgroupSaved
+      ? {}
+      : { saved: {}, smbSaved: false, workgroupSaved: false },
+  ),
+);
+
 /** A section of a folder's page was saved; its mark shows while its module is pending. */
-export const recordSaved = (uuid: string, section: SavedSection): void =>
+export const recordSaved = (uuid: string, section: SavedSection): void => {
+  marks.saved();
   sharesSession.set((s) => {
     const now = s.saved[uuid] ?? [];
     return now.includes(section)
       ? {}
       : { saved: { ...s.saved, [uuid]: [...now, section] } };
   });
+};
 
 /** The SMB page saved its switch. */
-export const recordSmbSaved = (): void =>
+export const recordSmbSaved = (): void => {
+  marks.saved();
   sharesSession.set((s) => (s.smbSaved ? {} : { smbSaved: true }));
+};
 
 /** The SMB page saved the workgroup. */
-export const recordWorkgroupSaved = (): void =>
+export const recordWorkgroupSaved = (): void => {
+  marks.saved();
   sharesSession.set((s) => (s.workgroupSaved ? {} : { workgroupSaved: true }));
-
-/**
- * Once none of the shares modules is pending any more (an apply or an undo ran), the marks are
- * forgotten. The pages call it with the pending modules they read.
- */
-export function forgetPending(pending: readonly string[]): void {
-  if (SHARES_MODULES.some((m) => pending.includes(m))) {
-    return;
-  }
-  sharesSession.set((s) =>
-    Object.keys(s.saved).length === 0 && !s.smbSaved && !s.workgroupSaved
-      ? {}
-      : { saved: {}, smbSaved: false, workgroupSaved: false },
-  );
-}
+};
 
 /** Mark a folder as being changed by this session; false when an action on it already runs. */
 export function beginAction(uuid: string, action: SharesAction): boolean {
@@ -138,9 +145,6 @@ export const clearHandover = (): void =>
   sharesSession.set((s) => (s.handover === null ? {} : { handover: null }));
 
 // ---- What the marks mean (0.8, 1.3, 1.5) -----------------------------------------------------------
-
-/** The modules whose pending state the shares marks follow. */
-export const SHARES_MODULES = ["sharedfolders", "samba"] as const;
 
 /** The module each section's save waits for. Access waits for either (it marks samba with a share). */
 const SECTION_MODULES: Record<SavedSection, readonly string[]> = {

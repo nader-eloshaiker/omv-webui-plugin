@@ -22,7 +22,7 @@ import {
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -47,7 +47,6 @@ import {
   type ShareDraft,
 } from "../../sharedFolders/folderPage.ts";
 import {
-  forgetPending,
   sectionPending,
   sharesSession,
 } from "../../sharedFolders/sharesSession.ts";
@@ -302,14 +301,6 @@ function Sections({
   const [stopOpen, setStopOpen] = useState(false);
   const [repointOpen, setRepointOpen] = useState(false);
   const [askRefresh, setAskRefresh] = useState(false);
-  const pendingRead = v.system.pending;
-
-  // Once none of the shares modules is pending any more, this session's marks are forgotten (0.8).
-  useEffect(() => {
-    if (pendingRead !== undefined) {
-      forgetPending(pendingRead);
-    }
-  }, [pendingRead]);
 
   const row = v.row;
   if (row === undefined || v.state === undefined) {

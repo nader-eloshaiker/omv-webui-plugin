@@ -25,7 +25,7 @@ import {
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -63,7 +63,6 @@ import { warnedGroupsOf } from "../../users/usersList.ts";
 import {
   accountId,
   accountSectionPending,
-  forgetUsersPending,
   usersSession,
 } from "../../users/usersSession.ts";
 import { PageTitle } from "../atoms/PageTitle.tsx";
@@ -342,13 +341,6 @@ function Sections({
   const adminGroup = useGroupCheck(ADMIN_GROUP);
   const sshGroup = useGroupCheck(SSH_GROUP);
   const pendingRead = system.pending;
-
-  // Once none of the slice's modules is pending any more, this session's marks are forgotten (0.4).
-  useEffect(() => {
-    if (pendingRead !== undefined) {
-      forgetUsersPending(pendingRead);
-    }
-  }, [pendingRead]);
 
   const name = person.name;
   const pending = pendingRead ?? [];

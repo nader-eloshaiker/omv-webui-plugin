@@ -3,6 +3,7 @@
 // this session turned home folders on or off since the last apply, for the pending mark beside the
 // state line while Windows and Mac sharing (`samba`) is pending. In memory only (UI-13); emptied when
 // the session ends (app.ts).
+import { savedMarks } from "../pending/savedMarks.ts";
 import { createMemoryStore } from "../shell/memoryStore.ts";
 
 export interface HomeSessionState {
@@ -14,16 +15,16 @@ export const homeSession = createMemoryStore<HomeSessionState>({
   saved: false,
 });
 
-/** The setting was saved (turned on or off). */
-export const recordHomeSaved = (): void =>
-  homeSession.set((s) => (s.saved ? {} : { saved: true }));
+/** Once `samba` is no longer pending (an apply or an undo ran), the mark is forgotten (savedMarks.ts). */
+const marks = savedMarks.track(["samba"], () =>
+  homeSession.set((s) => (s.saved ? { saved: false } : {})),
+);
 
-/** Once `samba` is no longer pending (an apply or an undo ran), the mark is forgotten. */
-export function forgetHomePending(pending: readonly string[]): void {
-  if (!pending.includes("samba")) {
-    homeSession.set((s) => (s.saved ? { saved: false } : {}));
-  }
-}
+/** The setting was saved (turned on or off). */
+export const recordHomeSaved = (): void => {
+  marks.saved();
+  homeSession.set((s) => (s.saved ? {} : { saved: true }));
+};
 
 /** The pending mark beside the state line. */
 export const homePending = (

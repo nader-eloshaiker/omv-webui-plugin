@@ -22,7 +22,7 @@ import {
   useToast,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { inertBidi, isolateName } from "../../format/isolate.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -41,7 +41,6 @@ import type { FolderChoices } from "../../users/accessByAccount.ts";
 import {
   accountId,
   accountSectionPending,
-  forgetUsersPending,
   usersSession,
 } from "../../users/usersSession.ts";
 import { GroupNameText } from "../atoms/GroupNameText.tsx";
@@ -321,13 +320,6 @@ function Sections({
   const [askRefresh, setAskRefresh] = useState(false);
   const pending = system.pending;
   const { groups, users, folders } = reads;
-
-  // Once none of the modules is pending any more, this session's marks are forgotten (0.4).
-  useEffect(() => {
-    if (pending !== undefined) {
-      forgetUsersPending(pending);
-    }
-  }, [pending]);
 
   const row = groups.data?.data.find((g) => g.name === groupName);
   if (row === undefined) {
