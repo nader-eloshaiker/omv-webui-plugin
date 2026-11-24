@@ -349,7 +349,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - About 8% of men have a red-green deficiency. The design does not depend on telling green from
   red by hue: lightness separates them, and words and shapes carry every status.
 
-Current audit result: **426 required pairs, 0 failures**, both themes (foundation 3.5).
+Current audit result: **430 required pairs, 0 failures**, both themes (foundation 3.5).
 Forty-four text pairs pass 4.5:1 but sit under Lc 60 (the terminal timestamps at Lc 46 to 47, one
 light label on its wash at Lc 60, and the dark pairs listed in 3.8, among them secondary text on the
 washes); all are labels, captions, secondary text or deliberately quiet metadata.

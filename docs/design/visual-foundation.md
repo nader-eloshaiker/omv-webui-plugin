@@ -187,7 +187,7 @@ it, so the bar stays legible over any content.
 Done. Every pair is in `PAIRS` in `tools/colour-audit.mjs`: each text tier, label, stroke and
 control edge on each of the four grounds; the selected tint; the status and pending washes over each
 ground, with the body and secondary text that sits on them; the ambient light; a card lit in its
-warning or critical state; the trace over its own area fill; the chassis; the map lines; and the
+warning or critical state; the trace over its own area fill; the chassis; the map lines; the bars of a bar chart on a card or an inset (4.90 to 7.02:1); and the
 Save button's "Saved" (`ok-foreground` on the OK fill, 12.24:1, edged in `ok-stroke`). The script
 now composites translucent tokens over their known ground, as the browser paints them (`on(ground,
 layer...)`), and checks a gradient at each of its stops, the worst stop deciding (`gradient(name,

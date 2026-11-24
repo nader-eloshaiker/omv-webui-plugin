@@ -21,4 +21,12 @@ describe("cn", () => {
     expect(cn("ease-standard", "ease-settle")).toBe("ease-settle");
     expect(cn("rounded-control", "rounded-full")).toBe("rounded-full");
   });
+
+  it("keeps a size beside a later status colour, and lets a later type step win", () => {
+    expect(cn("text-caption font-semibold", "text-warning-label")).toBe(
+      "text-caption font-semibold text-warning-label",
+    );
+    expect(cn("text-caption", "text-body")).toBe("text-body");
+    expect(cn("text-sm", "text-caption")).toBe("text-caption");
+  });
 });

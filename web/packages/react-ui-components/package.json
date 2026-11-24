@@ -8,6 +8,7 @@
   "description": "The shared, app-agnostic components of the interface (style guide section 5), on Base UI, with Storybook stories in both themes.",
   "exports": {
     ".": "./src/index.ts",
+    "./charts": "./src/charts.ts",
     "./utils": "./src/utils.ts"
   },
   "scripts": {
@@ -24,6 +25,8 @@
     "lucide-react": "catalog:ui",
     "react": "catalog:react",
     "react-dom": "catalog:react",
+    "react-is": "catalog:charts",
+    "recharts": "catalog:charts",
     "tailwind-merge": "catalog:ui"
   },
   "devDependencies": {
