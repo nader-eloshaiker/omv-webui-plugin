@@ -870,3 +870,7 @@ Rendered charts are being assessed separately (Recharts against UI-1 with Truste
 ## 2026-11-24 — Charts are drawn with Recharts (owner)
 
 Recharts 3.11.0 passed every check: no style elements, no HTML sinks, text measured with `textContent` through the CSSOM, no `eval`, no foreign requests at run time, and 28 MIT, ISC or BSD-3-Clause packages with no install scripts. Under the plugin's exact headers with Trusted Types enforced, the lab's test build showed zero violations. The components used cost about 125 KB gzip, mostly its shared state layer and seven d3 modules. The owner chose to keep it. It loads only in the route chunks that draw charts, never in the entry chunk. The PR that first ships a chart adds its four inert URL strings to `ALLOWED_URLS` in `tools/build-check/check.mjs`, and the chart components move into `react-ui-components` with stories, taking their series colours from `css-ui-style`.
+
+## 2026-11-24 — Test runs are capped (owner)
+
+Test runs pinned the owner's computer: `pnpm test` ran up to four packages at once, and each Vitest run started a worker for nearly every core. The owner asked for a practical limit on the computer and on CI. Each Vitest run now uses at most four workers on a developer's computer and two on CI (`maxWorkers` in the three test configs; `VITEST_MAX_WORKERS` overrides it for one run), and `pnpm test` runs the packages one after another. `.agents/rules/verification.md` says so.

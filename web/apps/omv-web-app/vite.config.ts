@@ -107,6 +107,10 @@ export default defineConfig(({ command, mode }) => ({
   ],
   test: {
     globals: true,
+    // At most four test workers on a developer's computer and two on CI, so a test run leaves the
+    // machine usable (owner, 2026-11-24). VITEST_MAX_WORKERS overrides it for one run.
+    maxWorkers:
+      Number(process.env.VITEST_MAX_WORKERS) || (process.env.CI ? 2 : 4),
     // happy-dom by default; a file that needs jsdom pins it with a docblock naming the gap.
     environment: "happy-dom",
     // The page's own origin under /ui/, so the transport's relative /rpc.php is same-origin. A

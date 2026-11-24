@@ -36,6 +36,12 @@ generated, or a lint rule has left the narrow battery's coverage.
 Long test runs go in the background (Claude Code: the Bash tool's `run_in_background`); see the
 [provider map](../README.md#provider-map). Only one test run on the machine at a time.
 
+Test runs are capped so the machine stays usable: each Vitest run uses at most four workers on a
+developer's computer and two on CI (`maxWorkers` in each test config; `VITEST_MAX_WORKERS=<n>`
+overrides it for one run), and `pnpm test` runs the packages one after another. Do not raise the cap
+or run packages in parallel to save time. Do not run Vitest, Playwright, `pnpm build` and a
+Storybook build at the same time, and stop dev servers that are no longer in use.
+
 ## The contract
 
 After any change under `web/packages/spec-api-omv/src/`:
