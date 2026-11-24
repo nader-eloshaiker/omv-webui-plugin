@@ -220,7 +220,7 @@ function Summary({ top }: { top: TopInfo | undefined }) {
               {load === null ? (
                 <NotReported />
               ) : (
-                t("dashboard.usage.loadValue", load)
+                t("dashboard.live.loadValue", load)
               )}
             </FactListValue>
           </FactListItem>

@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The dashboard's Phase 5 cards through the whole app on MSW serving the contract's examples and the
-// mock's scenarios: Storage, Disk health, Services, Network, the Usage chart and the new attention
-// rows, each in its loading, error, empty and populated states; every poll a background call (UI-14);
-// disk health read only when asked (owner); backend text as text (UI-2); nothing for a normal user.
+// The dashboard's cards through the whole app on MSW serving the contract's examples and the mock's
+// scenarios: Storage (rings), Disks (the drive bay and the check), Services, Network, Right now and
+// the attention cards, each in its loading, error, empty and populated states, and the answer's
+// fail-closed areas; every poll a background call (UI-14); disk health read only when asked (owner);
+// backend text as text (UI-2); nothing for a normal user.
 import {
   getFileSystemMgmtEnumerateMountedFilesystemsQueryKey,
+  getNetworkEnumerateDevicesListQueryKey,
   getSystemGetInformationQueryKey,
 } from "@omv-webui/react-api-omv/generated";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { MOUNTED_REQUEST } from "../../hooks/useMonitoringReads.ts";
+import {
+  ALL_INTERFACES,
+  MOUNTED_REQUEST,
+} from "../../hooks/useMonitoringReads.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
@@ -26,6 +31,8 @@ async function dashboard(options: Parameters<typeof renderApp>[0] = {}) {
 }
 
 const card = (name: string) => screen.getByRole("region", { name });
+/** The page's answer: a region named by the page title. */
+const answer = () => card("Dashboard");
 const attention = () =>
   screen.findByRole("region", { name: "Needs attention" });
 
@@ -50,6 +57,18 @@ describe("the Storage card", () => {
     ).toBeInTheDocument();
     expect(
       within(storage).queryByText(/file systems:/),
+    ).not.toBeInTheDocument();
+    // No OK roll-up: below its level is not claimed as fine (phase 5 1.2.1).
+    expect(within(storage).getByText("2 file systems")).toBeInTheDocument();
+    // A ring with a page of its own is a link tile to it; the system drive is not.
+    expect(
+      within(storage).getByRole("link", { name: "Open file system /dev/sda1" }),
+    ).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/ui\/storage\/filesystems\//),
+    );
+    expect(
+      within(storage).queryByRole("link", { name: /System drive/ }),
     ).not.toBeInTheDocument();
     expect(
       within(storage).getByRole("link", { name: "Open File systems" }),
@@ -91,7 +110,7 @@ describe("the Storage card", () => {
     ).toBeInTheDocument();
     const rows = within(await attention()).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent(
-      "Warning/dev/sda1 is 91% full, at or above its warning level of 85%.",
+      "Warning/dev/sda1 is almost fullIt is 91% full, at or above its warning level of 85%.",
     );
     // The file system's page when the list has it, else the File systems list (file-systems 9).
     expect(within(rows[0]!).getByRole("link").getAttribute("href")).toMatch(
@@ -103,8 +122,9 @@ describe("the Storage card", () => {
     await dashboard({ scenario: "storageFull" });
     const rows = within(await attention()).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent(
-      "Criticalbackups is full. Nothing more can be saved on it until you delete or move some files.",
+      "Criticalbackups is fullNothing more can be saved on it until you delete or move some files.",
     );
+    expect(answer()).toHaveTextContent("backups is full");
     expect(
       within(card("Storage")).getByText("1 of 3 file systems: Critical"),
     ).toBeInTheDocument();
@@ -116,17 +136,20 @@ describe("the Storage card", () => {
     expect(
       await within(storage).findByText("Could not read how full it is"),
     ).toBeInTheDocument();
-    expect(within(storage).getByText("Unknown")).toBeInTheDocument();
+    // A dashed ring, and no meter claiming a value.
     expect(within(storage).getAllByRole("meter")).toHaveLength(2);
+    expect(
+      within(answer()).getByRole("group", { name: "Health of this NAS" }),
+    ).toHaveTextContent("StorageUnknown");
     expect(
       screen.queryByRole("region", { name: "Needs attention" }),
     ).not.toBeInTheDocument();
   });
 
-  it("shows six file systems, the rest behind a disclosure", async () => {
+  it("draws four file systems as rings, the rest behind a disclosure", async () => {
     const { user } = await dashboard({ scenario: "storageMany" });
     const storage = card("Storage");
-    expect(await within(storage).findAllByRole("meter")).toHaveLength(6);
+    expect(await within(storage).findAllByRole("meter")).toHaveLength(4);
     const more = within(storage).getByRole("button", {
       name: "Show all 14 file systems",
     });
@@ -141,12 +164,14 @@ describe("the Storage card", () => {
     const storage = card("Storage");
     expect(
       await within(storage).findByText(
-        "Missing. Its disk may be disconnected or have failed.",
+        "Not found. Its disk may be disconnected or have failed.",
       ),
     ).toBeInTheDocument();
+    // Known to be bad without a reading: Critical, never the calm Unknown.
+    expect(within(storage).getAllByText("Critical").length).toBeGreaterThan(0);
     const rows = within(await attention()).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent(
-      /^Critical\/dev\/disk\/by-uuid\/\S+ is missing\. Its disk may be disconnected or have failed\. Shared folders on it cannot be reached\./,
+      /^Critical\/dev\/disk\/by-uuid\/\S+ is missingIts disk may be disconnected or have failed\. Shared folders on it cannot be reached\./,
     );
     const reads = seenCalls.filter((c) => c.call === "FileSystemMgmt.getList");
     expect(reads.length).toBeGreaterThanOrEqual(1);
@@ -156,7 +181,8 @@ describe("the Storage card", () => {
       sortfield: null,
       sortdir: null,
     });
-    expect(reads.every((c) => c.background)).toBe(true);
+    // Read on opening, never polled: the Storage card and the Disks card's inventory share the entry.
+    expect(reads.length).toBeLessThanOrEqual(2);
   });
 
   it("says when no file system is mounted", async () => {
@@ -217,11 +243,30 @@ describe("the Storage card", () => {
   });
 });
 
-describe("the Disk health card", () => {
-  it("reads nothing until asked, says why, and checks every disk when asked", async () => {
+describe("the Disks card", () => {
+  it("shows every disk as Not checked, reads nothing until asked, says why, and checks every disk when asked", async () => {
     const { user } = await dashboard();
-    const disks = card("Disk health");
-    expect(disks).toHaveTextContent(/^Disk health.*Reading it wakes any disk/);
+    const disks = card("Disks");
+    const bay = await within(disks).findByRole("figure", {
+      name: "The disks in this NAS",
+    });
+    const slots = within(bay).getAllByRole("listitem");
+    expect(slots).toHaveLength(6);
+    for (const slot of slots) {
+      expect(slot).toHaveTextContent("Not checked");
+    }
+    expect(slots[0]).toHaveTextContent(/^nvme0n1Not checked/);
+    expect(within(bay).getByRole("link", { name: /^sda/ })).toHaveAttribute(
+      "href",
+      "/ui/storage/disks/sda",
+    );
+    expect(disks).toHaveTextContent("6 disks · health not checked yet");
+    // The why is one click away.
+    await user.click(
+      within(disks).getByRole("button", { name: "Why do I have to ask?" }),
+    );
+    expect(within(disks).getByText(/Reading it wakes any disk/)).toBeVisible();
+    expect(callNames()).toContain("DiskMgmt.getList");
     expect(callNames()).not.toContain("Smart.getListBg");
     const button = within(disks).getByRole("button", {
       name: "Check disk health",
@@ -245,7 +290,15 @@ describe("the Disk health card", () => {
       sortfield: null,
       sortdir: null,
     });
+    // The bay shows each disk's word; a disk the check did not list has no reading.
+    const after = within(bay).getAllByRole("listitem");
+    expect(after[0]).toHaveTextContent(/^nvme0n1OK/);
+    expect(after[1]).toHaveTextContent(/^sdaUnknown/);
+    expect(after[5]).toHaveTextContent(/^sr0No reading/);
 
+    await user.click(
+      within(disks).getByRole("button", { name: "Disk details" }),
+    );
     const list = within(disks).getByRole("list", { name: "Disks" });
     const items = within(list).getAllByRole("listitem");
     expect(items).toHaveLength(5);
@@ -267,6 +320,9 @@ describe("the Disk health card", () => {
       within(disks).getByRole("link", { name: "Open Disk health" }),
     ).toHaveAttribute("href", "/ui/storage/smart/overview");
     expect(
+      within(disks).getByRole("link", { name: "Open Disks" }),
+    ).toHaveAttribute("href", "/ui/storage/disks");
+    expect(
       within(disks).getByRole("link", { name: "Open disk /dev/sda" }),
     ).toHaveAttribute("href", "/ui/storage/disks/sda");
     expect(within(disks).queryByText(/Turn it on in Settings/)).toBeNull();
@@ -280,7 +336,7 @@ describe("the Disk health card", () => {
     );
     // No serial number or WWN on the dashboard.
     expect(disks).not.toHaveTextContent("EXAMPLE-SERIAL");
-    // Unknown is not a failure: no attention row.
+    // Unknown is not a failure: no attention card.
     expect(
       screen.queryByRole("region", { name: "Needs attention" }),
     ).not.toBeInTheDocument();
@@ -289,11 +345,11 @@ describe("the Disk health card", () => {
   it("keeps the result for the session when the reader leaves the dashboard and comes back", async () => {
     const { user, app } = await dashboard();
     await user.click(
-      within(card("Disk health")).getByRole("button", {
+      within(card("Disks")).getByRole("button", {
         name: "Check disk health",
       }),
     );
-    await within(card("Disk health")).findByText(
+    await within(card("Disks")).findByText(
       "4 of 5 disks: Unknown",
       {},
       { timeout: 5000 },
@@ -303,24 +359,24 @@ describe("the Disk health card", () => {
     await act(() => app.router.navigate({ to: "/" }));
     await screen.findByRole("heading", { level: 1, name: "Dashboard" });
     expect(
-      within(card("Disk health")).getByText("4 of 5 disks: Unknown"),
+      within(card("Disks")).getByText("4 of 5 disks: Unknown"),
     ).toBeInTheDocument();
     expect(seenCalls.filter((c) => c.call === "Smart.getListBg")).toHaveLength(
       1,
     );
   });
 
-  it("lists failing disks and warnings in the attention list, monitored or not", async () => {
+  it("lists failing disks and warnings as attention cards, monitored or not", async () => {
     const { user } = await dashboard({ scenario: "disksMixed" });
     await user.click(
-      within(card("Disk health")).getByRole("button", {
+      within(card("Disks")).getByRole("button", {
         name: "Check disk health",
       }),
     );
     const rows = within(await attention()).getAllByRole("listitem");
     const text = rows.map((r) => r.textContent ?? "");
     expect(text[0]).toMatch(
-      /^CriticalDisk \/dev\/sdc \(\u2068Example HDD 4TB\u2069\) may fail soon: Many damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. Monitoring is off for this disk, so the NAS will not email you about it\.Open disk \/dev\/sdcRead at /,
+      /^CriticalDisk \/dev\/sdc may fail soonMany damaged areas \(bad sectors\)\. It may fail soon\. Copy your data off it and replace it\. \(\u2068Example HDD 4TB\u2069\) Monitoring is off for this disk, so the NAS will not email you about it\.Open disk \/dev\/sdcRead at /,
     );
     expect(
       within(rows[0] as HTMLElement).getByRole("link", {
@@ -328,29 +384,34 @@ describe("the Disk health card", () => {
       }),
     ).toHaveAttribute("href", "/ui/storage/disks/sdc");
     expect(text[1]).toMatch(
-      /^CriticalDisk \/dev\/sdd \(\u2068Example HDD 4TB\u2069\) may fail soon: It is working outside its safe limits now\./,
+      /^CriticalDisk \/dev\/sdd may fail soonIt is working outside its safe limits now\./,
     );
     expect(text[2]).toMatch(
-      /^WarningDisk \/dev\/sda \(\u2068Example HDD 4TB\u2069\): A few damaged areas/,
+      /^WarningDisk \/dev\/sda reported a problemA few damaged areas/,
     );
     expect(text[3]).toMatch(
-      /^WarningDisk \/dev\/sdb \(\u2068Example HDD 4TB\u2069\): It was once used outside its safe limits/,
+      /^WarningDisk \/dev\/sdb reported a problemIt was once used outside its safe limits/,
     );
     for (const device of within(rows[0]!).getAllByText("/dev/sdc")) {
       expect(device.tagName).toBe("CODE");
     }
-    const disks = card("Disk health");
+    const disks = card("Disks");
     expect(
       within(disks).getByText("2 of 6 disks: Critical"),
     ).toBeInTheDocument();
     expect(
       within(disks).getByText(/^Monitoring is off for 2 of 6 disks\./),
     ).toBeInTheDocument();
+    // The answer counts the cards and names the worst.
+    expect(answer()).toHaveTextContent("4 things need you");
+    expect(answer()).toHaveTextContent(
+      "Worst first: Disk /dev/sdc may fail soon.",
+    );
   });
 
-  it("says plainly when the check fails, with the server's message and a way to try again", async () => {
+  it("says plainly when the check fails, with the server's message and a way to check again", async () => {
     const { user } = await dashboard({ scenario: "disksFail" });
-    const disks = card("Disk health");
+    const disks = card("Disks");
     await user.click(
       within(disks).getByRole("button", { name: "Check disk health" }),
     );
@@ -363,13 +424,16 @@ describe("the Disk health card", () => {
     expect(alert).toHaveTextContent("smartctl");
     expect(alert).not.toHaveTextContent("mock trace");
     expect(
-      within(disks).getByRole("button", { name: "Try again" }),
+      within(disks).getByRole("button", { name: "Check again" }),
     ).toBeInTheDocument();
+    // The answer names the area that could not be read, and never claims it fine.
+    expect(answer()).toHaveTextContent("Part of the NAS could not be read");
+    expect(answer()).toHaveTextContent("Could not read: Disks.");
   });
 
   it("says every disk is fine, with no monitoring advice, when all are good and monitored", async () => {
     const { user } = await dashboard({ scenario: "disksAllGood" });
-    const disks = card("Disk health");
+    const disks = card("Disks");
     await user.click(
       within(disks).getByRole("button", { name: "Check disk health" }),
     );
@@ -384,7 +448,7 @@ describe("the Disk health card", () => {
 
   it("says when no disk reports its health", async () => {
     const { user } = await dashboard({ scenario: "disksEmpty" });
-    const disks = card("Disk health");
+    const disks = card("Disks");
     await user.click(
       within(disks).getByRole("button", { name: "Check disk health" }),
     );
@@ -395,24 +459,174 @@ describe("the Disk health card", () => {
         { timeout: 5000 },
       ),
     ).toBeInTheDocument();
+    const bay = within(disks).getByRole("figure", {
+      name: "The disks in this NAS",
+    });
+    for (const slot of within(bay).getAllByRole("listitem")) {
+      expect(slot).toHaveTextContent("No reading");
+    }
   });
 
   it("shows a reading it does not know as text, in the mono face", async () => {
     const { user } = await dashboard({ scenario: "disksUnrecognised" });
-    const disks = card("Disk health");
+    const disks = card("Disks");
     await user.click(
       within(disks).getByRole("button", { name: "Check disk health" }),
     );
-    const code = await within(disks).findByText(
-      "<b>SOMETHING_NEW</b>",
-      {},
-      { timeout: 5000 },
+    await user.click(
+      await within(disks).findByRole(
+        "button",
+        { name: "Disk details" },
+        { timeout: 5000 },
+      ),
     );
+    const code = within(disks).getByText("<b>SOMETHING_NEW</b>");
     expect(code.tagName).toBe("CODE");
     expect(disks.querySelector("b")).toBeNull();
     expect(
       within(disks).getByText(/^Health reading not recognised:/),
     ).toBeInTheDocument();
+  });
+
+  it("says what each disk holds only when that is known without waking a disk", async () => {
+    // Without the RAID and ZFS plugins, the reads that wake no disk say it all.
+    await dashboard({ scenario: "disksNoRaidPlugin" });
+    const bay = await within(card("Disks")).findByRole("figure", {
+      name: "The disks in this NAS",
+    });
+    await waitFor(() =>
+      expect(within(bay).getAllByRole("listitem")[0]).toHaveTextContent(
+        /^nvme0n1Not checkedSystem/,
+      ),
+    );
+    // Nothing that reads a member disk is asked from the dashboard (RAID 0.5, ZFS 10).
+    expect(callNames()).not.toContain("MdMgmt.enumerateDevices");
+    expect(callNames()).not.toContain("Zfs.getPoolDevices");
+  });
+
+  it("fails closed: no role at all while the RAID plugin is installed, or a read failed", async () => {
+    // The default story has the RAID plugin: its arrays are not read here, so no disk is "Empty".
+    await dashboard();
+    const bay = await within(card("Disks")).findByRole("figure", {
+      name: "The disks in this NAS",
+    });
+    await waitFor(() =>
+      expect(callNames()).toContain("FileSystemMgmt.enumerateFilesystems"),
+    );
+    expect(bay).not.toHaveTextContent("Empty");
+    expect(bay).not.toHaveTextContent("System");
+    expect(callNames()).not.toContain("MdMgmt.enumerateDevices");
+  });
+
+  it("fails closed when the file systems could not be read, even without the plugins", async () => {
+    await dashboard({
+      scenario: "disksNoRaidPlugin",
+      answers: {
+        fileSystemMgmtEnumerateFilesystems: {
+          status: 500,
+          message: "blkid failed.",
+        },
+      },
+    });
+    const bay = await within(card("Disks")).findByRole("figure", {
+      name: "The disks in this NAS",
+    });
+    await waitFor(() =>
+      expect(callNames()).toContain("FileSystemMgmt.enumerateFilesystems"),
+    );
+    expect(bay).not.toHaveTextContent("Empty");
+    expect(bay).not.toHaveTextContent("System");
+  });
+
+  it("says when the disks could not be read, and the check still works", async () => {
+    await dashboard({
+      answers: {
+        diskMgmtGetList: { status: 500, message: "<i>udev</i> failed." },
+      },
+    });
+    const disks = card("Disks");
+    const alert = await within(disks).findByRole("alert");
+    expect(alert).toHaveTextContent("Could not read the disks.");
+    expect(alert).toHaveTextContent("<i>udev</i> failed.");
+    expect(alert.querySelector("i")).toBeNull();
+    expect(
+      within(disks).getByRole("button", { name: "Check disk health" }),
+    ).toBeEnabled();
+  });
+});
+
+describe("the answer", () => {
+  it("says Everything is OK only after a disk check this session, and moves focus to it when its button goes", async () => {
+    const { user } = await dashboard({ scenario: "disksAllGood" });
+    expect(
+      await within(answer()).findByText("No problems found"),
+    ).toBeVisible();
+    expect(answer()).not.toHaveTextContent("Everything is OK");
+    const button = within(answer()).getByRole("button", {
+      name: "Check disk health",
+    });
+    await user.click(button);
+    const headline = await within(answer()).findByText(
+      "Everything is OK",
+      {},
+      { timeout: 5000 },
+    );
+    expect(answer()).toHaveTextContent(
+      /Disk health was checked at .*\. The rest is read while this page is open\./,
+    );
+    expect(
+      within(answer()).queryByRole("button", { name: /Check/ }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(headline).toHaveFocus());
+    // Announced once, by the Disks card's live region.
+    expect(within(card("Disks")).getByRole("status")).toHaveTextContent(
+      "Disk health checked: 3 disks: OK",
+    );
+  });
+
+  it("fails closed: a services read that failed is Could not read, never fine, with a foreground retry", async () => {
+    let fail = true;
+    const { user } = await dashboard({
+      answers: {
+        servicesGetStatus: () =>
+          fail ? { status: 500, message: "systemctl failed." } : "sshOnly",
+      },
+    });
+    await within(card("Services")).findByRole("alert");
+    expect(answer()).toHaveTextContent("Part of the NAS could not be read");
+    expect(answer()).toHaveTextContent("Could not read: Services.");
+    expect(answer()).not.toHaveTextContent("systemctl failed.");
+    expect(
+      within(answer()).getByRole("group", { name: "Health of this NAS" }),
+    ).toHaveTextContent("ServicesCould not read");
+    // No card claims a service is down from a read that failed.
+    expect(
+      screen.queryByRole("region", { name: "Needs attention" }),
+    ).not.toBeInTheDocument();
+    fail = false;
+    const before = seenCalls.length;
+    await user.click(
+      within(answer()).getByRole("button", { name: "Try again" }),
+    );
+    await waitFor(() =>
+      expect(answer()).toHaveTextContent("No problems found"),
+    );
+    const retry = seenCalls
+      .slice(before)
+      .find((c) => c.call === "Services.getStatus");
+    expect(retry?.background).toBe(false);
+  });
+
+  it("says there is nowhere to keep files yet, and leads to Add storage", async () => {
+    await dashboard({ scenario: "storageEmpty" });
+    await within(card("Storage")).findByText(/^No file systems are mounted\./);
+    expect(answer()).toHaveTextContent("No problems found");
+    expect(answer()).toHaveTextContent(
+      "There is no file system yet, so the NAS has nowhere to keep files.",
+    );
+    expect(
+      within(answer()).getByRole("link", { name: "Add storage" }),
+    ).toHaveAttribute("href", "/ui/storage/filesystems/add");
   });
 });
 
@@ -450,7 +664,7 @@ describe("the Services card", () => {
     ).toBeInTheDocument();
     const row = within(await attention()).getAllByRole("listitem")[0]!;
     expect(row).toHaveTextContent(
-      "CriticalSSH is on, but not running. Computers cannot use it until it starts.",
+      "CriticalSSH is not runningIt is turned on, but it has stopped. Computers cannot use it until it starts.",
     );
     expect(
       within(row).getByRole("link", { name: "Open SSH settings" }),
@@ -460,7 +674,7 @@ describe("the Services card", () => {
   it("points to the logs for a plugin's service, whose settings page it does not know", async () => {
     await dashboard({ scenario: "servicePlugin" });
     const row = within(await attention()).getAllByRole("listitem")[0]!;
-    expect(row).toHaveTextContent("DLNA is on, but not running.");
+    expect(row).toHaveTextContent("DLNA is not running");
     expect(
       within(row).getByRole("link", {
         name: "Look for the reason in the system logs",
@@ -573,9 +787,9 @@ describe("the dashboard's reads", () => {
   it("polls every card in the background, and a normal user's dashboard reads none of them", async () => {
     await dashboard();
     await within(card("Network")).findByText("enp2s0");
+    // The polled reads. FileSystemMgmt.getList and the disk inventory are read on opening only.
     for (const call of [
       "FileSystemMgmt.enumerateMountedFilesystems",
-      "FileSystemMgmt.getList",
       "Services.getStatus",
       "Network.enumerateDevicesList",
     ]) {
@@ -610,50 +824,97 @@ describe("the dashboard's reads", () => {
       "Services.getStatus",
       "Network.enumerateDevicesList",
       "Smart.getListBg",
+      "DiskMgmt.getList",
     ]) {
       expect(callNames()).not.toContain(call);
     }
-    for (const name of ["Storage", "Disk health", "Services", "Network"]) {
+    for (const name of [
+      "Storage",
+      "Disks",
+      "Services",
+      "Network",
+      "Right now",
+    ]) {
       expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
     }
   });
 });
 
-describe("the Usage chart", () => {
-  it("waits for two readings, then draws them with a summary and a table of every reading", async () => {
+describe("Right now", () => {
+  it("draws the session's samples, says the span it covers, and lists every reading", async () => {
     const { app, user } = await dashboard();
-    const usage = card("Usage");
+    const live = card("Right now");
+    // The session already has the shell's first sample: a lone point, "the last 0 s".
     expect(
-      await within(usage).findByText(/^Not enough readings yet\./),
+      await within(live).findByText(/^Processor over the last 0 s: now <1%/),
+    ).toBeInTheDocument();
+    // A rate needs two readings of the counters.
+    expect(
+      within(within(live).getByRole("group", { name: "Network" })).getAllByText(
+        "Waiting for a second reading",
+      ).length,
+    ).toBeGreaterThan(0);
+    // The shell's poll answers again: a second sample of each.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await act(async () => {
+      await app.queryClient.refetchQueries({
+        queryKey: getSystemGetInformationQueryKey(),
+      });
+      await app.queryClient.refetchQueries({
+        queryKey: getNetworkEnumerateDevicesListQueryKey(ALL_INTERFACES),
+      });
+    });
+    expect(
+      await within(live).findByText(
+        /^Processor over the last \d+ s: now <1%, highest <1%, lowest <1%\.$/,
+      ),
     ).toBeInTheDocument();
     expect(
-      within(usage).queryByRole("button", { name: "Show the readings" }),
-    ).not.toBeInTheDocument();
-    // The shell's poll answers again: a second sample.
-    await new Promise((resolve) => setTimeout(resolve, 5));
+      within(live).getByText(
+        /^Memory over the last \d+ s: now 9%, highest 9%, lowest 9%\.$/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      await within(live).findByText(
+        /^Network on enp2s0 over the last \d+ s: in now .+ KiB\/s, highest .+; out now .+, highest .+\.$/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(live).getByRole("group", { name: "Network" }),
+    ).toHaveTextContent(/In.*Out.*KiB\/s/);
+    const show = within(live).getByRole("button", {
+      name: "Show the readings",
+    });
+    await user.click(show);
+    const table = await within(live).findByRole("table", {
+      name: "Readings shown above, newest first",
+    });
+    // A header row and one row per reading.
+    expect(within(table).getAllByRole("row")).toHaveLength(3);
+    expect(show).toHaveAccessibleName("Hide the readings");
+  });
+
+  it("says plainly when the live read failed, and keeps what it drew", async () => {
+    let fail = false;
+    const { app } = await dashboard({
+      answers: {
+        systemGetInformation: () =>
+          fail ? { status: 500, message: "Busy." } : "adminWelcomeDismissed",
+      },
+    });
+    const live = card("Right now");
+    await within(live).findByText(/^Processor over the last/);
+    fail = true;
     await act(() =>
       app.queryClient.refetchQueries({
         queryKey: getSystemGetInformationQueryKey(),
       }),
     );
-    const chart = within(usage).getByRole("img", {
-      name: /^Processor and memory over the last /,
-    });
-    await waitFor(() =>
-      expect(chart).toHaveAccessibleDescription(
-        /^Processor now <1%, highest <1%, lowest <1%\. Memory now 9%, highest 9%, lowest 9%\.$/,
-      ),
-    );
-    const show = within(usage).getByRole("button", {
-      name: "Show the readings",
-    });
-    await user.click(show);
-    const table = within(usage).getByRole("table", {
-      name: "Readings of the last 10 minutes, newest first",
-    });
-    // A header row and one row per reading.
-    expect(within(table).getAllByRole("row")).toHaveLength(3);
-    expect(show).toHaveAccessibleName("Hide the readings");
+    const stale = await within(live).findByText(/^Could not read since /);
+    expect(stale).toHaveAttribute("role", "status");
+    expect(
+      within(live).getByRole("group", { name: "Processor" }),
+    ).toHaveTextContent("<1 %");
   });
 });
 
@@ -671,11 +932,11 @@ describe("the attention list's order", () => {
       expect(within(list).getAllByRole("listitem")).toHaveLength(4),
     );
     const rows = within(list).getAllByRole("listitem");
-    expect(rows.map((r) => r.textContent?.slice(0, 20))).toEqual([
-      expect.stringMatching(/^CriticalSSH is on/),
-      expect.stringMatching(/^Warning\/dev\/sda1 is/),
-      expect.stringMatching(/^WarningA restart/),
-      expect.stringMatching(/^The NAS clock/),
+    expect(rows.map((r) => r.textContent?.slice(0, 32))).toEqual([
+      expect.stringMatching(/^CriticalSSH is not running/),
+      expect.stringMatching(/^Warning\/dev\/sda1 is almost full/),
+      expect.stringMatching(/^WarningThe NAS needs a restart/),
+      expect.stringMatching(/^The clocks differ by/),
     ]);
   });
 });

@@ -13,6 +13,8 @@
 //          sentence of the catalogue is in a script the page loads first (the entry and what it
 //          imports statically or preloads), not only in a chunk loaded later, so the card can be
 //          shown when the NAS no longer answers.
+//   8.1    the chart library (dashboard spec 8.1): no script the page loads first holds Recharts;
+//          it loads only in the chunk the dashboard imports lazily.
 //
 //   node tools/build-check/check.mjs web/apps/omv-web-app/dist
 //
@@ -62,6 +64,22 @@ export const ALLOWED_URLS = new Map([
   [
     "http://localhost",
     'TanStack Router\'s stand-in origin for parsing paths when window.origin is "null"; it builds URL objects, never a request',
+  ],
+  [
+    "https://redux.js.org/Errors?code=$",
+    "Redux's production error text, inside Recharts (the dashboard's lazy chart chunk only): \"visit <url> for the full message\"; never fetched",
+  ],
+  [
+    "https://redux-toolkit.js.org/Errors?code=$",
+    "Redux Toolkit's production error text, inside Recharts (the lazy chart chunk only), the same pattern",
+  ],
+  [
+    "https://bit.ly/3cXEKWf",
+    'Immer\'s production error text, inside Recharts (the lazy chart chunk only): "Full error at: <url>"; never fetched',
+  ],
+  [
+    "http://www.w3.org/1999/xhtml",
+    "XHTML namespace name, the xmlns of Recharts' tooltip wrapper (the lazy chart chunk only): an identifier, never fetched",
   ],
   [
     "https://",
@@ -299,6 +317,52 @@ export function firstLoadScripts(dist) {
     }
   }
   return [...seen].sort();
+}
+
+/**
+ * Libraries that must load only in a chunk loaded later, never with the page itself, each found by a
+ * string only its own code contains (dashboard spec 8.1: the charts stay out of the entry chunk).
+ */
+export const LAZY_ONLY = [
+  {
+    text: "recharts-wrapper",
+    what: "Recharts, the chart library of @omv-webui/react-ui-components/charts",
+  },
+  {
+    text: "recharts-surface",
+    what: "Recharts, the chart library of @omv-webui/react-ui-components/charts",
+  },
+];
+
+/**
+ * 8.1: no script the page loads first holds a library that belongs in a chunk loaded later.
+ * @param {string} dist
+ * @returns {{ findings: Finding[], scripts: number }}
+ */
+export function checkFirstLoadLazy(dist) {
+  const scripts = firstLoadScripts(dist);
+  /** @type {Finding[]} */
+  const findings = [];
+  for (const file of scripts) {
+    let text;
+    try {
+      text = readFileSync(join(dist, file), "utf8");
+    } catch {
+      continue;
+    }
+    const seen = new Set();
+    for (const { text: marker, what } of LAZY_ONLY) {
+      if (text.includes(marker) && !seen.has(what)) {
+        seen.add(what);
+        findings.push({
+          rule: "8.1",
+          file,
+          message: `${what} is in a script the page loads first; it belongs in a chunk loaded later`,
+        });
+      }
+    }
+  }
+  return { findings, scripts: scripts.length };
 }
 
 /** The forms a catalogue string takes in a script: as is, in a JS string, or in JSON.parse("…"). */
@@ -539,14 +603,18 @@ function main(/** @type {string[]} */ argv) {
   }
   const { findings, summary } = checkDist(dist);
   const recovery = recoveryStrings(dist);
+  let firstLoaded = 0;
   if (present(dist, "index.html")) {
     findings.push(...checkFirstLoadStrings(dist, recovery));
+    const lazy = checkFirstLoadLazy(dist);
+    findings.push(...lazy.findings);
+    firstLoaded = lazy.scripts;
   }
   const allowed =
     [...summary.allowedUrls].map(([u, n]) => `${u} (${n})`).join(", ") ||
     "none";
   process.stdout.write(
-    `build-check: ${summary.files} files, ${summary.scanned} read as text, ${summary.references} references followed; allowed URLs seen: ${allowed}; recovery card sentences checked in the first-loaded scripts: ${recovery.length}\n`,
+    `build-check: ${summary.files} files, ${summary.scanned} read as text, ${summary.references} references followed; allowed URLs seen: ${allowed}; recovery card sentences checked in the first-loaded scripts: ${recovery.length}; first-loaded scripts checked for the chart library: ${firstLoaded}\n`,
   );
   for (const f of findings) {
     process.stdout.write(`  ${f.rule}  ${f.file}: ${f.message}\n`);
@@ -556,7 +624,7 @@ function main(/** @type {string[]} */ argv) {
     return 1;
   }
   process.stdout.write(
-    "build-check: UI-1, UI-7 and UI-11 hold for this bundle, and the recovery card's words load first\n",
+    "build-check: UI-1, UI-7 and UI-11 hold for this bundle, the recovery card's words load first, and the chart library does not\n",
   );
   return 0;
 }

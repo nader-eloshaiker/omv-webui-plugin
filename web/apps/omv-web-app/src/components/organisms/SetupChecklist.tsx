@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The set-up checklist (UX audit Q11; phase 3 design 2), for administrators while OMV's own welcome
-// flag is set. It is neutral: these are configuration choices, not monitored health, so states are
+// First steps, the set-up checklist (UX audit Q11; phase 3 design 2; dashboard spec 10.1), for
+// administrators while OMV's own welcome flag is set. It is neutral: these are configuration choices, not monitored health, so states are
 // told apart by mark and word, never by a status colour. The order is fixed by importance and never
 // changes as items change. Each item's read is its own: one failure shows "Not checked" with a retry
 // on that item only.
 //
 // Links go to a fixed route of this interface where one exists (the password form, the name of this
-// NAS: phase 5 network design 13.3) and otherwise to a fixed page of the classic interface (UI-3).
+// NAS: phase 5 network design 13.3) and otherwise to a fixed page of the classic interface (UI-3). A
+// step that is not done draws its link as a button, so the next step looks pressable at rest.
+//
+// The progress ring counts only the steps the NAS can confirm (HTTPS and email alerts, when read):
+// the password can never be confirmed and the updates, the name and the time zone are for the reader
+// to judge, so the ring never claims progress it cannot see.
 // The HTTPS item names the secure port as text and builds no link from it (owner, 2026-11-20). Hiding the checklist asks first, because it hides it for every
 // administrator and this interface cannot bring it back.
 import {
@@ -20,22 +25,24 @@ import {
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
+  buttonClass,
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
   Checklist,
   ChecklistItem,
+  cn,
   ConfirmDialog,
   ExternalLink,
+  ProgressRing,
   useToast,
   type ChecklistState,
 } from "@omv-webui/react-ui-components";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
   emailAlerts,
@@ -52,6 +59,9 @@ interface Props {
   info: Pick<SystemInformation, "hostname" | "availablePkgUpdates">;
   /** The signed-in account's name, when the server said it. */
   username: string | null;
+  /** Its place in the page grid, and in the rise-in order. */
+  className?: string;
+  index?: number;
 }
 
 /** A query's state as a checklist item sees it: in flight, failed with nothing to show, or read. */
@@ -66,22 +76,35 @@ function readState(query: {
   return query.isError ? "failed" : "checking";
 }
 
+/** A step not done: its link drawn as a button. */
+const stepButton = cn(
+  buttonClass({ variant: "neutral", size: "sm" }),
+  "no-underline hover:no-underline",
+);
+
 function ClassicLink({
   href,
+  next = false,
   children,
 }: {
   href: string;
+  /** The step is not done: the link is its next step, drawn as a button. */
+  next?: boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
-    <ExternalLink href={href} newTabLabel={t("app.newTab")}>
+    <ExternalLink
+      href={href}
+      newTabLabel={t("app.newTab")}
+      className={next ? stepButton : undefined}
+    >
       {children}
     </ExternalLink>
   );
 }
 
-export function SetupChecklist({ info, username }: Props) {
+export function SetupChecklist({ info, username, className, index }: Props) {
   const { t } = useTranslation();
   const titleId = useId();
   const hintId = useId();
@@ -131,6 +154,7 @@ export function SetupChecklist({ info, username }: Props) {
   // 2. HTTPS, from the web interface settings.
   const webGuiRead = readState(webGui);
   let https: ReactNode;
+  let httpsCheck: ChecklistState = "notChecked";
   if (webGuiRead !== "read" || webGui.data === undefined) {
     https = (
       <ChecklistItem
@@ -145,13 +169,14 @@ export function SetupChecklist({ info, username }: Props) {
     );
   } else {
     const state = httpsState(webGui.data.enablessl, window.location.protocol);
+    httpsCheck = state === "off" ? "notDone" : "done";
     https = (
       <ChecklistItem
         {...item(state === "off" ? "notDone" : "done")}
         title={t("checklist.https.title")}
         action={
           state === "off" ? (
-            <ClassicLink href={CLASSIC_HTTPS_SETTINGS}>
+            <ClassicLink href={CLASSIC_HTTPS_SETTINGS} next>
               {t("checklist.https.link")}
             </ClassicLink>
           ) : undefined
@@ -180,6 +205,7 @@ export function SetupChecklist({ info, username }: Props) {
   // 3. Email alerts. The transport has already removed the mail password from this reply.
   const emailRead = readState(email);
   let alerts: ReactNode;
+  let alertsState: ChecklistState = "notChecked";
   if (emailRead !== "read" || email.data === undefined) {
     alerts = (
       <ChecklistItem
@@ -194,12 +220,13 @@ export function SetupChecklist({ info, username }: Props) {
     );
   } else {
     const state = emailAlerts(email.data);
+    alertsState = state === "done" ? "done" : "notDone";
     alerts = (
       <ChecklistItem
         {...item(state === "done" ? "done" : "notDone")}
         title={t("checklist.email.title")}
         action={
-          <ClassicLink href={CLASSIC.notifications}>
+          <ClassicLink href={CLASSIC.notifications} next={state !== "done"}>
             {t("checklist.email.link")}
           </ClassicLink>
         }
@@ -229,7 +256,7 @@ export function SetupChecklist({ info, username }: Props) {
       {...item(count > 0 ? "notDone" : "notChecked")}
       title={t("checklist.updates.title")}
       action={
-        <ClassicLink href={CLASSIC.updates}>
+        <ClassicLink href={CLASSIC.updates} next={count > 0}>
           {t("checklist.updates.link")}
         </ClassicLink>
       }
@@ -317,12 +344,62 @@ export function SetupChecklist({ info, username }: Props) {
   };
 
   const failure = dismiss.error;
+  // Only the steps the NAS can confirm, once read.
+  const confirmable = [httpsCheck, alertsState].filter(
+    (state) => state === "done" || state === "notDone",
+  );
+  const done = confirmable.filter((state) => state === "done").length;
 
   return (
-    <Card render={<section aria-labelledby={titleId} />}>
-      <CardHeader>
-        <CardTitle id={titleId}>{t("checklist.title")}</CardTitle>
-        <CardDescription>{t("checklist.intro")}</CardDescription>
+    <Card
+      render={<section aria-labelledby={titleId} />}
+      className={cn(
+        index === undefined ? undefined : "motion-safe:animate-rise stagger",
+        className,
+      )}
+      style={
+        index === undefined
+          ? undefined
+          : ({ "--stagger-index": Math.min(index, 6) } as CSSProperties)
+      }
+    >
+      <CardHeader className="flex-nowrap items-start gap-x-3">
+        {confirmable.length > 0 ? (
+          <ProgressRing
+            aria-labelledby={titleId}
+            value={done}
+            max={confirmable.length}
+            valueText={t("checklist.progress", {
+              done,
+              total: confirmable.length,
+            })}
+            figure={t("checklist.progressFigure", {
+              done,
+              total: confirmable.length,
+            })}
+          />
+        ) : null}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <CardTitle id={titleId}>{t("checklist.title")}</CardTitle>
+          <CardDescription>{t("checklist.intro")}</CardDescription>
+          {confirmable.length > 0 ? (
+            <p className="text-caption text-tertiary-foreground">
+              {t("checklist.progressHint")}
+            </p>
+          ) : null}
+        </div>
+        <Button
+          variant="quiet"
+          size="sm"
+          className="shrink-0"
+          aria-describedby={hintId}
+          onClick={() => {
+            dismiss.reset();
+            setConfirming(true);
+          }}
+        >
+          {t("checklist.hide")}
+        </Button>
       </CardHeader>
       <CardContent>
         <Checklist>
@@ -333,22 +410,11 @@ export function SetupChecklist({ info, username }: Props) {
           {name}
           {zone}
         </Checklist>
-      </CardContent>
-      <CardFooter>
-        <Button
-          variant="neutral"
-          aria-describedby={hintId}
-          onClick={() => {
-            dismiss.reset();
-            setConfirming(true);
-          }}
-        >
-          {t("checklist.hide")}
-        </Button>
-        <p id={hintId} className="text-sm text-muted-foreground">
+        {/* Before the button is pressed, what hiding does: the dialog says it again. */}
+        <p id={hintId} className="text-caption text-tertiary-foreground">
           {t("checklist.hideHint")}
         </p>
-      </CardFooter>
+      </CardContent>
       <ConfirmDialog
         open={confirming}
         onOpenChange={(open) => {

@@ -14,21 +14,25 @@ import {
   addressWithPrefix,
   attentionRows,
   clockDifferenceSeconds,
+  dashboardAnswer,
   diskState,
   diskTemperature,
   emailAlerts,
   fileSystemName,
   fileSystemState,
+  healthAreas,
   httpsState,
   interfaceKind,
+  knownAreas,
   memoryUsage,
   missingFileSystems,
-  readingRows,
+  overallStatus,
   serviceState,
   serviceSummary,
   sortDisks,
   storageItems,
   visibleInterfaces,
+  type AreaInput,
 } from "./dashboard.ts";
 
 describe("memoryUsage", () => {
@@ -425,21 +429,6 @@ describe("visibleInterfaces", () => {
   });
 });
 
-describe("the chart's readings", () => {
-  const at = (t: number, cpu = 10) => ({ t, cpu, memory: 40 });
-
-  it("lists the readings newest first, with a row where the line breaks", () => {
-    const rows = readingRows([at(0), at(20_000), at(120_000)]);
-    expect(rows.map((r) => r.kind)).toEqual([
-      "reading",
-      "gap",
-      "reading",
-      "reading",
-    ]);
-    expect(rows[1]).toEqual({ kind: "gap", after: 20_000, before: 120_000 });
-  });
-});
-
 describe("attentionRows: storage, disks and services", () => {
   const now = 1_795_089_029_000;
   const info = { ts: now / 1000 };
@@ -518,5 +507,245 @@ describe("attentionRows: storage, disks and services", () => {
         pending: ["samba"],
       }),
     ).toEqual([]);
+  });
+});
+
+describe("healthAreas and the answer (dashboard spec 4.2)", () => {
+  const now = 1_795_089_029_000;
+  const readFs = storageItems([fs({ percentage: 40, usagewarnthreshold: 85 })]);
+  /** Every area read and fine, disk health checked: "Everything is OK". */
+  const fine = (change: Partial<AreaInput> = {}): AreaInput => ({
+    storage: { data: readFs, failed: false },
+    configured: { pending: false, failed: false },
+    pools: { state: "none", list: [] },
+    disks: {
+      checking: false,
+      failed: false,
+      devices: [disk({ overallstatus: "GOOD" })],
+    },
+    services: { data: SERVICES, failed: false, pending: [] },
+    system: { data: { rebootRequired: false }, failed: false },
+    ...change,
+  });
+  const words = (input: AreaInput) =>
+    healthAreas(input).map((a) => `${a.id}:${a.status}:${a.word}`);
+  const answer = (input: AreaInput, loading = false) => {
+    const areas = healthAreas(input);
+    return dashboardAnswer({
+      loading,
+      areas,
+      rows: attentionRows({
+        info: input.system.data
+          ? { ts: now / 1000, ...input.system.data }
+          : undefined,
+        receivedAtMs: now,
+        storage: input.storage.data,
+        disks: input.disks.devices
+          ? { devices: input.disks.devices, readAt: now }
+          : undefined,
+        services: input.services.data,
+        pools: input.pools.list,
+      }),
+      disksReadAt: input.disks.devices ? now : undefined,
+    });
+  };
+
+  it("is OK only when all four areas are read and fine, disk health included", () => {
+    expect(words(fine())).toEqual([
+      "storage:ok:nothingFull",
+      "disks:ok:ok",
+      "services:ok:allRunning",
+      "system:ok:ok",
+    ]);
+    expect(answer(fine())).toEqual({ kind: "ok", checkedAt: now });
+  });
+
+  it("says no problems found, not OK, while disk health has not been checked (D5)", () => {
+    const input = fine({
+      disks: { checking: false, failed: false, devices: undefined },
+    });
+    expect(words(input)[1]).toBe("disks:unknown:notChecked");
+    expect(overallStatus(healthAreas(input))).toBe("unknown");
+    expect(knownAreas(healthAreas(input))).toEqual({ known: 3, total: 4 });
+    expect(answer(input)).toEqual({
+      kind: "unknown",
+      line: { kind: "disksNotChecked" },
+    });
+    const checking = fine({
+      disks: { checking: true, failed: false, devices: undefined },
+    });
+    expect(answer(checking)).toEqual({
+      kind: "unknown",
+      line: { kind: "disksChecking" },
+    });
+  });
+
+  it("fails closed: a failed read makes its area Could not read, never fine", () => {
+    const input = fine({
+      services: { data: undefined, failed: true, pending: [] },
+      system: { data: undefined, failed: true },
+    });
+    expect(words(input)).toEqual([
+      "storage:ok:nothingFull",
+      "disks:ok:ok",
+      "services:unknown:readFailed",
+      "system:unknown:readFailed",
+    ]);
+    expect(answer(input)).toEqual({
+      kind: "unknown",
+      line: { kind: "readFailed", areas: ["services", "system"] },
+    });
+  });
+
+  it("never says Nothing full while the missing list, or the pools, could not be read", () => {
+    expect(
+      words(fine({ configured: { pending: false, failed: true } }))[0],
+    ).toBe("storage:unknown:readFailed");
+    expect(
+      words(fine({ configured: { pending: true, failed: false } }))[0],
+    ).toBe("storage:unknown:reading");
+    expect(words(fine({ pools: { state: "failed", list: [] } }))[0]).toBe(
+      "storage:unknown:readFailed",
+    );
+    expect(words(fine({ pools: { state: "checking", list: [] } }))[0]).toBe(
+      "storage:unknown:reading",
+    );
+    expect(
+      words(fine({ storage: { data: undefined, failed: false } }))[0],
+    ).toBe("storage:unknown:reading");
+  });
+
+  it("keeps what is known to be bad when another read fails", () => {
+    const input = fine({
+      storage: {
+        data: storageItems([fs({ percentage: 100 })]),
+        failed: false,
+      },
+      configured: { pending: false, failed: true },
+      services: { data: undefined, failed: true, pending: [] },
+    });
+    expect(words(input)[0]).toBe("storage:critical:critical");
+    expect(answer(input)).toMatchObject({
+      kind: "problems",
+      status: "critical",
+      count: 1,
+      first: { kind: "fsFull" },
+      unknown: { kind: "readFailed", areas: ["services"] },
+    });
+  });
+
+  it("calls a degraded pool Critical, an unread size Unknown, and no file system None yet", () => {
+    expect(
+      words(
+        fine({
+          pools: {
+            state: "read",
+            list: [{ name: "tank", state: "DEGRADED", status: "" }],
+          },
+        }),
+      )[0],
+    ).toBe("storage:critical:critical");
+    expect(
+      words(
+        fine({
+          storage: {
+            data: storageItems([fs({ percentage: -1 })]),
+            failed: false,
+          },
+        }),
+      )[0],
+    ).toBe("storage:unknown:unknown");
+    const empty = fine({ storage: { data: [], failed: false } });
+    expect(words(empty)[0]).toBe("storage:unknown:noneYet");
+    expect(answer(empty)).toEqual({
+      kind: "unknown",
+      line: { kind: "noStorage" },
+    });
+  });
+
+  it("leaves services that are all off out of the roll-up, as a choice", () => {
+    const input = fine({
+      services: {
+        data: [service("ssh", false, false)],
+        failed: false,
+        pending: [],
+      },
+    });
+    expect(words(input)[2]).toBe("services:disabled:noneOn");
+    expect(overallStatus(healthAreas(input))).toBe("ok");
+    expect(knownAreas(healthAreas(input))).toEqual({ known: 3, total: 3 });
+    expect(answer(input)).toEqual({ kind: "ok", checkedAt: now });
+  });
+
+  it("counts a service waiting to be applied as running, and a stopped one as Critical", () => {
+    const stopped = [service("samba", true, false)];
+    expect(
+      words(
+        fine({
+          services: { data: stopped, failed: false, pending: ["samba"] },
+        }),
+      )[2],
+    ).toBe("services:ok:allRunning");
+    expect(
+      words(
+        fine({ services: { data: stopped, failed: false, pending: [] } }),
+      )[2],
+    ).toBe("services:critical:critical");
+  });
+
+  it("takes the disks' worst reading, and No reading when the check listed none", () => {
+    expect(
+      words(
+        fine({
+          disks: {
+            checking: false,
+            failed: false,
+            devices: [
+              disk({ overallstatus: "GOOD" }),
+              disk({ overallstatus: "BAD_SECTOR" }),
+            ],
+          },
+        }),
+      )[1],
+    ).toBe("disks:warning:warning");
+    expect(
+      words(
+        fine({ disks: { checking: false, failed: false, devices: [] } }),
+      )[1],
+    ).toBe("disks:unknown:noReading");
+    expect(
+      words(
+        fine({ disks: { checking: false, failed: true, devices: undefined } }),
+      )[1],
+    ).toBe("disks:unknown:readFailed");
+  });
+
+  it("counts the cards that carry a status, never the clock advice, worst first", () => {
+    const input = fine({
+      system: { data: { rebootRequired: true }, failed: false },
+    });
+    expect(words(input)[3]).toBe("system:warning:restartNeeded");
+    const areas = healthAreas(input);
+    expect(
+      dashboardAnswer({
+        loading: false,
+        areas,
+        rows: [
+          { kind: "restart", key: "restart" },
+          { kind: "clock", key: "clock", seconds: 3600 },
+        ],
+        disksReadAt: now,
+      }),
+    ).toEqual({
+      kind: "problems",
+      status: "warning",
+      count: 1,
+      first: { kind: "restart", key: "restart" },
+      unknown: null,
+    });
+  });
+
+  it("shows skeletons while the first reads are in flight", () => {
+    expect(answer(fine(), true)).toEqual({ kind: "loading" });
   });
 });

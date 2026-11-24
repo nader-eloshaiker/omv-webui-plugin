@@ -12,7 +12,6 @@ import type { NetworkDevice } from "@omv-webui/react-api-omv/generated";
 import { EmptyState, HealthListSkeleton } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { Cable, Monitor, Unplug } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   addressWithPrefix,
@@ -20,19 +19,8 @@ import {
   visibleInterfaces,
 } from "../../dashboard/dashboard.ts";
 import { useFormat } from "../../format/useFormat.ts";
-import { readOf, useGeneralSettings } from "../../hooks/useNetworkReads.ts";
-import {
-  parsePageHost,
-  standing,
-  workOutConnection,
-  type Connection,
-} from "../../network/connection.ts";
-import {
-  loading as notYetRead,
-  ok,
-  type GeneralSettings,
-} from "../../network/dto.ts";
-import { readPageLocation } from "../../network/pageLocation.ts";
+import { useDashboardConnection } from "../../hooks/useDashboardConnection.ts";
+import { standing } from "../../network/connection.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
 import { IfaceLink } from "../atoms/IfaceLink.tsx";
 import { CardStaleLine } from "../molecules/CardStaleLine.tsx";
@@ -118,26 +106,6 @@ function InterfaceItem({
   );
 }
 
-/**
- * Which interface this page reaches the NAS through (0.4), from the card's own read. The NAS's name
- * is read only when the page was opened by a name; at an address it is not needed.
- */
-function useDashboardConnection(
-  devices: readonly NetworkDevice[] | undefined,
-): Connection {
-  const [location] = useState(readPageLocation);
-  const byName = parsePageHost(location.hostname)?.kind === "name";
-  const general = useGeneralSettings({
-    enabled: byName && devices !== undefined,
-    focus: false,
-  });
-  return workOutConnection({
-    location,
-    devices: devices === undefined ? notYetRead : ok(devices),
-    general: byName ? readOf<GeneralSettings>(general) : notYetRead,
-  });
-}
-
 export function NetworkCard({
   devices,
   loading,
@@ -146,6 +114,8 @@ export function NetworkCard({
   updatedAt,
   retrying,
   onRetry,
+  className,
+  index,
 }: {
   devices: readonly NetworkDevice[] | undefined;
   loading: boolean;
@@ -154,6 +124,9 @@ export function NetworkCard({
   updatedAt: number;
   retrying: boolean;
   onRetry: () => void;
+  /** Its place in the page grid, and in the rise-in order. */
+  className?: string;
+  index?: number;
 }) {
   const { t } = useTranslation();
   const connection = useDashboardConnection(devices);
@@ -206,6 +179,8 @@ export function NetworkCard({
   }
   return (
     <DashboardCard
+      className={className}
+      index={index}
       title={t("dashboard.network.title")}
       busy={devices === undefined && loading}
       busyLabel={t("dashboard.network.loading")}

@@ -310,7 +310,7 @@ describe("the summary card", () => {
       scenario: "disksNas",
       path: "/",
     });
-    const card = await screen.findByRole("region", { name: "Disk health" });
+    const card = await screen.findByRole("region", { name: "Disks" });
     await user.click(
       within(card).getByRole("button", { name: "Check disk health" }),
     );

@@ -58,6 +58,8 @@ export function ServicesCard({
   updatedAt,
   retrying,
   onRetry,
+  className,
+  index,
 }: {
   services: readonly ServiceStatus[] | undefined;
   /** The pending module ids. */
@@ -68,6 +70,9 @@ export function ServicesCard({
   updatedAt: number;
   retrying: boolean;
   onRetry: () => void;
+  /** Its place in the page grid, and in the rise-in order. */
+  className?: string;
+  index?: number;
 }) {
   const { t } = useTranslation();
   const footer = (
@@ -194,6 +199,8 @@ export function ServicesCard({
 
   return (
     <DashboardCard
+      className={className}
+      index={index}
       title={t("dashboard.services.title")}
       busy={services === undefined && loading}
       busyLabel={t("dashboard.services.loading")}

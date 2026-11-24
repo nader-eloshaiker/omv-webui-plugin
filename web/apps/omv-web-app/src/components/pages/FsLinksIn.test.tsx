@@ -20,18 +20,21 @@ describe("links into the file systems pages (9)", () => {
     ).toHaveAttribute("href", "/ui/storage/filesystems");
     await waitFor(() =>
       expect(
-        within(card).getByRole("link", { name: "/dev/sda1" }),
+        within(card).getByRole("link", { name: "Open file system /dev/sda1" }),
       ).toHaveAttribute("href", `/ui/storage/filesystems/${SDA1.uuid}`),
     );
     // The system drive has no page.
     expect(
-      within(card).queryByRole("link", { name: "System drive" }),
+      within(card).queryByRole("link", { name: /System drive/ }),
     ).toBeNull();
   });
 
   it("offers Add storage when there is no file system", async () => {
     await renderApp({ signedIn: true, path: "/", scenario: "storageEmpty" });
-    const link = await screen.findByRole("link", { name: "Add storage" });
+    const storage = await screen.findByRole("region", { name: "Storage" });
+    const link = await within(storage).findByRole("link", {
+      name: "Add storage",
+    });
     expect(link).toHaveAttribute("href", "/ui/storage/filesystems/add");
   });
 

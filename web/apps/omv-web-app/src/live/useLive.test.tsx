@@ -57,8 +57,13 @@ afterEach(() => {
   setVisibility("visible");
 });
 
+/** An administrator on a page with no chart of its own (the dashboard has one: "Right now"). */
 async function admin(options: Parameters<typeof renderApp>[0] = {}) {
-  const app = await renderApp({ signedIn: true, ...options });
+  const app = await renderApp({
+    signedIn: true,
+    path: "/account/settings",
+    ...options,
+  });
   await screen.findByRole("banner");
   await settle();
   return app;

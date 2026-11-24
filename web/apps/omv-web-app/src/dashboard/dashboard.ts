@@ -10,6 +10,7 @@ import type {
   SmartDevice,
   SystemInformation,
 } from "@omv-webui/react-api-omv/generated";
+import { rollUp } from "@omv-webui/react-ui-components";
 import {
   naturalCompare,
   parseByteCount,
@@ -88,7 +89,8 @@ export function httpsState(
 export const FACTORY_ACCOUNT = "admin";
 
 // ---------------------------------------------------------------------------------------------------
-// Phase 5: the Storage, Disk health, Services and Network cards, the chart and the attention list.
+// Phase 5: the Storage, Disk health, Services and Network cards and the attention list; the redesign's
+// health areas and the answer the page opens with (dashboard spec 4.2).
 
 /** Severity of a card state, for "worst first" (the roll-up's own order: Critical, Warning, Unknown). */
 const SEVERITY = {
@@ -273,8 +275,11 @@ export const missingFileSystems = (
   configured: readonly ConfiguredFilesystem[],
 ): ConfiguredFilesystem[] => configured.filter((fs) => fs.status === 3);
 
-/** How many file systems a card shows before "Show all" (D16). */
-export const STORAGE_VISIBLE = 6;
+/**
+ * How many file systems the Storage card draws as rings before "Show all" (dashboard spec 7, 3.5):
+ * four in comfortable density, six in compact. Problems sort first, so none is ever behind it.
+ */
+export const STORAGE_RINGS = { comfortable: 4, compact: 6 } as const;
 
 // ---- Disk health (design 1.3) ----
 
@@ -437,43 +442,6 @@ export function addressWithPrefix(
     return null;
   }
   return prefix >= 0 ? `${address}/${String(prefix)}` : address;
-}
-
-// ---- The Usage chart (design 1.6) ----
-
-/** What the Usage chart draws of a live sample (live/liveSamples.ts SystemSample). */
-export interface UsageSample {
-  /** When the reply arrived, on this computer's clock (ms). */
-  t: number;
-  /** Percent; null when the reply did not carry the figure. */
-  cpu: number | null;
-  memory: number | null;
-}
-
-/** The chart's window: the ten minutes the live samples keep (live/liveSamples.ts, LIVE_WINDOW_MS). */
-export const CHART_WINDOW_MS = 10 * 60_000;
-/** Two samples further apart than this are not joined: the poll paused or failed between them. */
-export const CHART_MAX_GAP_MS = 50_000;
-
-/** The readings table, newest first, with one "No readings" row where the line breaks. */
-export type ReadingRow =
-  | { kind: "reading"; sample: UsageSample }
-  | { kind: "gap"; after: number; before: number };
-
-export function readingRows(samples: readonly UsageSample[]): ReadingRow[] {
-  const rows: ReadingRow[] = [];
-  for (let i = samples.length - 1; i >= 0; i -= 1) {
-    const sample = samples[i];
-    if (sample === undefined) {
-      continue;
-    }
-    const newer = samples[i + 1];
-    if (newer !== undefined && newer.t - sample.t > CHART_MAX_GAP_MS) {
-      rows.push({ kind: "gap", after: sample.t, before: newer.t });
-    }
-    rows.push({ kind: "reading", sample });
-  }
-  return rows;
 }
 
 // ---- The attention list (design 1.7) ----
@@ -672,4 +640,300 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
     rows.push({ kind: "clock", key: "clock", seconds });
   }
   return rows;
+}
+
+/** How many attention cards show before "Show N more" (dashboard spec 5.1). Worst first, so none hidden is worse. */
+export const ATTENTION_VISIBLE = 6;
+
+/** Whether an attention row carries a status: every kind but the clock advice. */
+export const hasStatus = (row: AttentionRow): boolean => row.kind !== "clock";
+
+// ---- The answer: health areas and the headline (dashboard spec 4.2) ----
+
+export const AREA_IDS = ["storage", "disks", "services", "system"] as const;
+export type AreaId = (typeof AREA_IDS)[number];
+
+/** An area's state. Disabled is a choice (no service on), drawn dashed and left out of the roll-up. */
+export type AreaStatus = "ok" | "warning" | "critical" | "unknown" | "disabled";
+
+/**
+ * The area's word. The four health words are the fixed status words (`health.*`); the rest are the
+ * area's own precise words (`dashboard.area.*`).
+ */
+export type AreaWord =
+  | "ok"
+  | "warning"
+  | "critical"
+  | "unknown"
+  | "nothingFull"
+  | "notChecked"
+  | "checking"
+  | "noReading"
+  | "allRunning"
+  | "noneOn"
+  | "noneYet"
+  | "restartNeeded"
+  | "readFailed"
+  | "reading";
+
+export const isHealthWord = (
+  word: AreaWord,
+): word is "ok" | "warning" | "critical" | "unknown" =>
+  word === "ok" ||
+  word === "warning" ||
+  word === "critical" ||
+  word === "unknown";
+
+export interface AreaState {
+  id: AreaId;
+  status: AreaStatus;
+  word: AreaWord;
+}
+
+/** A read as an area sees it: its data once there, and whether it failed with nothing to show. */
+export interface AreaRead<T> {
+  data: T | undefined;
+  failed: boolean;
+}
+
+export interface AreaInput {
+  /** The Storage card's items (FileSystemMgmt.enumerateMountedFilesystems). */
+  storage: AreaRead<readonly StorageItem[]>;
+  /** FileSystemMgmt.getList, the missing file systems: still in flight, or failed with nothing. */
+  configured: { pending: boolean; failed: boolean };
+  /**
+   * ZFS pools (Zfs.getPoolStatus): "none" when the plugin is not installed, "checking" until that
+   * is known or the pools are read, "failed" when they could not be read.
+   */
+  pools: {
+    state: "none" | "checking" | "failed" | "read";
+    list: readonly { name: string; state: string; status: string }[];
+  };
+  /** The session's disk-health check: running, failed with no result, and its disks once read. */
+  disks: {
+    checking: boolean;
+    failed: boolean;
+    devices: readonly SmartDevice[] | undefined;
+  };
+  services: AreaRead<readonly ServiceStatus[]> & { pending: readonly string[] };
+  system: AreaRead<Pick<SystemInformation, "rebootRequired">>;
+}
+
+const area = (id: AreaId, status: AreaStatus, word: AreaWord): AreaState => ({
+  id,
+  status,
+  word,
+});
+
+/**
+ * Storage (spec 4.2): what is known to be bad first, from whatever was read, so a failed read can
+ * only make the area worse, never better. "Nothing full" needs every input read: the mounted list,
+ * the configured list (for a missing file system) and, where the plugin is installed, the pools.
+ */
+function storageArea(input: AreaInput): AreaState {
+  const items = input.storage.data;
+  const poolBad = input.pools.list.some((p) => zfsPoolHealth(p) !== null);
+  if (
+    poolBad ||
+    items?.some((i) => i.kind === "missing" || i.state === "critical")
+  ) {
+    return area("storage", "critical", "critical");
+  }
+  if (items?.some((i) => i.kind !== "missing" && i.state === "warning")) {
+    return area("storage", "warning", "warning");
+  }
+  if (items === undefined) {
+    return input.storage.failed
+      ? area("storage", "unknown", "readFailed")
+      : area("storage", "unknown", "reading");
+  }
+  if (input.configured.failed || input.pools.state === "failed") {
+    return area("storage", "unknown", "readFailed");
+  }
+  if (input.configured.pending || input.pools.state === "checking") {
+    return area("storage", "unknown", "reading");
+  }
+  if (items.length === 0) {
+    return area("storage", "unknown", "noneYet");
+  }
+  if (items.some((i) => i.kind !== "missing" && i.state === "unknown")) {
+    return area("storage", "unknown", "unknown");
+  }
+  return area("storage", "ok", "nothingFull");
+}
+
+/** Disks: only from a check in this session (it wakes disks, so it runs only when asked). */
+function disksArea(input: AreaInput): AreaState {
+  const { devices, checking, failed } = input.disks;
+  if (devices === undefined) {
+    if (checking) {
+      return area("disks", "unknown", "checking");
+    }
+    return failed
+      ? area("disks", "unknown", "readFailed")
+      : area("disks", "unknown", "notChecked");
+  }
+  if (devices.length === 0) {
+    return area("disks", "unknown", "noReading");
+  }
+  const worst = rollUp(
+    devices.map((d) => diskState(d.overallstatus).status),
+  ).status;
+  const status =
+    worst === "ok" || worst === "warning" || worst === "critical"
+      ? worst
+      : "unknown";
+  return area("disks", status, status);
+}
+
+/** Services: a service that is on but stopped is Critical; one waiting to be applied counts as running. */
+function servicesArea(input: AreaInput): AreaState {
+  const list = input.services.data;
+  if (list === undefined) {
+    return input.services.failed
+      ? area("services", "unknown", "readFailed")
+      : area("services", "unknown", "reading");
+  }
+  const { on } = serviceSummary(list, input.services.pending);
+  if (on.some((s) => s.state === "critical")) {
+    return area("services", "critical", "critical");
+  }
+  return on.length === 0
+    ? area("services", "disabled", "noneOn")
+    : area("services", "ok", "allRunning");
+}
+
+function systemArea(input: AreaInput): AreaState {
+  const info = input.system.data;
+  if (info === undefined) {
+    return input.system.failed
+      ? area("system", "unknown", "readFailed")
+      : area("system", "unknown", "reading");
+  }
+  return info.rebootRequired === true
+    ? area("system", "warning", "restartNeeded")
+    : area("system", "ok", "ok");
+}
+
+/** The four areas of the health ring, in its order: Storage, Disks, Services, System (D3). */
+export function healthAreas(input: AreaInput): AreaState[] {
+  return [
+    storageArea(input),
+    disksArea(input),
+    servicesArea(input),
+    systemArea(input),
+  ];
+}
+
+export type OverallStatus = "ok" | "warning" | "critical" | "unknown";
+
+/** The worst area, Disabled left out (a choice, not an unknown). No area to count is Unknown. */
+export function overallStatus(areas: readonly AreaState[]): OverallStatus {
+  const status = rollUp(
+    areas.filter((a) => a.status !== "disabled").map((a) => a.status),
+  ).status;
+  return status === "ok" || status === "warning" || status === "critical"
+    ? status
+    : "unknown";
+}
+
+/** How many areas the ring counts, and how many of them have a known state ("3/4 checked"). */
+export function knownAreas(areas: readonly AreaState[]): {
+  known: number;
+  total: number;
+} {
+  const counted = areas.filter((a) => a.status !== "disabled");
+  return {
+    known: counted.filter((a) => a.status !== "unknown").length,
+    total: counted.length,
+  };
+}
+
+/** Why an area is not known, in the order the answer names it. */
+export type UnknownLine =
+  | { kind: "readFailed"; areas: AreaId[] }
+  | { kind: "noStorage" }
+  | { kind: "disksChecking" }
+  | { kind: "disksNotChecked" }
+  | { kind: "reading"; areas: AreaId[] }
+  | { kind: "unknown"; areas: AreaId[] };
+
+/** The first reason an area is not known, or null when every area has a known state. */
+export function unknownLine(areas: readonly AreaState[]): UnknownLine | null {
+  const ids = (match: (a: AreaState) => boolean) =>
+    areas.filter(match).map((a) => a.id);
+  const failed = ids((a) => a.word === "readFailed");
+  if (failed.length > 0) {
+    return { kind: "readFailed", areas: failed };
+  }
+  if (areas.some((a) => a.id === "storage" && a.word === "noneYet")) {
+    return { kind: "noStorage" };
+  }
+  const disks = areas.find((a) => a.id === "disks");
+  if (disks?.word === "checking") {
+    return { kind: "disksChecking" };
+  }
+  if (disks?.word === "notChecked") {
+    return { kind: "disksNotChecked" };
+  }
+  const reading = ids((a) => a.word === "reading");
+  if (reading.length > 0) {
+    return { kind: "reading", areas: reading };
+  }
+  const unknown = ids((a) => a.status === "unknown");
+  return unknown.length > 0 ? { kind: "unknown", areas: unknown } : null;
+}
+
+/**
+ * The answer the page opens with (spec 4.2), first match wins:
+ * - the first reads are in flight: skeletons;
+ * - something is Critical or a Warning: the cards that need the reader, counted (the clock advice
+ *   carries no status and is not counted), with the first reason an area is not known beside it;
+ * - an area is not known: why, in the order of `unknownLine`;
+ * - otherwise every area was read and is fine, disk health included, from a check this session.
+ * Fail closed: "Everything is OK" is reached only when all four areas are known and OK.
+ */
+export type DashboardAnswer =
+  | { kind: "loading" }
+  | {
+      kind: "problems";
+      status: "warning" | "critical";
+      /** The attention cards that carry a status. */
+      count: number;
+      /** The worst of them, whose title is the headline when it is the only one. */
+      first: AttentionRow | undefined;
+      unknown: UnknownLine | null;
+    }
+  | { kind: "unknown"; line: UnknownLine }
+  | { kind: "ok"; checkedAt: number };
+
+export function dashboardAnswer(input: {
+  loading: boolean;
+  areas: readonly AreaState[];
+  rows: readonly AttentionRow[];
+  /** When the session's disk-health check was read, for "Everything is OK". */
+  disksReadAt: number | undefined;
+}): DashboardAnswer {
+  if (input.loading) {
+    return { kind: "loading" };
+  }
+  const overall = overallStatus(input.areas);
+  const line = unknownLine(input.areas);
+  if (overall === "critical" || overall === "warning") {
+    const counted = input.rows.filter(hasStatus);
+    return {
+      kind: "problems",
+      status: overall,
+      count: counted.length,
+      first: counted[0],
+      unknown: line,
+    };
+  }
+  if (line !== null || input.disksReadAt === undefined || overall !== "ok") {
+    return {
+      kind: "unknown",
+      line: line ?? { kind: "disksNotChecked" },
+    };
+  }
+  return { kind: "ok", checkedAt: input.disksReadAt };
 }

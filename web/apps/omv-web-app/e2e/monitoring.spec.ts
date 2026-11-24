@@ -49,7 +49,7 @@ test("the dashboard's new cards, and disk health only when asked", async ({
     copy.dashboard.disks.title,
     copy.dashboard.services.title,
     copy.dashboard.network.title,
-    copy.dashboard.usage.title,
+    copy.dashboard.live.title,
     copy.dashboard.system.title,
   ]) {
     await expect(page.getByRole("region", { name, exact: true })).toBeVisible();
@@ -63,7 +63,12 @@ test("the dashboard's new cards, and disk health only when asked", async ({
       .getByRole("region", { name: copy.dashboard.network.title })
       .getByText("enp2s0"),
   ).toBeVisible();
-  await expect(page.getByText(copy.dashboard.chart.notEnough)).toBeVisible();
+  // Live figures in words, the plots from their own chunk.
+  await expect(
+    page
+      .getByRole("region", { name: copy.dashboard.live.title })
+      .getByRole("group", { name: copy.dashboard.live.cpu }),
+  ).toBeVisible();
   expect(rpc.calls).not.toContain("Smart.getListBg");
 
   const disks = page.getByRole("region", { name: copy.dashboard.disks.title });
