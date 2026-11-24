@@ -42,7 +42,7 @@ function Toaster({ closeLabel, regionLabel, className }: ToasterProps) {
               key={toast.id}
               toast={toast}
               data-slot="toast"
-              className="rounded-card border border-border bg-popover text-popover-foreground shadow-md transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0"
+              className="rounded-card border border-border bg-popover text-popover-foreground shadow-floating transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0"
             >
               <Toast.Content className="flex items-start gap-3 p-3">
                 {tone !== "neutral" && statusLabel ? (

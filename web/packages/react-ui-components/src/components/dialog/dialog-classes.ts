@@ -6,5 +6,5 @@ export const backdropClass =
 
 export const popupClass =
   "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto " +
-  "rounded-card border border-border bg-popover p-6 text-popover-foreground shadow-lg outline-hidden " +
+  "rounded-card border border-border bg-popover p-6 text-popover-foreground shadow-floating outline-hidden " +
   "transition-opacity duration-slow data-ending-style:opacity-0 data-starting-style:opacity-0";

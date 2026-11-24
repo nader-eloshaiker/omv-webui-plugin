@@ -18,9 +18,9 @@ interface TopBarProps extends Omit<React.ComponentProps<"header">, "children"> {
 }
 
 /**
- * The top bar (style guide 5.1) on the identity ground. Its controls are `Button variant="onIdentity"`
- * or `IconButton variant="onIdentity"`: ink on the bar, never a filled button. Every focus ring inside
- * it takes `focus-ring-on-identity`, which clears 3:1 on the bar (6.91:1 light, 9.48:1 dark).
+ * The top bar (style guide 5.1), on the page ground: the sky-blue identity bar is gone (foundation
+ * 3.2). Its controls are `Button variant="quiet"` or `IconButton variant="quiet"`: ink on the bar,
+ * never a filled button, with the ordinary focus ring.
  */
 function TopBar({
   productName,
@@ -36,8 +36,7 @@ function TopBar({
     <header
       data-slot="top-bar"
       className={cn(
-        "flex min-h-12 items-center gap-2 bg-identity px-2 text-identity-foreground sm:gap-3 sm:px-4",
-        "[&_:focus-visible]:outline-focus-ring-on-identity",
+        "flex min-h-12 items-center gap-2 border-b border-border bg-page px-2 text-foreground sm:gap-3 sm:px-4",
         className,
       )}
       {...props}

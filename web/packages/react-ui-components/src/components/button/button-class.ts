@@ -33,11 +33,13 @@ export const buttonClass = cva(
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
           "focus-visible:outline-pending-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
-        // On the top bar: never a filled button (5.1). Ink on the identity ground (6.91:1 light,
-        // 9.48:1 dark), an edge in the same ink on hover, and the bar's own focus ring.
-        onIdentity:
-          "border-transparent bg-transparent text-identity-foreground hover:border-identity-foreground " +
-          "focus-visible:outline-focus-ring-on-identity data-popup-open:border-identity-foreground data-disabled:opacity-60",
+        // A control in ink with no fill: the top bar's indicators and menus, and other places where
+        // a row of controls must stay quiet. Secondary ink at rest, a neutral ground on hover and
+        // while its menu is open. It replaces the identity bar's variant (the bar is gone,
+        // foundation 3.2).
+        quiet:
+          "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
+          "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent",
       },
       size: {
         sm: "min-h-7 px-2.5 py-0.5 text-sm",

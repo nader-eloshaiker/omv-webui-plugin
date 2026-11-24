@@ -50,7 +50,7 @@ const noop = () => undefined;
 
 function Pending() {
   return (
-    <Button variant="onIdentity" size="sm" aria-label="3 pending changes">
+    <Button variant="quiet" size="sm" aria-label="3 pending changes">
       <History aria-hidden="true" />
       <span aria-hidden="true" className="tabular-nums">
         3
@@ -70,7 +70,7 @@ function Tasks() {
           <IconButton
             label="Tasks: 1 running"
             icon={<ListChecks />}
-            variant="onIdentity"
+            variant="quiet"
           />
         }
       />
@@ -107,7 +107,7 @@ function User() {
           <IconButton
             label="Account: admin"
             icon={<UserRound />}
-            variant="onIdentity"
+            variant="quiet"
           />
         }
       />
@@ -173,7 +173,7 @@ function Bar({ onOpenNav }: { onOpenNav?: () => void }) {
         <IconButton
           label="Open navigation"
           icon={<MenuIcon />}
-          variant="onIdentity"
+          variant="quiet"
           onClick={onOpenNav}
         />
       }

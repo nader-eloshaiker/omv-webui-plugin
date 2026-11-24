@@ -17,7 +17,7 @@ export function PendingIndicator() {
   }
   return (
     <Button
-      variant="onIdentity"
+      variant="quiet"
       size="sm"
       aria-label={
         count > 0

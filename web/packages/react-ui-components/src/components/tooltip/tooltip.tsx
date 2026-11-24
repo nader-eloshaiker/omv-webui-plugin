@@ -21,7 +21,7 @@ function Tooltip({ content, children, side = "top", className }: TooltipProps) {
         <BaseTooltip.Positioner side={side} sideOffset={6} className="z-50">
           <BaseTooltip.Popup
             className={cn(
-              "max-w-72 rounded-control bg-foreground px-2 py-1 text-xs text-page shadow-md",
+              "max-w-72 rounded-control bg-foreground px-2 py-1 text-xs text-page shadow-floating",
               "transition-opacity duration-fast data-ending-style:opacity-0 data-starting-style:opacity-0",
               className,
             )}

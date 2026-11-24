@@ -6,9 +6,9 @@ import { cn } from "../../utils";
 import { controlClass } from "../field/control-class";
 import { itemHighlightClass } from "../menu/item-class";
 
-// The floating surface shared by select and menu popups: raised (shadow-md), a card corner.
+// The floating surface shared by select and menu popups: floating (shadow-floating), a card corner.
 const popupClass =
-  "rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-md outline-hidden " +
+  "rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-floating outline-hidden " +
   "transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0";
 
 /**

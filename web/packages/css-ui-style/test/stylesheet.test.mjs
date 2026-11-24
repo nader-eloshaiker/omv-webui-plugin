@@ -89,7 +89,13 @@ describe("the token system", () => {
       "text-pending-foreground",
       "bg-terminal",
       "stroke-series-3",
-      "shadow-md",
+      "shadow-raised",
+      "bg-muted-strong",
+      "text-tertiary-foreground",
+      "bg-warning-wash",
+      "bg-selected",
+      "stroke-art-line",
+      "text-trace",
     ]);
     assert.match(rule(css, "bg-page"), /var\(--theme-page\)/);
     assert.match(
@@ -97,7 +103,30 @@ describe("the token system", () => {
       /var\(--theme-warning-label\)/,
     );
     assert.match(rule(css, "bg-pending"), /var\(--theme-pending\)/);
-    assert.match(rule(css, "shadow-md"), /var\(--theme-shadow-md\)/);
+    assert.match(rule(css, "shadow-raised"), /var\(--theme-shadow-raised\)/);
+    assert.match(rule(css, "bg-muted-strong"), /var\(--theme-muted-strong\)/);
+    assert.match(
+      rule(css, "text-tertiary-foreground"),
+      /var\(--theme-tertiary-foreground\)/,
+    );
+    assert.match(rule(css, "bg-warning-wash"), /var\(--theme-warning-wash\)/);
+    assert.match(rule(css, "bg-selected"), /var\(--theme-selected\)/);
+    assert.match(rule(css, "stroke-art-line"), /var\(--theme-art-line\)/);
+    assert.match(rule(css, "text-trace"), /var\(--theme-trace\)/);
+  });
+
+  it("makes no flat-fill utility of the ambient light's stops, and no identity bar", () => {
+    const css = build([
+      "bg-ambient",
+      "bg-ambient-soft",
+      "bg-identity",
+      "text-identity-foreground",
+    ]);
+    assert.doesNotMatch(
+      css,
+      /\.(bg-ambient|bg-ambient-soft|bg-identity|text-identity-foreground)\b/,
+    );
+    assert.doesNotMatch(css, /--theme-identity/);
   });
 
   it("has no Tailwind palette, white, black or off-system radius, shadow or size", () => {
@@ -122,10 +151,31 @@ describe("the token system", () => {
     assert.doesNotMatch(css, /--color-(red|blue|gray|white|black)\b/);
   });
 
-  it("keeps the type scale without Tailwind's per-size line heights", () => {
+  it("keeps the plain steps without Tailwind's per-size line heights", () => {
     const css = build(["text-sm", "text-base", "leading-tight"]);
     assert.doesNotMatch(css, /--text-sm--line-height/);
     assert.match(css, /--text-sm: 0\.8125rem/);
+    assert.match(css, /--text-base: 0\.9375rem/);
+  });
+
+  it("gives the six named type steps their whole style (foundation 4)", () => {
+    const css = build([
+      "text-display",
+      "text-figure",
+      "text-title",
+      "text-section",
+      "text-body",
+      "text-caption",
+    ]);
+    for (const step of ["display", "figure", "title", "section"]) {
+      const body = rule(css, `text-${step}`);
+      assert.match(body, new RegExp(`font-size: var\\(--text-${step}\\)`));
+      assert.match(body, new RegExp(`--text-${step}--line-height`));
+      assert.match(body, new RegExp(`--text-${step}--letter-spacing`));
+      assert.match(body, new RegExp(`--text-${step}--font-weight`));
+    }
+    assert.match(rule(css, "text-body"), /font-size: var\(--text-body\)/);
+    assert.match(css, /--text-display: clamp\(1\.75rem/);
   });
 
   it("applies the dark theme from the class or the OS preference, with no script", () => {
@@ -143,7 +193,7 @@ describe("the token system", () => {
   });
 });
 
-describe("corners (style guide 4.3)", () => {
+describe("corners (foundation 6)", () => {
   it("draws squircles only inside @supports, with their own radii", () => {
     const css = build(["rounded-control", "rounded-card"]);
     for (const [utility, round, squircle] of [
@@ -174,18 +224,111 @@ describe("corners (style guide 4.3)", () => {
   });
 });
 
-describe("motion (style guide 4.5)", () => {
-  it("reads the duration tokens, which reduced motion zeroes", () => {
-    const css = build(["duration-base", "transition-colors"]);
+describe("density (foundation 5)", () => {
+  it("maps the density tokens onto spacing utilities", () => {
+    const css = build([
+      "p-card",
+      "gap-grid",
+      "py-cell-y",
+      "px-cell-x",
+      "py-row",
+      "h-control",
+      "min-h-control-sm",
+      "size-control-lg",
+    ]);
+    assert.match(rule(css, "p-card"), /var\(--density-card\)/);
+    assert.match(rule(css, "gap-grid"), /var\(--density-grid\)/);
+    assert.match(rule(css, "py-cell-y"), /var\(--density-cell-y\)/);
+    assert.match(rule(css, "px-cell-x"), /var\(--density-cell-x\)/);
+    assert.match(rule(css, "py-row"), /var\(--density-row\)/);
+    assert.match(rule(css, "h-control"), /var\(--density-control\)/);
+    assert.match(rule(css, "min-h-control-sm"), /var\(--density-control-sm\)/);
+    assert.match(rule(css, "size-control-lg"), /var\(--density-control-lg\)/);
+  });
+
+  it("switches to compact from the attribute, and back to comfortable inside it", () => {
+    const css = build(["compact:hidden"]);
+    assert.match(
+      css,
+      /\[data-density="compact"\] \{[^}]*--density-card: 1rem;[^}]*--text-body: 0\.8125rem;[^}]*--font-readout: var\(--font-mono\);/,
+    );
+    assert.match(
+      css,
+      /\[data-density="comfortable"\] \{[^}]*--density-card: 1\.5rem;[^}]*--text-body: 0\.9375rem;[^}]*--font-readout: var\(--font-sans\);/,
+    );
+    assert.match(
+      css,
+      /\.compact\\:hidden:where\(\[data-density="compact"\], \[data-density="compact"\] \*\)/,
+    );
+  });
+});
+
+describe("surfaces, elevation and light (foundation 3.4 and 6)", () => {
+  it("draws the raised and floating levels from the semantic tier", () => {
+    const css = build(["surface-raised", "surface-floating", "shadow-control"]);
+    assert.match(
+      rule(css, "surface-raised"),
+      /background-color: var\(--theme-surface\);\s*box-shadow: var\(--theme-shadow-raised\)/,
+    );
+    assert.match(
+      rule(css, "surface-floating"),
+      /box-shadow: var\(--theme-shadow-floating\)/,
+    );
+    assert.match(rule(css, "shadow-control"), /var\(--theme-shadow-control\)/);
+  });
+
+  it("paints the ambient light from its two brand stops only", () => {
+    const body = rule(build(["ambient-light"]), "ambient-light");
+    assert.ok(body, "ambient-light is generated");
+    assert.match(body, /var\(--theme-ambient\) 39\.3%/);
+    assert.match(body, /var\(--theme-ambient-soft\) 47\.6%/);
+    assert.doesNotMatch(body, /--theme-(ok|warning|critical|unknown|pending)/);
+  });
+});
+
+describe("motion (foundation 7)", () => {
+  it("reads the duration and curve tokens, which reduced motion zeroes", () => {
+    const css = build([
+      "duration-base",
+      "duration-press",
+      "duration-glide",
+      "ease-settle",
+      "ease-enter",
+      "transition-colors",
+    ]);
     assert.match(rule(css, "duration-base"), /var\(--duration-base\)/);
+    assert.match(rule(css, "duration-press"), /var\(--duration-press\)/);
+    assert.match(rule(css, "duration-glide"), /var\(--duration-glide\)/);
+    assert.match(rule(css, "ease-settle"), /var\(--ease-settle\)/);
+    assert.match(css, /--ease-settle: linear\(/);
     assert.match(
       rule(css, "transition-colors"),
       /var\(--tw-duration, var\(--duration-fast\)\)/,
     );
     assert.match(
-      css,
-      /@media \(prefers-reduced-motion: reduce\) \{\s*:root \{\s*--duration-fast: 0ms;\s*--duration-base: 0ms;\s*--duration-slow: 0ms;/,
+      rule(css, "transition-colors"),
+      /var\(--tw-ease, var\(--ease-standard\)\)/,
     );
+    assert.match(
+      css,
+      /@media \(prefers-reduced-motion: reduce\) \{\s*:root \{\s*--duration-press: 0ms;\s*--duration-fast: 0ms;\s*--duration-base: 0ms;\s*--duration-slow: 0ms;\s*--duration-glide: 0ms;\s*--motion-stagger: 0ms;\s*--motion-rise: 0px;/,
+    );
+  });
+
+  it("ships the shared motions with their keyframes", () => {
+    const css = build([
+      "animate-rise",
+      "animate-settle-in",
+      "animate-fade-in",
+      "animate-breathe",
+      "stagger",
+    ]);
+    for (const name of ["rise", "settle-in", "fade-in", "breathe"]) {
+      assert.match(css, new RegExp(`@keyframes ${name} \\{`));
+    }
+    assert.match(rule(css, "animate-rise"), /var\(--ease-enter\)/);
+    assert.match(rule(css, "animate-settle-in"), /var\(--ease-settle\)/);
+    assert.match(rule(css, "stagger"), /var\(--motion-stagger\)/);
   });
 });
 
@@ -215,6 +358,10 @@ describe("the content security policy (UI-1) and local assets (UI-7)", () => {
       }
     }
     assert.match(css, /font-family: 'Inter Variable'/);
+    assert.ok(
+      urls.some((u) => /inter-latin-opsz-normal\.woff2$/.test(u)),
+      "Inter is the optical-size build",
+    );
     assert.match(css, /font-family: 'Roboto Mono Variable'/);
     assert.match(css, /--font-sans: "Inter Variable"/);
     assert.match(

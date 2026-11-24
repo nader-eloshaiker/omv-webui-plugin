@@ -33,7 +33,7 @@ function MenuContent({
         <BaseMenu.Popup
           data-slot="menu-content"
           className={cn(
-            "min-w-44 rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-md outline-hidden",
+            "min-w-44 rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-floating outline-hidden",
             "transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0",
             className,
           )}

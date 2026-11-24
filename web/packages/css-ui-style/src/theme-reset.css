@@ -4,11 +4,11 @@
  * the tokens declare. A class outside the system then generates nothing, instead of a value the
  * style guide forbids:
  *   --color-*    no Tailwind palette (`bg-blue-500`), no `white` or `black` (style guide 2.1, 3.1).
- *   --radius-*   one radius per kind of thing; no `rounded-xl` (4.3).
- *   --shadow-*   three elevation levels, from the semantic tier (4.3).
- *   --text-*     the type scale of 4.1, without Tailwind's per-size line heights: text inherits 1.5
- *                and titles and figures say `leading-tight`.
- *   --ease-*     one ease-out curve (4.5).
+ *   --radius-*   one radius per kind of thing; no `rounded-xl` (foundation 6).
+ *   --shadow-*   the elevation levels by meaning, from the semantic tier (foundation 6).
+ *   --text-*     the type scale of foundation 4. The plain steps carry no line height (text
+ *                inherits 1.5); the six named steps carry their own.
+ *   --ease-*     the named curves of foundation 7.1, nothing else.
  */
 @theme {
   --color-*: initial;

@@ -162,7 +162,7 @@ function SideNavDrawer({
             );
           }}
           className={cn(
-            "fixed inset-y-0 start-0 z-50 flex w-[min(18rem,85vw)] flex-col overflow-y-auto border-e border-border bg-page shadow-lg outline-hidden",
+            "fixed inset-y-0 start-0 z-50 flex w-[min(18rem,85vw)] flex-col overflow-y-auto border-e border-border bg-page shadow-floating outline-hidden",
             "transition-transform duration-slow data-ending-style:-translate-x-full data-starting-style:-translate-x-full rtl:data-ending-style:translate-x-full rtl:data-starting-style:translate-x-full",
           )}
         >

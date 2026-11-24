@@ -70,7 +70,7 @@ function Shell({
               <IconButton
                 label={t("app.openNav")}
                 icon={<MenuIcon />}
-                variant="onIdentity"
+                variant="quiet"
                 onClick={() => setDrawerOpen(true)}
               />
             }

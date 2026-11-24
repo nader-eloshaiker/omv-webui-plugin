@@ -10,10 +10,15 @@
 //      to drift from the first.
 //   2. A `.light` rule resetting the same names to their light values, so an explicit light choice
 //      also works on an element inside a dark one (a side-by-side story, say).
-//   3. One Tailwind utility per semantic role, by its own name, with `@theme inline`: `--theme-page`
-//      becomes `bg-page`, `--theme-warning-label` becomes `text-warning-label`, `--theme-shadow-md`
-//      becomes `shadow-md`. `inline` makes each utility read the `--theme-*` variable where it is
-//      used, so a `.dark` or `.light` subtree flips. The shadcn names are mapped by hand in index.css.
+//   3. A `[data-density="comfortable"]` rule resetting every name the `[data-density="compact"]`
+//      block sets to its default (from `:root` or `@theme`), so a comfortable subtree inside a compact
+//      one also works, the way `.light` does for themes.
+//   4. One Tailwind utility per semantic role, by its own name, with `@theme inline`: `--theme-page`
+//      becomes `bg-page`, `--theme-warning-label` becomes `text-warning-label`,
+//      `--theme-shadow-raised` becomes `shadow-raised`. `inline` makes each utility read the
+//      `--theme-*` variable where it is used, so a `.dark` or `.light` subtree flips. The ambient
+//      light's stops (`--theme-ambient*`) get none: they are read only by the `ambient-light`
+//      utility, never as a flat fill. The shadcn names are mapped by hand in index.css.
 //
 // Kept out of design/tokens.css on purpose: tools/colour-audit.mjs reads that file and treats every
 // block that is not `.dark` as the light theme, so a dark block under any other selector there would
@@ -23,6 +28,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const COMPACT = '[data-density="compact"]';
+const COMFORTABLE = '[data-density="comfortable"]';
+// Roles that are stops of a drawn light, not fills: no utility of their own.
+const NO_UTILITY = /^--theme-ambient(-|$)/;
 const SOURCE = path.resolve(here, "../../../../design/tokens.css");
 const TARGET = path.resolve(here, "../generated/tokens.css");
 
@@ -94,6 +103,28 @@ export function generate(source) {
   }
   const roles = [...light.keys()].filter((n) => n.startsWith("--theme-"));
 
+  // Density: the compact block, and the defaults every name in it resets to.
+  const compact = blocks.filter((b) => b.prelude === COMPACT);
+  if (compact.length > 1) {
+    throw new Error(`tokens.css: expected at most one ${COMPACT} block`);
+  }
+  const defaults = new Map();
+  for (const block of blocks.filter(
+    (b) => b.prelude === ":root" || b.prelude === "@theme",
+  )) {
+    for (const d of declarations(block.body)) {
+      defaults.set(d.name, d.value);
+    }
+  }
+  const compactDecls = compact.length ? declarations(compact[0].body) : [];
+  for (const d of compactDecls) {
+    if (!defaults.has(d.name)) {
+      throw new Error(
+        `tokens.css: ${d.name} is set for compact density but has no default on :root or in @theme`,
+      );
+    }
+  }
+
   const lines = (decls) => decls.map((d) => `    ${d.name}: ${d.value};`);
   // A primitive and a role must not share a utility name: `--color-x: var(--theme-x)` over a
   // primitive `--color-x` that `--theme-x` reads is a var() cycle, and both render transparent.
@@ -102,23 +133,25 @@ export function generate(source) {
       .filter((b) => b.prelude === "@theme")
       .flatMap((b) => declarations(b.body).map((d) => d.name)),
   );
-  const mapping = roles.map((name) => {
-    const role = name.slice("--theme-".length);
-    const utility = role.startsWith("shadow-")
-      ? `--${role}`
-      : `--color-${role}`;
-    if (primitives.has(utility)) {
-      throw new Error(
-        `tokens.css: the primitive ${utility} has the name the role ${name} needs as a utility; rename the primitive`,
-      );
-    }
-    return `  ${utility}: var(${name});`;
-  });
+  const mapping = roles
+    .filter((name) => !NO_UTILITY.test(name))
+    .map((name) => {
+      const role = name.slice("--theme-".length);
+      const utility = role.startsWith("shadow-")
+        ? `--${role}`
+        : `--color-${role}`;
+      if (primitives.has(utility)) {
+        throw new Error(
+          `tokens.css: the primitive ${utility} has the name the role ${name} needs as a utility; rename the primitive`,
+        );
+      }
+      return `  ${utility}: var(${name});`;
+    });
 
   return [
     "/* GENERATED from design/tokens.css by web/packages/css-ui-style/scripts/tokens.mjs. Do not edit:",
     "   change design/tokens.css and run `pnpm --filter @omv-webui/css-ui-style tokens`. The source is",
-    "   copied verbatim first; the three derived blocks follow it. */",
+    "   copied verbatim first; the four derived blocks follow it. */",
     "",
     source.trimEnd(),
     "",
@@ -136,7 +169,14 @@ export function generate(source) {
     ).map((l) => l.slice(2)),
     "}",
     "",
-    "/* ─── Derived 3: one utility per semantic role, by its own name ───────────────────────────── */",
+    "/* ─── Derived 3: comfortable density, also inside a compact subtree ───────────────────────── */",
+    `${COMFORTABLE} {`,
+    ...lines(
+      compactDecls.map((d) => ({ name: d.name, value: defaults.get(d.name) })),
+    ).map((l) => l.slice(2)),
+    "}",
+    "",
+    "/* ─── Derived 4: one utility per semantic role, by its own name ───────────────────────────── */",
     "@theme inline {",
     ...mapping,
     "}",

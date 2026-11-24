@@ -21,6 +21,26 @@ export const Destructive: Story = {
   args: { variant: "destructive", children: "Wipe disk" },
 };
 
+// Ink with no fill, as on the top bar: the pending count, the tasks and account menus.
+export const Quiet: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-1 border-b border-border bg-page p-2">
+      <Button variant="quiet" size="sm" aria-label="3 pending changes">
+        <span aria-hidden="true" className="tabular-nums">
+          3
+        </span>
+        <span aria-hidden="true">pending</span>
+      </Button>
+      <IconButton
+        label="Tasks: 1 running"
+        icon={<RefreshCw />}
+        variant="quiet"
+      />
+      <IconButton label="Account: admin" icon={<Settings />} variant="quiet" />
+    </div>
+  ),
+};
+
 export const Sizes: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
