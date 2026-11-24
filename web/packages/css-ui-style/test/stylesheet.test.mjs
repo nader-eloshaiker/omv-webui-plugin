@@ -322,14 +322,26 @@ describe("motion (foundation 7)", () => {
       "animate-fade-in",
       "animate-breathe",
       "animate-draw",
+      "animate-leave",
       "stagger",
     ]);
-    for (const name of ["rise", "settle-in", "fade-in", "breathe", "draw"]) {
+    for (const name of [
+      "rise",
+      "settle-in",
+      "fade-in",
+      "breathe",
+      "draw",
+      "leave",
+    ]) {
       assert.match(css, new RegExp(`@keyframes ${name} \\{`));
     }
     assert.match(rule(css, "animate-rise"), /var\(--ease-enter\)/);
     assert.match(rule(css, "animate-settle-in"), /var\(--ease-settle\)/);
     assert.match(rule(css, "stagger"), /var\(--motion-stagger\)/);
+    // An exit is shorter than an entrance, on the exit curve, and collapses the row it held.
+    assert.match(rule(css, "animate-leave"), /var\(--duration-base\)/);
+    assert.match(rule(css, "animate-leave"), /var\(--ease-exit\)/);
+    assert.match(css, /@keyframes leave \{[^}]*grid-template-rows: 0fr/);
   });
 });
 

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronRight } from "lucide-react";
-import type * as React from "react";
+import { ChevronRight, ExternalLink as ExternalIcon } from "lucide-react";
+import * as React from "react";
 import { cn } from "../../utils";
 
 const cardClass = cva(
@@ -36,24 +37,93 @@ const cardClass = cva(
   },
 );
 
+/** Where an action card goes: here (the default), or out of the interface in a new tab. */
+type CardOpens =
+  | { opens?: "here"; newTabLabel?: undefined }
+  | {
+      /**
+       * `new-tab`: the card leaves the interface (the classic interface). The card sets
+       * `target="_blank"` and `rel="noopener noreferrer"` on its element whatever it is given
+       * (UI-3), and adds `newTabLabel` to its name. Put a `CardExternalMark` where the chevron goes.
+       */
+      opens: "new-tab";
+      /** Said after the card's name for assistive technology: "(opens in a new tab)". */
+      newTabLabel: string;
+    };
+
 type CardProps = useRender.ComponentProps<"div"> &
-  VariantProps<typeof cardClass>;
+  VariantProps<typeof cardClass> &
+  CardOpens;
 
 /**
  * A card (foundation 6): a raised surface with the card corner and the density's padding inside its
  * parts. A `div` by default; pass `render` for the element the page needs, such as
  * `<section aria-labelledby={titleId} />` for a named region or `<li />` in a list of cards. A card
- * that acts as a whole is `variant="action"` with a `CardChevron`.
+ * that acts as a whole is `variant="action"` with a `CardChevron`; one that leaves the interface is
+ * also `opens="new-tab"` with a fixed address (`render={<a href={CLASSIC_HOME} />}`) and a
+ * `CardExternalMark`. Its `aria-labelledby`, on the card or on the element, keeps working: the
+ * new-tab words are added to it.
  */
-function Card({ render, variant, tone, className, ...props }: CardProps) {
+function Card({
+  render,
+  variant,
+  tone,
+  opens,
+  newTabLabel,
+  className,
+  children,
+  ...props
+}: CardProps) {
+  const newTabId = React.useId();
+  const external = opens === "new-tab";
+  let element = render;
+  let labelledBy = props["aria-labelledby"];
+  if (external && React.isValidElement<Record<string, unknown>>(render)) {
+    const own = render.props;
+    const Tag = render.type as React.ElementType;
+    labelledBy =
+      typeof own["aria-labelledby"] === "string"
+        ? own["aria-labelledby"]
+        : labelledBy;
+    const name = labelledBy ? `${labelledBy} ${newTabId}` : undefined;
+    // The element's own props win over the card's in the merge, so these are set after them.
+    element = (merged) => (
+      <Tag
+        {...mergeProps(merged, own)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-labelledby={name}
+      />
+    );
+  }
   return useRender({
-    render,
+    render: element,
     defaultTagName: "div",
     props: {
       "data-slot": "card",
       "data-variant": variant ?? "raised",
+      "data-opens": external ? "new-tab" : undefined,
       className: cn(cardClass({ variant, tone }), className),
       ...props,
+      ...(external
+        ? {
+            target: "_blank",
+            rel: "noopener noreferrer",
+            "aria-labelledby": labelledBy
+              ? `${labelledBy} ${newTabId}`
+              : undefined,
+          }
+        : {}),
+      children: external ? (
+        <>
+          {children}{" "}
+          <span id={newTabId} className="sr-only">
+            {newTabLabel}
+          </span>
+        </>
+      ) : (
+        children
+      ),
     },
   });
 }
@@ -148,13 +218,39 @@ function CardChevron({ className, ...props }: React.ComponentProps<"svg">) {
   );
 }
 
+/**
+ * The mark of a card that leaves the interface (`opens="new-tab"`): the external mark at the end of
+ * its header, in place of the chevron, moving up and out on hover and focus. Decorative; the card
+ * says "(opens in a new tab)" in its name.
+ */
+function CardExternalMark({
+  className,
+  ...props
+}: React.ComponentProps<"svg">) {
+  return (
+    <ExternalIcon
+      aria-hidden="true"
+      data-slot="card-external-mark"
+      className={cn(
+        "ms-auto size-4 shrink-0 self-center text-tertiary-foreground transition-[translate,color] duration-fast ease-standard",
+        "group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5 group-hover/card:text-muted-foreground",
+        "group-focus-visible/card:translate-x-0.5 group-focus-visible/card:-translate-y-0.5",
+        "rtl:-scale-x-100 rtl:group-hover/card:-translate-x-0.5",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 export {
   Card,
   CardChevron,
   CardContent,
   CardDescription,
+  CardExternalMark,
   CardFooter,
   CardHeader,
   CardTitle,
 };
-export type { CardProps, CardTitleProps };
+export type { CardOpens, CardProps, CardTitleProps };

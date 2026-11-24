@@ -110,6 +110,8 @@
   --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
   --animate-breathe: breathe 1.4s var(--ease-standard) infinite;
   --animate-draw: draw var(--duration-slow) var(--ease-standard) both;
+  /* The counterpart of settle-in for a list item that leaves: shorter, on the exit curve. */
+  --animate-leave: leave var(--duration-base) var(--ease-exit) both;
 }
 
 /* Entrance: fade and rise by --motion-rise (a list item, a card, the dialog over its scrim). */
@@ -130,6 +132,19 @@
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+/* Exit: a list item that leaves fades and gives up its height, so what follows closes up instead of
+   jumping (the attention card a poll found resolved). The item is a one-row grid (`grid-rows-[1fr]`)
+   whose child has `min-height: 0` and clips while it leaves; `LeavingItem` in the component library
+   sets all three. A single-column list with a gap sets `--leave-gap` to that gap on the list, so the
+   gap closes too. Only a `to` frame: the item leaves from wherever it is. Under reduced motion it
+   runs at 0ms like every keyframe, and the item is simply gone. */
+@keyframes leave {
+  to {
+    opacity: 0;
+    grid-template-rows: 0fr;
+    margin-block-end: calc(-1 * var(--leave-gap, 0px));
   }
 }
 /* The skeleton: bars breathe in opacity while loading is really happening. */

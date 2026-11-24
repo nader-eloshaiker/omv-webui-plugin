@@ -70,8 +70,8 @@ Rules:
   default), `-base` (240), `-slow` (360), `-glide` (640); curves `ease-standard` (the default),
   `ease-enter`, `ease-exit`, and the springs `ease-settle` and `ease-soft` as native `linear()`; the
   shared keyframes `animate-rise`, `animate-settle-in`, `animate-fade-in`, `animate-breathe`,
-  `animate-draw`, and `stagger` with `--stagger-index`. Exits are shorter than entrances. Under
-  `prefers-reduced-motion` every duration, the stagger and the rise are 0 in the token file, and the
+  `animate-draw`, `animate-leave` (a list item leaving, through `LeavingItem`), and `stagger` with
+  `--stagger-index`. Exits are shorter than entrances. Under `prefers-reduced-motion` every duration, the stagger and the rise are 0 in the token file, and the
   base layer runs any keyframe once at once. Components reference the tokens, never an inline duration.
 - Entry from nothing uses Base UI's `data-starting-style` and `data-ending-style` (CSS
   `@starting-style` semantics): dialogs rise over the scrim, popups grow from their

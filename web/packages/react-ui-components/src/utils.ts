@@ -23,7 +23,7 @@ const twMerge = extendTailwindMerge({
       ],
       shadow: ["control", "raised", "floating"],
       ease: ["standard", "enter", "exit", "settle", "soft"],
-      animate: ["rise", "settle-in", "fade-in", "breathe", "draw"],
+      animate: ["rise", "settle-in", "fade-in", "breathe", "draw", "leave"],
     },
     classGroups: {
       duration: [{ duration: ["press", "fast", "base", "slow", "glide"] }],

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Clock } from "lucide-react";
 import * as React from "react";
 import { Button } from "../button/button";
 import { CapacityMeter } from "../capacity-meter/capacity-meter";
@@ -17,6 +18,7 @@ import {
   CardChevron,
   CardContent,
   CardDescription,
+  CardExternalMark,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -26,10 +28,11 @@ const meta = {
   title: "Components/Card",
   component: Card,
   decorators: [(Story) => <div className="max-w-xl">{Story()}</div>],
-} satisfies Meta<typeof Card>;
+} satisfies Meta;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+// Card's props are a union (`opens`), which Storybook's args cannot infer; every story renders.
+type Story = StoryObj;
 
 export const Default: Story = {
   render: function DefaultStory() {
@@ -267,5 +270,117 @@ export const Inset: Story = {
         </Card>
       </CardContent>
     </Card>
+  ),
+};
+
+/** One attention card of the dashboard: its header, title, body and next step, named by the step. */
+function AttentionCard({
+  tone,
+  title,
+  body,
+  step,
+  href,
+  external,
+}: {
+  tone: "warning" | "critical" | "none";
+  title: React.ReactNode;
+  body: React.ReactNode;
+  step: string;
+  href: string;
+  external?: boolean;
+}) {
+  const stepId = React.useId();
+  const aboutId = React.useId();
+  const head =
+    tone === "none" ? (
+      <Clock aria-hidden="true" className="size-4 text-muted-foreground" />
+    ) : (
+      <StatusPill status={tone}>
+        {tone === "critical" ? "Critical" : "Warning"}
+      </StatusPill>
+    );
+  const inner = (
+    <>
+      <CardHeader className="flex-nowrap items-center">
+        {head}
+        {external ? <CardExternalMark /> : <CardChevron />}
+      </CardHeader>
+      <CardContent id={aboutId} className="gap-1">
+        <CardTitle level={3}>{title}</CardTitle>
+        <p className="text-muted-foreground">{body}</p>
+      </CardContent>
+      <CardFooter className="border-t-0 pt-0 pb-card">
+        <span id={stepId} className="font-medium text-action-label">
+          {step}
+        </span>
+      </CardFooter>
+    </>
+  );
+  return (
+    <li className="flex">
+      {external ? (
+        <Card
+          variant="action"
+          tone={tone}
+          opens="new-tab"
+          newTabLabel="(opens in a new tab)"
+          aria-labelledby={stepId}
+          aria-describedby={aboutId}
+          render={<a href={href} />}
+          className="flex-1"
+        >
+          {inner}
+        </Card>
+      ) : (
+        <Card
+          variant="action"
+          tone={tone}
+          aria-labelledby={stepId}
+          aria-describedby={aboutId}
+          render={<a href={href} />}
+          className="flex-1"
+        >
+          {inner}
+        </Card>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Action cards that lead out of this interface to the classic one: the external mark in place of the
+ * chevron, `target="_blank"` and `rel="noopener noreferrer"` set by the card, and "(opens in a new
+ * tab)" added to the name. Beside one that stays here, for comparison.
+ */
+export const LeavesTheInterface: Story = {
+  render: () => (
+    <ul
+      aria-label="Needs attention"
+      className="grid grid-cols-[repeat(auto-fill,minmax(17rem,1fr))] gap-gutter"
+    >
+      <AttentionCard
+        tone="warning"
+        title="The NAS needs a restart"
+        body="Updates finish installing when it restarts. Restarting is in the classic interface, in the power menu at the top right."
+        step="Restart from the classic interface"
+        href="/"
+        external
+      />
+      <AttentionCard
+        tone="none"
+        title="The clocks differ by 4 minutes"
+        body="If the NAS clock is wrong, schedules and logs will be too."
+        step="Check Date and time in the classic interface"
+        href="/"
+        external
+      />
+      <AttentionCard
+        tone="critical"
+        title="Disk sdb may fail soon"
+        body="Many damaged areas (bad sectors). It may fail soon. Copy your data off it and replace it."
+        step="Open disk sdb"
+        href="#/storage/disks/sdb"
+      />
+    </ul>
   ),
 };

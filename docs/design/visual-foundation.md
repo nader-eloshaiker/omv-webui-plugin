@@ -393,8 +393,10 @@ marks 6px. Pills, dots, meters and rings stay round.
 | `--motion-rise` (`--rise`) | (in `animate-rise`) | 12px | How far an entering card rises |
 
 Shared motions ship as utilities with their keyframes: `animate-rise` (fade and rise, on the enter
-curve), `animate-settle-in` (rise a little and land on the settle spring), `animate-fade-in` and
-`animate-breathe` (the skeleton, 1.4s). The old `--ease-out` is `--ease-standard`.
+curve), `animate-settle-in` (rise a little and land on the settle spring), `animate-fade-in`,
+`animate-breathe` (the skeleton, 1.4s) and `animate-leave` (a list item that leaves fades and gives
+up its height on the exit curve, 240ms, so what follows closes up; `LeavingItem` in the component
+library). The old `--ease-out` is `--ease-standard`.
 
 The springs are generated from a damped oscillator and written as native `linear()` easing: no
 library. Exits are shorter than entrances. Nothing a reader waits for takes longer than 400ms; only

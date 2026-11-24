@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
+import {
+  Card,
+  CardContent,
+  CardExternalMark,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./card";
 
 describe("Card", () => {
   it("titles itself with a heading at the level asked for", () => {
@@ -32,5 +39,63 @@ describe("Card", () => {
     const region = screen.getByRole("region", { name: "Usage" });
     expect(region.tagName).toBe("SECTION");
     expect(region).toHaveAttribute("data-slot", "card");
+  });
+
+  it("leaves the interface in a new tab, says so in its name, and cannot be talked out of rel", () => {
+    render(
+      <Card
+        variant="action"
+        opens="new-tab"
+        newTabLabel="(opens in a new tab)"
+        aria-labelledby="restart-step"
+        render={<a href="/#/dashboard" target="_self" rel="opener" />}
+      >
+        <CardHeader>
+          <CardTitle level={3}>The NAS needs a restart</CardTitle>
+          <CardExternalMark />
+        </CardHeader>
+        <CardFooter>
+          <span id="restart-step">Restart from the classic interface</span>
+        </CardFooter>
+      </Card>,
+    );
+    const link = screen.getByRole("link", {
+      name: "Restart from the classic interface (opens in a new tab)",
+    });
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(link).toHaveAttribute("data-opens", "new-tab");
+    expect(
+      link.querySelector("[data-slot=card-external-mark]"),
+    ).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("names a new-tab card from its content when nothing labels it", () => {
+    render(
+      <Card
+        variant="action"
+        opens="new-tab"
+        newTabLabel="(opens in a new tab)"
+        render={<a href="/" />}
+      >
+        Check Date and time in the classic interface
+      </Card>,
+    );
+    expect(
+      screen.getByRole("link", {
+        name: "Check Date and time in the classic interface (opens in a new tab)",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("stays in this interface by default", () => {
+    render(
+      <Card variant="action" render={<a href="#/storage/disks/sdb" />}>
+        Open disk sdb
+      </Card>,
+    );
+    const link = screen.getByRole("link", { name: "Open disk sdb" });
+    expect(link).not.toHaveAttribute("target");
+    expect(link).not.toHaveAttribute("data-opens");
   });
 });
