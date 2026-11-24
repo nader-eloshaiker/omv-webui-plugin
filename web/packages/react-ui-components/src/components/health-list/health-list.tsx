@@ -58,7 +58,7 @@ function HealthListItem({
       data-slot="health-list-item"
       data-status={status}
       className={cn(
-        "flex flex-wrap items-start gap-x-3 gap-y-1 py-2.5 first:pt-0 last:pb-0",
+        "flex flex-wrap items-start gap-x-3 gap-y-1 py-row first:pt-0 last:pb-0",
         className,
       )}
       {...props}
@@ -122,7 +122,7 @@ function HealthListSkeleton({
       {Array.from({ length: rows }, (_, i) => (
         <li
           key={`skeleton-${String(i)}`}
-          className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+          className="flex items-center gap-3 py-row first:pt-0 last:pb-0"
         >
           <Skeleton shape="block" className="h-5.5 w-16 rounded-full" />
           <Skeleton className={i % 2 === 0 ? "w-1/2" : "w-1/3"} />

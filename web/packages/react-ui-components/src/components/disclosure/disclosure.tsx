@@ -25,7 +25,8 @@ function Disclosure({
 
 const triggerClass = cva(
   "inline-flex w-fit items-center gap-1 rounded-sm text-start select-none " +
-    "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-transform [&_svg]:duration-fast " +
+    // The chevron turns on the settle spring (foundation 7.2).
+    "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-[rotate,scale] [&_svg]:duration-base [&_svg]:ease-settle " +
     "data-panel-open:[&_svg]:rotate-90 rtl:[&_svg]:-scale-x-100 rtl:data-panel-open:[&_svg]:-rotate-90 " +
     "data-disabled:cursor-not-allowed data-disabled:text-subtle-foreground",
   {
@@ -34,7 +35,7 @@ const triggerClass = cva(
         // A part of a form or a page: "Advanced". Medium weight in the main ink; it acts in place, so
         // it hovers with the neutral step, not a colour (style guide 2.1).
         section:
-          "-mx-1.5 min-h-7 rounded-control px-1.5 font-medium text-foreground hover:bg-muted",
+          "-mx-2 min-h-control rounded-control px-2 font-medium text-foreground transition-colors duration-fast hover:bg-muted-strong",
         // A toggle inside running content: "Show full key", "Show all". The action blue, like a link.
         inline: "min-h-6 text-sm text-action-label hover:underline",
       },
@@ -72,8 +73,13 @@ function DisclosureTrigger({
 /**
  * What it shows. Kept mounted while closed (hidden with the `hidden` attribute) by default, so a
  * form field inside keeps what was typed; pass `keepMounted={false}` for content that is costly to
- * render. There is no height animation: it would need `overflow: hidden`, which clips the focus ring
- * of the fields inside (style guide 4.6).
+ * render.
+ *
+ * It opens and closes in height on the soft spring (foundation 7.2, disclosure), from the height
+ * Base UI measures into `--collapsible-panel-height`; that is the primitive's own mechanism and works
+ * where `interpolate-size` does not yet. The height needs `overflow: hidden`, so the panel carries 4px
+ * of padding inside a matching negative margin: a 2px focus ring with its 2px offset fits within it
+ * and is never clipped (style guide 4.6). Reduced motion: it opens at once.
  */
 function DisclosurePanel({
   className,
@@ -84,7 +90,13 @@ function DisclosurePanel({
     <Collapsible.Panel
       data-slot="disclosure-panel"
       keepMounted={keepMounted}
-      className={cn("flex flex-col gap-4", className)}
+      className={cn(
+        "-m-1 flex h-(--collapsible-panel-height) flex-col gap-4 overflow-hidden p-1",
+        "transition-[height,opacity] duration-slow ease-soft",
+        "data-starting-style:h-0 data-starting-style:opacity-0 data-ending-style:h-0 data-ending-style:opacity-0 data-ending-style:duration-base data-ending-style:ease-exit",
+        "[&[hidden]:not([hidden=until-found])]:hidden",
+        className,
+      )}
       {...props}
     />
   );

@@ -1,14 +1,16 @@
 ---
 name: colour-theory
-description: Colour theory applied to the openmediavault web interface - colour as a signal channel, the colour budget (which hue may do which job), the identity sky blue versus the action blue, pending yellow, warning orange, status fill/label/stroke families, the slate neutral ramp, dark-theme derivation, chart palettes, tints and gradients, contrast (WCAG 2.2 bar, APCA advisory), colour-vision deficiency, and the scripted colour audit. Triggers on choosing or changing a colour, a token, a status or pending colour, a hover/selected/focus colour, a chart series, a tint, dark-mode colour, contrast, colour blindness, and colour reviews.
+description: Colour theory applied to the openmediavault web interface - colour as a signal channel, the colour budget (which hue may do which job), the brand sky blue versus the action blue, light and the four kinds of gradient, pending yellow, warning orange, status fill/label/stroke families, the slate neutral ramp, dark-theme derivation, chart palettes, tints and gradients, contrast (WCAG 2.2 bar, APCA advisory), colour-vision deficiency, and the scripted colour audit. Triggers on choosing or changing a colour, a token, a status or pending colour, a hover/selected/focus colour, a chart series, a tint, dark-mode colour, contrast, colour blindness, and colour reviews.
 ---
 
 # Colour theory for the openmediavault web interface
 
 This skill is **how to think about colour and how to audit it**. The decisions themselves, with their
-measured numbers, are in the [style guide](../../../docs/design/style-guide.md), sections 2 and 3;
-that document is normative and this skill never restates its numbers, because they come from the
-audit script and would go stale here. The token mechanics are in the `design-system` skill. The
+measured numbers, are in the [visual foundation](../../../docs/design/visual-foundation.md), section
+3 (normative for the grounds, the brand, light and gradients, washes and elevation), and the
+[style guide](../../../docs/design/style-guide.md), sections 2 and 3 (status semantics, the
+fill/label/stroke split, charts). This skill never restates their numbers, because they come from
+the audit script and would go stale here. The token mechanics are in the `design-system` skill. The
 sourced research behind the rules is in [references/research.md](references/research.md).
 
 The audit script is [`tools/colour-audit.mjs`](../../../tools/colour-audit.mjs). It is the only copy;
@@ -21,6 +23,7 @@ node tools/colour-audit.mjs distinct            # status, brand and series under
 node tools/colour-audit.mjs neutrals            # hue drift and chroma of the slate ramp
 node tools/colour-audit.mjs legacy              # the stock OMV palette's measured defects
 node tools/colour-audit.mjs measure '#fff' '#5dacdf'
+node tools/colour-audit.mjs measure '#8a4613' '#f78f00' 0.14 '#ffffff'   # on a wash over a ground
 node tools/colour-audit.mjs oklch 0.55 0.12 240
 ```
 
@@ -39,11 +42,11 @@ decoration may not borrow a hue that one of the five jobs owns.
 for a monitored thing that has failed or is failing. A validation error is not a system status, and
 a destructive button is red by form, not by status.
 
-## 2. The budget: mostly neutral, every hue with one job
+## 2. The budget: every hue with one job
 
-Dense product interfaces run at roughly 90% neutral by area; the 60-30-10 rule comes from interior
-design and is the wrong model for a data tool. The table of hues and their one job is style guide
-2.1. The checks that follow from it:
+Colour now also expresses identity and depth (the ambient light, the live trace, raised surfaces;
+foundation 3), but each hue still has one job, listed in style guide 2.1, and status stays honest.
+The checks that follow from it:
 
 - **One interaction hue.** Action blue means "you can act here". In-place hover is the neutral
   `muted` step; selected is a blue tint; focus is the blue ring.
@@ -54,9 +57,10 @@ design and is the wrong model for a data tool. The table of hues and their one j
 
 The four project-specific splits, and why (style guide 3.3 and 3.4):
 
-- **Sky blue `#5dacdf` is identity, not action, in the light theme**: white on it fails, so the bar
-  keeps the hue with dark ink, and a deeper blue of the same hue does actions. In dark it is the
-  action colour.
+- **Sky blue `#5dacdf` is the brand accent, never a surface**: the mark, the live dot, the health
+  ring, the trace of live data, the traced path on a map, the focus ring and the ambient light. There
+  is no sky-blue bar. White on it fails, so in light a deeper blue of the same hue does actions; in
+  dark it is the action colour itself.
 - **Yellow means pending configuration and nothing else.** It is OMV's signature banner; it is never
   warning, accent, highlight or hover.
 - **Warning is OMV's own orange**, which frees yellow.
@@ -94,10 +98,10 @@ stock interface, and the new fills are no better as words. A word always takes `
 ## 5. Dark theme: re-derive, never invert
 
 - Every semantic token has its own dark value. Chromatic words and marks go lighter and less
-  saturated; grounds are graphite with the same faint slate tint.
-- No pure black, no pure white for text. Elevation is a lighter surface plus a hairline.
-- A large brand fill is a container, not a button colour: in dark the top bar takes the container
-  blue, because a full-width sky-blue bar would glow.
+  saturated; grounds are a night sky, the slate family leaning toward the brand.
+- No pure black, no pure white for text. Elevation is a lighter surface with a 1px inner top
+  highlight (light from above) and a soft long shadow; light uses a layered soft shadow in slate ink.
+- No large brand fill: a full-width sky-blue surface would be the brightest thing on screen.
 - WCAG 2 flatters dark pairs; read the APCA column too and keep advisory pairs to labels at medium
   weight or above.
 - The same status looks like the same status in both themes.
@@ -125,19 +129,27 @@ stock interface, and the new fills are no better as words. A word always takes `
 
 ## 8. Tints, alpha and gradients
 
-- `x/NN` is alpha over whatever is below: safe on one known ground, unpredictable over variable
-  ones. Only the audited washes ship (style guide 3.10); any other combination is added to the audit
-  first.
-- State layers use the neutral `muted` step. Pick tonal step or overlay per component; do not mix.
-- **No gradients.** They carry no information here.
+- Alpha is safe on one known ground and unpredictable over variable ones, so translucent colours are
+  tokens written as `color-mix(in srgb, <colour> N%, transparent)` (the washes, `selected`,
+  `trace-area`, the ambient light), and every ground they sit on is a pair in `PAIRS`, composited the
+  way the browser paints it with `on(ground, layer...)`. An `x/NN` class a token does not name is a
+  new pair first.
+- State layers use the neutral steps (`muted`, `muted-strong`). Pick tonal step or overlay per
+  component; do not mix.
+- **Gradients and light: only the four kinds** (foundation 3.4), each with a meaning: the ambient
+  light (identity, brand hues only), the area under a live line (series or trace colour only), the
+  material light of a drawing (grounds only), and the status wash (one element per non-OK state,
+  with its word). A gradient is audited at every stop with `gradient(name, stop...)`; the worst stop
+  decides. A glow's token is the brightest point it actually paints, so the audit measures what is on
+  screen. Never gradient text, gradient borders, glow around text or multi-hue decoration.
 
 ## 9. Contrast: the bar and the advisory
 
 - **WCAG 2.2 AA is the bar**: 4.5:1 for text; 3:1 for large text, for marks needed to understand
   content, for the edge of a control (1.4.11), and for the focus indicator.
 - **APCA is advisory**: body text Lc 75, secondary Lc 60, large or bold Lc 45.
-- Measure on the real grounds: `page`, `surface`, `muted`, the identity bar, and the tint a label
-  sits on.
+- Measure on the real grounds: `page`, `surface`, `muted`, `muted-strong`, the wash a label sits on,
+  and the light it sits in (the ambient light, a card lit in its state).
 
 ## 10. Auditing colour
 
@@ -173,6 +185,7 @@ themes, greyscale and deuteranopia; update the style guide's numbers.
 - [ ] Every status has its word or a distinct icon; Unknown is hollow; greyscale and CVD views still
       tell states apart.
 - [ ] `contrast` exits 0; advisory pairs are labels, not body text.
-- [ ] No literal colours, palette classes or primitives in components; no gradients.
+- [ ] No literal colours, palette classes or primitives in components; no gradient outside the four
+      kinds, and each one audited at its stops.
 - [ ] Charts: four series at most, directly labelled, distinct dash or marker.
 - [ ] Both themes checked; dark re-derived, not inverted.

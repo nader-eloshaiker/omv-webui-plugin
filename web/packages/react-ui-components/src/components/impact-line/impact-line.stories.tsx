@@ -107,6 +107,7 @@ export const LiveUnderTheButtons: Story = {
     const [step, setStep] = React.useState(0);
     const impact = order[step % order.length] ?? "none";
     const review = impact === "moves" || impact === "mayCut";
+    const lineId = React.useId();
     return (
       <div className="flex flex-col gap-3">
         <Button
@@ -119,11 +120,11 @@ export const LiveUnderTheButtons: Story = {
         </Button>
         <div className="flex gap-2">
           <Button variant="neutral">Cancel</Button>
-          <Button aria-describedby="impact-under-save">
+          <Button aria-describedby={lineId}>
             {review ? "Review the change…" : "Save"}
           </Button>
         </div>
-        <ImpactLine id="impact-under-save" impact={impact}>
+        <ImpactLine id={lineId} impact={impact}>
           {WORDS[impact]}
         </ImpactLine>
       </div>

@@ -41,7 +41,8 @@ function Checkbox({
       // Only when set here: an undefined value would hide Base UI's own `aria-disabled`.
       {...(unavailable ? { "aria-disabled": true } : null)}
       className={cn(
-        "relative inline-flex size-4 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-action-foreground",
+        "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-action-foreground",
+        "transition-[background-color,border-color] duration-fast ease-standard",
         // The box is 16px; the press target is 24px (WCAG 2.5.8) through an empty pseudo-element.
         "after:absolute after:-inset-1 after:content-['']",
         "data-checked:border-action data-checked:bg-action data-indeterminate:border-action data-indeterminate:bg-action",
@@ -52,7 +53,8 @@ function Checkbox({
       {...props}
     >
       <BaseCheckbox.Indicator
-        className="flex data-unchecked:hidden"
+        // The mark lands on the settle spring as it appears (Base UI's starting style).
+        className="flex transition-[scale,opacity] duration-base ease-settle data-starting-style:scale-50 data-starting-style:opacity-0 data-unchecked:hidden"
         render={(indicatorProps, state) => (
           <span {...indicatorProps}>
             {state.indeterminate ? (

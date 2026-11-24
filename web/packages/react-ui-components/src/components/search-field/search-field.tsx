@@ -14,8 +14,8 @@ const inputClass = cva(
     variants: {
       size: {
         // 28px in a table toolbar (style guide 4.2).
-        sm: "h-7",
-        md: "h-8",
+        sm: "h-control-sm",
+        md: "h-control",
       },
     },
     defaultVariants: { size: "md" },

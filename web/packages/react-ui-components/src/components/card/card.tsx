@@ -1,25 +1,58 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { useRender } from "@base-ui/react/use-render";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ChevronRight } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
 
-type CardProps = useRender.ComponentProps<"div">;
+const cardClass = cva(
+  "group/card relative flex min-w-0 flex-col rounded-card text-foreground",
+  {
+    variants: {
+      variant: {
+        // A surface raised off the page (foundation 6): the surface colour with the raised shadow, in
+        // dark an inner top highlight and a soft long shadow, in light a layered soft shadow.
+        raised: "surface-raised",
+        // A panel inside a card or a dialog: one ground step, no shadow.
+        inset: "bg-muted",
+        // A card that acts as a whole (a link to its page). It looks like it acts at rest, with a
+        // `CardChevron` in its header, and takes the neutral hover (foundation 13). Pass
+        // `render={<a href=… />}` or the router's link.
+        action:
+          "surface-raised cursor-pointer transition-[background-color,box-shadow,translate] duration-fast ease-standard " +
+          "hover:bg-muted active:translate-y-px",
+      },
+      // The one card that carries a non-OK state is lit in its state: a radial wash in its top end
+      // corner fading to the card (foundation 3.3, 3.4). It always carries the state's pill or word.
+      tone: {
+        none: "",
+        warning:
+          "bg-[image:radial-gradient(520px_260px_at_100%_0%,var(--theme-warning-wash),transparent_70%)] rtl:bg-[image:radial-gradient(520px_260px_at_0%_0%,var(--theme-warning-wash),transparent_70%)]",
+        critical:
+          "bg-[image:radial-gradient(520px_260px_at_100%_0%,var(--theme-critical-wash),transparent_70%)] rtl:bg-[image:radial-gradient(520px_260px_at_0%_0%,var(--theme-critical-wash),transparent_70%)]",
+      },
+    },
+    defaultVariants: { variant: "raised", tone: "none" },
+  },
+);
+
+type CardProps = useRender.ComponentProps<"div"> &
+  VariantProps<typeof cardClass>;
 
 /**
- * A card (style guide 4.3): a `surface` with a hairline border and the card corner, no shadow, 16px
- * padding inside its parts. A `div` by default; pass `render` for the element the page needs, such as
- * `<section aria-labelledby={titleId} />` for a named region or `<li />` in a list of cards.
+ * A card (foundation 6): a raised surface with the card corner and the density's padding inside its
+ * parts. A `div` by default; pass `render` for the element the page needs, such as
+ * `<section aria-labelledby={titleId} />` for a named region or `<li />` in a list of cards. A card
+ * that acts as a whole is `variant="action"` with a `CardChevron`.
  */
-function Card({ render, className, ...props }: CardProps) {
+function Card({ render, variant, tone, className, ...props }: CardProps) {
   return useRender({
     render,
     defaultTagName: "div",
     props: {
       "data-slot": "card",
-      className: cn(
-        "flex min-w-0 flex-col rounded-card border border-border bg-surface text-foreground",
-        className,
-      ),
+      "data-variant": variant ?? "raised",
+      className: cn(cardClass({ variant, tone }), className),
       ...props,
     },
   });
@@ -31,7 +64,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 pt-4",
+        "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-card pt-card",
         className,
       )}
       {...props}
@@ -44,16 +77,13 @@ interface CardTitleProps extends React.ComponentProps<"h2"> {
   level?: 2 | 3 | 4;
 }
 
-/** The card's name, 16px semibold (4.1). A heading, so the card is reachable by heading navigation. */
+/** The card's name, the Section step (foundation 4). A heading, so it is reachable by heading navigation. */
 function CardTitle({ level = 2, className, ...props }: CardTitleProps) {
   const Heading = `h${String(level)}` as "h2" | "h3" | "h4";
   return (
     <Heading
       data-slot="card-title"
-      className={cn(
-        "text-lg leading-tight font-semibold text-foreground",
-        className,
-      )}
+      className={cn("text-section text-foreground", className)}
       {...props}
     />
   );
@@ -78,7 +108,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("flex flex-col gap-4 p-4", className)}
+      className={cn("flex flex-col gap-4 p-card", className)}
       {...props}
     />
   );
@@ -90,7 +120,27 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border px-4 py-3",
+        "flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border px-card py-3",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/**
+ * The mark of a card that acts: a chevron at the end of its header that moves toward where the card
+ * goes on hover and focus. Decorative; the card's own name says where it goes.
+ */
+function CardChevron({ className, ...props }: React.ComponentProps<"svg">) {
+  return (
+    <ChevronRight
+      aria-hidden="true"
+      data-slot="card-chevron"
+      className={cn(
+        "ms-auto size-4 shrink-0 self-center text-tertiary-foreground transition-[translate,color] duration-fast ease-standard",
+        "group-hover/card:translate-x-0.5 group-hover/card:text-muted-foreground group-focus-visible/card:translate-x-0.5",
+        "rtl:-scale-x-100 rtl:group-hover/card:-translate-x-0.5",
         className,
       )}
       {...props}
@@ -100,6 +150,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
   Card,
+  CardChevron,
   CardContent,
   CardDescription,
   CardFooter,

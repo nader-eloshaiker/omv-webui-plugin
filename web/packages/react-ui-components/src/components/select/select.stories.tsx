@@ -13,6 +13,8 @@ import {
 
 const meta = {
   title: "Components/Select",
+  // Several stories open the list on mount; one open list per story (see .storybook/preview.tsx).
+  parameters: { matrix: false },
   decorators: [(Story) => <div className="max-w-xs">{Story()}</div>],
 } satisfies Meta;
 

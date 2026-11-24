@@ -270,6 +270,10 @@ const PAIRS = [
   ["theme-pending-label", on("theme-surface", "theme-pending-wash"), "text", "label on the pending wash"],
   ["theme-pending-label", on("theme-page", "theme-pending-wash"), "text", "label on the pending wash (page)"],
   ["theme-pending-label", AMBIENT, "text", "'pending' in the ambient light"],
+  // A panel waiting on a pending decision (the job runner): its words on the pending wash.
+  ...GROUNDS.map((g) => ["theme-foreground", on(g, "theme-pending-wash"), "text", "body text on the pending wash"]),
+  ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, "theme-pending-wash"), "text", "secondary text on the pending wash"]),
+  ...GROUNDS.map((g) => ["theme-pending-stroke", on(g, "theme-pending-wash"), "ui", "pending mark on its wash"]),
   // Status: fills draw, labels are read, strokes outline, washes sit behind the one element in a
   // non-OK state.
   ...STATUS.flatMap((s) => [
@@ -277,8 +281,8 @@ const PAIRS = [
     ...onGrounds(`theme-${s}-stroke`, "ui", `${s} ring / icon (carries status with its word)`),
     ...onGrounds(`theme-${s}`, "deco", `${s} fill (always ringed by its stroke)`),
     ...GROUNDS.map((g) => [`theme-${s}-label`, on(g, `theme-${s}-wash`), "text", `${s} label on its wash`]),
-    ["theme-foreground", on("theme-surface", `theme-${s}-wash`), "text", `body text on the ${s} wash`],
-    ["theme-muted-foreground", on("theme-surface", `theme-${s}-wash`), "text", `secondary text on the ${s} wash`],
+    ...GROUNDS.map((g) => ["theme-foreground", on(g, `theme-${s}-wash`), "text", `body text on the ${s} wash`]),
+    ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, `theme-${s}-wash`), "text", `secondary text on the ${s} wash`]),
     [`theme-${s}-stroke`, on("theme-surface", `theme-${s}-wash`), "ui", `${s} mark on its wash`],
     [`theme-${s}-label`, AMBIENT, "text", `${s} as a word in the ambient light`],
   ]),
@@ -289,6 +293,9 @@ const PAIRS = [
     ["theme-muted-foreground", statusLight(s), "text", `secondary text on the card lit ${s}`],
     ["theme-action", statusLight(s), "ui", `primary button edge on the card lit ${s}`],
   ]),
+  // The Save button's "Saved" settle: words on the OK fill, edged in the OK stroke.
+  ["theme-ok-foreground", "theme-ok", "text", "'Saved' on the save button"],
+  ...onGrounds("theme-ok-stroke", "ui", "the saved button's edge"),
   // Destructive action.
   ["theme-destructive-foreground", "theme-destructive", "text", "words on the destructive button"],
   ...onGrounds("theme-destructive", "ui", "destructive button edge"),

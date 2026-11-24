@@ -186,13 +186,15 @@ it, so the bar stays legible over any content.
 
 Done. Every pair is in `PAIRS` in `tools/colour-audit.mjs`: each text tier, label, stroke and
 control edge on each of the four grounds; the selected tint; the status and pending washes over each
-ground; the ambient light; a card lit in its warning or critical state; the trace over its own area
-fill; the chassis; and the map lines. The script now composites translucent tokens over their known
-ground, as the browser paints them (`on(ground, layer...)`), and checks a gradient at each of its
-stops, the worst stop deciding (`gradient(name, stop...)`). It reads `color-mix(in srgb, X N%,
-transparent)`, the form every wash and glow is written in.
+ground, with the body and secondary text that sits on them; the ambient light; a card lit in its
+warning or critical state; the trace over its own area fill; the chassis; the map lines; and the
+Save button's "Saved" (`ok-foreground` on the OK fill, 12.24:1, edged in `ok-stroke`). The script
+now composites translucent tokens over their known ground, as the browser paints them (`on(ground,
+layer...)`), and checks a gradient at each of its stops, the worst stop deciding (`gradient(name,
+stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash and glow is
+written in.
 
-**Result: 344 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
+**Result: 426 required pairs, 0 failures, both themes** (164 before the new grounds). Highlights:
 
 - In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
   13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus
@@ -200,10 +202,13 @@ transparent)`, the form every wash and glow is written in.
 - Status labels on their own wash over any ground: 5.13 to 7.23:1 light, 6.17 to 9.06:1 dark. On a
   card lit warning, the warning word is 6.28:1 light and 7.86:1 dark at the wash's strongest point.
 - The trace over the top of its own area fill: 3.13 to 3.30:1 light, 4.17 to 4.49:1 dark.
+- Secondary text on any wash over any ground: at least 5.12:1 (dark, on the pending wash over
+  `muted-strong`).
 - The tightest required pairs: dark `tertiary-foreground` on `muted-strong` and on the chassis,
   4.68:1; light `series-3` on the page, 3.30:1; light trace over its fill in an inset, 3.13:1.
-- APCA advisory: 29 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions or words on a
-  fill (dark `tertiary-foreground` at Lc 40 to 43 is the lowest); none is running text.
+- APCA advisory: 44 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions, secondary
+  text on a wash or words on a fill (dark `tertiary-foreground` at Lc 40 to 43 is the lowest); none
+  is running text.
 - `distinct`: the live trace beside a categorical series falls under 10 in four places (for example
   light trace and `series-2`, 10.2 normal and 9.7 deuteranopia), so a chart that shows both labels
   each line directly and gives each its own dash, as style guide 3.9 already asks.
@@ -327,7 +332,7 @@ value glides (640ms) and the sample-paced chart scroll are longer, and neither b
 | **Apply progress** | That work is happening | A progress line runs along the pending bar; on success the bar reads "Applied" and collapses after 1.6s | A static line and the words |
 | **Destructive arm** | That the confirm is now live | Typing the name exactly fills the confirm button with the destructive red from the left | The fill appears |
 | **Dialog and palette** | What is in front now | Rise 8px and scale from 0.97 over a fading scrim | Fade only |
-| **Disclosure** | That more is there, and its size | Native `::details-content` with `interpolate-size`; the chevron turns on the settle spring | Opens at once |
+| **Disclosure** | That more is there, and its size | The height Base UI measures into `--collapsible-panel-height`, on the soft spring (works where `interpolate-size` does not yet); the chevron turns on the settle spring | Opens at once |
 | **Trace** | What depends on this | Pointing at or focusing a map node lights its whole lineage and dims the rest | Same, no transition |
 | **Map draw** | That lines are connections | Lines draw along their length on entrance | Drawn |
 | **Arrival** | Where to look after a jump | Following "View disk sdb" scrolls to that disk and rings it twice | Ring without movement |

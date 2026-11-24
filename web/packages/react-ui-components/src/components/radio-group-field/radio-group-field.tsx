@@ -192,7 +192,8 @@ function RadioOption({
             aria-describedby={hint ? hintId : undefined}
             {...(unavailable ? { "aria-disabled": true } : null)}
             className={cn(
-              "relative inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-input bg-surface",
+              "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-full border border-input bg-surface",
+              "transition-[background-color,border-color] duration-fast ease-standard",
               "after:absolute after:-inset-1 after:rounded-full after:content-['']",
               "data-checked:border-action data-checked:bg-action",
               "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:bg-muted",
@@ -203,7 +204,7 @@ function RadioOption({
           >
             <Radio.Indicator
               className={cn(
-                "size-1.5 rounded-full bg-action-foreground data-unchecked:hidden data-disabled:bg-subtle-foreground",
+                "size-2 rounded-full bg-action-foreground transition-[scale] duration-base ease-settle data-starting-style:scale-0 data-unchecked:hidden data-disabled:bg-subtle-foreground",
                 unavailable && "bg-subtle-foreground",
               )}
             />

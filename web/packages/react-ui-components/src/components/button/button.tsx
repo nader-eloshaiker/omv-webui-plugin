@@ -73,5 +73,83 @@ function IconButton({
   );
 }
 
-export { Button, IconButton };
-export type { ButtonProps, IconButtonProps };
+/** Where a save is: not started, in flight, or just landed. */
+type SavePhase = "idle" | "saving" | "saved";
+
+type SaveButtonProps = Omit<ButtonProps, "loading" | "variant"> & {
+  /** The caller owns the phase and returns it to `idle` about 1.5s after `saved`. */
+  phase: SavePhase;
+  /** The words while saving: "Saving…". */
+  savingLabel: React.ReactNode;
+  /** The words once it landed: "Saved". */
+  savedLabel: React.ReactNode;
+};
+
+// The three labels share one grid cell, so the button keeps the width of the longest and nothing
+// around it moves; the one shown slides in, the others are hidden from assistive technology.
+const labelClass =
+  "col-start-1 row-start-1 transition-[opacity,translate] duration-base ease-standard " +
+  "data-[shown=false]:-translate-y-1.5 data-[shown=false]:opacity-0";
+
+/**
+ * The primary button of a settings form, with the save settle (foundation 7.2): its label slides out,
+ * a spinner shows while saving, then a tick draws and the button turns OK green with `savedLabel`.
+ * Reduced motion: the words change, nothing moves. Announce the outcome in the page's own live
+ * region; the button only shows it.
+ */
+function SaveButton({
+  phase,
+  savingLabel,
+  savedLabel,
+  className,
+  children,
+  ...props
+}: SaveButtonProps) {
+  const label = (shown: boolean, content: React.ReactNode) => (
+    <span
+      data-shown={shown}
+      aria-hidden={shown ? undefined : true}
+      className={labelClass}
+    >
+      {content}
+    </span>
+  );
+  return (
+    <Button
+      data-phase={phase}
+      variant="primary"
+      loading={phase === "saving"}
+      className={cn(
+        "data-[phase=saved]:border-ok-stroke data-[phase=saved]:bg-ok data-[phase=saved]:text-ok-foreground data-[phase=saved]:hover:bg-ok",
+        className,
+      )}
+      {...props}
+    >
+      {phase === "saved" ? (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path
+            d="m5 12.5 4.5 4.5L19 7.5"
+            pathLength={1}
+            className="animate-draw [stroke-dasharray:1]"
+          />
+        </svg>
+      ) : null}
+      <span className="grid">
+        {label(phase === "idle", children)}
+        {label(phase === "saving", savingLabel)}
+        {label(phase === "saved", savedLabel)}
+      </span>
+    </Button>
+  );
+}
+
+export { Button, IconButton, SaveButton };
+export type { ButtonProps, IconButtonProps, SaveButtonProps, SavePhase };

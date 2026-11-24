@@ -315,7 +315,7 @@ function FirewallRuleList<Row extends FirewallRuleRow>({
                     scope="row"
                     className={cn(
                       stickyCell,
-                      "h-9 px-3 py-2 text-end font-regular tabular-nums text-foreground",
+                      "px-cell-x py-cell-y text-end font-regular tabular-nums text-foreground",
                     )}
                   >
                     {position}
@@ -332,13 +332,13 @@ function FirewallRuleList<Row extends FirewallRuleRow>({
                       {labels.actions[rule.action]}
                     </span>
                   </TableCell>
-                  <TableCell className="min-w-48 py-2 [overflow-wrap:anywhere]">
+                  <TableCell className="min-w-48 [overflow-wrap:anywhere]">
                     {rule.traffic}
                   </TableCell>
-                  <TableCell className="min-w-48 py-2 [overflow-wrap:anywhere]">
+                  <TableCell className="min-w-48 [overflow-wrap:anywhere]">
                     {rule.peer}
                   </TableCell>
-                  <TableCell className="min-w-40 py-2 text-muted-foreground [overflow-wrap:anywhere]">
+                  <TableCell className="min-w-40 text-muted-foreground [overflow-wrap:anywhere]">
                     {rule.note}
                   </TableCell>
                   <TableCell className="py-1">

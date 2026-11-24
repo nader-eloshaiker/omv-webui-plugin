@@ -4,12 +4,10 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
 import { controlClass } from "../field/control-class";
-import { itemHighlightClass } from "../menu/item-class";
+import { floatingListClass, itemHighlightClass } from "../menu/item-class";
 
-// The floating surface shared by select and menu popups: floating (shadow-floating), a card corner.
-const popupClass =
-  "rounded-card border border-border bg-popover p-1 text-popover-foreground shadow-floating outline-hidden " +
-  "transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0";
+// The floating surface shared by select and menu popups (menu/item-class.ts).
+const popupClass = floatingListClass;
 
 /**
  * A choice from a short fixed list, on Base UI's Select. Inside a `Field`, the field's label names it;
@@ -48,7 +46,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       className={cn(
         controlClass,
-        "flex items-center justify-between gap-2 text-start hover:bg-muted data-popup-open:bg-muted",
+        "flex items-center justify-between gap-2 text-start shadow-control hover:bg-muted-strong data-popup-open:bg-muted-strong",
         className,
       )}
       {...props}
@@ -97,7 +95,7 @@ function SelectItem({
     <BaseSelect.Item
       data-slot="select-item"
       className={cn(
-        "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-control py-1.5 ps-2 pe-3 text-base select-none",
+        "grid min-h-control cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-control py-1 ps-2.5 pe-3 text-base select-none",
         itemHighlightClass,
         "data-disabled:text-subtle-foreground",
         className,
@@ -144,7 +142,7 @@ function SelectGroupLabel({
     <BaseSelect.GroupLabel
       data-slot="select-group-label"
       className={cn(
-        "px-2 pt-1.5 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase select-none",
+        "px-2.5 pt-1.5 pb-1 text-xs font-semibold tracking-wide text-tertiary-foreground uppercase select-none",
         className,
       )}
       {...props}

@@ -39,7 +39,7 @@ function Table({
       className={cn(
         // `relative` keeps absolutely placed text inside (a visually hidden label would otherwise
         // widen the page); `@container` lets a state row measure the visible width (TableStateRow).
-        "@container relative w-full overflow-x-auto rounded-card border border-border bg-surface",
+        "@container relative w-full overflow-x-auto rounded-card surface-raised",
         frameClassName,
       )}
     >
@@ -56,7 +56,7 @@ function Table({
   );
 }
 
-/** Header on `muted`, short labels in 12px capitals (4.1, 5.2). */
+/** Header on `muted`, short labels in 12px capitals in the caption tier (5.2, foundation 4). */
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
@@ -78,7 +78,10 @@ interface TableRowProps extends React.ComponentProps<"tr"> {
   size?: "default" | "touch";
 }
 
-/** Hover is the neutral step on body rows; selected is the 10% action tint (3.10). No zebra stripes. */
+/**
+ * Hover is the neutral step on body rows; selected is the `selected` tint (3.10). No zebra stripes.
+ * Row height follows the density through the cells' `py-cell-y` (foundation 5).
+ */
 function TableRow({
   selected,
   size = "default",
@@ -92,7 +95,7 @@ function TableRow({
       data-size={size}
       className={cn(
         // Hover only on body rows: the header row is not a target.
-        "border-t border-border first:border-t-0 [tbody>&]:hover:bg-muted data-selected:bg-action/10",
+        "border-t border-border first:border-t-0 transition-colors duration-fast ease-standard [tbody>&]:hover:bg-muted data-selected:bg-selected",
         "data-[size=touch]:*:h-11",
         className,
       )}
@@ -136,7 +139,7 @@ function TableHead({
       scope="col"
       aria-sort={sortable ? sort : undefined}
       className={cn(
-        "h-8 px-3 text-start align-middle text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase",
+        "px-cell-x py-cell-y text-start align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-tertiary-foreground uppercase",
         numeric && "text-end",
         className,
       )}
@@ -147,7 +150,7 @@ function TableHead({
           type="button"
           onClick={onSort}
           className={cn(
-            "-mx-1 inline-flex items-center gap-1 rounded-sm px-1 uppercase hover:text-foreground",
+            "-mx-1 inline-flex min-h-6 items-center gap-1 rounded-sm px-1 uppercase transition-colors duration-fast hover:text-foreground",
             numeric && "flex-row-reverse",
           )}
         >
@@ -179,7 +182,7 @@ function TableCell({ numeric, mono, className, ...props }: TableCellProps) {
     <td
       data-slot="table-cell"
       className={cn(
-        "h-9 px-3 align-middle",
+        "px-cell-x py-cell-y align-middle",
         numeric && "text-end tabular-nums",
         mono && "font-mono text-sm",
         className,
@@ -250,7 +253,7 @@ function TableGroupRow({
       >
         {/* As TableStateRow's content: as wide as the frame's visible part and held there while the
             table scrolls sideways, so the heading wraps in view instead of running off a wide table. */}
-        <div className="sticky start-0 flex w-[100cqw] flex-col gap-0.5 px-3 pt-3 pb-1.5">
+        <div className="sticky start-0 flex w-[100cqw] flex-col gap-0.5 px-cell-x pt-3 pb-1.5">
           <span className="text-base font-semibold text-foreground [overflow-wrap:anywhere]">
             {heading}
           </span>
@@ -283,10 +286,13 @@ function TableSkeletonRows({
           className="border-t border-border first:border-t-0"
         >
           {Array.from({ length: columns }, (_, column) => (
-            <td key={`skeleton-${String(column)}`} className="h-9 px-3">
+            <td
+              key={`skeleton-${String(column)}`}
+              className="px-cell-x py-cell-y"
+            >
               <div
                 className={cn(
-                  "h-3 rounded-sm bg-muted motion-safe:animate-pulse",
+                  "h-[1lh] rounded-sm bg-muted-strong bg-clip-content py-[calc((1lh-0.75rem)/2)] motion-safe:animate-breathe",
                   column === 0 ? "w-2/3" : "w-1/2",
                 )}
               />

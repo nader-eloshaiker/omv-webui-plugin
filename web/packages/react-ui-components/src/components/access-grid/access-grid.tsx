@@ -377,7 +377,7 @@ function SkeletonRows() {
             <Skeleton className="w-12" />
           </td>
           <td className="col-span-2 px-3 pb-2 @2xl:col-span-1 @2xl:py-1.5">
-            <Skeleton shape="block" className="h-7 w-72 max-w-full" />
+            <Skeleton shape="block" className="h-control-sm w-72 max-w-full" />
           </td>
         </tr>
       ))}
@@ -583,7 +583,7 @@ function AccessGrid<V extends string = string>({
             >
               <div className="flex flex-col gap-1">
                 <SelectLabel>{showLabels.label}</SelectLabel>
-                <SelectTrigger className="h-7 w-auto min-w-32 text-sm" />
+                <SelectTrigger className="h-control-sm w-auto min-w-32 text-sm" />
               </div>
               <SelectContent>
                 {showItems.map((item) => (
@@ -606,7 +606,7 @@ function AccessGrid<V extends string = string>({
               >
                 <div className="flex flex-col gap-1">
                   <SelectLabel>{setAll.label}</SelectLabel>
-                  <SelectTrigger className="h-7 w-auto min-w-36 text-sm" />
+                  <SelectTrigger className="h-control-sm w-auto min-w-36 text-sm" />
                 </div>
                 <SelectContent>
                   {targetItems.map((item) => (

@@ -99,7 +99,7 @@ function ProgressBar({
         </Progress.Label>
       )}
       <Progress.Track className={trackClass({ size })}>
-        <Progress.Indicator className="h-full rounded-full bg-usage data-indeterminate:w-1/3 data-indeterminate:motion-safe:animate-pulse" />
+        <Progress.Indicator className="h-full rounded-full bg-usage transition-[width] duration-glide ease-standard data-indeterminate:w-1/3 data-indeterminate:motion-safe:animate-breathe" />
       </Progress.Track>
       <span data-slot="progress-bar-value" className={valueTextClass({ size })}>
         {valueText}

@@ -2,5 +2,7 @@
    Tailwind, the tokens, both themes and the base rules. */
 @import "@omv-webui/css-ui-style";
 
-/* Tailwind scans Storybook's own tree by default; the components and stories live under src/. */
+/* The components and stories live under src/; the preview's own decorators (the theme and density
+   panels) are in this folder. */
 @source "../src";
+@source ".";

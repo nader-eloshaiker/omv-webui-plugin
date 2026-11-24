@@ -310,6 +310,8 @@
   --theme-ok-stroke: #007938;
   --theme-ok-label: #00612c;
   --theme-ok-wash: color-mix(in srgb, var(--color-status-ok) 12%, transparent);
+  /* Words on the OK fill: only the Save button's brief "Saved" (foundation 7.2, save settle). */
+  --theme-ok-foreground: var(--color-slate-950);
   --theme-warning: var(--color-status-warning);
   --theme-warning-stroke: #ad5c15;
   --theme-warning-label: #8a4613;

@@ -63,11 +63,11 @@ describe("ProgressBar", () => {
       "[data-indeterminate] > div > div",
     );
     expect(indicator).not.toBeNull();
-    // The pulse is behind `motion-safe:`, so under reduced motion the bar stands still.
+    // The breath is behind `motion-safe:`, so under reduced motion the bar stands still.
     expect(indicator?.className).toContain(
-      "data-indeterminate:motion-safe:animate-pulse",
+      "data-indeterminate:motion-safe:animate-breathe",
     );
-    expect(indicator?.className).not.toMatch(/(^|\s)animate-pulse/);
+    expect(indicator?.className).not.toMatch(/(^|\s)animate-breathe/);
     expect(indicator?.getAttribute("style") ?? "").not.toContain("width");
     expect(screen.getByText("Working…")).toBeVisible();
   });

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import * as React from "react";
 import { StatusPill } from "../status/status";
 import { Identifier } from "../text/identifier";
 import { ProgressBar } from "./progress-bar";
@@ -57,43 +58,55 @@ export const Indeterminate: Story = {
  * the same figures as text. The reason names the bar, so it carries no label of its own.
  */
 export const CompactInNarrowRow: Story = {
-  render: () => (
-    <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <StatusPill status="warning">Warning</StatusPill>
-        <span id="md0-reason" className="min-w-0 text-sm text-foreground">
-          Synchronising its disks. Its files can be used, but it is not fully
-          protected until this ends.
-        </span>
+  render: function CompactInNarrowRowStory() {
+    const storyId = React.useId();
+    return (
+      <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <StatusPill status="warning">Warning</StatusPill>
+          <span
+            id={`${storyId}-md0-reason`}
+            className="min-w-0 text-sm text-foreground"
+          >
+            Synchronising its disks. Its files can be used, but it is not fully
+            protected until this ends.
+          </span>
+        </div>
+        <ProgressBar
+          aria-labelledby={`${storyId}-md0-reason`}
+          value={45}
+          valueText="45.0% done, about 2 hours left"
+          size="compact"
+        />
       </div>
-      <ProgressBar
-        aria-labelledby="md0-reason"
-        value={45}
-        valueText="45.0% done, about 2 hours left"
-        size="compact"
-      />
-    </div>
-  ),
+    );
+  },
 };
 
 /** Compact and indeterminate, for an array being checked, in the same narrow width. */
 export const CompactIndeterminate: Story = {
-  render: () => (
-    <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <StatusPill status="ok">OK</StatusPill>
-        <span id="md1-reason" className="min-w-0 text-sm text-foreground">
-          Being checked. This can take hours.
-        </span>
+  render: function CompactIndeterminateStory() {
+    const storyId = React.useId();
+    return (
+      <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <StatusPill status="ok">OK</StatusPill>
+          <span
+            id={`${storyId}-md1-reason`}
+            className="min-w-0 text-sm text-foreground"
+          >
+            Being checked. This can take hours.
+          </span>
+        </div>
+        <ProgressBar
+          aria-labelledby={`${storyId}-md1-reason`}
+          value={null}
+          valueText="Working…"
+          size="compact"
+        />
       </div>
-      <ProgressBar
-        aria-labelledby="md1-reason"
-        value={null}
-        valueText="Working…"
-        size="compact"
-      />
-    </div>
-  ),
+    );
+  },
 };
 
 /** Long words wrap under the bar and never widen it or hide behind a tooltip. */

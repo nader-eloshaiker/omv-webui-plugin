@@ -637,7 +637,8 @@ describe("growing it (4; owner, P5)", () => {
     const confirm = within(dialog).getByRole("button", {
       name: "Grow file system",
     });
-    expect(confirm).toHaveClass("bg-destructive");
+    // The destructive button: its red is a fill that arms, so its ink marks the variant.
+    expect(confirm).toHaveClass("text-destructive-foreground");
     expect(callNames()).not.toContain("FileSystemMgmt.grow");
     const lists = calls("FileSystemMgmt.getList").length;
     await user.click(confirm);

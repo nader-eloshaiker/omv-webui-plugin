@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Plus, RefreshCw, Settings, Trash2 } from "lucide-react";
-import { Button, IconButton } from "./button";
+import * as React from "react";
+import { Checkbox } from "../checkbox/checkbox";
+import { Button, IconButton, SaveButton, type SavePhase } from "./button";
 
 const meta = {
   title: "Components/Button",
@@ -142,4 +144,62 @@ export const WrapsAtNarrowWidth: Story = {
       </Button>
     </div>
   ),
+};
+
+// The save settle (foundation 7.2): press Save; the label slides out, a spinner shows while saving,
+// then a tick draws and the button turns OK green with "Saved" for 1.5s. Reduced motion: the words
+// change and nothing moves.
+export const SaveSettle: Story = {
+  render: function SaveSettleStory() {
+    const [phase, setPhase] = React.useState<SavePhase>("idle");
+    React.useEffect(() => {
+      if (phase === "idle") {
+        return undefined;
+      }
+      const timer = window.setTimeout(
+        () => setPhase(phase === "saving" ? "saved" : "idle"),
+        phase === "saving" ? 900 : 1500,
+      );
+      return () => window.clearTimeout(timer);
+    }, [phase]);
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="neutral">Discard</Button>
+        <SaveButton
+          phase={phase}
+          savingLabel="Saving…"
+          savedLabel="Saved"
+          onClick={() => setPhase("saving")}
+        >
+          Save sharing
+        </SaveButton>
+      </div>
+    );
+  },
+};
+
+// The destructive arm (foundation 7.2): unavailable, the confirm button is an outline; the moment the
+// act becomes possible it fills with the destructive red from the start edge. Reduced motion: the
+// fill appears.
+export const DestructiveArm: Story = {
+  render: function DestructiveArmStory() {
+    const [armed, setArmed] = React.useState(false);
+    return (
+      <div className="flex flex-col items-start gap-3">
+        <label className="flex items-center gap-2">
+          <Checkbox
+            checked={armed}
+            onCheckedChange={(checked) => setArmed(checked)}
+          />
+          I understand that every file on Backup is deleted
+        </label>
+        <div className="flex gap-2">
+          <Button variant="neutral">Cancel</Button>
+          <Button variant="destructive" disabled={!armed}>
+            Delete Backup and its files
+          </Button>
+        </div>
+      </div>
+    );
+  },
 };

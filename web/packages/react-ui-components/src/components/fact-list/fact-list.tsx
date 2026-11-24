@@ -7,7 +7,7 @@ import { Skeleton } from "../skeleton/skeleton";
 const listClass =
   "grid grid-cols-1 sm:grid-cols-[fit-content(40%)_minmax(0,1fr)] sm:gap-x-6";
 const itemClass =
-  "grid grid-cols-subgrid gap-y-0.5 border-t border-border py-2 first:border-t-0 first:pt-0 last:pb-0 sm:col-span-2";
+  "grid grid-cols-subgrid gap-y-0.5 border-t border-border py-row first:border-t-0 first:pt-0 last:pb-0 sm:col-span-2";
 
 /**
  * Facts about one thing, as a description list (`dl`): label and value side by side from 640px, the

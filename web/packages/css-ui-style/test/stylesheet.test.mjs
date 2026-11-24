@@ -321,9 +321,10 @@ describe("motion (foundation 7)", () => {
       "animate-settle-in",
       "animate-fade-in",
       "animate-breathe",
+      "animate-draw",
       "stagger",
     ]);
-    for (const name of ["rise", "settle-in", "fade-in", "breathe"]) {
+    for (const name of ["rise", "settle-in", "fade-in", "breathe", "draw"]) {
       assert.match(css, new RegExp(`@keyframes ${name} \\{`));
     }
     assert.match(rule(css, "animate-rise"), /var\(--ease-enter\)/);

@@ -74,7 +74,7 @@ function StepButton({
           aria-describedby={available ? undefined : reasonId}
           onClick={onPress}
           className={cn(
-            "max-sm:size-7 max-sm:px-0",
+            "max-sm:size-control-sm max-sm:px-0",
             direction === "next" && "flex-row-reverse",
           )}
         >
@@ -147,7 +147,7 @@ function TablePagination({
           <SelectLabel className="text-sm font-regular text-muted-foreground">
             {pageSizeLabel}
           </SelectLabel>
-          <SelectTrigger className="h-7 w-auto min-w-16 text-sm tabular-nums" />
+          <SelectTrigger className="h-control-sm w-auto min-w-16 text-sm tabular-nums" />
         </div>
         <SelectContent>
           {items.map((item) => (

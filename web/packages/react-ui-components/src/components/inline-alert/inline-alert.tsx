@@ -5,7 +5,7 @@ import type * as React from "react";
 import { cn } from "../../utils";
 
 const alertClass = cva(
-  "flex gap-2.5 rounded-control border px-3 py-2.5 text-base text-foreground",
+  "flex gap-2.5 rounded-control border px-3.5 py-3 text-base text-foreground",
   {
     variants: {
       tone: {

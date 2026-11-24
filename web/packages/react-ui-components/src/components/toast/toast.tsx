@@ -42,9 +42,17 @@ function Toaster({ closeLabel, regionLabel, className }: ToasterProps) {
               key={toast.id}
               toast={toast}
               data-slot="toast"
-              className="rounded-card border border-border bg-popover text-popover-foreground shadow-floating transition-opacity duration-base data-ending-style:opacity-0 data-starting-style:opacity-0"
+              className={cn(
+                "rounded-card surface-floating text-popover-foreground",
+                // Entry from nothing (Base UI's starting style, CSS @starting-style semantics): it
+                // rises and lands on the settle spring; it leaves faster on the exit curve
+                // (foundation 7.2). Reduced motion: it is simply there.
+                "transition-[opacity,translate,scale] duration-slow ease-settle",
+                "data-starting-style:translate-y-3 data-starting-style:scale-[0.97] data-starting-style:opacity-0",
+                "data-ending-style:opacity-0 data-ending-style:duration-base data-ending-style:ease-exit",
+              )}
             >
-              <Toast.Content className="flex items-start gap-3 p-3">
+              <Toast.Content className="flex items-start gap-3 p-4">
                 {tone !== "neutral" && statusLabel ? (
                   <StatusPill status={tone} className="mt-0.5 shrink-0">
                     {statusLabel}
