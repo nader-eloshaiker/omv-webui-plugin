@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { Metric } from "./chartModel.ts";
 import type { Scenario } from "./data.ts";
 import { nas } from "./data.ts";
 import "./lab.css";
@@ -72,6 +73,7 @@ export default function LabRoot() {
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [focusDisk, setFocusDisk] = useState<string | null>(null);
+  const [focusMetric, setFocusMetric] = useState<Metric | null>(null);
   const [density, setDensity] = useState<"comfortable" | "compact">(
     initial.density,
   );
@@ -132,10 +134,12 @@ export default function LabRoot() {
     loading,
     toasts,
     focusDisk,
+    focusMetric,
     density,
     setDensity,
     go: (next, options) => {
       setFocusDisk(options?.disk ?? null);
+      setFocusMetric(options?.metric ?? null);
       if (next === screen) {
         return;
       }

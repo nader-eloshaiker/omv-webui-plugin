@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Parts the lab's three directions share: development only (UI-11).
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ChevronRight, ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { EmptyPending } from "../art.tsx";
+import type { MetricDef } from "../chartModel.ts";
+import { liveSummary, metricDefs, spanWords } from "../chartModel.ts";
+import { LiveChart, LiveTable, Swatch } from "../charts.tsx";
 import type { Attention, FileSystem, Status } from "../data.ts";
 import { percent, size, STATUS_WORD, worst } from "../data.ts";
-import { KEEP, SAMPLE_MS } from "../live.ts";
+import { SAMPLE_MS } from "../live.ts";
 import { useLab } from "../state.ts";
-import { Live, Mark, Meter, Pill, Spark } from "../ui.tsx";
+import { Live, Mark, Meter, More, Pill } from "../ui.tsx";
 import { cx, vars } from "../util.ts";
 import type { FlowNode } from "./model.ts";
-import { sparkLabel, useLiveFigures } from "./model.ts";
+import { useLiveFigures } from "./model.ts";
 
 export function Card({
   className,
@@ -56,17 +59,22 @@ export function CardHead({
   );
 }
 
-export function LiveCaption() {
-  const f = useLiveFigures();
+export function LiveCaption({ windowS }: { windowS?: number }) {
+  const f = useLiveFigures(windowS);
   return (
     <span className="lx-livecap">
       <span className="lx-livedot" aria-hidden="true" />
-      Live · every {SAMPLE_MS / 1000}&nbsp;s · last {f.seconds}&nbsp;s on this
-      page
+      Live · every {SAMPLE_MS / 1000}&nbsp;s · last {spanWords(f.seconds)} on
+      this page
     </span>
   );
 }
 
+/**
+ * The dashboard's "right now": four live charts of the last minute this page sampled, each with its
+ * reading above it, a sentence for screen readers, and one table of all the numbers below. Each
+ * chart's name opens the Performance page at that metric.
+ */
 export function LiveGrid({
   variant,
 }: {
@@ -74,79 +82,96 @@ export function LiveGrid({
 }) {
   const lab = useLab();
   const f = useLiveFigures();
+  const defs = metricDefs(lab.nas);
   const memTotal = lab.nas.memTotalGiB;
-  const tiles = [
+  const tiles: { def: MetricDef; value: ReactNode; sub: ReactNode }[] = [
     {
-      key: "cpu",
-      name: "Processor",
+      def: defs.cpu,
       value: <Live value={f.latest.cpu} unit="%" />,
       sub: `${lab.nas.cores} cores · load ${f.latest.load.toFixed(2)}`,
-      spark: (
-        <Spark
-          values={f.cpu}
-          max={100}
-          label={sparkLabel("Processor use", f.cpu, "%")}
-          keep={KEEP}
-        />
-      ),
     },
     {
-      key: "mem",
-      name: "Memory",
+      def: defs.mem,
       value: <Live value={f.latest.memGiB} digits={1} unit="GiB" />,
       sub: `of ${memTotal.toFixed(1)}\u00a0GiB · ${percent(f.latest.memGiB, memTotal)}% in use`,
-      spark: (
-        <Spark
-          values={f.mem}
-          max={memTotal}
-          label={sparkLabel("Memory in use", f.mem, "GiB")}
-          keep={KEEP}
-        />
-      ),
     },
     {
-      key: "net",
-      name: "Network in",
-      value: <Live value={f.latest.rxMiB} digits={1} unit="MiB/s" />,
-      sub: (
+      def: defs.net,
+      value: (
         <>
-          out <Live value={f.latest.txMiB} digits={1} unit="MiB/s" /> · eth0
+          <span className="lx-livetile-dir">in</span>
+          <Live value={f.latest.rxMiB} digits={1} unit="MiB/s" />
         </>
       ),
-      spark: (
-        <Spark
-          values={f.rx}
-          max={f.netMax}
-          label={sparkLabel("Data received on eth0", f.rx, "MiB/s")}
-          keep={KEEP}
-        />
+      sub: (
+        <span className="lx-livetile-legend">
+          <span>
+            <Swatch tone="s1" /> In
+          </span>
+          <span>
+            <Swatch tone="s2" dash /> Out{" "}
+            <Live value={f.latest.txMiB} digits={1} unit="MiB/s" />
+          </span>
+          <span className="lx-mono">eth0</span>
+        </span>
       ),
     },
     {
-      key: "temp",
-      name: "Processor temperature",
+      def: defs.temp,
       value: <Live value={f.latest.cpuTemp} unit="°C" />,
       sub: "Normal below 80\u00a0°C",
-      spark: (
-        <Spark
-          values={f.temp}
-          max={90}
-          label={sparkLabel("Processor temperature", f.temp, "°C")}
-          keep={KEEP}
-        />
-      ),
     },
   ];
   return (
     <div className={`lx-live lx-live--${variant}`}>
-      {tiles.map((t) => (
-        <div key={t.key} className="lx-livetile">
-          <div className="lx-livetile-name">{t.name}</div>
-          <div className="lx-livetile-value">{t.value}</div>
-          <div className="lx-livetile-spark">{t.spark}</div>
-          <div className="lx-livetile-sub">{t.sub}</div>
-        </div>
-      ))}
+      <div className="lx-live-tiles">
+        {tiles.map((t) => {
+          const capId = `lx-live-${t.def.id}`;
+          return (
+            <figure
+              key={t.def.id}
+              className="lx-livetile"
+              aria-labelledby={capId}
+            >
+              <button
+                type="button"
+                className="lx-livetile-name"
+                onClick={() => {
+                  lab.go("activity", { metric: t.def.id });
+                }}
+              >
+                {t.def.name}
+                <ChevronRight
+                  size={14}
+                  aria-hidden
+                  className="lx-livetile-chev"
+                />
+                <span className="lx-vh"> (open in Performance)</span>
+              </button>
+              <div className="lx-livetile-value">{t.value}</div>
+              <div className="lx-livetile-chart">
+                <LiveChart
+                  def={t.def}
+                  samples={f.samples}
+                  windowS={f.windowS}
+                />
+              </div>
+              <div className="lx-livetile-sub">{t.sub}</div>
+              <figcaption id={capId} className="lx-vh">
+                {liveSummary(t.def, f.samples, f.windowS)}
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+      <More summary="Show the numbers as a table">
+        <LiveTable
+          defs={[defs.cpu, defs.mem, defs.net, defs.temp]}
+          samples={f.samples}
+          windowS={f.windowS}
+          caption={`Readings sampled every ${SAMPLE_MS / 1000} seconds over the last ${spanWords(f.seconds)} on this page, newest first`}
+        />
+      </More>
     </div>
   );
 }

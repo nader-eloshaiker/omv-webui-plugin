@@ -4,11 +4,9 @@
 // dashed ring, Pending a clock), so no state depends on colour alone. Geometry that depends on data
 // is passed as custom properties through React's style prop, which sets them through the CSSOM.
 import type { ReactNode } from "react";
-import { useId, useLayoutEffect, useRef } from "react";
 import type { Status } from "./data.ts";
 import { STATUS_WORD } from "./data.ts";
-import { SAMPLE_MS } from "./live.ts";
-import { reducedMotion, useTween } from "./motion.ts";
+import { useTween } from "./motion.ts";
 import { cx, vars } from "./util.ts";
 
 export function Mark({
@@ -230,113 +228,6 @@ export function Ring({
       </svg>
       {children ? <div className="lx-ring-body">{children}</div> : null}
     </div>
-  );
-}
-
-/**
- * A sampled line. When a sample arrives the line moves left by one step over the sampling interval,
- * so it scrolls at the rate the data really arrives; the head dot beats once per sample. Under
- * reduced motion the line simply redraws.
- */
-export function Spark({
-  values,
-  max,
-  label,
-  height = 48,
-  width = 240,
-  tone = "brand",
-  keep = 40,
-  area = true,
-}: {
-  values: number[];
-  max: number;
-  label: string;
-  height?: number;
-  width?: number;
-  tone?: "brand" | "s2";
-  keep?: number;
-  area?: boolean;
-}) {
-  const id = useId().replace(/:/g, "");
-  const group = useRef<SVGGElement>(null);
-  const head = useRef<SVGCircleElement>(null);
-  const step = width / (keep - 1);
-  const pad = 3;
-  const y = (v: number) =>
-    pad + (height - pad * 2) * (1 - Math.min(1, v / max));
-  const start = keep - values.length;
-  const points = values.map((v, i) => [(start + i) * step, y(v)] as const);
-  const line = points
-    .map(
-      ([px, py], i) =>
-        `${i === 0 ? "M" : "L"}${px.toFixed(1)} ${py.toFixed(1)}`,
-    )
-    .join(" ");
-  const first = points[0];
-  const last = points.at(-1);
-  const fill =
-    first && last
-      ? `${line} L${last[0].toFixed(1)} ${height} L${first[0].toFixed(1)} ${height} Z`
-      : "";
-  const latest = values.at(-1);
-  useLayoutEffect(() => {
-    if (reducedMotion()) {
-      return;
-    }
-    group.current?.animate(
-      [{ transform: `translateX(${step}px)` }, { transform: "translateX(0)" }],
-      { duration: SAMPLE_MS, easing: "linear" },
-    );
-    head.current?.animate(
-      [
-        { r: "5", opacity: 0.35 },
-        { r: "2.5", opacity: 1 },
-      ],
-      {
-        duration: 700,
-        easing: "cubic-bezier(0.2, 0, 0, 1)",
-      },
-    );
-  }, [latest, step]);
-  return (
-    <svg
-      className={`lx-spark lx-spark--${tone}`}
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      role="img"
-      aria-label={label}
-    >
-      <defs>
-        <linearGradient id={`g${id}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" className="lx-spark-stop0" />
-          <stop offset="1" className="lx-spark-stop1" />
-        </linearGradient>
-        <clipPath id={`c${id}`}>
-          <rect x="0" y="0" width={width} height={height} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#c${id})`}>
-        <g ref={group}>
-          {area ? (
-            <path className="lx-spark-area" d={fill} fill={`url(#g${id})`} />
-          ) : null}
-          <path
-            className="lx-spark-line"
-            d={line}
-            vectorEffect="non-scaling-stroke"
-          />
-        </g>
-      </g>
-      {last ? (
-        <circle
-          ref={head}
-          className="lx-spark-head"
-          cx={last[0] - 2}
-          cy={last[1]}
-          r="2.5"
-        />
-      ) : null}
-    </svg>
   );
 }
 

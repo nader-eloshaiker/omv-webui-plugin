@@ -14,8 +14,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: ".",
   testMatch: "**/*.spec.ts",
-  // The VM's own browser test (vm/) has its own configuration and never runs here.
-  testIgnore: "vm/**",
+  // The VM's own browser test (vm/) and the design lab's (lab/) have their own configurations.
+  testIgnore: ["vm/**", "lab/**"],
   outputDir: "../test-results/e2e",
   globalSetup: "./support/globalSetup.ts",
   forbidOnly: Boolean(process.env.CI),

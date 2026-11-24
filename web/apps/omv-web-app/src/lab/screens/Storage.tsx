@@ -5,6 +5,13 @@ import { Copy, Stethoscope } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Arrangement, DriveBay } from "../art.tsx";
+import { DISK_ALERT_C } from "../chartModel.ts";
+import {
+  CapacityChart,
+  CapacityTable,
+  DiskTempChart,
+  DiskTempTable,
+} from "../charts.tsx";
 import type { Disk } from "../data.ts";
 import { percent, size } from "../data.ts";
 import { reducedMotion } from "../motion.ts";
@@ -232,6 +239,79 @@ function StorageHead({ children }: { children?: ReactNode }) {
   );
 }
 
+/** The two storage charts' contents: a heading, the chart with its sentence, the table one click away. */
+function SpaceChart({
+  heading,
+}: {
+  heading: (title: string, meta: string) => ReactNode;
+}) {
+  const lab = useLab();
+  const total = lab.nas.fileSystems.reduce((s, f) => s + f.sizeTiB, 0);
+  const used = lab.nas.fileSystems.reduce((s, f) => s + f.usedTiB, 0);
+  const largest = [...lab.nas.fileSystems].sort(
+    (a, b) => b.sizeTiB - a.sizeTiB,
+  )[0];
+  const full = lab.nas.fileSystems.filter(
+    (f) => percent(f.usedTiB, f.sizeTiB) >= 85,
+  );
+  return (
+    <>
+      {heading("Where the space is", "Every file system to one scale")}
+      <figure className="lx-chartfig" aria-labelledby="lx-cap-cap">
+        <CapacityChart
+          fileSystems={lab.nas.fileSystems}
+          label="Space by file system"
+        />
+        <figcaption id="lx-cap-cap" className="lx-vh">
+          {`Space by file system: ${size(used)} of ${size(total)} used. The largest is ${largest?.label ?? ""} at ${size(largest?.sizeTiB ?? 0)}.${full.length > 0 ? ` Almost full: ${full.map((f) => f.label).join(", ")}.` : ""}`}
+        </figcaption>
+      </figure>
+      <More summary="Show as a table">
+        <CapacityTable fileSystems={lab.nas.fileSystems} />
+      </More>
+    </>
+  );
+}
+
+function TempChart({
+  heading,
+}: {
+  heading: (title: string, meta: string) => ReactNode;
+}) {
+  const lab = useLab();
+  const read = lab.nas.disks.filter((d) => d.temp !== null);
+  const hottest = [...read].sort((a, b) => (b.temp ?? 0) - (a.temp ?? 0))[0];
+  const over = read.filter((d) => (d.temp ?? 0) >= DISK_ALERT_C);
+  const silent = lab.nas.disks.filter((d) => d.temp === null);
+  return (
+    <>
+      {heading("Disk temperatures", `Now · alert at ${DISK_ALERT_C}\u00a0°C`)}
+      <figure className="lx-chartfig" aria-labelledby="lx-temp-cap">
+        <DiskTempChart disks={lab.nas.disks} />
+        <figcaption id="lx-temp-cap" className="lx-vh">
+          {`Disk temperatures now. The warmest is ${hottest?.device ?? ""} at ${hottest?.temp ?? 0} °C. ${over.length === 0 ? "All are" : `${over.map((d) => d.device).join(", ")} ${over.length === 1 ? "is" : "are"} not`} below the alert temperature of ${DISK_ALERT_C} °C.${silent.length > 0 ? ` No reading from ${silent.map((d) => d.device).join(", ")}.` : ""}`}
+        </figcaption>
+      </figure>
+      <More summary="Show as a table">
+        <DiskTempTable disks={lab.nas.disks} />
+      </More>
+    </>
+  );
+}
+
+function cardHeading(title: string, meta: string) {
+  return <CardHead title={title} meta={meta} />;
+}
+
+function atlasHeading(title: string, meta: string) {
+  return (
+    <header className="lx-atlas-charthead">
+      <h3 className="lx-h3">{title}</h3>
+      <p className="lx-hint">{meta}</p>
+    </header>
+  );
+}
+
 function InstrumentStorage() {
   const lab = useLab();
   const [fs, setFs] = useState<string | null>(null);
@@ -268,6 +348,12 @@ function InstrumentStorage() {
               </div>
             ))}
           </div>
+        </Card>
+        <Card className="lx-span-7" label="Where the space is" i={1}>
+          <SpaceChart heading={cardHeading} />
+        </Card>
+        <Card className="lx-span-5" label="Disk temperatures" i={1}>
+          <TempChart heading={cardHeading} />
         </Card>
         <Card className="lx-span-12" label="Disks" i={1}>
           <CardHead title="Disks" meta={countBy(lab.nas.disks)} />
@@ -402,6 +488,14 @@ function SkyStorage() {
           );
         })}
       </ul>
+      <div className="lx-grid lx-chartrow">
+        <Card className="lx-span-7" label="Where the space is" i={2}>
+          <SpaceChart heading={cardHeading} />
+        </Card>
+        <Card className="lx-span-5" label="Disk temperatures" i={3}>
+          <TempChart heading={cardHeading} />
+        </Card>
+      </div>
       <h2 className="lx-h2 lx-enter">Disks</h2>
       <div className="lx-card lx-enter lx-loadable lx-baycard">
         <DriveBay disks={lab.nas.disks} focus={lab.focusDisk} />
@@ -445,17 +539,33 @@ function AtlasStorage() {
       </section>
       <section
         className="lx-atlas-sec lx-loadable"
+        aria-labelledby="lx-as-space"
+      >
+        <h2 className="lx-h2" id="lx-as-space">
+          <span className="lx-h2-num">01</span> Space and temperature
+        </h2>
+        <div className="lx-atlas-cols lx-atlas-charts">
+          <div className="lx-atlas-chart">
+            <SpaceChart heading={atlasHeading} />
+          </div>
+          <div className="lx-atlas-chart">
+            <TempChart heading={atlasHeading} />
+          </div>
+        </div>
+      </section>
+      <section
+        className="lx-atlas-sec lx-loadable"
         aria-labelledby="lx-as-disks"
       >
         <h2 className="lx-h2" id="lx-as-disks">
-          <span className="lx-h2-num">01</span> Disks{" "}
+          <span className="lx-h2-num">02</span> Disks{" "}
           <span className="lx-h2-meta">{countBy(lab.nas.disks)}</span>
         </h2>
         <DiskTable highlightFs={null} />
       </section>
       <section className="lx-atlas-sec lx-loadable" aria-labelledby="lx-as-arr">
         <h2 className="lx-h2" id="lx-as-arr">
-          <span className="lx-h2-num">02</span> How pool keeps your data{" "}
+          <span className="lx-h2-num">03</span> How pool keeps your data{" "}
           <span className="lx-h2-meta">Mirror of sdc and sdd</span>
         </h2>
         <Arrangement current="mirror" />

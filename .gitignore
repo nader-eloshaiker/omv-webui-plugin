@@ -1,6 +1,8 @@
 # Dependencies and build output
 node_modules/
 dist/
+# The design lab's test-only build (pnpm build:lab); never packaged
+dist-lab/
 storybook-static/
 coverage/
 playwright-report/

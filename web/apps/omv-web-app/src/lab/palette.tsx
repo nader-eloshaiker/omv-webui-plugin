@@ -53,6 +53,16 @@ export function Palette({
         },
       },
       {
+        id: "p-p",
+        label: "Performance",
+        group: "Go to",
+        hint: "Diagnostics",
+        keys: "g p",
+        run: () => {
+          lab.go("activity");
+        },
+      },
+      {
         id: "p-f",
         label: "Photos",
         group: "Go to",

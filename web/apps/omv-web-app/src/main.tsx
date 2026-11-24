@@ -18,9 +18,12 @@ installTheme();
 const MOCK = import.meta.env.DEV && import.meta.env.VITE_MOCK_API === "true";
 
 // The design lab at /ui/lab (src/lab): development only, behind the same compile-time switch, so a
-// production build emits none of it (UI-11). It does not boot the app or the mock.
+// production build emits none of it (UI-11). It does not boot the app or the mock. The one other
+// way in is `pnpm build:lab` (mode "lab", output dist-lab/), a test-only build that proves the lab
+// under the snippet's real headers (pnpm test:browser:lab); a production build replaces MODE with
+// "production", so the comparison is false at compile time and the branch is dropped.
 const LAB =
-  import.meta.env.DEV &&
+  (import.meta.env.DEV || import.meta.env.MODE === "lab") &&
   window.location.pathname.startsWith(`${import.meta.env.BASE_URL}lab`);
 
 const ScenarioPicker = MOCK

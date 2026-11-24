@@ -28,6 +28,7 @@ const tsconfigRootDir = path.resolve(
 export default defineConfig([
   globalIgnores([
     "**/dist",
+    "**/dist-lab",
     "**/node_modules",
     "**/generated/**",
     "**/storybook-static/**",

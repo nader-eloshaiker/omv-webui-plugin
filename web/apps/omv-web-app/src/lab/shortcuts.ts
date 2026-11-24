@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The lab's keyboard shortcuts: development only (UI-11). "/" or Ctrl+K (Cmd+K) opens the palette;
-// "g" then "o", "s" or "f" jumps to Overview, Storage or Photos. Ignored while typing in a field.
+// "g" then "o", "s", "f" or "p" jumps to Overview, Storage, Photos or Performance. Ignored while typing in a field.
 import { useEffect } from "react";
 import type { Screen } from "./state.ts";
 import { useLab } from "./state.ts";
@@ -13,6 +13,7 @@ export function usePaletteShortcuts(open: () => void) {
       o: "dashboard",
       s: "storage",
       f: "folder",
+      p: "activity",
     };
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;

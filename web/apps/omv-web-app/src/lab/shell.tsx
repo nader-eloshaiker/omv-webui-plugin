@@ -32,6 +32,7 @@ import {
 import type { NavGroup, NavItem } from "./data.ts";
 import { NAV } from "./data.ts";
 import { Palette } from "./palette.tsx";
+import { Activity as ActivityPage } from "./screens/Activity.tsx";
 import { Dashboard } from "./screens/Dashboard.tsx";
 import { FolderPage } from "./screens/FolderPage.tsx";
 import { Storage } from "./screens/Storage.tsx";
@@ -54,7 +55,10 @@ const ICONS: Record<
 };
 
 function currentGroup(screen: Screen): string {
-  return screen === "dashboard" ? "" : "storage";
+  if (screen === "dashboard") {
+    return "";
+  }
+  return screen === "activity" ? "diagnostics" : "storage";
 }
 
 function isCurrent(item: NavItem, screen: Screen): boolean {
@@ -379,7 +383,15 @@ function RailNav() {
 /** Sky: one sidebar; the current group is open and the others fold. */
 function SideNav() {
   const lab = useLab();
-  const [open, setOpen] = useState<string[]>(["storage"]);
+  const [open, setOpen] = useState<string[]>(() => [
+    currentGroup(lab.screen) || "storage",
+  ]);
+  const group = currentGroup(lab.screen);
+  useEffect(() => {
+    if (group) {
+      setOpen((list) => (list.includes(group) ? list : [...list, group]));
+    }
+  }, [group]);
   return (
     <nav className="lx-sidenav" aria-label="Main">
       <DashboardLink />
@@ -598,6 +610,9 @@ function Page() {
   }
   if (lab.screen === "folder") {
     return <FolderPage />;
+  }
+  if (lab.screen === "activity") {
+    return <ActivityPage />;
   }
   return <Dashboard />;
 }

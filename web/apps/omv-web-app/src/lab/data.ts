@@ -391,7 +391,7 @@ export const PEOPLE: Person[] = [
 export interface NavItem {
   id: string;
   label: string;
-  screen?: "dashboard" | "storage" | "folder";
+  screen?: "dashboard" | "storage" | "folder" | "activity";
   classic?: boolean;
 }
 
@@ -473,7 +473,7 @@ export const NAV: NavGroup[] = [
       { id: "processes", label: "Processes" },
       { id: "services", label: "Services" },
       { id: "system-information", label: "System information", classic: true },
-      { id: "performance", label: "Performance", classic: true },
+      { id: "performance", label: "Performance", screen: "activity" },
       { id: "report", label: "Report", classic: true },
     ],
   },

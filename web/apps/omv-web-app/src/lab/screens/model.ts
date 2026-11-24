@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Derived values for the lab's screens: development only (UI-11).
+import { inView, sampledSeconds } from "../chartModel.ts";
 import type { Disk, NasState, Status } from "../data.ts";
 import { percent, STATUS_WORD, worst } from "../data.ts";
 import type { Sample } from "../live.ts";
-import { SAMPLE_MS, useSamples } from "../live.ts";
-
-export function niceMax(v: number): number {
-  const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-  return steps.find((s) => s >= v * 1.15) ?? 1000;
-}
+import { DASH_WINDOW_S, useSamples } from "../live.ts";
 
 export function health(nas: NasState) {
   const diskState = worst(nas.disks.map((d) => d.status));
@@ -37,34 +33,18 @@ export function countBy(disks: { status: Status }[]): string {
 }
 
 /** Every card can show its loading state: same size, content hidden, a quiet skeleton. */
-export function useLiveFigures() {
+/** The live samples in the dashboard's window, and the latest reading. */
+export function useLiveFigures(windowS: number = DASH_WINDOW_S) {
   const samples = useSamples();
   const latest = samples.at(-1) as Sample;
-  const pick = (f: (s: Sample) => number) => samples.map(f);
-  const rx = pick((s) => s.rxMiB);
-  const tx = pick((s) => s.txMiB);
+  const seen = inView(samples, windowS);
   return {
     samples,
     latest,
-    cpu: pick((s) => s.cpu),
-    mem: pick((s) => s.memGiB),
-    rx,
-    tx,
-    temp: pick((s) => s.cpuTemp),
-    netMax: niceMax(Math.max(...rx, ...tx)),
+    windowS,
     // The span actually sampled, not the window's capacity: honest while the page fills it.
-    seconds: Math.round(((samples.length - 1) * SAMPLE_MS) / 1000),
+    seconds: Math.round(sampledSeconds(seen, windowS)),
   };
-}
-
-export function sparkLabel(
-  name: string,
-  values: number[],
-  unit: string,
-): string {
-  const now = values.at(-1) ?? 0;
-  const top = Math.max(...values);
-  return `${name}, sampled while this page is open: now ${now.toFixed(0)} ${unit}, highest ${top.toFixed(0)} ${unit}.`;
 }
 
 export function diskFor(nas: NasState, id: string): Disk | undefined {

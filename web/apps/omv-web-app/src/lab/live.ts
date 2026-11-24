@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The design lab's live sampler: development only (UI-11). OMV keeps no history as numbers (journal,
 // A7), so a chart can only show what the open page has sampled. This stands in for a poll of CPU,
-// memory, load and one interface's byte counters every SAMPLE_MS. The lab prefills a short history
-// so a screenshot shows a tab that has been open for a minute; the real page starts empty.
+// memory, load and one interface's byte counters every SAMPLE_MS, kept for the session (up to
+// SESSION_KEEP samples, so it survives moving between pages, which the foundation allows when it
+// says so). The lab prefills five minutes so a screenshot shows a tab that has been open a while;
+// the real page starts empty.
 import { useSyncExternalStore } from "react";
 
 export const SAMPLE_MS = 2000;
-export const KEEP = 40;
+/** Ten minutes of samples: what a session keeps while the interface is open. */
+export const SESSION_KEEP = 300;
+/** The dashboard's window, in seconds: the last minute. */
+export const DASH_WINDOW_S = 60;
+const PREFILL = 150;
 
 export interface Sample {
   t: number;
@@ -58,7 +64,7 @@ let samples: Sample[] = [];
 {
   const now = Date.now();
   let prev: Sample | undefined;
-  for (let i = 30; i > 0; i -= 1) {
+  for (let i = PREFILL; i > 0; i -= 1) {
     prev = next(prev, now - i * SAMPLE_MS);
     samples.push(prev);
   }
@@ -68,7 +74,7 @@ const listeners = new Set<() => void>();
 let timer: ReturnType<typeof setInterval> | undefined;
 
 function tick() {
-  samples = [...samples, next(samples.at(-1), Date.now())].slice(-KEEP);
+  samples = [...samples, next(samples.at(-1), Date.now())].slice(-SESSION_KEEP);
   for (const listener of listeners) {
     listener();
   }

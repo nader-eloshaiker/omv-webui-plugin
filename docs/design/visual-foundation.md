@@ -487,9 +487,18 @@ Instrument suits a technical audience best but is the easiest to mistake for a g
 - **What is stubbed**: other navigation items and first-step buttons show a toast; the live samples
   are simulated, with 60 seconds prefilled so a fresh tab looks like one open for a minute (the real
   page starts empty); error states and the UI-12 notice are not drawn.
-- **Never shipped**: `main.tsx` loads the lab only when `import.meta.env.DEV` is true and the path is
-  under `/ui/lab`, so a production build emits none of it; `index.css` excludes `src/lab` from
-  Tailwind's sources; `tools/build-check` fails the bundle if `omv-lab` or `lx-labbar` appears.
+- **Never shipped**: `main.tsx` loads the lab only when `import.meta.env.DEV` is true (or the build
+  mode is `lab`) and the path is under `/ui/lab`, so a production build emits none of it; `index.css`
+  excludes `src/lab` from Tailwind's sources; `tools/build-check` fails the bundle if `omv-lab` or
+  `lx-labbar` appears.
+- **Proved under the real headers**: `pnpm test:browser:lab` (in `web/`) builds the lab in the
+  test-only `lab` mode into `dist-lab/` and serves it with the snippet's headers, Trusted Types
+  enforced; every direction and theme is pointed at, driven by keyboard and left to update live, and
+  any CSP or Trusted Types violation fails it.
+- **Charts** are drawn with Recharts (`src/lab/charts.tsx`, what they show in `chartModel.ts`):
+  the dashboard's last minute, the storage page's space and disk temperatures, and a Performance
+  page (Diagnostics) with up to ten minutes of session samples. Every mark is painted by class; text
+  takes `currentColor`.
 - **CSP**: the lab follows the production rules. Styling is one stylesheet of classes; data-driven
   geometry is set as custom properties through the CSSOM (React's `style` prop, `setProperty`), which
   `style-src 'self'` allows; the pending flight's element is made with `createElement` and moved with

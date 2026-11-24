@@ -19,8 +19,56 @@
   --e-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
   --e-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
   /* Springs as native linear() curves: "settle" overshoots 8%, "soft" 1.5%. */
-  --e-settle: linear(0, 0.101, 0.319, 0.561, 0.771, 0.926, 1.023, 1.071, 1.084, 1.075, 1.057, 1.037, 1.019, 1.006, 0.998, 0.994, 0.993, 0.994, 0.995, 0.997, 0.998, 0.999, 1);
-  --e-soft: linear(0, 0.062, 0.202, 0.366, 0.526, 0.665, 0.777, 0.861, 0.922, 0.964, 0.99, 1.005, 1.012, 1.015, 1.015, 1.013, 1.01, 1.008, 1.006, 1.004, 1.002, 1.001, 1);
+  --e-settle: linear(
+    0,
+    0.101,
+    0.319,
+    0.561,
+    0.771,
+    0.926,
+    1.023,
+    1.071,
+    1.084,
+    1.075,
+    1.057,
+    1.037,
+    1.019,
+    1.006,
+    0.998,
+    0.994,
+    0.993,
+    0.994,
+    0.995,
+    0.997,
+    0.998,
+    0.999,
+    1
+  );
+  --e-soft: linear(
+    0,
+    0.062,
+    0.202,
+    0.366,
+    0.526,
+    0.665,
+    0.777,
+    0.861,
+    0.922,
+    0.964,
+    0.99,
+    1.005,
+    1.012,
+    1.015,
+    1.015,
+    1.013,
+    1.01,
+    1.008,
+    1.006,
+    1.004,
+    1.002,
+    1.001,
+    1
+  );
   --stagger: 28ms;
   --rise: 6px;
 }
@@ -49,6 +97,9 @@
   --danger: #f66d67;
   --danger-ink: #2a0606;
   --scrim: rgb(0 0 0 / 0.62);
+  /* Chart series (tokens.css --theme-series-1, -2): never a status hue, the brand or the yellow. */
+  --series-1: #9369d4;
+  --series-2: #97e9e8;
 }
 .omv-lab[data-theme="light"] {
   color-scheme: light;
@@ -65,6 +116,8 @@
   --danger: #b7191c;
   --danger-ink: #ffffff;
   --scrim: rgb(16 22 26 / 0.42);
+  --series-1: #6635a3;
+  --series-2: #006c6c;
 }
 
 /* ─── Direction palettes. Dark first. ────────────────────────────────────────────────────────── */
@@ -89,7 +142,11 @@
   --shadow-card: 0 0 0 1px var(--line);
   --shadow-pop: 0 0 0 1px #2e363e, 0 18px 48px rgb(0 0 0 / 0.55);
   --top-bg: #0e1215;
-  --ambient: radial-gradient(900px 280px at 50% -120px, rgb(93 172 223 / 0.07), transparent 70%);
+  --ambient: radial-gradient(
+    900px 280px at 50% -120px,
+    rgb(93 172 223 / 0.07),
+    transparent 70%
+  );
 }
 .omv-lab[data-dir="instrument"][data-theme="light"] {
   --bg: #eceff2;
@@ -132,12 +189,22 @@
   --trace: #87c6f2;
   --track: #1f2b3b;
   --hl: inset 0 1px 0 rgb(255 255 255 / 0.05);
-  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.045), 0 10px 30px rgb(0 0 0 / 0.28);
-  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 60px rgb(0 0 0 / 0.55);
+  --shadow-card:
+    0 0 0 1px rgb(255 255 255 / 0.045), 0 10px 30px rgb(0 0 0 / 0.28);
+  --shadow-pop:
+    0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 60px rgb(0 0 0 / 0.55);
   --top-bg: transparent;
   --ambient:
-    radial-gradient(1100px 560px at 18% -220px, rgb(93 172 223 / 0.22), transparent 70%),
-    radial-gradient(800px 420px at 92% -200px, rgb(135 198 242 / 0.1), transparent 70%);
+    radial-gradient(
+      1100px 560px at 18% -220px,
+      rgb(93 172 223 / 0.22),
+      transparent 70%
+    ),
+    radial-gradient(
+      800px 420px at 92% -200px,
+      rgb(135 198 242 / 0.1),
+      transparent 70%
+    );
 }
 .omv-lab[data-dir="sky"][data-theme="light"] {
   --bg: #eef3f8;
@@ -156,12 +223,23 @@
   --trace: #1272ab;
   --track: #e3eaf1;
   --hl: none;
-  --shadow-card: 0 0 0 1px rgb(15 26 38 / 0.05), 0 1px 2px rgb(15 26 38 / 0.05), 0 10px 28px rgb(15 26 38 / 0.06);
-  --shadow-pop: 0 0 0 1px rgb(15 26 38 / 0.06), 0 24px 56px rgb(15 26 38 / 0.18);
+  --shadow-card:
+    0 0 0 1px rgb(15 26 38 / 0.05), 0 1px 2px rgb(15 26 38 / 0.05),
+    0 10px 28px rgb(15 26 38 / 0.06);
+  --shadow-pop:
+    0 0 0 1px rgb(15 26 38 / 0.06), 0 24px 56px rgb(15 26 38 / 0.18);
   --top-bg: transparent;
   --ambient:
-    radial-gradient(1100px 560px at 18% -220px, rgb(93 172 223 / 0.28), transparent 70%),
-    radial-gradient(800px 420px at 92% -200px, rgb(135 198 242 / 0.22), transparent 70%);
+    radial-gradient(
+      1100px 560px at 18% -220px,
+      rgb(93 172 223 / 0.28),
+      transparent 70%
+    ),
+    radial-gradient(
+      800px 420px at 92% -200px,
+      rgb(135 198 242 / 0.22),
+      transparent 70%
+    );
 }
 
 /* Atlas: an even, near-neutral ground; structure from type, rules and lines, not boxes. */
@@ -270,7 +348,16 @@
     --r-card: 30px;
     --r-ctl: 16px;
   }
-  .omv-lab[data-dir="sky"] :is(.lx-card, .lx-hero, .lx-btn, .lx-palette, .lx-dialog, .lx-node, .lx-chassis) {
+  .omv-lab[data-dir="sky"]
+    :is(
+      .lx-card,
+      .lx-hero,
+      .lx-btn,
+      .lx-palette,
+      .lx-dialog,
+      .lx-node,
+      .lx-chassis
+    ) {
     corner-shape: squircle;
   }
 }
@@ -288,7 +375,9 @@
   font-feature-settings: var(--features);
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
-  transition: background-color var(--d-4) var(--e-std), color var(--d-4) var(--e-std);
+  transition:
+    background-color var(--d-4) var(--e-std),
+    color var(--d-4) var(--e-std);
 }
 .omv-lab *,
 .omv-lab *::before,
@@ -428,7 +517,10 @@
   background-image: linear-gradient(var(--danger), var(--danger));
   background-repeat: no-repeat;
   background-size: 0% 100%;
-  transition: background-size var(--d-4) var(--e-std), color var(--d-3) var(--e-std), border-color var(--d-3);
+  transition:
+    background-size var(--d-4) var(--e-std),
+    color var(--d-3) var(--e-std),
+    border-color var(--d-3);
 }
 .lx-btn--danger.is-armed {
   background-size: 100% 100%;
@@ -493,7 +585,9 @@
   border-radius: var(--r-ctl);
   background: transparent;
   color: var(--ink-2);
-  transition: background-color var(--d-2), color var(--d-2);
+  transition:
+    background-color var(--d-2),
+    color var(--d-2);
 }
 .lx-iconbtn:hover {
   background: var(--s3);
@@ -514,7 +608,10 @@
   border: 1px solid var(--line);
   border-bottom-width: 2px;
   border-radius: 5px;
-  font: 500 0.75rem/1.4 "Roboto Mono Variable", ui-monospace, monospace;
+  font:
+    500 0.75rem/1.4 "Roboto Mono Variable",
+    ui-monospace,
+    monospace;
   color: var(--ink-2);
   text-align: center;
 }
@@ -572,7 +669,10 @@
   border-radius: 999px;
   background: var(--s3);
   color: var(--ink-2);
-  font: 500 0.75rem/1.5 "Roboto Mono Variable", ui-monospace, monospace;
+  font:
+    500 0.75rem/1.5 "Roboto Mono Variable",
+    ui-monospace,
+    monospace;
 }
 .lx-top-end {
   display: flex;
@@ -591,7 +691,9 @@
   border-radius: var(--r-ctl);
   background: var(--s2);
   color: var(--ink-3);
-  transition: border-color var(--d-2), background-color var(--d-2);
+  transition:
+    border-color var(--d-2),
+    background-color var(--d-2);
 }
 .lx-search:hover {
   border-color: var(--line-2);
@@ -611,7 +713,10 @@
   background: transparent;
   color: var(--ink-3);
   font-weight: 550;
-  transition: background-color var(--d-3), color var(--d-3), border-color var(--d-3);
+  transition:
+    background-color var(--d-3),
+    color var(--d-3),
+    border-color var(--d-3);
 }
 .lx-pendchip .lx-mark {
   opacity: 0.4;
@@ -690,7 +795,9 @@
   color: var(--ink-2);
   font-size: 0.75rem;
   font-weight: 550;
-  transition: background-color var(--d-2), color var(--d-2);
+  transition:
+    background-color var(--d-2),
+    color var(--d-2);
 }
 .lx-railbtn:hover {
   background: var(--s3);
@@ -747,7 +854,9 @@
   color: var(--ink-2);
   text-decoration: none;
   font-weight: 500;
-  transition: background-color var(--d-2), color var(--d-2);
+  transition:
+    background-color var(--d-2),
+    color var(--d-2);
 }
 .lx-navlink:hover {
   background: var(--s3);
@@ -874,7 +983,9 @@
   background: transparent;
   color: var(--ink-2);
   font-weight: 600;
-  transition: color var(--d-2), background-color var(--d-2);
+  transition:
+    color var(--d-2),
+    background-color var(--d-2);
 }
 .lx-tab:hover {
   color: var(--ink);
@@ -928,7 +1039,9 @@
   translate: var(--ind-x, 0px) 0;
   background: var(--brand);
   border-radius: 2px;
-  transition: translate var(--d-4) var(--e-settle), width var(--d-4) var(--e-settle);
+  transition:
+    translate var(--d-4) var(--e-settle),
+    width var(--d-4) var(--e-settle);
 }
 .omv-lab[data-dir="atlas"] .lx-main {
   padding-top: 40px;
@@ -1165,7 +1278,10 @@
 }
 .lx-h2-num {
   margin-inline-end: 10px;
-  font: 500 0.8125rem "Roboto Mono Variable", ui-monospace, monospace;
+  font:
+    500 0.8125rem "Roboto Mono Variable",
+    ui-monospace,
+    monospace;
   color: var(--brand-label);
   letter-spacing: 0;
 }
@@ -1390,29 +1506,6 @@
   font-weight: 650;
   font-size: 1rem;
 }
-.lx-spark {
-  display: block;
-  width: 100%;
-  height: 44px;
-  overflow: visible;
-}
-.lx-spark-line {
-  fill: none;
-  stroke: var(--trace);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
-.lx-spark-stop0 {
-  stop-color: var(--trace);
-  stop-opacity: 0.32;
-}
-.lx-spark-stop1 {
-  stop-color: var(--trace);
-  stop-opacity: 0;
-}
-.lx-spark-head {
-  fill: var(--trace);
-}
 .lx-livecap {
   display: inline-flex;
   align-items: center;
@@ -1436,30 +1529,56 @@
 .lx-card--fill > .lx-live {
   flex: 1;
 }
-.lx-card--fill .lx-livetile {
-  grid-template-rows: auto auto minmax(44px, 1fr) auto;
-}
-.lx-card--fill .lx-livetile-spark .lx-spark {
-  height: 100%;
-  min-height: 44px;
-}
 
-/* Live tiles: three treatments */
+/* Live tiles: three treatments, each a reading above a chart of the last minute */
 .lx-live {
+  display: grid;
+  gap: 10px;
+}
+.lx-live-tiles {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
 }
 .lx-livetile {
   display: grid;
+  grid-template-rows: auto auto 1fr auto;
   align-content: start;
   gap: 2px;
   min-width: 0;
+  margin: 0;
 }
 .lx-livetile-name {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: -2px -4px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
   color: var(--ink-2);
+  font: inherit;
   font-size: 0.8125rem;
   font-weight: 550;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    color var(--d-2),
+    background-color var(--d-2);
+}
+.lx-livetile-name:hover {
+  color: var(--ink);
+  background: var(--s3);
+}
+.lx-livetile-chev {
+  color: var(--ink-3);
+  transition: translate var(--d-2) var(--e-std);
+}
+.lx-livetile-name:hover .lx-livetile-chev {
+  translate: 2px 0;
+  color: var(--ink-2);
 }
 .lx-livetile-value {
   font-size: var(--fs-read);
@@ -1468,20 +1587,45 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
+.lx-livetile-dir {
+  margin-inline-end: 0.4em;
+  color: var(--ink-3);
+  font-family: "Inter Variable", Inter, system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  letter-spacing: 0;
+}
 .lx-livetile-sub {
   color: var(--ink-3);
   font-size: 0.75rem;
 }
-.lx-livetile-spark {
-  margin: 6px 0 2px;
+.lx-livetile-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
 }
-.lx-live--readout {
+.lx-livetile-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.lx-livetile-legend .lx-num {
+  color: var(--ink-2);
+}
+.lx-livetile-chart {
+  min-width: 0;
+  margin: 6px 0 4px;
+}
+.lx-live--readout .lx-live-tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   background: var(--line);
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
 }
 .lx-live--readout .lx-livetile {
+  --chart-ground: var(--s2);
   padding: 12px 14px 10px;
   background: var(--s2);
 }
@@ -1490,14 +1634,11 @@
   letter-spacing: 0.06em;
   font-size: 0.75rem;
 }
-.lx-live--soft {
+.lx-live--soft .lx-live-tiles {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px 28px;
+  gap: 22px 28px;
 }
-.lx-live--soft .lx-spark {
-  height: 52px;
-}
-.lx-live--figure {
+.lx-live--figure .lx-live-tiles {
   gap: 0;
 }
 .lx-live--figure .lx-livetile {
@@ -1512,8 +1653,429 @@
   font-weight: 300;
   letter-spacing: -0.04em;
 }
-.lx-live--figure .lx-spark {
-  height: 30px;
+
+/* ─── Charts (Recharts): every mark is painted here through a class, never an attribute ─────── */
+.lx-chart {
+  --chart-h: 96px;
+  --chart-line: 1.75px;
+  --chart-fill-top: 0.3;
+  --chart-ground: var(--s1);
+  position: relative;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.lx-chart .lx-chart-surface {
+  width: 100%;
+  height: var(--chart-h);
+}
+.lx-chart--large {
+  --chart-h: 240px;
+}
+.lx-chart--bars {
+  --chart-h: 220px;
+}
+.lx-chart svg {
+  overflow: visible;
+}
+.lx-chart .recharts-surface:focus {
+  outline: none;
+}
+.lx-chart .recharts-surface:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.lx-chart .recharts-cartesian-grid line {
+  stroke: var(--line);
+  stroke-width: 1px;
+}
+/* Text arrives with fill: currentColor; its colour is set here. */
+.lx-chart .recharts-cartesian-axis-tick-value {
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+.lx-chart-axis--names .recharts-cartesian-axis-tick-value {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.lx-chart-series.is-trace {
+  color: var(--trace);
+}
+.lx-chart-series.is-s1 {
+  color: var(--series-1);
+}
+.lx-chart-series.is-s2 {
+  color: var(--series-2);
+}
+.lx-chart-series .recharts-area-curve,
+.lx-chart-series .recharts-line-curve {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--chart-line);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.lx-chart-series.is-dash .recharts-line-curve {
+  stroke-dasharray: 5 4;
+}
+.lx-chart-series .recharts-area-area {
+  stroke: none;
+  fill-opacity: 1;
+}
+.lx-chart-stop0 {
+  stop-color: var(--trace);
+  stop-opacity: var(--chart-fill-top);
+}
+.lx-chart-stop1 {
+  stop-color: var(--trace);
+  stop-opacity: 0;
+}
+.lx-chart-head,
+.lx-chart-head circle,
+.lx-chart-active,
+.lx-chart .recharts-active-dot circle {
+  stroke: var(--chart-ground);
+  stroke-width: 2px;
+}
+.lx-chart-head.is-trace circle,
+.lx-chart-active.is-trace {
+  fill: var(--trace);
+}
+.lx-chart-head.is-s1 circle,
+.lx-chart-active.is-s1 {
+  fill: var(--series-1);
+}
+.lx-chart-head.is-s2 circle,
+.lx-chart-active.is-s2 {
+  fill: var(--series-2);
+}
+.lx-chart .lx-chart-direct {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 550;
+}
+.lx-chart-ref line,
+.lx-chart .recharts-reference-line-line {
+  stroke: var(--line-2);
+  stroke-width: 1px;
+  stroke-dasharray: 2 3;
+}
+.lx-chart .lx-chart-reflabel {
+  color: var(--ink-2);
+  font-size: 0.6875rem;
+  font-weight: 550;
+}
+.lx-chart-cursor,
+.lx-chart .recharts-tooltip-cursor {
+  stroke: var(--line-2);
+  stroke-width: 1px;
+  fill: none;
+}
+.lx-chart-band,
+.lx-chart .recharts-rectangle.recharts-tooltip-cursor {
+  fill: var(--s3);
+  fill-opacity: 0.55;
+  stroke: none;
+}
+.lx-chart .lx-chart-disktick-note {
+  color: var(--ink-3);
+  font-size: 0.6875rem;
+  font-style: italic;
+  font-weight: 500;
+}
+.lx-chart-bar.is-used .recharts-rectangle {
+  fill: var(--trace);
+}
+.lx-chart-bar.is-free .recharts-rectangle {
+  fill: var(--track);
+}
+.lx-chart .lx-chart-barlabel {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.lx-chart-swatch {
+  flex: none;
+  overflow: visible;
+}
+.lx-chart-swatch path {
+  fill: none;
+  stroke-width: 2.25px;
+  stroke-linecap: round;
+}
+.lx-chart-swatch.is-trace path {
+  stroke: var(--trace);
+}
+.lx-chart-swatch.is-s1 path {
+  stroke: var(--series-1);
+}
+.lx-chart-swatch.is-s2 path {
+  stroke: var(--series-2);
+}
+.lx-chart-swatch.is-dash path {
+  stroke-dasharray: 4 3;
+}
+/* A chart in a card or a section: the figure, then its table one click away */
+.lx-chartfig {
+  margin: 0;
+  min-width: 0;
+}
+.lx-chartfig + .lx-more {
+  margin-top: 6px;
+}
+.lx-chartrow {
+  margin-block: 4px 8px;
+}
+.lx-atlas-charts {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.lx-atlas-chart {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+.lx-atlas-charthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.lx-h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+/* The Performance page: one card (or numbered section) per metric, figures beside the title */
+.lx-perf-note {
+  max-width: 72ch;
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+.lx-perf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-top: 16px;
+}
+.lx-perf-classic {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8125rem;
+}
+.lx-perf-list {
+  display: grid;
+  gap: var(--gap);
+  margin-top: var(--gap);
+}
+.lx-perf {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.lx-perf-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 32px;
+}
+.lx-perf-head {
+  display: grid;
+  gap: 8px;
+}
+.lx-perf-title {
+  margin: 0;
+}
+.lx-perf-figs {
+  display: grid;
+  gap: 8px;
+}
+.lx-perf-fig {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  align-items: end;
+  gap: 4px 28px;
+  margin: 0;
+}
+.lx-perf-fig > div {
+  display: grid;
+  gap: 1px;
+}
+.lx-perf-fig:has(.lx-perf-fig-series) {
+  grid-template-columns: auto repeat(4, auto);
+}
+.lx-perf-fig dt {
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.lx-perf-fig dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lx-perf-fig .lx-perf-fig-now dd {
+  color: var(--ink);
+  font-family: var(--font-read);
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+.lx-perf-fig .lx-perf-fig-series {
+  min-width: 52px;
+  align-self: center;
+}
+.lx-perf-fig-series dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 550;
+}
+@media (max-width: 560px) {
+  .lx-perf-fig,
+  .lx-perf-fig:has(.lx-perf-fig-series) {
+    grid-template-columns: repeat(4, minmax(0, auto));
+    gap: 4px 16px;
+  }
+  .lx-perf-fig .lx-perf-fig-series {
+    grid-column: 1 / -1;
+  }
+  .lx-perf-fig dd {
+    font-size: 0.875rem;
+  }
+  .lx-perf-fig .lx-perf-fig-now dd {
+    font-size: 1rem;
+  }
+  .lx-chart--large {
+    --chart-h: 200px;
+  }
+}
+.lx-perf.is-arrived {
+  animation: lx-arrive 1.6s var(--e-std) 300ms;
+}
+.omv-lab[data-dir="atlas"] .lx-perf-list {
+  gap: 28px;
+}
+
+/* The tooltip: the exact value and the moment, in text tokens, never a series colour */
+.lx-chart .recharts-tooltip-wrapper {
+  z-index: 5;
+  pointer-events: none;
+}
+.lx-chart-tip {
+  min-width: 148px;
+  padding: 8px 10px;
+  border-radius: var(--r-ctl);
+  background: var(--s1);
+  box-shadow: var(--shadow-pop);
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.lx-chart-tip p {
+  margin: 0;
+}
+.lx-chart-tip ul {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lx-chart-tip li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+}
+.lx-chart-tip-time {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 650;
+}
+.lx-chart-tip-ago {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.lx-chart-tip-name {
+  color: var(--ink-2);
+}
+.lx-chart-tip-val {
+  font-weight: 650;
+}
+
+/* The table equivalent */
+.lx-chart-tablewrap {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-ctl);
+}
+.lx-chart-table {
+  width: 100%;
+  font-size: 0.8125rem;
+}
+.lx-chart-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--s2);
+}
+.lx-chart-table .is-num {
+  text-align: end;
+  white-space: nowrap;
+}
+.lx-chart-table tbody th {
+  font-weight: 500;
+  text-align: start;
+}
+.lx-chart-table-unit {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* Direction: Instrument draws crisp traces on a hairline grid, Sky soft filled areas, Atlas thin
+   lines with the least ink. */
+.omv-lab[data-dir="instrument"] .lx-chart {
+  --chart-line: 1.5px;
+  --chart-fill-top: 0.26;
+}
+.omv-lab[data-dir="instrument"] .lx-chart .recharts-cartesian-axis-tick-value {
+  font-family: "Roboto Mono Variable", "Roboto Mono", ui-monospace, monospace;
+  font-size: 0.65625rem;
+}
+.omv-lab[data-dir="instrument"] .lx-chart--tile {
+  --chart-h: 112px;
+}
+.omv-lab[data-dir="sky"] .lx-chart {
+  --chart-line: 2.25px;
+  --chart-fill-top: 0.34;
+}
+.omv-lab[data-dir="sky"] .lx-chart--tile {
+  --chart-h: 104px;
+}
+.omv-lab[data-dir="sky"] .lx-chart .recharts-cartesian-grid line {
+  stroke-dasharray: 0;
+  opacity: 0.7;
+}
+.omv-lab[data-dir="atlas"] .lx-chart {
+  --chart-line: 1.25px;
+  --chart-fill-top: 0.16;
+}
+.omv-lab[data-dir="atlas"] .lx-chart--tile {
+  --chart-h: 84px;
+}
+.omv-lab[data-dir="atlas"] .lx-chart .recharts-cartesian-grid line {
+  stroke-dasharray: 1 3;
 }
 
 /* ─── Dashboard parts ───────────────────────────────────────────────────────────────────────── */
@@ -1585,7 +2147,9 @@ button.lx-strip-cell:hover {
 .lx-strip-chev {
   opacity: 0;
   translate: -3px 0;
-  transition: opacity var(--d-2), translate var(--d-2) var(--e-std);
+  transition:
+    opacity var(--d-2),
+    translate var(--d-2) var(--e-std);
 }
 .lx-strip-cell:hover .lx-strip-chev,
 .lx-strip-cell:focus-visible .lx-strip-chev {
@@ -1656,7 +2220,9 @@ button.lx-strip-cell:hover {
   box-shadow: var(--shadow-card), var(--hl);
 }
 .lx-attn-cards .lx-attn-item--warning {
-  box-shadow: var(--shadow-card), inset 0 3px 0 var(--warning);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 3px 0 var(--warning);
 }
 /* Atlas: numbered, editorial */
 .lx-attn--numbered .lx-attn-item {
@@ -1734,7 +2300,9 @@ button.lx-strip-cell:hover {
   animation-delay: calc(200ms + var(--i) * 40ms);
 }
 .lx-sled.is-warning {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning-stroke) 60%, transparent), inset 3px 0 0 var(--warning);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--warning-stroke) 60%, transparent),
+    inset 3px 0 0 var(--warning);
 }
 .lx-sled-role {
   color: var(--ink-2);
@@ -1886,11 +2454,19 @@ button.lx-strip-cell:hover {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(500px 240px at 100% 0%, var(--brand-soft), transparent 70%);
+  background: radial-gradient(
+    500px 240px at 100% 0%,
+    var(--brand-soft),
+    transparent 70%
+  );
   pointer-events: none;
 }
 .lx-hero.is-warning::before {
-  background: radial-gradient(520px 260px at 100% 0%, color-mix(in srgb, var(--warning) 13%, transparent), transparent 70%);
+  background: radial-gradient(
+    520px 260px at 100% 0%,
+    color-mix(in srgb, var(--warning) 13%, transparent),
+    transparent 70%
+  );
 }
 .lx-hero > * {
   position: relative;
@@ -2000,7 +2576,9 @@ button.lx-strip-cell:hover {
   box-shadow: var(--shadow-card);
 }
 .lx-diskcard.is-warning {
-  box-shadow: var(--shadow-card), inset 0 3px 0 var(--warning);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 3px 0 var(--warning);
 }
 .lx-diskicon {
   flex: none;
@@ -2110,7 +2688,10 @@ button.lx-strip-cell:hover {
   stroke-dashoffset: 1;
   animation: lx-draw 900ms var(--e-std) forwards;
   animation-delay: calc(250ms + var(--i) * 30ms);
-  transition: stroke var(--d-3), stroke-opacity var(--d-3), stroke-width var(--d-3);
+  transition:
+    stroke var(--d-3),
+    stroke-opacity var(--d-3),
+    stroke-width var(--d-3);
 }
 .lx-flow-path--warning {
   stroke: var(--warning-stroke);
@@ -2164,7 +2745,11 @@ button.lx-strip-cell:hover {
   border-radius: var(--r-ctl);
   background: var(--s1);
   text-align: start;
-  transition: opacity var(--d-3), border-color var(--d-3), background-color var(--d-3), translate var(--d-3) var(--e-settle);
+  transition:
+    opacity var(--d-3),
+    border-color var(--d-3),
+    background-color var(--d-3),
+    translate var(--d-3) var(--e-settle);
 }
 .lx-node:hover {
   border-color: var(--line-2);
@@ -2285,7 +2870,9 @@ button.lx-strip-cell:hover {
   border-bottom: 0;
 }
 .lx-table tbody tr {
-  transition: background-color var(--d-2), opacity var(--d-3);
+  transition:
+    background-color var(--d-2),
+    opacity var(--d-3);
 }
 .lx-table tbody tr:hover {
   background: var(--s2);
@@ -2404,7 +2991,9 @@ button.lx-strip-cell:hover {
   border: 1.5px solid var(--line-2);
   border-radius: 999px;
   background: var(--s3);
-  transition: background-color var(--d-3) var(--e-std), border-color var(--d-3);
+  transition:
+    background-color var(--d-3) var(--e-std),
+    border-color var(--d-3);
 }
 .lx-switch-thumb {
   position: absolute;
@@ -2414,7 +3003,10 @@ button.lx-strip-cell:hover {
   height: 17px;
   border-radius: 50%;
   background: var(--ink-2);
-  transition: translate var(--d-4) var(--e-settle), background-color var(--d-3), width var(--d-2) var(--e-std);
+  transition:
+    translate var(--d-4) var(--e-settle),
+    background-color var(--d-3),
+    width var(--d-2) var(--e-std);
 }
 .lx-switch:active .lx-switch-thumb {
   width: 21px;
@@ -2448,7 +3040,10 @@ button.lx-strip-cell:hover {
   font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
-  transition: background-color var(--d-2), color var(--d-2), box-shadow var(--d-3) var(--e-settle);
+  transition:
+    background-color var(--d-2),
+    color var(--d-2),
+    box-shadow var(--d-3) var(--e-settle);
 }
 .lx-seg-opt:hover {
   color: var(--ink);
@@ -2524,7 +3119,9 @@ button.lx-strip-cell:hover {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: opacity var(--d-2), translate var(--d-3) var(--e-settle);
+  transition:
+    opacity var(--d-2),
+    translate var(--d-3) var(--e-settle);
 }
 .lx-save .lx-save-busy,
 .lx-save .lx-save-done {
@@ -2546,7 +3143,9 @@ button.lx-strip-cell:hover {
   background: var(--ok);
   border-color: var(--ok-stroke);
   color: #05341a;
-  transition: background-color var(--d-3), border-color var(--d-3);
+  transition:
+    background-color var(--d-3),
+    border-color var(--d-3);
 }
 .lx-tick path {
   fill: none;
@@ -2615,7 +3214,10 @@ button.lx-strip-cell:hover {
     height: 0;
     overflow: clip;
     opacity: 0;
-    transition: height var(--d-4) var(--e-soft), opacity var(--d-3), content-visibility var(--d-4) allow-discrete;
+    transition:
+      height var(--d-4) var(--e-soft),
+      opacity var(--d-3),
+      content-visibility var(--d-4) allow-discrete;
   }
   .lx-more[open]::details-content {
     height: auto;
@@ -2744,7 +3346,9 @@ button.lx-strip-cell:hover {
 }
 .lx-callout--warning {
   background: color-mix(in srgb, var(--warning) 10%, var(--s1));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning-stroke) 45%, transparent), inset 4px 0 0 var(--warning);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--warning-stroke) 45%, transparent),
+    inset 4px 0 0 var(--warning);
 }
 .lx-tabcard {
   padding-top: 0;
@@ -2778,7 +3382,9 @@ button.lx-strip-cell:hover {
   width: var(--ind-w, 0px);
   translate: var(--ind-x, 0px) 0;
   background: var(--brand);
-  transition: translate var(--d-4) var(--e-settle), width var(--d-4) var(--e-settle);
+  transition:
+    translate var(--d-4) var(--e-settle),
+    width var(--d-4) var(--e-settle);
 }
 .lx-tabpanel {
   display: grid;
@@ -3120,7 +3726,9 @@ button.lx-strip-cell:hover {
   padding: 10px 14px 14px;
   border-radius: 14px;
   background: linear-gradient(180deg, var(--s3), var(--s2));
-  box-shadow: inset 0 0 0 1px var(--line), var(--hl);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--hl);
 }
 .lx-chassis-top {
   display: flex;
@@ -3128,7 +3736,10 @@ button.lx-strip-cell:hover {
   gap: 8px;
   margin-bottom: 10px;
   color: var(--ink-3);
-  font: 500 0.75rem "Roboto Mono Variable", ui-monospace, monospace;
+  font:
+    500 0.75rem "Roboto Mono Variable",
+    ui-monospace,
+    monospace;
 }
 .lx-chassis-power {
   width: 8px;
@@ -3279,11 +3890,16 @@ button.lx-strip-cell:hover {
   fill: var(--brand-soft);
   stroke: var(--brand);
   stroke-width: 1.5;
-  transition: fill var(--d-3), stroke var(--d-3), opacity var(--d-3);
+  transition:
+    fill var(--d-3),
+    stroke var(--d-3),
+    opacity var(--d-3);
 }
 .lx-arr-block text {
   fill: var(--brand-label);
-  font: 600 12px "Inter Variable", sans-serif;
+  font:
+    600 12px "Inter Variable",
+    sans-serif;
 }
 .lx-arr-block.is-parity rect {
   fill: transparent;
@@ -3432,7 +4048,9 @@ button.lx-strip-cell:hover {
 }
 .lx-delpic-dep text {
   fill: var(--ink-2);
-  font: 500 12px "Inter Variable", sans-serif;
+  font:
+    500 12px "Inter Variable",
+    sans-serif;
 }
 .lx-emptyart {
   display: flex;
@@ -3481,12 +4099,18 @@ button.lx-strip-cell:hover {
   border-radius: 12px;
   background: #1b1d20;
   color: #e8e8e8;
-  box-shadow: 0 0 0 1px #34373b, 0 12px 32px rgb(0 0 0 / 0.4);
-  font: 500 12px/1 "Inter Variable", sans-serif;
+  box-shadow:
+    0 0 0 1px #34373b,
+    0 12px 32px rgb(0 0 0 / 0.4);
+  font:
+    500 12px/1 "Inter Variable",
+    sans-serif;
 }
 .lx-labbar-tag {
   padding: 0 6px;
-  font: 600 11px "Roboto Mono Variable", monospace;
+  font:
+    600 11px "Roboto Mono Variable",
+    monospace;
   color: #f8d400;
 }
 .lx-labbar-group {
@@ -3596,10 +4220,14 @@ button.lx-strip-cell:hover {
     translate: 0 10px;
   }
 }
-html[data-lab-nav="forward"]:has(.omv-lab[data-dir="atlas"])::view-transition-new(lx-main) {
+html[data-lab-nav="forward"]:has(
+    .omv-lab[data-dir="atlas"]
+  )::view-transition-new(lx-main) {
   animation-name: lx-vt-in-right;
 }
-html[data-lab-nav="back"]:has(.omv-lab[data-dir="atlas"])::view-transition-new(lx-main) {
+html[data-lab-nav="back"]:has(.omv-lab[data-dir="atlas"])::view-transition-new(
+    lx-main
+  ) {
   animation-name: lx-vt-in-left;
 }
 html:has(.omv-lab[data-dir="sky"])::view-transition-new(lx-main) {
@@ -3690,11 +4318,11 @@ html:has(.omv-lab[data-dir="sky"])::view-transition-new(lx-main) {
   }
 }
 @media (max-width: 760px) {
-  .lx-live {
+  .lx-live-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .lx-live--figure {
-    gap: 20px 0;
+  .lx-live--figure .lx-live-tiles {
+    gap: 24px 0;
   }
   .lx-live--figure .lx-livetile:nth-child(3) {
     padding-inline-start: 0;
@@ -3798,6 +4426,20 @@ html:has(.omv-lab[data-dir="sky"])::view-transition-new(lx-main) {
 }
 
 /* ─── Reduced motion: nothing moves; fades stay short; meaning stays ────────────────────────── */
+@media (max-width: 560px) {
+  .lx-live .lx-live-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lx-live--figure .lx-livetile,
+  .lx-live--figure .lx-livetile:nth-child(3) {
+    padding: 0;
+    border: 0;
+  }
+  .lx-live--figure .lx-livetile + .lx-livetile {
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .omv-lab {
     --d-1: 0ms;

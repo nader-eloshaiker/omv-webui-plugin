@@ -428,8 +428,8 @@ function AtlasDashboard() {
         <h1 className="lx-display">{h.headline}.</h1>
       </header>
       <section className="lx-atlas-band lx-loadable" aria-label="Activity">
-        <LiveGrid variant="figure" />
         <LiveCaption />
+        <LiveGrid variant="figure" />
       </section>
       <div className="lx-atlas-cols">
         <section

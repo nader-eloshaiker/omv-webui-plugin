@@ -9,11 +9,13 @@
     "dev": "vite",
     "dev:mock": "vite --mode mock",
     "build": "tsc -b && vite build",
+    "build:lab": "tsc -b && vite build --mode lab --outDir dist-lab",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:browser": "playwright test --config e2e/playwright.config.ts",
     "test:browser:install": "playwright install chromium",
+    "test:browser:lab": "playwright test --config e2e/lab/playwright.config.ts",
     "test:browser:vm": "playwright test --config e2e/vm/playwright.config.ts"
   },
   "dependencies": {
@@ -27,6 +29,8 @@
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "react-i18next": "catalog:i18n",
+    "react-is": "catalog:charts",
+    "recharts": "catalog:charts",
     "zustand": "catalog:react"
   },
   "devDependencies": {
