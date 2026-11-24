@@ -11,6 +11,7 @@
 // nothing is pending before it starts: it never applies a change it did not make.
 import type { Locator, Page } from "@playwright/test";
 import copy from "../../src/locales/en/common.json" with { type: "json" };
+import { openNavGroup } from "../support/shell.ts";
 import { expect, target, test, type RpcLog } from "./support/vmFixtures.ts";
 import type { Account } from "./support/vmTarget.ts";
 
@@ -132,6 +133,7 @@ test.describe("an administrator", () => {
       "Changes are already pending on the VM; Apply would apply them too.",
     );
 
+    await openNavGroup(page, "services");
     await navigation(page)
       .getByRole("link", { name: copy.nav.items.services.ssh })
       .click();
@@ -222,6 +224,7 @@ test.describe("an administrator", () => {
     const lastPage = () => pages.filter((p) => p.params.limit !== null).at(-1);
 
     await signIn(page, vm.admin);
+    await openNavGroup(page, "storage");
     await navigation(page)
       .getByRole("link", { name: copy.nav.items.storage["shared-folders"] })
       .click();
@@ -336,6 +339,7 @@ test.describe("a normal user", () => {
     vm,
   }) => {
     await signIn(page, vm.user);
+    await openNavGroup(page, "account");
     const accountLink: Locator = navigation(page).getByRole("link", {
       name: copy.nav.items.account.settings,
     });

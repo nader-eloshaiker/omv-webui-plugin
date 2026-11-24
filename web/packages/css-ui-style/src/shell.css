@@ -1,0 +1,61 @@
+/* The shell's motion (docs/design/visual-foundation.md 7.2 and 10), in the stylesheet so nothing is
+ * inserted at run time (UI-1). Durations and curves are the motion tokens; under
+ * prefers-reduced-motion they are 0 and the base rule in index.css cuts view transitions, so a page
+ * change is a cut and the apply line is static.
+ */
+
+/* ─── Page change (foundation 7.2, Sky) ───────────────────────────────────────────────────────── */
+/* The shell is named and stays still: the top bar, the sidebar and the pending band do not move or
+   fade. The page in `main` fades out quickly and the new one fades in, scaling up from 0.985. The
+   rest of the document (the ground, the notices) is cut, not cross-faded. Only where the browser has
+   the View Transitions API; the router starts one only on a change of page. */
+::view-transition-group(root),
+::view-transition-group(shell-top),
+::view-transition-group(shell-nav),
+::view-transition-group(shell-pending),
+::view-transition-group(shell-main) {
+  animation-duration: 0s;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(shell-main) {
+  animation: shell-page-out var(--duration-fast) var(--ease-exit) both;
+}
+/* The new page waits half the old one's exit, so the two are never read on top of each other. */
+::view-transition-new(shell-main) {
+  animation: shell-page-in var(--duration-slow) var(--ease-enter)
+    calc(var(--duration-fast) / 2) both;
+}
+@keyframes shell-page-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes shell-page-in {
+  from {
+    opacity: 0;
+    scale: 0.985;
+  }
+}
+
+/* ─── Apply progress (foundation 7.2) ─────────────────────────────────────────────────────────── */
+/* A line along the pending band's foot while applying: it runs most of the way and waits there for
+   the answer, because an apply has no measurable progress. It runs once, never in a loop; under
+   reduced motion it is drawn at once at its end, a static line beside the words. */
+@keyframes pending-apply {
+  0% {
+    scale: 0.04 1;
+  }
+  60% {
+    scale: 0.7 1;
+  }
+  100% {
+    scale: 0.94 1;
+  }
+}
+@utility animate-pending-apply {
+  animation: pending-apply calc(var(--duration-glide) * 4) var(--ease-standard)
+    forwards;
+}

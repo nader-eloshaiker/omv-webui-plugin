@@ -10,6 +10,7 @@ import type { Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
 import { answerWithScenario, STORAGE_CALLS } from "./support/scenarioRoute.ts";
+import { openNavGroup } from "./support/shell.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -71,6 +72,7 @@ test("the RAID list from the menu, then an array's page, changing nothing", asyn
   // The dashboard never reads the arrays: reading them reads a member disk (journal, 2026-11-21).
   await page.waitForTimeout(500);
   expect(calls).not.toContain("MdMgmt.enumerateDevices");
+  await openNavGroup(page, "storage");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: copy.nav.items.storage.md })
@@ -243,6 +245,7 @@ test("without the plugin there is no RAID item, and its address says what to ins
 }) => {
   const calls = await signInWith(page, rpc, "raidNoPlugin");
   const nav = page.getByRole("navigation", { name: copy.app.navigation });
+  await openNavGroup(page, "storage");
   await expect(
     nav.getByRole("link", { name: copy.nav.items.storage.filesystems }),
   ).toBeVisible();

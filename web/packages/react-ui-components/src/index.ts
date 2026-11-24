@@ -15,9 +15,12 @@ export * from "./components/checkbox-list-field/checkbox-list-field";
 export * from "./components/checkbox/checkbox";
 export * from "./components/checklist/checklist";
 export * from "./components/client-field/client-field";
+export * from "./components/command-palette/command-palette";
+export * from "./components/command-palette/use-command-keys";
 export * from "./components/confirm-dialog/confirm-dialog";
 export * from "./components/connection-line/connection-line";
 export * from "./components/copy-button/copy-button";
+export * from "./components/density-toggle/density-toggle";
 export * from "./components/dialog/dialog";
 export * from "./components/direction-summary/direction-summary";
 export * from "./components/disclosure/disclosure";
@@ -26,6 +29,12 @@ export * from "./components/external-link/external-link";
 export * from "./components/fact-list/fact-list";
 export * from "./components/field/field";
 export * from "./components/firewall-rule-list/firewall-rule-list";
+export {
+  flyPendingMark,
+  popElement,
+  prefersReducedMotion,
+  whenLanded,
+} from "./components/flight/flight";
 export * from "./components/health-list/health-list";
 export * from "./components/impact-line/impact-line";
 export * from "./components/inline-alert/inline-alert";
@@ -37,6 +46,8 @@ export * from "./components/new-password-fields/new-password-fields";
 export * from "./components/now-after-table/now-after-table";
 export * from "./components/number-field/number-field";
 export * from "./components/page-tabs/page-tabs";
+export * from "./components/pending-band/pending-band";
+export * from "./components/pending-pill/pending-pill";
 export * from "./components/port-field/port-field";
 export * from "./components/progress-bar/progress-bar";
 export * from "./components/radio-group-field/radio-group-field";
@@ -49,6 +60,7 @@ export * from "./components/search-field/search-field";
 export * from "./components/secret-field/secret-field";
 export * from "./components/segmented-choice/segmented-choice";
 export * from "./components/select/select";
+export * from "./components/shell/shell";
 export * from "./components/side-nav/side-nav";
 export * from "./components/size-field/size-field";
 export * from "./components/skeleton/skeleton";

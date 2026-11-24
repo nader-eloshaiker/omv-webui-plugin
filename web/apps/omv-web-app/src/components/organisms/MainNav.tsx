@@ -1,15 +1,46 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The groups of the side navigation for the session's role (navigation.ts), used beside the content
-// from 1024px and in the drawer below it. Pages built here link to their own route; pages that exist
-// only in the classic interface say so.
+// The side navigation for the session's role (navigation.ts; foundation 10): the dashboard, then OMV's
+// groups as folding groups, the current page's group open and the others folded, then Add-ons. Used
+// beside the content from 1024px and in the drawer below it. Pages built here link to their own
+// route; pages that exist only in the classic interface stay listed, quieter, and say so.
 import type { Role } from "@omv-webui/react-api-omv/generated";
-import { SideNavGroup, SideNavItem } from "@omv-webui/react-ui-components";
+import {
+  SideNavGroup,
+  SideNavItem,
+  SideNavList,
+} from "@omv-webui/react-ui-components";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Puzzle } from "lucide-react";
+import {
+  Activity,
+  Cpu,
+  HardDrive,
+  LayoutDashboard,
+  Network,
+  Puzzle,
+  Share2,
+  UserRound,
+  Users,
+} from "lucide-react";
+import type { ReactElement } from "react";
 import { useTranslation } from "react-i18next";
-import { useRaidPlugin } from "../../hooks/useRaidReads.ts";
-import { useZfsPlugin } from "../../hooks/useZfsReads.ts";
-import { builtRoute, isCurrent, navFor } from "../../navigation/navigation.ts";
+import { useNavGroups } from "../../hooks/useNavGroups.ts";
+import {
+  builtRoute,
+  isCurrent,
+  isCurrentPage,
+  type NavGroup,
+} from "../../navigation/navigation.ts";
+
+/** Each group's icon: decorative, the group's name says what it is. */
+const GROUP_ICONS: Record<NavGroup, ReactElement> = {
+  system: <Cpu />,
+  network: <Network />,
+  storage: <HardDrive />,
+  services: <Share2 />,
+  usermgmt: <Users />,
+  diagnostics: <Activity />,
+  account: <UserRound />,
+};
 
 export function MainNav({
   role,
@@ -22,14 +53,10 @@ export function MainNav({
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const classic = { label: t("nav.classic") };
-  // The RAID item is shown only once the plugin is known to be installed (0.10); a normal user's shell
-  // makes no RAID call (10).
-  const raidPlugin = useRaidPlugin(role === "admin") === "installed";
-  // The same for ZFS, by Zfs.listCompressionTypes, which runs no command (ZFS design 0.11, P14).
-  const zfsPlugin = useZfsPlugin(role === "admin") === "installed";
+  const groups = useNavGroups(role);
   return (
     <>
-      <ul className="flex flex-col gap-0.5">
+      <SideNavList className="mb-1">
         <SideNavItem
           icon={<LayoutDashboard />}
           current={pathname === "/"}
@@ -37,9 +64,16 @@ export function MainNav({
         >
           {t("nav.dashboard")}
         </SideNavItem>
-      </ul>
-      {navFor(role, { raidPlugin, zfsPlugin }).map(({ group, pages }) => (
-        <SideNavGroup key={group} label={t(`nav.groups.${group}`)}>
+      </SideNavList>
+      {groups.map(({ group, pages }) => (
+        <SideNavGroup
+          key={group}
+          label={t(`nav.groups.${group}`)}
+          icon={GROUP_ICONS[group]}
+          current={pages.some((page) => isCurrentPage(pathname, page))}
+          // A role that sees one group (a normal user: Account) finds it open.
+          defaultOpen={groups.length === 1}
+        >
           {pages.map((page) => {
             const built = builtRoute(page);
             return built ? (
@@ -70,7 +104,7 @@ export function MainNav({
         </SideNavGroup>
       ))}
       {role === "admin" ? (
-        <ul className="flex flex-col gap-0.5">
+        <SideNavList className="mt-1">
           <SideNavItem
             icon={<Puzzle />}
             classicOnly={classic}
@@ -79,7 +113,7 @@ export function MainNav({
           >
             {t("nav.addOns")}
           </SideNavItem>
-        </ul>
+        </SideNavList>
       ) : null}
     </>
   );

@@ -349,6 +349,26 @@
       }
     }
   },
+  "palette": {
+    "trigger": "Go to or do…",
+    "label": "Go to or do",
+    "input": "Search pages and actions",
+    "empty": "Nothing matches “{{query}}”. Try a page name, like “disks”.",
+    "close": "Close",
+    "keys": "↑ ↓ to move · Enter to go · Esc to close · g then a letter jumps from anywhere",
+    "external": "classic interface",
+    "groupGo": "Go to",
+    "groupDo": "Do",
+    "apply_one": "Apply {{count}} pending change",
+    "apply_other": "Apply {{count}} pending changes",
+    "applyAll": "Apply the pending changes",
+    "classicHint": "{{group}} · classic interface"
+  },
+  "density": {
+    "label": "Compact rows",
+    "on": "Compact rows: on",
+    "off": "Compact rows: off"
+  },
   "classicOnly": {
     "body": "This page is not in the new interface yet. It works as before in the classic interface.",
     "link": "Open {{page}} in the classic interface",
@@ -388,11 +408,14 @@
     "showDetails": "Show what happened",
     "applying": "Applying the changes…",
     "undoing": "Undoing the changes…",
+    "applied": "Applied. The services now use the new settings.",
+    "undone": "Undone. The settings are back to how they are on the server.",
     "applyFailed": "Applying the changes failed. They are still saved and waiting.",
     "undoFailed": "Undoing the changes failed. They are still saved and waiting.",
     "indicator_one": "{{count}} pending change",
     "indicator_other": "{{count}} pending changes",
     "indicatorUnknown": "Pending changes",
+    "indicatorNone": "No pending changes",
     "indicatorShort": "pending",
     "applyTask": "Apply changes",
     "undoTask": "Undo changes",

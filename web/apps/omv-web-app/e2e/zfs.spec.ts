@@ -9,6 +9,7 @@ import type { Page } from "@playwright/test";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
 import { answerWithScenario, STORAGE_CALLS } from "./support/scenarioRoute.ts";
+import { openNavGroup } from "./support/shell.ts";
 
 // Typed into the mock only; no real system is involved.
 const PASSWORD = "not-a-real-password";
@@ -56,6 +57,7 @@ test("the dashboard, File systems and Disks load with a ZFS pool present", async
   expect(calls).toContain("FileSystemMgmt.enumerateMountedFilesystems");
 
   // File systems: listed, said to be managed with the pool, no page and no action.
+  await openNavGroup(page, "storage");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: copy.nav.items.storage.filesystems })
@@ -85,6 +87,7 @@ test("the dashboard, File systems and Disks load with a ZFS pool present", async
   ).toHaveCount(0);
 
   // Disks: the pool's disks are part of it.
+  await openNavGroup(page, "storage");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: copy.nav.items.storage.disks, exact: true })
@@ -220,6 +223,7 @@ test("the ZFS menu item, the list and a pool's page, changing nothing; the dashb
     page.getByText("ZFS pool tank: a disk is missing or has failed."),
   ).toBeVisible();
   expect(calls).not.toContain("Zfs.listPools");
+  await openNavGroup(page, "storage");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: copy.nav.items.storage.zfs })
@@ -341,6 +345,7 @@ test("without the plugin: no menu item and the page says what to install", async
   const calls = await signInWith(page, rpc, "zfsNoPlugin");
   await page.goto("/ui/storage/zfs");
   await expect(page.getByText(copy.zfs.notInstalled.title)).toBeVisible();
+  await openNavGroup(page, "storage");
   await expect(
     page
       .getByRole("navigation", { name: copy.app.navigation })

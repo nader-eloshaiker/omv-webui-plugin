@@ -11,6 +11,7 @@ import { join } from "node:path";
 import copy from "../src/locales/en/common.json" with { type: "json" };
 import { expect, test } from "./support/fixtures.ts";
 import { breakThePolicy, CANARY_VIOLATIONS } from "./support/observer.ts";
+import { openNavGroup, revealPendingBand } from "./support/shell.ts";
 import { DIST } from "./support/snippetServer.ts";
 
 // Typed into the mock only; no real system is involved.
@@ -105,6 +106,7 @@ test("an administrator uses the shell: menus, a classic-only page, and applying 
   // A page only the classic interface has: a fixed link out, in the classic interface's hash form,
   // and no call.
   const before = rpc.calls.length;
+  await openNavGroup(page, "system");
   await page
     .getByRole("navigation", { name: copy.app.navigation })
     .getByRole("link", { name: new RegExp(`^${copy.nav.items.system.cron}`) })
@@ -123,6 +125,7 @@ test("an administrator uses the shell: menus, a classic-only page, and applying 
 
   // The pending band: the apply confirmation, then the task, then the band is gone.
   const band = page.getByRole("region", { name: copy.pending.label });
+  await revealPendingBand(page);
   await expect(band).toBeVisible();
   const applyLabel = copy.pending.apply_other.replace("{{count}}", "2");
   await band.getByRole("button", { name: applyLabel }).click();

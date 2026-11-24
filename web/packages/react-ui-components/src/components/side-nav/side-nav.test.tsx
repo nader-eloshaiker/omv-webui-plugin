@@ -6,7 +6,13 @@ import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it } from "vitest";
 import { UiProvider } from "../ui-provider/ui-provider";
-import { SideNavDrawer, SideNavGroup, SideNavItem } from "./side-nav";
+import {
+  SideNav,
+  SideNavDrawer,
+  SideNavGroup,
+  SideNavItem,
+  SideNavList,
+} from "./side-nav";
 
 function Harness() {
   const [open, setOpen] = React.useState(false);
@@ -21,7 +27,7 @@ function Harness() {
         label="Navigation"
         closeLabel="Close navigation"
       >
-        <SideNavGroup label="Storage">
+        <SideNavGroup label="Storage" current>
           <SideNavItem href="#disks">Disks</SideNavItem>
           <SideNavItem href="#shares" current>
             Shared folders
@@ -70,5 +76,97 @@ describe("SideNavDrawer", () => {
       );
       expect(drawer).toContainElement(document.activeElement as HTMLElement);
     }
+  });
+});
+
+function Groups({ page }: { page: "dashboard" | "disks" | "ssh" }) {
+  return (
+    <SideNav aria-label="Main navigation">
+      <SideNavList>
+        <SideNavItem href="#dashboard" current={page === "dashboard"}>
+          Dashboard
+        </SideNavItem>
+      </SideNavList>
+      <SideNavGroup label="Storage" current={page === "disks"}>
+        <SideNavItem href="#disks" current={page === "disks"}>
+          Disks
+        </SideNavItem>
+        <SideNavItem href="#shares">Shared folders</SideNavItem>
+      </SideNavGroup>
+      <SideNavGroup label="Services" current={page === "ssh"}>
+        <SideNavItem href="#ssh" current={page === "ssh"}>
+          SSH
+        </SideNavItem>
+        <SideNavItem href="#wg" classicOnly={{ label: "Classic" }}>
+          WireGuard
+        </SideNavItem>
+      </SideNavGroup>
+    </SideNav>
+  );
+}
+
+describe("SideNavGroup", () => {
+  it("opens the current page's group and folds the others", () => {
+    render(<Groups page="disks" />);
+    expect(screen.getByRole("button", { name: "Storage" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Services" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByRole("link", { name: "Disks" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    // A folded group's pages stay findable by the browser's find in page, but not reachable.
+    expect(screen.queryByRole("link", { name: "SSH" })).toBeNull();
+    expect(screen.getByText("SSH")).toBeInTheDocument();
+  });
+
+  it("opens and folds a group by keyboard, from its name", async () => {
+    const user = userEvent.setup();
+    render(<Groups page="disks" />);
+    const services = screen.getByRole("button", { name: "Services" });
+    services.focus();
+    await user.keyboard("{Enter}");
+    expect(services).toHaveAttribute("aria-expanded", "true");
+    expect(
+      await screen.findByRole("link", { name: /^WireGuard/ }),
+    ).toHaveTextContent("Classic");
+    // Tab goes from the group's name into its pages.
+    await user.tab();
+    expect(screen.getByRole("link", { name: "SSH" })).toHaveFocus();
+    services.focus();
+    await user.keyboard(" ");
+    expect(services).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() =>
+      expect(screen.queryByRole("link", { name: "SSH" })).toBeNull(),
+    );
+  });
+
+  it("follows the current page: the new group opens and the old one folds", () => {
+    const { rerender } = render(<Groups page="disks" />);
+    rerender(<Groups page="ssh" />);
+    expect(screen.getByRole("button", { name: "Services" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Storage" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  });
+
+  it("names each group by its heading, for the region list of assistive technology", () => {
+    render(<Groups page="dashboard" />);
+    const names = screen
+      .getAllByRole("group")
+      .map((g) =>
+        document.getElementById(g.getAttribute("aria-labelledby") ?? ""),
+      )
+      .map((label) => label?.textContent);
+    expect(names).toEqual(["Storage", "Services"]);
   });
 });

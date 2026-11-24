@@ -1,19 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The application shell (style guide 5.1), around every page behind sign-in. In order, and never
-// side by side: the skip link, the top bar (the only sticky part), the unencrypted-connection notice
-// (UI-12), the pending-changes band (5.8, administrators), then the side navigation and the content.
-// Under 1024px the navigation is a drawer. The pages' toasts (5.10) are shown here. It renders nothing
-// the moment the session is gone, so no read under it fetches again after the server data has been
-// dropped.
+// The application shell (foundation 10; style guide 5.1), around every page behind sign-in. In order,
+// and never side by side: the skip link, the top bar (sticky, blurring the page under it), the
+// unencrypted-connection notice (UI-12), the pending-changes band (5.8, administrators; it sticks
+// under the top bar and shrinks into the bar's pending pill while scrolling), then the side
+// navigation with folding groups and the content. Under 1024px the navigation is a drawer. The top bar
+// carries the mark and host, "Go to or do…" (the command palette, `/` or Ctrl/Cmd+K), the density
+// switch, the pending pill, the tasks and the account. The pages' toasts (5.10) are shown here. It
+// renders nothing the moment the session is gone, so no read under it fetches again after the server
+// data has been dropped.
 import {
+  CommandPaletteTrigger,
+  DensityToggle,
   IconButton,
+  Shell,
   SideNav,
   SideNavDrawer,
   SkipLink,
   Toaster,
   TopBar,
+  TopBarBrand,
 } from "@omv-webui/react-ui-components";
-import { Outlet } from "@tanstack/react-router";
+import { Link, Outlet } from "@tanstack/react-router";
 import { Menu as MenuIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,11 +32,13 @@ import {
   useNavigationTracker,
 } from "../../shell/pageFocus.ts";
 import { ShowTaskContext } from "../../shell/taskDialog.ts";
+import { useDensityStore } from "../../stores/useDensityStore.ts";
 import { HttpNotice } from "../organisms/HttpNotice.tsx";
 import { IdleWarning } from "../organisms/IdleWarning.tsx";
 import { MainNav } from "../organisms/MainNav.tsx";
 import { PendingChanges } from "../organisms/PendingChanges.tsx";
 import { PendingIndicator } from "../organisms/PendingIndicator.tsx";
+import { ShellPalette } from "../organisms/ShellPalette.tsx";
 import { TaskAnnouncer } from "../organisms/TaskAnnouncer.tsx";
 import { TaskOutputDialog } from "../organisms/TaskOutputDialog.tsx";
 import { TasksMenu } from "../organisms/TasksMenu.tsx";
@@ -40,10 +49,10 @@ export function ShellLayout() {
   if (session.status !== "signedIn") {
     return null;
   }
-  return <Shell username={session.username} role={session.role} />;
+  return <ShellFrame username={session.username} role={session.role} />;
 }
 
-function Shell({
+function ShellFrame({
   username,
   role,
 }: {
@@ -54,64 +63,98 @@ function Shell({
   // The one poll of System.getInformation and the interface counters (live/useLive.ts).
   const info = useLiveReads(role);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [shownTask, setShownTask] = useState<number | null>(null);
   const pageFocus = useNavigationTracker();
+  const density = useDensityStore((s) => s.density);
+  const setDensity = useDensityStore((s) => s.setDensity);
   const admin = role === "admin";
+
+  const brand = (layout: "bar" | "panel", onNavigate?: () => void) => (
+    <TopBarBrand
+      layout={layout}
+      productName={t("app.name")}
+      hostName={layout === "bar" ? info.data?.hostname : undefined}
+      render={<Link to="/" onClick={onNavigate} />}
+    />
+  );
 
   return (
     <PageFocusContext value={pageFocus}>
       <ShowTaskContext value={setShownTask}>
-        <div className="flex min-h-dvh flex-col bg-page">
-          <SkipLink targetId={MAIN_ID}>{t("app.skipToMain")}</SkipLink>
-          <TopBar
-            className="sticky top-0 z-40"
-            productName={t("app.name")}
-            hostName={info.data?.hostname}
-            navToggle={
-              <IconButton
-                label={t("app.openNav")}
-                icon={<MenuIcon />}
-                variant="quiet"
-                onClick={() => setDrawerOpen(true)}
-              />
-            }
-            pending={admin ? <PendingIndicator /> : undefined}
-            tasks={<TasksMenu />}
-            user={<UserMenu username={username} />}
-          />
-          <HttpNotice role={role} />
-          {admin ? <PendingChanges /> : null}
-          <div className="flex flex-1">
-            <SideNav
-              aria-label={t("app.navigation")}
-              className="hidden w-64 shrink-0 border-e border-border lg:flex"
-            >
+        <Shell
+          mainId={MAIN_ID}
+          skipLink={
+            <SkipLink targetId={MAIN_ID}>{t("app.skipToMain")}</SkipLink>
+          }
+          topBar={
+            <TopBar
+              brand={brand("bar")}
+              navToggle={
+                <IconButton
+                  label={t("app.openNav")}
+                  icon={<MenuIcon />}
+                  variant="quiet"
+                  onClick={() => setDrawerOpen(true)}
+                />
+              }
+              search={
+                <CommandPaletteTrigger
+                  label={t("palette.trigger")}
+                  onClick={() => setPaletteOpen(true)}
+                />
+              }
+              density={
+                <DensityToggle
+                  density={density}
+                  onDensityChange={setDensity}
+                  label={t("density.label")}
+                  hint={t(density === "compact" ? "density.on" : "density.off")}
+                />
+              }
+              pending={admin ? <PendingIndicator /> : undefined}
+              tasks={<TasksMenu />}
+              user={<UserMenu username={username} />}
+            />
+          }
+          notices={<HttpNotice role={role} />}
+          pending={admin ? <PendingChanges /> : null}
+          sidebar={
+            <SideNav aria-label={t("app.navigation")}>
               <MainNav role={role} />
             </SideNav>
-            <SideNavDrawer
-              open={drawerOpen}
-              onOpenChange={setDrawerOpen}
-              label={t("app.navigation")}
-              closeLabel={t("app.closeNav")}
-            >
-              <MainNav role={role} onNavigate={() => setDrawerOpen(false)} />
-            </SideNavDrawer>
-            <main
-              id={MAIN_ID}
-              tabIndex={-1}
-              className="min-w-0 flex-1 px-4 py-6 outline-hidden sm:px-6"
-            >
-              <Outlet />
-            </main>
-          </div>
-          <IdleWarning />
-          <TaskOutputDialog id={shownTask} onClose={() => setShownTask(null)} />
-          <TaskAnnouncer />
-          <Toaster
-            closeLabel={t("toast.close")}
-            regionLabel={t("toast.region")}
-          />
-        </div>
+          }
+          overlays={
+            <>
+              <SideNavDrawer
+                open={drawerOpen}
+                onOpenChange={setDrawerOpen}
+                label={t("app.navigation")}
+                closeLabel={t("app.closeNav")}
+                brand={brand("panel", () => setDrawerOpen(false))}
+              >
+                <MainNav role={role} onNavigate={() => setDrawerOpen(false)} />
+              </SideNavDrawer>
+              <ShellPalette
+                role={role}
+                open={paletteOpen}
+                onOpenChange={setPaletteOpen}
+              />
+              <IdleWarning />
+              <TaskOutputDialog
+                id={shownTask}
+                onClose={() => setShownTask(null)}
+              />
+              <TaskAnnouncer />
+              <Toaster
+                closeLabel={t("toast.close")}
+                regionLabel={t("toast.region")}
+              />
+            </>
+          }
+        >
+          <Outlet />
+        </Shell>
       </ShowTaskContext>
     </PageFocusContext>
   );

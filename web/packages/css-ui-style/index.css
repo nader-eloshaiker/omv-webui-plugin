@@ -15,6 +15,7 @@
 @import "tailwindcss";
 @import "./src/theme-reset.css";
 @import "./generated/tokens.css";
+@import "./src/shell.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
    page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.
