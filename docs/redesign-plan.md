@@ -180,7 +180,7 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
 | 1. Network slice finished and merged      | done: #20, `1a7181a`                              |
 | 2. Visual foundation and three directions | done: `f58cedd`                                   |
 | 3. Lab prototypes                         | done: `/ui/lab`, `f58cedd`                        |
-| 4. Design system rewrite                  | tokens and audit done; skins, shell, charts next  |
-| 5. Re-compose built pages                 | waiting on 4                                      |
+| 4. Design system rewrite                  | done: #28, `08eeaa8`                              |
+| 5. Re-compose built pages                 | in progress: the dashboard first                  |
 | 6. Process change                         | in force from now                                 |
 | 7. Remaining domains                      | waiting on 5                                      |
