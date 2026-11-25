@@ -54,8 +54,8 @@ const GUIDANCE_ONLY = [
   /^button: What is different$/,
   // The welcome's link; Shortcuts offer the same with tips off.
   /^button: Open the classic interface$/,
-  // First steps become Shortcuts (P.3, G1). Their actions stay on the map, except the factory
-  // password's, which P.3 does not place anywhere else (see the report).
+  // First steps become Shortcuts (P.3, G1). Their actions stay on the map, and a step whose action
+  // is nowhere else stays as a shortcut under its title ("Change the factory password", below).
   /^button: Add storage$/,
   /^button: Add a shared folder$/,
   /^button: Add a person$/,
@@ -78,6 +78,7 @@ const KEPT_CONTROLS = [
   "SMB, what it means",
   "What is a shared folder?",
   "Add a person",
+  "Change the factory password",
   "Save",
 ];
 

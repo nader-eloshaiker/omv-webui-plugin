@@ -8,7 +8,8 @@
 // a step's title and button and drops its explanation (owner decision 11). Lab-local candidates for
 // *FirstSteps and *Shortcuts (spec 8 row 1). Development only (UI-11).
 import { Button, Icon } from "@omv-webui/react-ui-components";
-import { ExternalLink, Play } from "lucide-react";
+import { BellRing, ExternalLink, KeyRound, Lock, Play } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import type { Facts, Step } from "./model.ts";
 import { currentStep } from "./model.ts";
@@ -110,13 +111,36 @@ export function FirstSteps({
   );
 }
 
+/** The first steps whose action the map or the fixed shortcuts already offer. */
+const OFFERED_ELSEWHERE = new Set(["storage", "folder", "person"]);
+const STEP_ICONS: Record<string, ReactNode> = {
+  password: <KeyRound aria-hidden="true" />,
+  https: <Lock aria-hidden="true" />,
+  alerts: <BellRing aria-hidden="true" />,
+};
+
 /**
  * When the steps are done or tips are off: what the map does not already offer, as a short list of
  * text buttons. The map's own actions (Add a shared folder, Check disk health) stay with the map, so
- * each action is on the screen once.
+ * each action is on the screen once. A first step not yet done whose action is nowhere else on the
+ * screen stays as a shortcut under its title, because turning tips off never hides a control (P.3).
  */
-export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
+export function Shortcuts({
+  steps = [],
+  onNote,
+}: {
+  steps?: readonly Step[];
+  onNote: (text: string) => void;
+}) {
+  const open = steps
+    .filter((s) => !s.done && !OFFERED_ELSEWHERE.has(s.id))
+    .map((s) => ({
+      icon: STEP_ICONS[s.id] ?? <Play aria-hidden="true" />,
+      words: s.title,
+      note: `${s.title} opens its page.`,
+    }));
   const items = [
+    ...open,
     {
       icon: <Icon name="person" mark="create" size={20} />,
       words: "Add a person",

@@ -357,6 +357,7 @@ export function Dashboard({
         accent={accent}
         assemble={assemble}
         captions={captions}
+        example={visit === "replay" || tips}
         arrival={arrival}
         showTraceTip={traceTip && welcome === "gone" && tips && !loading}
         onTraced={() => {
@@ -387,7 +388,7 @@ export function Dashboard({
             onNote={onNote}
           />
         ) : stepsShown ? null : (
-          <Shortcuts onNote={onNote} />
+          <Shortcuts steps={nas.steps} onNote={onNote} />
         )}
         <ThisNas
           facts={nas.facts}

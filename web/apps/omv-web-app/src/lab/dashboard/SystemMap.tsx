@@ -895,6 +895,11 @@ export interface SystemMapProps {
   assemble: Assemble;
   /** The columns that show their one-line caption: a newcomer's visit, a new NAS, an empty column. */
   captions: readonly LaneId[];
+  /**
+   * Whether a new NAS shows its example row (P.3 G1). Newcomer guidance, so it follows tips, not
+   * density: compact hides the captions only (owner decision 11). By default, with the captions.
+   */
+  example?: boolean;
   /** A problem that just arrived: its row's connectors draw again in its tone (7.6). */
   arrival: { node: string; n: number } | null;
   showTraceTip: boolean;
@@ -920,6 +925,7 @@ export function SystemMap(props: SystemMapProps) {
     accent,
     assemble,
     captions,
+    example = captions.length > 0,
     arrival,
     showTraceTip,
     onTraced,
@@ -1118,9 +1124,7 @@ export function SystemMap(props: SystemMapProps) {
                     }
                   })
                 )}
-                {!loading && nas.newNas && captions.length > 0 ? (
-                  <ExampleRow />
-                ) : null}
+                {!loading && nas.newNas && example ? <ExampleRow /> : null}
               </ul>
             )}
             <p id={`${ids}-map-keys`} className="sr-only">

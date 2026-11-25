@@ -86,7 +86,7 @@ function NewNas({
           onNote={onNote}
         />
       ) : (
-        <Shortcuts onNote={onNote} />
+        <Shortcuts steps={nas.steps} onNote={onNote} />
       )}
       <SystemMap
         idPrefix="g-new"
@@ -97,6 +97,7 @@ function NewNas({
         accent={accent}
         assemble="none"
         captions={captionsFor(nas, tips, compact)}
+        example={tips}
         arrival={null}
         showTraceTip={false}
         onTraced={() => undefined}

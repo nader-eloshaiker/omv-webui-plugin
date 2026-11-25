@@ -51,12 +51,7 @@ import { GuidancePage } from "./GuidancePage.tsx";
 import type { OfferCause } from "./parts/hideTipsOffer.ts";
 import { useHideTipsOffer } from "./parts/hideTipsOffer.ts";
 import { tipsCommand } from "./parts/tipsCommand.ts";
-import {
-  endTip,
-  useCurrentTip,
-  useShowTips,
-  useTipTurn,
-} from "./parts/tipsContext.ts";
+import { endTip, useCurrentTip, useShowTips } from "./parts/tipsContext.ts";
 import { TipsProvider } from "./parts/TipsProvider.tsx";
 import type { GuidanceView, GuidanceWidth } from "./states.ts";
 import { guidanceQuery, readGuidanceView } from "./states.ts";
@@ -419,15 +414,16 @@ function GuidanceScreen({
 
 /**
  * The palette's field in the top bar. Until the palette is first used it reads "Press / to go
- * anywhere" (a G2 tip, so it takes its turn with the others), then "Go to or do…".
+ * anywhere", then "Go to or do…". It changes only words already on screen, so it does not take a
+ * turn among the G2 tip lines: counting it would hold back the welcome until the palette was used.
  */
 function PaletteTrigger({ onOpen }: { onOpen: () => void }) {
   const seen = useSeenStore(hasSeen("tip.palette"));
-  const { turn, anchor } = useTipTurn("tip.palette", !seen);
+  const [show] = useShowTips();
   return (
-    <span ref={anchor} className="g-tip-slot" data-tip="tip.palette">
+    <span className="g-tip-slot" data-tip="tip.palette">
       <CommandPaletteTrigger
-        label={turn ? PALETTE_TIP : PALETTE_LABEL}
+        label={show && !seen ? PALETTE_TIP : PALETTE_LABEL}
         onClick={onOpen}
       />
     </span>
