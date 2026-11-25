@@ -27,7 +27,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import "../forms/forms.css";
 import { Toggle } from "../forms/FormsLab.tsx";
-import { LabIcon } from "../forms/LabIcon.tsx";
+import { FormIcon } from "../forms/FormIcon.tsx";
 import { DisksTable } from "./DisksTable.tsx";
 import { FoldersTable } from "./FoldersTable.tsx";
 import type {
@@ -313,7 +313,7 @@ export default function TablesLab() {
                 setChrome(false);
               }}
             >
-              <LabIcon name="close" />
+              <FormIcon name="close" />
             </button>
           </aside>
         ) : null}
