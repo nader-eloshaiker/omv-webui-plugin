@@ -5,8 +5,9 @@ Branch `redesign-dashboard`.
 
 **Status (2026-11-26).** The accent, the NAS map, the two forms and the two tables are prototyped in
 the dev-only lab (section 8, prototypes 1 to 5) and the owner approved their direction. The motion
-reel and guidance (prototypes 7 and 8) and the icon sheet (6) are not built yet. Nothing has moved
-into the library or the pages.
+reel and guidance (prototypes 7 and 8) are being built (section 7.10 lists what style guide 10
+changed in the motions); the icon sheet (6) is not built yet. Nothing has moved into the library or
+the pages.
 
 **What wins where they differ.** The owner decisions below override the rest of this spec.
 [Style guide section 10](style-guide.md#10-the-generated-look-what-we-never-do) ("The generated
@@ -1716,6 +1717,27 @@ time. Each is a single short motion inside the 24px box; the icon's resting draw
 | A shimmer sweep across skeletons | The foundation's breathe is calmer and already chosen |
 | Sliding page transitions in the direction of travel for every navigation | Tiring for a pro moving fast; the foundation's fade-and-rise stays |
 | Animated gradients or glows | Not one of the four kinds of light (foundation 3.4) |
+
+### 7.10 What style guide 10 changed in this section (2026-11-26)
+
+The motion reel (prototype 7) builds the tables above with these changes, because
+[style guide section 10](style-guide.md#10-the-generated-look-what-we-never-do) overrides this spec:
+
+- **Out:** the empty state's picture assembling when an empty view is first shown, an entrance
+  nobody caused (rule 19; the picture is static); the area chip motions, because area chips are gone
+  (rule 15); the blink light's rays pulsing (rule 10; the state is the word "Blinking" beside a
+  still icon); the live line's moving dot and the sparklines (rules 10 and 17).
+- **Changed:** a row that changes state takes its status wash across the whole row once, not on a
+  leading edge, and a field with an error turns its whole border critical, not an edge drawn from
+  the left (rule 13); the table's "1 row changed" chip is a text button, "1 row changed. Show it"
+  (rules 2 and 15); a first step's empty circle, not a number disc, becomes the check (rule 9);
+  "It is live" is a stroke segment travelling the lineage strip, with no glow (rule 11); the copy
+  direction's dash travels once per cause, not twice (7.1 rule 1).
+- **Added:** every motion's parts reach full opacity within 400ms of its cause, the NAS assembling
+  included (its movement may continue at full opacity to about 900ms). The reel checks this for each
+  motion.
+- **Waiting:** the icon motions that move a part of the drawing (the share ribbon, the mount socket,
+  wipe's sweep, delete's lid, the copy job's dash) need the custom icon set of prototype 6.
 
 ---
 
