@@ -47,7 +47,10 @@ interface DriveBayProps extends Omit<
   slots: readonly DriveSlot[];
   /** The name on the chassis, in mono: the NAS's host name. */
   name?: React.ReactNode;
-  /** The slot to ring twice after a jump to it ("View disk sdb"). */
+  /**
+   * The slot jumped to ("View disk sdb"): a ring appears round it once, holds still for about a
+   * second and fades out. Under reduced motion it is shown still and removed without the fade.
+   */
   arrived?: string;
 }
 
@@ -230,9 +233,9 @@ function DriveBay({
             style={{ "--stagger-index": i } as React.CSSProperties}
             className={cn(
               "grid min-w-0 rounded-control",
-              // The slot jumped to rings twice instead of entering in turn.
+              // The slot jumped to is ringed once instead of entering in turn.
               arrived === slot.id
-                ? "animate-arrive motion-reduce:ring-2 motion-reduce:ring-focus-ring"
+                ? "animate-arrive"
                 : "animate-slot-in stagger",
             )}
           >

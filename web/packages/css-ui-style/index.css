@@ -300,5 +300,11 @@
     ::view-transition-new(*) {
       animation: none !important;
     }
+    /* The one exception: the arrival ring (src/visuals.css) has no end state worth landing on, and
+       a ring cut to nothing at once would not say where to look. It is shown still for a second and
+       then removed, with no fade: a change of state, not a movement. The class outranks `*`. */
+    .animate-arrive {
+      animation: arrive-still 1s step-end both !important;
+    }
   }
 }

@@ -90,7 +90,11 @@ type Story = StoryObj<typeof meta>;
 export const Healthy: Story = {};
 /** A warning disk, a failing one and a USB disk that is not checked: each with its light, icon and word. */
 export const WarningDisk: Story = { args: { slots: TROUBLE } };
-/** After "View disk sdb": that slot rings twice (a still ring under reduced motion). */
+/**
+ * After "View disk sdb": a ring appears round that slot once, holds still for about a second and
+ * fades out (under reduced motion it is shown still, then removed without the fade). Reload the
+ * story to see it again.
+ */
 export const Arrived: Story = { args: { slots: TROUBLE, arrived: "sdb" } };
 export const AtPhoneWidth: Story = {
   args: { slots: TROUBLE },
