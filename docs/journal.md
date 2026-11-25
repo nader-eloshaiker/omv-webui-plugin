@@ -897,3 +897,12 @@ The owner chose:
 6. **The dashboard surfaces content from plugins too, natively.** OMV's classic dashboard builds plugin widgets from YAML that OMV compiles into one static file (`omv-mkworkbench dashboard`); each widget names any RPC method and renders template text with HTML. Rendering them that way would break UI-2, UI-4 and UI-10, so the owner chose: plugins this interface knows (ZFS and RAID now, others such as NUT when they join the contract) get native tiles and appear in their lane of the NAS map; any other installed plugin gets a tile with its name and "Open in the classic interface". The security rules are unchanged.
 
 New form and table patterns, an icon set and a motion catalogue are prototyped in the dev-only lab, and the owner sees screenshots before they move into the library and the pages.
+
+## 2026-11-25 — The NAS map reads by rows, and the welcome can be replayed (owner)
+
+The owner saw the first NAS map prototype: five columns (disks, storage, shared folders, ways in, network) joined by curved lines. They found the direction interesting but the connecting lines very hard to follow. The lines fanned out of shared trunks, crossed and ran close together, and the short right-hand columns left the map half empty. The map is redrawn so that position does the connecting: one row per storage, with its disks on the left and its shared folders on the right, each folder showing the ways it is reached by. Lines join only neighbours on the same row, so none can cross. A problem colours its own row. The ways in and the network become one small band under the rows. Pointing at a folder, a disk or a way in highlights what belongs to it, instead of asking the eye to follow a line.
+
+The owner also decided:
+
+1. **The welcome is remembered per browser** (a preference in browser storage, allowed by UI-13), so the NAS assembles once and later visits simply fade in. It can be seen again: "Show me around" replays it with the newcomer captions.
+2. **Compact density hides the explanations under each first step**, leaving the title and its button.
