@@ -4,7 +4,8 @@
 // so a production build emits none of it (UI-11; tools/build-check looks for the "omv-lab" marker).
 // The query string selects what is shown (?dir=, theme=, screen=, state=); it never acts (UI-4).
 // screen=add-folder and screen=add-person open the form prototypes (src/lab/forms/FormsLab.tsx);
-// screen=folders-table and screen=disks-table the table prototypes (src/lab/tables/TablesLab.tsx).
+// screen=folders-table and screen=disks-table the table prototypes (src/lab/tables/TablesLab.tsx);
+// screen=nas-map the dashboard prototype, the NAS map (src/lab/dashboard/NasMapLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -14,6 +15,8 @@ import {
   useState,
 } from "react";
 import type { Metric } from "./chartModel.ts";
+import NasMapLab from "./dashboard/NasMapLab.tsx";
+import { DASH_SCREENS } from "./dashboard/states.ts";
 import type { Scenario } from "./data.ts";
 import { nas } from "./data.ts";
 import FormsLab from "./forms/FormsLab.tsx";
@@ -67,11 +70,14 @@ function readQuery() {
 }
 
 /**
- * The form and table prototypes (rethink spec 8, rows 2 to 5) render in the system's own look with their own
- * controls; every other screen is the three-direction lab below.
+ * The dashboard, form and table prototypes (rethink spec 8, rows 1 to 5) render in the system's own
+ * look with their own controls; every other screen is the three-direction lab below.
  */
 export default function LabRoot() {
   const screen = new URLSearchParams(window.location.search).get("screen");
+  if (DASH_SCREENS.some((s) => s === screen)) {
+    return <NasMapLab />;
+  }
   if (TABLE_SCREENS.some((s) => s === screen)) {
     return <TablesLab />;
   }
