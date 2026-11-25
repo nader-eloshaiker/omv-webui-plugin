@@ -67,9 +67,8 @@ describe("a disk's page", () => {
       "href",
       "/ui/storage/disks",
     );
-    const current = within(crumbs).getByText("/dev/sdb");
-    expect(current).toHaveAttribute("aria-current", "page");
-    expect(current.closest("a")).toBeNull();
+    // Only the parent page: the title says where you are.
+    expect(crumbs).toHaveTextContent(/^Disks$/);
     expect(
       screen.getByText(
         (_, element) =>

@@ -494,7 +494,7 @@ value glides (640ms) and the sample-paced chart scroll are longer, and neither b
 | **Disclosure** | That more is there, and its size | The height Base UI measures into `--collapsible-panel-height`, on the soft spring (works where `interpolate-size` does not yet); the chevron turns on the settle spring | Opens at once |
 | **Trace** | What depends on this | Pointing at or focusing a map node lights its whole lineage and dims the rest | Same, no transition |
 | **Map draw** | That lines are connections | Lines draw along their length on entrance | Drawn |
-| **Arrival** | Where to look after a jump | Following "View disk sdb" scrolls to that disk and rings it twice | Ring without movement |
+| **Arrival** | Where to look after a jump | Following "View disk sdb", a search result or a command palette entry scrolls to the thing and a ring in the focus blue appears round it once (`animate-arrive`), holds still for about a second and fades out. It never flashes or repeats | The ring is shown still for a second, then removed without a fade |
 | **Skeleton** | That this is loading, with its final shape | The real layout with its content hidden, static bars, and the region's "Loading …" in words. No breath, no shimmer | Same |
 | **Disk failing preview** | What a layout survives | One disk greys and is crossed through; lost blocks go dashed red only where data is lost | Same, no transition |
 | **Copy direction** | Which way files go | A dash travels from source to destination twice on arrival, not in a loop (the job is not running) | Static arrow |

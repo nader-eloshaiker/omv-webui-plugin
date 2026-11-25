@@ -530,6 +530,12 @@ foundation](visual-foundation.md), section 10. The stacking order and the skip l
   indicator, so nothing is lost when the bands scroll away. A skip link to the main content is the
   first focusable element on every page.
 - One page title per page, in the content area. Breadcrumbs only below the second level.
+- **Breadcrumbs show only the parent page** (owner, 2026-11-25): one plain link in the link colour,
+  underlined, above the page title ("Shared folders" over "Photos"). No separator (no chevron,
+  slash or dot) and no crumb for the current page, which the title already names. It is a `nav`
+  named "Breadcrumb". Where a page spec writes a trail ("ZFS" › the pool › "Add a file system"),
+  only its nearest ancestor is shown; `Breadcrumbs` does that for a caller that still passes the
+  whole trail, and an item marked `current` renders nothing.
 - The address bar always reflects where you are, but a URL only ever *selects a view*. See 7.
 
 ### 5.2 Data tables
@@ -857,7 +863,11 @@ the area under a live line, which shows the data (foundation 3.4).
   `quiet` is its deprecated alias. Table headers, menu, select and palette group labels, chart and
   map labels are sentence case and regular weight. Skeletons, loading tracks and an indeterminate
   progress bar stand still. The top bar is solid with a hairline, the page has no glow, the drive
-  bay has no lights and no gradient, and a page's answer has no entrance motion.
+  bay has no lights and no gradient, and a page's answer has no entrance motion. `Breadcrumbs`
+  renders the parent page's link alone, with no chevron; `BreadcrumbItem current` is deprecated and
+  renders nothing. The jump highlight (`animate-arrive`, the ring round what a link, search or the
+  command palette jumped to) appears once, holds still for about a second and fades; under reduced
+  motion it is shown still for a second and removed without the fade. It never flashes or repeats.
 
 ### 10.2 How to check
 
