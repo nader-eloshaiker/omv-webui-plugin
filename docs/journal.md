@@ -894,5 +894,6 @@ The owner chose:
 3. **Two preferences**: "Show tips" (newcomer tips, which also fade by themselves) and "Animations: Full / Reduced" (on top of the system's reduced-motion setting).
 4. **Create flows say what they do.** "Add a shared folder" and "Add a person" already create and apply in one go; the button names the outcome ("Create Photos") and the summary says it takes effect at once.
 5. **Fields are sized to their content.** A short value gets a short field; only free text, paths and lists take the full width.
+6. **The dashboard surfaces content from plugins too.** Plugins add their own widgets to the classic dashboard; the new dashboard keeps a place for them. How plugins declare widgets, and whether the new interface can read them without new backend code, is being checked in OMV's source.
 
 New form and table patterns, an icon set and a motion catalogue are prototyped in the dev-only lab, and the owner sees screenshots before they move into the library and the pages.
