@@ -44,7 +44,7 @@ function DensityToggle({
           onDensityChange(pressed ? "compact" : "comfortable")
         }
         className={cn(
-          buttonClass({ variant: "quiet", size: "icon" }),
+          buttonClass({ variant: "plain", size: "icon" }),
           "data-pressed:bg-muted-strong data-pressed:text-foreground",
           className,
         )}

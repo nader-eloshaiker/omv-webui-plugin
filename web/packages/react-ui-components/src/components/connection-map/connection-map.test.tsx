@@ -15,7 +15,7 @@ const COLUMNS: ConnectionMapColumn[] = [
       {
         id: "sdb",
         label: "sdb",
-        detail: "3.6 TiB · 47 °C",
+        detail: "3.6 TiB, 47 °C",
         status: "warning",
         statusLabel: "Warning",
         feeds: ["data"],
@@ -79,10 +79,10 @@ describe("ConnectionMap", () => {
     const user = userEvent.setup();
     render(map());
     const photos = screen.getByRole("button", { name: /Photos/ });
-    expect(photos.querySelector("svg.lucide-chevron-right")).not.toBeNull();
+    expect(photos.className).toContain("shadow-control");
     await user.click(photos);
     expect(opened).toHaveBeenCalledTimes(1);
-    // A plain node is not a button and has no chevron.
+    // A plain node is not a button. Neither carries a chevron (style guide 10).
     expect(node("music").tagName).toBe("DIV");
     expect(node("music").querySelector("svg.lucide-chevron-right")).toBeNull();
     expect(screen.getAllByRole("button")).toHaveLength(1);

@@ -12,8 +12,8 @@ const pillClass = cva(
   {
     variants: {
       tone: {
-        // Nothing waits: a quiet chip on the bar, so the place where changes land is known.
-        quiet:
+        // Nothing waits: a plain chip on the bar, so the place where changes land is known.
+        idle:
           "border-border bg-transparent text-tertiary-foreground hover:bg-muted-strong hover:text-foreground " +
           "data-disabled:cursor-default data-disabled:hover:bg-transparent data-disabled:hover:text-tertiary-foreground",
         // Something waits: the pending gold and its navy ink (style guide 5.8), its only other place.
@@ -23,7 +23,7 @@ const pillClass = cva(
           "border-pending-stroke bg-pending text-pending-foreground hover:border-pending-foreground",
       },
     },
-    defaultVariants: { tone: "quiet" },
+    defaultVariants: { tone: "idle" },
   },
 );
 
@@ -117,7 +117,7 @@ function PendingPill({
       data-slot="pending-pill"
       data-pending={on || undefined}
       aria-label={label}
-      className={cn(pillClass({ tone: on ? "pending" : "quiet" }), className)}
+      className={cn(pillClass({ tone: on ? "pending" : "idle" }), className)}
       {...props}
     >
       {applying ? (

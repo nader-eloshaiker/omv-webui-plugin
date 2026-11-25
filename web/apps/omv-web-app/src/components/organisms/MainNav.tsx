@@ -2,7 +2,7 @@
 // The side navigation for the session's role (navigation.ts; foundation 10): the dashboard, then OMV's
 // groups as folding groups, the current page's group open and the others folded, then Add-ons. Used
 // beside the content from 1024px and in the drawer below it. Pages built here link to their own
-// route; pages that exist only in the classic interface stay listed, quieter, and say so.
+// route; pages that exist only in the classic interface stay listed, in the secondary ink, and say so.
 import type { Role } from "@omv-webui/react-api-omv/generated";
 import {
   SideNavGroup,

@@ -31,7 +31,7 @@ function FactListItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-/** The label, in the quieter ink. */
+/** The label, in the secondary ink. */
 function FactListLabel({ className, ...props }: React.ComponentProps<"dt">) {
   return (
     <dt
@@ -50,7 +50,7 @@ const valueClass = cva("min-w-0 text-base", {
       // Something to copy or compare character by character: a host name, a path, a kernel release
       // (4.1). Breaks anywhere so a long path stays in its column.
       identifier: "font-mono text-sm text-foreground [overflow-wrap:anywhere]",
-      // No value: the word ("Not reported", "None") in the quieter ink, never a dash alone.
+      // No value: the word ("Not reported", "None") in the secondary ink, never a dash alone.
       missing: "text-muted-foreground",
     },
   },

@@ -34,7 +34,7 @@ describe("CapacityMeter cells (compact density)", () => {
     expect(filled(container, "usage")).toBe(15);
   });
 
-  it("fills in the warning colour only with its pill", () => {
+  it("fills in the warning colour only with its status label", () => {
     const { container } = render(
       <CapacityMeter
         label="photos"

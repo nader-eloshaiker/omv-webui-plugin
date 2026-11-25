@@ -79,8 +79,8 @@ const valueTextClass = cva(
 /**
  * How far a task has got (style guide 5.7), on Base UI's Progress (`role="progressbar"` with its
  * values). The bar is the usage blue on the usage track, as the capacity meter's. With `value: null`
- * the bar is indeterminate: a third-width bar that pulses only when motion is allowed, and stands
- * still under `prefers-reduced-motion`. The figures are always visible as text.
+ * the bar is indeterminate: a third-width bar that stands still (nothing pulses, style guide 10),
+ * with the words saying the work goes on. The figures are always visible as text.
  */
 function ProgressBar({
   value,
@@ -99,7 +99,7 @@ function ProgressBar({
         </Progress.Label>
       )}
       <Progress.Track className={trackClass({ size })}>
-        <Progress.Indicator className="h-full rounded-full bg-usage transition-[width] duration-glide ease-standard data-indeterminate:w-1/3 data-indeterminate:motion-safe:animate-breathe" />
+        <Progress.Indicator className="h-full rounded-full bg-usage transition-[width] duration-glide ease-standard data-indeterminate:w-1/3" />
       </Progress.Track>
       <span data-slot="progress-bar-value" className={valueTextClass({ size })}>
         {valueText}

@@ -15,7 +15,7 @@ interface CopyDirectionProps extends Omit<
    * language keeps its own order: "Copies Photos to backup.example.org".
    */
   sentence: string;
-  /** When it runs, quieter, after the picture: "Every night at 02:00". */
+  /** When it runs, in the secondary ink, after the picture: "Every night at 02:00". */
   detail?: React.ReactNode;
 }
 

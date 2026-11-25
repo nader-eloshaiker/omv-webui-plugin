@@ -60,7 +60,7 @@ function Harness({
       id: "cron",
       label: "Scheduled tasks",
       group: "Go to",
-      hint: "System · classic interface",
+      hint: "System, in the classic interface",
       external: true,
       onSelect: () => went("cron"),
     },

@@ -51,7 +51,7 @@ in foundation 3.6, and `tokens.css` states it at the top of its primitives). Mea
 (`node tools/colour-audit.mjs measure '#hex' '#fff'` prints it):
 
 - **The base, about 240**: Sky blue in lightness steps does brand, links, selection, checked
-  controls, the focus ring, the trace, usage, the map path and the ambient light. The slate neutrals
+  controls, the focus ring, the trace, usage and the map path. The slate neutrals
   lean toward it.
 - **The accent, 258**: Cobalt, the base turned toward the screen's own blue at nearly twice its
   chroma, says "do this" and nothing else (owner, 2026-11-25). Analogous, so it belongs; louder by
@@ -72,7 +72,7 @@ of step with its siblings, is a defect even when it passes contrast.
 
 ### The budget: every hue with one job
 
-Colour now also expresses identity and depth (the ambient light, the live trace, raised surfaces;
+Colour now also expresses identity and depth (the live trace, raised surfaces;
 foundation 3), but each hue still has one job, listed in style guide 2.1, and status stays honest.
 The checks that follow from it:
 
@@ -92,8 +92,8 @@ The checks that follow from it:
 The four project-specific splits, and why (style guide 3.3 and 3.4):
 
 - **Sky blue `#5dacdf` is the brand, never a surface and never the primary action**: the mark, the
-  live dot, the health ring, the trace of live data, the traced path on a map, the focus ring and
-  the ambient light. There is no sky-blue bar. White on it fails, so in light a deeper step of the
+  health ring, the trace of live data, the traced path on a map and the focus ring. There is no
+  sky-blue bar, no glow and no "live" dot (style guide 10). White on it fails, so in light a deeper step of the
   same hue does links and checked marks; in dark it is the checked mark itself.
 - **Cobalt is the accent, a family of its own** (foundation 3.6): fill, hover, foreground, label,
   stroke (the edge that clears 3:1; in dark the fill alone does not) and wash. In light it shares
@@ -115,7 +115,7 @@ Every chromatic family has members with different jobs and different bars (style
 
 | Member          | Job                                     | Bar                                   |
 | --------------- | --------------------------------------- | ------------------------------------- |
-| fill (`x`)      | dots, meter fill, pill wash, solid button | 3:1 only if it carries meaning alone |
+| fill (`x`)      | meter fill, solid button                  | 3:1 only if it carries meaning alone |
 | `x-foreground`  | words on the solid fill                 | 4.5:1 against the fill                |
 | `x-label`       | words in that hue on a ground or tint   | 4.5:1 on every ground it lands on     |
 | `x-stroke`      | outlines, rings, small icons            | 3:1 on every ground                   |
@@ -131,7 +131,7 @@ stock interface, and the new fills are no better as words. A word always takes `
 - The slate ramp is cool and leans toward the brand hue so greys and blues belong together.
 - Three text tiers that read as tiers: `foreground`, `muted-foreground`, `subtle-foreground`
   (placeholders and disabled only).
-- Two borders: `border` is a quiet divider and exempt from 3:1; `border-control` marks something you
+- Two borders: `border` is a faint, decorative divider and exempt from 3:1; `border-control` marks something you
   can operate and clears 3:1 on every ground.
 
 ## 5. Dark theme: re-derive, never invert
@@ -149,7 +149,9 @@ stock interface, and the new fills are no better as words. A word always takes `
 
 - **Never colour alone** (WCAG 1.4.1): the status word or a distinct icon shape travels with every
   status colour.
-- **Same meaning, same treatment, everywhere**: one pill, one dot, one icon per status.
+- **Same meaning, same treatment, everywhere**: one status label (its icon and its word in the
+  `-label` ink, no capsule) per status; where the word does not fit, the same icon with the word in
+  its name. No coloured disc, no tinted card, no coloured left edge (style guide 10).
 - **Lightness must separate what hue cannot.** Under red-green deficiency some pairs collapse in hue;
   the style guide keeps OK light and Critical dark, and carries the remaining close pairs by form
   (pending is a banner or a labelled chip, never a bare dot; Unknown is a hollow ring).
@@ -164,23 +166,22 @@ stock interface, and the new fills are no better as words. A word always takes `
 - Sequential (how full, how much): one hue by lightness, Sky's usage blue.
 - Grey for context, colour for the series being discussed.
 - Thresholds are status with words: a meter is blue until an admin-configured threshold adds a
-  Warning or Critical pill.
+  Warning or Critical status label.
 
 ## 8. Tints, alpha and gradients
 
 - Alpha is safe on one known ground and unpredictable over variable ones, so translucent colours are
   tokens written as `color-mix(in srgb, <colour> N%, transparent)` (the washes, `selected`,
-  `trace-area`, the ambient light), and every ground they sit on is a pair in `PAIRS`, composited the
+  `trace-area`), and every ground they sit on is a pair in `PAIRS`, composited the
   way the browser paints it with `on(ground, layer...)`. An `x/NN` class a token does not name is a
   new pair first.
 - State layers use the neutral steps (`muted`, `muted-strong`). Pick tonal step or overlay per
   component; do not mix.
-- **Gradients and light: only the four kinds** (foundation 3.4), each with a meaning: the ambient
-  light (identity, brand hues only), the area under a live line (series or trace colour only), the
-  material light of a drawing (grounds only), and the status wash (one element per non-OK state,
-  with its word). A gradient is audited at every stop with `gradient(name, stop...)`; the worst stop
-  decides. A glow's token is the brightest point it actually paints, so the audit measures what is on
-  screen. Never gradient text, gradient borders, glow around text or multi-hue decoration.
+- **One gradient** (foundation 3.4): the area under a live line (series or trace colour only). The
+  ambient light, the material light of the chassis and the card lit in its state are gone (owner,
+  2026-11-25; style guide 10). A gradient is audited at every stop with `gradient(name, stop...)`;
+  the worst stop decides. Never a glow, a radial wash, a gradient on a surface or a button, gradient
+  text or borders, dithering, noise, blur or multi-hue decoration. A wash is never a status ground.
 
 ## 9. Contrast: the bar and the advisory
 
@@ -188,7 +189,7 @@ stock interface, and the new fills are no better as words. A word always takes `
   content, for the edge of a control (1.4.11), and for the focus indicator.
 - **APCA is advisory**: body text Lc 75, secondary Lc 60, large or bold Lc 45.
 - Measure on the real grounds: `page`, `surface`, `muted`, `muted-strong`, the wash a label sits on,
-  and the light it sits in (the ambient light, a card lit in its state).
+  and the line or fill it sits over (the trace's own area fill).
 
 ## 10. Auditing colour
 

@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 import { Button, IconButton } from "../button/button";
 import { buttonRowClass } from "../button/button-class";
 import { ProgressBar } from "../progress-bar/progress-bar";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import type { TaskStatus } from "../status/status-kinds";
 import { ServerMessage } from "../text/server-message";
 import { TypeToConfirmField } from "../type-to-confirm/type-to-confirm-field";
@@ -102,12 +102,12 @@ function JobStepList({
             aria-current={step.status === "running" ? "step" : undefined}
             className="grid gap-1.5 border-t border-border py-2.5 first:border-t-0 sm:col-span-2 sm:grid-cols-subgrid sm:items-center sm:gap-x-3"
           >
-            <StatusPill
+            <StatusLabel
               status={step.status}
               className="justify-self-start sm:min-w-28"
             >
               {statusLabels[step.status]}
-            </StatusPill>
+            </StatusLabel>
             <span
               className={cn(
                 "min-w-0 text-base [overflow-wrap:anywhere]",
@@ -195,7 +195,7 @@ function JobProgress({
 
 interface JobResultProps {
   /**
-   * How the job ended, once it has: the fixed word in a pill and a plain sentence. While undefined the
+   * How the job ended, once it has: the fixed word as a status label and a plain sentence. While undefined the
    * component still renders its (empty) live region, so the result is announced when it arrives.
    */
   result?: {
@@ -229,9 +229,9 @@ function JobResult({
     >
       {result ? (
         <div className="flex items-start gap-3">
-          <StatusPill status={result.status} className="mt-0.5">
+          <StatusLabel status={result.status} className="mt-0.5">
             {result.statusLabel}
-          </StatusPill>
+          </StatusLabel>
           <p className="min-w-0 flex-1 text-base text-foreground">
             {result.message}
           </p>

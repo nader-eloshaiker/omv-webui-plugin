@@ -139,7 +139,7 @@ const WHAT_STAYS = {
   title: "What stays",
   items: [
     "Their files, wherever they are on the NAS. The files keep their old owner, who is then shown as a number. A person you add later may be given the same number and so become the owner of these files.",
-    "Their home folder, homes › alex, with everything in it. If you add a person called alex again, they get this folder.",
+    "Their home folder, alex in the homes folder, with everything in it. If you add a person called alex again, they get this folder.",
   ],
 };
 

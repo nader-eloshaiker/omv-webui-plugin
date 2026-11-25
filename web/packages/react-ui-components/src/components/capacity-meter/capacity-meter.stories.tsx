@@ -82,7 +82,7 @@ export const CompactBelowLevel: Story = {
     variant: "compact",
     label: "Usage of data",
     value: 2.2,
-    valueText: "62% full · 1.4 TiB free of 3.6 TiB",
+    valueText: "62% full, 1.4 TiB free of 3.6 TiB",
   },
 };
 export const CompactWarning: Story = {
@@ -92,7 +92,7 @@ export const CompactWarning: Story = {
     variant: "compact",
     label: "Usage of photos",
     value: 3.1,
-    valueText: "86% full · 512 GiB free of 3.6 TiB",
+    valueText: "86% full, 512 GiB free of 3.6 TiB",
     threshold: { status: "warning", label: "Warning" },
   },
 };
@@ -103,7 +103,7 @@ export const CompactCriticalFull: Story = {
     variant: "compact",
     label: "Usage of backup",
     value: 3.6,
-    valueText: "100% full · 0 B free of 3.6 TiB",
+    valueText: "100% full, 0 B free of 3.6 TiB",
     threshold: { status: "critical", label: "Critical" },
   },
 };
@@ -145,7 +145,7 @@ export const CompactInAColumn: Story = {
           label="Usage of data"
           value={2.2}
           max={3.6}
-          valueText="62% full · 1.4 TiB free of 3.6 TiB"
+          valueText="62% full, 1.4 TiB free of 3.6 TiB"
         />
       </UsageCell>
       <UsageCell>
@@ -154,7 +154,7 @@ export const CompactInAColumn: Story = {
           label="Usage of photos"
           value={3.1}
           max={3.6}
-          valueText="86% full · 512 GiB free of 3.6 TiB"
+          valueText="86% full, 512 GiB free of 3.6 TiB"
           threshold={{ status: "warning", label: "Warning" }}
         />
       </UsageCell>
@@ -164,7 +164,7 @@ export const CompactInAColumn: Story = {
           label="Usage of backup"
           value={3.6}
           max={3.6}
-          valueText="100% full · 0 B free of 3.6 TiB"
+          valueText="100% full, 0 B free of 3.6 TiB"
           threshold={{ status: "critical", label: "Critical" }}
         />
       </UsageCell>
@@ -199,7 +199,7 @@ export const Densities: Story = {
           {...args}
           variant="compact"
           label="Usage of data"
-          valueText="62% full · 1.4 TiB free"
+          valueText="62% full, 1.4 TiB free"
         />
       </div>
     </BothDensities>

@@ -2,7 +2,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { ExternalLink } from "../external-link/external-link";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import {
   AccessGrid,
   type AccessGridProps,
@@ -359,7 +359,7 @@ const FOLDERS: readonly AccessGridRow<Access>[] = [
     "old-backups",
     "none",
     <>
-      <StatusPill status="critical">Missing</StatusPill>
+      <StatusLabel status="critical">Missing</StatusLabel>
       <span>Its disk is not connected.</span>
     </>,
   ),
@@ -375,7 +375,7 @@ export const FoldersAsRowsWithLinks: Story = {
   render: () => <Live {...FOLDER_WORDS} rows={FOLDERS} />,
 };
 
-/** A folder that is not OK shows its pill and status words in the Kind column instead. */
+/** A folder that is not OK shows its status label and status words in the Kind column instead. */
 export const PillInTheKindColumn: Story = {
   render: () => (
     <Live
@@ -386,14 +386,14 @@ export const PillInTheKindColumn: Story = {
           "archive",
           "ro",
           <>
-            <StatusPill status="warning">Degraded</StatusPill>
+            <StatusLabel status="warning">Degraded</StatusLabel>
             <span>Windows and Mac</span>
           </>,
         ),
         folder(
           "tv-recordings",
           "none",
-          <StatusPill status="unknown">Not known</StatusPill>,
+          <StatusLabel status="unknown">Not known</StatusLabel>,
         ),
       ]}
     />
@@ -422,7 +422,7 @@ export const RowRefusedAfterSave: Story = {
   ),
 };
 
-/** 320px: the pill and its words wrap in their column beside the name; nothing scrolls sideways. */
+/** 320px: the status and its words wrap in their column beside the name; nothing scrolls sideways. */
 export const FoldersNarrow: Story = {
   decorators: [(Story) => <div className="w-[18rem]">{Story()}</div>],
   render: () => (

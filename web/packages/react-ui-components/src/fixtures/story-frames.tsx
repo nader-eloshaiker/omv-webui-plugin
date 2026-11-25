@@ -32,15 +32,11 @@ export function BothDensities({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div data-density="comfortable" className="flex min-w-0 flex-col gap-2">
-        <p className="text-caption font-semibold text-tertiary-foreground">
-          Comfortable
-        </p>
+        <p className="text-sm text-muted-foreground">Comfortable</p>
         {children}
       </div>
       <div data-density="compact" className="flex min-w-0 flex-col gap-2">
-        <p className="text-caption font-semibold text-tertiary-foreground">
-          Compact
-        </p>
+        <p className="text-sm text-muted-foreground">Compact</p>
         {children}
       </div>
     </div>

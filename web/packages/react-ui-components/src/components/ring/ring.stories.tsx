@@ -44,7 +44,7 @@ function Capacities() {
         figure="62%"
         valueText="2.2 TiB of 3.6 TiB used"
       >
-        ext4 · mirror of sda and sdb
+        ext4, a mirror of sda and sdb
       </CapacityRing>
       <CapacityRing
         label="photos"
@@ -54,7 +54,7 @@ function Capacities() {
         valueText="3.1 TiB of 3.6 TiB used"
         threshold={{ status: "warning", label: "Almost full" }}
       >
-        Btrfs · sdc
+        Btrfs on sdc
       </CapacityRing>
       <CapacityRing
         label="archive"
@@ -63,7 +63,7 @@ function Capacities() {
         figure=""
         valueText="No reading: not mounted"
       >
-        XFS · USB disk
+        XFS on a USB disk
       </CapacityRing>
     </div>
   );
@@ -76,7 +76,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A few capacities side by side: blue until the threshold, then the warning fill with its pill. */
+/** A few capacities side by side: blue until the threshold, then the warning fill with its status label. */
 export const CapacityRings: Story = {
   render: () => (
     <StoryCard title="Storage" className="max-w-4xl">
@@ -192,7 +192,7 @@ export const AtPhoneWidth: Story = {
 
 /**
  * A missing file system is Critical without a reading: the dashed ring in the critical stroke with
- * its icon, and the pill. Beside it, a reading that failed (Unknown, no pill) for comparison.
+ * its icon, and the status label. Beside it, a reading that failed (Unknown, no status label) for comparison.
  */
 export const KnownBadWithoutReading: Story = {
   render: () => (
@@ -224,7 +224,7 @@ export const KnownBadWithoutReading: Story = {
 
 /**
  * Each ring opens its file system: the whole tile is the target, with the neutral hover, the focus
- * ring round the tile and a chevron. The system drive has no page here, so it is not a link.
+ * ring round the tile, and no chevron. The system drive has no page here, so it is not a link.
  */
 export const LinkTiles: Story = {
   render: () => (
@@ -236,7 +236,7 @@ export const LinkTiles: Story = {
             value={87}
             max={100}
             figure="87%"
-            valueText="87% full · 120 GiB free of 916 GiB"
+            valueText="87% full, 120 GiB free of 916 GiB"
             threshold={{ status: "warning", label: "Warning" }}
             link={<a href="#/storage/filesystems/data" />}
             linkLabel="Open file system Data"
@@ -264,7 +264,7 @@ export const LinkTiles: Story = {
             value={41}
             max={100}
             figure="41%"
-            valueText="41% full · 2.1 TiB free of 3.6 TiB"
+            valueText="41% full, 2.1 TiB free of 3.6 TiB"
             link={<a href="#/storage/filesystems/photos" />}
             linkLabel="Open file system Photos and home videos of the family, 2009 to now"
           >
@@ -277,7 +277,7 @@ export const LinkTiles: Story = {
             value={23}
             max={100}
             figure="23%"
-            valueText="23% full · 45 GiB free of 58 GiB"
+            valueText="23% full, 45 GiB free of 58 GiB"
           >
             Where openmediavault is installed
           </CapacityRing>
@@ -323,7 +323,7 @@ export const Progress: Story = {
   },
 };
 
-/** While the first reads are in flight: the tracks breathe, with bars where the words go. */
+/** While the first reads are in flight: the tracks stand still, with bars where the words go. */
 export const Loading: Story = {
   render: () => (
     <StoryCard title="Storage" className="max-w-4xl">

@@ -13,12 +13,12 @@ function storage(warning: boolean): ConnectionMapColumn[] {
       id: "disks",
       title: "Disks",
       nodes: [
-        { id: "sda", label: "sda", detail: "3.6 TiB · 38 °C", feeds: ["data"] },
+        { id: "sda", label: "sda", detail: "3.6 TiB, 38 °C", feeds: ["data"] },
         warning
           ? {
               id: "sdb",
               label: "sdb",
-              detail: "3.6 TiB · 47 °C",
+              detail: "3.6 TiB, 47 °C",
               status: "warning",
               statusLabel: "Warning",
               feeds: ["data"],
@@ -26,19 +26,19 @@ function storage(warning: boolean): ConnectionMapColumn[] {
           : {
               id: "sdb",
               label: "sdb",
-              detail: "3.6 TiB · 39 °C",
+              detail: "3.6 TiB, 39 °C",
               feeds: ["data"],
             },
         {
           id: "sdc",
           label: "sdc",
-          detail: "7.3 TiB · 36 °C",
+          detail: "7.3 TiB, 36 °C",
           feeds: ["backup"],
         },
         {
           id: "sdd",
           label: "sdd",
-          detail: "1.8 TiB · USB",
+          detail: "1.8 TiB, USB",
           status: "unknown",
           statusLabel: "Not checked",
           feeds: ["archive"],
@@ -52,7 +52,7 @@ function storage(warning: boolean): ConnectionMapColumn[] {
         {
           id: "data",
           label: "data",
-          detail: "62% full · ext4, mirror",
+          detail: "62% full, ext4, mirror",
           feeds: ["photos", "music", "family-documents"],
           ...(warning
             ? { status: "warning" as const, statusLabel: "Disk warning" }
@@ -61,13 +61,13 @@ function storage(warning: boolean): ConnectionMapColumn[] {
         {
           id: "backup",
           label: "backup",
-          detail: "15% full · ZFS",
+          detail: "15% full, ZFS",
           feeds: ["copies"],
         },
         {
           id: "archive",
           label: "archive",
-          detail: "22% full · XFS",
+          detail: "22% full, XFS",
           feeds: [],
         },
       ],
@@ -114,13 +114,13 @@ function storage(warning: boolean): ConnectionMapColumn[] {
         {
           id: "smb",
           label: "Windows and Mac",
-          detail: "SMB · running",
+          detail: "SMB, running",
           feeds: ["family", "guests"],
         },
         {
           id: "nfs",
           label: "Linux and Unix",
-          detail: "NFS · running",
+          detail: "NFS, running",
           feeds: ["family"],
         },
       ],
@@ -129,14 +129,14 @@ function storage(warning: boolean): ConnectionMapColumn[] {
       id: "people",
       title: "People",
       nodes: [
-        { id: "family", label: "family", detail: "4 people · read and write" },
+        { id: "family", label: "family", detail: "4 people, read and write" },
         { id: "guests", label: "guests", detail: "Read only" },
       ],
     },
   ];
 }
 
-const feedsLabel = (names: readonly string[]) => `→ ${names.join(", ")}`;
+const feedsLabel = (names: readonly string[]) => `Feeds ${names.join(", ")}`;
 
 const meta = {
   title: "Diagrams/Connection map",

@@ -47,7 +47,7 @@ describe("ProgressBar", () => {
     expect(bar).toHaveAttribute("aria-valuemax", "1200");
   });
 
-  it("is indeterminate with a null value: no current value, a third-width bar that pulses only with motion", () => {
+  it("is indeterminate with a null value: no current value, a third-width bar that stands still", () => {
     const { container } = render(
       <ProgressBar
         aria-label="Checking RAID md0"
@@ -63,11 +63,9 @@ describe("ProgressBar", () => {
       "[data-indeterminate] > div > div",
     );
     expect(indicator).not.toBeNull();
-    // The breath is behind `motion-safe:`, so under reduced motion the bar stands still.
-    expect(indicator?.className).toContain(
-      "data-indeterminate:motion-safe:animate-breathe",
-    );
-    expect(indicator?.className).not.toMatch(/(^|\s)animate-breathe/);
+    // A third-width bar that stands still: nothing pulses (style guide 10); the words say it works.
+    expect(indicator?.className).toContain("data-indeterminate:w-1/3");
+    expect(indicator?.className).not.toMatch(/animate-/);
     expect(indicator?.getAttribute("style") ?? "").not.toContain("width");
     expect(screen.getByText("Working…")).toBeVisible();
   });

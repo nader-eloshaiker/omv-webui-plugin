@@ -162,12 +162,8 @@ function PickerRow({
       data-slot="member-picker-row"
       data-changed={changed || undefined}
       data-unavailable={unavailable || undefined}
-      className={cn(
-        "relative ps-3",
-        // The changed mark: the row's leading edge in the control ink, beside the word "Changed".
-        changed &&
-          "before:absolute before:inset-y-0 before:start-0 before:w-1 before:bg-input",
-      )}
+      // A changed row says so in the word "Changed" beside its name; no edge strip (style guide 10).
+      className="relative"
     >
       <Field className="gap-0.5">
         <div className="flex flex-wrap items-start gap-x-2 gap-y-0.5">

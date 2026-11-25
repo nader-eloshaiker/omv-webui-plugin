@@ -18,7 +18,7 @@ import * as LiveStories from "../components/charts/live-chart.stories";
 import { DriveBay, type DriveSlot } from "../components/drive-bay/drive-bay";
 import { PendingBand } from "../components/pending-band/pending-band";
 import { PendingPill } from "../components/pending-pill/pending-pill";
-import { StatusPill } from "../components/status/status";
+import { StatusLabel } from "../components/status/status";
 import { TaskLog, type TaskLogLine } from "../components/task-log/task-log";
 import { TopBar, TopBarBrand } from "../components/top-bar/top-bar";
 import { cn } from "../utils";
@@ -162,20 +162,21 @@ function InUse({ theme }: { theme: "dark" | "light" }) {
 
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-title text-foreground">Shared folders</h2>
-        <StatusPill status="pending">Not applied yet</StatusPill>
-        <span className="ms-auto flex flex-wrap gap-2">
-          <StatusPill status="ok">OK</StatusPill>
-          <StatusPill status="warning">Warning</StatusPill>
-          <StatusPill status="critical">Critical</StatusPill>
-          <StatusPill status="unknown">Unknown</StatusPill>
+        <StatusLabel status="pending">Not applied yet</StatusLabel>
+        <span className="ms-auto flex flex-wrap gap-x-4 gap-y-2">
+          <StatusLabel status="ok">OK</StatusLabel>
+          <StatusLabel status="warning">Warning</StatusLabel>
+          <StatusLabel status="critical">Critical</StatusLabel>
+          <StatusLabel status="unknown">Unknown</StatusLabel>
         </span>
       </div>
 
       <div className="grid gap-gutter md:grid-cols-2">
-        <Card tone="warning">
+        <Card>
           <CardHeader>
-            <CardTitle level={3}>Disk sdb is running warm</CardTitle>
-            <StatusPill status="warning">Warning</StatusPill>
+            <CardTitle level={3} tone="warning">
+              Disk sdb is running warm
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
@@ -187,10 +188,11 @@ function InUse({ theme }: { theme: "dark" | "light" }) {
             </Button>
           </CardContent>
         </Card>
-        <Card tone="critical">
+        <Card>
           <CardHeader>
-            <CardTitle level={3}>RAID md0 is degraded</CardTitle>
-            <StatusPill status="critical">Critical</StatusPill>
+            <CardTitle level={3} tone="critical">
+              RAID md0 is degraded
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
@@ -245,8 +247,8 @@ function InUse({ theme }: { theme: "dark" | "light" }) {
         lines={APT}
         endMessage={
           <span className="flex flex-wrap items-center gap-2">
-            <StatusPill status="succeeded">Succeeded</StatusPill>3 packages were
-            upgraded.
+            <StatusLabel status="succeeded">Succeeded</StatusLabel>3 packages
+            were upgraded.
           </span>
         }
       />

@@ -121,8 +121,8 @@ function UsedByPanel({
   if (loading) {
     body = (
       <div aria-hidden="true" className="flex flex-col gap-2">
-        <div className="h-4 w-2/3 rounded-sm bg-muted-strong motion-safe:animate-breathe" />
-        <div className="h-4 w-1/2 rounded-sm bg-muted-strong motion-safe:animate-breathe" />
+        <div className="h-4 w-2/3 rounded-sm bg-muted-strong" />
+        <div className="h-4 w-1/2 rounded-sm bg-muted-strong" />
       </div>
     );
   } else if (error) {

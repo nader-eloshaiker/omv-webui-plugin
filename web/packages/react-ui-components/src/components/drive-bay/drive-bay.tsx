@@ -28,7 +28,7 @@ interface DriveSlot {
   statusLabel: React.ReactNode;
   /** What it holds: "data", "Not used". Leave it out while that is not known, never "Empty". */
   role?: React.ReactNode;
-  /** One quiet fact under the role: the temperature "34 °C", or "Asleep". */
+  /** One secondary fact under the role: the temperature "34 °C", or "Asleep". */
   detail?: React.ReactNode;
   /**
    * Makes the slot a link to the disk's page: the element to render, `<a href=… />` or the router's
@@ -62,21 +62,6 @@ const bodyClass = cva("fill-surface stroke-art-line", {
   },
 });
 
-// The health light: the status fill ringed in its stroke; Unknown is a hollow dashed ring. It always
-// travels with the icon and the word under the caddy.
-const ledClass = cva("stroke-[1.5]", {
-  variants: {
-    tone: {
-      ok: "fill-ok stroke-ok-stroke",
-      warning: "fill-warning stroke-warning-stroke",
-      critical: "fill-critical stroke-critical-stroke",
-      unknown: "fill-none stroke-unknown-stroke",
-      // The lit light while it is dark: what a light crossfades from on its first result.
-      dim: "fill-muted-strong stroke-unknown-stroke",
-    },
-  },
-});
-
 const wordClass = cva("", {
   variants: {
     tone: {
@@ -88,14 +73,18 @@ const wordClass = cva("", {
   },
 });
 
-// A change of state after mount (the disk check's result landing) crossfades the light, the edge and
-// the word, slot after slot: the transition waits two stagger steps per slot. The first render has
+// A change of state after mount (the disk check's result landing) turns the caddy's edge and the
+// word, slot after slot: the transition waits two stagger steps per slot. The first render has
 // nothing to transition from, so the entrance is the slot's own `slot-in`. Under reduced motion the
 // durations and the stagger are 0ms, so the new state is simply there.
 const turn =
   "transition-[opacity,fill,stroke,color] duration-base ease-standard [transition-delay:calc(min(var(--stagger-index,0),11)*var(--motion-stagger)*2)]";
 
-/** One caddy, front view: its face by kind, a handle and the health light. No activity light: OMV gives none per disk. */
+/**
+ * One caddy, front view: its face by kind and a handle. No light of any kind: a coloured dot on a
+ * drawing reads as a "live dot" (style guide 10), and OMV gives no activity per disk. A caddy in a
+ * non-OK state is edged in its stroke; the icon and the word under it say which state.
+ */
 function Caddy({ kind, tone }: { kind: DriveKind; tone: Tone }) {
   const part = "fill-muted-strong stroke-art-line";
   return (
@@ -145,36 +134,12 @@ function Caddy({ kind, tone }: { kind: DriveKind; tone: Tone }) {
           ) : null}
         </>
       )}
-      {/* The light: a hollow dashed ring while unknown, the lit state otherwise; the two crossfade. */}
-      <circle
-        cx="28"
-        cy="14"
-        r="4"
-        strokeDasharray="2 2"
-        data-light="unknown"
-        className={cn(
-          ledClass({ tone: "unknown" }),
-          turn,
-          tone === "unknown" ? "opacity-100" : "opacity-0",
-        )}
-      />
-      <circle
-        cx="28"
-        cy="14"
-        r="4"
-        data-light={tone === "unknown" ? undefined : tone}
-        className={cn(
-          ledClass({ tone: tone === "unknown" ? "dim" : tone }),
-          turn,
-          tone === "unknown" ? "opacity-0" : "opacity-100",
-        )}
-      />
     </svg>
   );
 }
 
 const chassisClass =
-  "m-0 rounded-card bg-linear-to-b from-art-chassis-top to-art-chassis-bottom px-3.5 pt-2.5 pb-3.5 shadow-control ring-1 ring-border ring-inset";
+  "m-0 rounded-card bg-art-chassis-top px-3.5 pt-2.5 pb-3.5 shadow-control ring-1 ring-border ring-inset";
 const slotGridClass =
   "grid grid-cols-[repeat(auto-fit,minmax(3.75rem,1fr))] gap-2 compact:grid-cols-[repeat(auto-fit,minmax(3.25rem,1fr))] compact:gap-1.5";
 const slotBodyClass =
@@ -191,7 +156,7 @@ function SlotBody({ slot }: { slot: DriveSlot }) {
       </span>
       <span
         className={cn(
-          "inline-flex flex-wrap items-center justify-center gap-1 text-caption font-semibold",
+          "inline-flex flex-wrap items-center justify-center gap-1 text-caption font-medium",
           wordClass({ tone }),
           turn,
         )}
@@ -216,7 +181,7 @@ function SlotBody({ slot }: { slot: DriveSlot }) {
     defaultTagName: "a",
     props: {
       "data-slot": "drive-slot-link",
-      // The neutral hover on the slot, never on the light, so the state reads the same under the pointer.
+      // The neutral hover on the slot, never on the state's marks, so they read the same under the pointer.
       className: cn(
         slotBodyClass,
         "h-full transition-[background-color,translate] duration-fast ease-standard hover:bg-muted active:translate-y-px",
@@ -229,14 +194,14 @@ function SlotBody({ slot }: { slot: DriveSlot }) {
 }
 
 /**
- * The NAS front panel (foundation 9): one caddy per disk, each with its health light and, under it,
- * the device, its health as an icon and a word, what it holds and one quiet detail (the temperature,
- * "Asleep"). The chassis is lit from above, one step (material light). Answers "which disk is which,
+ * The NAS front panel (foundation 9): one caddy per disk and, under it, the device, its health as an
+ * icon and a word, what it holds and one secondary detail (the temperature, "Asleep"). The chassis
+ * is a flat fill: no gradient and no lights (style guide 10). Answers "which disk is which,
  * and which one is the problem?". The words are HTML, so they reflow: six slots across become four at
  * 390px.
  *
  * A slot with `link` opens its disk's page. When a slot's state changes after mount (the disk check's
- * result lands), the lights change in turn, a slot at a time; under reduced motion they change at once.
+ * result lands), the edges and words change in turn, a slot at a time; under reduced motion they change at once.
  */
 function DriveBay({
   slots,
@@ -252,8 +217,7 @@ function DriveBay({
       {...props}
     >
       {name ? (
-        <div className="mb-2.5 flex items-center gap-2 font-mono text-xs font-medium text-tertiary-foreground">
-          <span aria-hidden="true" className="size-2 rounded-full bg-brand" />
+        <div className="mb-2.5 font-mono text-xs font-medium text-tertiary-foreground">
           {name}
         </div>
       ) : null}
@@ -290,7 +254,7 @@ interface DriveBaySkeletonProps extends Omit<
 
 /**
  * A `DriveBay` while the disk list is read: the chassis with caddy-shaped placeholders and two text
- * bars under each, breathing. Hidden from assistive technology: the region carries `aria-busy` and a
+ * bars under each, still. Hidden from assistive technology: the region carries `aria-busy` and a
  * polite "Loading the disks…" of its own.
  */
 function DriveBaySkeleton({

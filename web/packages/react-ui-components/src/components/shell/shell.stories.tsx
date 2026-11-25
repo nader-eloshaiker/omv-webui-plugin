@@ -299,7 +299,7 @@ function DemoShell({
         id: `${g.id}/${p.id}`,
         label: p.label,
         group: "Go to",
-        hint: p.classic ? `${g.label} · classic interface` : g.label,
+        hint: p.classic ? `${g.label}, in the classic interface` : g.label,
         external: p.classic,
         shortcut: p.jump ? ["g", p.jump] : undefined,
         onSelect: () => go({ group: g.id, id: p.id }),
@@ -384,7 +384,7 @@ function DemoShell({
               <IconButton
                 label="Open navigation"
                 icon={<MenuIcon />}
-                variant="quiet"
+                variant="plain"
                 onClick={() => setDrawer(true)}
               />
             }
@@ -488,7 +488,7 @@ function DemoShell({
                 `Nothing matches “${q}”. Try a page name, like “disks”.`
               }
               closeLabel="Close"
-              keysHint="↑ ↓ to move · Enter to go · g then a letter jumps from anywhere"
+              keysHint="↑ and ↓ to move, Enter to go, g then a letter to jump from anywhere"
               externalLabel="classic interface"
             />
           </>
@@ -498,7 +498,7 @@ function DemoShell({
         <p className="mt-2 max-w-prose text-muted-foreground">
           Save a setting to see the pending mark fly into the top bar. Press /
           for the palette, or g then d for Disks. Scroll to shrink the band into
-          the pill.
+          the pending count.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Button
@@ -516,7 +516,8 @@ function DemoShell({
             <div key={i} className="h-40 rounded-card p-card surface-raised">
               <p className="text-section">Card {i + 1}</p>
               <p className="mt-1 text-caption text-tertiary-foreground">
-                Content scrolls under the top bar, which blurs it.
+                Content scrolls under the top bar, which stays solid with a
+                hairline under it.
               </p>
             </div>
           ))}
@@ -534,7 +535,7 @@ function Tasks() {
           <IconButton
             label="Tasks: 1 running"
             icon={<ListChecks />}
-            variant="quiet"
+            variant="plain"
           />
         }
       />
@@ -563,7 +564,7 @@ function User() {
           <IconButton
             label="Account: admin"
             icon={<UserRound />}
-            variant="quiet"
+            variant="plain"
           />
         }
       />
@@ -576,7 +577,7 @@ function User() {
   );
 }
 
-/** The shell on a built page, nothing pending: the pill is a quiet chip. Light theme. */
+/** The shell on a built page, nothing pending: the pill is a plain count chip. Light theme. */
 export const Light: Story = {
   globals: { theme: "Light" },
   render: () => <DemoShell />,
@@ -610,7 +611,7 @@ export const PhoneAt390: Story = {
 };
 
 /**
- * Every group with the items plugins add, which stay classic and quieter. The current group is open;
+ * Every group with the items plugins add, which stay classic, in the secondary ink. The current group is open;
  * the others fold, so the list never becomes one long column.
  */
 export const ManyGroupsWithPluginItems: Story = {

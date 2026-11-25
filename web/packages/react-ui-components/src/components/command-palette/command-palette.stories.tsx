@@ -77,7 +77,7 @@ const PAGES: CommandItem[] = [
     id: "cron",
     label: "Scheduled tasks",
     group: "Go to",
-    hint: "System · classic interface",
+    hint: "System, in the classic interface",
     external: true,
     onSelect: noop,
   },
@@ -85,7 +85,7 @@ const PAGES: CommandItem[] = [
     id: "compose",
     label: "Compose",
     group: "Go to",
-    hint: "Services · classic interface",
+    hint: "Services, in the classic interface",
     external: true,
     onSelect: noop,
   },
@@ -131,7 +131,7 @@ function Demo({
           `Nothing matches “${q}”. Try a page name, like “disks”.`
         }
         closeLabel="Close"
-        keysHint="↑ ↓ to move · Enter to go · g then a letter jumps from anywhere"
+        keysHint="↑ and ↓ to move, Enter to go, g then a letter to jump from anywhere"
         externalLabel="classic interface"
       />
     </div>

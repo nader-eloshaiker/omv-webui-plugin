@@ -10,7 +10,7 @@ import {
 } from "./ring";
 
 describe("CapacityRing", () => {
-  it("is a meter with its numbers, and takes the warning fill only with its pill", () => {
+  it("is a meter with its numbers, and takes the warning fill only with its status label", () => {
     const { container } = render(
       <CapacityRing
         label="photos"
@@ -60,7 +60,7 @@ describe("CapacityRing", () => {
 });
 
 describe("CapacityRing, known bad without a reading", () => {
-  it("draws the dashed ring in the state's stroke, with its pill and words", () => {
+  it("draws the dashed ring in the state's stroke, with its status label and words", () => {
     const { container } = render(
       <CapacityRing
         label="Data"
@@ -90,7 +90,7 @@ describe("CapacityRing as a link tile", () => {
         label="Data"
         value={87}
         max={100}
-        valueText="87% full · 120 GiB free of 916 GiB"
+        valueText="87% full, 120 GiB free of 916 GiB"
         figure="87%"
         threshold={{ status: "warning", label: "Warning" }}
         link={<a href="#/storage/filesystems/data" />}
@@ -164,7 +164,7 @@ describe("ProgressRing", () => {
 });
 
 describe("ring skeletons", () => {
-  it("are the track only, breathing, hidden from assistive technology", () => {
+  it("are the track only, still, hidden from assistive technology", () => {
     const { container } = render(
       <>
         <CapacityRingSkeleton size="sm" />
@@ -177,9 +177,9 @@ describe("ring skeletons", () => {
     const health = container.querySelector("[data-slot=health-ring-skeleton]");
     expect(capacity).toHaveAttribute("aria-hidden", "true");
     expect(health).toHaveAttribute("aria-hidden", "true");
-    expect(capacity?.querySelector("svg")?.getAttribute("class")).toMatch(
-      /animate-breathe/,
-    );
+    expect(
+      capacity?.querySelector("svg")?.getAttribute("class") ?? "",
+    ).not.toMatch(/animate-/);
     expect(health?.querySelectorAll("[data-slot=skeleton]")).toHaveLength(4);
     expect(capacity?.querySelectorAll("[data-slot=skeleton]")).toHaveLength(2);
   });

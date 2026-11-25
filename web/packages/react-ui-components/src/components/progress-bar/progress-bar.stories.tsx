@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import { Identifier } from "../text/identifier";
 import { ProgressBar } from "./progress-bar";
 
@@ -44,8 +44,8 @@ export const KnownWithoutTimeLeft: Story = {
 };
 
 /**
- * A check, whose progress is not known: a third-width bar that pulses. Under
- * `prefers-reduced-motion` the same bar stands still and the words say it is working.
+ * A check, whose progress is not known: a third-width bar that stands still, and the words say it
+ * is working. Nothing pulses (style guide 10).
  */
 export const Indeterminate: Story = {
   render: () => (
@@ -54,7 +54,7 @@ export const Indeterminate: Story = {
 };
 
 /**
- * In a 36px table row at 320px: the state pill, its reason, and the compact bar under the reason with
+ * In a 36px table row at 320px: the state, its reason, and the compact bar under the reason with
  * the same figures as text. The reason names the bar, so it carries no label of its own.
  */
 export const CompactInNarrowRow: Story = {
@@ -63,7 +63,7 @@ export const CompactInNarrowRow: Story = {
     return (
       <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <StatusPill status="warning">Warning</StatusPill>
+          <StatusLabel status="warning">Warning</StatusLabel>
           <span
             id={`${storyId}-md0-reason`}
             className="min-w-0 text-sm text-foreground"
@@ -90,7 +90,7 @@ export const CompactIndeterminate: Story = {
     return (
       <div className="flex w-80 max-w-full flex-col gap-1 border-y border-border py-2">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <StatusPill status="ok">OK</StatusPill>
+          <StatusLabel status="ok">OK</StatusLabel>
           <span
             id={`${storyId}-md1-reason`}
             className="min-w-0 text-sm text-foreground"

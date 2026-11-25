@@ -115,8 +115,9 @@ describe("the token system", () => {
     assert.match(rule(css, "text-trace"), /var\(--theme-trace\)/);
   });
 
-  it("makes no flat-fill utility of the ambient light's stops, and no identity bar", () => {
+  it("has no ambient light and no identity bar (style guide 10: the generated look)", () => {
     const css = build([
+      "ambient-light",
       "bg-ambient",
       "bg-ambient-soft",
       "bg-identity",
@@ -124,9 +125,9 @@ describe("the token system", () => {
     ]);
     assert.doesNotMatch(
       css,
-      /\.(bg-ambient|bg-ambient-soft|bg-identity|text-identity-foreground)\b/,
+      /\.(ambient-light|bg-ambient|bg-ambient-soft|bg-identity|text-identity-foreground)\b/,
     );
-    assert.doesNotMatch(css, /--theme-identity/);
+    assert.doesNotMatch(css, /--theme-(ambient|identity)/);
   });
 
   it("has no Tailwind palette, white, black or off-system radius, shadow or size", () => {
@@ -277,12 +278,9 @@ describe("surfaces, elevation and light (foundation 3.4 and 6)", () => {
     assert.match(rule(css, "shadow-control"), /var\(--theme-shadow-control\)/);
   });
 
-  it("paints the ambient light from its two brand stops only", () => {
-    const body = rule(build(["ambient-light"]), "ambient-light");
-    assert.ok(body, "ambient-light is generated");
-    assert.match(body, /var\(--theme-ambient\) 39\.3%/);
-    assert.match(body, /var\(--theme-ambient-soft\) 47\.6%/);
-    assert.doesNotMatch(body, /--theme-(ok|warning|critical|unknown|pending)/);
+  it("paints no glow, no blur and no texture of its own", () => {
+    const css = build(["bg-page", "surface-raised", "surface-floating"]);
+    assert.doesNotMatch(css, /radial-gradient|backdrop-filter:|filter: blur/);
   });
 });
 
@@ -320,19 +318,11 @@ describe("motion (foundation 7)", () => {
       "animate-rise",
       "animate-settle-in",
       "animate-fade-in",
-      "animate-breathe",
       "animate-draw",
       "animate-leave",
       "stagger",
     ]);
-    for (const name of [
-      "rise",
-      "settle-in",
-      "fade-in",
-      "breathe",
-      "draw",
-      "leave",
-    ]) {
+    for (const name of ["rise", "settle-in", "fade-in", "draw", "leave"]) {
       assert.match(css, new RegExp(`@keyframes ${name} \\{`));
     }
     assert.match(rule(css, "animate-rise"), /var\(--ease-enter\)/);
@@ -342,6 +332,23 @@ describe("motion (foundation 7)", () => {
     assert.match(rule(css, "animate-leave"), /var\(--duration-base\)/);
     assert.match(rule(css, "animate-leave"), /var\(--ease-exit\)/);
     assert.match(css, /@keyframes leave \{[^}]*grid-template-rows: 0fr/);
+  });
+
+  it("has no pulse, breath, blink or blur; only the spinner repeats", () => {
+    const css = build([
+      "animate-breathe",
+      "animate-pulse",
+      "animate-ping",
+      "animate-bounce",
+      "animate-spin",
+      "backdrop-blur-md",
+      "blur-sm",
+    ]);
+    assert.doesNotMatch(css, /\.animate-(breathe|pulse|ping|bounce)\b/);
+    assert.doesNotMatch(css, /@keyframes (breathe|pulse|ping|bounce)\b/);
+    assert.doesNotMatch(css, /\.(backdrop-blur-md|blur-sm)\b/);
+    // The spinner stays: it is the running state itself, beside its words.
+    assert.match(rule(css, "animate-spin"), /spin 1s linear infinite/);
   });
 });
 

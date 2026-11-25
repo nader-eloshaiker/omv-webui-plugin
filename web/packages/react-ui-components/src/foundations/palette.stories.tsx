@@ -150,7 +150,7 @@ function FamilyRow({ family }: { family: (typeof FAMILIES)[number] }) {
             </span>
             <span
               className={cn(
-                "inline-flex self-start rounded-full border px-2 py-0.5 text-xs font-semibold",
+                "inline-flex self-start rounded-control px-2.5 py-1 text-sm font-medium",
                 family.stroke,
                 family.wash,
                 family.label,
@@ -193,7 +193,7 @@ function Inks() {
 
 /**
  * The accent and Sky side by side: Cobalt says "do this" (the primary, the outlined next step); Sky
- * says "you can interact with this" (a link, a quiet action, the selected row, the checked mark, the
+ * says "you can interact with this" (a link, an action in place, the selected row, the checked mark, the
  * focus ring).
  */
 function ActionAndSelection() {
@@ -344,7 +344,7 @@ function UsageTerminalDrawing() {
         <span className="text-terminal-foreground">Setting up libssl3 ...</span>
         <Hex bg="bg-terminal-foreground" />
       </div>
-      <div className="flex flex-col gap-2 rounded-control bg-linear-to-b from-art-chassis-top to-art-chassis-bottom p-3 ring-1 ring-art-line">
+      <div className="flex flex-col gap-2 rounded-control bg-art-chassis-top p-3 ring-1 ring-art-line">
         <span className="text-xs text-tertiary-foreground">Drawing</span>
         <svg viewBox="0 0 120 30" className="w-full" aria-hidden="true">
           <rect

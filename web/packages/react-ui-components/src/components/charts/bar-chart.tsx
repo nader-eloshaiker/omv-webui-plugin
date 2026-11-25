@@ -32,7 +32,7 @@ import { chartFrameClass, TICK, type ChartAlert } from "./chart-theme";
 interface BarTooltip {
   title: React.ReactNode;
   meta?: React.ReactNode;
-  /** The lines under the title: "2.2 TiB of 3.6 TiB used · 62%", "1.4 TiB free". */
+  /** The lines under the title: "2.2 TiB of 3.6 TiB used (62%)", "1.4 TiB free". */
   body: React.ReactNode;
 }
 
@@ -61,7 +61,7 @@ interface BarChartProps<Row> extends Omit<
   alerts?: readonly ChartAlert[];
   /** A value with its unit, for the axis: "2 TiB", "35°". */
   formatTick: (value: number) => string;
-  /** The words at the end of each bar: "62%", "62% · Almost full", "41°". */
+  /** The words at the end of each bar: "62%", "62%, almost full", "41°". */
   barLabel: (row: Row) => string;
   /** Under the name of a thing with no value, where its bar would be: "No reading". */
   missingLabel: string;
@@ -157,7 +157,7 @@ function BarChart<Row>({
   const grow = across
     ? "[&_.recharts-rectangle]:grow-box [&_.recharts-rectangle]:origin-left [&_.recharts-rectangle]:animate-grow-x"
     : "[&_.recharts-rectangle]:grow-box [&_.recharts-rectangle]:origin-bottom [&_.recharts-rectangle]:animate-grow-y";
-  const labelClass = "text-xs font-semibold text-muted-foreground";
+  const labelClass = "text-xs text-muted-foreground";
   const valueAxis = {
     type: "number" as const,
     domain: [...scale.domain],
@@ -186,7 +186,7 @@ function BarChart<Row>({
         // Names are read: the secondary ink at a heavier weight than the figures on the value axis
         // (not their class, which the frame paints in the caption tier).
         className={cn(
-          "text-xs font-semibold text-muted-foreground",
+          "text-xs text-muted-foreground",
           monoNames && "font-mono",
         )}
       >

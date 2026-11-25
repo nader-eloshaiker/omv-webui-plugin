@@ -20,14 +20,14 @@ describe("LiveTile", () => {
         }
         plot={<div data-testid="plot" />}
       >
-        Average load 0.23 · 0.09 · 0.02
+        Average load 0.23, 0.09 and 0.02
       </LiveTile>,
     );
     const tile = screen.getByRole("group", { name: "Processor" });
     expect(within(tile).getByText("12 %")).toBeInTheDocument();
     expect(within(tile).getByTestId("plot")).toBeInTheDocument();
     expect(
-      within(tile).getByText("Average load 0.23 · 0.09 · 0.02"),
+      within(tile).getByText("Average load 0.23, 0.09 and 0.02"),
     ).toBeInTheDocument();
   });
 
@@ -49,7 +49,7 @@ describe("LiveTile", () => {
     );
     const { container } = render(
       <LiveTile
-        name="Network · enp2s0"
+        name="Network on enp2s0"
         figure="In 1.2"
         plot={
           <React.Suspense fallback={<LivePlotSkeleton />}>

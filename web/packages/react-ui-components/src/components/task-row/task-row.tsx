@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type * as React from "react";
 import { cn } from "../../utils";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import type { TaskStatus } from "../status/status-kinds";
 
 interface TaskRowProps extends Omit<React.ComponentProps<"div">, "title"> {
@@ -17,7 +17,7 @@ interface TaskRowProps extends Omit<React.ComponentProps<"div">, "title"> {
 }
 
 /**
- * One task in the top bar's tasks menu or a task list (5.7): its state as a pill, its title, how long
+ * One task in the top bar's tasks menu or a task list (5.7): its state as a status label, its title, how long
  * it has run. A running task stays reachable from here after leaving its page.
  */
 function TaskRow({
@@ -36,7 +36,7 @@ function TaskRow({
       className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", className)}
       {...props}
     >
-      <StatusPill status={status}>{statusLabel}</StatusPill>
+      <StatusLabel status={status}>{statusLabel}</StatusLabel>
       <span className="min-w-0 flex-1 text-base text-foreground [overflow-wrap:anywhere]">
         {title}
       </span>

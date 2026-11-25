@@ -9,7 +9,15 @@ import { cva } from "class-variance-authority";
 // Pressable looks pressable at rest (foundation 13): filled or outlined, with the resting depth of
 // `shadow-control`. Pressing sinks it by a pixel in `duration-press`; under reduced motion every
 // duration is 0, so the state changes without travel.
-/** The button look, also for Base UI parts that render their own button (a toast action). */
+const PLAIN =
+  "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
+  "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent";
+
+/**
+ * The button look, also for Base UI parts that render their own button (a toast action). A button
+ * carries no arrow or chevron (style guide 10): its words say where it goes. A disclosure keeps its
+ * chevron, a link that opens a new tab its external mark.
+ */
 export const buttonClass = cva(
   "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none " +
     "transition-[color,background-color,border-color,box-shadow,translate,scale,background-size] duration-fast ease-standard " +
@@ -37,7 +45,7 @@ export const buttonClass = cva(
           "data-popup-open:bg-muted-strong " +
           "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
         // An action in place: Sky words, like a link ("you can interact with this"), a neutral hover.
-        // Never the accent: a quiet action is not the one to press.
+        // Never the accent: an action in place is not the one to press.
         ghost:
           "border-transparent bg-transparent text-link hover:bg-muted-strong data-popup-open:bg-muted-strong " +
           "data-disabled:bg-transparent data-disabled:text-subtle-foreground",
@@ -56,13 +64,13 @@ export const buttonClass = cva(
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
           "focus-visible:outline-pending-foreground data-disabled:border-dashed data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
-        // A control in ink with no fill: the top bar's indicators and menus, and other places where
-        // a row of controls must stay quiet. Secondary ink at rest, a neutral ground on hover and
-        // while its menu is open. It replaces the identity bar's variant (the bar is gone,
-        // foundation 3.2).
-        quiet:
-          "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
-          "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent",
+        // A plain control in ink with no fill: the top bar's indicators and menus, and other places
+        // where a row of controls must not compete with the content. Secondary ink at rest, a
+        // neutral ground on hover and while its menu is open. It replaces the identity bar's
+        // variant (the bar is gone, foundation 3.2).
+        plain: PLAIN,
+        /** @deprecated Use `plain`; the same look under its old name (style guide 10). */
+        quiet: PLAIN,
       },
       size: {
         sm: "min-h-control-sm px-2.5 py-0.5 text-sm",

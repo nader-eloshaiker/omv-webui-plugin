@@ -55,17 +55,3 @@ export const OnSurfaceAndPage: Story = {
     </div>
   ),
 };
-
-/**
- * What a reader who asked for reduced motion sees: the same bars, still. In the product this comes
- * from the operating system setting; here the pulse is switched off by class to show it.
- */
-export const ReducedMotion: Story = {
-  render: () => (
-    <div className="flex flex-col gap-1">
-      <Skeleton className="w-28 motion-safe:animate-none" />
-      <Skeleton className="motion-safe:animate-none" />
-      <Skeleton shape="block" className="h-8 motion-safe:animate-none" />
-    </div>
-  ),
-};

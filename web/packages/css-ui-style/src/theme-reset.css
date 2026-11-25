@@ -9,6 +9,10 @@
  *   --text-*     the type scale of foundation 4. The plain steps carry no line height (text
  *                inherits 1.5); the six named steps carry their own.
  *   --ease-*     the named curves of foundation 7.1, nothing else.
+ *   --animate-*  the shared motions of index.css and the spinner only: no `animate-pulse`,
+ *                `animate-ping` or `animate-bounce`, since nothing pulses, breathes or blinks
+ *                (style guide 10, the generated look).
+ *   --blur-*     none: no frosted glass and no blurred glow (style guide 10).
  */
 @theme {
   --color-*: initial;
@@ -16,4 +20,6 @@
   --shadow-*: initial;
   --text-*: initial;
   --ease-*: initial;
+  --animate-*: initial;
+  --blur-*: initial;
 }

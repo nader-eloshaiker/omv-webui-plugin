@@ -5,9 +5,7 @@ import { Phone } from "../../fixtures/story-frames";
 import { Button } from "../button/button";
 import { HealthRing, HealthRingSkeleton, type HealthArea } from "../ring/ring";
 import { Skeleton } from "../skeleton/skeleton";
-import { StatusPill } from "../status/status";
 import type { HealthStatus } from "../status/status-kinds";
-import { Identifier } from "../text/identifier";
 import {
   PageAnswer,
   PageAnswerAction,
@@ -60,8 +58,6 @@ function Figure({ top, bottom }: { top: string; bottom: string }) {
 }
 
 function Answer({
-  status,
-  statusLabel,
   headline,
   description,
   action,
@@ -70,8 +66,6 @@ function Answer({
   ringSize = "lg",
 }: {
   ringSize?: "md" | "lg";
-  status: HealthStatus;
-  statusLabel: string;
   headline: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
@@ -85,12 +79,7 @@ function Answer({
         <h1 id={titleId} className="text-section text-muted-foreground">
           Dashboard
         </h1>
-        <PageAnswerKicker>
-          <StatusPill status={status}>{statusLabel}</StatusPill>
-          <Identifier>nas</Identifier>
-          <span aria-hidden="true">·</span>
-          <span>Updated at 10:42:07</span>
-        </PageAnswerKicker>
+        <PageAnswerKicker>Read at 10:42:07</PageAnswerKicker>
         <PageAnswerHeadline>{headline}</PageAnswerHeadline>
         {description}
         {action ? <PageAnswerAction>{action}</PageAnswerAction> : null}
@@ -120,9 +109,7 @@ type Story = StoryObj<typeof meta>;
 export const Attention: Story = {
   render: () => (
     <Answer
-      status="warning"
-      statusLabel="Warning"
-      headline="2 things need you"
+      headline="Two things need you."
       description={
         <>
           <PageAnswerDescription>
@@ -143,13 +130,11 @@ export const Attention: Story = {
 export const OneCritical: Story = {
   render: () => (
     <Answer
-      status="critical"
-      statusLabel="Critical"
       headline={
         <>
           File system{" "}
           <span className="isolate">Photos and home videos 2009 to now</span> is
-          full
+          full.
         </>
       }
       areas={CRITICAL}
@@ -162,9 +147,7 @@ export const OneCritical: Story = {
 export const NoProblemsNotChecked: Story = {
   render: () => (
     <Answer
-      status="unknown"
-      statusLabel="Not checked"
-      headline="No problems found"
+      headline="No problems were found."
       description={
         <PageAnswerDescription>
           Disk health has not been checked since you signed in.
@@ -181,9 +164,7 @@ export const NoProblemsNotChecked: Story = {
 export const EverythingOk: Story = {
   render: () => (
     <Answer
-      status="ok"
-      statusLabel="OK"
-      headline="Everything is OK"
+      headline="Everything is working."
       description={
         <PageAnswerDescription>
           Disk health was checked at 10:41. The rest is read while this page is
@@ -226,9 +207,7 @@ export const AtPhoneWidth: Story = {
   render: () => (
     <Phone>
       <Answer
-        status="unknown"
-        statusLabel="Not checked"
-        headline="No problems found"
+        headline="No problems were found."
         description={
           <PageAnswerDescription>
             Disk health has not been checked since you signed in.

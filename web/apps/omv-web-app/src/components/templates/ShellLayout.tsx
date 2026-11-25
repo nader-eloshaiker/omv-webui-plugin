@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The application shell (foundation 10; style guide 5.1), around every page behind sign-in. In order,
-// and never side by side: the skip link, the top bar (sticky, blurring the page under it), the
+// and never side by side: the skip link, the top bar (sticky, solid, with a hairline under it), the
 // unencrypted-connection notice (UI-12), the pending-changes band (5.8, administrators; it sticks
 // under the top bar and shrinks into the bar's pending pill while scrolling), then the side
 // navigation with folding groups and the content. Under 1024px the navigation is a drawer. The top bar
@@ -94,7 +94,7 @@ function ShellFrame({
                 <IconButton
                   label={t("app.openNav")}
                   icon={<MenuIcon />}
-                  variant="quiet"
+                  variant="plain"
                   onClick={() => setDrawerOpen(true)}
                 />
               }

@@ -2,12 +2,11 @@
 import { Meter } from "@base-ui/react/meter";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronRight } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { ratioOf, ringArcs } from "../chart-model/chart-model";
 import { Skeleton } from "../skeleton/skeleton";
-import { StatusIcon, StatusPill } from "../status/status";
+import { StatusIcon, StatusLabel } from "../status/status";
 import { STATUS_DRAWING, type HealthStatus } from "../status/status-kinds";
 
 /** The ring's box and stroke in pixels, per size. */
@@ -124,7 +123,7 @@ function UsageArc({
 
 interface CapacityRingThreshold {
   status: "warning" | "critical";
-  /** The pill's words: "Almost full", "Critical". */
+  /** The status words: "Almost full", "Critical". */
   label: React.ReactNode;
 }
 
@@ -135,7 +134,7 @@ type CapacityRingLink =
       /**
        * Makes the ring a link tile: the element to render as the link, `<a href=… />` or the
        * router's `<Link to=… />`. It covers the tile, takes the neutral hover and the focus ring
-       * round the tile, and a chevron marks it at the end.
+       * round the tile. No chevron: the tile's name says where it goes (style guide 10).
        */
       link: useRender.RenderProp;
       /** The link's name, said after the meter: "Open file system Data". */
@@ -150,7 +149,7 @@ type CapacityRingProps = Omit<React.ComponentProps<"div">, "children"> &
     /**
      * How much is used, out of `max`; `null` when there is no reading, drawn as a hollow dashed
      * ring. With a `threshold` as well, the thing is known to be bad without a reading (a missing
-     * file system): the dashed ring takes that state's stroke and icon, and the pill shows.
+     * file system): the dashed ring takes that state's stroke and icon, and the status label shows.
      */
     value: number | null;
     max: number;
@@ -158,7 +157,7 @@ type CapacityRingProps = Omit<React.ComponentProps<"div">, "children"> &
     valueText: string;
     /** The figure inside the ring, formatted by the caller: "62%". */
     figure: React.ReactNode;
-    /** A crossed threshold, or a known bad state: the arc takes the status fill, and only with this pill. */
+    /** A crossed threshold, or a known bad state: the arc takes the status fill, and only with this status label. */
     threshold?: CapacityRingThreshold;
     /** Words beside the ring, under the label and the numbers: the type, where it lives. */
     children?: React.ReactNode;
@@ -174,7 +173,7 @@ const dashedClass = cva("fill-none", {
   },
 });
 
-/** The link that covers a ring tile, and its chevron. */
+/** The link that covers a ring tile. */
 function TileLink({
   render,
   label,
@@ -191,25 +190,18 @@ function TileLink({
       className: "absolute inset-0 rounded-[inherit]",
     },
   });
-  return (
-    <>
-      <ChevronRight
-        aria-hidden="true"
-        className="ms-auto size-4 shrink-0 self-center text-tertiary-foreground transition-[translate,color] duration-fast ease-standard group-hover/tile:translate-x-0.5 group-hover/tile:text-muted-foreground group-has-[:focus-visible]/tile:translate-x-0.5 rtl:-scale-x-100"
-      />
-      {link}
-    </>
-  );
+  // No chevron: the tile's name says where it goes, and its hover says it acts (style guide 10).
+  return link;
 }
 
 /**
  * How full something is, for a few capacities side by side (foundation 8, Sky): an arc of the usage
  * blue that draws on entrance, the figure inside and the words beside. Past an administrator's
- * threshold the arc takes the warning or critical fill together with its pill. A `meter` on Base UI.
+ * threshold the arc takes the warning or critical fill together with its status label. A `meter` on Base UI.
  *
  * - No reading (`value={null}`): a thin dashed ring with the Unknown icon, and no `meter`.
  * - No reading but known bad (`value={null}` with `threshold`, a missing file system): the dashed
- *   ring in that state's stroke with its icon, and the pill.
+ *   ring in that state's stroke with its icon, and the status label.
  * - A link tile (`link` and `linkLabel`): the tile opens the thing's page; the meter is read first,
  *   then the link by its own name.
  */
@@ -277,7 +269,7 @@ function CapacityRing({
           </Meter.Label>
         )}
         {threshold ? (
-          <StatusPill status={threshold.status}>{threshold.label}</StatusPill>
+          <StatusLabel status={threshold.status}>{threshold.label}</StatusLabel>
         ) : null}
       </div>
       <p
@@ -593,7 +585,7 @@ function HealthRing({
 
 /* ─── Skeletons ───────────────────────────────────────────────────────────────────────────────── */
 
-/** The ring's track alone, breathing while the first read is in flight. */
+/** The ring's track alone, still, while the first read is in flight. */
 function TrackSkeleton({ size }: { size: RingSize }) {
   const g = GEOMETRY[size];
   const c = g.box / 2;
@@ -602,7 +594,7 @@ function TrackSkeleton({ size }: { size: RingSize }) {
     <div className={ringBoxClass({ size })}>
       <svg
         aria-hidden="true"
-        className="absolute inset-0 size-full motion-safe:animate-breathe"
+        className="absolute inset-0 size-full"
         viewBox={`0 0 ${g.box} ${g.box}`}
       >
         <circle
@@ -623,7 +615,7 @@ interface RingSkeletonProps
     VariantProps<typeof ringBoxClass> {}
 
 /**
- * A `CapacityRing` while its first read is in flight: the track only, breathing, and two text bars
+ * A `CapacityRing` while its first read is in flight: the track only, still, and two text bars
  * where the label and the numbers go, at their real line heights. Hidden from assistive technology:
  * the region carries `aria-busy` and a polite "Loading …" of its own (style guide 5.2).
  */
@@ -656,7 +648,7 @@ interface HealthRingSkeletonProps extends RingSkeletonProps {
 }
 
 /**
- * A `HealthRing` while the first reads are in flight: the track only, breathing, and a bar per
+ * A `HealthRing` while the first reads are in flight: the track only, still, and a bar per
  * legend row. Hidden from assistive technology, as every skeleton.
  */
 function HealthRingSkeleton({
