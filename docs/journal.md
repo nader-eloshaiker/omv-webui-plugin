@@ -882,3 +882,17 @@ The owner rejected the pending pair kept from stock OMV, lemon `#f8d400` with co
 Three pending treatments were compared in Storybook in both themes: gold and navy in a solid band, a slate night band with gold accents, and the lemon kept with navy ink. The owner chose **gold `#ffcd47` with Sky's navy `#021d30`** and **all of the palette-wide changes**: navy as the one ink on every light fill, the status labels at one weight, the series re-spaced into the gaps between the scheme's hues at one chroma, and the terminal's words in slate. The pending pill takes its edge in `pending-stroke` so it clears 3:1 on the light page, and the band's buttons, unavailable while applying, become dashed outlines rather than fading into an unaudited khaki.
 
 The scheme is now the rule for any colour added later ([visual foundation 3.6](design/visual-foundation.md)). The colour audit simulates tritanopia as well as deuteranopia and protanopia, and checks 436 pairs with no failure.
+
+## 2026-11-25 — The reskin was not enough: accent, patterns and the NAS map (owner)
+
+The owner reviewed the dashboard re-composed in the new system and rejected the direction of the whole interface: it reads as one colour, with nothing that draws the eye to what needs attention or to the main thing to click. The forms and tables are the old interactions under new CSS ("a pig with lipstick"): no thought about how someone fills a form, or reads and digests a table. The interface needs many more custom icons and diagrams that show the action, its intention and its purpose. New users must feel welcomed and find it obvious how to use, without anything getting in a pro's way. Animations should be clever and fun, but subtle and never annoying. The dashboard had empty spaces in awkward places and must not look as if an AI laid it out. Input fields must not be far longer than the short text they hold.
+
+The owner chose:
+
+1. **An accent: Cobalt** (hue 258, `#0065da`), from three candidates (Iris, Cobalt, Glacier) compared in Storybook. It means one thing, *do this*: the one primary button in a view, the next step of the worst problem, the current step of a flow, first-steps progress, and the create button of an empty page. At most one filled accent per region. Sky blue keeps links, selection, checked controls and the focus ring. Status, pending, destructive buttons and charts never take the accent.
+2. **The dashboard becomes a map of the NAS**: the answer in words with area chips; a short list of what needs you; the map in lanes (disks, storage, shared folders, ways in, network) with status in place and each lane ending in its action; a live strip; first steps beside the NAS's facts. Every region spans the full width or a fixed split, so none can leave a hole.
+3. **Two preferences**: "Show tips" (newcomer tips, which also fade by themselves) and "Animations: Full / Reduced" (on top of the system's reduced-motion setting).
+4. **Create flows say what they do.** "Add a shared folder" and "Add a person" already create and apply in one go; the button names the outcome ("Create Photos") and the summary says it takes effect at once.
+5. **Fields are sized to their content.** A short value gets a short field; only free text, paths and lists take the full width.
+
+New form and table patterns, an icon set and a motion catalogue are prototyped in the dev-only lab, and the owner sees screenshots before they move into the library and the pages.
