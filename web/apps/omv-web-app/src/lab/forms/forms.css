@@ -13,7 +13,7 @@
  */
 
 /* ─── The animations preference, as the spec's decision 3 will set it ─────────────────────────── */
-:root[data-motion="reduced"] {
+[data-motion="reduced"] {
   --duration-press: 0ms;
   --duration-base: 0ms;
   --duration-slow: 0ms;
@@ -1272,21 +1272,21 @@
 }
 
 /* ─── Reduced motion: the meaning stays, the travel goes ──────────────────────────────────────── */
-:root[data-motion="reduced"] .lf-line-draw {
+[data-motion="reduced"] .lf-line-draw {
   stroke-dashoffset: 0;
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
-:root[data-motion="reduced"] .lf-line[data-on] .lf-line-draw {
+[data-motion="reduced"] .lf-line[data-on] .lf-line-draw {
   opacity: 1;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
-:root[data-motion="reduced"] .lf-avatar-pop,
-:root[data-motion="reduced"] .lf-arrive,
-:root[data-motion="reduced"] .lf-count {
+[data-motion="reduced"] .lf-avatar-pop,
+[data-motion="reduced"] .lf-arrive,
+[data-motion="reduced"] .lf-count {
   animation: fade-in var(--duration-fast) var(--ease-standard) both;
 }
-:root[data-motion="reduced"] .lf-run-step[data-state="running"] .lf-run-ring {
+[data-motion="reduced"] .lf-run-step[data-state="running"] .lf-run-ring {
   animation: none;
   stroke-dashoffset: 0.5;
 }
