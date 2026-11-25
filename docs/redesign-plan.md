@@ -184,3 +184,13 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
 | 5. Re-compose built pages                 | in progress: the dashboard first                  |
 | 6. Process change                         | in force from now                                 |
 | 7. Remaining domains                      | waiting on 5                                      |
+
+Step 5 so far (2026-11-26, branch `redesign-dashboard`): after the owner rejected the first reskin,
+the dashboard, the forms and the tables were redesigned in
+[design/redesign-rethink.md](design/redesign-rethink.md) and prototyped in the dev-only lab, and
+the owner approved the prototypes. The first dashboard spec is kept, superseded, as
+[design/redesign-dashboard-first-pass.md](design/redesign-dashboard-first-pass.md). The library
+already carries the accent, `StatusLabel`, parent-only breadcrumbs and the single jump highlight,
+and [style guide section 10](design/style-guide.md#10-the-generated-look-what-we-never-do) bans the
+twenty habits of generated design. Next: the motion and guidance prototypes, then the agreed lab
+pieces move into the library, then the pages are re-composed, the dashboard first.
