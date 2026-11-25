@@ -3,7 +3,8 @@
 // choose from (journal, 2026-11-23). Development only: main.tsx loads it behind import.meta.env.DEV,
 // so a production build emits none of it (UI-11; tools/build-check looks for the "omv-lab" marker).
 // The query string selects what is shown (?dir=, theme=, screen=, state=); it never acts (UI-4).
-// screen=add-folder and screen=add-person open the form prototypes (src/lab/forms/FormsLab.tsx).
+// screen=add-folder and screen=add-person open the form prototypes (src/lab/forms/FormsLab.tsx);
+// screen=folders-table and screen=disks-table the table prototypes (src/lab/tables/TablesLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -23,6 +24,8 @@ import { flyPending, pulse, viewChange, viewCommitted } from "./motion.ts";
 import { Shell } from "./shell.tsx";
 import type { ApplyPhase, Dir, Lab, Screen, Theme, Toast } from "./state.ts";
 import { LabContext, SCREENS } from "./state.ts";
+import { TABLE_SCREENS } from "./tables/states.ts";
+import TablesLab from "./tables/TablesLab.tsx";
 
 const DIRS: { id: Dir; name: string }[] = [
   { id: "instrument", name: "Instrument" },
@@ -64,11 +67,14 @@ function readQuery() {
 }
 
 /**
- * The form prototypes (rethink spec 8, rows 2 and 3) render in the system's own look with their own
+ * The form and table prototypes (rethink spec 8, rows 2 to 5) render in the system's own look with their own
  * controls; every other screen is the three-direction lab below.
  */
 export default function LabRoot() {
   const screen = new URLSearchParams(window.location.search).get("screen");
+  if (TABLE_SCREENS.some((s) => s === screen)) {
+    return <TablesLab />;
+  }
   return FORM_SCREENS.some((s) => s === screen) ? (
     <FormsLab />
   ) : (

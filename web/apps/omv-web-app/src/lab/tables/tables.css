@@ -1,0 +1,901 @@
+/* The table prototypes' stylesheet: development only, never in the production bundle (UI-11).
+ *
+ * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
+ * tokens (--theme-*, --duration-*, --ease-*, --density-*, --text-*, --radius-*), so both themes and
+ * both densities follow without a change here. No colour literal. Nothing is a style attribute in
+ * markup (UI-1); rows travel through the Web Animations API (grid.ts).
+ *
+ * Selection is Sky's selection roles (selected, selected-mark, selected-label), links are `link`,
+ * and the Cobalt accent appears only as the library's `primary` button: one filled per region.
+ * Reduced motion: the duration tokens are 0ms (the OS setting, or forms.css for the lab's
+ * "Animations: Reduced"), so every keyframe here lands at once; moving rows crossfade (grid.ts).
+ */
+
+/* ─── Page ────────────────────────────────────────────────────────────────────────────────────── */
+.lt-width {
+  min-width: 0;
+}
+.lt-width[data-width="900"] {
+  max-width: 836px;
+}
+.lt-width[data-width="390"] {
+  max-width: 358px;
+}
+.lt-page {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.lt-title {
+  margin: 0;
+  font-size: var(--text-title);
+  line-height: var(--text-title--line-height);
+  letter-spacing: var(--text-title--letter-spacing);
+  font-weight: var(--text-title--font-weight);
+}
+.lt-head-help {
+  flex-basis: 100%;
+}
+.lt-head-help:has(.lf-help-q) {
+  flex-basis: auto;
+}
+
+/* ─── Summary line (4.1) ──────────────────────────────────────────────────────────────────────── */
+.lt-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-block: 10px 18px;
+}
+.lt-summary-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+  margin: 0;
+  font-size: var(--text-lg);
+  color: var(--theme-muted-foreground);
+}
+.lt-summary-part {
+  display: inline-flex;
+  align-items: center;
+}
+.lt-summary-part:first-child {
+  color: var(--theme-foreground);
+  font-weight: var(--font-weight-semibold);
+}
+.lt-dot {
+  padding-inline: 10px;
+  color: var(--theme-subtle-foreground);
+}
+.lt-summary-problem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: var(--font-weight-semibold);
+}
+.lt-summary-problem[data-tone="warning"] {
+  color: var(--theme-warning-label);
+}
+.lt-summary-problem[data-tone="critical"] {
+  color: var(--theme-critical-label);
+}
+.lt-summary-problem[data-tone="unknown"] {
+  color: var(--theme-unknown-label);
+}
+
+/* The lab's cause buttons, dashed so they never read as part of the page. */
+.lt-causes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-block-end: 14px;
+  padding: 6px 8px;
+  border: 1px dashed var(--theme-border-control);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  color: var(--theme-muted-foreground);
+}
+.lt-causes-tag {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-pending-label);
+}
+.lt-causes button {
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--theme-border-control);
+  border-radius: var(--radius-sm);
+  background: var(--theme-surface);
+  color: var(--theme-foreground);
+  font: inherit;
+  cursor: pointer;
+}
+.lt-causes button:hover {
+  background: var(--theme-muted-strong);
+}
+
+.lt-stale {
+  margin-block-end: 12px;
+}
+.lt-stale > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* ─── Toolbar, chips, selection bar ───────────────────────────────────────────────────────────── */
+.lt-frame {
+  min-width: 0;
+}
+.lt-toolbar {
+  min-height: calc(var(--density-control-sm) + 16px);
+  animation: fade-in var(--duration-base) var(--ease-standard) both;
+}
+.lt-search {
+  width: 15rem;
+}
+.lt-frame[data-narrow] .lt-search {
+  width: 100%;
+}
+.lt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lt-frame[data-narrow] .lt-chips {
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-block: 2px;
+}
+.lt-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--density-control-sm);
+  padding: 0 6px 0 11px;
+  border: 1px solid var(--theme-border-control);
+  border-radius: var(--radius-full);
+  background: var(--theme-surface);
+  color: var(--theme-foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+.lt-chip:hover {
+  background: var(--theme-muted-strong);
+}
+.lt-chip[aria-pressed="true"] {
+  border-color: var(--theme-selected-mark);
+  background: var(--theme-selected);
+  color: var(--theme-selected-label);
+  font-weight: var(--font-weight-medium);
+}
+.lt-chip svg {
+  color: var(--theme-warning-label);
+}
+.lt-chip-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--theme-muted-strong);
+  color: var(--theme-muted-foreground);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.lt-chip[aria-pressed="true"] .lt-chip-count {
+  background: var(--theme-selected-mark);
+  color: var(--theme-selected-mark-foreground);
+}
+.lt-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+  cursor: pointer;
+}
+.lt-toolbar-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.lt-narrow-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: space-between;
+}
+.lt-sortby {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.lt-sortby select {
+  height: var(--density-control-sm);
+  padding: 0 8px;
+  border: 1px solid var(--theme-border-control);
+  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  color: var(--theme-foreground);
+  font: inherit;
+}
+
+/* The selection bar drops 8px into place as the toolbar goes (7.5); the count glides. */
+.lt-selbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: calc(var(--density-control-sm) + 16px);
+  margin-block-end: 8px;
+  padding: 4px 6px 4px 14px;
+  border-radius: var(--radius-md);
+  background: var(--theme-selected);
+  box-shadow: inset 0 0 0 1px var(--theme-selected-mark);
+  color: var(--theme-selected-label);
+  animation: lt-drop var(--duration-base) var(--ease-settle) both;
+}
+.lt-selbar-count {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.lt-selbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-inline-end: auto;
+}
+.lt-count {
+  display: inline-block;
+  animation: settle-in var(--duration-slow) var(--ease-settle) both;
+}
+@keyframes lt-drop {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+/* ─── Table ───────────────────────────────────────────────────────────────────────────────────── */
+.lt-table .lt-select {
+  width: 36px;
+  padding-inline-end: 0;
+}
+.lt-table .lt-end {
+  width: 1%;
+  white-space: nowrap;
+  text-align: end;
+}
+.lt-row {
+  --lt-ground: var(--theme-muted);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+.lt-row[data-selected] {
+  --lt-ground: var(--theme-selected);
+}
+.lt-row:focus-within:not([data-selected]) {
+  background: var(--theme-muted);
+}
+.lt-row:focus-visible {
+  outline-color: var(--theme-focus-ring);
+}
+/* Status first (4.4): a row that is not OK takes its status on its leading 3px edge, with the pill. */
+.lt-row[data-tone] > td:first-child,
+.lt-item[data-tone] {
+  box-shadow: inset 3px 0 0 var(--lt-edge);
+}
+[data-tone="warning"] {
+  --lt-edge: var(--theme-warning);
+  --lt-wash: var(--theme-warning-wash);
+}
+[data-tone="critical"] {
+  --lt-edge: var(--theme-critical);
+  --lt-wash: var(--theme-critical-wash);
+}
+/* Linked from the drive bay (4.9): the hover ground, the name in the link blue. */
+.lt-row[data-linked]:not([data-selected]) {
+  background: var(--theme-muted);
+}
+.lt-row:is(:hover, :focus-within, [data-linked]) .lt-name {
+  color: var(--theme-link);
+}
+
+/* A row whose status changed shows the status's wash once, fading (7.5 "A row moves"). */
+.lt-row[data-changed] {
+  --lt-wash: var(--theme-ok-wash);
+}
+.lt-row[data-changed][data-tone] {
+  --lt-wash: var(--theme-warning-wash);
+}
+.lt-row[data-changed] > td {
+  animation: lt-wash var(--duration-glide) var(--ease-standard) 120ms both;
+}
+.lt-row[data-changed] .lt-status-mark,
+.lt-row[data-changed] .lt-power {
+  animation: lt-swap var(--duration-base) var(--ease-settle) both;
+}
+@keyframes lt-wash {
+  from {
+    background-color: var(--lt-wash);
+  }
+}
+@keyframes lt-swap {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+/* A new row rises into its group and is ringed twice (7.5 "A new row arrives"). */
+.lt-row[data-arrived],
+.lt-item[data-arrived] {
+  animation:
+    rise var(--duration-slow) var(--ease-enter) both,
+    lt-ring calc(var(--duration-glide) * 2.5) var(--ease-standard)
+      var(--duration-slow) both;
+}
+@keyframes lt-ring {
+  20%,
+  60% {
+    outline-color: var(--theme-focus-ring);
+  }
+}
+:root[data-motion="reduced"] .lt-row[data-arrived],
+:root[data-motion="reduced"] .lt-item[data-arrived] {
+  animation: none;
+  outline-color: var(--theme-focus-ring);
+}
+
+/* ─── Identity (4.3) ──────────────────────────────────────────────────────────────────────────── */
+.lt-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 12rem;
+}
+.lt-plate {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: var(--theme-muted);
+  box-shadow: inset 0 0 0 1px var(--theme-border);
+  color: var(--theme-foreground);
+}
+:root[data-density="compact"] .lt-plate {
+  width: 22px;
+  height: 22px;
+}
+:root[data-density="compact"] .lt-plate svg {
+  width: 16px;
+  height: 16px;
+}
+.lt-identity-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lt-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.lt-name {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  text-align: start;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+.lt-name:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.lt-line2 {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.lt-compact-only {
+  display: none;
+}
+:root[data-density="compact"] .lt-compact-only {
+  display: inline-flex;
+}
+:root[data-density="compact"] .lt-line2 {
+  display: none;
+}
+.lt-chip-mono {
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--theme-muted-strong);
+  color: var(--theme-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+.lt-term {
+  margin-inline-start: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-sm);
+  color: var(--theme-tertiary-foreground);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Cells ───────────────────────────────────────────────────────────────────────────────────── */
+.lt-status {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.lt-status-mark {
+  display: inline-flex;
+  white-space: nowrap;
+}
+.lt-status-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-inline-start: 2px;
+  color: var(--theme-ok-label);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.lt-reason {
+  max-width: 22rem;
+}
+.lt-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lt-unit {
+  color: var(--theme-muted-foreground);
+}
+.lt-missing {
+  color: var(--theme-tertiary-foreground);
+}
+.lt-quiet {
+  color: var(--theme-muted-foreground);
+}
+.lt-services {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.lt-service {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.lt-drive {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 11rem;
+}
+:root[data-density="compact"] .lt-services {
+  flex-wrap: nowrap;
+}
+/* Compact rows are one line (4.8): the drive's name sits beside its bar. */
+:root[data-density="compact"] .lt-drive {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.lt-drive-name {
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+.lt-meter {
+  width: 13rem;
+  max-width: 100%;
+}
+.lt-tech {
+  white-space: nowrap;
+}
+.lt-tech .lt-path {
+  margin-inline-end: 4px;
+}
+.lt-temp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.lt-holds {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lt-holds-empty {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.lt-power {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.lt-power[data-power="asleep"] {
+  color: var(--theme-muted-foreground);
+}
+
+/* Check health: the pulse traces along its path while the disk is really being read (7.5, 7.7). */
+.lt-tracing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-muted-foreground);
+  font-size: var(--text-sm);
+}
+.lt-trace-icon [data-part="pulse"] {
+  stroke-dasharray: 1;
+  animation: lt-trace calc(var(--duration-slow) * 2.4) var(--ease-standard)
+    infinite;
+}
+@keyframes lt-trace {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  70%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+:root[data-motion="reduced"] .lt-trace-icon [data-part="pulse"] {
+  animation: none;
+  stroke-dashoffset: 0;
+}
+
+/* ─── Row actions (4.7) ───────────────────────────────────────────────────────────────────────── */
+.lt-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+/* The quick verbs fade in on hover and focus within the row, after an 80ms intent delay, so a
+   pointer passing over rows does not flicker; they keep their room so nothing shifts. */
+/* They float over the end of the cell before, on the row's own ground, so the column stays as narrow
+   as the More button and the chevron and the table never scrolls sideways to show them. */
+.lt-table .lt-end {
+  position: relative;
+}
+.lt-quick {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: calc(100% - var(--density-cell-x));
+  translate: 0 -50%;
+  display: inline-flex;
+  gap: 2px;
+  padding-inline: 12px 4px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(to right, transparent, var(--lt-ground) 12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.lt-row:is(:hover, :focus-within) .lt-quick {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 80ms;
+}
+:root[data-motion="reduced"] .lt-row:is(:hover, :focus-within) .lt-quick {
+  transition-delay: 0ms;
+}
+.lt-expand svg {
+  transition: rotate var(--duration-base) var(--ease-settle);
+}
+.lt-expand[aria-expanded="true"] svg {
+  rotate: 180deg;
+}
+
+/* The expanded row: technical facts, each copyable; the facts fade in once the row is open. */
+.lt-detail-row > td {
+  padding: 6px var(--density-cell-x) 18px
+    calc(36px + 38px + var(--density-cell-x));
+  background: var(--theme-muted);
+}
+.lt-detail {
+  max-width: 46rem;
+  animation: rise var(--duration-slow) var(--ease-soft) var(--duration-fast)
+    both;
+}
+.lt-copyline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+/* Group headings (4.6): the group, its count and its worst state. */
+.lt-group-head {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.lt-group-count {
+  color: var(--theme-muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+}
+.lt-group-head .lt-summary-problem {
+  font-size: var(--text-sm);
+}
+
+/* ─── Teaching empty state (4.8, 4.10, 7.3) ───────────────────────────────────────────────────── */
+.lt-teach {
+  display: grid;
+  gap: 26px;
+  min-height: 160px;
+  padding: 28px var(--density-cell-x) 30px;
+}
+.lt-teach-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+.lt-teach-art {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+}
+.lt-teach-back {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-squircle-lg);
+  background: var(--theme-selected);
+  animation: settle-in var(--duration-slow) var(--ease-settle) both;
+}
+.lt-teach-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  color: var(--theme-foreground);
+  animation: rise var(--duration-slow) var(--ease-enter)
+    calc(var(--motion-stagger) * 2) both;
+}
+.lt-teach-words {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 36rem;
+  animation: fade-in var(--duration-slow) var(--ease-standard)
+    calc(var(--motion-stagger) * 3) both;
+}
+.lt-teach-title {
+  margin: 0;
+  font-size: var(--text-section);
+  font-weight: var(--text-section--font-weight);
+}
+.lt-teach-line {
+  margin: 0;
+  color: var(--theme-muted-foreground);
+}
+.lt-teach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 8px;
+}
+/* The ghost row: what will appear, labelled "Example", its pieces landing in turn. */
+.lt-ghost {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 36px;
+  max-width: 46rem;
+  padding: 14px 18px;
+  border: 1.5px dashed var(--theme-border-control);
+  border-radius: var(--radius-md);
+  color: var(--theme-muted-foreground);
+  animation: fade-in var(--duration-slow) var(--ease-standard)
+    calc(var(--motion-stagger) * 4) both;
+}
+.lt-ghost-tag {
+  position: absolute;
+  inset-block-start: -10px;
+  inset-inline-start: 14px;
+  padding: 0 6px;
+  background: var(--theme-surface);
+  color: var(--theme-tertiary-foreground);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.lt-ghost-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.8;
+  animation: slot-in var(--duration-slow) var(--ease-settle) both;
+}
+.lt-ghost-cell[data-i="0"] {
+  animation-delay: calc(var(--motion-stagger) * 5);
+}
+.lt-ghost-cell[data-i="1"] {
+  animation-delay: calc(var(--motion-stagger) * 6);
+}
+.lt-ghost-cell[data-i="2"] {
+  animation-delay: calc(var(--motion-stagger) * 7);
+}
+.lt-ghost-cell[data-i="3"] {
+  animation-delay: calc(var(--motion-stagger) * 8);
+}
+.lt-ghost-name {
+  color: var(--theme-foreground);
+  font-weight: var(--font-weight-medium);
+}
+.lt-ghost-bar > span {
+  display: block;
+  width: 60px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    to right,
+    var(--theme-usage) 0 40%,
+    var(--theme-usage-track) 40%
+  );
+}
+.lt-nomatch {
+  align-items: flex-start;
+  text-align: start;
+}
+
+/* ─── The list form, under 640px (4.8) ────────────────────────────────────────────────────────── */
+.lt-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-lg);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-raised);
+  overflow: hidden;
+}
+.lt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 10px 12px 14px;
+  border-block-start: 1px solid var(--theme-border);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+.lt-item:first-child {
+  border-block-start: 0;
+}
+.lt-item[data-selected] {
+  background: var(--theme-selected);
+}
+.lt-item-select {
+  padding-block-start: 5px;
+}
+.lt-item-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.lt-item-line1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.lt-item-name {
+  font-size: var(--text-base);
+}
+.lt-item-line2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.lt-item-line2 .lt-dot {
+  padding-inline: 6px;
+}
+.lt-item-line3 .lt-drive {
+  min-width: 0;
+}
+.lt-item-end {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.lt-item-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--theme-tertiary-foreground);
+}
+
+/* ─── The drive bay, linked to the table (4.9) ────────────────────────────────────────────────── */
+.lt-bay-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-end: 18px;
+}
+.lt-bay {
+  max-width: 44rem;
+}
+.lt-bay-wrap .lf-tip {
+  max-width: 44rem;
+}
+/* A slot lights when its row is pointed at or focused, and lifts a little (10: not under reduced). */
+.lt-slot {
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    translate var(--duration-base) var(--ease-settle),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+.lt-slot[data-linked] {
+  background: var(--theme-muted);
+  translate: 0 -3px;
+}
+.lt-slot:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+/* A selected row rings its slot: the selection roles, never the accent. */
+.lt-slot[data-picked] {
+  background: var(--theme-selected);
+  box-shadow: inset 0 0 0 2px var(--theme-selected-mark);
+}
+/* Asleep: the caddy dims over a glide; waking brings it back (7.5 "sleep and wake"). */
+.lt-slot svg {
+  transition: opacity var(--duration-glide) var(--ease-standard);
+}
+.lt-slot[data-asleep] svg {
+  opacity: 0.5;
+}
