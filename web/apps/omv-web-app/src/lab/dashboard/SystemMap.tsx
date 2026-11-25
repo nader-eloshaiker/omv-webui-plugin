@@ -112,6 +112,8 @@ interface MapCtx {
   onTrace: (key: string | null) => void;
   register: (key: string, el: HTMLElement | null) => void;
   onNote: (text: string) => void;
+  /** The start of the map's element ids: "dm" on the dashboard. */
+  ids: string;
 }
 
 const MapContext = createContext<MapCtx | null>(null);
@@ -761,6 +763,7 @@ function Band({
   onRetry: (lane: LaneId) => void;
 }) {
   const ctx = useMapCtx();
+  const ids = ctx.ids;
   const lit = ctx.trace !== null && ctx.trace.ways.size > 0;
   const waysFailed = failed.includes("ways");
   const netFailed = failed.includes("network");
@@ -773,7 +776,7 @@ function Band({
     >
       <div className="dm-band-head" data-part="ways">
         <span className="dm-band-title-row">
-          <h3 id="dm-band-ways-title" className="dm-col-title">
+          <h3 id={`${ids}-band-ways-title`} className="dm-col-title">
             Ways in
           </h3>
           {running ? <span className="dm-band-note">{running}</span> : null}
@@ -783,7 +786,7 @@ function Band({
         ) : null}
       </div>
       <div className="dm-band-head" data-part="net">
-        <h3 id="dm-band-net-title" className="dm-col-title">
+        <h3 id={`${ids}-band-net-title`} className="dm-col-title">
           Network
         </h3>
         {captions.includes("network") ? (
@@ -791,7 +794,7 @@ function Band({
         ) : null}
       </div>
       <div
-        id="dm-band-ways"
+        id={`${ids}-band-ways`}
         tabIndex={-1}
         className="dm-band-part"
         data-part="ways"
@@ -805,7 +808,7 @@ function Band({
             }}
           />
         ) : view.ways.on.length > 0 ? (
-          <ul className="dm-ways" aria-labelledby="dm-band-ways-title">
+          <ul className="dm-ways" aria-labelledby={`${ids}-band-ways-title`}>
             {view.ways.on.map((w) => (
               <WayTile
                 key={w.id}
@@ -824,7 +827,7 @@ function Band({
       ) : null}
       <span className="dm-bus" data-part="in" aria-hidden="true" />
       <div
-        id="dm-band-net"
+        id={`${ids}-band-net`}
         tabIndex={-1}
         className="dm-band-part"
         data-part="net"
@@ -838,7 +841,7 @@ function Band({
             }}
           />
         ) : (
-          <ul className="dm-ifaces" aria-labelledby="dm-band-net-title">
+          <ul className="dm-ifaces" aria-labelledby={`${ids}-band-net-title`}>
             {view.ifaces.map((n) => (
               <IfaceTile key={n.id} iface={n} />
             ))}
@@ -895,6 +898,10 @@ export interface SystemMapProps {
   /** A problem that just arrived: its row's connectors draw again in its tone (7.6). */
   arrival: { node: string; n: number } | null;
   showTraceTip: boolean;
+  /** A tip for the map's header in place of the built-in trace tip (the guidance prototype's own). */
+  tip?: ReactNode;
+  /** The start of the map's element ids, for a page with two maps; "dm" by default. */
+  idPrefix?: string;
   onTraced: () => void;
   onDismissTip: () => void;
   /** What the first steps already offer on this screen, so the map does not offer it again. */
@@ -919,6 +926,7 @@ export function SystemMap(props: SystemMapProps) {
     onDismissTip,
     stepActions,
     onNote,
+    idPrefix: ids = "dm",
   } = props;
   const [hot, setHot] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
@@ -990,7 +998,7 @@ export function SystemMap(props: SystemMapProps) {
     elementsRef.current.get(target)?.focus();
   };
 
-  const ctx: MapCtx = { trace, current, onTrace, register, onNote };
+  const ctx: MapCtx = { trace, current, onTrace, register, onNote, ids };
 
   const columns = (["disks", "storage", "folders"] as const).map((lane) => {
     const meta = LANES.find((l) => l.id === lane);
@@ -1015,19 +1023,20 @@ export function SystemMap(props: SystemMapProps) {
         data-layout={layout}
         data-assemble={assemble}
         data-tracing={trace ? "" : undefined}
-        aria-labelledby="dm-map-title"
+        aria-labelledby={`${ids}-map-title`}
         aria-busy={loading || undefined}
         style={{ "--rows": view.rows.length } as CSSProperties}
       >
         <header className="dm-map-head">
-          <h2 id="dm-map-title" className="dm-region-title">
+          <h2 id={`${ids}-map-title`} className="dm-region-title">
             Your NAS
           </h2>
-          {showTraceTip && layout !== "narrow" ? (
-            <Tip onDismiss={onDismissTip}>
-              Point at a shared folder or a way in to see what it reaches.
-            </Tip>
-          ) : null}
+          {props.tip ??
+            (showTraceTip && layout !== "narrow" ? (
+              <Tip onDismiss={onDismissTip}>
+                Point at a shared folder or a way in to see what it reaches.
+              </Tip>
+            ) : null)}
         </header>
 
         {failedLanes.map((lane) => (
@@ -1064,11 +1073,11 @@ export function SystemMap(props: SystemMapProps) {
               />
             ) : (
               <ul
-                id="dm-rows"
+                id={`${ids}-rows`}
                 tabIndex={-1}
                 className="dm-rows"
                 aria-label="Your storage, a row each"
-                aria-describedby="dm-map-keys"
+                aria-describedby={`${ids}-map-keys`}
                 onKeyDown={onKeyDown}
               >
                 {loading ? (
@@ -1114,7 +1123,7 @@ export function SystemMap(props: SystemMapProps) {
                 ) : null}
               </ul>
             )}
-            <p id="dm-map-keys" className="sr-only">
+            <p id={`${ids}-map-keys`} className="sr-only">
               Use the arrow keys to move along a row and between rows.
             </p>
           </div>

@@ -1,0 +1,458 @@
+/* The guidance prototype's stylesheet: development only, never in the production bundle (UI-11).
+ *
+ * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
+ * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
+ * densities follow. No colour literal. Nothing is a style attribute in markup (UI-1).
+ *
+ * None of the generated look: every layer is a region on the page ground under its heading, and a
+ * specimen is a fragment of a screen parted from the next by a hairline, never a card. A tip is one
+ * line with no box, fill, outline or edge. The only floating surfaces are the account menu and the
+ * popovers, which are things the person opens. Motion answers a cause only: a tip that appears
+ * because of something the person did rises in, a tip that ends folds up; nothing enters on load.
+ */
+
+/* ─── The page ────────────────────────────────────────────────────────────────────────────────── */
+.g-page {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  min-width: 0;
+  padding-block-end: 96px;
+}
+:root[data-density="compact"] .g-page {
+  gap: 36px;
+}
+.g-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 44rem;
+}
+.g-page-title {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: var(--font-weight-semibold);
+}
+.g-page-lede {
+  margin: 0;
+  color: var(--theme-muted-foreground);
+}
+
+/* ─── Regions and specimens ──────────────────────────────────────────────────────────────────── */
+.g-region {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+:root[data-density="compact"] .g-region {
+  gap: 16px;
+}
+.g-region-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 44rem;
+}
+.g-region-title {
+  margin: 0;
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+  font-weight: var(--text-section--font-weight);
+}
+.g-region-what,
+.g-region-off {
+  margin: 0;
+}
+.g-region-off {
+  color: var(--theme-muted-foreground);
+}
+.g-specimens {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-width: 0;
+}
+.g-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+@container (min-width: 760px) {
+  .g-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.g-specimen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.g-specimen-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--theme-muted-foreground);
+}
+.g-specimen-line {
+  margin: 0;
+  max-width: 40rem;
+}
+.g-specimen .lt-causes {
+  margin-block-end: 0;
+}
+.g-tip-state {
+  color: var(--theme-muted-foreground);
+}
+.g-mono {
+  font-family: var(--font-mono);
+}
+
+/* G0 */
+.g-field {
+  max-width: 28rem;
+}
+.g-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px 24px;
+  margin: 0;
+}
+.g-fact {
+  display: contents;
+}
+.g-fact dt {
+  color: var(--theme-muted-foreground);
+}
+.g-fact dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+}
+.g-fact-more {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.g-empty {
+  align-items: flex-start;
+  padding: 0;
+  text-align: start;
+}
+
+/* G1 and the map */
+.g-dash {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-width: 0;
+}
+:root[data-density="compact"] .g-dash {
+  gap: 20px;
+}
+.g-dash .lt-causes {
+  margin-block-end: 0;
+}
+.g-answer .dm-answer-title {
+  font-size: var(--text-xl);
+  line-height: 1.25;
+}
+.g-specimen .lt-page {
+  min-width: 0;
+}
+#g-new-rows:focus-visible,
+#g-trace-rows:focus-visible {
+  box-shadow: 0 0 0 2px var(--theme-focus-ring);
+}
+.dm-map-head .g-tip-leave {
+  flex-basis: 100%;
+}
+
+/* ─── A tip: one line, no box ──────────────────────────────────────────────────────────────────── */
+.g-tip-slot {
+  display: contents;
+}
+.g-tip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.g-tip-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--theme-tertiary-foreground);
+}
+.g-tip-icon > svg {
+  width: 16px;
+  height: 16px;
+}
+.g-tip-line {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.g-tip-done {
+  flex: none;
+}
+/* A tip that appears because of something the person did rises in; one there on load is simply
+   there. Its leaving is the library's LeavingItem (animate-leave). */
+.g-tip[data-arrive] {
+  animation: rise var(--duration-slow) var(--ease-enter) both;
+}
+
+/* The welcome is the one tip that speaks at body size: it is the first thing on the dashboard. */
+.g-welcome {
+  font-size: var(--text-base);
+  color: var(--theme-foreground);
+}
+.g-welcome .g-tip-icon {
+  color: var(--theme-muted-foreground);
+}
+.g-welcome .g-tip-icon > svg {
+  width: 20px;
+  height: 20px;
+}
+.g-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 12px;
+}
+.g-welcome-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding-inline-start: 18px;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+
+/* After the first save: the yellow bar sits at the top of the fragment, not under the top bar. */
+.g-save [data-slot="pending-band"] {
+  position: relative;
+  inset-block-start: auto;
+}
+.g-save-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 34rem;
+}
+.g-save-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Help when asked ─────────────────────────────────────────────────────────────────────────── */
+.g-choice,
+.g-term-specimen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.g-help {
+  max-width: 34rem;
+}
+.g-help-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.g-help-body p,
+.g-pop-panel p {
+  margin: 0;
+}
+.g-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.g-pop,
+.g-term {
+  position: relative;
+  display: inline-flex;
+}
+.g-pop-q {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--theme-muted-foreground);
+  cursor: pointer;
+}
+.g-pop-q:hover,
+.g-pop-q[aria-expanded="true"] {
+  color: var(--theme-foreground);
+  background: var(--theme-muted-strong);
+}
+.g-pop-q > svg {
+  width: 16px;
+  height: 16px;
+}
+.g-pop-q:focus-visible,
+.g-term-word:focus-visible,
+.g-account:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.g-pop-panel:not([hidden]) {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 48px));
+  padding: 12px 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-floating);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--theme-foreground);
+  text-align: start;
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+}
+.g-term-panel:not([hidden]) {
+  display: block;
+}
+.g-term-name {
+  font-weight: var(--font-weight-semibold);
+}
+.g-term-word {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.g-term-word:hover {
+  color: var(--theme-link);
+}
+
+/* The forms lab flattens capsules in the top bar (its host name); the menu's switch and choices sit
+   in the top bar too, so they take the library's own look back. */
+.omv-lab-guidance [data-slot="top-bar"] .g-menu .rounded-full {
+  padding: revert-layer;
+  border-radius: revert-layer;
+  background: revert-layer;
+  color: revert-layer;
+}
+
+/* ─── The account menu ────────────────────────────────────────────────────────────────────────── */
+.g-account-root {
+  position: relative;
+}
+.g-account-name {
+  font-size: var(--text-sm);
+}
+@media (max-width: 640px) {
+  .g-account-name {
+    display: none;
+  }
+}
+.g-menu:not([hidden]) {
+  position: absolute;
+  inset-block-start: calc(100% + 8px);
+  inset-inline-end: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, calc(100vw - 16px));
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-floating);
+  color: var(--theme-foreground);
+}
+.g-menu-who {
+  padding: 12px 16px 10px;
+  border-block-end: 1px solid var(--theme-border);
+}
+.g-menu-name,
+.g-menu-role {
+  margin: 0;
+}
+.g-menu-name {
+  font-weight: var(--font-weight-semibold);
+}
+.g-menu-role {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.g-menu-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.g-menu-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+.g-menu-label {
+  font-size: var(--text-sm);
+}
+.g-menu-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 8px 8px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.g-switch-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.g-switch-words {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.g-switch-label {
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.g-switch-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--theme-muted-foreground);
+}
+
+/* ─── Reduced motion: the meaning stays, the travel goes ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .g-tip[data-arrive] {
+    animation: fade-in var(--duration-fast) var(--ease-standard) both;
+  }
+}
+:root[data-motion="reduced"] .g-tip[data-arrive] {
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+}
