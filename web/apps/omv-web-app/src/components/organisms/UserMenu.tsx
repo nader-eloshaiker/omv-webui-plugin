@@ -54,7 +54,7 @@ export function UserMenu({ username }: { username: string | null }) {
                   : t("user.menu", { name: username })
               }
               icon={<UserRound />}
-              variant="quiet"
+              variant="plain"
             />
           }
         />

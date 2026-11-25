@@ -12,6 +12,14 @@ language), and is normative over the [style guide](../../../docs/design/style-gu
 everything its section 0 lists; the `uiux-design` skill governs how screens are designed; **this
 skill governs the system that produces them.** Colour choices go through the `colour-theory` skill.
 
+**First, the generated look.** [Style guide section 10](../../../docs/design/style-guide.md#10-the-generated-look-what-we-never-do)
+lists twenty habits of generated design and what replaces each; it overrides this skill, the
+foundation and any spec. No token, utility, component, variant or story may bring one back: no glow,
+blur, gradient fill or texture; no eyebrow (uppercase or letter-spaced labels); no coloured left edge;
+no status pill or "live" dot; no arrow or chevron on a button or text link; no `·` separators; nothing
+that pulses, breathes or blinks; no entrance motion on a region; no sparkle glyphs; no card around a
+region; no "quiet" as a style word. Check every change against the table before reporting it done.
+
 ---
 
 ## 1. Tokens: three tiers, one direction
@@ -41,10 +49,10 @@ Rules:
   `muted-foreground`, `tertiary-foreground` (captions, still 4.5:1) and `subtle-foreground`
   (placeholder and disabled only).
 - **There is no identity bar.** The sky blue is the brand and the interaction hue: `brand` (the
-  mark, the live dot, the health ring), `trace` and `trace-area` (live data), `art-path` (the traced
-  lineage), `link`, `selected`, `selected-label`, `selected-mark` (checked controls, the current
-  item's bar) and the focus ring. Nothing is painted sky blue as a surface; controls on the top bar
-  use the button's `quiet` variant.
+  mark, the health ring), `trace` and `trace-area` (live data), `art-path` (the traced lineage),
+  `link`, `selected`, `selected-label`, `selected-mark` (checked controls, the current tab's
+  underline) and the focus ring. Nothing is painted sky blue as a surface; controls on the top bar
+  use the button's `plain` variant (`quiet` is its deprecated alias).
 - **The accent is Cobalt, the `action` family** (foundation 3.6): `action`, `action-hover`,
   `action-foreground`, `action-label`, `action-stroke`, `action-wash`; shadcn's `primary` maps to
   it. It says "do this" only: `Button` `primary` (edged in `action-stroke`), `primaryOutline` for a
@@ -55,21 +63,25 @@ Rules:
   are CSS in css-ui-style `src/icons.css`, keyed on `data-part`, never inline.
 - **Washes and the selected tint are tokens**, not `x/NN` classes: `ok-wash`, `warning-wash`,
   `critical-wash`, `unknown-wash`, `pending-wash`, `selected`. An alpha a token does not name is a
-  new pair for the audit first.
-- **Light and gradients: only the four kinds** (foundation 3.4), each with its tokens: the ambient
-  light at the top of the page (`ambient-light`, from `--theme-ambient` and `--theme-ambient-soft`,
-  which have no flat-fill utility); the area under a live line (`trace-area`); the material light of
-  a drawing (`art-chassis-top` to `art-chassis-bottom`); and the status wash, also as a card lit in
-  its state (`Card tone="warning"`). Never gradient text, borders, glow or multi-hue decoration.
+  new pair for the audit first. A wash is never a status ground: no tinted card, row or capsule.
+- **One gradient** (foundation 3.4): the area under a live line (`trace-area`). There is no
+  ambient light, no lit card and no gradient chassis; the drive-bay chassis is the flat
+  `art-chassis-top`. Never a glow, a radial wash, a gradient on a surface or a button, gradient
+  text or borders, dithering, noise or blur. `theme-reset.css` empties `--blur-*`, so
+  `backdrop-blur-*` and `blur-*` generate nothing, and the tests of `css-ui-style` fail if an
+  ambient token or utility comes back.
 - **Elevation by meaning**: `shadow-control` (pressable, at rest), `shadow-raised` or
   `surface-raised` (cards, panels, tables), `shadow-floating` or `surface-floating` (dialogs, menus,
   popovers, toasts, drawers) over `bg-scrim` when modal. In dark each carries a 1px inner top
   highlight. `shadow-sm`, `shadow-md` and `shadow-lg` no longer exist.
 - **Radii**: `rounded-control` (12px, 16px squircle) and `rounded-card` (20px, 30px squircle);
-  `rounded-sm` (6px) for checkboxes and inner marks; pills, dots, meters and rings `rounded-full`.
+  `rounded-sm` (6px) for checkboxes and inner marks; meters, rings, count badges and removable
+  filter tokens `rounded-full`. A status is never a pill.
 - **Type**: the six named steps `text-display`, `text-figure`, `text-title`, `text-section`,
   `text-body`, `text-caption`, each carrying its weight, tracking and leading; the plain steps stay
-  for older code (`text-base` is the 15px body). `font-readout` for live figures.
+  for older code (`text-base` is the 15px body). `font-readout` for live figures. No `uppercase`,
+  no `tracking-wide`, no `italic`: table headers, group labels, chart and map labels are sentence
+  case, regular weight, in `muted-foreground`.
 - **Density** is `data-density="compact"` on `<html>` (or a subtree); comfortable is the default.
   Components take their padding and heights from the density utilities, never fixed values: `p-card`,
   `gap-grid`, `py-cell-y`, `px-cell-x`, `py-row`, `h-control`, `min-h-control`, `size-control` (with
@@ -78,9 +90,12 @@ Rules:
 - **Motion is tokens** (foundation 7.1): durations `duration-press` (90ms), `-fast` (160, the
   default), `-base` (240), `-slow` (360), `-glide` (640); curves `ease-standard` (the default),
   `ease-enter`, `ease-exit`, and the springs `ease-settle` and `ease-soft` as native `linear()`; the
-  shared keyframes `animate-rise`, `animate-settle-in`, `animate-fade-in`, `animate-breathe`,
-  `animate-draw`, `animate-leave` (a list item leaving, through `LeavingItem`), and `stagger` with
-  `--stagger-index`. Exits are shorter than entrances. Under `prefers-reduced-motion` every duration, the stagger and the rise are 0 in the token file, and the
+  shared keyframes `animate-rise`, `animate-settle-in`, `animate-fade-in`, `animate-draw`,
+  `animate-leave` (a list item leaving, through `LeavingItem`), `animate-spin` (the one repeating
+  motion, a spinner beside words), and `stagger` with `--stagger-index`. `theme-reset.css` empties
+  `--animate-*`, so Tailwind's `animate-pulse`, `animate-ping` and `animate-bounce` do not exist.
+  Nothing pulses, breathes or blinks (skeletons are still), and no region fades or rises in on load
+  or scroll: motion answers an action or a change of state. Exits are shorter than entrances. Under `prefers-reduced-motion` every duration, the stagger and the rise are 0 in the token file, and the
   base layer runs any keyframe once at once. Components reference the tokens, never an inline duration.
 - Entry from nothing uses Base UI's `data-starting-style` and `data-ending-style` (CSS
   `@starting-style` semantics): dialogs rise over the scrim, popups grow from their
@@ -148,11 +163,14 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
   `onValueChange`).
 - Accessibility is part of the API: icon-only variants require an accessible name; focus styling
   comes from the shared `focus-ring` token (style guide 4.6).
-- The style guide's fixed anatomies are not reinvented per component: one status pill, one dot (with
-  Unknown hollow), one capacity meter, one destructive confirmation (focus starts on Cancel, Enter
+- The style guide's fixed anatomies are not reinvented per component: one status label
+  (`StatusLabel`, its icon and word, no capsule; `StatusDot` the icon alone, Unknown a dashed ring),
+  one capacity meter, one destructive confirmation (focus starts on Cancel, Enter
   does not confirm, type-to-confirm for `data`-destructive), one pending banner.
 - Breaking a component's props is a workspace-wide change: find every call site and migrate it in the
-  same change.
+  same change. A prop or variant that only produced a look style guide 10 forbids stays accepted,
+  does nothing, and is marked `@deprecated` in its JSDoc with what replaces it (`StatusPill`,
+  `Card tone`, `CardChevron`, `variant="quiet"`), until every caller has moved.
 
 ## 6. Storybook
 
@@ -160,12 +178,13 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
   and long content, and a story for each motion it has (switch settle, save settle, destructive arm).
 - **Every story renders in both themes and both densities at once** by default: the preview's
   `withMatrix` decorator draws four panels (dark and light, comfortable and compact), each on the
-  page ground with the ambient light. A story that opens an overlay on mount sets
+  flat page ground. A story that opens an overlay on mount sets
   `parameters: { matrix: false }`; `layout: "fullscreen"` also opts out. The toolbar switches theme
   (dark first), density and the layout. Stories use `React.useId()`, never fixed DOM ids, since a
   story renders four times.
-- Realistic content: real OMV-shaped labels, sizes with units, long share names. Seed one story with
-  markup-looking text to show it renders inert.
+- Realistic content: OMV-shaped labels, sizes with units, long share names. Values joined with
+  commas or given their own labels, never `·`; headlines and messages as whole sentences, never
+  fragments (style guide 10). Seed one story with markup-looking text to show it renders inert.
 - `build-storybook` stays green.
 
 ## 7. Charts and data display
@@ -205,3 +224,4 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 7. [ ] No markup rendered from strings?
 8. [ ] Stories cover every state and motion, green in both themes and both densities?
 9. [ ] Colour audit exits 0; style guide numbers updated?
+10. [ ] None of the twenty habits of style guide 10, in the component or its stories?

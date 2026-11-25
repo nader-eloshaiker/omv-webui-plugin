@@ -22,7 +22,7 @@ const withDensity: Decorator = (Story, context) => (
 );
 
 // The review surface (design-system skill, section 6): every story in both themes and both densities
-// at once, each panel on the page ground with the ambient light, as a page shows it. Theme and density
+// at once, each panel on the flat page ground, as a page shows it. Theme and density
 // are a class and an attribute on the panel, so the tokens resolve per panel. A story that opens an
 // overlay on mount (a dialog, an open menu) sets `matrix: false`, and a story with
 // `layout: "fullscreen"` fills the window; both follow the toolbar instead. Popups in a portal always
@@ -42,11 +42,11 @@ const withMatrix: Decorator = (Story, context) => {
           key={`${theme}-${density}`}
           aria-label={`${theme === "dark" ? "Dark" : "Light"}, ${density}`}
           data-density={density}
-          className={`${theme} min-w-0 rounded-card bg-page p-6 text-body text-foreground ambient-light`}
+          className={`${theme} min-w-0 rounded-card bg-page p-6 text-body text-foreground`}
         >
-          <p className="mb-4 text-xs font-semibold tracking-wide text-tertiary-foreground uppercase">
-            {theme === "dark" ? "Dark" : "Light"} ·{" "}
-            {density === "compact" ? "Compact" : "Comfortable"}
+          <p className="mb-4 text-sm text-muted-foreground">
+            {theme === "dark" ? "Dark" : "Light"},{" "}
+            {density === "compact" ? "compact" : "comfortable"}
           </p>
           <Story />
         </section>

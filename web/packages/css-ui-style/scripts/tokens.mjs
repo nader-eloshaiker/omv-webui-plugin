@@ -16,9 +16,8 @@
 //   4. One Tailwind utility per semantic role, by its own name, with `@theme inline`: `--theme-page`
 //      becomes `bg-page`, `--theme-warning-label` becomes `text-warning-label`,
 //      `--theme-shadow-raised` becomes `shadow-raised`. `inline` makes each utility read the
-//      `--theme-*` variable where it is used, so a `.dark` or `.light` subtree flips. The ambient
-//      light's stops (`--theme-ambient*`) get none: they are read only by the `ambient-light`
-//      utility, never as a flat fill. The shadcn names are mapped by hand in index.css.
+//      `--theme-*` variable where it is used, so a `.dark` or `.light` subtree flips. The shadcn
+//      names are mapped by hand in index.css.
 //
 // Kept out of design/tokens.css on purpose: tools/colour-audit.mjs reads that file and treats every
 // block that is not `.dark` as the light theme, so a dark block under any other selector there would
@@ -30,8 +29,6 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const COMPACT = '[data-density="compact"]';
 const COMFORTABLE = '[data-density="comfortable"]';
-// Roles that are stops of a drawn light, not fills: no utility of their own.
-const NO_UTILITY = /^--theme-ambient(-|$)/;
 const SOURCE = path.resolve(here, "../../../../design/tokens.css");
 const TARGET = path.resolve(here, "../generated/tokens.css");
 
@@ -133,20 +130,18 @@ export function generate(source) {
       .filter((b) => b.prelude === "@theme")
       .flatMap((b) => declarations(b.body).map((d) => d.name)),
   );
-  const mapping = roles
-    .filter((name) => !NO_UTILITY.test(name))
-    .map((name) => {
-      const role = name.slice("--theme-".length);
-      const utility = role.startsWith("shadow-")
-        ? `--${role}`
-        : `--color-${role}`;
-      if (primitives.has(utility)) {
-        throw new Error(
-          `tokens.css: the primitive ${utility} has the name the role ${name} needs as a utility; rename the primitive`,
-        );
-      }
-      return `  ${utility}: var(${name});`;
-    });
+  const mapping = roles.map((name) => {
+    const role = name.slice("--theme-".length);
+    const utility = role.startsWith("shadow-")
+      ? `--${role}`
+      : `--color-${role}`;
+    if (primitives.has(utility)) {
+      throw new Error(
+        `tokens.css: the primitive ${utility} has the name the role ${name} needs as a utility; rename the primitive`,
+      );
+    }
+    return `  ${utility}: var(${name});`;
+  });
 
   return [
     "/* GENERATED from design/tokens.css by web/packages/css-ui-style/scripts/tokens.mjs. Do not edit:",

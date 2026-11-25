@@ -23,7 +23,7 @@ function Answer({
     <PageAnswer aria-labelledby={titleId}>
       <PageAnswerBody>
         <h1 id={titleId}>Dashboard</h1>
-        <PageAnswerKicker>nas · Updated at 10:42:07</PageAnswerKicker>
+        <PageAnswerKicker>Read at 10:42:07</PageAnswerKicker>
         <PageAnswerHeadline ref={headlineRef}>
           No problems found
         </PageAnswerHeadline>

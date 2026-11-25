@@ -210,7 +210,7 @@ function loadTokens() {
 // [foreground token, ground, bar, note]. Bars: "text" 4.5:1, "ui" 3:1 (large text, icons, control
 // outlines, marks that carry meaning alone), "deco" = reported, never failed. A ground is:
 //   - a token name, which must be opaque;
-//   - on(base, ...layers): translucent tokens (a wash, the selected tint, the ambient light)
+//   - on(base, ...layers): translucent tokens (a wash, the selected tint)
 //     composited bottom-up over a known opaque ground, as the browser paints them;
 //   - gradient(name, ...stops): a gradient, checked at every stop; the worst stop decides. Each stop
 //     is itself a token or an on(). A two-colour gradient's contrast with one ink changes
@@ -222,34 +222,20 @@ const gradient = (name, ...stops) => ({ name, stops });
 const GROUNDS = ["theme-page", "theme-surface", "theme-muted", "theme-muted-strong"];
 const onGrounds = (fg, bar, note, grounds = GROUNDS) => grounds.map((g) => [fg, g, bar, note]);
 const STATUS = ["ok", "warning", "critical", "unknown"];
-// The light from above the page: the bare page, each glow alone, and both where they overlap. The
-// `ambient-light` utility lists the main glow first, so it paints over the soft one.
-const AMBIENT = gradient(
-  "ambient light",
-  "theme-page",
-  on("theme-page", "theme-ambient-soft"),
-  on("theme-page", "theme-ambient"),
-  on("theme-page", "theme-ambient-soft", "theme-ambient"),
-);
-// A status wash used as light: a radial wash in the card's corner fading to the bare card.
-const statusLight = (s) => gradient(`${s} light`, "theme-surface", on("theme-surface", `theme-${s}-wash`));
-// The drive-bay chassis: lit from above, one step between its stops.
+// The drive-bay chassis. The library paints it flat in the top stop; the bottom stop stays audited
+// while the lab's drawings still use the pair.
 const CHASSIS = gradient("chassis", "theme-art-chassis-top", "theme-art-chassis-bottom");
 const DRAWING_GROUNDS = ["theme-surface", "theme-muted", "theme-art-surface"];
 
 const PAIRS = [
-  // Text tiers, on every ground and in the ambient light.
+  // Text tiers, on every ground.
   ...onGrounds("theme-foreground", "text", "body text"),
   ...onGrounds("theme-muted-foreground", "text", "secondary text"),
   ...onGrounds("theme-tertiary-foreground", "text", "captions and metadata"),
   ...onGrounds("theme-subtle-foreground", "deco", "placeholder / disabled (exempt, 1.4.3)"),
-  ["theme-foreground", AMBIENT, "text", "the headline and title in the ambient light"],
-  ["theme-muted-foreground", AMBIENT, "text", "secondary text in the ambient light"],
-  ["theme-tertiary-foreground", AMBIENT, "text", "captions in the ambient light"],
   // Structure.
   ...onGrounds("theme-border", "deco", "divider (decorative)"),
   ...onGrounds("theme-border-control", "ui", "control outline (1.4.11)"),
-  ["theme-border-control", AMBIENT, "ui", "control outline in the ambient light"],
   // Action: Cobalt, the accent, "do this". Its fill alone is reported: the primary button clears
   // 3:1 against the ground by its edge, `action-stroke`, which is the fill itself in light.
   ["theme-action-foreground", "theme-action", "text", "words on the primary button"],
@@ -258,9 +244,7 @@ const PAIRS = [
   ["theme-action-foreground", on("theme-action-hover", "theme-art-plane"), "ui", "an icon's outline over its plane on the primary button, hovered"],
   ...onGrounds("theme-action", "deco", "the primary fill alone (edged by action-stroke)"),
   ...onGrounds("theme-action-stroke", "ui", "the primary and outlined next step's edge"),
-  ["theme-action-stroke", AMBIENT, "ui", "the primary's edge in the ambient light"],
   ...onGrounds("theme-action-label", "text", "accent words: the outlined next step"),
-  ["theme-action-label", AMBIENT, "text", "accent words in the ambient light"],
   // The outlined next step, hovered: its words and edge on the accent wash.
   ...["theme-surface", "theme-muted", "theme-page"].map((g) => ["theme-action-label", on(g, "theme-action-wash"), "text", "accent words on the accent wash"]),
   ["theme-foreground", on("theme-surface", "theme-action-wash"), "text", "body text on the accent wash"],
@@ -272,11 +256,9 @@ const PAIRS = [
   ["theme-action-stroke", "theme-usage-track", "ui", "the first-steps progress arc on its track"],
   // Interaction: Sky, "you can interact with this": links, selection, checked controls, focus.
   ...onGrounds("theme-link", "text", "a link"),
-  ["theme-link", AMBIENT, "text", "a link in the ambient light"],
   ["theme-link", on("theme-surface", "theme-pending-wash"), "text", "a link on the pending wash"],
   ...onGrounds("theme-focus-ring", "ui", "focus ring (2.4.11 / 1.4.11)"),
-  ["theme-focus-ring", AMBIENT, "ui", "focus ring in the ambient light"],
-  ...onGrounds("theme-selected-mark", "ui", "a checked control, the current item's bar"),
+  ...onGrounds("theme-selected-mark", "ui", "a checked control, the current tab's underline"),
   ["theme-selected-mark-foreground", "theme-selected-mark", "ui", "the check, the dot, the thumb on the mark"],
   ...onGrounds("theme-selected-label", "text", "the chosen segment's words on its raised surface"),
   // The selected tint, and selected text.
@@ -285,10 +267,9 @@ const PAIRS = [
   ["theme-muted-foreground", on("theme-surface", "theme-selected"), "text", "secondary text on a selected row"],
   ["theme-selected-label", on("theme-page", "theme-selected"), "text", "current side-navigation item"],
   ["theme-foreground", on("theme-page", "theme-selected"), "text", "current side-navigation item, ink"],
-  ["theme-selected-mark", on("theme-page", "theme-selected"), "ui", "current item's leading bar"],
   ["theme-foreground", "theme-selection", "text", "selected text"],
-  // Brand: the mark, the live dot, the health ring; and the live trace with its area fill.
-  ...onGrounds("theme-brand", "ui", "the mark, the live dot, the health ring"),
+  // Brand: the mark and the health ring; and the live trace with its area fill.
+  ...onGrounds("theme-brand", "ui", "the mark and the health ring"),
   ["theme-brand", on("theme-page", "theme-selected"), "ui", "the mark on its plate (the top bar)"],
   ["theme-brand", on("theme-surface", "theme-selected"), "ui", "the mark on its plate, on a surface"],
   ...onGrounds("theme-trace", "ui", "the live trace", GROUNDS.slice(1)),
@@ -300,11 +281,9 @@ const PAIRS = [
   ...onGrounds("theme-pending-stroke", "ui", "pending dot ring / icon"),
   ["theme-pending-label", on("theme-surface", "theme-pending-wash"), "text", "label on the pending wash"],
   ["theme-pending-label", on("theme-page", "theme-pending-wash"), "text", "label on the pending wash (page)"],
-  ["theme-pending-label", AMBIENT, "text", "'pending' in the ambient light"],
   // The top bar's pill: gold, edged in the stroke so it clears 3:1 where the gold alone does not (the
   // light page); its words are the band's pair. The band's buttons are outlined in the ink, and stay
   // outlined (dashed, never faded) while unavailable; Apply is the inverse pair.
-  ["theme-pending-stroke", AMBIENT, "ui", "the pending pill's edge on the top bar, in the ambient light"],
   ["theme-pending-foreground", "theme-pending", "ui", "a band button's outline, also unavailable"],
   ["theme-pending", "theme-pending-foreground", "text", "Apply on the band: gold words on the navy"],
   // The flight's mark: a gold disc ringed in navy. One of the two always carries it (the disc in dark,
@@ -325,16 +304,6 @@ const PAIRS = [
     ...GROUNDS.map((g) => ["theme-foreground", on(g, `theme-${s}-wash`), "text", `body text on the ${s} wash`]),
     ...GROUNDS.map((g) => ["theme-muted-foreground", on(g, `theme-${s}-wash`), "text", `secondary text on the ${s} wash`]),
     [`theme-${s}-stroke`, on("theme-surface", `theme-${s}-wash`), "ui", `${s} mark on its wash`],
-    [`theme-${s}-label`, AMBIENT, "text", `${s} as a word in the ambient light`],
-  ]),
-  // A non-OK card lit in its status: a radial wash fading to the card, read at both ends.
-  ...["warning", "critical"].flatMap((s) => [
-    [`theme-${s}-label`, statusLight(s), "text", `${s} word on the card lit in its state`],
-    ["theme-foreground", statusLight(s), "text", `headline on the card lit ${s}`],
-    ["theme-muted-foreground", statusLight(s), "text", `secondary text on the card lit ${s}`],
-    ["theme-action-stroke", statusLight(s), "ui", `the next step's edge on the card lit ${s}`],
-    ["theme-action-label", statusLight(s), "text", `the outlined next step's words on the card lit ${s}`],
-    ["theme-focus-ring", statusLight(s), "ui", `focus ring on the card lit ${s}`],
   ]),
   // The Save button's "Saved" settle: words on the OK fill, edged in the OK stroke.
   ["theme-ok-foreground", "theme-ok", "text", "'Saved' on the save button"],
@@ -356,7 +325,7 @@ const PAIRS = [
   ["theme-art-line", CHASSIS, "ui", "a caddy's outline on the chassis"],
   ["theme-foreground", CHASSIS, "text", "a device name on the chassis"],
   ["theme-tertiary-foreground", CHASSIS, "text", "the chassis caption"],
-  ...STATUS.map((s) => [`theme-${s}-stroke`, CHASSIS, "ui", `a ${s} slot light on the chassis`]),
+  ...STATUS.map((s) => [`theme-${s}-stroke`, CHASSIS, "ui", `a ${s} caddy edge on the chassis`]),
   // The icon set (rethink 5.2): the outline in the ink it stands in, over its one plane.
   ...["theme-page", "theme-surface", "theme-muted", "theme-muted-strong"].flatMap((g) => [
     ["theme-foreground", on(g, "theme-art-plane"), "ui", "an icon's outline over its plane"],

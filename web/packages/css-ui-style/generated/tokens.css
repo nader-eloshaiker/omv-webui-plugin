@@ -42,8 +42,8 @@
 @theme {
   /* One colour scheme (foundation 3.6), in OKLCH hue. Every colour below has its place in it, and a
      new colour takes a place in it or does not come in:
-       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage, the
-         map path and the ambient light are this one hue in lightness steps, and the slate neutrals
+       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage and the
+         map path are this one hue in lightness steps, and the slate neutrals
          lean toward it (248 to 259);
        - the colours that ask for attention sit opposite, on the base's complementary arc: warning
          on the complement (62), critical and pending on the split complements (27 and 87). Their
@@ -337,11 +337,11 @@
   /* Interaction: Sky, which says "you can interact with this" (style guide 2.1). Links and Sky
      words; selection (a selected row, the current navigation item and tab, a chosen segment or
      option); checked controls; the focus ring. A state of a control, never a call to act.
-       link                     links in running text, breadcrumbs, quiet in-place actions
+       link                     links in running text, breadcrumbs, plain in-place actions
        selected                 the selected tint, behind a selected row or the current item
        selected-label           the words of the selected or current item
        selected-mark            a checked box, a radio dot's ring, a switch that is on, the current
-                                item's bar: 3:1 on every ground
+                                tab's underline: 3:1 on every ground
        selected-mark-foreground the check, the dot and the thumb on the mark */
   --theme-link: var(--color-brand-700);
   --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
@@ -352,18 +352,11 @@
   /* Text selection: opaque, so selected words keep their contrast. */
   --theme-selection: var(--color-brand-200);
 
-  /* Brand: the mark, the live dot and the health ring. Identity, never a state and never a control.
+  /* Brand: the mark and the health ring. Identity, never a state and never a control.
      The live trace and its area fill are the brand's light on data (foundation 3.2 and 3.4). */
   --theme-brand: var(--color-brand-600);
   --theme-trace: var(--color-brand-600);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
-
-  /* Ambient light: the glow from above the page (foundation 3.4), drawn by css-ui-style's
-     `ambient-light` utility in brand hues only, never a status hue; no colour utility is made for
-     these. Each value is the brightest point the glow actually paints, at the page's top edge (the
-     ellipses are centred above the page), so the audit measures what is on screen. */
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
 
   /* Pending configuration changes: the gold, inked in navy. In light, pending words are the navy on
      the gold wash (a dark gold word would read olive or brown) and the stroke is a deep gold that
@@ -419,7 +412,9 @@
   --theme-art-line: var(--color-slate-600); /* outlines that must read: 3:1 */
   --theme-art-faint: var(--color-slate-300); /* secondary structure, dimmed lines (decorative) */
   --theme-art-path: var(--color-brand-600); /* the lineage being traced on a map */
-  --theme-art-chassis-top: var(--color-slate-50); /* material light: lit from above, one step */
+  /* The drive-bay chassis: a flat fill (`art-chassis-top`). The bottom step is kept for the lab's
+     drawings until they are flat too; the library paints no gradient with it. */
+  --theme-art-chassis-top: var(--color-slate-50);
   --theme-art-chassis-bottom: var(--color-slate-200);
   /* The one inner plane of a two-tone icon (rethink 5.2): a tinted step of the base blue behind the
      outline, which stays in currentColor. Translucent, so it sits on any ground and on the
@@ -481,9 +476,6 @@
   --theme-brand: var(--color-brand-400);
   --theme-trace: var(--color-brand-300);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
-
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
 
   --theme-pending-label: #f4d660;
   --theme-pending-stroke: var(--color-pending-fill);
@@ -574,8 +566,6 @@
     --theme-brand: var(--color-brand-400);
     --theme-trace: var(--color-brand-300);
     --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
-    --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
-    --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
     --theme-pending-label: #f4d660;
     --theme-pending-stroke: var(--color-pending-fill);
     --theme-ok-stroke: var(--color-status-ok);
@@ -638,8 +628,6 @@
   --theme-brand: var(--color-brand-600);
   --theme-trace: var(--color-brand-600);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
   --theme-pending-label: var(--color-brand-950);
   --theme-pending-stroke: #9e7b0b;
   --theme-ok-stroke: #1d8545;

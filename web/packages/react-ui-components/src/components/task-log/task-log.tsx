@@ -6,7 +6,7 @@ import { Button, IconButton } from "../button/button";
 import { ConfirmDialog } from "../confirm-dialog/confirm-dialog";
 import { stripControl } from "./strip-control";
 
-/** A line of output, optionally with its timestamp (shown in the quieter terminal ink). */
+/** A line of output, optionally with its timestamp (shown in the subdued terminal ink). */
 export type TaskLogLine = string | { time: string; text: string };
 
 /** Show only the first lines of a long output until the reader asks for the rest. */
@@ -78,7 +78,7 @@ interface TaskLogProps {
   /** Shown while there is no output yet: "Waiting for output…". */
   emptyLabel?: React.ReactNode;
   /**
-   * Set when the task has ended: the result, best as a status pill with the fixed word and a plain
+   * Set when the task has ended: the result, best as a status label with the fixed word and a plain
    * sentence. Announced through a polite live region and kept on screen (5.7).
    */
   endMessage?: React.ReactNode;

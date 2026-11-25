@@ -30,7 +30,6 @@
   --link:var(--brand-700); --selected-label:var(--brand-700); --selected-mark:var(--brand-600); --focus-ring:var(--brand-600);
   --selected:color-mix(in srgb, var(--brand-600) 9%, transparent); --selection:var(--brand-200);
   --brand:var(--brand-600); --trace:var(--brand-600); --trace-area:color-mix(in srgb, var(--brand-600) 32%, transparent);
-  --ambient:color-mix(in srgb, var(--brand-400) 12%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 7%, transparent);
   --pending:var(--pending-fill); --pending-foreground:var(--pending-ink); --pending-label:var(--brand-950); --pending-stroke:#9e7b0b;
   --pending-wash:color-mix(in srgb, var(--pending-fill) 14%, transparent);
   --ok:var(--status-ok); --ok-stroke:#1d8545; --ok-label:#096a33; --ok-wash:color-mix(in srgb, var(--status-ok) 12%, transparent); --ok-foreground:var(--brand-950);
@@ -65,7 +64,6 @@
   --link:var(--brand-300); --selected-label:var(--brand-300); --selected-mark:var(--brand-400); --focus-ring:var(--brand-300);
   --selected:color-mix(in srgb, var(--brand-400) 14%, transparent); --selection:var(--brand-800);
   --brand:var(--brand-400); --trace:var(--brand-300); --trace-area:color-mix(in srgb, var(--brand-300) 32%, transparent);
-  --ambient:color-mix(in srgb, var(--brand-400) 10%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 3%, transparent);
   --pending-label:#f4d660; --pending-stroke:var(--pending-fill);
   --ok-stroke:var(--status-ok); --ok-label:#70e093;
   --warning-stroke:var(--status-warning); --warning-label:#ffa659;
@@ -83,8 +81,7 @@
 
 * { box-sizing:border-box; }
 html { font-size:16px; }
-body { margin:0; background:var(--page); color:var(--foreground); font:400 var(--text-body)/1.5 var(--font-sans); font-feature-settings:"cv11","tnum"; -webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(1100px 560px at 18% -220px, var(--ambient) 39.3%, transparent 70%), radial-gradient(800px 420px at 92% -200px, var(--ambient-soft) 47.6%, transparent 70%); background-repeat:no-repeat; }
+body { margin:0; background:var(--page); color:var(--foreground); font:400 var(--text-body)/1.5 var(--font-sans); font-feature-settings:"cv11","tnum"; -webkit-font-smoothing:antialiased; }
 ::selection { background:var(--selection); color:var(--foreground); }
 h1,h2,h3,p { margin:0; }
 h1 { font-size:clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); line-height:1.1; font-weight:650; letter-spacing:-0.03em; margin:24px 0 4px; }
@@ -114,7 +111,6 @@ a { color:var(--link); text-underline-offset:2px; }
 main { max-width:1080px; margin:0 auto; padding:8px 24px 64px; }
 .grid { display:grid; gap:var(--density-gutter); grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
 .card { background:var(--surface); box-shadow:var(--shadow-raised); border-radius:var(--radius-lg); padding:var(--density-card); }
-.card.lit-warning { background-image:radial-gradient(520px 260px at 100% 0%, var(--warning-wash), transparent 70%); }
 .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
 .ramp { display:flex; border-radius:12px; overflow:hidden; box-shadow:var(--shadow-raised); }
@@ -143,18 +139,13 @@ input.invalid { border-color:var(--critical-stroke); }
 .hint { font-size:0.8125rem; color:var(--muted-foreground); margin-top:4px; }
 .error { font-size:0.8125rem; color:var(--critical-label); margin-top:4px; display:flex; gap:6px; align-items:center; }
 
-.pill { display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px 0 6px; border-radius:9999px; font-size:0.75rem; font-weight:500; border:1px solid; }
+.pill { display:inline-flex; align-items:center; gap:4px; font-size:0.8125rem; font-weight:500; }
 .pill svg, .error svg { width:14px; height:14px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-.pill-ok { color:var(--ok-label); border-color:var(--ok-stroke); background:var(--ok-wash); }
-.pill-warning { color:var(--warning-label); border-color:var(--warning-stroke); background:var(--warning-wash); }
-.pill-critical { color:var(--critical-label); border-color:var(--critical-stroke); background:var(--critical-wash); }
-.pill-unknown { color:var(--unknown-label); border-color:var(--unknown-stroke); background:var(--unknown-wash); }
-.pill-pending { color:var(--pending-label); border-color:var(--pending-stroke); background:var(--pending-wash); }
-.dot { width:10px; height:10px; border-radius:9999px; display:inline-block; border:1.5px solid; flex:none; }
-.dot-ok { background:var(--ok); border-color:var(--ok-stroke); }
-.dot-warning { background:var(--warning); border-color:var(--warning-stroke); }
-.dot-critical { background:var(--critical); border-color:var(--critical-stroke); }
-.dot-unknown { background:transparent; border-color:var(--unknown-stroke); }
+.pill-ok { color:var(--ok-label); }
+.pill-warning { color:var(--warning-label); }
+.pill-critical { color:var(--critical-label); }
+.pill-unknown { color:var(--unknown-label); }
+.pill-pending { color:var(--pending-label); }
 
 table { width:100%; border-collapse:collapse; }
 th { text-align:left; font-size:var(--text-caption); font-weight:600; color:var(--tertiary-foreground); background:var(--muted); padding:var(--density-cell-y) var(--density-cell-x); }
@@ -186,7 +177,7 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
 @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
 
 /* Squircle corners where supported (foundation 6), as css-ui-style's rounded-control and
-   rounded-card draw them. Pills, dots and meters stay round. */
+   rounded-card draw them. Meters, rings and count badges stay round. */
 @supports (corner-shape: squircle) {
   .btn, input[type=text], .bar button, .banner button, .swatch { corner-shape:squircle; border-radius:var(--radius-squircle-md); }
   .card, .tablewrap, .ground, .terminal, .ramp { corner-shape:squircle; border-radius:var(--radius-squircle-lg); }
@@ -240,7 +231,7 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
 
   <h2>Brand, the accent and pending</h2>
   <div class="grid">
-    <div class="swatch" style="background:var(--surface);color:var(--foreground)"><span class="dot" style="background:var(--brand);border-color:var(--brand);margin-right:8px"></span>brand: mark, live dot, health ring</div>
+    <div class="swatch" style="background:var(--surface);color:var(--brand)">brand: the mark, the health ring</div>
     <div class="swatch" style="background:var(--action);color:var(--action-foreground);border:1px solid var(--action-stroke)">action (Cobalt, "do this") + foreground</div>
     <div class="swatch" style="background:var(--surface);color:var(--link)">link and selection (Sky)</div>
     <div class="swatch" style="background:var(--pending);color:var(--pending-foreground)">pending + ink</div>
@@ -272,7 +263,7 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
     </div>
   </div>
 
-  <h2>Status: always a word with a mark</h2>
+  <h2>Status: its icon and a coloured word, no capsule</h2>
   <div class="card">
     <div class="row">
       <span class="pill pill-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>OK</span>
@@ -280,12 +271,6 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
       <span class="pill pill-critical"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8l6-6z"/><path d="m9 9 6 6M15 9l-6 6"/></svg>Critical</span>
       <span class="pill pill-unknown"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-dasharray="4 3"/></svg>Unknown</span>
       <span class="pill pill-pending"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>Pending</span>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <span class="row"><span class="dot dot-ok"></span>OK</span>
-      <span class="row"><span class="dot dot-warning"></span>Warning</span>
-      <span class="row"><span class="dot dot-critical"></span>Critical</span>
-      <span class="row"><span class="dot dot-unknown"></span>Unknown (hollow)</span>
     </div>
   </div>
 
@@ -316,28 +301,26 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
       <div class="meter crit" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="96" aria-label="backup usage"><i style="width:96%"></i></div>
       <p class="secondary num">3.5&nbsp;TiB of 3.6&nbsp;TiB; over the 90% threshold</p>
     </div>
-    <div class="card lit-warning">
-      <h3>Needs you</h3>
-      <p><span class="pill pill-warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>Warning</span></p>
-      <p style="margin-top:8px">Disk sdb is running warm</p>
-      <p class="secondary">47&nbsp;°C, above its 45&nbsp;°C limit. A card lit in its state: the wash fades to the card.</p>
+    <div class="card">
+      <h3 class="pill pill-warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>Disk sdb is running warm</h3>
+      <p class="secondary">It is at 47&nbsp;°C, above the 45&nbsp;°C you set. The state is the icon before the heading, never a tinted card or a coloured edge.</p>
     </div>
     <div class="card">
-      <h3>Processor · live</h3>
+      <h3>Processor</h3>
       <p class="figure num">23%</p>
       <svg class="chart" viewBox="0 0 300 80" preserveAspectRatio="none" role="img" aria-label="Processor, last minute: now 23%, peak 41%" style="height:80px">
         <defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop class="trace-top" offset="0"/><stop class="trace-bottom" offset="1"/></linearGradient></defs>
         <path fill="url(#ta)" d="M0 60 40 52 80 56 120 34 160 40 200 22 240 44 300 48V80H0Z"/>
         <path class="trace-line" d="M0 60 40 52 80 56 120 34 160 40 200 22 240 44 300 48"/>
       </svg>
-      <p class="tertiary">Live · every 2&nbsp;s · last 58&nbsp;s</p>
+      <p class="tertiary">Updated every 2&nbsp;s, showing the last 58&nbsp;s.</p>
     </div>
     <div class="card">
       <h3>Services</h3>
-      <div class="svc"><span class="dot dot-ok"></span><span>SMB</span><span class="secondary">Running</span></div>
-      <div class="svc"><span class="dot dot-ok"></span><span>SSH</span><span class="secondary">Running</span></div>
-      <div class="svc"><span class="dot dot-critical"></span><span>NFS</span><span style="color:var(--critical-label)">Failed</span></div>
-      <div class="svc"><span class="dot dot-unknown"></span><span>FTP</span><span class="secondary">Disabled</span></div>
+      <div class="svc"><span>SMB</span><span class="secondary">Running</span></div>
+      <div class="svc"><span>SSH</span><span class="secondary">Running</span></div>
+      <div class="svc"><span>NFS</span><span class="pill pill-critical"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8l6 6v8l-6 6H8l-6-6V8l6-6z"/><path d="m9 9 6 6M15 9l-6 6"/></svg>Failed</span></div>
+      <div class="svc"><span>FTP</span><span class="secondary">Disabled</span></div>
     </div>
   </div>
 
@@ -377,12 +360,8 @@ input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16p
     <figure><div class="tile c-s30"></div><figcaption>card, squircle 30px</figcaption></figure>
   </div>
 
-  <h3 style="margin-top:16px">Stay round: pills, dots and meters</h3>
+  <h3 style="margin-top:16px">Stays round: the meter</h3>
   <div class="card row">
-    <span class="pill pill-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>OK</span>
-    <span class="pill pill-pending"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>Pending</span>
-    <span class="row"><span class="dot dot-ok"></span>OK</span>
-    <span class="row"><span class="dot dot-unknown"></span>Unknown</span>
     <div class="meter" style="width:160px;margin:0" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62" aria-label="Sample usage"><i style="width:62%"></i></div>
   </div>
   </section>

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { Button } from "../button/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../card/card";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import { LeavingItem } from "./leaving-item";
 import { useLeavingItems } from "./use-leaving-items";
 
@@ -87,9 +87,9 @@ function Demo({ columns }: { columns: "one" | "grid" }) {
               style={{ "--stagger-index": i } as React.CSSProperties}
             >
               <CardHeader>
-                <StatusPill status={entry.item.status}>
+                <StatusLabel status={entry.item.status}>
                   {entry.item.status === "critical" ? "Critical" : "Warning"}
-                </StatusPill>
+                </StatusLabel>
               </CardHeader>
               <CardContent className="gap-1">
                 <CardTitle level={3}>{entry.item.title}</CardTitle>

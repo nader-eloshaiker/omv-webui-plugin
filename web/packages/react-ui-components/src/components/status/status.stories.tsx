@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { StatusDot, StatusPill } from "./status";
+import { StatusDot, StatusLabel } from "./status";
 import { rollUp, type RollUpStatus, type Status } from "./status-kinds";
 
 const WORDS: Record<Status, string> = {
@@ -20,22 +20,22 @@ const WORDS: Record<Status, string> = {
 
 const meta = {
   title: "Components/Status",
-  component: StatusPill,
+  component: StatusLabel,
   args: { status: "ok", children: "OK" },
-} satisfies Meta<typeof StatusPill>;
+} satisfies Meta<typeof StatusLabel>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Health: Story = {
   render: () => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-4 gap-y-2">
       {(
         ["ok", "warning", "critical", "unknown", "disabled", "stopped"] as const
       ).map((s) => (
-        <StatusPill key={s} status={s}>
+        <StatusLabel key={s} status={s}>
           {WORDS[s]}
-        </StatusPill>
+        </StatusLabel>
       ))}
     </div>
   ),
@@ -43,13 +43,13 @@ export const Health: Story = {
 
 export const TaskSteps: Story = {
   render: () => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-4 gap-y-2">
       {(
         ["waiting", "running", "succeeded", "failed", "cancelled"] as const
       ).map((s) => (
-        <StatusPill key={s} status={s}>
+        <StatusLabel key={s} status={s}>
           {WORDS[s]}
-        </StatusPill>
+        </StatusLabel>
       ))}
     </div>
   ),
@@ -65,13 +65,13 @@ export const OnEveryGround: Story = {
       {(["bg-page", "bg-surface", "bg-muted"] as const).map((ground) => (
         <div
           key={ground}
-          className={`flex flex-wrap gap-2 rounded-card border border-border p-3 ${ground}`}
+          className={`flex flex-wrap gap-x-4 gap-y-2 rounded-card border border-border p-3 ${ground}`}
         >
           {(["ok", "warning", "critical", "unknown", "pending"] as const).map(
             (s) => (
-              <StatusPill key={s} status={s}>
+              <StatusLabel key={s} status={s}>
                 {WORDS[s]}
-              </StatusPill>
+              </StatusLabel>
             ),
           )}
         </div>
@@ -80,7 +80,8 @@ export const OnEveryGround: Story = {
   ),
 };
 
-export const Dots: Story = {
+/** Where a word does not fit: the status's icon alone, its word beside it or in its name. */
+export const IconOnly: Story = {
   render: () => (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-4">
@@ -91,7 +92,7 @@ export const Dots: Story = {
         )}
       </div>
       <p className="flex items-center gap-1 text-sm text-muted-foreground">
-        Compact, word in the name and tooltip:
+        Compact, the word in its name and tooltip:
         {(["ok", "warning", "critical", "unknown"] as const).map((s) => (
           <StatusDot key={s} status={s} label={WORDS[s]} />
         ))}
@@ -111,19 +112,19 @@ export const RollUp: Story = {
   render: () => {
     const { status, count, total } = rollUp(DISKS.map((d) => d.status));
     return (
-      <StatusPill status={status ?? "unknown"}>
+      <StatusLabel status={status ?? "unknown"}>
         {`${String(count)} of ${String(total)} disks: ${WORDS[status ?? "unknown"]}`}
-      </StatusPill>
+      </StatusLabel>
     );
   },
 };
 
 // A translated word is the catalogue's fixed word (5.5 forbids synonyms); any reason sits beside the
-// pill as its own text, never inside it.
+// status as its own text, never inside it.
 export const TranslatedWordWithReason: Story = {
   render: () => (
     <div className="flex max-w-xs flex-wrap items-center gap-2">
-      <StatusPill status="unknown">Unbekannt</StatusPill>
+      <StatusLabel status="unknown">Unbekannt</StatusLabel>
       <span className="text-sm text-muted-foreground">
         Dieses Laufwerk unterstützt kein SMART.
       </span>

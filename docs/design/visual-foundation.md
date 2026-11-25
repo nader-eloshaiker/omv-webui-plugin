@@ -6,6 +6,12 @@ principles every screen follows, and the systems that carry them: colour, type, 
 motion, data visualisation, illustration, navigation and page composition. It ends with the three
 visual directions that were prototyped in the design lab, and the owner's choice among them.
 
+**The generated look is out** (owner, 2026-11-25): the twenty habits listed in [style guide
+section 10](style-guide.md#10-the-generated-look-what-we-never-do) are used nowhere, and that list
+overrides this document wherever the two disagree. The passages below that asked for one of them
+(the ambient light, the frosted top bar, a card lit in its state, pills, dots, breathing skeletons,
+entrance motion on regions) have been rewritten.
+
 **It is normative.** On 2026-11-24 the owner chose the mix (journal, "The new look: the owner's four
 choices"; section 14.4): **Sky is the base, Atlas's map is the diagram language, and Instrument's
 values are the compact density.** The values in sections 3 to 7 are the chosen ones, and they live
@@ -29,9 +35,9 @@ This document **supersedes** these parts of the [style guide](style-guide.md):
 | --- | --- | --- |
 | 1 (feel), 1.1 last row (Material dropped for flat) | Calm, appliance-like, "no decoration that moves" | Section 1 and 2 here |
 | 2.1 (colour budget, about 90% neutral by area) | Colour only as signal | Section 3: colour also expresses identity and depth, with rules that keep status honest |
-| 2.1 and 3.3, the identity rows (the sky-blue top bar, `identity` and its ink) | Identity is a bar | Section 3.2: no bar; the brand is the mark, the light, the trace and the focus ring. 3.3's action decision stands |
+| 2.1 and 3.3, the identity rows (the sky-blue top bar, `identity` and its ink) | Identity is a bar | Section 3.2: no bar; the brand is the mark, the trace and the focus ring. 3.3's action decision stands |
 | 3.7 neutral ramp values, three text tiers, three grounds | Graphite, flat | Section 3.1: Sky's ramp, four grounds and a readable third tier (`tertiary-foreground`) |
-| 3.10 last bullet (no gradients) | No gradients anywhere | Section 3.4: four kinds of gradient and light, each with a meaning |
+| 3.10 last bullet (no gradients) | No gradients anywhere | Section 3.4: one gradient, the area under a live line |
 | 3.10 tints as `x/14` alpha classes | Ad hoc alpha | Section 3.3: the audited wash tokens (`warning-wash` and the others) |
 | 3.8 "elevation is a lighter surface plus a hairline" | Flat | Section 6 |
 | 3.11 audit numbers, 4.6 focus-ring numbers | Measured on the old grounds | Section 3.5 |
@@ -46,7 +52,7 @@ These **survive unchanged** and are normative here too:
 
 - **Status semantics** (style guide 2 jobs 2 and 3, 3.4 to 3.6, 5.5): the fixed words OK, Warning,
   Critical, Unknown, Disabled, Stopped; a word or a distinct shape with every status colour; Unknown
-  as a hollow ring; a roll-up shows the worst child; yellow means saved-but-not-applied and nothing
+  as a dashed ring; a roll-up shows the worst child; yellow means saved-but-not-applied and nothing
   else; warning is OMV's orange; destructive is a form, not a status; no blue "info" severity.
 - **The audited colour values** of status fills, labels and strokes, pending yellow and its ink and
   the action blues (tokens.css), and the fill/label/stroke split (3.5). None needed to change on the
@@ -67,11 +73,12 @@ These **survive unchanged** and are normative here too:
 The NAS is a machine that is alive in the next room. Opening the interface should feel like looking
 at it through a good window: in one glance you see that it is well, or exactly what is not; the
 things that move are the things that are really moving; everything you can touch looks touchable
-and tells you what it will do before you touch it. It is quiet when nothing is wrong, unmistakable
-when something is, and pleasant enough that people open it when nothing is wrong.
+and tells you what it will do before you touch it. It stays out of the way when nothing is wrong,
+is unmistakable when something is, and is pleasant enough that people open it when nothing is wrong.
 
-Not a document, not a control panel from 2010, not a showcase. Depth, light and motion are used the
-way a well-made physical product uses them: to show what is in front, what is live and what changed.
+Not a document, not a control panel from 2010, not a showcase, and not the default look of a
+generator (style guide 10). Depth and motion are used the way a well-made physical product uses
+them: to show what is in front, what is live and what changed.
 
 ## 2. Principles
 
@@ -83,15 +90,17 @@ way a well-made physical product uses them: to show what is in front, what is li
 3. **Affordance is obvious.** Anything pressable looks pressable at rest, not only on hover; every
    action says what it does in a verb with its object, and previews its consequence before it
    happens (section 13).
-4. **Depth means hierarchy.** What is raised is more important or closer to the hand; what is
-   ambient is identity. Nothing is raised for decoration.
+4. **Depth means hierarchy.** What is raised is a thing the person handles as one unit, or is
+   closer to the hand. Regions sit on the page ground under their heading. Nothing is raised, lit
+   or boxed for decoration.
 5. **Motion explains.** It shows where a thing came from and went, what changed, what is live, what
-   is working and that something landed. It never delays a reader and never loops without real work
-   behind it (section 7).
+   is working and that something landed. It answers the person's action or a change of state, never
+   a scroll or a region arriving; it never delays a reader, and nothing pulses, breathes or blinks
+   (section 7).
 6. **Honest liveness.** Only what is sampled moves; a chart says how long it has been sampling
    (OMV keeps no history as numbers, journal A7). "No data yet" is never drawn as calm.
 7. **Status colour is a claim.** Status hues mean only the state of a monitored thing, always with
-   a word or shape. Brand light is for identity and never for state.
+   a word or shape. The brand blue is for identity and never for state.
 8. **One interface for beginners and experts.** The same screens, layered: plain first view,
    explanations on demand, technical detail one disclosure away, and fast keyboard paths for those
    who want them (section 13).
@@ -107,10 +116,10 @@ re-derived, not inverted: a cool page and white cards.
 
 | Lab name | Token | Job | Dark | Light |
 | --- | --- | --- | --- | --- |
-| `bg` | `page` | The page, with the ambient light at its top | `#0a111c` (slate-950) | `#eef3f8` (slate-100) |
+| `bg` | `page` | The page, flat: no glow, no texture | `#0a111c` (slate-950) | `#eef3f8` (slate-100) |
 | `s1` | `surface` | Cards, panels, tables, dialogs, menus | `#111a27` (slate-925) | `#ffffff` |
 | `s2` | `muted` | Insets, table heads, neutral hover inside a card | `#16212f` (slate-900) | `#f5f8fb` (slate-50) |
-| `s3` | `muted-strong` | Hover on a control, chips, tracks | `#1d2939` (slate-850) | `#e8eef4` (slate-200) |
+| `s3` | `muted-strong` | Hover on a control, count badges, tracks | `#1d2939` (slate-850) | `#e8eef4` (slate-200) |
 | `line` | `border` | Dividers (decorative) | `#233042` (slate-800) | `#dbe3eb` (slate-300) |
 | `line-2` | `border-control` | Control edges, 3:1 on every ground | `#7d8b9b` (slate-550) | `#6b7885` (slate-600) |
 
@@ -133,9 +142,8 @@ is `#111a27`, and the meter track takes `muted-strong` in both themes.
 
 OMV's sky blue `#5dacdf` stays the identity, and now does more (tokens in brackets):
 
-- **As the mark and light** (`brand`): the logo, the live dot, the health ring, the power light on
-  the drive-bay picture; and an ambient glow from above the page (`ambient`, `ambient-soft`, section
-  3.4).
+- **As the mark** (`brand`): the logo and the health ring. There is no "live" dot, no light on the
+  drive-bay picture and no glow behind the page (style guide 10).
 - **As the focus ring** (`focus-ring`): brand-600 in light, brand-300 in dark.
 - **As the trace of live data** (`trace`, `trace-area`). Single-series live charts (processor,
   memory, network, temperature) draw in the brand blue: they are "how much", which the old guide
@@ -147,70 +155,63 @@ OMV's sky blue `#5dacdf` stays the identity, and now does more (tokens in bracke
   Cobalt (3.6, owner, 2026-11-25).
 
 **The identity bar is gone** (owner, 2026-11-24): no surface is painted sky blue. The top bar sits
-on the page ground and identity comes from the mark, the light and the blue that runs through live
-data. The `identity`, `identity-foreground` and `focus-ring-on-identity` roles and the button's
-`onIdentity` variant are removed; controls on the bar use the `quiet` variant. (The light-theme top
+on the page ground and identity comes from the mark and the blue that runs through live data. The
+`identity`, `identity-foreground` and `focus-ring-on-identity` roles and the button's `onIdentity`
+variant are removed; controls on the bar use the `plain` variant. (The light-theme top
 bar's contrast problem in style guide 3.3 disappears with it.)
 
 ### 3.3 Status stays honest
 
 Status hues (OK green, Warning orange, Critical red, Unknown grey) and the pending gold are used
-only for what they mean (where each sits on the colour wheel, and why, is 3.6), always with a word or shape: a pill, a shaped mark, a slot light with the word
-beside it, a node with its mark. Two kinds of status area are new and allowed: a **status-tinted
-wash** behind the one element that carries a non-OK state (the health strip's lead cell, a warning
-callout, a warning node on a map) at 7 to 14% over a known ground (`ok-wash` 12%, `warning-wash`
-14%, `critical-wash` 14%, `unknown-wash` 10%, `pending-wash` 14%, theme-invariant like the fills),
-and **status-coloured lines** on a map leading to a node in that state. Both always travel with the
-node's mark and word. A risk statement that is not a monitored state (for example "a stripe loses
+only for what they mean (where each sits on the colour wheel, and why, is 3.6), always with a word or shape: a status label (its icon
+and its word), a status icon before a title, a node or row with its icon and word. A state is never
+a tinted card, a capsule or a coloured left edge (style guide 10). The washes (`ok-wash` 12%,
+`warning-wash` 14%, `critical-wash` 14%, `unknown-wash` 10%, `pending-wash` 14%, theme-invariant
+like the fills) stay as audited tokens for a panel waiting on a decision (the job runner on the
+pending wash), not as a status ground. **Status-coloured lines** on a map lead to a node in that
+state, and always travel with the node's icon and word. A risk statement that is not a monitored state (for example "a stripe loses
 everything") uses a neutral glyph, never a status hue.
 
-### 3.4 Gradients, tints and light: four kinds, each with a meaning
+### 3.4 Gradients and light: one kind
 
 | Kind | Where | Means | Rule |
 | --- | --- | --- | --- |
-| Ambient light | Behind the top of the page (`ambient-light`), brand hues only | Identity | Nothing is read against it that would fail at its darkest or lightest point; never a status hue |
 | Area fill under a live line | Sparklines and live charts, from 0.32 alpha to 0 (`trace-area`) | The area of the quantity | Series or trace colour only |
-| Material light | The chassis of the drive-bay picture, lit from above, 1 step (`art-chassis-top`, `art-chassis-bottom`) | That the picture is an object | Grounds only |
-| Status wash | One element per non-OK state (`*-wash`; as light, a radial wash in a card's corner fading to the card) | The state, with its word | Over a known ground; the label clears 4.5:1 on it |
 
-The ambient light is two radial glows whose ellipses are centred above the page (the lab's
-geometry). Its tokens are the **brightest point actually painted**, where each glow meets the page's
-top edge: `ambient` is brand-400 at 10% (dark) and 12% (light), `ambient-soft` brand-300 at 3% and
-7%. The `ambient-light` utility places its first colour stop exactly there, so it looks as it did in
-the lab, and the audit measures what is on screen rather than the centre of an ellipse no one sees.
+That is the only gradient. The ambient light from above the page, the material light of the
+drive-bay chassis and the card lit in its state are gone (owner, 2026-11-25; style guide 10): the
+page is flat, the chassis is one flat fill (`art-chassis-top`; `art-chassis-bottom` stays only while
+the lab's drawings still use it), and a card's state is the icon before its title.
 
-Not allowed: multi-hue decorative gradients, gradient text, gradient borders, glow around text,
-glass blur over content. One exception to blur: Sky's sticky top bar blurs the page scrolling under
-it, so the bar stays legible over any content.
+Not allowed: glows, radial washes, gradient fills on surfaces or buttons, multi-hue decorative
+gradients, gradient text, gradient borders, glow around text, dithering, noise or grain, and any
+blur. The sticky top bar is the solid page ground with a hairline under it, not frosted glass. The
+stylesheet makes no blur utility and no ambient-light utility.
 
 ### 3.5 The audit
 
 Done. Every pair is in `PAIRS` in `tools/colour-audit.mjs`: each text tier, label, stroke and
 control edge on each of the four grounds; the selected tint; the status and pending washes over each
-ground, with the body and secondary text that sits on them; the ambient light; a card lit in its
-warning or critical state; the trace over its own area fill; the chassis; the map lines; the bars of a bar chart on a card or an inset (4.90 to 7.02:1); and the
+ground, with the body and secondary text that sits on them; the trace over its own area fill; the
+chassis; the map lines; the bars of a bar chart on a card or an inset (4.90 to 7.02:1); and the
 Save button's "Saved" (`ok-foreground` on the OK fill, 12.24:1, edged in `ok-stroke`). The script
 now composites translucent tokens over their known ground, as the browser paints them (`on(ground,
 layer...)`), and checks a gradient at each of its stops, the worst stop deciding (`gradient(name,
-stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash and glow is
+stop...)`). It reads `color-mix(in srgb, X N%, transparent)`, the form every wash is
 written in.
 
-**Result: 436 required pairs, 0 failures, both themes** (164 before the new grounds, 430 before the
-scheme of 3.6). Highlights:
+**Result: 460 required pairs, 0 failures, both themes** (164 before the new grounds, 430 before the
+scheme of 3.6, 514 before the ambient light and the lit cards went on 2026-11-25). Highlights:
 
-- In the ambient light, at its brightest (both glows over the page): `foreground` 13.90:1 light and
-  13.26:1 dark, `muted-foreground` 5.96 and 7.51:1, `tertiary-foreground` 4.87 and 4.93:1, the focus
-  ring 4.15 and 8.41:1, `border-control` 3.59 and 4.46:1.
 - Status labels on their own wash over any ground: 5.10 to 6.78:1 light, 6.08 to 9.06:1 dark; the
-  pending words, navy in light and gold in dark, 14.72 to 16.23:1 and 8.88 to 9.88:1. On a card lit
-  warning, the warning word is 6.28:1 light and 7.28:1 dark at the wash's strongest point.
+  pending words, navy in light and gold in dark, 14.72 to 16.23:1 and 8.88 to 9.88:1.
 - The trace over the top of its own area fill: 3.13 to 3.30:1 light, 4.17 to 4.49:1 dark.
 - Secondary text on any wash over any ground: at least 5.11:1 (dark, on the pending wash over
   `muted-strong`).
 - The tightest required pairs: dark `tertiary-foreground` on `muted-strong` and on the chassis,
   4.68:1; light `series-2` on the page, 3.09:1; light trace over its fill in an inset, 3.13:1; the
-  pending pill's edge in the light ambient light, 3.15:1.
-- APCA advisory: 44 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions, secondary
+  pending count's edge on the light page, 3.55:1.
+- APCA advisory: 45 text pairs pass 4.5:1 but sit under Lc 60, all labels, captions, secondary
   text on a wash or words on a fill (dark `tertiary-foreground` at Lc 40 to 43 is the lowest); none
   is running text.
 - `distinct` simulates deuteranopia, protanopia and tritanopia (Machado 2009). In light the live
@@ -232,7 +233,7 @@ it at the top of its primitives.
 
 | Place | Hue | Who sits there |
 | --- | --- | --- |
-| The base | 240 | Sky blue: brand, links, selection, checked controls, the focus ring, the live trace, usage, the map path, the ambient light. The slate neutrals lean toward it (248 to 259) |
+| The base | 240 | Sky blue: brand, links, selection, checked controls, the focus ring, the live trace, usage and the map path. The slate neutrals lean toward it (248 to 259) |
 | The accent | 258 | Cobalt `#0065da`: "do this", the one action expected here (owner, 2026-11-25; below) |
 | The complement | 62 | Warning, OMV's orange `#f78f00` |
 | The split complements | 27 and 87 | Critical `#d01d21`, and pending gold `#ffcd47` |
@@ -253,7 +254,7 @@ it at the top of its primitives.
 - **Labels hold one weight and never go muddy.** In light, the status words clear 5.10 to 5.70:1 at
   their worst; a word in a hue leans toward red as it darkens and toward yellow as it lightens.
   Darkened gold reads olive or brown, so in light the pending words are the navy on the gold wash,
-  with a deep gold stroke (`#9e7b0b`) that also edges the top bar's pill; in dark they are a lighter
+  with a deep gold stroke (`#9e7b0b`) that also edges the top bar's pending count; in dark they are a lighter
   gold (`#f4d660`). Warning's dark label moves to its fill's own hue (`#ffa659`), apart from the gold.
 - **The terminal is a piece of the night theme**: its words are the slate text tiers, not a green
   tint, since green is OK's hue.
@@ -282,12 +283,12 @@ the complement and its red on a split complement.
 
 - Navy on the gold: 11.53:1 (coffee on lemon was 8.31). "Saved" on the OK fill 11.12:1; words on
   the dark destructive button 5.98:1.
-- The pending pill clears 3:1 by its edge: the gold alone is 1.34:1 on the light page, the stroke
-  3.15:1 at the worst point of the ambient light.
+- The pending count on the top bar clears 3:1 by its edge: the gold alone is 1.34:1 on the light
+  page, the stroke 3.55:1.
 - Pending against warning (normal / deuteranopia / protanopia / tritanopia): fills 14.5 / 12.1 /
   15.8 / 15.2; words 29.6 or more in light, 11.7 / 7.8 / 11.6 / 12.0 in dark (they were 7.0 / 2.5 /
   1.1 / 7.7 and 9.4 / 6.3 / 9.1 / 8.7). Pending against OK stays a pair that needs its word (7.3
-  under protanopia), as before: pending is never a bare dot.
+  under protanopia), as before: pending is never a bare mark.
 - The weakest chart pair, series against series or the trace, over all four kinds of vision: light
   8.2 (was 3.8), dark 9.3 (was 8.4). Every series clears 3:1 on the plot grounds: 3.09 to 8.27:1
   light, 4.16 to 13.77:1 dark.
@@ -304,7 +305,7 @@ to take here**. Sky keeps "you can interact with this".
   sRGB holds the most chroma a blue can have at these lightnesses: 0.196 at the fill against the
   brand's 0.12. It stands out by chroma, not temperature, because the warm arc is status and
   pending (a warm accent would read as a state) and the gaps hold the chart series. It is the most
-  saturated colour on a healthy screen and quieter than Critical's pill and wash on an unhealthy
+  saturated colour on a healthy screen and less loud than Critical's icon and word on an unhealthy
   one. No series moves: Cobalt sits outside the gaps.
 - **Its roles** (`--theme-action-*`; shadcn's `primary` maps here, shadcn's `accent` stays neutral):
 
@@ -326,7 +327,7 @@ to take here**. Sky keeps "you can interact with this".
 - **What Sky keeps**, now on roles of their own where they shared the action roles: `link` (links,
   breadcrumbs, the ghost button), `selected` and `selected-label` (a selected row, the current
   navigation item and tab, the chosen segment), `selected-mark` and `selected-mark-foreground` (a
-  checked box, a radio dot, a switch that is on, the current item's bar, the caret), `focus-ring`,
+  checked box, a radio dot, a switch that is on, the current tab's underline, the caret), `focus-ring`,
   and the brand roles (the top bar's mark is `brand`). Their values did not change; the old
   `action` and `action-label` values moved to them.
 - **The icon plane**: `art-plane`, brand-400 at 14% light and 18% dark, is the one inner plane of the
@@ -336,14 +337,12 @@ to take here**. Sky keeps "you can interact with this".
 
 - White on the fill 5.42:1, hovered 7.67:1, in both themes; an icon's outline over its plane on the
   fill 4.87 / 4.73:1.
-- The edge, `action-stroke`, on the four grounds: 4.64 to 5.42:1 / 4.10 to 5.27:1, and 4.31 / 4.32:1
-  at the worst point of the ambient light. The fill alone on the dark grounds is 2.71 to 3.49:1,
+- The edge, `action-stroke`, on the four grounds: 4.64 to 5.42:1 / 4.10 to 5.27:1. The fill alone on the dark grounds is 2.71 to 3.49:1,
   which is why the dark button is edged in the 500 step.
 - `action-label` on the four grounds: 6.56 to 7.67:1 / 5.77 to 7.42:1. In dark its APCA is Lc 46 to
   52, so accent words are set at medium weight or above (they are button labels).
-- On the accent wash: the words 6.15 to 6.83:1 / 5.01 to 5.96:1, the edge 4.83 / 3.85:1. On a card
-  lit warning or critical: the edge 4.81 and 4.30:1 / 3.93 and 4.55:1, the words 6.09 to 6.80:1 /
-  5.52 to 6.41:1. The first-steps arc on its track: 4.64 / 4.10:1.
+- On the accent wash: the words 6.15 to 6.83:1 / 5.01 to 5.96:1, the edge 4.83 / 3.85:1. The
+  first-steps arc on its track: 4.64 / 4.10:1.
 - Apart from every state (normal / deuteranopia / protanopia / tritanopia, the weakest of the
   five fills and the pending gold): 23.7 or more in every view, in both themes. Accent words
   against the status words fall to 4.4 (OK) and 6.0 (Unknown) under tritanopia in light; accent
@@ -427,11 +426,13 @@ target minimum (WCAG 2.5.8).
 
 Three levels, by meaning:
 
-1. **Ground**: the page, ambient light only (`bg-page`, `ambient-light`).
-2. **Surface**: cards, panels, tables (`surface-raised`, or `bg-surface shadow-raised`). Dark: one
+1. **Ground**: the page, flat (`bg-page`). Regions of a page sit here, under their heading, with no
+   card around them (style guide 10).
+2. **Surface**: a thing handled as one unit (a dialog's body, a form being filled, an item whose
+   whole surface opens it), panels, tables (`surface-raised`, or `bg-surface shadow-raised`). Dark: one
    step lighter than the ground, a 1px inner top highlight (light from above), a faint edge and a
    soft long shadow. Light: white with a layered soft shadow. Inside a surface, insets are `muted`
-   and hover on a control, chips and tracks are `muted-strong`.
+   and hover on a control, count badges and tracks are `muted-strong`.
 3. **Floating**: dialogs, the palette, drawers, menus, popovers and toasts (`surface-floating`, or
    `shadow-floating`). A stronger shadow, over the `scrim` when modal (dark 0.62, light 0.42 alpha).
 
@@ -441,7 +442,8 @@ in light. The shadow ink in light is slate (`rgb(17 26 39)`), never black. The t
 
 Radius (Sky): controls 12px (`rounded-control`), cards, dialogs, menus, popovers and toasts 20px
 (`rounded-card`), squircles of 16 and 30px where `corner-shape` is supported; checkboxes and inner
-marks 6px. Pills, dots, meters and rings stay round.
+marks 6px. Meters, rings, count badges and removable filter tokens stay round; nothing else is a
+pill, and a status never is.
 
 ## 7. Motion
 
@@ -457,14 +459,15 @@ marks 6px. Pills, dots, meters and rings stay round.
 | `--ease-standard` (`--e-std`) | `ease-standard`, the default | `cubic-bezier(0.2, 0, 0, 1)` | Everything by default |
 | `--ease-enter` (`--e-enter`) | `ease-enter` | `cubic-bezier(0.05, 0.7, 0.1, 1)` | Things arriving: decelerate hard |
 | `--ease-exit` (`--e-exit`) | `ease-exit` | `cubic-bezier(0.3, 0, 0.8, 0.15)` | Things leaving: accelerate away |
-| `--ease-settle` (`--e-settle`) | `ease-settle` | a spring as CSS `linear()`, 8% overshoot | Things that land: a switch thumb, a pending chip, a toast |
+| `--ease-settle` (`--e-settle`) | `ease-settle` | a spring as CSS `linear()`, 8% overshoot | Things that land: a switch thumb, the pending count, a toast |
 | `--ease-soft` (`--e-soft`) | `ease-soft` | a spring as CSS `linear()`, 1.5% overshoot | Height changes: bars, disclosures, sections |
 | `--motion-stagger` (`--stagger`) | `stagger`, with `--stagger-index` | 45ms per item | List entrance, capped at 10 items |
 | `--motion-rise` (`--rise`) | (in `animate-rise`) | 12px | How far an entering card rises |
 
 Shared motions ship as utilities with their keyframes: `animate-rise` (fade and rise, on the enter
-curve), `animate-settle-in` (rise a little and land on the settle spring), `animate-fade-in`,
-`animate-breathe` (the skeleton, 1.4s) and `animate-leave` (a list item that leaves fades and gives
+curve, for a dialog or an item the person just added), `animate-settle-in` (rise a little and land
+on the settle spring), `animate-fade-in`, `animate-spin` (the spinner beside words that say work is
+running, the one motion that repeats) and `animate-leave` (a list item that leaves fades and gives
 up its height on the exit curve, 240ms, so what follows closes up; `LeavingItem` in the component
 library). The old `--ease-out` is `--ease-standard`.
 
@@ -478,9 +481,9 @@ value glides (640ms) and the sample-paced chart scroll are longer, and neither b
 | --- | --- | --- | --- |
 | **Page change** | Where you went | View Transitions API: the shell is named and stays still; the old page fades out in 160ms, the new rises 10px (Instrument), scales from 0.985 (Sky), or slides 32px in the direction of travel (Atlas) | A cut |
 | **Shared element** | That this is the same thing, bigger | The folder tile is named, so it morphs between views | A cut |
-| **List entrance** | Reading order | Items fade and rise in turn (`--stagger`) | Content is simply there |
+| **List entrance** | That the items just arrived because of the person's action (a search, a filter, an add); never on page load or scroll | Items fade and rise in turn (`--stagger`) | Content is simply there |
 | **Value glide** | That a number changed, and by how much | Tabular figures tween to the new value in 700ms | Jump to the value |
-| **Live line** | What is live and how fast it is sampled | The line moves left by one step over exactly one sampling interval (Web Animations API); the head dot beats once per sample received | The line redraws in place; the dot is still |
+| **Live line** | What is live and how fast it is sampled | The line moves left by one step over exactly one sampling interval (Web Animations API); no beating head dot. The words under the chart say once how often it updates | The line redraws in place |
 | **Meter and ring fill** | How full, as an amount | Fills grow from zero on entrance, then glide | Drawn at value |
 | **Switch settle** | That the choice took | The thumb travels on the settle spring; pressing stretches it | Moves without travel |
 | **Save settle** | That the save landed | The button's label slides out, a spinner while saving, then a tick draws and the button turns OK green with "Saved" for 1.5s | Words change, no movement |
@@ -492,11 +495,14 @@ value glides (640ms) and the sample-paced chart scroll are longer, and neither b
 | **Trace** | What depends on this | Pointing at or focusing a map node lights its whole lineage and dims the rest | Same, no transition |
 | **Map draw** | That lines are connections | Lines draw along their length on entrance | Drawn |
 | **Arrival** | Where to look after a jump | Following "View disk sdb" scrolls to that disk and rings it twice | Ring without movement |
-| **Skeleton** | That this is loading, with its final shape | The real layout with its content hidden, bars breathing in opacity at 1.4s | Static bars with the words |
+| **Skeleton** | That this is loading, with its final shape | The real layout with its content hidden, static bars, and the region's "Loading …" in words. No breath, no shimmer | Same |
 | **Disk failing preview** | What a layout survives | One disk greys and is crossed through; lost blocks go dashed red only where data is lost | Same, no transition |
 | **Copy direction** | Which way files go | A dash travels from source to destination twice on arrival, not in a loop (the job is not running) | Static arrow |
 
-The only loops allowed are the spinner and the skeleton, while work or loading is really happening.
+The only loop allowed is the spinner, beside words, while work is really happening. Nothing
+pulses, breathes or blinks, and no section or region fades or rises in on load or on scroll. The one
+entrance the owner approved is the NAS assembling on the first visit and on "Show me around"; it
+plays once (journal, 2026-11-25).
 
 ### 7.3 Reduced motion
 
@@ -509,19 +515,20 @@ words.
 
 ## 8. Data visualisation
 
-- **Sampled, never invented.** Live charts show only what this page sampled (A7), say so ("Live ·
-  every 2 s · last 58 s on this page", the span actually sampled), and start empty. A history kept across pages for the
+- **Sampled, never invented.** Live charts show only what this page sampled (A7), say so ("Updated
+  every 2 s, showing the last 58 s read on this page", the span actually sampled), and start empty.
+  No trend, uptime or history the backend does not give. A history kept across pages for the
   session is allowed and says so.
 - **Sparkline**: one series, brand trace with its area fill, fixed scale for percentages, a rounded
   "nice" maximum for throughput, a text alternative with now and peak.
-- **Capacity meter**: blue until an administrator's threshold; then the warning fill *with* a pill
-  ("Almost full"). Instrument segments it (24 or 40 cells) so the amount can be counted; numbers
+- **Capacity meter**: blue until an administrator's threshold; then the warning fill *with* a status
+  label ("Almost full"). Instrument segments it (24 or 40 cells) so the amount can be counted; numbers
   always beside it.
 - **Ring**: for a few capacities side by side (Sky) and for roll-ups (the health ring: one segment
   per area in its status fill, Unknown dashed). Always with the figure inside and the words beside.
-- **Disk**: drawn as a slot in a NAS front panel (section 9). Temperature as a number; no fake
-  activity light (OMV does not give per-disk activity).
-- **Map**: disks → file systems → shared folders → ways of sharing → people, with traced lineage.
+- **Disk**: drawn as a slot in a NAS front panel (section 9). Temperature as a number; no light of
+  any kind on the drawing (OMV gives no per-disk activity, and a coloured dot is a "live dot").
+- **Map**: disks, file systems, shared folders, ways of sharing and people, by rows, with traced lineage.
 - At most four categorical series, labelled directly (style guide 3.9 holds).
 
 ## 9. Illustration and diagram language
@@ -536,15 +543,17 @@ depends on what, which way a copy goes, what a delete takes away, what to do nex
 - Ink from `currentColor` and fills from the stylesheet's `--art-*` and theme properties, so one
   drawing serves both themes and all three directions. No `<style>` inside an SVG; classes from the
   stylesheet or presentation attributes only.
-- Status colour on a drawing follows section 3.3: the shape or word carries the state too (a slot
-  light beside its mark and word; a crossed disk; dashed lost blocks).
-- Motion follows section 7: parts enter in order, a state change animates once.
+- Status colour on a drawing follows section 3.3: the shape or word carries the state too (a
+  caddy edged in its state with its icon and word under it; a crossed disk; dashed lost blocks). No
+  LED dots.
+- Motion follows section 7: a state change animates once. Parts enter in order only in the NAS
+  assembling on the first visit and on "Show me around".
 - **Words are HTML beside the drawing**, so they reflow at 390px, zoom with the page and translate.
   Text inside an SVG is limited to labels on fixed-size drawings (block letters, "Copy job") at 12px
   or more. A drawing is either decorative (`aria-hidden`, with the same facts as text beside it) or
   `role="img"` with a full text alternative.
 - **At 390px** grids of parts wrap (drive slots go from six across to four), maps drop their lines
-  and each node says in words what it feeds ("→ pool").
+  and each node says in words what it feeds ("Feeds pool").
 
 **Security** (UI-2, UI-7): every drawing is a React component built from data through props.
 Nothing parses or injects SVG text; backend strings appear only as React text children; no external
@@ -554,12 +563,12 @@ or third-party asset. lucide stays for small interface icons.
 
 | Drawing | Removes the question |
 | --- | --- |
-| Drive bay: the NAS front with one caddy per disk, health light, device, word and role | "Which disk is which, and which one is the problem?" |
+| Drive bay: the NAS front with one caddy per disk, device, health icon and word, and role | "Which disk is which, and which one is the problem?" |
 | Arrangement: blocks on disks for mirror, stripe and parity, with "Show a disk failing" | "What do I lose if a disk dies?", before anyone commits to a layout |
-| Map: disks → file systems → folders → sharing → people, traceable | "What depends on this?", "Who can reach this folder, and how?" |
-| Copy direction: from → to with a travelling dash | "Which way does this job copy?" |
+| Map: disks, file systems, folders, sharing and people, by rows, traceable | "What depends on this?", "Who can reach this folder, and how?" |
+| Copy direction: from one place to the other, with a travelling dash | "Which way does this job copy?" |
 | Delete picture: the folder crossed, its links cut, what depends on it named | "What exactly goes away?" |
-| Empty pending: a form → the yellow bar | "Where do saved settings wait?" |
+| Empty pending: a form and the gold band it waits in | "Where do saved settings wait?" |
 
 Not yet drawn, same language, for later domains: network topology (this browser → interface → the
 NAS, bonds, VLANs and bridges as layers), service tiles with meaningful glyphs, RAID and ZFS pool
@@ -569,17 +578,18 @@ creation previews using the arrangement drawing with the real disks.
 
 - **Grouped as OMV groups it** (System, Network, Storage, Services, Users, Diagnostics) plus
   Overview. Only the current group's pages are listed at once, so navigation is never a 40-row
-  list. Classic-only pages stay listed, quieter, with "Classic" and the external mark.
+  list. Classic-only pages stay listed, in the secondary ink, with "Classic" and the external mark.
 - **Sky's sidebar**: one sidebar where only the current group is open and the others fold. It scales
   to every page and to plugin items. (The lab also shows Instrument's icon rail and Atlas's top
   tabs; neither was chosen.)
 - **Under 1024px** every direction folds into a drawer.
-- **The top bar** carries the product mark and host, "Go to or do…" (the palette, `/`), the density
-  switch, the pending indicator (a count chip that turns yellow) and the account.
+- **The top bar** is the solid page ground with a hairline under it, never frosted. It carries the
+  product mark and the host name (plain mono text, not a chip), "Go to or do…" (the palette, `/`),
+  the density switch, the pending indicator (a count badge that turns gold) and the account.
 - **The pending changes** keep their behaviour (style guide 5.8) and OMV's yellow, in a **slim band
   directly under the top bar** (owner, 2026-11-24; Sky's dock at the foot of the window was not
-  chosen). On save, a pending mark flies into the top bar's "pending" pill, and the band can shrink
-  to that pill while the page scrolls.
+  chosen). On save, a pending mark flies into the top bar's pending count, and the band can shrink
+  to that count while the page scrolls.
 - The UI-12 notice keeps its place under the top bar in all three (not drawn in the lab).
 
 ## 11. Page archetypes
@@ -590,9 +600,9 @@ creation previews using the arrangement drawing with the real disks.
 - **List**: a short summary line with counts by state, a drawing where one helps (bay, map), a
   dense table with selection and bulk actions, technical columns behind a switch.
 - **Detail**: a summary header (what it is, where it lives, who can use it, its state, and the one
-  callout if something is wrong), then sections. Sections are tabs (Instrument), cards with an "On
-  this page" list (Sky) or a numbered ledger with sticky section titles (Atlas). Destructive actions
-  sit in the header, quiet, and open a confirmation.
+  callout if something is wrong), then sections on the page ground, each under its heading, with an
+  "On this page" list. No numbered sections and no card around each section (style guide 10).
+  Destructive actions sit in the header as plain buttons, and open a confirmation.
 - **Flow or wizard**: for creating things that are hard to undo (a file system, a pool, a copy
   job). Steps with a drawing of the result before the final step; never forced on someone who uses
   the palette to reach a single setting.
@@ -621,8 +631,9 @@ of them stale.
 
 **For a new owner (affordance)**
 
-- **Clickable looks clickable at rest**: filled or outlined buttons, links in the action colour with
-  an arrow, cards that act have a chevron and a hover state; nothing depends on hover to be found.
+- **Clickable looks clickable at rest**: filled or outlined buttons, underlined links in Sky, cards
+  that act have a resting depth and a hover state; the words say where each goes, with no arrow or
+  chevron (style guide 10); nothing depends on hover to be found.
 - **Every action says what it does**: "Run a quick health check", "Save sharing", "Apply 1 change",
   "Delete Photos and its files"; never "OK".
 - **What happens before it happens**: the save bar previews the consequence in words with the real
@@ -643,22 +654,24 @@ of them stale.
 - **Jump keys**: `g` then `o`, `s` or `f` (Overview, Storage, Photos in the lab; per page in the
   build). Ignored while typing.
 - **Density**: compact rows from the top bar or the palette.
-- **Dense tables** with selection and bulk actions ("2 selected · Run a quick health check", "Set
-  to Read only" for several people at once) and **technical columns** behind a switch.
+- **Dense tables** with selection and bulk actions ("2 selected", then "Run a quick health check",
+  "Set to Read only" for several people at once) and **technical columns** behind a switch.
 - **Technical values** one disclosure away and copyable.
 - **No forced wizards**: a wizard is the way to create something new; changing one setting is always
   a direct page or palette action.
 
 **How each direction serves both**: all three share the palette, jump keys, density, bulk actions,
-copyable details, previews and first steps. Instrument leans expert (dense from the start, uppercase
-labels, mono readouts) and relies on first steps and previews to welcome a beginner. Sky leans
+copyable details, previews and first steps. Instrument leans expert (dense from the start,
+mono readouts) and relies on first steps and previews to welcome a beginner. Sky leans
 beginner (a plain headline, big rings, cards) and relies on the palette, density and technical
 columns for the expert. Atlas serves both through the map: a beginner sees how things fit together;
 an expert traces dependencies before acting.
 
 ## 14. Three directions
 
-All three follow sections 1 to 13. They differ in character.
+All three follow sections 1 to 13. They differ in character. This section is the record of what was
+prototyped; several habits described in it (uppercase panel titles, numbered sections, a soft light
+from above, a health strip of chips) are now out (style guide 10) and are not to be built.
 
 ### 14.1 Instrument
 

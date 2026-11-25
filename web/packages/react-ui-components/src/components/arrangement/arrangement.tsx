@@ -218,7 +218,7 @@ function Arrangement({
                 <p className="flex flex-wrap items-center gap-1.5 text-base font-semibold text-foreground">
                   {option.title}
                   {option.current && currentLabel ? (
-                    <span className="rounded-full bg-selected px-2 text-xs font-semibold text-selected-label">
+                    <span className="text-sm font-normal text-selected-label">
                       {currentLabel}
                     </span>
                   ) : null}

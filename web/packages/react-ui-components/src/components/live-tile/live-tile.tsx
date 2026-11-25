@@ -25,7 +25,7 @@ interface LiveTileProps
   extends
     Omit<React.ComponentProps<"div">, "children">,
     VariantProps<typeof tileClass> {
-  /** What is measured, the tile's name: "Processor", "Network · enp2s0". */
+  /** What is measured, the tile's name: "Processor", "Network on enp2s0". */
   name: React.ReactNode;
   /** The newest reading: one `LiveFigure`, or two `size="readout"` side by side for In and Out. */
   figure: React.ReactNode;
@@ -34,13 +34,13 @@ interface LiveTileProps
    * in a `Suspense` whose fallback is a `LivePlotSkeleton`, so nothing moves when the chunk lands.
    */
   plot: React.ReactNode;
-  /** One quiet line under the plot: "Average load 0.23 · 0.09 · 0.02", or a key and a disclosure. */
+  /** One secondary line under the plot: "Average load 0.23, 0.09 and 0.02", or a key and a disclosure. */
   children?: React.ReactNode;
 }
 
 /**
  * One live reading on a dashboard (foundation 7.2): its name, the figure that glides to each reading,
- * the plot, and one quiet sub-line. A group named by its name. `layout="auto"` (the default) stacks
+ * the plot, and one secondary line under it. A group named by its name. `layout="auto"` (the default) stacks
  * the parts in a narrow tile and sets the name and figure beside the plot once the tile is 20rem
  * wide; `stacked` and `row` force one. Draws no chart itself: the plot is the caller's.
  */
@@ -107,7 +107,7 @@ interface LivePlotSkeletonProps
 }
 
 /**
- * A `LiveChart` while its chunk loads: the plot's exact height (and its caption line), breathing, so
+ * A `LiveChart` while its chunk loads: the plot's exact height (and its caption line), still, so
  * the tile does not move when the chart lands. The `Suspense` fallback for a lazy plot. Hidden from
  * assistive technology; the tile's name and figure are already there.
  */

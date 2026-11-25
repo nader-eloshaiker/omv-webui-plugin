@@ -55,42 +55,48 @@ function StatusIcon({
   );
 }
 
-// The status's wash token, a 1px stroke edge, the word in the -label member (5.5). Running is neutral.
-const pillVariants = cva(
-  "inline-flex min-h-5.5 max-w-full items-center gap-1 rounded-full border py-0.5 ps-1.5 pe-2 text-xs font-semibold",
+// The status is its icon and its word in the family's -label ink (5.5): no capsule, no wash, no
+// edge (style guide 10). Running is work, not health, so it is in the body ink.
+const labelVariants = cva(
+  "inline-flex max-w-full items-center gap-1 text-sm font-medium",
   {
     variants: {
       tone: {
-        ok: "border-ok-stroke bg-ok-wash text-ok-label",
-        warning: "border-warning-stroke bg-warning-wash text-warning-label",
-        critical: "border-critical-stroke bg-critical-wash text-critical-label",
-        unknown: "border-unknown-stroke bg-unknown-wash text-unknown-label",
-        pending: "border-pending-stroke bg-pending-wash text-pending-label",
-        neutral: "border-input bg-muted-strong text-foreground",
+        ok: "text-ok-label",
+        warning: "text-warning-label",
+        critical: "text-critical-label",
+        unknown: "text-unknown-label",
+        pending: "text-pending-label",
+        neutral: "text-foreground",
       },
     },
   },
 );
 
-interface StatusPillProps extends React.ComponentProps<"span"> {
+interface StatusLabelProps extends React.ComponentProps<"span"> {
   status: Status;
   /** The word: OK, Warning, Critical, Unknown, Disabled, Stopped, Waiting, ... from the catalogue. */
   children: React.ReactNode;
 }
 
-/** The one status pill (style guide 5.5): icon and word, on every surface. */
-function StatusPill({
+/**
+ * A status (style guide 5.5): its own icon shape and its word, both in the family's label ink, on
+ * every surface. Never a pill: a capsule is kept for a removable filter token or a count badge
+ * (style guide 10). Its `data-slot` is still `status-pill`, so queries written before the rename
+ * keep their meaning.
+ */
+function StatusLabel({
   status,
   className,
   children,
   ...props
-}: StatusPillProps) {
+}: StatusLabelProps) {
   const { tone } = STATUS_DRAWING[status];
   return (
     <span
       data-slot="status-pill"
       data-status={status}
-      className={cn(pillVariants({ tone }), className)}
+      className={cn(labelVariants({ tone }), className)}
       {...props}
     >
       <StatusIcon status={status} />
@@ -99,36 +105,32 @@ function StatusPill({
   );
 }
 
-/** Pending and running have no dot: pending is a banner or a labelled pill (3.4), running a pill. */
-type DotStatus = RollUpStatus;
+/**
+ * @deprecated Use `StatusLabel`. The same component under its old name: a status is no longer drawn
+ * as a pill (style guide 10), and the name stays only so existing callers compile.
+ */
+const StatusPill = StatusLabel;
+/** @deprecated Use `StatusLabelProps`. */
+type StatusPillProps = StatusLabelProps;
 
-// An 8-10px disc of the fill with a stroke ring. The Unknown family is a hollow ring (5.5, 3.4).
-const dotVariants = cva(
-  "inline-block size-2.5 shrink-0 rounded-full border-[1.5px]",
-  {
-    variants: {
-      tone: {
-        ok: "border-ok-stroke bg-ok",
-        warning: "border-warning-stroke bg-warning",
-        critical: "border-critical-stroke bg-critical",
-        unknown: "border-unknown-stroke bg-transparent",
-        pending: "",
-        neutral: "",
-      },
-    },
-  },
-);
+/** Pending and running have no mark of their own here: pending is the band or a label, running a label. */
+type DotStatus = RollUpStatus;
 
 interface StatusDotProps {
   status: DotStatus;
   /** The word. Read by assistive technology, and shown as a tooltip unless `showLabel`. */
   label: string;
-  /** Show the word beside the dot instead of only in its name. */
+  /** Show the word beside the mark instead of only in its name. */
   showLabel?: boolean;
   className?: string;
 }
 
-/** Where a pill does not fit (a compact tile): a dot, always with its word in reach. */
+/**
+ * Where a label does not fit (a compact tile): the status's icon alone, in its label ink, with its
+ * word in reach (beside it with `showLabel`, otherwise in hidden text and a tooltip). It was a
+ * coloured disc; a disc reads as a "live dot" and says less than a shape (style guide 10), so it
+ * draws the same icon as `StatusLabel`. A healthy thing usually needs no mark at all.
+ */
 function StatusDot({
   status,
   label,
@@ -136,19 +138,20 @@ function StatusDot({
   className,
 }: StatusDotProps) {
   const { tone } = STATUS_DRAWING[status];
-  const dot = (
+  const mark = (
     <span
       data-slot="status-dot"
       data-status={status}
-      className={dotVariants({ tone })}
-    />
+      aria-hidden="true"
+      className={labelVariants({ tone })}
+    >
+      <StatusIcon status={status} />
+    </span>
   );
   if (showLabel) {
     return (
-      <span className={cn("inline-flex items-center gap-1.5", className)}>
-        <span aria-hidden="true" className="inline-flex">
-          {dot}
-        </span>
+      <span className={cn(labelVariants({ tone }), "gap-1.5", className)}>
+        {mark}
         <span>{label}</span>
       </span>
     );
@@ -158,14 +161,12 @@ function StatusDot({
   return (
     <Tooltip content={label}>
       <span className={cn("inline-flex p-1", className)}>
-        <span aria-hidden="true" className="inline-flex">
-          {dot}
-        </span>
+        {mark}
         <span className="sr-only">{label}</span>
       </span>
     </Tooltip>
   );
 }
 
-export { StatusDot, StatusIcon, StatusPill };
-export type { DotStatus, StatusDotProps, StatusPillProps };
+export { StatusDot, StatusIcon, StatusLabel, StatusPill };
+export type { DotStatus, StatusDotProps, StatusLabelProps, StatusPillProps };

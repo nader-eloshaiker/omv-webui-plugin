@@ -57,7 +57,7 @@ export function ChartTooltipCard({
 }: {
   /** The moment or the thing pointed at: "14:02:31", "sdb". */
   title: React.ReactNode;
-  /** Quieter, beside the title: "12 s ago", "data". */
+  /** In the secondary ink, beside the title: "12 s ago", "data". */
   meta?: React.ReactNode;
   /** The values: a list of `ChartTooltipRow`, or lines of text. */
   children: React.ReactNode;

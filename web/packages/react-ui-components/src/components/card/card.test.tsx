@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   Card,
+  CardChevron,
   CardContent,
   CardExternalMark,
   CardFooter,
@@ -97,5 +98,26 @@ describe("Card", () => {
     const link = screen.getByRole("link", { name: "Open disk sdb" });
     expect(link).not.toHaveAttribute("target");
     expect(link).not.toHaveAttribute("data-opens");
+  });
+
+  it("carries a state on its title's icon, never on the card's own ground (style guide 10)", () => {
+    const { container } = render(
+      <Card tone="warning">
+        <CardHeader>
+          <CardTitle tone="warning">Disk sdb is running warm</CardTitle>
+          <CardChevron />
+        </CardHeader>
+      </Card>,
+    );
+    const card = container.querySelector("[data-slot=card]");
+    expect(card).toHaveAttribute("data-tone", "warning");
+    expect(card?.className).not.toMatch(
+      /gradient|bg-\[image|border-s|border-l/,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Disk sdb is running warm" }),
+    ).toHaveAttribute("data-tone", "warning");
+    expect(container.querySelector("h2 [data-icon=triangle]")).not.toBeNull();
+    expect(container.querySelector("svg:not([data-icon] *)")).toBeNull();
   });
 });

@@ -2,7 +2,7 @@
 // The icon sheet (rethink 8, prototype 6): every icon of the custom set at 16, 20 and 24 and on the
 // 32px plate, beside the nearest lucide glyph at the same size for the stroke comparison (1.75px
 // against lucide's 2 at 24, so objects read apart from controls); the badges; the icons on the
-// accent primary button and on quiet ones; and each action icon acting out its action (7.7) with a
+// accent primary button and on plain ones; and each action icon acting out its action (7.7) with a
 // replay of its success. Every panel of the matrix is one theme and one density.
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
@@ -290,7 +290,7 @@ export const Badges: Story = {
 
 /**
  * On the accent's primary button the whole icon is the button's ink, its plane a tint over the
- * Cobalt (A5); on a quiet, neutral or ghost button the icon is ink, never the accent. Hover a
+ * Cobalt (A5); on a plain, neutral or ghost button the icon is ink, never the accent. Hover a
  * button to see its icon act.
  */
 export const OnButtons: Story = {
@@ -321,7 +321,7 @@ export const OnButtons: Story = {
           <Icon name="mount" size={16} />
           Mount Data drive
         </Button>
-        <Button variant="quiet" size="sm">
+        <Button variant="plain" size="sm">
           <Icon name="restart" size={16} />
           Restart
         </Button>

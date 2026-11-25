@@ -87,7 +87,7 @@ function MenuGroupLabel({
   return (
     <BaseMenu.GroupLabel
       className={cn(
-        "px-2.5 pt-1.5 pb-1 text-xs font-semibold text-tertiary-foreground",
+        "px-2.5 pt-1.5 pb-1 text-sm font-normal text-muted-foreground",
         className,
       )}
       {...props}

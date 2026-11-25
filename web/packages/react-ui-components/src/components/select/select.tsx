@@ -145,7 +145,7 @@ function SelectGroup({
   );
 }
 
-/** A group's heading: 12px capitals in the quiet ink, like a side-navigation group (4.1). */
+/** A group's heading: sentence case, regular weight, secondary ink, like a side-navigation group (4.1). */
 function SelectGroupLabel({
   className,
   ...props
@@ -154,7 +154,7 @@ function SelectGroupLabel({
     <BaseSelect.GroupLabel
       data-slot="select-group-label"
       className={cn(
-        "px-2.5 pt-1.5 pb-1 text-xs font-semibold tracking-wide text-tertiary-foreground uppercase select-none",
+        "px-2.5 pt-1.5 pb-1 text-sm font-normal text-muted-foreground select-none",
         className,
       )}
       {...props}

@@ -7,7 +7,7 @@ import { cn } from "../utils";
 
 type Theme = "dark" | "light";
 
-/** A panel in one theme, on the page ground with the ambient light, as a page shows it. */
+/** A panel in one theme, on the page ground, as a page shows it. */
 export function Panel({
   theme,
   title,
@@ -24,13 +24,11 @@ export function Panel({
       aria-label={title}
       className={cn(
         theme,
-        "flex min-w-0 flex-col gap-5 rounded-card bg-page p-6 text-body text-foreground ambient-light",
+        "flex min-w-0 flex-col gap-5 rounded-card bg-page p-6 text-body text-foreground",
         className,
       )}
     >
-      <p className="text-xs font-semibold tracking-wide text-tertiary-foreground uppercase">
-        {title}
-      </p>
+      <p className="text-sm text-muted-foreground">{title}</p>
       {children}
     </section>
   );

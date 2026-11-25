@@ -105,14 +105,17 @@
   --spacing-control: var(--density-control);
   --spacing-control-lg: var(--density-control-lg);
 
-  /* Shared motions (foundation 7.2), each with its keyframes below. Under reduced motion the base
-     rule runs every animation once at 0ms, so each lands on its end state: content is simply there,
-     and the skeleton is still. */
+  /* Shared motions (foundation 7.2), each with its keyframes below. Each answers the person's action
+     or a change of state and runs once: nothing pulses, breathes or blinks, so a skeleton is still.
+     Under reduced motion the base rule runs every animation once at 0ms, so each lands on its end
+     state: content is simply there. */
   --animate-rise: rise var(--duration-slow) var(--ease-enter) both;
   --animate-settle-in: settle-in var(--duration-slow) var(--ease-settle) both;
   --animate-fade-in: fade-in var(--duration-base) var(--ease-standard) both;
-  --animate-breathe: breathe 1.4s var(--ease-standard) infinite;
   --animate-draw: draw var(--duration-slow) var(--ease-standard) both;
+  /* The one motion that repeats: a spinner beside words that say work is running. It is the state
+     itself, for as long as the work runs, and stands still under reduced motion like every other. */
+  --animate-spin: spin 1s linear infinite;
   /* The counterpart of settle-in for a list item that leaves: shorter, on the exit curve. */
   --animate-leave: leave var(--duration-base) var(--ease-exit) both;
 }
@@ -150,10 +153,9 @@
     margin-block-end: calc(-1 * var(--leave-gap, 0px));
   }
 }
-/* The skeleton: bars breathe in opacity while loading is really happening. */
-@keyframes breathe {
-  50% {
-    opacity: 0.55;
+@keyframes spin {
+  to {
+    rotate: 360deg;
   }
 }
 
@@ -198,8 +200,8 @@
   }
 }
 
-/* ─── Surfaces, elevation and light (foundation 3.4 and 6) ────────────────────────────────────── */
-/* The three levels by meaning. Ground is `bg-page` with `ambient-light` at the top. A raised surface
+/* ─── Surfaces and elevation (foundation 6) ───────────────────────────────────────────────────── */
+/* The three levels by meaning. Ground is `bg-page`, flat: no glow, no blur, no texture. A raised surface
    (cards, panels, tables) is the surface colour with the raised shadow: in dark a 1px inner top
    highlight, a faint edge and a soft long shadow; in light a layered soft shadow. A floating surface
    (dialogs, the palette, drawers, menus, popovers, toasts) takes the stronger shadow, over
@@ -213,26 +215,6 @@
 @utility surface-floating {
   background-color: var(--theme-surface);
   box-shadow: var(--theme-shadow-floating);
-}
-
-/* The light from above the page: two brand glows whose ellipses are centred above the top edge.
-   The first colour stop sits exactly where each ellipse meets the page's top edge, so the token is
-   the brightest point actually painted, which is what the audit measures. Brand hues only, and
-   nothing is read against it that the audit has not checked (tools/colour-audit.mjs, AMBIENT). Put
-   it on the page's own layer, behind the content, at the top of the page. */
-@utility ambient-light {
-  background-image:
-    radial-gradient(
-      1100px 560px at 18% -220px,
-      var(--theme-ambient) 39.3%,
-      transparent 70%
-    ),
-    radial-gradient(
-      800px 420px at 92% -200px,
-      var(--theme-ambient-soft) 47.6%,
-      transparent 70%
-    );
-  background-repeat: no-repeat;
 }
 
 /* ─── Base rules: written once, for every surface ─────────────────────────────────────────────── */

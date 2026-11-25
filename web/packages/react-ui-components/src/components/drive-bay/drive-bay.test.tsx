@@ -25,13 +25,6 @@ const SLOTS: DriveSlot[] = [
   },
 ];
 
-function lights(slot: Element) {
-  return {
-    hollow: slot.querySelector('circle[data-light="unknown"]'),
-    lit: slot.querySelector("circle:not([data-light=unknown])[cx='28']"),
-  };
-}
-
 describe("DriveBay", () => {
   it("shows each slot's device, state, role and detail, and links the slots that have a page", () => {
     render(<DriveBay aria-label="The disks in this NAS" slots={SLOTS} />);
@@ -53,17 +46,13 @@ describe("DriveBay", () => {
     expect(container.querySelectorAll("path.stroke-art-faint")).toHaveLength(1);
   });
 
-  it("crossfades the hollow light to the lit one when a result lands, slot after slot", () => {
+  it("turns the caddy's edge and word when a result lands, slot after slot, and draws no light", () => {
     const { container, rerender } = render(
       <DriveBay aria-label="Disks" slots={SLOTS} />,
     );
-    const [first] = container.querySelectorAll("li");
-    expect(lights(first as Element).hollow?.getAttribute("class")).toMatch(
-      /opacity-100/,
-    );
-    expect(lights(first as Element).lit?.getAttribute("class")).toMatch(
-      /opacity-0/,
-    );
+    // No light, no dot: the state is the icon and the word under the caddy (style guide 10).
+    expect(container.querySelectorAll("li svg circle")).toHaveLength(0);
+    expect(container.querySelector(".rounded-full")).toBeNull();
 
     rerender(
       <DriveBay
@@ -75,20 +64,18 @@ describe("DriveBay", () => {
         }))}
       />,
     );
-    const [a, b] = container.querySelectorAll("li");
-    expect(lights(a as Element).hollow?.getAttribute("class")).toMatch(
-      /opacity-0/,
-    );
-    const lit = lights(b as Element).lit;
-    expect(lit).toHaveAttribute("data-light", "critical");
-    expect(lit?.getAttribute("class")).toMatch(/fill-critical/);
+    const second = container.querySelectorAll("li")[1] as HTMLElement;
+    const body = second.querySelector("svg rect");
+    expect(body?.getAttribute("class")).toMatch(/stroke-critical-stroke/);
     // The change waits two stagger steps per slot, read from the slot's --stagger-index.
-    expect(lit?.getAttribute("class")).toMatch(
+    expect(body?.getAttribute("class")).toMatch(
       /transition-delay:calc\(min\(var\(--stagger-index,0\),11\)\*var\(--motion-stagger\)\*2\)/,
     );
-    expect((b as HTMLElement).style.getPropertyValue("--stagger-index")).toBe(
-      "1",
-    );
+    expect(second.style.getPropertyValue("--stagger-index")).toBe("1");
+    expect(within(second).getByText("Critical")).toBeVisible();
+    expect(
+      container.querySelector("[data-slot=drive-bay]")?.className,
+    ).not.toMatch(/gradient|bg-linear/);
   });
 });
 

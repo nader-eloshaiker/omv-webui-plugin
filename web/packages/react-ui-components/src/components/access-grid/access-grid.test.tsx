@@ -3,7 +3,7 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import {
   AccessGrid,
   type AccessGridProps,
@@ -476,14 +476,14 @@ describe("AccessGrid", () => {
     ).toBeInTheDocument();
   });
 
-  it("carries a status pill and its words in the Kind column", () => {
+  it("carries a status label and its words in the Kind column", () => {
     render(
       <Grid
         rows={[
           row("share:old", "old-backups", "ro", {
             kind: (
               <>
-                <StatusPill status="critical">Missing</StatusPill>
+                <StatusLabel status="critical">Missing</StatusLabel>
                 <span>Its disk is not connected.</span>
               </>
             ),

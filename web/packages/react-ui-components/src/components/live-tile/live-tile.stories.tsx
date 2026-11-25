@@ -119,7 +119,7 @@ function Tiles({
         }
         plot={<ProcessorPlot data={system} />}
       >
-        Average load 0.23 · 0.09 · 0.02
+        Average load 0.23, 0.09 and 0.02
       </LiveTile>
       <LiveTile
         layout={layout}
@@ -140,7 +140,7 @@ function Tiles({
         layout={layout}
         name={
           <>
-            Network · <code className="font-mono">eth0</code>
+            Network on <code className="font-mono">eth0</code>
           </>
         }
         figure={
@@ -202,7 +202,7 @@ export const RowsInANarrowColumn: Story = {
   ),
 };
 
-/** The chart chunk is still loading: the plot's exact height breathes; the name and figure are there. */
+/** The chart chunk is still loading: the plot's exact height stands in, still; the name and figure are there. */
 export const PlotLoading: Story = {
   args: { name: "", figure: null, plot: null },
   render: () => (
@@ -223,12 +223,12 @@ export const PlotLoading: Story = {
             plot={<LivePlotSkeleton />}
           >
             {name === "Processor"
-              ? "Average load 0.23 · 0.09 · 0.02"
+              ? "Average load 0.23, 0.09 and 0.02"
               : "347.8 MiB of 3.8 GiB in use"}
           </LiveTile>
         ))}
         <LiveTile
-          name="Network · eth0"
+          name="Network on eth0"
           figure={
             <LiveFigure
               value={null}
@@ -274,7 +274,7 @@ export const NoReadingYet: Story = {
           plot={<MemoryPlot data={[]} />}
         />
         <LiveTile
-          name="Network · eth0"
+          name="Network on eth0"
           figure={
             <LiveFigure
               value={null}

@@ -12,10 +12,9 @@ import {
   FactListSkeleton,
   FactListValue,
 } from "../fact-list/fact-list";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import {
   Card,
-  CardChevron,
   CardContent,
   CardDescription,
   CardExternalMark,
@@ -90,7 +89,7 @@ export const WithDescriptionAndFooter: Story = {
   },
 };
 
-export const WithQuietFooterLink: Story = {
+export const WithFooterLink: Story = {
   render: () => (
     <Card>
       <CardHeader>
@@ -146,7 +145,7 @@ export const AttentionRow: Story = {
     <ul aria-label="Needs attention" className="flex flex-col gap-2">
       <Card render={<li />}>
         <CardContent className="flex-row flex-wrap items-start gap-3">
-          <StatusPill status="warning">Warning</StatusPill>
+          <StatusLabel status="warning">Warning</StatusLabel>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <p>
               A restart is needed to finish installing updates. Restarting is in
@@ -181,8 +180,8 @@ export const LongContent: Story = {
 };
 
 /**
- * Cards that act (foundation 13): the whole card is the link, with a chevron at rest and a hover
- * state, so it is plainly something to press before the pointer reaches it.
+ * Cards that act (foundation 13): the whole card is the link. Its title says where it goes, the
+ * hover and the press say that it acts; no arrow or chevron (style guide 10).
  */
 export const ActionCards: Story = {
   render: () => (
@@ -193,10 +192,9 @@ export const ActionCards: Story = {
             <div className="flex min-w-0 flex-col gap-0.5">
               <CardTitle level={3}>Disks</CardTitle>
               <p className="text-caption text-tertiary-foreground tabular-nums">
-                4 disks · 14.6&nbsp;TiB
+                4 disks, 14.6&nbsp;TiB in all
               </p>
             </div>
-            <CardChevron />
           </CardHeader>
         </Card>
       </li>
@@ -209,7 +207,6 @@ export const ActionCards: Story = {
                 6 folders, 3 shared with Windows
               </p>
             </div>
-            <CardChevron />
           </CardHeader>
         </Card>
       </li>
@@ -218,16 +215,17 @@ export const ActionCards: Story = {
 };
 
 /**
- * The one card that carries a non-OK state, lit in its state: a wash in its top end corner fading
- * to the card, always with the state's pill and words (foundation 3.3, 3.4).
+ * A card about a thing in a non-OK state: its title leads with the state's icon, and its words say
+ * what is wrong. The card itself is not lit, tinted or edged in the state (style guide 10).
  */
-export const LitInItsState: Story = {
+export const StateOnTheTitle: Story = {
   render: () => (
     <div className="flex flex-col gap-gutter">
-      <Card tone="warning">
+      <Card>
         <CardHeader>
-          <CardTitle level={3}>Disk sdb is running warm</CardTitle>
-          <StatusPill status="warning">Warning</StatusPill>
+          <CardTitle level={3} tone="warning">
+            Disk sdb is running warm
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -239,10 +237,11 @@ export const LitInItsState: Story = {
           </Button>
         </CardContent>
       </Card>
-      <Card tone="critical">
+      <Card>
         <CardHeader>
-          <CardTitle level={3}>RAID md0 is degraded</CardTitle>
-          <StatusPill status="critical">Critical</StatusPill>
+          <CardTitle level={3} tone="critical">
+            RAID md0 is degraded
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -295,15 +294,15 @@ function AttentionCard({
     tone === "none" ? (
       <Clock aria-hidden="true" className="size-4 text-muted-foreground" />
     ) : (
-      <StatusPill status={tone}>
+      <StatusLabel status={tone}>
         {tone === "critical" ? "Critical" : "Warning"}
-      </StatusPill>
+      </StatusLabel>
     );
   const inner = (
     <>
       <CardHeader className="flex-nowrap items-center">
         {head}
-        {external ? <CardExternalMark /> : <CardChevron />}
+        {external ? <CardExternalMark /> : null}
       </CardHeader>
       <CardContent id={aboutId} className="gap-1">
         <CardTitle level={3}>{title}</CardTitle>
@@ -321,7 +320,6 @@ function AttentionCard({
       {external ? (
         <Card
           variant="action"
-          tone={tone}
           opens="new-tab"
           newTabLabel="(opens in a new tab)"
           aria-labelledby={stepId}
@@ -334,7 +332,6 @@ function AttentionCard({
       ) : (
         <Card
           variant="action"
-          tone={tone}
           aria-labelledby={stepId}
           aria-describedby={aboutId}
           render={<a href={href} />}
@@ -348,8 +345,8 @@ function AttentionCard({
 }
 
 /**
- * Action cards that lead out of this interface to the classic one: the external mark in place of the
- * chevron, `target="_blank"` and `rel="noopener noreferrer"` set by the card, and "(opens in a new
+ * Action cards that lead out of this interface to the classic one: the external mark at the end of
+ * the header, `target="_blank"` and `rel="noopener noreferrer"` set by the card, and "(opens in a new
  * tab)" added to the name. Beside one that stays here, for comparison.
  */
 export const LeavesTheInterface: Story = {

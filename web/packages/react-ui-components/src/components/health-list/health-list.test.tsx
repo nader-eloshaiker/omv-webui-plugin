@@ -49,7 +49,7 @@ describe("HealthList", () => {
     expect(item).toHaveTextContent('<img src=x onerror="alert(1)">');
   });
 
-  it("leaves the pill out of an item that makes no claim", () => {
+  it("leaves the status out of an item that makes no claim", () => {
     render(
       <HealthList>
         <HealthListItem name="enp2s0" />

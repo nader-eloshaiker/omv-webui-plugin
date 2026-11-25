@@ -52,10 +52,10 @@ export const Destructive: Story = {
 };
 
 // Ink with no fill, as on the top bar: the pending count, the tasks and account menus.
-export const Quiet: Story = {
+export const Plain: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-1 border-b border-border bg-page p-2">
-      <Button variant="quiet" size="sm" aria-label="3 pending changes">
+      <Button variant="plain" size="sm" aria-label="3 pending changes">
         <span aria-hidden="true" className="tabular-nums">
           3
         </span>
@@ -64,9 +64,9 @@ export const Quiet: Story = {
       <IconButton
         label="Tasks: 1 running"
         icon={<RefreshCw />}
-        variant="quiet"
+        variant="plain"
       />
-      <IconButton label="Account: admin" icon={<Settings />} variant="quiet" />
+      <IconButton label="Account: admin" icon={<Settings />} variant="plain" />
     </div>
   ),
 };

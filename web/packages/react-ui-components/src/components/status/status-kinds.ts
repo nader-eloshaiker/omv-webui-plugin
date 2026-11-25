@@ -10,7 +10,7 @@ export type HealthStatus =
 export type TaskStatus =
   "waiting" | "running" | "succeeded" | "failed" | "cancelled";
 
-/** Everything a pill can say. `pending` is configuration saved but not applied (3.4). */
+/** Everything a status label can say. `pending` is configuration saved but not applied (3.4). */
 export type Status = HealthStatus | TaskStatus | "pending";
 
 /** The colour family a status is drawn in. `neutral` is a running task: work, not a state of health. */
