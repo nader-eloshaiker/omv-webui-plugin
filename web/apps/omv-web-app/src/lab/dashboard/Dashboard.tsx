@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Prototype: the dashboard as the NAS map (rethink spec 6, 6.8, 8 row 1). Development only (UI-11).
 // Top to bottom it reads as the visit does: the answer (A), what needs you (B), the NAS itself with
-// status in place (C), what is happening now (D), the add-ons, then setup and facts (E). Every region
-// spans the full width or splits it in a fixed 8/4, so no region can leave a hole beside it.
+// status in place (C), what is happening now (D), then setup and facts (E). Every region sits on the
+// page ground, parted from the next by space and its sentence-case heading; none is a card. Every
+// region spans the full width or splits it in a fixed 8/4, so no region can leave a hole beside it.
+// ZFS pools and RAID arrays are storage rows on the map; any other add-on is one line in This NAS.
 //
 // The first visit in this browser assembles the map row by row and brings the welcome line and the
 // column captions; the browser remembers it (useWelcomeStore, a non-sensitive preference, UI-13). "Show
 // me around" in This NAS plays it again. The account menu's entry for it belongs to the shell.
 //
 // The lab's cause buttons bring what a later reading would (a problem arriving and resolving, the
-// first storage replacing its ghost, a disk going to sleep) and forget the first visit. Everything
+// first storage replacing its placeholder, a disk going to sleep) and forget the first visit. Everything
 // happens in memory; nothing is written to the backend (UI-4).
 import type {
   PointerEvent,
@@ -27,22 +29,19 @@ import {
 import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
 import { LabCauses } from "../tables/FoldersTable.tsx";
 import { reducedMotion } from "../tables/grid.ts";
-import { AddOns } from "./AddOns.tsx";
-import { AnswerRegion, AreaChips, WelcomeLine } from "./Answer.tsx";
+import { AnswerRegion, WelcomeLine } from "./Answer.tsx";
 import { FirstSteps, Shortcuts, ThisNas } from "./Footer.tsx";
 import { useLiveFeed } from "./liveFeed.ts";
-import { useRateWords } from "./liveReadings.ts";
-import { LiveLine, LiveStrip } from "./LiveStrip.tsx";
-import type { AreaState, Attention, LaneId, Nas } from "./model.ts";
+import { LiveStrip } from "./LiveStrip.tsx";
+import type { Attention, LaneId, Nas } from "./model.ts";
 import {
   accentAt,
   answerOf,
-  areaStates,
-  LANE_TARGET,
   layoutFor,
   mapView,
   nasFor,
   needsYou,
+  otherAddOns,
   stepActionsShown,
   withFirstStorage,
   withoutSdbWarning,
@@ -83,11 +82,6 @@ function useContentWidth(ref: RefObject<HTMLElement | null>): number {
   }, [ref]);
   return width;
 }
-
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (target.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 /**
  * The visit, for its guidance: "first" in a browser that has not seen the dashboard, "replay" after
@@ -149,9 +143,7 @@ export function Dashboard({
   }, [visit]);
 
   useLiveFeed(still);
-  const rate = useRateWords();
 
-  const areas = useMemo(() => areaStates(nas), [nas]);
   const answer = useMemo(() => answerOf(nas), [nas]);
   const needs = useMemo(() => needsYou(nas), [nas]);
   const view = useMemo(() => mapView(nas), [nas]);
@@ -162,7 +154,6 @@ export function Dashboard({
   const stepsOnTop =
     stepsShown && nas.newNas && nas.steps.filter((s) => s.done).length < 2;
   const accent = accentAt(nas, stepsShown);
-  const smb = nas.ways.find((w) => w.id === "smb");
 
   // The column captions (6.8, P.3): every column on a newcomer's visit or a new NAS (G1, G2), the
   // shared folders column alone while there are none (G1). "Show me around" asks for them, so it
@@ -210,52 +201,6 @@ export function Dashboard({
     });
   };
 
-  const focusArea = useCallback((area: AreaState) => {
-    const el = document.getElementById(
-      area.lane ? LANE_TARGET[area.lane] : "dm-facts",
-    );
-    if (!el) {
-      return;
-    }
-    el.scrollIntoView({
-      block: "nearest",
-      behavior: reducedMotion() ? "auto" : "smooth",
-    });
-    el.focus({ preventScroll: true });
-    // The foundation's "Arrival": ringed twice, then nothing.
-    el.removeAttribute("data-arrived-ring");
-    requestAnimationFrame(() => {
-      el.setAttribute("data-arrived-ring", "");
-    });
-    window.setTimeout(() => {
-      el.removeAttribute("data-arrived-ring");
-    }, 2200);
-  }, []);
-
-  // 1 to 6 move focus to an area when focus is on the page, ignored while typing (6.7).
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        isTyping(event.target)
-      ) {
-        return;
-      }
-      const index = Number(event.key) - 1;
-      const area = areas[index];
-      if (Number.isInteger(index) && area && event.key.length === 1) {
-        event.preventDefault();
-        focusArea(area);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [areas, focusArea]);
-
   const onRetry = (lane: LaneId) => {
     setRetrying((r) => [...r, lane]);
     window.setTimeout(() => {
@@ -271,9 +216,6 @@ export function Dashboard({
   const sda = nas.disks.find((d) => d.id === "d:sda");
   const hasSdb = nas.disks.some((d) => d.id === "d:sdb");
   const sdbBad = nas.disks.some((d) => d.id === "d:sdb" && d.health !== "ok");
-
-  const live =
-    compact && layout !== "narrow" ? <LiveLine loading={loading} /> : null;
 
   return (
     <div
@@ -299,7 +241,7 @@ export function Dashboard({
           <button
             type="button"
             onClick={() => {
-              setAssemble("fade");
+              setAssemble("none");
               setVisit("later");
               setWelcome("gone");
               setMapKey((k) => k + 1);
@@ -338,7 +280,7 @@ export function Dashboard({
                 setNas((n) => withFirstStorage(n));
               }}
             >
-              A ghost becomes real (storage added)
+              Storage is added
             </button>
           ) : null}
           {sda?.power === "awake" ? (
@@ -364,7 +306,7 @@ export function Dashboard({
             <button
               type="button"
               onClick={() => {
-                setAssemble("fade");
+                setAssemble("none");
                 setLoading(false);
               }}
             >
@@ -386,16 +328,12 @@ export function Dashboard({
         />
       ) : null}
 
+      {/* With rows to show, the first row says the reason; the sentence alone heads them. */}
       <AnswerRegion
         answer={answer}
         loading={loading}
         welcome={nas.newNas}
-        chips={
-          layout === "narrow" ? null : (
-            <AreaChips areas={areas} onChip={focusArea} />
-          )
-        }
-        live={live}
+        reason={needs.length === 0}
       />
 
       {stepsOnTop ? (
@@ -431,24 +369,9 @@ export function Dashboard({
         retrying={retrying}
         onRetry={onRetry}
         onNote={onNote}
-        rate={rate}
       />
 
-      {live ? null : (
-        <LiveStrip
-          loading={loading}
-          layout={layout}
-          connections={smb?.on ? smb.connections : null}
-        />
-      )}
-
-      {loading ? null : (
-        <AddOns
-          nas={nas}
-          fit={layout === "wide" ? 4 : layout === "mid" ? 3 : 1}
-          onNote={onNote}
-        />
-      )}
+      <LiveStrip loading={loading} layout={layout} />
 
       <div
         className="dm-foot"
@@ -466,7 +389,12 @@ export function Dashboard({
         ) : stepsShown ? null : (
           <Shortcuts onNote={onNote} />
         )}
-        <ThisNas facts={nas.facts} onNote={onNote} onShowAround={showAround} />
+        <ThisNas
+          facts={nas.facts}
+          addOns={loading ? [] : otherAddOns(nas.addOns)}
+          onNote={onNote}
+          onShowAround={showAround}
+        />
       </div>
     </div>
   );

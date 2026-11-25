@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region E (rethink spec 6.2 E, 6.8, 7.2): left, 8 of 12, First steps as a row of four numbered
-// steps with the current one's button in the accent (filled when nothing else on the page is,
-// outlined otherwise), or Shortcuts in the same slot when the steps are done or tips are off; right,
-// 4 of 12, This NAS as facts in two columns, ending in "Show me around", which replays the first
-// visit. Both blocks are about the same height by design, and each fits its content, so neither
-// stretches into a blank strip. A step that is done draws its check and the next step's button fills
-// from the start edge (7.2, "A first step lands"). Compact density keeps a step's title and button
-// and drops its explanation (owner decision 11). Lab-local candidates for *FirstStepsStepper,
-// *Shortcuts (spec 8 row 1). Development only (UI-11).
+// Region E (rethink spec 6.2 E, 6.8, 7.2), on the page ground: left, 8 of 12, First steps as a
+// checklist (a tick when done, an empty circle when not; no numbers and no rail) with the next step's
+// button in the accent (filled when nothing else on the page is, outlined otherwise), or Shortcuts in
+// the same place when the steps are done or tips are off; right, 4 of 12, This NAS as labelled facts,
+// ending in "Show me around", which replays the first visit. A step that is done draws its tick
+// (7.2, "A first step lands"): motion that answers a change, never an entrance. Compact density keeps
+// a step's title and button and drops its explanation (owner decision 11). Lab-local candidates for
+// *FirstSteps and *Shortcuts (spec 8 row 1). Development only (UI-11).
 import { Button, Icon } from "@omv-webui/react-ui-components";
-import { ArrowRight, ExternalLink, Play } from "lucide-react";
-import type { CSSProperties } from "react";
+import { ExternalLink, Play } from "lucide-react";
 import { useState } from "react";
 import type { Facts, Step } from "./model.ts";
 import { currentStep } from "./model.ts";
@@ -31,7 +29,7 @@ export function FirstSteps({
   compact: boolean;
   onNote: (text: string) => void;
 }) {
-  // A step that was not done when the stepper was drawn and is done now has just landed (7.2).
+  // A step that was not done when the list was drawn and is done now has just landed (7.2).
   const [initial] = useState(
     () => new Set(steps.filter((s) => s.done).map((s) => s.id)),
   );
@@ -43,57 +41,51 @@ export function FirstSteps({
       data-placement={placement}
       aria-labelledby={`dm-steps-title-${placement}`}
     >
-      <header className="dm-steps-head">
+      <header className="dm-region-head">
         <h2
           id={`dm-steps-title-${placement}`}
           className="dm-region-title dm-region-title-sm"
         >
           First steps
         </h2>
-        <span className="dm-steps-count">
+        <p className="dm-region-note">
           {done} of {steps.length} done
-        </span>
-        <span
-          className="dm-steps-bar"
-          aria-hidden="true"
-          style={{ "--v": done / steps.length } as CSSProperties}
-        />
+        </p>
       </header>
-      <ol className="dm-stepper">
-        {steps.map((step, i) => {
+      <ul className="dm-checklist">
+        {steps.map((step) => {
           const current = step.id === now?.id;
           const landed = step.done && !initial.has(step.id);
           return (
             <li
               key={step.id}
-              className="dm-step"
+              className="dm-check"
               data-done={step.done || undefined}
               data-current={current || undefined}
               data-landed={landed || undefined}
               aria-current={current ? "step" : undefined}
             >
-              <span className="dm-step-disc" aria-hidden="true">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                className="dm-check-mark"
+              >
+                <circle cx="10" cy="10" r="8.25" />
                 {step.done ? (
-                  <svg viewBox="0 0 16 16" className="dm-step-check">
-                    <path d="M4 8.5l2.6 2.6L12 5.6" pathLength={1} />
-                  </svg>
-                ) : (
-                  i + 1
-                )}
-              </span>
-              <span className="dm-step-words">
-                <span className="dm-step-title">
+                  <path d="M6 10.4l2.7 2.7L14.2 7.6" pathLength={1} />
+                ) : null}
+              </svg>
+              <span className="dm-check-words">
+                <span className="dm-check-title">
                   {step.title}
                   {step.done ? <span className="sr-only"> (done)</span> : null}
                 </span>
                 {compact ? null : (
-                  <span className="dm-step-line">{step.line}</span>
+                  <span className="dm-check-line">{step.line}</span>
                 )}
               </span>
               {step.done ? null : (
                 <Button
-                  // The current step's button fills from the start edge when the step before lands.
-                  key={current ? `now:${String(done)}` : "later"}
                   variant={
                     current
                       ? filled
@@ -102,10 +94,7 @@ export function FirstSteps({
                       : "neutral"
                   }
                   size="sm"
-                  className="dm-step-action"
-                  data-just-current={
-                    current && done > initial.size ? "" : undefined
-                  }
+                  className="dm-check-action"
                   onClick={() => {
                     onNote(`${step.action} opens its page.`);
                   }}
@@ -116,15 +105,15 @@ export function FirstSteps({
             </li>
           );
         })}
-      </ol>
+      </ul>
     </section>
   );
 }
 
 /**
  * When the steps are done or tips are off: what the map does not already offer, as a short list of
- * rows. The map's own actions (Add a shared folder, Check disk health) stay with the map, so each
- * action is on the screen once.
+ * text buttons. The map's own actions (Add a shared folder, Check disk health) stay with the map, so
+ * each action is on the screen once.
  */
 export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
   const items = [
@@ -149,12 +138,14 @@ export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
       className="dm-steps dm-shortcuts"
       aria-labelledby="dm-shortcuts-title"
     >
-      <h2
-        id="dm-shortcuts-title"
-        className="dm-region-title dm-region-title-sm"
-      >
-        Shortcuts
-      </h2>
+      <header className="dm-region-head">
+        <h2
+          id="dm-shortcuts-title"
+          className="dm-region-title dm-region-title-sm"
+        >
+          Shortcuts
+        </h2>
+      </header>
       <ul className="dm-shortcut-list">
         {items.map((item) => (
           <li key={item.words}>
@@ -167,7 +158,6 @@ export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
             >
               <span className="dm-shortcut-icon">{item.icon}</span>
               {item.words}
-              <ArrowRight aria-hidden="true" className="dm-shortcut-go" />
             </button>
           </li>
         ))}
@@ -178,10 +168,13 @@ export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
 
 export function ThisNas({
   facts,
+  addOns,
   onNote,
   onShowAround,
 }: {
   facts: Facts;
+  /** The installed add-ons this interface does not draw, by their short name. */
+  addOns: readonly string[];
   onNote: (text: string) => void;
   /** Replays the first visit: the map assembles, the welcome line and the captions come back. */
   onShowAround: () => void;
@@ -193,7 +186,7 @@ export function ThisNas({
       className="dm-facts"
       aria-labelledby="dm-facts-title"
     >
-      <header className="dm-facts-head">
+      <header className="dm-region-head">
         <h2 id="dm-facts-title" className="dm-region-title dm-region-title-sm">
           This NAS
         </h2>
@@ -227,18 +220,39 @@ export function ThisNas({
         <div className="dm-fact dm-fact-wide">
           <dt>Updates</dt>
           <dd>
-            <button
-              type="button"
-              className="dm-link"
-              onClick={() => {
-                onNote("Opens Updates.");
-              }}
-            >
-              {facts.updates} to install
-              <ArrowRight aria-hidden="true" />
-            </button>
+            {facts.updates === 0 ? (
+              "The NAS is up to date."
+            ) : (
+              <button
+                type="button"
+                className="dm-link"
+                onClick={() => {
+                  onNote("Opens Updates.");
+                }}
+              >
+                {facts.updates} to install
+              </button>
+            )}
           </dd>
         </div>
+        {addOns.length > 0 ? (
+          <div className="dm-fact dm-fact-wide">
+            <dt>Add-ons</dt>
+            <dd>
+              {addOns.join(", ")},{" "}
+              <button
+                type="button"
+                className="dm-link"
+                onClick={() => {
+                  onNote("Opens the classic interface in a new tab.");
+                }}
+              >
+                open in the classic interface
+                <ExternalLink aria-hidden="true" />
+              </button>
+            </dd>
+          </div>
+        ) : null}
       </dl>
     </section>
   );

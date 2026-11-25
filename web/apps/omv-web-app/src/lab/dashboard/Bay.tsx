@@ -17,7 +17,7 @@ const KIND_WORD: Record<MapDisk["kind"], string> = {
   usb: "USB disk",
 };
 
-/** The caddy's face by kind, front view, with the health light. Decorative: the words say it all. */
+/** The disk drawn by kind, front view, with no light: its state is in words beside it. Decorative. */
 function Caddy({ disk }: { disk: MapDisk }) {
   return (
     <svg
@@ -35,7 +35,6 @@ function Caddy({ disk }: { disk: MapDisk }) {
         rx="4"
         className="dm-caddy-body"
       />
-      <circle cx="16" cy="7" r="2.4" className="dm-caddy-led" />
       {disk.kind === "hdd" ? (
         <g className="dm-platter">
           <circle cx="16" cy="25" r="9" className="dm-caddy-part" />
@@ -125,7 +124,7 @@ export function SlotTile({
   // Whether the power state changed since the slot was first drawn: only a change is news (7.6).
   const [initialPower] = useState(disk.power);
   const powerChanged = disk.power !== initialPower;
-  const quiet = disk.health === "ok";
+  const healthy = disk.health === "ok";
   return (
     <button
       {...item}
@@ -154,8 +153,8 @@ export function SlotTile({
         className="dm-slot-state"
         data-health={disk.health}
       >
-        {quiet ? null : <StatusIcon status={disk.health} />}
-        {quiet ? (
+        {healthy ? null : <StatusIcon status={disk.health} />}
+        {healthy ? (
           disk.power === "asleep" ? (
             <>
               <svg aria-hidden="true" viewBox="0 0 12 12" className="dm-moon">
@@ -208,10 +207,7 @@ export function BayStrip({
           />
         ))}
       </span>
-      <span className="dm-strip-words">
-        {words.endsWith("all OK") ? <StatusIcon status="ok" /> : null}
-        {words}
-      </span>
+      <span className="dm-strip-words">{words}</span>
     </button>
   );
 }

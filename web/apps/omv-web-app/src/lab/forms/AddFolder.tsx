@@ -306,12 +306,11 @@ export function AddFolder({
       name: p.name,
       line:
         p.kind === "group"
-          ? `Group · ${p.line}`
-          : raised
-            ? `${p.line} · ${levelWords(effective)} through the group`
+          ? `A group of ${p.line}`
+          : raised && via.length > 0
+            ? `${p.line}, ${levelWords(effective)} through ${listWords(via)}`
             : p.line,
       value: own,
-      tag: via.length > 0 ? `through ${listWords(via)}` : undefined,
     };
   });
 
@@ -325,7 +324,7 @@ export function AddFolder({
         Skip to summary
       </a>
       {wide ? null : errorSummary}
-      <FormSection n={1} question="What is it called?">
+      <FormSection question="What is it called?">
         <Field
           invalid={Boolean(nameError)}
           className="lf-field"
@@ -373,27 +372,24 @@ export function AddFolder({
                 set({ description: event.target.value });
               }}
             />
-            <FieldHint>Shown in lists, to tell folders apart.</FieldHint>
+            <FieldHint>Lists show it, to tell folders apart.</FieldHint>
           </Field>
         </MoreOptions>
       </FormSection>
 
-      <FormSection n={2} question="Where are its files kept?">
+      <FormSection question="Where are its files kept?">
         {usable.length === 1 && drive ? (
-          <StatementRow
-            icon="file-system"
-            fact={`${gib(drive.freeGiB)} free of ${gib(drive.sizeGiB)}`}
-          >
-            Files are kept on{" "}
+          <StatementRow icon="file-system">
+            Its files are kept on{" "}
             <strong className="lf-strong">{drive.name}</strong>
-            <span className="lf-term"> {drive.type}</span>
+            <span className="lf-term"> {drive.type}</span>, which has{" "}
+            {gib(drive.freeGiB)} free of {gib(drive.sizeGiB)}.
           </StatementRow>
         ) : (
           <ChoiceCards
             label="Where its files are kept"
             name="drive"
             value={form.drive}
-            columns={drives.length > 2 ? 3 : 2}
             onChange={(drive) => {
               set({ drive });
             }}
@@ -407,7 +403,6 @@ export function AddFolder({
                 value: d.id,
                 title: d.name,
                 term: d.type,
-                icon: "file-system" as const,
                 line: d.device,
                 fact: d.unavailable
                   ? undefined
@@ -445,7 +440,6 @@ export function AddFolder({
       </FormSection>
 
       <FormSection
-        n={3}
         question="Who can open it?"
         flagged={Boolean(whoError)}
         help={
@@ -467,20 +461,17 @@ export function AddFolder({
             options={[
               {
                 value: "everyone",
-                icon: "group",
                 title: "Everyone here can read and change files",
-                line: `All ${PEOPLE.length} people who use this NAS.`,
+                line: `That is all ${PEOPLE.length} people who use this NAS.`,
                 recommended: true,
               },
               {
                 value: "readSome",
-                icon: "person",
                 title: "Everyone can read; some can change",
                 line: "You choose who may change or delete files.",
               },
               {
                 value: "chosen",
-                icon: "give-access",
                 title: "Only the people I choose",
                 line: "Nobody else can open it.",
               },
@@ -493,11 +484,11 @@ export function AddFolder({
           </Help>
         ) : null}
         {form.who === "everyone" ? null : (
-          <div className="lf-picker lf-arrive">
+          <div className="lf-picker">
             <p className="lf-picker-head">
               {form.who === "readSome"
                 ? "Who may change files?"
-                : "Who can open it?"}
+                : "People and groups"}
               <span className="lf-picker-count">
                 {withAccess.length} of {PEOPLE.length} people
               </span>
@@ -520,7 +511,6 @@ export function AddFolder({
       </FormSection>
 
       <FormSection
-        n={4}
         question="How will computers reach it?"
         help={
           tips ? null : (
@@ -535,7 +525,7 @@ export function AddFolder({
             icon="smb"
             title="Windows and Mac"
             term="SMB"
-            line="Opens in File Explorer and Finder."
+            line="It opens in File Explorer and Finder."
             checked={form.smb}
             onChange={(smb) => {
               set({ smb });
@@ -545,7 +535,7 @@ export function AddFolder({
             icon="nfs"
             title="Linux and media players"
             term="NFS"
-            line="For Linux computers, Kodi and similar boxes."
+            line="Linux computers, Kodi and similar boxes use it."
             checked={form.nfs}
             onChange={(nfs) => {
               set({ nfs });
@@ -553,7 +543,7 @@ export function AddFolder({
           />
         </div>
         {form.nfs ? (
-          <div className="lf-nfs lf-arrive">
+          <div className="lf-nfs">
             <p className="lf-sub">Which computers?</p>
             <ChoiceCards<NfsReach>
               label="Which computers can open it over NFS"
@@ -566,18 +556,18 @@ export function AddFolder({
                 {
                   value: "one",
                   title: "One computer",
-                  line: "The one at the address you type.",
+                  line: "Only the computer at the address you type can open it.",
                 },
                 {
                   value: "home",
                   title: "My home network",
-                  line: `Computers on ${HOME_RANGE}.`,
+                  line: `Every computer on ${HOME_RANGE} can open it.`,
                   recommended: true,
                 },
                 {
                   value: "any",
                   title: "Any computer",
-                  line: "Anyone who can reach the NAS.",
+                  line: "Anyone who can reach the NAS can open it.",
                 },
               ]}
             />
@@ -621,7 +611,7 @@ export function AddFolder({
         >
           <SettingRow
             label="Show it in the network list"
-            hint="Computers see it when they browse the NAS. Off: it opens only by its address."
+            hint="Computers see it when they browse the NAS. When it is off, the folder opens only by its address."
             checked={form.browseable}
             onChange={(browseable) => {
               set({ browseable });
@@ -710,7 +700,7 @@ export function AddFolder({
             Creating {name}
           </h2>
           <RunSteps steps={steps} stepMs={STEP_MS} />
-          <p className="lf-quiet">
+          <p className="lf-secondary">
             You can leave this page; the work carries on.
           </p>
         </div>
@@ -761,7 +751,7 @@ export function AddFolder({
             >
               Open {name}
             </Button>
-            <Button variant="primaryOutline" size="lg" onClick={reset}>
+            <Button variant="neutral" size="lg" onClick={reset}>
               Add another shared folder
             </Button>
           </div>
@@ -778,8 +768,8 @@ export function AddFolder({
             status 1.
           </p>
           <p className="lf-line">
-            Already made: <strong className="lf-strong">{name}</strong> on{" "}
-            {drive?.name}, and who can open it. Nothing else changed.
+            <strong className="lf-strong">{name}</strong> is already made on{" "}
+            {drive?.name}, with who can open it. Nothing else changed.
           </p>
           <div className="lf-actions">
             <Button variant="primary" size="lg" onClick={run}>
@@ -821,10 +811,9 @@ export function AddFolder({
   return (
     <>
       <FormHeader
-        icon="create-shared-folder"
         parent="Shared folders"
         title="Add a shared folder"
-        line="A folder on the NAS that your computers can open."
+        line="A shared folder is a folder on the NAS that your computers can open."
       />
       <FormLayout
         layoutRef={layoutRef}

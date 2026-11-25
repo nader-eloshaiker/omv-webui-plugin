@@ -241,14 +241,13 @@ export function AddPerson({
       name: a.folder,
       line:
         a.through !== null
-          ? `${levelWords(a.access)[0]?.toUpperCase() ?? ""}${levelWords(a.access).slice(1)}, as the group gives it`
+          ? `${levelWords(a.access)[0]?.toUpperCase() ?? ""}${levelWords(a.access).slice(1)} through ${a.through}`
           : form.own[a.folder] !== undefined
             ? `Set for ${name || "them"} alone`
             : givers.length > 0
               ? `The ${listWords(givers)} ${givers.length === 1 ? "group opens" : "groups open"} it`
               : "No group opens it",
       value: a.access,
-      tag: a.through !== null ? `through ${a.through}` : undefined,
     };
   });
 
@@ -258,7 +257,7 @@ export function AddPerson({
         Skip to summary
       </a>
       {wide ? null : errorSummary}
-      <FormSection n={1} question="Who is it?">
+      <FormSection question="Who is it?">
         <Field
           invalid={Boolean(nameError)}
           className="lf-field"
@@ -297,7 +296,7 @@ export function AddPerson({
               set({ who: event.target.value });
             }}
           />
-          <FieldHint>Shown in lists, to tell people apart.</FieldHint>
+          <FieldHint>Lists show it, to tell people apart.</FieldHint>
         </Field>
         <MoreOptions
           what="email address"
@@ -318,12 +317,12 @@ export function AddPerson({
                 set({ email: event.target.value });
               }}
             />
-            <FieldHint>For messages from scheduled jobs.</FieldHint>
+            <FieldHint>Scheduled jobs send their messages to it.</FieldHint>
           </Field>
         </MoreOptions>
       </FormSection>
 
-      <FormSection n={2} question="How will they sign in?">
+      <FormSection question="How will they sign in?">
         <PasswordPart
           form={form}
           set={set}
@@ -336,7 +335,7 @@ export function AddPerson({
         />
       </FormSection>
 
-      <FormSection n={3} question="What can they open?">
+      <FormSection question="What can they open?">
         <fieldset className="lf-chips">
           <legend className="lf-sub">Groups</legend>
           {GROUPS.map((group) => {
@@ -364,12 +363,9 @@ export function AddPerson({
                     <path d="m3.5 8.5 3 3 6-7" pathLength={1} />
                   </svg>
                 </span>
-                <span className="lf-chip-icon" aria-hidden="true">
-                  <FormIcon name="group" />
-                </span>
                 <span className="lf-chip-name">{group.name}</span>
                 <span className="lf-chip-line">
-                  Opens {listWords(group.opens.map((o) => o.folder))}
+                  It opens {listWords(group.opens.map((o) => o.folder))}.
                 </span>
               </label>
             );
@@ -385,28 +381,25 @@ export function AddPerson({
         />
       </FormSection>
 
-      <FormSection n={4} question="What may they change?">
+      <FormSection question="What may they change?">
         <ChoiceCards<Role>
           label="What they may change"
           name="role"
           value={form.role}
-          columns={2}
           onChange={(role) => {
             set({ role });
           }}
           options={[
             {
               value: "user",
-              icon: "person",
               title: "Uses shared folders",
-              line: "Opens the shared folders they are given. Can change their own password.",
+              line: "They open the shared folders they are given and can change their own password.",
               recommended: true,
             },
             {
               value: "admin",
-              icon: "administrator",
               title: "Administrator of this NAS",
-              line: "Can change every setting, and read and delete every file.",
+              line: "They can change every setting, and read and delete every file.",
             },
           ]}
         />
@@ -502,7 +495,7 @@ export function AddPerson({
               Open {name}&apos;s page
             </Button>
             <Button
-              variant="primaryOutline"
+              variant="neutral"
               size="lg"
               onClick={() => {
                 setForm(initialPerson());
@@ -523,10 +516,9 @@ export function AddPerson({
   return (
     <>
       <FormHeader
-        icon="add-person"
         parent="People"
         title="Add a person"
-        line="Someone who opens the shared folders, with their own password."
+        line="Each person signs in with their own password and opens the shared folders you give them."
       />
       <FormLayout
         layoutRef={layoutRef}
@@ -632,8 +624,8 @@ function PasswordPart({
                 {measured.length === 1 ? "character" : "characters"}
               </span>
             ) : (
-              <span className="lf-quiet">
-                A long password they use nowhere else.
+              <span className="lf-secondary">
+                Choose a long password they use nowhere else.
               </span>
             )}
           </span>
@@ -673,7 +665,7 @@ function PasswordPart({
           Suggest a strong password
         </Button>
         {form.suggested ? (
-          <span className="lf-suggested lf-arrive">
+          <span className="lf-suggested">
             <CopyButton
               text={form.password}
               label="Copy the password"
@@ -683,8 +675,8 @@ function PasswordPart({
             >
               Copy
             </CopyButton>
-            <span className="lf-quiet">
-              Shown once. Give it to them, or copy it now.
+            <span className="lf-secondary">
+              It is shown only once. Give it to them, or copy it now.
             </span>
           </span>
         ) : null}
@@ -692,7 +684,7 @@ function PasswordPart({
       {form.revealed || form.suggested ? null : (
         <Field
           invalid={Boolean(againError)}
-          className="lf-field lf-arrive"
+          className="lf-field"
           data-flagged={againError ? attempt : undefined}
         >
           <FieldLabel>Type it again</FieldLabel>
@@ -710,7 +702,7 @@ function PasswordPart({
           {againError ? (
             <FieldError key={attempt}>{againError}</FieldError>
           ) : (
-            <FieldHint>To catch a typing slip.</FieldHint>
+            <FieldHint>This catches a typing slip.</FieldHint>
           )}
         </Field>
       )}

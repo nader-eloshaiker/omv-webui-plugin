@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The form prototypes' icons: development only (UI-11). Objects and actions come from the library's
-// own set (`Icon`, `IconPlate`; rethink spec 5.3 and 5.4). The set has no equivalent yet for the
+// own set (`Icon`; rethink spec 5.3 and 5.4). The set has no equivalent yet for the
 // few names in FALLBACK, which stay on lucide until it does:
 //   administrator (a person with a shield plane), give-access (key into the object), and the form
-//   furniture: info, warning, error, help, tip, takes-effect, check, close, reveal, conceal, suggest.
+//   furniture: info, warning, error, help, tip, takes-effect, check, close, reveal, conceal, and
+//   suggest (a password field, for "Suggest a strong password").
 import type { IconName } from "@omv-webui/react-ui-components";
-import { Icon, IconPlate } from "@omv-webui/react-ui-components";
+import { Icon } from "@omv-webui/react-ui-components";
 import type { LucideIcon } from "lucide-react";
 import {
   Check,
@@ -16,10 +17,9 @@ import {
   Info,
   KeyRound,
   Lightbulb,
-  MousePointerClick,
+  RectangleEllipsis,
   ShieldUser,
   TriangleAlert,
-  WandSparkles,
   X,
 } from "lucide-react";
 
@@ -45,12 +45,12 @@ const FALLBACK = {
   error: CircleAlert,
   help: CircleHelp,
   tip: Lightbulb,
-  "takes-effect": MousePointerClick,
+  "takes-effect": Info,
   check: Check,
   close: X,
   reveal: Eye,
   conceal: EyeOff,
-  suggest: WandSparkles,
+  suggest: RectangleEllipsis,
 } satisfies Record<string, LucideIcon>;
 
 export type FormIconName = keyof typeof FROM_SET | keyof typeof FALLBACK;
@@ -92,18 +92,5 @@ export function FormIcon({
       strokeWidth={size >= 24 ? 1.6 : 1.8}
       className={className}
     />
-  );
-}
-
-/** The 32px title plate, from the library, for a form's title (3.1). */
-export function FormPlate({ name }: { name: FormIconName }) {
-  const set = fromSet(name);
-  if (!set) {
-    return null;
-  }
-  return "mark" in set ? (
-    <IconPlate name={set.name} mark={set.mark} />
-  ) : (
-    <IconPlate name={set.name} />
   );
 }

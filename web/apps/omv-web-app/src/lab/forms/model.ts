@@ -11,7 +11,7 @@ export interface Drive {
   id: string;
   /** The plain name the person gave it (or the label OMV shows). */
   name: string;
-  /** The technical term, second and quieter (N5). */
+  /** The technical term, second and in secondary text (N5). */
   type: string;
   device: string;
   freeGiB: number;
@@ -179,7 +179,7 @@ export function initialFolder(drives: readonly Drive[]): FolderForm {
   };
 }
 
-/** How many settings each "More options" holds away from their defaults ("More options · 1 changed"). */
+/** How many settings each "More options" holds away from their defaults ("More options: description, 1 changed"). */
 export function changedCounts(form: FolderForm): {
   name: number;
   where: number;
@@ -320,11 +320,11 @@ export function folderSentences(
     id: "made",
     icon: "made",
     parts: [
-      "Creates ",
-      name || "a shared folder",
-      " on ",
+      "",
+      name || "The shared folder",
+      " is made on ",
       drive?.name ?? "a drive",
-      `${drive ? ` (${gib(drive.freeGiB)} free)` : ""}${path && path !== name ? ", in its folder " : "."}`,
+      `${drive ? `, which has ${gib(drive.freeGiB)} free` : ""}${path && path !== name ? ", in its folder " : "."}`,
       ...(path && path !== name ? [`${path}/`, "."] : []),
     ],
   });
@@ -445,20 +445,20 @@ export function folderSentences(
     out.push({
       id: "smbOn",
       icon: "nas",
-      parts: ["Turns on Windows and Mac sharing for the whole NAS."],
+      parts: ["Windows and Mac sharing is turned on for the whole NAS."],
     });
   }
   if (form.nfs && !services.nfsOn) {
     out.push({
       id: "nfsOn",
       icon: "nas",
-      parts: ["Turns on Linux and Unix sharing for the whole NAS."],
+      parts: ["Linux and Unix sharing is turned on for the whole NAS."],
     });
   }
   out.push({
     id: "effect",
     icon: "effect",
-    parts: ["Takes effect when you press Create."],
+    parts: ["Nothing changes until you press Create."],
   });
   return out;
 }
@@ -587,21 +587,27 @@ export function personSentences(form: PersonForm): Sentence[] {
   const name = form.name.trim();
   const out: Sentence[] = [];
   const who = form.who.trim();
+  // Every sentence has its subject: the name when there is one, "They" before.
+  const subject = name || "They";
   out.push({
     id: "adds",
     icon: "made",
     parts: name
       ? who
-        ? ["Adds ", who, ", who signs in as ", name, "."]
-        : ["Adds ", name, ", who signs in with that name."]
-      : ["Adds a person who can sign in to this NAS."],
+        ? ["", who, " is added and signs in as ", name, "."]
+        : ["", name, " is added and signs in with that name."]
+      : ["A person is added who can sign in to this NAS."],
   });
   const access = personAccess(form).filter((a) => a.access !== "none");
   if (access.length === 0) {
     out.push({
       id: "opens",
       icon: "people",
-      parts: ["Cannot open any shared folder yet. You can give access later."],
+      parts: [
+        "",
+        subject,
+        " cannot open any shared folder yet. You can give access later.",
+      ],
     });
   } else {
     // "Photos (read and change) and Music (read only)": folder names bold, levels plain.
@@ -620,14 +626,16 @@ export function personSentences(form: PersonForm): Sentence[] {
           viaGroup.map((a) => a.through).filter((v): v is string => v !== null),
         ),
       ];
-      const parts = ["Can open ", ...folderParts(viaGroup)];
+      const parts = ["", subject, " can open ", ...folderParts(viaGroup)];
       parts[parts.length - 1] = `${parts[parts.length - 1] ?? ""}, through `;
       parts.push(listWords(via), ".");
       out.push({ id: "opens", icon: "people", parts });
     }
     if (own.length > 0) {
       const parts = [
-        viaGroup.length > 0 ? "Can also open " : "Can open ",
+        "",
+        subject,
+        viaGroup.length > 0 ? " can also open " : " can open ",
         ...folderParts(own),
       ];
       parts[parts.length - 1] =
@@ -642,26 +650,28 @@ export function personSentences(form: PersonForm): Sentence[] {
           icon: "warning",
           tone: "warning",
           parts: [
-            "Can change every setting on this NAS, and read and delete every file.",
+            "",
+            subject,
+            " can change every setting on this NAS, and read and delete every file.",
           ],
         }
       : {
           id: "role",
           icon: "nas",
-          parts: ["Cannot change the NAS's settings."],
+          parts: ["", subject, " cannot change the NAS's settings."],
         },
   );
   if (form.ssh) {
     out.push({
       id: "ssh",
       icon: "nas",
-      parts: ["May sign in to the NAS's command line over SSH."],
+      parts: ["", subject, " may sign in to the NAS's command line over SSH."],
     });
   }
   out.push({
     id: "effect",
     icon: "effect",
-    parts: ["Takes effect when you press Add."],
+    parts: ["Nothing changes until you press Add."],
   });
   return out;
 }

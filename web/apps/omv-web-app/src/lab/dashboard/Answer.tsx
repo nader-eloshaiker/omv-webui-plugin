@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region A, the answer (rethink spec 6.2 A, P.2): one sentence, its reason, and the area chips, each
-// the area's icon, name and state, moving focus to its lane. Above it, on an existing NAS seen in the
-// new interface for the first time, the one-line welcome. Lab-local candidates for *StatusLine,
-// *AreaChip and *WelcomeLine (spec 8 row 1). Development only (UI-11).
-import type { IconName } from "@omv-webui/react-ui-components";
+// Region A, the answer (rethink spec 6.2 A, P.2): one full short sentence and its reason, on the page
+// ground. No row of area chips under it: the sentence and what needs you carry the state, and the map
+// shows each thing's state in place. Above it, on an existing NAS seen in the new interface for the
+// first time, the one-line welcome. Lab-local candidates for *StatusLine and *WelcomeLine (spec 8
+// row 1). Development only (UI-11).
 import {
   Button,
   Disclosure,
@@ -11,29 +11,13 @@ import {
   DisclosureTrigger,
   Icon,
   IconBadge,
-  IconPlate,
   Skeleton,
-  StatusIcon,
-  StatusPill,
 } from "@omv-webui/react-ui-components";
 import { ExternalLink } from "lucide-react";
-import type { ReactNode } from "react";
 import { useState } from "react";
-import type { Answer, AreaId, AreaState } from "./model.ts";
+import type { Answer } from "./model.ts";
 
-const AREA_ICON: Record<AreaId, IconName> = {
-  disks: "disk",
-  storage: "file-system",
-  folders: "shared-folder",
-  sharing: "share",
-  network: "net-ethernet",
-  system: "nas",
-};
-
-/**
- * The answer's mark: the state in its own shape on a 32px plate, the size of the icon set's plate
- * (5.2), so it marks the sentence without outweighing it. Keyed by the state, so a change settles in.
- */
+/** The answer's mark: the state in its own shape, the size of the heading's first line. */
 function AnswerMark({
   tone,
   welcome,
@@ -42,61 +26,18 @@ function AnswerMark({
   welcome: boolean;
 }) {
   if (welcome) {
-    return <IconPlate name="nas" className="dm-answer-mark" />;
+    return (
+      <span aria-hidden="true" className="dm-answer-mark">
+        <Icon name="nas" size={24} motion="none" />
+      </span>
+    );
   }
   return (
-    <span
-      key={tone}
-      aria-hidden="true"
-      className="dm-answer-mark"
-      data-tone={tone}
-    >
+    <span aria-hidden="true" className="dm-answer-mark" data-tone={tone}>
       <svg viewBox="0 0 24 24">
-        <IconBadge status={tone} cx={12} cy={12.5} r={8} strokeWidth={1.5} />
+        <IconBadge status={tone} cx={12} cy={12} r={10} strokeWidth={1.5} />
       </svg>
     </span>
-  );
-}
-
-export function AreaChips({
-  areas,
-  onChip,
-}: {
-  areas: readonly AreaState[];
-  onChip: (area: AreaState) => void;
-}) {
-  return (
-    <ul className="dm-chips" aria-label="Areas of the NAS">
-      {areas.map((area, i) => (
-        <li key={area.id}>
-          <button
-            type="button"
-            className="dm-chip"
-            data-health={area.health}
-            aria-keyshortcuts={String(i + 1)}
-            onClick={() => {
-              onChip(area);
-            }}
-          >
-            <Icon name={AREA_ICON[area.id]} size={16} motion="none" />
-            <span className="dm-chip-name">{area.name}</span>
-            {/* Keyed by the state, so a change crossfades and OK's check draws (7.6). */}
-            <span key={area.health} className="dm-chip-state">
-              {area.empty ? (
-                <span className="dm-chip-none">{area.word}</span>
-              ) : area.health === "ok" ? (
-                <span className="dm-chip-ok">
-                  <StatusIcon status="ok" />
-                  {area.word}
-                </span>
-              ) : (
-                <StatusPill status={area.health}>{area.word}</StatusPill>
-              )}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -104,16 +45,13 @@ export function AnswerRegion({
   answer,
   loading,
   welcome,
-  chips,
-  live,
+  reason,
 }: {
   answer: Answer;
   loading: boolean;
   welcome: boolean;
-  /** The area chips; left out at 390, where the lane rows carry the same states. */
-  chips: ReactNode;
-  /** Compact density folds the live readouts into this band (6.3). */
-  live: ReactNode;
+  /** Whether the reason shows: not when what needs you lists it in its first row just below. */
+  reason: boolean;
 }) {
   return (
     <section
@@ -130,22 +68,13 @@ export function AnswerRegion({
         <AnswerMark tone={answer.tone} welcome={welcome} />
       )}
       <div className="dm-answer-words" aria-live="polite">
-        {/* Keyed by the words, so a change crossfades ("All OK" to "1 thing needs you", 7.6). */}
-        <h1
-          key={loading ? "loading" : answer.title}
-          id="dm-answer-title"
-          className="dm-answer-title"
-        >
+        <h1 id="dm-answer-title" className="dm-answer-title">
           {loading ? "Reading the NAS…" : answer.title}
         </h1>
-        {loading ? null : (
-          <p key={answer.reason} className="dm-answer-reason">
-            {answer.reason}
-          </p>
+        {loading || !reason ? null : (
+          <p className="dm-answer-reason">{answer.reason}</p>
         )}
       </div>
-      {loading ? null : chips}
-      {live}
     </section>
   );
 }

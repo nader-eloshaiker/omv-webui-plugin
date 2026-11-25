@@ -6,6 +6,11 @@
 // Development only (UI-11). The lab does not boot the mock, a session or a query client, so every
 // figure here is a fixture; the live strip alone runs through the app's own sample store
 // (liveFeed.ts).
+//
+// Every figure the dashboard shows names, beside its field, the contract method it comes from
+// (web/packages/spec-api-omv/src/operations). A figure no method gives is not shown: there is no
+// count of connected computers (SMB.getStats and SSH.getStats return the commands' text, not a
+// count) and no list of running tasks (Exec.isRunning answers only for a handle this browser holds).
 import type { Health } from "../tables/model.ts";
 import { byHealth, worst } from "../tables/model.ts";
 import type { DashState } from "./states.ts";
@@ -17,7 +22,7 @@ const NBSP = " ";
 
 // ─── Types ────────────────────────────────────────────────────────────────────────────────────
 
-/** The areas region A names, each a chip that moves focus to its lane. */
+/** The part of the NAS a thing that needs the person is about. */
 export type AreaId =
   "disks" | "storage" | "folders" | "sharing" | "network" | "system";
 /** The map's lanes, left to right in the direction things feed one another. */
@@ -28,29 +33,53 @@ export type WayId = "smb" | "nfs" | "rsync" | "ssh";
 
 export interface MapDisk {
   id: string;
+  /** DiskMgmt.getList: `devicename`. */
   device: string;
+  /**
+   * For the drawing, never shown as a figure: nvme from DiskMgmt.getList's `devicename`, hdd or ssd
+   * from Smart.getListBg's device details.
+   */
   kind: DiskKind;
+  /** DiskMgmt.getList: `size` (bytes, shown in TiB or GiB). */
   size: string;
+  /** Smart.getListBg: `overallstatus`; unknown while it has no reading. */
   health: Health;
   /** The state in words: "OK", "Not checked", "Failing". */
   word: string;
+  /** DiskMgmt.getList: `temperature` (Smart.getListBg has it too). */
   temp: number | null;
+  /** DiskMgmt.getList: `powermode` (active or standby). */
   power: Power;
-  /** The storage it is part of; none for an empty disk. */
+  /**
+   * The storage it is part of; none for an empty disk. FileSystemMgmt.getList `devicefiles`,
+   * MdMgmt.enumerateDevices `devices`, Zfs.getPoolDevices.
+   */
   feeds: readonly string[];
 }
 
 export interface MapStorage {
   id: string;
-  /** The plain name: "Data drive", "tank". */
+  /**
+   * The plain name: "Data drive", "tank". FileSystemMgmt.getList `label`, MdMgmt.enumerateDevices
+   * `name`, Zfs.listPools `name`.
+   */
   name: string;
-  /** The technical term, quieter: "EXT4", "Mirror (RAID 1)", "ZFS pool". */
+  /**
+   * The technical term, in secondary text: "EXT4" (FileSystemMgmt.getList `type`), "Mirror (RAID 1)"
+   * (MdMgmt.enumerateDevices `level`), "ZFS pool" (Zfs.listPools).
+   */
   tech: string;
   kind: "fs" | "raid" | "zfs";
-  /** Used, 0 to 1. */
+  /** Used, 0 to 1. FileSystemMgmt.getList: `percentage`; a pool's from Zfs.listPools. */
   used: number;
+  /** FileSystemMgmt.getList: `available`. */
   free: string;
+  /** FileSystemMgmt.getList: `size`. */
   total: string;
+  /**
+   * "Almost full" past FileSystemMgmt.getList's `usagewarnthreshold`; an array's from
+   * MdMgmt.enumerateDevices `state`.
+   */
   health: Health;
   word: string;
   /** The shared folders on it. */
@@ -59,8 +88,12 @@ export interface MapStorage {
 
 export interface MapFolder {
   id: string;
+  /** ShareMgmt.getList: `name`. */
   name: string;
-  /** The ways in it is reached by (only ways that are on). Empty: "Not shared". */
+  /**
+   * The ways in it is reached by, only those that are on: SMB.getShareList and NFS.getShareList.
+   * Empty: no way in reaches it.
+   */
   via: readonly WayId[];
   health: Health;
   word: string;
@@ -72,18 +105,23 @@ export interface MapWay {
   name: string;
   /** The technical term second: "SMB". */
   tech: string;
+  /** Services.getStatus: `enabled`. */
   on: boolean;
+  /** Services.getStatus: `running`. */
   running: boolean;
-  /** Computers connected now, where the service says. */
-  connections: number | null;
 }
 
 export interface MapIface {
   id: string;
+  /** Network.getInterfaceList: `devicename`. */
   name: string;
+  /** Network.getInterfaceList: `type`. */
   kind: "net-ethernet" | "net-wifi" | "net-bond";
+  /** Network.getInterfaceList: `speed` (Mbit/s). */
   speed: string;
+  /** Network.getInterfaceList: `address`. */
   address: string;
+  /** Network.getInterfaceList: `state` and `link`. */
   up: boolean;
 }
 
@@ -95,7 +133,10 @@ export interface MapIface {
 export interface AddOn {
   id: string;
   kind: "zfs" | "raid" | "unknown";
-  /** The Debian package: "openmediavault-zfs". */
+  /**
+   * The Debian package: "openmediavault-zfs". Not a figure, but it needs a method the contract does
+   * not have yet (Plugin.getList, the installed plugins); until it does, the list is a fixture.
+   */
   pkg: string;
 }
 
@@ -122,17 +163,26 @@ export interface Step {
   done: boolean;
 }
 
+/** This NAS: every fact from System.getInformation. */
 export interface Facts {
+  /** `hostname`. */
   name: string;
+  /** `version`. */
   version: string;
+  /** `uptime` (seconds), in hours and minutes. */
   uptime: string;
+  /** `time`, the server's own display text. */
   time: string;
+  /** `availablePkgUpdates`. */
   updates: number;
 }
 
 export interface Nas {
   facts: Facts;
-  /** When the disks were last checked, "10:31"; null when never. */
+  /**
+   * When this browser last read the disks' health (Smart.getListBg's reply arriving), "10:31"; null
+   * before any reading.
+   */
   checkedAt: string | null;
   disks: readonly MapDisk[];
   storage: readonly MapStorage[];
@@ -156,19 +206,6 @@ export const HEALTH_WORD: Record<Health, string> = {
   critical: "Critical",
   unknown: "Unknown",
 };
-
-export const AREAS: readonly {
-  id: AreaId;
-  name: string;
-  lane: LaneId | null;
-}[] = [
-  { id: "disks", name: "Disks", lane: "disks" },
-  { id: "storage", name: "Storage", lane: "storage" },
-  { id: "folders", name: "Shared folders", lane: "folders" },
-  { id: "sharing", name: "Sharing", lane: "ways" },
-  { id: "network", name: "Network", lane: "network" },
-  { id: "system", name: "System", lane: null },
-];
 
 export const LANES: readonly {
   id: LaneId;
@@ -208,6 +245,30 @@ export const LANES: readonly {
   },
 ];
 
+const NUMBER_WORDS = [
+  "no",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+];
+
+/** A count in words up to ten, then in figures: "four", "12". */
+export function countWords(n: number): string {
+  return NUMBER_WORDS[n] ?? String(n);
+}
+
+/** The first letter in capitals, for a sentence that starts with a count. */
+export function capital(words: string): string {
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
 export function plural(count: number, one: string, other: string): string {
   return `${String(count)}${NBSP}${count === 1 ? one : other}`;
 }
@@ -224,58 +285,7 @@ export function percent(used: number): string {
   return `${String(Math.round(used * 100))}${NBSP}%`;
 }
 
-// ─── The answer (A) and the areas ─────────────────────────────────────────────────────────────
-
-export interface AreaState {
-  id: AreaId;
-  name: string;
-  lane: LaneId | null;
-  health: Health;
-  word: string;
-  /** Nothing there yet (a new NAS's storage and folders): "None yet", without a state mark. */
-  empty?: boolean;
-}
-
-/** Each area's state: the worst of its things and of what needs the person there. */
-export function areaStates(nas: Nas): AreaState[] {
-  const fromAttention = (area: AreaId) =>
-    nas.attention.filter((a) => a.area === area).map((a) => a.health);
-  const of = (area: AreaId): Health[] => {
-    switch (area) {
-      case "disks":
-        return nas.disks.map((d) => d.health);
-      case "storage":
-        return nas.storage.map((s) => s.health);
-      case "folders":
-        return nas.folders.map((f) => f.health);
-      case "sharing":
-        return nas.ways
-          .filter((w) => w.on)
-          .map((w) => (w.running ? "ok" : "warning"));
-      case "network":
-        return nas.ifaces.map((i) => (i.up ? "ok" : "critical"));
-      case "system":
-        return [];
-    }
-  };
-  return AREAS.map((area) => {
-    if (area.lane && nas.failed.includes(area.lane)) {
-      return { ...area, health: "unknown", word: "Could not read" };
-    }
-    const empty =
-      (area.id === "folders" && nas.folders.length === 0) ||
-      (area.id === "storage" && !nas.storage.some((s) => s.id !== "s:system"));
-    const health = worst([...of(area.id), ...fromAttention(area.id)]);
-    if (empty && health === "ok") {
-      return { ...area, health, word: "None yet", empty: true };
-    }
-    const word =
-      health === "unknown" && area.id === "disks"
-        ? "Not checked"
-        : HEALTH_WORD[health];
-    return { ...area, health, word };
-  });
-}
+// ─── The answer (A) ─────────────────────────────────────────────────────────────────────────────
 
 /** What needs the person, worst first; equal ones keep the order they were found in. */
 export function needsYou(nas: Nas): Attention[] {
@@ -295,7 +305,7 @@ export function attentionRows(
 }
 
 export interface Answer {
-  /** The sentence at 28px. */
+  /** A full short sentence at 28px: "Everything is working.", "Four things need you." */
   title: string;
   reason: string;
   tone: Health;
@@ -306,7 +316,7 @@ export function answerOf(nas: Nas): Answer {
   const needs = needsYou(nas);
   if (nas.newNas) {
     return {
-      title: "Welcome to your NAS",
+      title: "Welcome to your NAS.",
       reason: "It is running. Here is what is in it, and what to set up first.",
       tone: "ok",
     };
@@ -314,10 +324,7 @@ export function answerOf(nas: Nas): Answer {
   const first = needs[0];
   if (first) {
     return {
-      title:
-        needs.length === 1
-          ? "1 thing needs you"
-          : `${String(needs.length)} things need you`,
+      title: `${capital(countWords(needs.length))} ${needs.length === 1 ? "thing needs" : "things need"} you.`,
       reason: first.answer,
       tone: first.health,
     };
@@ -327,7 +334,7 @@ export function answerOf(nas: Nas): Answer {
       (id) => LANES.find((l) => l.id === id)?.title.toLowerCase() ?? id,
     );
     return {
-      title: "Could not read everything",
+      title: "Part of the NAS could not be read.",
       reason: `The ${listWords(names)} could not be read. Everything else is OK.`,
       tone: "unknown",
     };
@@ -335,11 +342,11 @@ export function answerOf(nas: Nas): Answer {
   const drives = nas.storage.length;
   const roomy = nas.storage.filter((s) => s.health === "ok").length;
   const disks = nas.checkedAt
-    ? `Disks checked at ${nas.checkedAt}.`
-    : "Disks not checked yet.";
+    ? `The disks reported no problem at ${nas.checkedAt}.`
+    : "The disks have not been checked yet.";
   return {
-    title: "All OK",
-    reason: `${disks} ${roomy === drives ? `All ${String(drives)} drives have space.` : `${String(roomy)} of ${String(drives)} drives have space.`}`,
+    title: "Everything is working.",
+    reason: `${disks} ${roomy === drives ? `All ${countWords(drives)} drives have space.` : `${capital(countWords(roomy))} of ${countWords(drives)} drives have space.`}`,
     tone: "ok",
   };
 }
@@ -398,7 +405,7 @@ export function moreWords(hidden: readonly { health: Health }[]): string {
     : `${n} more`;
 }
 
-/** Ways in (6.8 item 4): only those that are on as tiles, the rest as one "Off:" line. */
+/** Ways in (6.8 item 4): only those that are on as list items, the rest as one "Off:" line. */
 export function waysLayout(ways: readonly MapWay[]): {
   on: MapWay[];
   off: string;
@@ -783,34 +790,21 @@ export function rowName(row: MapRow): string {
         folders.length > 0
           ? `Shared folders: ${listWords(folders.map((f) => f.name))}${row.tone ? ", at risk" : ""}.`
           : row.system
-            ? "Holds the system."
-            : "No shared folders.";
+            ? "It holds the system, so it keeps no shared folders."
+            : "It has no shared folders yet.";
       return `${s.name}${on}: ${String(Math.round(s.used * 100))} percent used${own}${sick}. ${held}`;
     }
   }
 }
 
-/** A way in's name: "Windows and Mac (SMB): on, 2 computers connected, over enp2s0". */
+/** A way in's name: "Windows and Mac (SMB): running, over enp2s0". */
 export function wayName(w: MapWay, ifaces: readonly MapIface[]): string {
-  const state = !w.running
-    ? "on, not running"
-    : w.connections
-      ? `on, ${String(w.connections)} ${w.connections === 1 ? "computer" : "computers"} connected`
-      : "on, running";
+  const state = w.running ? "running" : "on but not running";
   const over = ifaces.filter((i) => i.up).map((i) => i.name);
   return `${w.name} (${w.tech}): ${state}${over.length > 0 ? `, over ${listWords(over)}` : ""}`;
 }
 
 // ─── The map's actions, each once on the screen (6.8 item 8) ──────────────────────────────────
-
-/** Where each area chip of region A moves focus (6.2 A): the rows, or the band's two halves. */
-export const LANE_TARGET: Record<LaneId, string> = {
-  disks: "dm-rows",
-  storage: "dm-rows",
-  folders: "dm-rows",
-  ways: "dm-band-ways",
-  network: "dm-band-net",
-};
 
 /** The actions of the first steps that are on the screen, so nothing else offers them again. */
 export function stepActionsShown(
@@ -885,14 +879,14 @@ export function currentStep(steps: readonly Step[]): Step | undefined {
   return steps.find((s) => !s.done);
 }
 
-/** The plugin tiles in full rows (owner decision 8): as many columns as fit, rows balanced, no holes. */
-export function tileColumns(count: number, fit: number): number {
-  if (count <= 0) {
-    return 1;
-  }
-  const max = Math.max(1, Math.min(fit, count));
-  const rows = Math.ceil(count / max);
-  return Math.ceil(count / rows);
+/**
+ * The installed add-ons this interface does not draw, by their short name ("compose"), for one line
+ * in This NAS. ZFS and RAID are not among them: their pools and arrays are storage rows on the map.
+ */
+export function otherAddOns(addOns: readonly AddOn[]): string[] {
+  return addOns
+    .filter((a) => a.kind === "unknown")
+    .map((a) => a.pkg.replace(/^openmediavault-/u, ""));
 }
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────────────────────
@@ -901,7 +895,7 @@ const STEPS_EXISTING: Step[] = [
   {
     id: "name",
     title: "Name the NAS",
-    line: "It is called nas on your network.",
+    line: "Your computers see it as nas on your network.",
     action: "Rename",
     done: true,
   },
@@ -915,14 +909,14 @@ const STEPS_EXISTING: Step[] = [
   {
     id: "https",
     title: "Turn on secure sign-in",
-    line: "So your password never crosses the network in the clear (HTTPS).",
+    line: "Then your password never crosses the network in the clear (HTTPS).",
     action: "Turn on",
     done: false,
   },
   {
     id: "alerts",
     title: "Get alerts by email",
-    line: "Hear about a failing disk before you lose files.",
+    line: "The NAS writes to you when a disk starts to fail, before files are lost.",
     action: "Set up",
     done: false,
   },
@@ -932,21 +926,21 @@ const STEPS_NEW: Step[] = [
   {
     id: "storage",
     title: "Add storage",
-    line: "Make a disk ready to keep files.",
+    line: "Storage is a disk made ready to keep files.",
     action: "Add storage",
     done: false,
   },
   {
     id: "folder",
     title: "Add a shared folder",
-    line: "A folder your computers open, like Photos.",
+    line: "Your computers open it like any folder, for example Photos.",
     action: "Add a shared folder",
     done: false,
   },
   {
     id: "person",
     title: "Add the people who use it",
-    line: "Each with their own password.",
+    line: "Each person signs in with their own password.",
     action: "Add a person",
     done: false,
   },
@@ -997,7 +991,6 @@ const WAYS: MapWay[] = [
     tech: "SMB",
     on: true,
     running: true,
-    connections: 2,
   },
   {
     id: "nfs",
@@ -1005,7 +998,6 @@ const WAYS: MapWay[] = [
     tech: "NFS",
     on: true,
     running: true,
-    connections: null,
   },
   {
     id: "rsync",
@@ -1013,7 +1005,6 @@ const WAYS: MapWay[] = [
     tech: "rsync",
     on: false,
     running: false,
-    connections: null,
   },
   {
     id: "ssh",
@@ -1021,7 +1012,6 @@ const WAYS: MapWay[] = [
     tech: "SSH",
     on: true,
     running: true,
-    connections: 0,
   },
 ];
 
@@ -1181,7 +1171,7 @@ export function withoutSdbWarning(nas: Nas): Nas {
   };
 }
 
-/** The lab's "A ghost becomes real": the new NAS's first storage, on sda. */
+/** The lab's "Storage is added": the new NAS's first storage, on sda. */
 export function withFirstStorage(nas: Nas): Nas {
   return {
     ...nas,
@@ -1445,7 +1435,6 @@ export function nasFor(state: DashState): Nas {
           ...w,
           on: w.id === "ssh",
           running: w.id === "ssh",
-          connections: w.id === "ssh" ? 0 : null,
         })),
         addOns: [],
         steps: STEPS_NEW,
@@ -1458,7 +1447,6 @@ export function nasFor(state: DashState): Nas {
         ...base,
         storage: base.storage.map((s) => ({ ...s, feeds: [] })),
         folders: [],
-        ways: WAYS.map((w) => (w.id === "smb" ? { ...w, connections: 0 } : w)),
       };
     case "lane-failed":
       return { ...base, failed: ["disks"] };

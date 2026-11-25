@@ -3,7 +3,7 @@
 // no mock and no query client, so nothing polls; this stands in for the two replies the shell's
 // combined read records (System.getInformation and the interface counters), shaped by their
 // generated DTOs (SystemFigures, DeviceCounters) and handed to the same recorders app.ts uses.
-// The strip then reads them with the real useLiveSamples (src/live). A minute is prefilled, so a
+// The strip then reads them with the app's own useLiveSamples (src/live). A minute is prefilled, so a
 // screenshot shows a page open a while.
 import { useEffect } from "react";
 import type { DeviceCounters, SystemFigures } from "../../live/liveSamples.ts";

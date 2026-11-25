@@ -31,13 +31,7 @@ import {
   TableStateRow,
   TableToolbar,
 } from "@omv-webui/react-ui-components";
-import {
-  ArrowRight,
-  ChevronRight,
-  FolderMinus,
-  KeyRound,
-  Trash2,
-} from "lucide-react";
+import { FolderMinus, KeyRound, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Fragment, useId, useRef, useState } from "react";
 import { Help } from "../forms/parts.tsx";
@@ -71,6 +65,7 @@ import type { Chip, SummaryPart } from "./parts.tsx";
 import {
   FilterChips,
   Identity,
+  Missing,
   PageHead,
   Quick,
   RowActions,
@@ -233,7 +228,7 @@ export function FoldersTable({
         ? ["Shared folders could not be read"]
         : folderSummary(folders, drives).map((part) =>
             part.includes("not reachable")
-              ? { text: part, status: "warning" }
+              ? { text: part, status: "warning" as const }
               : part,
           );
   const addButton =
@@ -269,7 +264,7 @@ export function FoldersTable({
           open(folder.id);
         }}
       >
-        <ArrowRight aria-hidden="true" />
+        <Icon name="shared-folder" size={16} />
         Open
       </MenuItem>
       <MenuItem
@@ -424,7 +419,7 @@ export function FoldersTable({
             <Identity
               icon={<Icon name="shared-folder" size={20} />}
               name={folder.name}
-              line={folder.description || `On ${drive.name}`}
+              line={folder.description || undefined}
               onOpen={() => {
                 open(folder.id);
               }}
@@ -595,7 +590,6 @@ export function FoldersTable({
   return (
     <div className="lt-page">
       <PageHead
-        icon="shared-folder"
         title="Shared folders"
         help={
           <Help tips={tips} question="What is a shared folder?">
@@ -605,7 +599,10 @@ export function FoldersTable({
           </Help>
         }
       />
-      <TableSummary parts={summary} action={addButton} />
+      {/* With no folders, the teaching state says it; the summary would only repeat it. */}
+      {folders.length === 0 && phase === "ready" ? null : (
+        <TableSummary parts={summary} action={addButton} />
+      )}
       {chrome ? (
         <LabCauses>
           <button type="button" onClick={flipMedia}>
@@ -632,7 +629,7 @@ export function FoldersTable({
         <InlineAlert
           tone="neutral"
           icon="warning"
-          title="Shown from 10:31; reading again failed"
+          title="Reading again failed, so these are the folders as read at 10:31."
           className="lt-stale"
         >
           <ServerMessage label="The NAS said">
@@ -807,9 +804,23 @@ export function FoldersTable({
 
 // ─── Cells ────────────────────────────────────────────────────────────────────────────────────
 
-function ReachedBy({ services }: { services: Folder["services"] }) {
+/**
+ * How computers reach a folder. Empty is a plain dash in the table, whose column says what it is
+ * missing; in the list form, which has no column, it is a labelled value.
+ */
+function ReachedBy({
+  services,
+  labelled,
+}: {
+  services: Folder["services"];
+  labelled?: boolean;
+}) {
   if (services.length === 0) {
-    return <span className="lt-quiet">Not shared</span>;
+    return labelled ? (
+      <span className="lt-secondary">Reached by: no computer</span>
+    ) : (
+      <Missing label="No computer can reach it" />
+    );
   }
   return (
     <span className="lt-services">
@@ -823,10 +834,20 @@ function ReachedBy({ services }: { services: Folder["services"] }) {
   );
 }
 
-function WhoCanOpen({ folder }: { folder: Folder }) {
+function WhoCanOpen({
+  folder,
+  labelled,
+}: {
+  folder: Folder;
+  labelled?: boolean;
+}) {
   const { access } = folder;
   if (access.kind === "nobody") {
-    return <span className="lt-quiet">Nobody yet</span>;
+    return labelled ? (
+      <span className="lt-secondary">Who can open it: nobody</span>
+    ) : (
+      <Missing label="Nobody can open it" />
+    );
   }
   return (
     <span className="lt-service">
@@ -838,18 +859,24 @@ function WhoCanOpen({ folder }: { folder: Folder }) {
 
 /** The drive with its free-space bar (4.5): the library's meter, small, its figure beside it. */
 function DriveCell({ drive }: { drive: Drive }) {
-  const used = drive.free === null ? null : drive.size - drive.free;
+  // Not mounted: no bar to draw, so the free space is a labelled value instead.
+  if (drive.free === null) {
+    return (
+      <span className="lt-drive">
+        <span className="lt-drive-name">{drive.name}</span>
+        <span className="lt-line2">Free space: unknown</span>
+      </span>
+    );
+  }
   return (
     <span className="lt-drive">
       <span className="lt-drive-name">{drive.name}</span>
       <CapacityMeter
         variant="compact"
         label={`Space on ${drive.name}`}
-        value={used}
+        value={drive.size - drive.free}
         max={drive.size}
-        valueText={
-          drive.free === null ? "No reading" : `${bytesText(drive.free)} free`
-        }
+        valueText={`${bytesText(drive.free)} free`}
         className="lt-meter"
       />
     </span>
@@ -887,6 +914,22 @@ function FolderDetail({
             </span>
           </FactListValue>
         </FactListItem>
+        {folder.services.length === 0 ? (
+          <FactListItem>
+            <FactListLabel>Sharing</FactListLabel>
+            <FactListValue>
+              No computer can open {folder.name} until you share it.
+            </FactListValue>
+          </FactListItem>
+        ) : null}
+        {folder.access.kind === "nobody" ? (
+          <FactListItem>
+            <FactListLabel>Who can open it</FactListLabel>
+            <FactListValue>
+              Nobody can open {folder.name} yet. Give access from its menu.
+            </FactListValue>
+          </FactListItem>
+        ) : null}
         <FactListItem>
           <FactListLabel>Kept on</FactListLabel>
           <FactListValue>
@@ -921,7 +964,7 @@ function FolderDetail({
           <FactListValue variant={folder.inUse ? "text" : "missing"}>
             {folder.inUse
               ? "Yes: sharing or a copy job refers to it"
-              : "Nothing refers to it"}
+              : "No: nothing refers to it"}
           </FactListValue>
         </FactListItem>
       </FactList>
@@ -932,25 +975,17 @@ function FolderDetail({
 // ─── States ───────────────────────────────────────────────────────────────────────────────────
 
 /**
- * The teaching empty state (4.8, 4.10, 7.3): in the frame, at the table's left edge, the folder
- * picture assembling, one sentence, one accent action, one quiet link, and a ghost row of what will
- * appear ("Example"). With tips off the ghost goes; the sentence and the action stay (G1).
+ * The teaching empty state (4.8, 4.10): in the frame, at the table's left edge, one sentence, one
+ * accent action, one text button, and a ghost row of what will appear ("Example"). Nothing
+ * assembles or fades in: it is there when the page is. With tips off the ghost goes; the sentence
+ * and the action stay (G1).
  */
 function TeachingEmpty({ tips, onAdd }: { tips: boolean; onAdd: () => void }) {
   return (
     <div className="lt-teach">
       <div className="lt-teach-main">
-        <span className="lt-teach-art" aria-hidden="true">
-          <span className="lt-teach-back" />
-          <Icon
-            name="shared-folder"
-            size={24}
-            strokeWidth={0.7}
-            className="lt-teach-icon"
-          />
-        </span>
         <div className="lt-teach-words">
-          <p className="lt-teach-title">No shared folders yet</p>
+          <p className="lt-teach-title">This NAS has no shared folders yet</p>
           <p className="lt-teach-line">
             A shared folder is a folder your computers can open over the
             network, for example Photos for the whole family.
@@ -983,7 +1018,9 @@ function TeachingEmpty({ tips, onAdd }: { tips: boolean; onAdd: () => void }) {
             <Icon name="person" size={16} />6 people
           </span>
           <span className="lt-ghost-cell lt-ghost-bar" data-i="3">
-            <span />
+            <span>
+              <span />
+            </span>
           </span>
         </div>
       ) : null}
@@ -1089,11 +1126,8 @@ function FolderList({
                 />
               </div>
               <div className="lt-item-line2">
-                <ReachedBy services={folder.services} />
-                <span className="lt-dot" aria-hidden="true">
-                  ·
-                </span>
-                <WhoCanOpen folder={folder} />
+                <ReachedBy services={folder.services} labelled />
+                <WhoCanOpen folder={folder} labelled />
               </div>
               <div className="lt-item-line3">
                 <DriveCell drive={drive} />
@@ -1109,7 +1143,6 @@ function FolderList({
                 }}
                 tabbable
               />
-              <ChevronRight aria-hidden="true" className="lt-item-chevron" />
             </div>
           </li>
         );

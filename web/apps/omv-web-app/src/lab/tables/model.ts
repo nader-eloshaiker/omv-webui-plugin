@@ -28,7 +28,7 @@ export function worst(states: readonly Health[]): Health {
 const NBSP = " ";
 const UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"] as const;
 
-/** Binary units, one decimal, the number and unit apart so the unit can be quieter (4.5). */
+/** Binary units, one decimal, the number and unit apart so the unit can be secondary text (4.5). */
 export function bytes(n: number): { value: string; unit: string } {
   let unit = 0;
   let v = n;
@@ -250,13 +250,16 @@ export function filterCounts(
   };
 }
 
-/** "4 shared folders · 1 not reachable · 3 shared with Windows and Mac": counts, worst first (4.1). */
+/**
+ * "4 shared folders, 1 not reachable, 3 shared with Windows and Mac": counts, worst first (4.1). The
+ * summary line joins the parts with commas and ends the sentence.
+ */
 export function folderSummary(
   folders: readonly Folder[],
   drives: readonly Drive[],
 ): string[] {
   if (folders.length === 0) {
-    return ["No shared folders yet"];
+    return ["There are no shared folders yet"];
   }
   const bad = folders.filter((f) => folderHealth(f, drives) !== "ok").length;
   const smb = folders.filter((f) => f.services.includes("smb")).length;
@@ -345,7 +348,7 @@ export function accessWords(access: Access): string {
     case "everyone":
       return "Everyone";
     case "nobody":
-      return "Nobody yet";
+      return "Nobody";
   }
 }
 
@@ -386,10 +389,10 @@ export const KIND_WORDS: Record<DiskKind, string> = {
   disk: "disk",
 };
 
-/** The temperature from which a disk's figure takes a threshold pill (4.9: only when crossed). */
+/** The temperature from which a disk's figure takes a warning word (4.9: only when crossed). */
 export const HOT = 50;
 
-const NOT_CHECKED = "Not checked yet";
+export const NOT_CHECKED = "Not checked yet";
 
 export const DISKS: readonly Disk[] = [
   {
@@ -564,7 +567,7 @@ export function groupDisks(
   }).filter((g) => g.disks.length > 0);
 }
 
-/** "7 disks · health not checked since you signed in", or the counts worst first once checked. */
+/** "7 disks, health not checked since you signed in", or the counts worst first once checked. */
 export function diskSummary(disks: readonly Disk[]): {
   parts: string[];
   checked: boolean;

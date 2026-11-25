@@ -6,7 +6,7 @@
 // retracts on the exit curve when it turns off. Reduced motion: lines and nodes crossfade.
 // The picture is aria-hidden; the consequence summary says the same facts in words.
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTween } from "../motion.ts";
 import type { FormIconName } from "./FormIcon.tsx";
 import { FormIcon } from "./FormIcon.tsx";
@@ -49,7 +49,7 @@ function Node({
   w: number;
   h: number;
   icon: FormIconName;
-  /** "new": dashed until it has a name; "off": dashed and quiet; "on": solid. */
+  /** "new": dashed until it has a name; "off": dashed and faint; "on": solid. */
   state: "new" | "off" | "on";
   children?: ReactNode;
 }) {
@@ -133,6 +133,8 @@ export function FolderPicture({
 }: FolderPictureProps) {
   const count = Math.round(useTween(people.length, 640));
   const lightRef = useLight(live);
+  // Avatars there when the page opens are simply there; only one added by an answer pops in.
+  const [opened] = useState(() => new Set(people));
   const shown = people.slice(0, 3);
   const reached = smb || nfs;
   const lightPath = smb
@@ -225,7 +227,7 @@ export function FolderPicture({
             style={{ "--i": i } as CSSProperties}
             transform={`translate(${300 + (i - (shown.length - 1) / 2) * 23} 75)`}
           >
-            <g className="lf-avatar-pop">
+            <g className={opened.has(person) ? undefined : "lf-avatar-pop"}>
               <circle r={13} />
               <text y={3.8}>{person.slice(0, 2)}</text>
             </g>
@@ -235,7 +237,7 @@ export function FolderPicture({
           {people.length === 0
             ? guest
               ? "Anyone"
-              : "Nobody yet"
+              : "Nobody"
             : `${count} ${count === 1 ? "person" : "people"}`}
         </text>
         <text className="lf-pic-fact" x={300} y={126}>
