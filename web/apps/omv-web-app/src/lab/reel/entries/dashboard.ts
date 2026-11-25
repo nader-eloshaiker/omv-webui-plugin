@@ -75,7 +75,7 @@ const sleeps = defineEntry<{ asleep: boolean }>({
     },
   ],
   timing:
-    "The slot's platter arc turns a quarter over 640ms on the exit curve and stops; a small moon fades in beside “Asleep” over 160ms as the temperature fades out. Never on page load, only on a change between readings.",
+    "The slot's platter arc turns a quarter over 640ms on the standard curve, slowing to a stop; a small moon fades in beside “Asleep” over 160ms as the temperature fades out. Never on page load, only on a change between readings.",
   reducedTiming: "The moon and the word appear.",
   Stage: PowerStage,
 });

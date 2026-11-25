@@ -1574,7 +1574,7 @@
   }
 }
 .rl-slot[data-changed][data-power="asleep"] .rl-arc {
-  animation: rl-arc-sleep var(--duration-glide) var(--ease-exit) both;
+  animation: rl-arc-sleep var(--duration-glide) var(--ease-standard) both;
 }
 .rl-slot[data-changed][data-power="awake"] .rl-arc {
   animation: rl-arc-wake var(--duration-slow) var(--ease-enter) both;

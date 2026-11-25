@@ -1733,11 +1733,17 @@ The motion reel (prototype 7) builds the tables above with these changes, becaus
   (rules 2 and 15); a first step's empty circle, not a number disc, becomes the check (rule 9);
   "It is live" is a stroke segment travelling the lineage strip, with no glow (rule 11); the copy
   direction's dash travels once per cause, not twice (7.1 rule 1).
-- **Added:** every motion's parts reach full opacity within 400ms of its cause, the NAS assembling
-  included (its movement may continue at full opacity to about 900ms). The reel checks this for each
-  motion.
-- **Waiting:** the icon motions that move a part of the drawing (the share ribbon, the mount socket,
-  wipe's sweep, delete's lid, the copy job's dash) need the custom icon set of prototype 6.
+- **Added:** fades finish within 400ms of their cause; only movement, drawing and value glides may
+  run longer, at full opacity. So the NAS assembling fades each part in over 160ms (all visible by
+  about 320ms) while the slides, connectors and bars run to about 900ms; a cleared filter's rows
+  rise 45ms apart but fade 20ms apart; an expanded row's facts fade in as the height lands, not
+  after; a sleeping disk's moon and the "Almost full" label fade in over 160ms while the arc's turn
+  and the settle keep their length. The reel checks this for each motion.
+- **Changed:** a sleeping disk's arc turns on the standard curve, which slows to a stop (the exit
+  curve speeds up). "Sort by size" sorts disks, because the backend gives no folder sizes (rule 17).
+- **Waiting:** the icon motions for stop sharing, delete's lid and the copy job's dash need the
+  custom icon set of prototype 6. The library's `Icon` already draws create, undo, restart, apply,
+  check health, share, mount and wipe with their motions.
 
 ---
 
