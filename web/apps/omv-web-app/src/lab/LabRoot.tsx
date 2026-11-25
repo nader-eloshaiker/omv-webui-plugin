@@ -5,7 +5,9 @@
 // The query string selects what is shown (?dir=, theme=, screen=, state=); it never acts (UI-4).
 // screen=add-folder and screen=add-person open the form prototypes (src/lab/forms/FormsLab.tsx);
 // screen=folders-table and screen=disks-table the table prototypes (src/lab/tables/TablesLab.tsx);
-// screen=nas-map the dashboard prototype, the NAS map (src/lab/dashboard/NasMapLab.tsx).
+// screen=nas-map the dashboard prototype, the NAS map (src/lab/dashboard/NasMapLab.tsx);
+// screen=motion the motion reel (src/lab/reel/MotionLab.tsx); screen=guidance the guidance
+// prototype (src/lab/guidance/GuidanceLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -21,9 +23,13 @@ import type { Scenario } from "./data.ts";
 import { nas } from "./data.ts";
 import FormsLab from "./forms/FormsLab.tsx";
 import { FORM_SCREENS } from "./forms/states.ts";
+import GuidanceLab from "./guidance/GuidanceLab.tsx";
+import { GUIDANCE_SCREENS } from "./guidance/states.ts";
 import "./lab.css";
 import { freeze } from "./live.ts";
 import { flyPending, pulse, viewChange, viewCommitted } from "./motion.ts";
+import MotionLab from "./reel/MotionLab.tsx";
+import { REEL_SCREENS } from "./reel/states.ts";
 import { Shell } from "./shell.tsx";
 import type { ApplyPhase, Dir, Lab, Screen, Theme, Toast } from "./state.ts";
 import { LabContext, SCREENS } from "./state.ts";
@@ -70,7 +76,7 @@ function readQuery() {
 }
 
 /**
- * The dashboard, form and table prototypes (rethink spec 8, rows 1 to 5) render in the system's own
+ * The dashboard, form, table, motion and guidance prototypes (rethink spec 8, rows 1 to 5, 7 and 8) render in the system's own
  * look with their own controls; every other screen is the three-direction lab below.
  */
 export default function LabRoot() {
@@ -80,6 +86,12 @@ export default function LabRoot() {
   }
   if (TABLE_SCREENS.some((s) => s === screen)) {
     return <TablesLab />;
+  }
+  if (REEL_SCREENS.some((s) => s === screen)) {
+    return <MotionLab />;
+  }
+  if (GUIDANCE_SCREENS.some((s) => s === screen)) {
+    return <GuidanceLab />;
   }
   return FORM_SCREENS.some((s) => s === screen) ? (
     <FormsLab />
