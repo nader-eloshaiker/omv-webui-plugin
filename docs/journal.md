@@ -912,3 +912,9 @@ The owner also decided:
 The owner found the map by rows much improved but still marked as machine-made, and named twenty habits of generated design: arrows on every button, little dots between words, overused eyebrow labels, cream backgrounds, one italic word in the headline, sparkle icons, everything in a card, the word "quiet", numbered sections, pulsing green dots, blurry glows behind the headline, a display serif, coloured left borders, three icon cards in a row, pills around the headline, the word "real", made-up figures, two-word sentences, sections fading in on scroll, and dithering. Several were in the new designs and in the design system: separator dots, uppercase labels, tone bars on the left of rows and cards, the area pills under the dashboard's answer, the ambient glow behind the page header, the pulsing live dot, and numbered first steps.
 
 None of the twenty is used anywhere. The style guide lists each one with what replaces it. Regions sit on the page ground instead of in cards. A status is its icon and a coloured word. Labels are in sentence case. Values are written with commas or given their own labels. Copy is either a label or a whole sentence. Every figure comes from a backend read. The NAS assembling on the first visit stays, because it answers the person's first visit and "Show me around", not a scroll.
+
+The owner then left three questions to the recommendation:
+
+1. **Breadcrumbs** show only the parent page, as one link above the title ("Shared folders"). That needs no separator, so there is no chevron and no slash.
+2. **Table filters** are text tabs with their counts, the chosen one underlined, instead of pill-shaped buttons.
+3. **The jump highlight** (the ring round the thing a link or search jumped to) appears once, holds still briefly and fades, instead of flashing twice.
