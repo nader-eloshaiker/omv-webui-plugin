@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region E (rethink spec 6.2 E, 7.2): left, 8 of 12, First steps as a row of four numbered steps with
-// the current one's button in the accent (filled when nothing else on the page is, outlined
-// otherwise), or Shortcuts in the same slot when the steps are done or tips are off; right, 4 of 12,
-// This NAS as a two-column fact list. The two are one row of equal height, so neither leaves a hole.
-// A step that is done draws its check and the next step's button fills from the start edge (7.2,
-// "A first step lands"). Lab-local candidates for *FirstStepsStepper, *Shortcuts (spec 8 row 1).
-// Development only (UI-11).
-import {
-  Button,
-  FactList,
-  FactListItem,
-  FactListLabel,
-  FactListValue,
-  Icon,
-} from "@omv-webui/react-ui-components";
-import { ArrowRight, ExternalLink } from "lucide-react";
+// Region E (rethink spec 6.2 E, 6.8, 7.2): left, 8 of 12, First steps as a row of four numbered
+// steps with the current one's button in the accent (filled when nothing else on the page is,
+// outlined otherwise), or Shortcuts in the same slot when the steps are done or tips are off; right,
+// 4 of 12, This NAS as facts in two columns, ending in "Show me around", which replays the first
+// visit. Both blocks are about the same height by design, and each fits its content, so neither
+// stretches into a blank strip. A step that is done draws its check and the next step's button fills
+// from the start edge (7.2, "A first step lands"). Compact density keeps a step's title and button
+// and drops its explanation (owner decision 11). Lab-local candidates for *FirstStepsStepper,
+// *Shortcuts (spec 8 row 1). Development only (UI-11).
+import { Button, Icon } from "@omv-webui/react-ui-components";
+import { ArrowRight, ExternalLink, Play } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useState } from "react";
 import type { Facts, Step } from "./model.ts";
@@ -24,6 +19,7 @@ export function FirstSteps({
   steps,
   filled,
   placement,
+  compact,
   onNote,
 }: {
   steps: readonly Step[];
@@ -31,6 +27,8 @@ export function FirstSteps({
   filled: boolean;
   /** Under region A on a new NAS, or in region E. */
   placement: "top" | "foot";
+  /** Compact density: each step's title and button, without its explanation. */
+  compact: boolean;
   onNote: (text: string) => void;
 }) {
   // A step that was not done when the stepper was drawn and is done now has just landed (7.2).
@@ -88,7 +86,9 @@ export function FirstSteps({
                   {step.title}
                   {step.done ? <span className="sr-only"> (done)</span> : null}
                 </span>
-                <span className="dm-step-line">{step.line}</span>
+                {compact ? null : (
+                  <span className="dm-step-line">{step.line}</span>
+                )}
               </span>
               {step.done ? null : (
                 <Button
@@ -121,19 +121,27 @@ export function FirstSteps({
   );
 }
 
+/**
+ * When the steps are done or tips are off: what the map does not already offer, as a short list of
+ * rows. The map's own actions (Add a shared folder, Check disk health) stay with the map, so each
+ * action is on the screen once.
+ */
 export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
   const items = [
     {
-      icon: <Icon name="shared-folder" mark="create" size={20} />,
-      words: "Add a shared folder",
-    },
-    {
       icon: <Icon name="person" mark="create" size={20} />,
       words: "Add a person",
+      note: "Add a person opens its page.",
     },
     {
-      icon: <Icon name="check-health" size={20} />,
-      words: "Check disk health",
+      icon: <Icon name="group" mark="create" size={20} />,
+      words: "Add a group",
+      note: "Add a group opens its page.",
+    },
+    {
+      icon: <ExternalLink aria-hidden="true" />,
+      words: "Open the classic interface",
+      note: "Opens the classic interface in a new tab.",
     },
   ];
   return (
@@ -150,32 +158,19 @@ export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
       <ul className="dm-shortcut-list">
         {items.map((item) => (
           <li key={item.words}>
-            <Button
-              variant="neutral"
-              size="md"
+            <button
+              type="button"
               className="dm-shortcut"
               onClick={() => {
-                onNote(`${item.words} opens its page.`);
+                onNote(item.note);
               }}
             >
-              {item.icon}
+              <span className="dm-shortcut-icon">{item.icon}</span>
               {item.words}
-            </Button>
+              <ArrowRight aria-hidden="true" className="dm-shortcut-go" />
+            </button>
           </li>
         ))}
-        <li>
-          <Button
-            variant="ghost"
-            size="md"
-            className="dm-shortcut"
-            onClick={() => {
-              onNote("Opens the classic interface in a new tab.");
-            }}
-          >
-            Open the classic interface
-            <ExternalLink aria-hidden="true" />
-          </Button>
-        </li>
       </ul>
     </section>
   );
@@ -184,9 +179,12 @@ export function Shortcuts({ onNote }: { onNote: (text: string) => void }) {
 export function ThisNas({
   facts,
   onNote,
+  onShowAround,
 }: {
   facts: Facts;
   onNote: (text: string) => void;
+  /** Replays the first visit: the map assembles, the welcome line and the captions come back. */
+  onShowAround: () => void;
 }) {
   return (
     <section
@@ -195,25 +193,40 @@ export function ThisNas({
       className="dm-facts"
       aria-labelledby="dm-facts-title"
     >
-      <h2 id="dm-facts-title" className="dm-region-title dm-region-title-sm">
-        This NAS
-      </h2>
-      <FactList className="dm-factlist">
-        <FactListItem>
-          <FactListLabel>Name</FactListLabel>
-          <FactListValue variant="identifier">{facts.name}</FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>Version</FactListLabel>
-          <FactListValue>{facts.version}</FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>Running for</FactListLabel>
-          <FactListValue>{facts.uptime}</FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>Updates</FactListLabel>
-          <FactListValue>
+      <header className="dm-facts-head">
+        <h2 id="dm-facts-title" className="dm-region-title dm-region-title-sm">
+          This NAS
+        </h2>
+        <Button
+          variant="quiet"
+          size="sm"
+          className="dm-show-around"
+          onClick={onShowAround}
+        >
+          <Play aria-hidden="true" />
+          Show me around
+        </Button>
+      </header>
+      <dl className="dm-factgrid">
+        <div className="dm-fact">
+          <dt>Name</dt>
+          <dd className="dm-mono">{facts.name}</dd>
+        </div>
+        <div className="dm-fact">
+          <dt>Version</dt>
+          <dd>{facts.version}</dd>
+        </div>
+        <div className="dm-fact">
+          <dt>Running for</dt>
+          <dd>{facts.uptime}</dd>
+        </div>
+        <div className="dm-fact">
+          <dt>Time on the NAS</dt>
+          <dd>{facts.time}</dd>
+        </div>
+        <div className="dm-fact dm-fact-wide">
+          <dt>Updates</dt>
+          <dd>
             <button
               type="button"
               className="dm-link"
@@ -224,13 +237,9 @@ export function ThisNas({
               {facts.updates} to install
               <ArrowRight aria-hidden="true" />
             </button>
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>Time on the NAS</FactListLabel>
-          <FactListValue>{facts.time}</FactListValue>
-        </FactListItem>
-      </FactList>
+          </dd>
+        </div>
+      </dl>
     </section>
   );
 }

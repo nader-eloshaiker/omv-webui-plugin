@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The dashboard prototype's data and pure logic (rethink spec 6): lab fixtures shaped like the
-// mock's default NAS, the answer and its area states, the "needs you" order, the lanes' caps, the
-// map's graph and which nodes a problem puts at risk, and where the one filled accent goes.
+// mock's default NAS, the answer and its area states, the "needs you" order, the map's rows (6.8:
+// their order, caps and the problem flowing along each), what pointing at a thing lights, the names
+// assistive technology reads, the map's actions once per screen, and where the one filled accent goes.
 // Development only (UI-11). The lab does not boot the mock, a session or a query client, so every
 // figure here is a fixture; the live strip alone runs through the app's own sample store
 // (liveFeed.ts).
-import type { MapNodeShape } from "@omv-webui/react-ui-components";
 import type { Health } from "../tables/model.ts";
 import { byHealth, worst } from "../tables/model.ts";
 import type { DashState } from "./states.ts";
@@ -180,25 +180,25 @@ export const LANES: readonly {
     id: "disks",
     title: "Disks",
     action: "Check disk health",
-    caption: "These are the disks the NAS found.",
+    caption: "The drives the NAS found inside it.",
   },
   {
     id: "storage",
     title: "Storage",
     action: "Add storage",
-    caption: "Storage is a disk made ready to keep files.",
+    caption: "A disk made ready to keep files.",
   },
   {
     id: "folders",
     title: "Shared folders",
     action: "Add a shared folder",
-    caption: "A shared folder is what your computers open.",
+    caption: "What your computers open, like Photos.",
   },
   {
     id: "ways",
     title: "Ways in",
     action: "Sharing settings",
-    caption: "How your computers reach the shared folders.",
+    caption: "How computers reach your shared folders.",
   },
   {
     id: "network",
@@ -218,17 +218,6 @@ export function listWords(items: readonly string[]): string {
     return items[0] ?? "";
   }
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
-}
-
-/** What a node feeds, in words, for the narrow map without lines: "Feeds Photos, Music and 4 more". */
-export function feedsWords(names: readonly string[]): string {
-  if (names.length === 0) {
-    return "";
-  }
-  if (names.length <= 3) {
-    return `Feeds ${listWords(names)}`;
-  }
-  return `Feeds ${names.slice(0, 2).join(", ")} and ${String(names.length - 2)} more`;
 }
 
 export function percent(used: number): string {
@@ -355,18 +344,18 @@ export function answerOf(nas: Nas): Answer {
   };
 }
 
-// ─── Lanes: caps (6.4) ────────────────────────────────────────────────────────────────────────
+// ─── Caps (6.8 item 9) ────────────────────────────────────────────────────────────────────────
 
 const isProblem = (h: Health) => h === "warning" || h === "critical";
 
 /**
- * The bay (6.4): up to `max` slots at full size; beyond that the healthy and unchecked disks fold
- * into a strip of ticks, and every disk in trouble keeps its full slot.
+ * A row's bay (6.8 item 9): up to `max` slots at full size; beyond that the healthy and unchecked
+ * disks fold into a strip of ticks, and every disk in trouble keeps its full slot.
  */
-export function bayLayout(
-  disks: readonly MapDisk[],
-  max = 12,
-): { full: MapDisk[]; strip: MapDisk[] } {
+export function bayLayout<D extends MapDisk>(
+  disks: readonly D[],
+  max = 6,
+): { full: D[]; strip: D[] } {
   if (disks.length <= max) {
     return { full: [...disks], strip: [] };
   }
@@ -395,7 +384,7 @@ export function stripWords(
   return `${lead}: ${String(ok)} OK, ${String(unread)} not checked`;
 }
 
-/** A capped lane: what is shown, and how many are left out and whether they are all fine. */
+/** A capped list: what is shown, and what is left out. */
 export interface Capped<T> {
   shown: T[];
   hidden: T[];
@@ -409,43 +398,7 @@ export function moreWords(hidden: readonly { health: Health }[]): string {
     : `${n} more`;
 }
 
-/** Storage (6.4): every one in trouble, then the fullest, up to `max`. Uncapped, in its own order. */
-export function capStorage(
-  list: readonly MapStorage[],
-  disks: readonly MapDisk[] = [],
-  max = 5,
-): Capped<MapStorage> {
-  if (list.length <= max) {
-    return { shown: [...list], hidden: [] };
-  }
-  // A drive on a disk in trouble counts as in trouble: it is what the problem puts at risk.
-  const trouble = (s: MapStorage) =>
-    worst([
-      s.health,
-      ...disks.filter((d) => d.feeds.includes(s.id)).map((d) => d.health),
-    ]);
-  const order = [...list].sort(
-    (a, b) => byHealth(trouble(a), trouble(b)) || b.used - a.used,
-  );
-  return { shown: order.slice(0, max), hidden: order.slice(max) };
-}
-
-/** Shared folders (6.4): those in trouble first, then the backend's order, up to `max`. */
-export function capFolders(
-  list: readonly MapFolder[],
-  max = 6,
-): Capped<MapFolder> {
-  if (list.length <= max) {
-    return { shown: [...list], hidden: [] };
-  }
-  const order = [...list]
-    .map((f, i) => ({ f, i }))
-    .sort((x, y) => byHealth(x.f.health, y.f.health) || x.i - y.i)
-    .map(({ f }) => f);
-  return { shown: order.slice(0, max), hidden: order.slice(max) };
-}
-
-/** Ways in (6.4): only those that are on as tiles, the rest as one "Off:" line. */
+/** Ways in (6.8 item 4): only those that are on as tiles, the rest as one "Off:" line. */
 export function waysLayout(ways: readonly MapWay[]): {
   on: MapWay[];
   off: string;
@@ -457,194 +410,456 @@ export function waysLayout(ways: readonly MapWay[]): {
   };
 }
 
-// ─── The map's graph ──────────────────────────────────────────────────────────────────────────
+// ─── The map, by rows (6.8) ───────────────────────────────────────────────────────────────────
 
-export const MORE_ID: Record<"storage" | "folders", string> = {
-  storage: "more:storage",
-  folders: "more:folders",
-};
-export const STRIP_ID = "strip:disks";
+/** The problem on a row, which flows right along it and nowhere else (6.8 item 2). */
+export type RowTone = "warning" | "critical";
+
+/** A disk on a row, and the other storage it is also part of (a partition in each, item 10). */
+export interface RowDisk extends MapDisk {
+  alsoIn: readonly string[];
+}
+
+export interface StorageRow {
+  kind: "storage";
+  /** `row:` and the storage's id. */
+  id: string;
+  storage: MapStorage;
+  disks: RowDisk[];
+  /** More than six disks: the healthy ones fold into a strip of ticks (item 9). */
+  bay: { full: RowDisk[]; strip: RowDisk[] };
+  /** More than six folders: five, then "+N more" (item 9). */
+  folders: Capped<MapFolder>;
+  /** The worst of its disks and the storage, when either is in trouble. */
+  tone: RowTone | null;
+  /** A disk on the row is in trouble: the connector from the disks takes the tone. */
+  diskTrouble: boolean;
+  system: boolean;
+}
+
+/** The disks that are in no storage yet, ending in "Add storage" (item 3). */
+export interface UnusedRow {
+  kind: "unused";
+  id: "row:unused";
+  disks: RowDisk[];
+  bay: { full: RowDisk[]; strip: RowDisk[] };
+}
+
+/** "+3 more, all OK": the storage rows beyond six (item 9). */
+export interface MoreRow {
+  kind: "more";
+  id: "row:more";
+  hidden: StorageRow[];
+}
+
+export type MapRow = StorageRow | UnusedRow | MoreRow;
 
 export interface MapView {
-  bay: { full: MapDisk[]; strip: MapDisk[] };
-  storage: Capped<MapStorage>;
-  folders: Capped<MapFolder>;
+  rows: MapRow[];
   ways: { on: MapWay[]; off: string };
-  ifaces: Capped<MapIface>;
-  /** The visible graph, every hidden node folded into its lane's "more" node or the strip. */
-  nodes: MapNodeShape[];
+  ifaces: MapIface[];
 }
 
-/** The lane a map node id belongs to, by its prefix. */
-export function laneOfId(id: string): LaneId {
-  if (id.startsWith("d:") || id === STRIP_ID) {
-    return "disks";
-  }
-  if (id.startsWith("s:") || id === MORE_ID.storage) {
-    return "storage";
-  }
-  if (id.startsWith("f:") || id === MORE_ID.folders) {
-    return "folders";
-  }
-  return id.startsWith("w:") ? "ways" : "network";
+export const UNUSED_ROW = "row:unused";
+export const MORE_ROW = "row:more";
+export const SYSTEM_ID = "s:system";
+
+const TONE_RANK: Record<RowTone, number> = { critical: 0, warning: 1 };
+
+function toneOf(healths: readonly Health[]): RowTone | null {
+  const w = worst(healths.filter(isProblem));
+  return w === "warning" || w === "critical" ? w : null;
 }
 
-export const wayNode = (id: WayId) => `w:${id}`;
-
-/** The full graph, nothing capped: disks feed storage, storage feeds folders, and so on. */
-export function fullGraph(nas: Nas): MapNodeShape[] {
-  const up = nas.ifaces.filter((i) => i.up).map((i) => i.id);
-  return [
-    ...nas.disks.map((d) => ({ id: d.id, feeds: d.feeds, status: d.health })),
-    ...nas.storage.map((s) => ({ id: s.id, feeds: s.feeds, status: s.health })),
-    ...nas.folders.map((f) => ({
-      id: f.id,
-      feeds: f.via.map(wayNode),
-      status: f.health,
-    })),
-    ...nas.ways
-      .filter((w) => w.on)
-      .map((w) => ({
-        id: wayNode(w.id),
-        feeds: up,
-        status: (w.running ? "ok" : "warning") as Health,
-      })),
-    ...nas.ifaces.map((i) => ({
-      id: i.id,
-      status: (i.up ? "ok" : "critical") as Health,
-    })),
-  ];
-}
-
-/** What the map shows: each lane capped, and the graph between what is shown. */
-export function mapView(nas: Nas): MapView {
-  const bay = bayLayout(nas.disks);
-  const storage = capStorage(nas.storage, nas.disks);
-  const folders = capFolders(nas.folders);
-  const ifaces: Capped<MapIface> = {
-    shown: nas.ifaces.slice(0, 3),
-    hidden: nas.ifaces.slice(3),
-  };
-  const ways = waysLayout(nas.ways);
-  const alias = new Map<string, string>();
-  for (const d of bay.strip) {
-    alias.set(d.id, STRIP_ID);
+/** Up to `max` folders; beyond that, `max - 1` (those in trouble first) and "+N more". */
+export function capRowFolders(
+  list: readonly MapFolder[],
+  max = 6,
+): Capped<MapFolder> {
+  if (list.length <= max) {
+    return { shown: [...list], hidden: [] };
   }
-  for (const s of storage.hidden) {
-    alias.set(s.id, MORE_ID.storage);
-  }
-  for (const f of folders.hidden) {
-    alias.set(f.id, MORE_ID.folders);
-  }
-  const visible = (id: string) => alias.get(id) ?? id;
-  const merged = new Map<string, { feeds: Set<string>; status: Health[] }>();
-  for (const node of fullGraph(nas)) {
-    const id = visible(node.id);
-    const entry = merged.get(id) ?? { feeds: new Set(), status: [] };
-    for (const to of node.feeds ?? []) {
-      entry.feeds.add(visible(to));
-    }
-    entry.status.push((node.status ?? "ok") as Health);
-    merged.set(id, entry);
-  }
-  const nodes = [...merged].map(([id, { feeds, status }]) => ({
-    id,
-    feeds: [...feeds],
-    // A strip or "more" node is drawn plain: the trouble it folds in is never there (6.4).
-    status: id === STRIP_ID || id.startsWith("more:") ? "ok" : worst(status),
-  })) as MapNodeShape[];
-  return { bay, storage, folders, ways, ifaces, nodes };
+  const order = [...list]
+    .map((f, i) => ({ f, i }))
+    .sort((x, y) => byHealth(x.f.health, y.f.health) || x.i - y.i)
+    .map(({ f }) => f);
+  return { shown: order.slice(0, max - 1), hidden: order.slice(max - 1) };
 }
 
 /**
- * What a problem puts at risk (6.2, 7.6): from a disk or a storage, what it holds, down to the
- * shared folders (a disk failing does not endanger the network); from a way in or an interface, the
- * shared folders it is the way to. The node itself is always part of it.
+ * Row order (item 7): rows with a problem first, worst first; then by how much the row holds (the
+ * fullest first); the system drive last, since it rarely matters to the person.
  */
-export function atRisk(
-  nodes: readonly MapNodeShape[],
-  id: string,
-): Set<string> {
-  const down = new Map<string, readonly string[]>();
-  const up = new Map<string, string[]>();
-  for (const node of nodes) {
-    down.set(node.id, node.feeds ?? []);
-    for (const to of node.feeds ?? []) {
-      up.set(to, [...(up.get(to) ?? []), node.id]);
-    }
+export function byRow(a: StorageRow, b: StorageRow): number {
+  const ta = a.tone ? TONE_RANK[a.tone] : 2;
+  const tb = b.tone ? TONE_RANK[b.tone] : 2;
+  if (ta !== tb) {
+    return ta - tb;
   }
-  const lane = laneOfId(id);
-  const out = new Set<string>([id]);
-  if (lane === "folders") {
-    return out;
+  if (a.tone === null && a.system !== b.system) {
+    return a.system ? 1 : -1;
   }
-  const next = lane === "disks" || lane === "storage" ? down : up;
-  const queue = [id];
-  while (queue.length > 0) {
-    const at = queue.shift() as string;
-    if (at !== id && laneOfId(at) === "folders") {
-      continue;
-    }
-    for (const n of next.get(at) ?? []) {
-      if (!out.has(n)) {
-        out.add(n);
-        queue.push(n);
-      }
-    }
+  return b.storage.used - a.storage.used;
+}
+
+/** The map's rows (6.8): storage rows in order, capped at six, then the unused disks. */
+export function mapRows(nas: Nas, maxRows = 6, maxDisks = 6): MapRow[] {
+  const names = new Map(nas.storage.map((s) => [s.id, s.name]));
+  const folders = new Map(nas.folders.map((f) => [f.id, f]));
+  const rowDisk = (d: MapDisk, here: string | null): RowDisk => ({
+    ...d,
+    alsoIn: d.feeds
+      .filter((id) => id !== here)
+      .map((id) => names.get(id) ?? id),
+  });
+  const rows: StorageRow[] = nas.storage.map((storage) => {
+    const disks = nas.disks
+      .filter((d) => d.feeds.includes(storage.id))
+      .map((d) => rowDisk(d, storage.id));
+    return {
+      kind: "storage",
+      id: `row:${storage.id}`,
+      storage,
+      disks,
+      bay: bayLayout(disks, maxDisks),
+      folders: capRowFolders(
+        storage.feeds.flatMap((id) => folders.get(id) ?? []),
+      ),
+      tone: toneOf([storage.health, ...disks.map((d) => d.health)]),
+      diskTrouble: toneOf(disks.map((d) => d.health)) !== null,
+      system: storage.id === SYSTEM_ID,
+    };
+  });
+  rows.sort(byRow);
+  const out: MapRow[] =
+    rows.length > maxRows
+      ? [
+          ...rows.slice(0, maxRows - 1),
+          { kind: "more", id: MORE_ROW, hidden: rows.slice(maxRows - 1) },
+        ]
+      : rows;
+  const unused = nas.disks
+    .filter((d) => d.feeds.length === 0)
+    .map((d) => rowDisk(d, null));
+  // Disks that could not be read say nothing about which are unused.
+  if (unused.length > 0 && !nas.failed.includes("disks")) {
+    out.push({
+      kind: "unused",
+      id: UNUSED_ROW,
+      disks: unused,
+      bay: bayLayout(unused, maxDisks),
+    });
   }
   return out;
 }
 
-/** Every node at risk from a problem on the map, with the worst problem's tone. */
-export function riskTones(
-  nodes: readonly MapNodeShape[],
-): Map<string, "warning" | "critical"> {
-  const tones = new Map<string, "warning" | "critical">();
-  for (const node of nodes) {
-    const status = node.status ?? "ok";
-    if (status !== "warning" && status !== "critical") {
-      continue;
-    }
-    for (const id of atRisk(nodes, node.id)) {
-      if (tones.get(id) !== "critical") {
-        tones.set(id, status);
-      }
-    }
-  }
-  return tones;
+/** What the map shows: its rows, and the band of ways in and the network under them. */
+export function mapView(nas: Nas): MapView {
+  return {
+    rows: mapRows(nas),
+    ways: waysLayout(nas.ways),
+    ifaces: nas.ifaces.slice(0, 3),
+  };
 }
 
-/** How far each node at risk is from where the trouble starts, for the lineage's travel (7.6). */
-export function riskDepth(
-  nodes: readonly MapNodeShape[],
-  from: string,
-): Map<string, number> {
-  const set = atRisk(nodes, from);
-  const depth = new Map<string, number>([[from, 0]]);
-  const links = new Map<string, string[]>();
-  for (const node of nodes) {
-    for (const to of node.feeds ?? []) {
-      links.set(node.id, [...(links.get(node.id) ?? []), to]);
-      links.set(to, [...(links.get(to) ?? []), node.id]);
-    }
+/** A folder's state on its row: its own problem, else the row's ("At risk"), else none. */
+export function folderState(
+  folder: MapFolder,
+  tone: RowTone | null,
+): { health: RowTone; word: string } | null {
+  if (folder.health === "warning" || folder.health === "critical") {
+    return { health: folder.health, word: folder.word };
   }
-  const queue = [from];
-  while (queue.length > 0) {
-    const at = queue.shift() as string;
-    for (const n of links.get(at) ?? []) {
-      if (set.has(n) && !depth.has(n)) {
-        depth.set(n, (depth.get(at) ?? 0) + 1);
-        queue.push(n);
+  return tone ? { health: tone, word: "At risk" } : null;
+}
+
+// ─── Keys of the things on the map ────────────────────────────────────────────────────────────
+
+/** A disk can stand on two rows (a partition in each), so its key carries its row. */
+export const diskKey = (rowId: string, diskId: string) => `${rowId}/${diskId}`;
+export const stripKey = (rowId: string) => `${rowId}/strip`;
+export const moreKey = (rowId: string) => `${rowId}/more`;
+export const ADD_KEY = `${UNUSED_ROW}/add`;
+export const wayKey = (id: WayId) => `w:${id}`;
+
+/** The keys on a row, in reading order, grouped by column: disks, storage, folders. */
+export function rowKeys(row: MapRow, addable: boolean): string[][] {
+  const bayKeys = (bay: { full: RowDisk[]; strip: RowDisk[] }) => [
+    ...bay.full.map((d) => diskKey(row.id, d.id)),
+    ...(bay.strip.length > 0 ? [stripKey(row.id)] : []),
+  ];
+  switch (row.kind) {
+    case "storage":
+      return [
+        bayKeys(row.bay),
+        [row.storage.id],
+        [
+          ...row.folders.shown.map((f) => f.id),
+          ...(row.folders.hidden.length > 0 ? [moreKey(row.id)] : []),
+        ],
+      ];
+    case "unused":
+      return [bayKeys(row.bay), addable ? [ADD_KEY] : [], []];
+    case "more":
+      return [[], [MORE_ROW], []];
+  }
+}
+
+/**
+ * Where an arrow key moves on the rows: left and right along the row, up and down to the same
+ * column of the next row that has one (the nearest column otherwise), Home and End to the first and
+ * last thing on the map. `null` when there is nowhere to go.
+ */
+export function moveInRows(
+  grid: readonly (readonly (readonly string[])[])[],
+  current: string,
+  key: string,
+): string | null {
+  let r = -1;
+  let c = -1;
+  let i = -1;
+  grid.forEach((row, ri) => {
+    row.forEach((col, ci) => {
+      const at = col.indexOf(current);
+      if (at >= 0) {
+        r = ri;
+        c = ci;
+        i = at;
+      }
+    });
+  });
+  if (r < 0) {
+    return null;
+  }
+  const flat = (ri: number) => grid[ri]?.flat() ?? [];
+  const pick = (ri: number): string | null => {
+    const best = (grid[ri] ?? [])
+      .map((col, ci) => ({ col, ci }))
+      .filter(({ col }) => col.length > 0)
+      .sort(
+        (x, y) => Math.abs(x.ci - c) - Math.abs(y.ci - c) || x.ci - y.ci,
+      )[0];
+    return best ? (best.col[Math.min(i, best.col.length - 1)] ?? null) : null;
+  };
+  switch (key) {
+    case "ArrowRight":
+    case "ArrowLeft": {
+      const row = flat(r);
+      return (
+        row[row.indexOf(current) + (key === "ArrowRight" ? 1 : -1)] ?? null
+      );
+    }
+    case "ArrowDown":
+    case "ArrowUp": {
+      const step = key === "ArrowDown" ? 1 : -1;
+      for (let ri = r + step; ri >= 0 && ri < grid.length; ri += step) {
+        const target = pick(ri);
+        if (target !== null) {
+          return target;
+        }
+      }
+      return null;
+    }
+    case "Home":
+      return grid.flatMap((_, ri) => flat(ri))[0] ?? null;
+    case "End":
+      return grid.flatMap((_, ri) => flat(ri)).at(-1) ?? null;
+    default:
+      return null;
+  }
+}
+
+// ─── Tracing by highlighting (item 5) ─────────────────────────────────────────────────────────
+
+export interface Trace {
+  /** Rows lit whole. */
+  rows: ReadonlySet<string>;
+  /** Things lit one by one, wherever they are (the folder chips a way in reaches). */
+  keys: ReadonlySet<string>;
+  /** Ways in lit, with their connector into the network. */
+  ways: ReadonlySet<WayId>;
+}
+
+/**
+ * What pointing at or focusing a thing lights: a folder lights its row and the ways in it is reached
+ * by; a way in lights every folder it reaches, wherever it is; a disk, a storage or a row's "more"
+ * lights its row (a disk on two rows lights both); an interface lights every way in and every folder
+ * reached at all. The rest is shown at reduced emphasis.
+ */
+export function traceOf(view: MapView, key: string): Trace {
+  const storageRows = view.rows.filter(
+    (r): r is StorageRow => r.kind === "storage",
+  );
+  const reached = (ways: readonly WayId[]) => {
+    const keys: string[] = [];
+    const reaches = (f: MapFolder) => f.via.some((w) => ways.includes(w));
+    for (const row of storageRows) {
+      keys.push(...row.folders.shown.filter(reaches).map((f) => f.id));
+      if (row.folders.hidden.some(reaches)) {
+        keys.push(moreKey(row.id));
+      }
+    }
+    return keys;
+  };
+  if (key.startsWith("w:")) {
+    const id = key.slice(2) as WayId;
+    return {
+      rows: new Set(),
+      keys: new Set([key, ...reached([id])]),
+      ways: new Set([id]),
+    };
+  }
+  if (key.startsWith("n:")) {
+    const on = view.ways.on.map((w) => w.id);
+    return {
+      rows: new Set(),
+      keys: new Set([key, ...on.map(wayKey), ...reached(on)]),
+      ways: new Set(on),
+    };
+  }
+  if (key.startsWith("f:")) {
+    const row = storageRows.find((r) =>
+      r.folders.shown.some((f) => f.id === key),
+    );
+    const folder = row?.folders.shown.find((f) => f.id === key);
+    const via = (folder?.via ?? []).filter((w) =>
+      view.ways.on.some((on) => on.id === w),
+    );
+    return {
+      rows: new Set(row ? [row.id] : []),
+      keys: new Set([key, ...via.map(wayKey)]),
+      ways: new Set(via),
+    };
+  }
+  if (key.startsWith("s:")) {
+    return {
+      rows: new Set([`row:${key}`]),
+      keys: new Set([key]),
+      ways: new Set(),
+    };
+  }
+  const slash = key.indexOf("/");
+  const rowId = slash < 0 ? key : key.slice(0, slash);
+  const rest = slash < 0 ? "" : key.slice(slash + 1);
+  const rows = new Set([rowId]);
+  if (rest.startsWith("d:")) {
+    // The same disk on another row (a partition in each) lights that row too.
+    for (const row of view.rows) {
+      if (row.kind !== "more" && row.disks.some((d) => d.id === rest)) {
+        rows.add(row.id);
       }
     }
   }
-  return depth;
+  return { rows, keys: new Set([key]), ways: new Set() };
+}
+
+// ─── Names for assistive technology (item 13) ─────────────────────────────────────────────────
+
+/**
+ * A row's name: "Data drive, on disk sda: 92 percent used, almost full. Shared folders: Photos,
+ * Music and Documents, at risk."
+ */
+export function rowName(row: MapRow): string {
+  switch (row.kind) {
+    case "more":
+      return `${moreWords(row.hidden.map((r) => ({ health: r.tone ?? "ok" })))}: more storage`;
+    case "unused": {
+      const one = row.disks.length === 1;
+      return `Not in use: ${one ? "disk" : "disks"} ${listWords(row.disks.map((d) => d.device))}. Add storage to keep files on ${one ? "it" : "them"}.`;
+    }
+    case "storage": {
+      const s = row.storage;
+      const on =
+        row.disks.length === 0
+          ? ""
+          : `, on ${row.disks.length === 1 ? "disk" : "disks"} ${listWords(row.disks.map((d) => d.device))}`;
+      const own = isProblem(s.health) ? `, ${s.word.toLowerCase()}` : "";
+      const sick = row.disks
+        .filter((d) => isProblem(d.health))
+        .map((d) => `, disk ${d.device} ${d.word.toLowerCase()}`)
+        .join("");
+      const folders = [...row.folders.shown, ...row.folders.hidden];
+      const held =
+        folders.length > 0
+          ? `Shared folders: ${listWords(folders.map((f) => f.name))}${row.tone ? ", at risk" : ""}.`
+          : row.system
+            ? "Holds the system."
+            : "No shared folders.";
+      return `${s.name}${on}: ${String(Math.round(s.used * 100))} percent used${own}${sick}. ${held}`;
+    }
+  }
+}
+
+/** A way in's name: "Windows and Mac (SMB): on, 2 computers connected, over enp2s0". */
+export function wayName(w: MapWay, ifaces: readonly MapIface[]): string {
+  const state = !w.running
+    ? "on, not running"
+    : w.connections
+      ? `on, ${String(w.connections)} ${w.connections === 1 ? "computer" : "computers"} connected`
+      : "on, running";
+  const over = ifaces.filter((i) => i.up).map((i) => i.name);
+  return `${w.name} (${w.tech}): ${state}${over.length > 0 ? `, over ${listWords(over)}` : ""}`;
+}
+
+// ─── The map's actions, each once on the screen (6.8 item 8) ──────────────────────────────────
+
+/** Where each area chip of region A moves focus (6.2 A): the rows, or the band's two halves. */
+export const LANE_TARGET: Record<LaneId, string> = {
+  disks: "dm-rows",
+  storage: "dm-rows",
+  folders: "dm-rows",
+  ways: "dm-band-ways",
+  network: "dm-band-net",
+};
+
+/** The actions of the first steps that are on the screen, so nothing else offers them again. */
+export function stepActionsShown(
+  steps: readonly Step[],
+  shown: boolean,
+): string[] {
+  return shown ? steps.filter((s) => !s.done).map((s) => s.action) : [];
+}
+
+/** The map's footer, in reading order. */
+export const MAP_ACTIONS = [
+  "Check disk health",
+  "Add storage",
+  "Add a shared folder",
+  "Sharing settings",
+  "Interfaces",
+] as const;
+export type MapAction = (typeof MAP_ACTIONS)[number];
+
+/**
+ * Each action once per screen: the footer leaves out what the screen already offers elsewhere (a
+ * first step's button, the unused row's "Add storage"). The ghost on the unused row is that button
+ * unless a first step already offers it; then it is a picture of where new storage will go.
+ */
+export function mapActions(
+  view: MapView,
+  stepActions: readonly string[],
+): { footer: MapAction[]; ghostAdds: boolean } {
+  const hasUnused = view.rows.some((r) => r.kind === "unused");
+  const ghostAdds = hasUnused && !stepActions.includes("Add storage");
+  const elsewhere = new Set([
+    ...stepActions,
+    ...(ghostAdds ? ["Add storage"] : []),
+  ]);
+  return {
+    footer: MAP_ACTIONS.filter((a) => !elsewhere.has(a)),
+    ghostAdds,
+  };
 }
 
 // ─── The accent (A2, 1.2) ─────────────────────────────────────────────────────────────────────
 
-/** Where the one filled accent goes: B's worst row, else an empty lane's action, else the step. */
-export type AccentAt = "needs-you" | "folders-lane" | "step" | "none";
+/**
+ * Where the one filled accent goes: B's worst row, else the map's "Add a shared folder" when there
+ * are none, else the current first step, else (a new NAS with the steps hidden) the unused row's
+ * "Add storage".
+ */
+export type AccentAt =
+  "needs-you" | "folders-lane" | "step" | "add-storage" | "none";
 
 export function accentAt(nas: Nas, stepsShown: boolean): AccentAt {
   if (needsYou(nas).length > 0) {
@@ -657,7 +872,12 @@ export function accentAt(nas: Nas, stepsShown: boolean): AccentAt {
   ) {
     return "folders-lane";
   }
-  return stepsShown && nas.steps.some((s) => !s.done) ? "step" : "none";
+  if (stepsShown && nas.steps.some((s) => !s.done)) {
+    return "step";
+  }
+  return nas.newNas && nas.disks.some((d) => d.feeds.length === 0)
+    ? "add-storage"
+    : "none";
 }
 
 /** The step to do now: the first not done. */
@@ -1042,12 +1262,31 @@ function manyNas(): Nas {
     ["archive", "Archive drive", "Parity (RAID 6)", "raid", 0.77],
   ] as const;
   const dataDrives = drives.slice(1);
+  // How many disks each data drive is made of, in letter order: the RAID 6 has eight, so its row
+  // folds them into a strip (6.8 item 9).
+  const diskCount: Record<string, number> = {
+    photos: 2,
+    media1: 3,
+    media2: 5,
+    backup: 2,
+    tank: 2,
+    scratch: 1,
+    archive: 8,
+  };
+  const diskTargets = dataDrives.flatMap(([id]) =>
+    Array.from({ length: diskCount[id] ?? 0 }, () => id),
+  );
   const disks: MapDisk[] = [
     disk("nvme0n1", "nvme", g("238.5"), ["s:system"], 34),
-    ...letters.map((l, i) => {
-      const target = dataDrives[i % dataDrives.length]?.[0] ?? "photos";
-      return disk(`sd${l}`, "hdd", t("7.3"), [`s:${target}`], 33 + (i % 6));
-    }),
+    ...letters.map((l, i) =>
+      disk(
+        `sd${l}`,
+        "hdd",
+        t("7.3"),
+        [`s:${diskTargets[i] ?? "photos"}`],
+        33 + (i % 6),
+      ),
+    ),
   ];
   const folders = MANY_FOLDERS.map((name, i) =>
     folder(
@@ -1056,6 +1295,11 @@ function manyNas(): Nas {
       i % 5 === 4 ? ["nfs"] : i % 7 === 6 ? [] : ["smb"],
     ),
   );
+  // The first nine folders are on Photos drive (more than six: five and "+4 more"), the rest
+  // round the other data drives.
+  const others = dataDrives.slice(1);
+  const folderDrive = (i: number) =>
+    i < 9 ? "photos" : (others[(i - 9) % others.length]?.[0] ?? "photos");
   const storage = drives.map(([id, name, tech, kind, used]) =>
     storageNode(
       id,
@@ -1065,11 +1309,7 @@ function manyNas(): Nas {
       used,
       t((7.3 * (1 - used)).toFixed(1)),
       t("7.3"),
-      id === "system"
-        ? []
-        : folders
-            .filter((_, i) => dataDrives[i % dataDrives.length]?.[0] === id)
-            .map((f) => f.id),
+      folders.filter((_, i) => folderDrive(i) === id).map((f) => f.id),
     ),
   );
   const nas: Nas = {
@@ -1227,39 +1467,15 @@ export function nasFor(state: DashState): Nas {
 
 // ─── Layout ─────────────────────────────────────────────────────────────────────────────────────
 
-/** The map's layout: five lanes, three lanes with Ways in below (900), or disclosure rows (390). */
+/**
+ * The page's layout by content width: wide (1440), mid (900: rows keep their three columns, the
+ * band and the footer blocks stack) or narrow (390: each row a card, connectors vertical).
+ */
 export type Layout = "wide" | "mid" | "narrow";
 
 /** The layout the content width allows. */
 export function layoutFor(width: number): Layout {
   return width >= 960 ? "wide" : width >= 600 ? "mid" : "narrow";
-}
-
-/** The lane's count and state for its header: "6 · Not checked", "4 · OK". */
-export function laneSummary(
-  nas: Nas,
-  lane: LaneId,
-  areas: readonly AreaState[],
-): { count: string; health: Health; word: string } {
-  const area = areas.find((a) => a.lane === lane);
-  const counts: Record<LaneId, number> = {
-    disks: nas.disks.length,
-    storage: nas.storage.length,
-    folders: nas.folders.length,
-    ways: nas.ways.filter((w) => w.on).length,
-    network: nas.ifaces.length,
-  };
-  const count =
-    lane === "ways"
-      ? `${String(counts.ways)} on`
-      : lane === "network"
-        ? (nas.ifaces[0]?.name ?? "")
-        : String(counts[lane]);
-  return {
-    count,
-    health: area?.health ?? "ok",
-    word: area?.word ?? "OK",
-  };
 }
 
 /** A temperature with its unit: "36 °C". */

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Prototype: the dashboard as the NAS map (rethink spec 6, 8 row 1). Development only (UI-11). Top
-// to bottom it reads as the visit does: the answer (A), what needs you (B), the NAS itself with
+// Prototype: the dashboard as the NAS map (rethink spec 6, 6.8, 8 row 1). Development only (UI-11).
+// Top to bottom it reads as the visit does: the answer (A), what needs you (B), the NAS itself with
 // status in place (C), what is happening now (D), the add-ons, then setup and facts (E). Every region
 // spans the full width or splits it in a fixed 8/4, so no region can leave a hole beside it.
 //
+// The first visit in this browser assembles the map row by row and brings the welcome line and the
+// column captions; the browser remembers it (useWelcomeStore, a non-sensitive preference, UI-13). "Show
+// me around" in This NAS plays it again. The account menu's entry for it belongs to the shell.
+//
 // The lab's cause buttons bring what a later reading would (a problem arriving and resolving, the
-// first storage replacing its ghost, a disk going to sleep) and replay the first visit. Everything
+// first storage replacing its ghost, a disk going to sleep) and forget the first visit. Everything
 // happens in memory; nothing is written to the backend (UI-4).
 import type {
   PointerEvent,
@@ -20,6 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
 import { LabCauses } from "../tables/FoldersTable.tsx";
 import { reducedMotion } from "../tables/grid.ts";
 import { AddOns } from "./AddOns.tsx";
@@ -33,10 +38,12 @@ import {
   accentAt,
   answerOf,
   areaStates,
+  LANE_TARGET,
   layoutFor,
   mapView,
   nasFor,
   needsYou,
+  stepActionsShown,
   withFirstStorage,
   withoutSdbWarning,
   withPower,
@@ -44,11 +51,17 @@ import {
 } from "./model.ts";
 import { NeedsYou } from "./NeedsYou.tsx";
 import type { DashState } from "./states.ts";
-import type { Assemble } from "./SystemMap.tsx";
 import { SystemMap } from "./SystemMap.tsx";
+import type { Assemble } from "./welcome.ts";
+import { assembleFor } from "./welcome.ts";
 
-/** The first visit in this browser assembles the map; later visits fade it in (7.1 rule 4). */
-let assembledOnce = false;
+const ALL_LANES: readonly LaneId[] = [
+  "disks",
+  "storage",
+  "folders",
+  "ways",
+  "network",
+];
 
 function useContentWidth(ref: RefObject<HTMLElement | null>): number {
   const [width, setWidth] = useState(1100);
@@ -76,6 +89,12 @@ const isTyping = (target: EventTarget | null) =>
   (target.isContentEditable ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
+/**
+ * The visit, for its guidance: "first" in a browser that has not seen the dashboard, "replay" after
+ * "Show me around", "later" otherwise.
+ */
+type Visit = "first" | "replay" | "later";
+
 export function Dashboard({
   state,
   tips,
@@ -100,24 +119,34 @@ export function Dashboard({
   const [nas, setNas] = useState<Nas>(() => nasFor(state));
   const [loading, setLoading] = useState(state === "loading");
   const [retrying, setRetrying] = useState<LaneId[]>([]);
-  const [welcome, setWelcome] = useState<"shown" | "leaving" | "gone">(
-    state === "new-interface" && tips ? "shown" : "gone",
+  // The lab's "new interface" state is a first visit whatever this browser remembers.
+  const [visit, setVisit] = useState<Visit>(() =>
+    state === "new-interface" || !useWelcomeStore.getState().seen
+      ? "first"
+      : "later",
   );
-  const [traceTip, setTraceTip] = useState(state === "new-interface" && tips);
+  const [welcome, setWelcome] = useState<"shown" | "leaving" | "gone">(() =>
+    visit === "first" && tips && !nas.newNas ? "shown" : "gone",
+  );
+  const [traceTip, setTraceTip] = useState(visit === "first" && tips);
   const [arrival, setArrival] = useState<{ node: string; n: number } | null>(
     null,
   );
   const [mapKey, setMapKey] = useState(0);
   const [assemble, setAssemble] = useState<Assemble>(() =>
-    state === "loading"
-      ? "none"
-      : !assembledOnce && !reduced && !reducedMotion()
-        ? "full"
-        : "fade",
+    assembleFor({
+      firstVisit: visit === "first",
+      reduced: reduced || reducedMotion(),
+      still,
+      loading: state === "loading",
+    }),
   );
+  // Remember the first visit in this browser, once it has been shown (UI-13: one boolean).
   useEffect(() => {
-    assembledOnce = true;
-  }, []);
+    if (visit === "first") {
+      useWelcomeStore.getState().setSeen(true);
+    }
+  }, [visit]);
 
   useLiveFeed(still);
   const rate = useRateWords();
@@ -135,21 +164,55 @@ export function Dashboard({
   const accent = accentAt(nas, stepsShown);
   const smb = nas.ways.find((w) => w.id === "smb");
 
+  // The column captions (6.8, P.3): every column on a newcomer's visit or a new NAS (G1, G2), the
+  // shared folders column alone while there are none (G1). "Show me around" asks for them, so it
+  // brings them even with tips off. Compact density never shows them (owner decision 11).
+  const captions: readonly LaneId[] = compact
+    ? []
+    : visit === "replay" || (tips && (visit === "first" || nas.newNas))
+      ? ALL_LANES
+      : tips && nas.folders.length === 0
+        ? ["folders"]
+        : [];
+
   const dismissWelcome = useCallback(() => {
     setWelcome((w) => (w === "shown" ? "leaving" : w));
   }, []);
 
-  // Anything done on the page dismisses the welcome (P.2), "Got it" included.
+  // Anything done on the page dismisses the welcome (P.2), "Got it" included; "Show me around"
+  // brings it back, so pressing it does not count.
   const onPageAction = (event: PointerEvent | ReactKeyboardEvent) => {
     const target = event.target as HTMLElement;
-    if (welcome === "shown" && !target.closest("[data-welcome-line]")) {
+    if (
+      welcome === "shown" &&
+      !target.closest("[data-welcome-line], .dm-show-around")
+    ) {
       dismissWelcome();
     }
   };
 
+  const showAround = () => {
+    setVisit("replay");
+    setWelcome(nas.newNas ? "gone" : "shown");
+    setTraceTip(false);
+    setAssemble(
+      assembleFor({
+        firstVisit: true,
+        reduced: reduced || reducedMotion(),
+        still: false,
+        loading,
+      }),
+    );
+    setMapKey((k) => k + 1);
+    rootRef.current?.scrollIntoView({
+      block: "start",
+      behavior: reducedMotion() ? "auto" : "smooth",
+    });
+  };
+
   const focusArea = useCallback((area: AreaState) => {
     const el = document.getElementById(
-      area.lane ? `dm-lane-${area.lane}` : "dm-facts",
+      area.lane ? LANE_TARGET[area.lane] : "dm-facts",
     );
     if (!el) {
       return;
@@ -160,16 +223,16 @@ export function Dashboard({
     });
     el.focus({ preventScroll: true });
     // The foundation's "Arrival": ringed twice, then nothing.
-    el.removeAttribute("data-arrived");
+    el.removeAttribute("data-arrived-ring");
     requestAnimationFrame(() => {
-      el.setAttribute("data-arrived", "");
+      el.setAttribute("data-arrived-ring", "");
     });
     window.setTimeout(() => {
-      el.removeAttribute("data-arrived");
+      el.removeAttribute("data-arrived-ring");
     }, 2200);
   }, []);
 
-  // 1 to 6 move focus to an area's lane when focus is on the page, ignored while typing (6.7).
+  // 1 to 6 move focus to an area when focus is on the page, ignored while typing (6.7).
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
@@ -225,16 +288,20 @@ export function Dashboard({
           <button
             type="button"
             onClick={() => {
-              setAssemble(reducedMotion() ? "fade" : "full");
-              setMapKey((k) => k + 1);
+              useWelcomeStore.getState().setSeen(false);
+              onNote(
+                "This browser forgot the first visit; open the page again to see it.",
+              );
             }}
           >
-            Replay the first visit
+            Forget the first visit
           </button>
           <button
             type="button"
             onClick={() => {
               setAssemble("fade");
+              setVisit("later");
+              setWelcome("gone");
               setMapKey((k) => k + 1);
             }}
           >
@@ -310,6 +377,7 @@ export function Dashboard({
       {welcome !== "gone" ? (
         <WelcomeLine
           leaving={welcome === "leaving"}
+          compact={compact}
           onDismiss={dismissWelcome}
           onLeft={() => {
             setWelcome("gone");
@@ -335,6 +403,7 @@ export function Dashboard({
           steps={nas.steps}
           filled={accent === "step"}
           placement="top"
+          compact={compact}
           onNote={onNote}
         />
       ) : null}
@@ -345,13 +414,11 @@ export function Dashboard({
         key={mapKey}
         nas={nas}
         view={view}
-        areas={areas}
         layout={layout}
-        tips={tips}
-        compact={compact}
         loading={loading}
         accent={accent}
         assemble={assemble}
+        captions={captions}
         arrival={arrival}
         showTraceTip={traceTip && welcome === "gone" && tips && !loading}
         onTraced={() => {
@@ -360,6 +427,7 @@ export function Dashboard({
         onDismissTip={() => {
           setTraceTip(false);
         }}
+        stepActions={stepActionsShown(nas.steps, stepsShown)}
         retrying={retrying}
         onRetry={onRetry}
         onNote={onNote}
@@ -370,7 +438,6 @@ export function Dashboard({
         <LiveStrip
           loading={loading}
           layout={layout}
-          iface={nas.ifaces[0]}
           connections={smb?.on ? smb.connections : null}
         />
       )}
@@ -383,18 +450,23 @@ export function Dashboard({
         />
       )}
 
-      <div className="dm-foot" data-layout={layout}>
+      <div
+        className="dm-foot"
+        data-layout={layout}
+        data-single={(stepsShown && stepsOnTop) || undefined}
+      >
         {stepsShown && !stepsOnTop ? (
           <FirstSteps
             steps={nas.steps}
             filled={accent === "step"}
             placement="foot"
+            compact={compact}
             onNote={onNote}
           />
-        ) : (
+        ) : stepsShown ? null : (
           <Shortcuts onNote={onNote} />
         )}
-        <ThisNas facts={nas.facts} onNote={onNote} />
+        <ThisNas facts={nas.facts} onNote={onNote} onShowAround={showAround} />
       </div>
     </div>
   );

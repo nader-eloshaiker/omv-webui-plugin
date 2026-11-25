@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The Disks lane's bay (rethink spec 6.2 C, 6.4): slot tiles with their health in place, and beyond
-// twelve disks a strip of ticks for the healthy ones while every disk in trouble keeps its full
-// slot. Lab-local until the owner has seen it, a candidate for DriveBay's "slot tiles" mode and
+// A map row's disks (rethink spec 6.8): slot tiles with their health in place, and beyond six disks
+// a strip of ticks for the healthy ones while every disk in trouble keeps its full slot. Lab-local
+// until the owner has seen it, a candidate for DriveBay's "slot tiles" mode and
 // *BayStrip (spec 8 row 1). Development only (UI-11). A slot whose disk goes to sleep turns its
 // platter arc a quarter and stops, and a moon fades in beside "Asleep" (7.6); only on a change,
 // never on page load.
@@ -73,7 +73,22 @@ function Caddy({ disk }: { disk: MapDisk }) {
   );
 }
 
-function slotName(disk: MapDisk): string {
+/**
+ * What a thing on the map takes from the map: its key, whether it is lit or dimmed by a trace, its
+ * tab stop (one per map, moved by the arrow keys) and the pointer and focus that trace it.
+ */
+export interface ItemProps {
+  ref: (el: HTMLElement | null) => void;
+  "data-key": string;
+  "data-trace": "lit" | "dim" | undefined;
+  tabIndex: number;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
+  onFocus: () => void;
+  onBlur: () => void;
+}
+
+function slotName(disk: MapDisk, alsoIn: readonly string[]): string {
   const detail =
     disk.power === "asleep"
       ? "asleep"
@@ -85,28 +100,27 @@ function slotName(disk: MapDisk): string {
     `${KIND_WORD[disk.kind]} ${disk.size}`,
     disk.word,
     detail,
+    alsoIn.length > 0 ? `also in ${alsoIn.join(" and ")}` : "",
   ]
     .filter(Boolean)
     .join(", ");
 }
 
-/** One disk as a tile: its caddy, its device in mono, and its state in words (never colour alone). */
+/**
+ * One disk as a slot: its caddy, its device in mono, and its state in words (never colour alone).
+ * A disk that is also part of another storage (a partition in each) carries a small link mark and
+ * says so in its tooltip and name (6.8 item 10).
+ */
 export function SlotTile({
   disk,
-  risk,
-  trace,
-  tabbable,
-  onTrace,
+  alsoIn,
+  item,
   onOpen,
-  register,
 }: {
   disk: MapDisk;
-  risk?: "warning" | "critical";
-  trace?: "lit" | "dim";
-  tabbable: boolean;
-  onTrace: (id: string | null) => void;
+  alsoIn: readonly string[];
+  item: ItemProps;
   onOpen: (words: string) => void;
-  register: (id: string, el: HTMLElement | null) => void;
 }) {
   // Whether the power state changed since the slot was first drawn: only a change is news (7.6).
   const [initialPower] = useState(disk.power);
@@ -114,37 +128,27 @@ export function SlotTile({
   const quiet = disk.health === "ok";
   return (
     <button
-      ref={(el) => {
-        register(disk.id, el);
-      }}
+      {...item}
       type="button"
       className="dm-slot"
-      data-node={disk.id}
       data-health={disk.health}
-      data-risk={risk}
-      data-trace={trace}
       data-power={disk.power}
       data-power-changed={powerChanged || undefined}
-      tabIndex={tabbable ? 0 : -1}
-      aria-label={slotName(disk)}
-      onPointerEnter={() => {
-        onTrace(disk.id);
-      }}
-      onPointerLeave={() => {
-        onTrace(null);
-      }}
-      onFocus={() => {
-        onTrace(disk.id);
-      }}
-      onBlur={() => {
-        onTrace(null);
-      }}
+      aria-label={slotName(disk, alsoIn)}
+      title={alsoIn.length > 0 ? `Also in ${alsoIn.join(" and ")}` : undefined}
       onClick={() => {
         onOpen(`Opens disk ${disk.device}.`);
       }}
     >
       <Caddy disk={disk} />
-      <span className="dm-slot-device">{disk.device}</span>
+      <span className="dm-slot-device">
+        {disk.device}
+        {alsoIn.length > 0 ? (
+          <svg aria-hidden="true" viewBox="0 0 12 12" className="dm-slot-link">
+            <path d="M5 7l2-2M4.2 5.6 3 6.8a1.7 1.7 0 0 0 2.4 2.4l1.2-1.2M7.8 6.4 9 5.2a1.7 1.7 0 0 0-2.4-2.4L5.4 4" />
+          </svg>
+        ) : null}
+      </span>
       <span
         key={disk.health}
         className="dm-slot-state"
@@ -172,47 +176,24 @@ export function SlotTile({
   );
 }
 
-/** The healthy disks beyond twelve, as ticks with their shape, and their count in words (6.4). */
+/** The healthy disks of a row beyond six, as 12px ticks with their shape, and their count (6.8 item 9). */
 export function BayStrip({
   disks,
   hasFull,
-  trace,
-  tabbable,
-  onTrace,
+  item,
   onOpen,
-  register,
 }: {
   disks: readonly MapDisk[];
   hasFull: boolean;
-  trace?: "lit" | "dim";
-  tabbable: boolean;
-  onTrace: (id: string | null) => void;
+  item: ItemProps;
   onOpen: (words: string) => void;
-  register: (id: string, el: HTMLElement | null) => void;
 }) {
   const words = stripWords(disks, hasFull);
   return (
     <button
-      ref={(el) => {
-        register("strip:disks", el);
-      }}
+      {...item}
       type="button"
       className="dm-strip"
-      data-node="strip:disks"
-      data-trace={trace}
-      tabIndex={tabbable ? 0 : -1}
-      onPointerEnter={() => {
-        onTrace("strip:disks");
-      }}
-      onPointerLeave={() => {
-        onTrace(null);
-      }}
-      onFocus={() => {
-        onTrace("strip:disks");
-      }}
-      onBlur={() => {
-        onTrace(null);
-      }}
       onClick={() => {
         onOpen("Opens the disks page.");
       }}

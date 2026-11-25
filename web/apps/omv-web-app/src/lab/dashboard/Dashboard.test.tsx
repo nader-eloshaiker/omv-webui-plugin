@@ -1,20 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The dashboard prototype as a person meets it: the answer, the rows that need them, the map's
-// lanes and their actions, a lane that fails and is read again, and the first visit's welcome.
+// The dashboard prototype as a person meets it: the answer, the rows that need them, the map read by
+// rows (their order, a problem flowing along one row, tracing by pointer and keyboard), a lane that
+// fails and is read again, the first visit remembered and shown again, and compact density.
 // Lab fixtures only; nothing here reaches the network.
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearStorage } from "../../stores/storageSnapshot.ts";
+import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
 import { Dashboard } from "./Dashboard.tsx";
 import type { DashState } from "./states.ts";
 
-function show(state: DashState, tips = true) {
+function show(
+  state: DashState,
+  { tips = true, compact = false }: { tips?: boolean; compact?: boolean } = {},
+) {
   const onNote = vi.fn();
   render(
     <Dashboard
       state={state}
       tips={tips}
-      compact={false}
+      compact={compact}
       reduced
       chrome={false}
       still
@@ -24,17 +30,42 @@ function show(state: DashState, tips = true) {
   return { onNote };
 }
 
+const rows = () =>
+  within(screen.getByRole("list", { name: "Your storage, a row each" }))
+    .getAllByRole("listitem")
+    .filter((li) => li.getAttribute("aria-hidden") !== "true");
+
+const rowNamed = (start: string) => {
+  const row = rows().find((li) =>
+    (li.getAttribute("aria-label") ?? "").startsWith(start),
+  );
+  if (!row) {
+    throw new Error(`No row ${start}`);
+  }
+  return row;
+};
+
+beforeEach(() => {
+  // A browser that has seen the dashboard, unless a test says otherwise.
+  useWelcomeStore.setState({ seen: true });
+});
+
+afterEach(() => {
+  useWelcomeStore.setState({ seen: false });
+  clearStorage();
+});
+
 describe("the NAS map dashboard", () => {
   it("answers first, then lists what needs the person, worst first, three and how many more", () => {
     show("needs-you");
     expect(
       screen.getByRole("heading", { level: 1, name: "4 things need you" }),
     ).toBeInTheDocument();
-    const rows = within(
+    const list = within(
       screen.getByRole("region", { name: "What needs you" }),
     ).getAllByRole("listitem");
-    expect(rows).toHaveLength(3);
-    expect(rows[0]).toHaveTextContent("Disk sdb reports a problem");
+    expect(list).toHaveLength(3);
+    expect(list[0]).toHaveTextContent("Disk sdb reports a problem");
     expect(screen.getByRole("button", { name: "1 more" })).toBeInTheDocument();
   });
 
@@ -44,12 +75,13 @@ describe("the NAS map dashboard", () => {
     expect(screen.getByText("The clocks differ by 4 days")).toBeInTheDocument();
   });
 
-  it("has no needs-you region when all is well, and every lane ends in its action", () => {
+  it("has no needs-you region when all is well, and offers each map action once", () => {
     show("all-ok");
     expect(
       screen.getByRole("heading", { level: 1, name: "All OK" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "What needs you" })).toBeNull();
+    const map = screen.getByRole("region", { name: "Your NAS" });
     for (const action of [
       "Check disk health",
       "Add storage",
@@ -57,12 +89,9 @@ describe("the NAS map dashboard", () => {
       "Sharing settings",
       "Interfaces",
     ]) {
-      expect(
-        within(screen.getByRole("region", { name: "Your NAS" })).getByRole(
-          "button",
-          { name: action },
-        ),
-      ).toBeInTheDocument();
+      expect(within(map).getAllByRole("button", { name: action })).toHaveLength(
+        1,
+      );
     }
   });
 
@@ -74,15 +103,135 @@ describe("the NAS map dashboard", () => {
       }),
     ).toBeInTheDocument();
   });
+});
 
-  it("shows a lane's read error as text in place, and reads it again", async () => {
+describe("the map's rows (6.8)", () => {
+  it("has a row per storage, problems first, the system drive last, unused disks at the end", () => {
+    show("needs-you");
+    expect(
+      rows().map((li) => (li.getAttribute("aria-label") ?? "").split(",")[0]),
+    ).toEqual([
+      "Data drive",
+      "Backup",
+      "tank",
+      "System drive",
+      "Not in use: disk sde. Add storage to keep files on it.",
+    ]);
+    expect(rowNamed("Data drive")).toHaveAccessibleName(
+      "Data drive, on disk sda: 92 percent used, almost full. Shared folders: Photos, Music and Documents, at risk.",
+    );
+  });
+
+  it("lets a disk's problem flow right along its row and nowhere else", () => {
+    show("needs-you");
+    const backup = rowNamed("Backup");
+    expect(
+      within(backup).getByRole("button", {
+        name: "Time Machine: Windows and Mac, at risk",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(backup).getByText("At risk", { selector: ".dm-store *" }),
+    ).toBeInTheDocument();
+    const tank = rowNamed("tank");
+    expect(
+      within(tank).getByRole("button", { name: "Archive: Linux" }),
+    ).toBeInTheDocument();
+    expect(within(tank).queryByText("At risk")).toBeNull();
+  });
+
+  it("lists the ways in with how many computers and the interface they come in over", () => {
+    show("needs-you");
+    const ways = screen.getByRole("list", { name: "Ways in" });
+    expect(within(ways).getAllByRole("listitem")[0]).toHaveAccessibleName(
+      "Windows and Mac (SMB): on, 2 computers connected, over enp2s0",
+    );
+    expect(screen.getByText("Off: Copies to other NAS")).toBeInTheDocument();
+  });
+});
+
+describe("tracing by highlighting", () => {
+  it("lights every folder a way in reaches when it is pointed at, and dims the rest", async () => {
+    show("needs-you");
+    await userEvent.hover(
+      screen.getByRole("button", { name: /^Windows and Mac SMB/u }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Photos: Windows and Mac, at risk" }),
+    ).toHaveAttribute("data-trace", "lit");
+    expect(
+      screen.getByRole("button", {
+        name: "Time Machine: Windows and Mac, at risk",
+      }),
+    ).toHaveAttribute("data-trace", "lit");
+    expect(
+      screen.getByRole("button", { name: "Archive: Linux" }),
+    ).toHaveAttribute("data-trace", "dim");
+    // No row is lit whole.
+    expect(rowNamed("Data drive")).toHaveAttribute("data-trace", "dim");
+  });
+
+  it("lights a folder's row and the ways in it is reached by, by keyboard focus too", () => {
+    show("needs-you");
+    const music = screen.getByRole("button", {
+      name: "Music: Windows and Mac and Linux, at risk",
+    });
+    act(() => {
+      music.focus();
+    });
+    expect(rowNamed("Data drive")).toHaveAttribute("data-trace", "lit");
+    expect(rowNamed("Backup")).toHaveAttribute("data-trace", "dim");
+    expect(
+      screen.getByRole("button", { name: /^Windows and Mac SMB/u }),
+    ).toHaveAttribute("data-trace", "lit");
+    expect(
+      screen.getByRole("button", { name: /^Linux and Unix NFS/u }),
+    ).toHaveAttribute("data-trace", "lit");
+    expect(
+      screen.getByRole("button", { name: /^Remote sign-in SSH/u }),
+    ).toHaveAttribute("data-trace", "dim");
+    act(() => {
+      music.blur();
+    });
+    expect(rowNamed("Data drive")).not.toHaveAttribute("data-trace");
+  });
+
+  it("lights a disk's row", async () => {
+    show("needs-you");
+    await userEvent.hover(screen.getByRole("button", { name: /^sdc, / }));
+    expect(rowNamed("Backup")).toHaveAttribute("data-trace", "lit");
+    expect(rowNamed("Data drive")).toHaveAttribute("data-trace", "dim");
+  });
+
+  it("is one tab stop, moved along a row and between rows by the arrow keys", () => {
+    show("needs-you");
+    const sda = screen.getByRole("button", { name: /^sda, / });
+    expect(sda).toHaveAttribute("tabindex", "0");
+    act(() => {
+      sda.focus();
+    });
+    fireEvent.keyDown(sda, { key: "ArrowRight" });
+    expect(
+      screen.getByRole("button", { name: /^Data drive EXT4/u }),
+    ).toHaveFocus();
+    fireEvent.keyDown(document.activeElement as Element, { key: "ArrowDown" });
+    expect(screen.getByRole("button", { name: /^Backup/u })).toHaveFocus();
+    expect(sda).toHaveAttribute("tabindex", "-1");
+  });
+});
+
+describe("a lane that fails", () => {
+  it("shows its read error as text in place, and reads it again", async () => {
     show("lane-failed");
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Could not read disks");
     expect(alert).toHaveTextContent("The request timed out after 10 seconds.");
-    // The other lanes stand.
+    // The rows stand, their disks unread.
     expect(
-      screen.getByRole("button", { name: /Data drive/u }),
+      screen.getByRole("button", { name: /^Data drive/u }),
+    ).toBeInTheDocument();
+    expect(
+      within(rowNamed("Data drive")).getByText("Not read"),
     ).toBeInTheDocument();
     await userEvent.click(
       within(alert).getByRole("button", { name: "Try again" }),
@@ -96,45 +245,132 @@ describe("the NAS map dashboard", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).toBeNull();
   });
+});
 
-  it("welcomes a new NAS with ghosts and first steps that lead with Add storage", () => {
+describe("a new NAS", () => {
+  it("leads with Add storage in the first steps, shows the unused disks' row and an example, each action once", () => {
     show("new-nas");
     expect(
       screen.getByRole("heading", { level: 1, name: "Welcome to your NAS" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Your storage will appear here"),
     ).toBeInTheDocument();
     const steps = screen.getByRole("region", { name: "First steps" });
     expect(
       within(steps).getByRole("listitem", { current: "step" }),
     ).toHaveTextContent("Add storage");
+    expect(rowNamed("Not in use")).toHaveTextContent("New storage goes here");
+    expect(screen.getByText("Example")).toBeInTheDocument();
+    expect(
+      screen.getByText("A disk made ready to keep files."),
+    ).toBeInTheDocument();
+    for (const action of ["Add storage", "Add a shared folder"]) {
+      expect(screen.getAllByRole("button", { name: action })).toHaveLength(1);
+    }
   });
 
-  it("drops ghosts, captions and first steps with tips off; the empty state's sentence stays", () => {
-    show("new-nas", false);
-    expect(screen.queryByText("Your storage will appear here")).toBeNull();
-    expect(
-      screen.queryByText("A shared folder is what your computers open."),
-    ).toBeNull();
-    expect(screen.getByText("No shared folders yet.")).toBeInTheDocument();
+  it("drops the example and the captions with tips off; the unused row then offers Add storage in the accent", () => {
+    show("new-nas", { tips: false });
+    expect(screen.queryByText("Example")).toBeNull();
+    expect(screen.queryByText("A disk made ready to keep files.")).toBeNull();
     expect(
       screen.getByRole("region", { name: "Shortcuts" }),
     ).toBeInTheDocument();
+    const add = within(rowNamed("Not in use")).getByRole("button", {
+      name: "Add storage",
+    });
+    // The filled accent: the one "do this" on the map.
+    expect(add.className).toMatch(/\bbg-primary\b/u);
+    expect(screen.getAllByRole("button", { name: "Add storage" })).toHaveLength(
+      1,
+    );
+  });
+});
+
+describe("the first visit (owner decision 10)", () => {
+  it("welcomes a browser that has not seen it, with the captions, and remembers it", () => {
+    useWelcomeStore.setState({ seen: false });
+    show("all-ok");
+    expect(
+      screen.getByText(/Welcome to the new interface\./u),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The drives the NAS found inside it."),
+    ).toBeInTheDocument();
+    expect(useWelcomeStore.getState().seen).toBe(true);
   });
 
-  it("welcomes an existing NAS to the new interface in one line that leaves with Got it", async () => {
+  it("stays out of the way on a later visit", () => {
+    show("all-ok");
+    expect(screen.queryByText(/Welcome to the new interface\./u)).toBeNull();
+    expect(
+      screen.queryByText("The drives the NAS found inside it."),
+    ).toBeNull();
+  });
+
+  it("can be seen again with Show me around", async () => {
+    show("all-ok", { tips: false });
+    await userEvent.click(
+      screen.getByRole("button", { name: "Show me around" }),
+    );
+    expect(
+      screen.getByText(/Welcome to the new interface\./u),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The drives the NAS found inside it."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("How computers reach your shared folders."),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves with Got it", async () => {
     show("new-interface");
     expect(
       screen.getByText(/Welcome to the new interface\./u),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Got it" }));
-    // Reduced motion: the line leaves at once.
+    // It folds away (it is removed when its leaving animation ends) and the answer stays.
     expect(
-      await screen.findByRole("heading", { level: 1, name: "All OK" }),
+      screen
+        .getByText(/Welcome to the new interface\./u)
+        .closest("[data-welcome-line]"),
+    ).toHaveAttribute("data-leaving");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "All OK" }),
     ).toBeInTheDocument();
   });
+});
 
+describe("compact density (owner decision 11)", () => {
+  it("keeps a first step's title and button and drops its explanation", () => {
+    show("all-ok", { compact: true });
+    const steps = screen.getByRole("region", { name: "First steps" });
+    expect(
+      within(steps).getByText("Change the factory password"),
+    ).toBeInTheDocument();
+    expect(
+      within(steps).getByRole("button", { name: "Change" }),
+    ).toBeInTheDocument();
+    expect(
+      within(steps).queryByText("The factory password may still work."),
+    ).toBeNull();
+  });
+
+  it("drops the captions and the welcome's second sentence, even on a first visit", () => {
+    useWelcomeStore.setState({ seen: false });
+    show("all-ok", { compact: true });
+    expect(
+      screen.getByText(/Welcome to the new interface\./u),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Your settings and files are the same/u),
+    ).toBeNull();
+    expect(
+      screen.queryByText("The drives the NAS found inside it."),
+    ).toBeNull();
+  });
+});
+
+describe("add-ons", () => {
   it("shows an unknown add-on by its package name with the way to the classic interface", () => {
     show("all-ok");
     const addOns = screen.getByRole("region", { name: "From your add-ons" });
