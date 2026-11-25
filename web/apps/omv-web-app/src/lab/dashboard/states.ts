@@ -7,7 +7,7 @@ export type DashScreen = (typeof DASH_SCREENS)[number];
 
 export const DASH_STATES = [
   { id: "needs-you", name: "Needs you: 4 things" },
-  { id: "all-ok", name: "All OK" },
+  { id: "all-ok", name: "Everything is working" },
   { id: "disk-critical", name: "A disk is failing" },
   { id: "new-nas", name: "First visit: a new NAS" },
   { id: "new-interface", name: "First visit: new interface" },

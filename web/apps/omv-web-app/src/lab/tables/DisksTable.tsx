@@ -19,7 +19,6 @@ import {
   Icon,
   MenuItem,
   MenuSeparator,
-  StatusPill,
   Switch,
   Table,
   TableBody,
@@ -33,7 +32,6 @@ import {
   TableStateRow,
   TableToolbar,
 } from "@omv-webui/react-ui-components";
-import { ArrowRight } from "lucide-react";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { Tip } from "../forms/parts.tsx";
 import { LabCauses } from "./FoldersTable.tsx";
@@ -48,6 +46,7 @@ import {
   groupDisks,
   holdsWords,
   HOT,
+  NOT_CHECKED,
   sortDisks,
 } from "./model.ts";
 import type { SummaryPart } from "./parts.tsx";
@@ -61,6 +60,7 @@ import {
   SelectCell,
   SelectionBar,
   StatusCell,
+  StatusWord,
   SummaryProblem,
   TableSummary,
 } from "./parts.tsx";
@@ -304,7 +304,7 @@ export function DisksTable({
         : checking
           ? [
               summary.parts[0] ?? "",
-              `Checking health, ${String(done)} ${done === 1 ? "disk" : "disks"} to go`,
+              `checking health, ${String(done)} ${done === 1 ? "disk" : "disks"} to go`,
             ]
           : summary.parts.map((p) =>
               /warning|critical/u.test(p)
@@ -375,7 +375,7 @@ export function DisksTable({
           open(d.id);
         }}
       >
-        <ArrowRight aria-hidden="true" />
+        <Icon name={KIND_ICON[d.kind]} size={16} />
         Open
       </MenuItem>
       {checkable(d) ? (
@@ -480,7 +480,7 @@ export function DisksTable({
               mono={d.device}
               line={
                 <>
-                  {d.model} <code className="lt-chip-mono">{d.device}</code>
+                  {d.model}, <code className="lt-chip-mono">{d.device}</code>
                 </>
               }
               onOpen={() => {
@@ -498,7 +498,9 @@ export function DisksTable({
             ) : (
               <StatusCell
                 status={d.health}
-                reason={d.health === "ok" ? undefined : d.reason}
+                {...(d.reason === NOT_CHECKED
+                  ? { word: "Not checked yet" }
+                  : { reason: d.health === "ok" ? undefined : d.reason })}
               />
             )}
           </TableCell>
@@ -573,7 +575,7 @@ export function DisksTable({
 
   return (
     <div className="lt-page">
-      <PageHead icon="disk" title="Disks" />
+      <PageHead title="Disks" />
       <TableSummary parts={summaryParts} action={action} />
       {chrome ? (
         <LabCauses>
@@ -605,7 +607,6 @@ export function DisksTable({
         <div className="lt-bay-wrap">
           <DriveBay
             aria-label="The disks in this NAS. Point at a disk to find its row."
-            name="nas"
             slots={slots}
             arrived={rang}
             className="lt-bay"
@@ -763,7 +764,7 @@ export function DisksTable({
 
 // ─── Cells ────────────────────────────────────────────────────────────────────────────────────
 
-/** Right-aligned with its unit (4.5); a threshold pill only when crossed (4.9). */
+/** Right-aligned with its unit (4.5); a warning word only when the threshold is crossed (4.9). */
 function Temperature({ disk, power }: { disk: Disk; power: PowerShown }) {
   if (disk.temperature === null) {
     return (
@@ -779,7 +780,7 @@ function Temperature({ disk, power }: { disk: Disk; power: PowerShown }) {
   return (
     <span className="lt-temp">
       {disk.temperature >= HOT ? (
-        <StatusPill status="warning">Hot</StatusPill>
+        <StatusWord status="warning">Hot</StatusWord>
       ) : null}
       <span className="lt-num">
         {disk.temperature}
@@ -821,7 +822,7 @@ function HoldsCell({
     case "empty":
       return (
         <span className="lt-holds lt-holds-empty">
-          <span className="lt-quiet">Empty</span>
+          <span className="lt-secondary">Empty</span>
           <Button
             variant="ghost"
             size="sm"
@@ -835,7 +836,7 @@ function HoldsCell({
         </span>
       );
     case "removable":
-      return <span className="lt-quiet">{holds.what}</span>;
+      return <span className="lt-secondary">{holds.what}</span>;
   }
 }
 

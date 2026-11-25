@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region B, "Needs you" (rethink spec 6.2 B, 7.6): only when something does. Rows, not cards: the
-// status icon, the title, one line and the next step, worst first. The worst row's button is the
+// Region B, "Needs you" (rethink spec 6.2 B, 7.6): only when something does. Rows on the page ground,
+// parted by hairlines, with no card and no coloured edge: the status icon at the start, the title,
+// one line and the next step, worst first. The answer above is the region's heading. The worst row's button is the
 // region's one filled accent, the others are outlined (A2). At most three, then "N more". A new row
 // rises in at its place; one that no longer needs the person leaves and gives up its height.
 // Lab-local candidate for *AttentionList (spec 8 row 1). Development only (UI-11).

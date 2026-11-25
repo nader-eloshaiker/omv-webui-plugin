@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region C, "Your NAS" (rethink spec 6.8): the NAS read by rows, not lines. Each storage is one row,
-// left to right its disks, a short straight connector, the storage with its usage bar, another
-// connector and its shared folders as wrapping chips that carry the ways they are reached by. What
-// hangs together sits on one row, so a problem flows right along its row and nowhere else; a 3px
-// tone bar at the row's start finds it from across the room. Unused disks end in "Add storage".
-// Under the rows, one band: the ways in that are on, fanning into the network through one bus.
+// Region C, "Your NAS" (rethink spec 6.8): the NAS read by rows, not lines, on the page ground with
+// nothing boxed. Each storage is one row, left to right: its disks as their drawings, a short straight
+// connector, the storage as its icon, name, usage bar and figures, another connector and its shared
+// folders as icon and name with the ways they are reached by. What hangs together sits on one row, so
+// a problem flows right along its row and nowhere else: the row starts with the problem's status
+// icon and its connectors take the tone. Unused disks end in "Add storage". Under the rows, one band:
+// the ways in that are on, as icon, name and state, fanning into the network through one bus.
 // Tracing is highlighting: pointing at or focusing a thing lights what it belongs to and reaches,
 // and shows the rest at reduced emphasis. The rows share their column tracks (a subgrid), so the
 // column headers read and the eye scans down a column as easily as along a row.
@@ -21,7 +22,7 @@ import {
   Skeleton,
   StatusIcon,
 } from "@omv-webui/react-ui-components";
-import { ArrowRight, House, RotateCw } from "lucide-react";
+import { House, RotateCw } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import {
   createContext,
@@ -203,12 +204,12 @@ function Bay({
     return (
       <span className="dm-bay dm-bay-unread">
         <StatusIcon status="unknown" />
-        Not read
+        Disks: not read
       </span>
     );
   }
   if (row.disks.length === 0) {
-    return <span className="dm-bay dm-bay-none">No disk</span>;
+    return <span className="dm-bay dm-bay-none">Disks: none</span>;
   }
   return (
     <span className="dm-bay" data-strip={row.bay.strip.length > 0 || undefined}>
@@ -243,7 +244,7 @@ function StorageNode({ row }: { row: StorageRow }) {
   const s = row.storage;
   const item = useItem(s.id, row.id);
   const own = s.health === "warning" || s.health === "critical";
-  // A disk in trouble puts the storage at risk; its own problem is said by the meter's pill.
+  // A disk in trouble puts the storage at risk; its own problem is said beside the meter's figures.
   const atRisk = !own && row.tone !== null;
   const { ref, onPointerEnter, onPointerLeave, ...focus } = item;
   return (
@@ -283,7 +284,7 @@ function StorageNode({ row }: { row: StorageRow }) {
         label={`${s.name}: space used`}
         value={s.used}
         max={1}
-        valueText={`${percent(s.used)} · ${s.free} free`}
+        valueText={`${percent(s.used)} used, ${s.free} free`}
         threshold={
           s.health === "warning" || s.health === "critical"
             ? { status: s.health, label: s.word }
@@ -308,6 +309,12 @@ function FolderChip({
   const item = useItem(folder.id, row.id);
   const state = folderState(folder, row.tone);
   const via = folder.via.map((w) => WAY_SHORT[w]);
+  // Only the folder's own problem is said on it; the row's status icon and toned connector already
+  // say the row is at risk, so the folders do not repeat it.
+  const own =
+    folder.health === "warning" || folder.health === "critical"
+      ? { health: folder.health, word: folder.word }
+      : null;
   return (
     <button
       {...item}
@@ -315,7 +322,7 @@ function FolderChip({
       className="dm-folder"
       data-health={state?.health}
       style={{ "--i": index } as CSSProperties}
-      aria-label={`${folder.name}: ${via.length > 0 ? listWords(via) : "not shared"}${state ? `, ${state.word.toLowerCase()}` : ""}`}
+      aria-label={`${folder.name}: ${via.length > 0 ? `reached by ${listWords(via)}` : "no way in reaches it"}${state ? `, ${state.word.toLowerCase()}` : ""}`}
       onClick={() => {
         ctx.onNote(`Opens the shared folder ${folder.name}.`);
       }}
@@ -325,7 +332,7 @@ function FolderChip({
         <bdi>{folder.name}</bdi>
       </span>
       {folder.via.length === 0 ? (
-        <span className="dm-folder-none">Not shared</span>
+        <span className="dm-folder-none">Ways in: none</span>
       ) : (
         <span className="dm-folder-via">
           {folder.via.map((w) => (
@@ -335,10 +342,10 @@ function FolderChip({
           ))}
         </span>
       )}
-      {state ? (
-        <span className="dm-state" data-health={state.health}>
-          <StatusIcon status={state.health} />
-          {state.word}
+      {own ? (
+        <span className="dm-state" data-health={own.health}>
+          <StatusIcon status={own.health} />
+          {own.word}
         </span>
       ) : null}
     </button>
@@ -358,8 +365,7 @@ function MoreFolders({ row }: { row: StorageRow }) {
         ctx.onNote(`Opens Shared folders, those on ${row.storage.name}.`);
       }}
     >
-      +{moreWords(row.folders.hidden)}
-      <ArrowRight aria-hidden="true" />
+      {moreWords(row.folders.hidden)}
     </button>
   );
 }
@@ -367,16 +373,18 @@ function MoreFolders({ row }: { row: StorageRow }) {
 function Folders({ row, failed }: { row: StorageRow; failed: boolean }) {
   if (failed) {
     return (
-      <span className="dm-quiet-line">
+      <span className="dm-secondary-line">
         <StatusIcon status="unknown" />
-        Not read
+        Shared folders: not read
       </span>
     );
   }
   if (row.folders.shown.length === 0) {
     return (
-      <span className="dm-quiet-line">
-        {row.system ? "Holds the system" : "No shared folders"}
+      <span className="dm-secondary-line">
+        {row.system
+          ? "This drive holds the system itself, so it keeps no shared folders."
+          : "Shared folders: none"}
       </span>
     );
   }
@@ -418,7 +426,9 @@ function StorageRowView({
       aria-label={rowName(row)}
       style={{ "--r": index } as CSSProperties}
     >
-      <span className="dm-edge" aria-hidden="true" />
+      <span className="dm-edge" aria-hidden="true">
+        {row.tone ? <StatusIcon status={row.tone} /> : null}
+      </span>
       <span className="dm-cell dm-cell-disks">
         <Bay row={row} failed={failed.includes("disks")} />
         <Wire tone={row.diskTrouble ? row.tone : null} />
@@ -455,8 +465,8 @@ function UnusedRowView({
 }) {
   const ctx = useMapCtx();
   const item = useItem(ADD_KEY, row.id);
+  const one = row.disks.length === 1;
   const devices = listWords(row.disks.map((d) => d.device));
-  const verb = row.disks.length === 1 ? "is" : "are";
   return (
     <li
       className="dm-row"
@@ -473,13 +483,9 @@ function UnusedRowView({
       </span>
       <span className="dm-cell dm-cell-storage">
         <span className="dm-ghost-store" data-trace={item["data-trace"]}>
-          <span className="dm-ghost-words">
-            <span className="dm-ghost-title">
-              {ghostAdds ? "Not in use yet" : "New storage goes here"}
-            </span>
-            <span className="dm-ghost-line">
-              {devices} {verb} ready to become storage
-            </span>
+          <span className="dm-ghost-line">
+            {one ? "Disk" : "Disks"} {devices} {one ? "is" : "are"} not in use
+            yet.
           </span>
           {ghostAdds ? (
             <Button
@@ -499,7 +505,9 @@ function UnusedRowView({
       </span>
       <span className="dm-cell dm-cell-folders">
         {captions ? (
-          <span className="dm-quiet-line">Shared folders live on storage.</span>
+          <span className="dm-secondary-line">
+            Shared folders live on storage.
+          </span>
         ) : null}
       </span>
     </li>
@@ -515,7 +523,6 @@ function MoreRowView({ row, index }: RowProps & { row: MoreRow }) {
     (n, r) => n + r.folders.shown.length + r.folders.hidden.length,
     0,
   );
-  const allOk = row.hidden.every((r) => r.tone === null);
   return (
     <li
       className="dm-row"
@@ -526,7 +533,9 @@ function MoreRowView({ row, index }: RowProps & { row: MoreRow }) {
     >
       <span className="dm-edge" aria-hidden="true" />
       <span className="dm-cell dm-cell-disks">
-        <span className="dm-quiet-line">{plural(disks, "disk", "disks")}</span>
+        <span className="dm-secondary-line">
+          {plural(disks, "disk", "disks")}
+        </span>
       </span>
       <span className="dm-cell dm-cell-storage">
         <button
@@ -537,15 +546,13 @@ function MoreRowView({ row, index }: RowProps & { row: MoreRow }) {
             ctx.onNote("Opens File systems, every drive.");
           }}
         >
-          {allOk ? <StatusIcon status="ok" /> : null}+
           {moreWords(row.hidden.map((r) => ({ health: r.tone ?? "ok" })))}
-          <ArrowRight aria-hidden="true" />
         </button>
       </span>
       <span className="dm-cell dm-cell-folders">
-        <span className="dm-quiet-line">
-          {listWords(names)} ·{" "}
-          {plural(folders, "shared folder", "shared folders")}
+        <span className="dm-secondary-line">
+          {listWords(names)} hold{" "}
+          {plural(folders, "shared folder", "shared folders")}.
         </span>
       </span>
     </li>
@@ -635,15 +642,6 @@ function SkeletonRows() {
 
 // ─── The band: ways in into the network ───────────────────────────────────────────────────────
 
-function wayLine(w: MapWay): string {
-  if (!w.running) {
-    return "On · Not running";
-  }
-  return w.connections
-    ? `On · ${plural(w.connections, "computer", "computers")} connected`
-    : "On · Running";
-}
-
 function WayTile({
   way,
   ifaces,
@@ -669,21 +667,23 @@ function WayTile({
         }}
       >
         <Icon name={WAY_ICON[way.id]} size={20} motion="none" />
-        <span className="dm-wt-words">
-          <span className="dm-wt-name">
-            {way.name} <span className="dm-wt-tech">{way.tech}</span>
-          </span>
-          <span className="dm-wt-line">
-            {way.running ? null : <StatusIcon status="warning" />}
-            {wayLine(way)}
-          </span>
+        <span className="dm-wt-name">
+          {way.name} <span className="dm-wt-tech">{way.tech}</span>
+        </span>
+        {/* A healthy thing shows its word only; a problem its icon and the word in its colour. */}
+        <span
+          className="dm-wt-state"
+          data-health={way.running ? undefined : "warning"}
+        >
+          {way.running ? null : <StatusIcon status="warning" />}
+          {way.running ? "Running" : "Not running"}
         </span>
       </button>
     </li>
   );
 }
 
-function IfaceTile({ iface, rate }: { iface: MapIface; rate: string | null }) {
+function IfaceTile({ iface }: { iface: MapIface }) {
   const ctx = useMapCtx();
   const item = useItem(iface.id, null, false);
   const lit = ctx.trace !== null && ctx.trace.ways.size > 0;
@@ -700,23 +700,19 @@ function IfaceTile({ iface, rate }: { iface: MapIface; rate: string | null }) {
         }}
       >
         <Icon name={iface.kind} size={20} motion="none" />
-        <span className="dm-wt-words">
-          <span className="dm-wt-name">
-            <span className="dm-mono">{iface.name}</span>{" "}
-            <span className="dm-wt-tech">{iface.speed}</span>
-          </span>
-          <span className="dm-wt-line">
-            {iface.up ? (
-              <span className="dm-mono">{iface.address}</span>
-            ) : (
-              <>
-                <StatusIcon status="critical" />
-                No link
-              </>
-            )}
-          </span>
-          {rate ? <span className="dm-wt-line dm-num">{rate}</span> : null}
+        <span className="dm-wt-name">
+          <span className="dm-mono">{iface.name}</span>
         </span>
+        {iface.up ? (
+          <span className="dm-wt-state">
+            {iface.speed}, <span className="dm-mono">{iface.address}</span>
+          </span>
+        ) : (
+          <span className="dm-wt-state" data-health="critical">
+            <StatusIcon status="critical" />
+            Not connected
+          </span>
+        )}
       </button>
     </li>
   );
@@ -725,14 +721,12 @@ function IfaceTile({ iface, rate }: { iface: MapIface; rate: string | null }) {
 function Band({
   view,
   failed,
-  rate,
   captions,
   retrying,
   onRetry,
 }: {
   view: MapView;
   failed: readonly LaneId[];
-  rate: string | null;
   captions: readonly LaneId[];
   retrying: readonly LaneId[];
   onRetry: (lane: LaneId) => void;
@@ -784,7 +778,7 @@ function Band({
             ))}
           </ul>
         ) : (
-          <p className="dm-quiet-line">No way in is on yet.</p>
+          <p className="dm-secondary-line">No way in is on yet.</p>
         )}
       </div>
       {view.ways.off && !waysFailed ? (
@@ -807,8 +801,8 @@ function Band({
           />
         ) : (
           <ul className="dm-ifaces" aria-labelledby="dm-band-net-title">
-            {view.ifaces.map((n, i) => (
-              <IfaceTile key={n.id} iface={n} rate={i === 0 ? rate : null} />
+            {view.ifaces.map((n) => (
+              <IfaceTile key={n.id} iface={n} />
             ))}
           </ul>
         )}
@@ -816,10 +810,7 @@ function Band({
       <span className="dm-bus" data-part="out" aria-hidden="true" />
       <div className="dm-world" data-trace={lit ? "lit" : undefined}>
         <House aria-hidden="true" />
-        <span className="dm-wt-words">
-          <span className="dm-wt-name">Your network</span>
-          <span className="dm-wt-line">Computers, phones and TVs</span>
-        </span>
+        <span className="dm-wt-name">Your network</span>
       </div>
     </div>
   );
@@ -873,8 +864,6 @@ export interface SystemMapProps {
   retrying: readonly LaneId[];
   onRetry: (lane: LaneId) => void;
   onNote: (text: string) => void;
-  /** The first interface's live rate, in words. */
-  rate: string | null;
 }
 
 export function SystemMap(props: SystemMapProps) {
@@ -896,7 +885,7 @@ export function SystemMap(props: SystemMapProps) {
   const [hot, setHot] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
   const elementsRef = useRef(new Map<string, HTMLElement>());
-  // The rows there when the map was first drawn: one that appears later (a ghost becoming real)
+  // The rows there when the map was first drawn: one that appears later (storage just added)
   // solidifies in (7.2).
   const [firstRows] = useState(() => new Set(view.rows.map((r) => r.id)));
 
@@ -994,20 +983,8 @@ export function SystemMap(props: SystemMapProps) {
       >
         <header className="dm-map-head">
           <h2 id="dm-map-title" className="dm-region-title">
-            <Icon name="nas" size={24} motion="none" />
             Your NAS
           </h2>
-          {loading ? null : (
-            <p className="dm-map-meta">
-              <span className="dm-mono">{nas.facts.name}</span>
-              {" · "}
-              {plural(nas.disks.length, "disk", "disks")}
-              {" · "}
-              {plural(nas.storage.length, "storage", "storage")}
-              {" · "}
-              {plural(nas.folders.length, "shared folder", "shared folders")}
-            </p>
-          )}
           {showTraceTip && layout !== "narrow" ? (
             <Tip onDismiss={onDismissTip}>
               Point at a shared folder or a way in to see what it reaches.
@@ -1108,7 +1085,6 @@ export function SystemMap(props: SystemMapProps) {
             <Band
               view={view}
               failed={nas.failed}
-              rate={props.rate}
               captions={captions}
               retrying={props.retrying}
               onRetry={props.onRetry}
@@ -1133,9 +1109,6 @@ export function SystemMap(props: SystemMapProps) {
                 >
                   {ACTION_ICON[action] ?? null}
                   {action}
-                  {ACTION_ICON[action] ? null : (
-                    <ArrowRight aria-hidden="true" />
-                  )}
                 </Button>
               );
             })}

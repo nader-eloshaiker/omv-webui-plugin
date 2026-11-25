@@ -22,18 +22,20 @@ import {
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormIconName } from "./FormIcon.tsx";
-import { FormIcon, FormPlate } from "./FormIcon.tsx";
+import { FormIcon } from "./FormIcon.tsx";
 import type { Sentence } from "./model.ts";
 
 // ─── Header and layout ────────────────────────────────────────────────────────────────────────
 
+/**
+ * The page's title and one sentence on what it makes. The page it belongs to is one link above the
+ * title: a single level needs no trail and no separator glyph.
+ */
 export function FormHeader({
-  icon,
   title,
   line,
   parent,
 }: {
-  icon: FormIconName;
   title: string;
   line: string;
   parent: string;
@@ -41,22 +43,11 @@ export function FormHeader({
   return (
     <header className="lf-head">
       <nav aria-label="Breadcrumbs" className="lf-crumbs">
-        <ol>
-          <li>
-            <span className="lf-crumb-parent">{parent}</span>
-            <span aria-hidden="true" className="lf-crumb-sep">
-              /
-            </span>
-          </li>
-          <li aria-current="page">{title}</li>
-        </ol>
+        <span className="lf-crumb-parent">{parent}</span>
       </nav>
-      <div className="lf-head-row">
-        <FormPlate name={icon} />
-        <div className="lf-head-words">
-          <h1 className="lf-title">{title}</h1>
-          <p className="lf-line">{line}</p>
-        </div>
+      <div className="lf-head-words">
+        <h1 className="lf-title">{title}</h1>
+        <p className="lf-line">{line}</p>
       </div>
     </header>
   );
@@ -100,15 +91,13 @@ export function FormLayout({
 
 // ─── Questions ────────────────────────────────────────────────────────────────────────────────
 
-/** One numbered question (3.1): the number in a neutral disc, the question as the heading. */
+/** One question (3.1), its words as the heading. No number: the order is not the content. */
 export function FormSection({
-  n,
   question,
   help,
   children,
   flagged,
 }: {
-  n: number;
   question: string;
   help?: ReactNode;
   children: ReactNode;
@@ -122,11 +111,7 @@ export function FormSection({
       data-flagged={flagged || undefined}
     >
       <div className="lf-section-head">
-        <span className="lf-disc" aria-hidden="true">
-          {n}
-        </span>
         <h2 id={id} className="lf-question">
-          <span className="sr-only">{`${n}. `}</span>
           {question}
         </h2>
         {help}
@@ -161,12 +146,11 @@ export interface ChoiceOption<V extends string> {
   value: V;
   title: string;
   line: string;
-  icon?: FormIconName;
   /** A fact in tabular figures: "412 GiB free of 931 GiB". */
   fact?: ReactNode;
   /** A usage bar under the fact, 0 to 1. */
   used?: number;
-  /** The technical term, quieter, after the title (N5): "EXT4". */
+  /** The technical term, in secondary text after the title (N5): "EXT4". */
   term?: string;
   recommended?: boolean;
   /** Kept visible, not choosable; the reason replaces the line (3.6). */
@@ -174,8 +158,9 @@ export interface ChoiceOption<V extends string> {
 }
 
 /**
- * Choice cards (3.6): a radio group whose cards are the labels, so arrows move between them and
- * nothing is built by hand. Selected is the blue selection ground and a 2px edge, never the accent.
+ * A choice of a few (3.6): a radio list, one option per row with its radio at the start, so arrows
+ * move between them and nothing is built by hand. Not a row of same-shaped tiles: the options read
+ * down like a list. Selected is the selection ground, never the accent.
  */
 export function ChoiceCards<V extends string>({
   label,
@@ -183,17 +168,15 @@ export function ChoiceCards<V extends string>({
   value,
   options,
   onChange,
-  columns = 3,
 }: {
   label: string;
   name: string;
   value: V;
   options: readonly ChoiceOption<V>[];
   onChange: (value: V) => void;
-  columns?: 1 | 2 | 3;
 }) {
   return (
-    <fieldset className="lf-cards" data-columns={columns}>
+    <fieldset className="lf-cards">
       <legend className="sr-only">{label}</legend>
       {options.map((option) => {
         const checked = option.value === value;
@@ -216,11 +199,6 @@ export function ChoiceCards<V extends string>({
               }}
             />
             <span className="lf-card-dot" aria-hidden="true" />
-            {option.icon ? (
-              <span className="lf-card-icon" aria-hidden="true">
-                <FormIcon name={option.icon} size={24} />
-              </span>
-            ) : null}
             <span className="lf-card-title">
               {option.title}
               {option.term ? (
@@ -242,10 +220,7 @@ export function ChoiceCards<V extends string>({
               </span>
             ) : null}
             {option.recommended ? (
-              <span className="lf-recommended">
-                <FormIcon name="check" />
-                Recommended
-              </span>
+              <span className="lf-recommended">Recommended</span>
             ) : null}
           </label>
         );
@@ -255,8 +230,9 @@ export function ChoiceCards<V extends string>({
 }
 
 /**
- * A way in, on or off (3.11 question 4): a card whose position cue and word say the state, not
- * colour alone. A real checkbox with the switch role, so it is named by its card and toggled by Space.
+ * A way in, on or off (3.11 question 4): a row with the way's icon and name, and a switch whose
+ * position and word say the state, not colour alone. A real checkbox with the switch role, so it is
+ * named by its row and toggled by Space.
  */
 export function ToggleCard({
   icon,
@@ -332,7 +308,7 @@ export function MoreOptions({
         More options: {what}
         {changed > 0 ? (
           <span className="lf-more-changed">
-            {" · "}
+            {", "}
             <span key={changed} className="lf-count">
               {changed}
             </span>{" "}
@@ -441,9 +417,10 @@ function SentenceWords({ parts }: { parts: string[] }) {
 }
 
 /**
- * The live consequence summary (3.7): one fact per sentence, generated from the answers. A new
- * sentence rises in, a removed one leaves and gives up its height, a changed one crossfades its
- * words (7.4 "A summary sentence changes"). A warning sentence draws its triangle as it enters.
+ * The live consequence summary (3.7): one fact per sentence, generated from the answers. What is
+ * there when the page opens is simply there. Afterwards, in answer to the person: a new sentence
+ * fades in, a removed one leaves and gives up its height, a changed one crossfades its words (7.4
+ * "A summary sentence changes").
  */
 export function ConsequenceList({
   sentences,
@@ -453,10 +430,11 @@ export function ConsequenceList({
   iconFor?: Record<Sentence["icon"], FormIconName>;
 }) {
   const { entries, left } = useLeavingItems(sentences, (s) => s.id);
-  const firstRef = useRef(true);
-  useEffect(() => {
-    firstRef.current = false;
-  }, []);
+  // The sentences and their words as the page opened with them: those never animate in.
+  const [opened] = useState(
+    () =>
+      new Set(sentences.flatMap((s) => [s.id, `${s.id}|${s.parts.join("")}`])),
+  );
   return (
     <ul className="lf-sum" aria-label="What pressing the button does">
       {entries.map(({ key, item, leaving }) => (
@@ -466,14 +444,21 @@ export function ConsequenceList({
           onLeft={() => {
             left(key);
           }}
-          className={firstRef.current ? "lf-sum-item" : "lf-sum-item lf-arrive"}
+          className={opened.has(key) ? "lf-sum-item" : "lf-sum-item lf-arrive"}
           data-tone={item.tone}
         >
           <div className="lf-sum-row">
             <span className="lf-sum-icon" aria-hidden="true">
               <FormIcon name={iconFor[item.icon]} />
             </span>
-            <span key={item.parts.join("")} className="lf-sum-words">
+            <span
+              key={item.parts.join("")}
+              className={
+                opened.has(`${item.id}|${item.parts.join("")}`)
+                  ? "lf-sum-words"
+                  : "lf-sum-words lf-fade"
+              }
+            >
               <SentenceWords parts={item.parts} />
             </span>
             {item.copy ? (
@@ -503,7 +488,7 @@ export function ErrorSummary({
   onGo,
 }: {
   problems: { field: string; text: string }[];
-  /** Each press of the primary: the summary is focused again and rises in again. */
+  /** Each press of the primary: the summary is focused again. */
   attempt: number;
   onGo: (field: string) => void;
 }) {
@@ -527,8 +512,8 @@ export function ErrorSummary({
       <p className="lf-errors-title">
         <FormIcon name="error" />
         {problems.length === 1
-          ? "1 thing to fix"
-          : `${problems.length} things to fix`}
+          ? "There is 1 thing to fix."
+          : `There are ${problems.length} things to fix.`}
       </p>
       <ul className="lf-errors-list">
         {problems.map((p) => (
@@ -549,7 +534,7 @@ export function ErrorSummary({
   );
 }
 
-/** The primary with its keyboard shortcut shown in it (A7), and the quiet Cancel. */
+/** The primary with its keyboard shortcut shown in it (A7), and Cancel as a text button. */
 export function ActionBar({
   primary,
   onPrimary,
@@ -623,10 +608,10 @@ const STEP_WORD: Record<StepState, string> = {
 };
 
 /**
- * The run in place of the summary (3.9, 7.4 "The run"): each step's disc. The step in progress is
- * the accent (a filled disc with its number, A3) with a ring that fills over the step's expected
- * time; a finished step is OK's check, drawn as it lands; a failed one is the critical cross; steps
- * still to come are neutral. Every state also has its word.
+ * The run in place of the summary (3.9, 7.4 "The run"), a checklist rather than a numbered
+ * stepper: a step still to come is an empty circle; the step in progress has a ring that fills over
+ * the step's expected time; a finished step is OK's check, drawn as it lands; a failed one is the
+ * critical cross. Every state also has its word.
  */
 export function RunSteps({
   steps,
@@ -641,7 +626,7 @@ export function RunSteps({
       aria-label="Steps"
       style={{ "--step-ms": `${stepMs}ms` } as CSSProperties}
     >
-      {steps.map((step, i) => (
+      {steps.map((step) => (
         <li
           key={step.id}
           className="lf-run-step"
@@ -669,9 +654,6 @@ export function RunSteps({
                 <path className="lf-run-cross" d="m12 12 8 8M20 12l-8 8" />
               ) : null}
             </svg>
-            {step.state === "waiting" || step.state === "running" ? (
-              <span className="lf-run-n">{i + 1}</span>
-            ) : null}
           </span>
           <span className="lf-run-label">{step.label}</span>
           <span className="lf-run-word">{STEP_WORD[step.state]}</span>

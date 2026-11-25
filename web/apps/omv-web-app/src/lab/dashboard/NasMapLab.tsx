@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The dashboard prototype, the NAS map (rethink spec 8 row 1), in the lab: development only (UI-11).
 // It renders in the system's own look (react-ui-components on css-ui-style) inside a static copy of
-// the shell, so a screenshot shows the real thing. The query string selects what is shown and never
+// the shell, so a screenshot shows the page itself. The query string selects what is shown and never
 // acts (UI-4): screen=nas-map, state=<one of DASH_STATES>, tips=on|off, motion=full|reduced,
 // theme=dark|light, density=comfortable|compact, width=full|900|390 (frames the page), still=1
 // (no live sampling, for screenshots), chrome=0 hides the lab's controls and cause buttons.

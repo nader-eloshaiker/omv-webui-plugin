@@ -4,7 +4,6 @@ import type { MapDisk, Nas, StorageRow } from "./model.ts";
 import {
   accentAt,
   answerOf,
-  areaStates,
   attentionRows,
   bayLayout,
   capRowFolders,
@@ -18,10 +17,10 @@ import {
   moveInRows,
   nasFor,
   needsYou,
+  otherAddOns,
   rowKeys,
   rowName,
   stripWords,
-  tileColumns,
   traceOf,
   wayName,
   waysLayout,
@@ -46,60 +45,49 @@ const disk = (id: string, health: MapDisk["health"] = "ok"): MapDisk => ({
 describe("the answer (A)", () => {
   it("says all is well with when the disks were checked and how many drives have space", () => {
     expect(answerOf(nasFor("all-ok"))).toEqual({
-      title: "All OK",
-      reason: "Disks checked at 10:31. All 4 drives have space.",
+      title: "Everything is working.",
+      reason:
+        "The disks reported no problem at 10:31. All four drives have space.",
       tone: "ok",
     });
   });
 
   it("counts what needs the person and gives the worst one's reason", () => {
     const answer = answerOf(nasFor("needs-you"));
-    expect(answer.title).toBe("4 things need you");
+    expect(answer.title).toBe("Four things need you.");
     expect(answer.reason).toMatch(/^Disk sdb reports a problem/u);
     expect(answer.tone).toBe("warning");
   });
 
   it("puts a critical problem first, whatever order it was found in", () => {
     const answer = answerOf(nasFor("disk-critical"));
-    expect(answer.title).toBe("2 things need you");
+    expect(answer.title).toBe("Two things need you.");
     expect(answer.tone).toBe("critical");
   });
 
   it("welcomes a new NAS instead of judging it", () => {
-    expect(answerOf(nasFor("new-nas")).title).toBe("Welcome to your NAS");
+    expect(answerOf(nasFor("new-nas")).title).toBe("Welcome to your NAS.");
   });
 
   it("says which lane could not be read and that the rest is fine", () => {
     expect(answerOf(nasFor("lane-failed"))).toEqual({
-      title: "Could not read everything",
+      title: "Part of the NAS could not be read.",
       reason: "The disks could not be read. Everything else is OK.",
       tone: "unknown",
     });
   });
-});
 
-describe("the areas", () => {
-  it("names a lane that failed as Unknown, not OK", () => {
-    const disks = areaStates(nasFor("lane-failed")).find(
-      (a) => a.id === "disks",
-    );
-    expect(disks).toMatchObject({ health: "unknown", word: "Could not read" });
-  });
-
-  it("calls unchecked disks Not checked, and an empty area None yet", () => {
-    const areas = areaStates(nasFor("new-nas"));
-    expect(areas.find((a) => a.id === "disks")?.word).toBe("Not checked");
-    expect(areas.find((a) => a.id === "folders")).toMatchObject({
-      word: "None yet",
-      empty: true,
-    });
-  });
-
-  it("takes the state of what needs the person in that area", () => {
-    const system = areaStates(nasFor("needs-you")).find(
-      (a) => a.id === "system",
-    );
-    expect(system?.health).toBe("warning");
+  it("is always a full sentence, one thing or many", () => {
+    const one = withSdbWarning(nasFor("all-ok"));
+    expect(answerOf(one).title).toBe("One thing needs you.");
+    for (const state of [
+      "all-ok",
+      "needs-you",
+      "new-nas",
+      "lane-failed",
+    ] as const) {
+      expect(answerOf(nasFor(state)).title).toMatch(/^[A-Z].*\.$/u);
+    }
   });
 });
 
@@ -373,7 +361,7 @@ describe("names for assistive technology (6.8 item 13)", () => {
       "Backup, on disks sdb and sdc: 41 percent used, disk sdb warning. Shared folders: Time Machine and a4share, at risk.",
     );
     expect(rowName(rows[3] as StorageRow)).toBe(
-      "System drive, on disk nvme0n1: 10 percent used. Holds the system.",
+      "System drive, on disk nvme0n1: 10 percent used. It holds the system, so it keeps no shared folders.",
     );
   });
 
@@ -381,7 +369,7 @@ describe("names for assistive technology (6.8 item 13)", () => {
     const nas = nasFor("needs-you");
     const smb = nas.ways.find((w) => w.id === "smb");
     expect(smb && wayName(smb, nas.ifaces)).toBe(
-      "Windows and Mac (SMB): on, 2 computers connected, over enp2s0",
+      "Windows and Mac (SMB): running, over enp2s0",
     );
   });
 });
@@ -449,21 +437,20 @@ describe("layout", () => {
     expect(layoutFor(358)).toBe("narrow");
   });
 
-  it("balances the add-on tiles into full rows", () => {
-    expect(tileColumns(3, 4)).toBe(3);
-    expect(tileColumns(4, 3)).toBe(2);
-    expect(tileColumns(5, 4)).toBe(3);
-    expect(tileColumns(3, 1)).toBe(1);
+  it("names the add-ons this interface does not draw by their short name, never ZFS or RAID", () => {
+    expect(otherAddOns(nasFor("all-ok").addOns)).toEqual(["compose"]);
+    expect(otherAddOns(nasFor("many").addOns)).toEqual(["compose", "wol"]);
+    expect(otherAddOns(nasFor("new-nas").addOns)).toEqual([]);
   });
 });
 
 describe("the first visit (owner decision 10)", () => {
-  it("assembles on a first visit, fades otherwise or in reduced motion, and stays still for a screenshot", () => {
+  it("assembles on a first visit only; otherwise, in reduced motion and for a screenshot, no entrance", () => {
     const base = { reduced: false, still: false, loading: false };
     expect(assembleFor({ ...base, firstVisit: true })).toBe("full");
-    expect(assembleFor({ ...base, firstVisit: false })).toBe("fade");
+    expect(assembleFor({ ...base, firstVisit: false })).toBe("none");
     expect(assembleFor({ ...base, firstVisit: true, reduced: true })).toBe(
-      "fade",
+      "none",
     );
     expect(assembleFor({ ...base, firstVisit: true, still: true })).toBe(
       "none",

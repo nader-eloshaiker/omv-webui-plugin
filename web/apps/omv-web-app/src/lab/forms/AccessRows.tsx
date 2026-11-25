@@ -14,8 +14,6 @@ export interface AccessRow {
   name: string;
   line: string;
   value: Access;
-  /** A short tag after the name: "through family". */
-  tag?: string;
 }
 
 const OPTIONS = [
@@ -70,10 +68,7 @@ export function AccessRows({
             </span>
           )}
           <span className="lf-row-words">
-            <span className="lf-row-name">
-              {row.name}
-              {row.tag ? <span className="lf-row-tag">{row.tag}</span> : null}
-            </span>
+            <span className="lf-row-name">{row.name}</span>
             <span className="lf-row-line">{row.line}</span>
           </span>
           <SegmentedChoice

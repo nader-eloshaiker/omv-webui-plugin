@@ -4,10 +4,11 @@
 // (UI-11).
 
 /**
- * How the map comes in: it assembles row by row on a first visit or "Show me around", as a fade in
- * reduced motion; a later visit fades; a screenshot (`still`) and the loading skeleton do not move.
+ * How the map comes in: it assembles row by row on a first visit or "Show me around", the one
+ * entrance the owner approved (owner Q2). Every other visit, reduced motion, a screenshot (`still`)
+ * and the loading skeleton show the page as it is, with no entrance.
  */
-export type Assemble = "full" | "fade" | "none";
+export type Assemble = "full" | "none";
 
 export function assembleFor({
   firstVisit,
@@ -20,8 +21,5 @@ export function assembleFor({
   still: boolean;
   loading: boolean;
 }): Assemble {
-  if (still || loading) {
-    return "none";
-  }
-  return firstVisit && !reduced ? "full" : "fade";
+  return firstVisit && !reduced && !still && !loading ? "full" : "none";
 }

@@ -3,16 +3,13 @@
 // development only (UI-11). Each is a candidate for the library (spec 8 row 4: TableSummary,
 // FilterChips, StatusCell, NumberCell, RowActions, RowDetail, SelectionBar). Styling is tables.css;
 // geometry reaches the CSS as custom properties through the CSSOM (UI-1).
-import type { IconName } from "@omv-webui/react-ui-components";
 import {
   Button,
   Checkbox,
-  IconPlate,
   Menu,
   MenuContent,
   MenuTrigger,
   StatusIcon,
-  StatusPill,
 } from "@omv-webui/react-ui-components";
 import { ChevronDown, Ellipsis } from "lucide-react";
 import type { ReactNode } from "react";
@@ -28,32 +25,31 @@ const HEALTH_WORD: Record<Health, string> = {
 
 // ─── Page and summary ─────────────────────────────────────────────────────────────────────────
 
-/** The page's title with its object's plate, and the "What is …?" help beside it. */
-export function PageHead({
-  icon,
-  title,
-  help,
-}: {
-  icon: IconName;
-  title: string;
-  help?: ReactNode;
-}) {
+/** The page's title, and the "What is …?" help beside it. */
+export function PageHead({ title, help }: { title: string; help?: ReactNode }) {
   return (
     <header className="lt-head">
-      <IconPlate name={icon} className="lt-head-plate" />
       <h1 className="lt-title">{title}</h1>
       {help ? <div className="lt-head-help">{help}</div> : null}
     </header>
   );
 }
 
-/**
- * The summary line (4.1): the table's question answered in words, counts worst first, and the one
- * accent action of the region at its end (A1). A polite live region, so a change is heard once.
- */
 /** A sentence part of the summary; a problem count carries its status, drawn with its shape. */
 export type SummaryPart = string | { text: string; status: Health };
 
+/** Where a summary sentence ends: a full stop, unless it already ends in one or in "…". */
+function ending(parts: readonly SummaryPart[]): string {
+  const last = parts.at(-1);
+  const text = typeof last === "string" ? last : (last?.text ?? "");
+  return /[.…]$/u.test(text) ? "" : ".";
+}
+
+/**
+ * The summary line (4.1): the table's question answered in one sentence, its counts worst first
+ * and apart by commas, and the one accent action of the region at its end (A1). A polite live
+ * region, so a change is heard once.
+ */
 export function TableSummary({
   parts,
   action,
@@ -69,11 +65,7 @@ export function TableSummary({
             key={typeof part === "string" ? part : part.text}
             className="lt-summary-part"
           >
-            {i > 0 ? (
-              <span className="lt-dot" aria-hidden="true">
-                ·
-              </span>
-            ) : null}
+            {i > 0 ? ", " : null}
             {typeof part === "string" ? (
               part
             ) : (
@@ -81,6 +73,7 @@ export function TableSummary({
             )}
           </span>
         ))}
+        {ending(parts)}
       </p>
       {action ? <div className="lt-summary-action">{action}</div> : null}
     </div>
@@ -153,7 +146,7 @@ export function FilterChips<V extends string>({
 
 /**
  * The selection bar (4.7, 7.5): replaces the toolbar while rows are selected, dropping into place as
- * the toolbar fades. "2 selected · Check health · Clear". Escape in the table clears it too.
+ * the toolbar goes: the count, the actions, Clear. Escape in the table clears it too.
  */
 export function SelectionBar({
   count,
@@ -207,9 +200,28 @@ export function SelectCell({
 }
 
 /**
- * Status first (4.4): OK is the check and the word in the OK label without a wash, so a healthy list
- * is quiet; anything else is the full pill. A reason goes on the second line ("Not checked yet").
- * The pill is keyed by its status, so a change crossfades the new one in (7.5).
+ * A status as its icon and a word in the status's label colour (generated-look rule 15): never a
+ * capsule. Stands in for the library's StatusPill until the library drops the capsule.
+ */
+export function StatusWord({
+  status,
+  children,
+}: {
+  status: Health;
+  children: ReactNode;
+}) {
+  return (
+    <span className="lt-status-word" data-status={status}>
+      <StatusIcon status={status} />
+      {children}
+    </span>
+  );
+}
+
+/**
+ * Status first (4.4): a problem is its icon and coloured word; OK is the word alone, in secondary
+ * text, since a healthy row needs no mark (generated-look rule 10). A reason goes on the second
+ * line. The mark is keyed by its status, so a change crossfades the new one in (7.5).
  */
 export function StatusCell({
   status,
@@ -226,12 +238,9 @@ export function StatusCell({
     <span className="lt-status">
       <span key={status} className="lt-status-mark" data-status={status}>
         {status === "ok" ? (
-          <span className="lt-status-ok">
-            <StatusIcon status="ok" />
-            {words}
-          </span>
+          <span className="lt-status-ok">{words}</span>
         ) : (
-          <StatusPill status={status}>{words}</StatusPill>
+          <StatusWord status={status}>{words}</StatusWord>
         )}
       </span>
       {reason ? <span className="lt-line2 lt-reason">{reason}</span> : null}
@@ -239,7 +248,7 @@ export function StatusCell({
   );
 }
 
-/** A size with its unit quieter (4.5): "3.6 TiB", tabular figures, a non-breaking space. */
+/** A size with its unit in secondary text (4.5): "3.6 TiB", tabular figures, a non-breaking space. */
 export function Bytes({ n }: { n: number }) {
   const { value, unit } = bytes(n);
   return (
@@ -264,7 +273,7 @@ export function Missing({ label }: { label: string }) {
 
 /**
  * The row's end (4.7): one or two quick verbs that fade in on hover and focus within the row (after
- * an 80ms intent delay, 7.5), the always-visible quiet More button with the row's menu, and the
+ * an 80ms intent delay, 7.5), the always-visible plain More button with the row's menu, and the
  * chevron that opens the row's detail inline. Everything in the quick verbs is also in the menu, so
  * nothing is hover-only. Controls are tab stops only while their row is active.
  */
@@ -330,7 +339,7 @@ export function RowActions({
   );
 }
 
-/** A quiet icon-and-word quick action (4.7). The icon acts out its action on hover (7.7). */
+/** An icon-and-word quick action as a text button (4.7). The icon acts out its action on hover (7.7). */
 export function Quick({
   icon,
   children,

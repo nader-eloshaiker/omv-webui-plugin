@@ -76,7 +76,7 @@ describe("the folder's consequence summary (spec 3.7, 3.11)", () => {
       "effect",
     ]);
     expect(text(sentences[0]?.parts ?? [])).toBe(
-      "Creates Photos on Data drive (7.8 GiB free).",
+      "Photos is made on Data drive, which has 7.8 GiB free.",
     );
     expect(text(sentences[1]?.parts ?? [])).toBe(
       "6 people can read and change files. Nobody else can open it.",
@@ -127,7 +127,7 @@ describe("Add a person", () => {
     ]);
     const opens = personSentences(form).find((s) => s.id === "opens");
     expect(text(opens?.parts ?? [])).toBe(
-      "Can open Photos (read and change) and Music (read only), through family.",
+      "alex can open Photos (read and change) and Music (read only), through family.",
     );
   });
 
