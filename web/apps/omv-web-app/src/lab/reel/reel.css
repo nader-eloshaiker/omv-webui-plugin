@@ -148,6 +148,7 @@
 }
 /* A plain inset stage: the muted ground and a hairline, no shadow. */
 .rl-stage {
+  container-type: inline-size;
   flex: 1;
   min-width: 0;
   padding: 18px;
@@ -211,15 +212,14 @@
   font: inherit;
   transition: border-color var(--duration-base) var(--ease-standard);
 }
+/* A folder on the map, as the dashboard draws it: its name, no box and no capsule (style guide 10,
+   rules 7 and 15). A folder at risk leads with the warning icon; the row says "At risk" once. */
 .rl-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid var(--theme-border-control);
-  border-radius: var(--radius-md);
-  background: var(--theme-surface);
+  min-height: 24px;
+  margin-inline-end: 8px;
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
@@ -227,9 +227,6 @@
 .rl-chip svg {
   width: 14px;
   height: 14px;
-}
-.rl-chip[data-risk] {
-  border-color: var(--theme-warning-stroke);
 }
 
 /* ─── Shared motions ──────────────────────────────────────────────────────────────────────────── */
@@ -1491,6 +1488,21 @@
 .rl-maprow-store {
   min-width: 0;
 }
+/* In a narrow pane the folders sit under the storage, so the connector to them is left out
+   instead of dangling at the end of the line. */
+@container (width < 640px) {
+  .rl-maprow {
+    display: grid;
+    grid-template-columns: auto 36px minmax(0, 1fr);
+    align-items: center;
+  }
+  .rl-maprow > .rl-mapwire:nth-of-type(2) {
+    display: none;
+  }
+  .rl-maprow-folders {
+    grid-column: 3;
+  }
+}
 .rl-store {
   display: flex;
   flex-direction: column;
@@ -1500,6 +1512,7 @@
 .rl-mapwire {
   flex: none;
   width: 28px;
+  margin-inline: 4px;
   height: 8px;
   overflow: visible;
 }
