@@ -12,10 +12,10 @@
 // count of connected computers (SMB.getStats and SSH.getStats return the commands' text, not a
 // count) and no list of running tasks (Exec.isRunning answers only for a handle this browser holds).
 import type { Health } from "../tables/model.ts";
-import { byHealth, worst } from "../tables/model.ts";
+import { byHealth, listWords, sharedState, worst } from "../tables/model.ts";
 import type { DashState } from "./states.ts";
 
-export { worst };
+export { listWords, worst };
 export type { Health };
 
 const NBSP = " ";
@@ -273,14 +273,6 @@ export function plural(count: number, one: string, other: string): string {
   return `${String(count)}${NBSP}${count === 1 ? one : other}`;
 }
 
-/** "Photos", "Photos and Music", "Photos, Music and Documents". */
-export function listWords(items: readonly string[]): string {
-  if (items.length <= 1) {
-    return items[0] ?? "";
-  }
-  return `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
-}
-
 export function percent(used: number): string {
   return `${String(Math.round(used * 100))}${NBSP}%`;
 }
@@ -369,6 +361,27 @@ export function bayLayout<D extends MapDisk>(
   return {
     full: disks.filter((d) => isProblem(d.health)),
     strip: disks.filter((d) => !isProblem(d.health)),
+  };
+}
+
+/**
+ * The state a row's disks share, said once beside them ("Not checked yet: sda, sdb and sdc")
+ * instead of under every disk. A healthy disk has no word to say (its slot shows its temperature),
+ * and a disk whose state differs from the row's keeps its own word.
+ */
+export function rowDiskState<D extends MapDisk>(
+  disks: readonly D[],
+): { word: string; health: Health; ids: Set<string>; words: string } | null {
+  const shared = sharedState(disks, (d) => (d.health === "ok" ? null : d.word));
+  const first = shared?.items[0];
+  if (!shared || !first) {
+    return null;
+  }
+  return {
+    word: shared.word,
+    health: first.health,
+    ids: new Set(shared.items.map((d) => d.id)),
+    words: `${shared.word}: ${listWords(shared.items.map((d) => d.device))}`,
   };
 }
 
@@ -795,6 +808,21 @@ export function rowName(row: MapRow): string {
       return `${s.name}${on}: ${String(Math.round(s.used * 100))} percent used${own}${sick}. ${held}`;
     }
   }
+}
+
+/**
+ * "Running", said once beside the ways in instead of under each: "All running", or "2 of 3
+ * running". Null when fewer than two of them run, so a lone way keeps its own word. A way that is
+ * not running always keeps its own word, since it is a problem.
+ */
+export function waysRunning(on: readonly MapWay[]): string | null {
+  const running = on.filter((w) => w.running).length;
+  if (running < 2) {
+    return null;
+  }
+  return running === on.length
+    ? "All running"
+    : `${String(running)} of ${String(on.length)} running`;
 }
 
 /** A way in's name: "Windows and Mac (SMB): running, over enp2s0". */
@@ -1427,7 +1455,7 @@ export function nasFor(state: DashState): Nas {
           ...d,
           feeds: d.id === "d:nvme0n1" ? d.feeds : [],
           health: d.id === "d:nvme0n1" ? "ok" : "unknown",
-          word: d.id === "d:nvme0n1" ? "OK" : "Not checked",
+          word: d.id === "d:nvme0n1" ? "OK" : "Not checked yet",
         })),
         storage: base.storage.filter((s) => s.id === "s:system"),
         folders: [],

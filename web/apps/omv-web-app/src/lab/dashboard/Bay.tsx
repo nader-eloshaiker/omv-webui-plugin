@@ -107,17 +107,21 @@ function slotName(disk: MapDisk, alsoIn: readonly string[]): string {
 
 /**
  * One disk as a slot: its caddy, its device in mono, and its state in words (never colour alone).
- * A disk that is also part of another storage (a partition in each) carries a small link mark and
- * says so in its tooltip and name (6.8 item 10).
+ * When its row says the state once for several disks (`said`), the slot shows what a healthy one
+ * shows, its temperature or "Asleep", and its name still carries the state. A disk that is also
+ * part of another storage (a partition in each) carries a small link mark and says so in its
+ * tooltip and name (6.8 item 10).
  */
 export function SlotTile({
   disk,
   alsoIn,
+  said = false,
   item,
   onOpen,
 }: {
   disk: MapDisk;
   alsoIn: readonly string[];
+  said?: boolean;
   item: ItemProps;
   onOpen: (words: string) => void;
 }) {
@@ -125,6 +129,8 @@ export function SlotTile({
   const [initialPower] = useState(disk.power);
   const powerChanged = disk.power !== initialPower;
   const healthy = disk.health === "ok";
+  // The slot says its own state only when it is not healthy and its row does not say it.
+  const own = !healthy && !said;
   return (
     <button
       {...item}
@@ -149,27 +155,25 @@ export function SlotTile({
         ) : null}
       </span>
       <span
-        key={disk.health}
+        key={`${disk.health}:${String(own)}`}
         className="dm-slot-state"
-        data-health={disk.health}
+        data-health={own ? disk.health : undefined}
       >
-        {healthy ? null : <StatusIcon status={disk.health} />}
-        {healthy ? (
-          disk.power === "asleep" ? (
-            <>
-              <svg aria-hidden="true" viewBox="0 0 12 12" className="dm-moon">
-                <path d="M8.6 7.8A4 4 0 0 1 4.2 3.4 4 4 0 1 0 8.6 7.8Z" />
-              </svg>
-              Asleep
-            </>
-          ) : disk.temp === null ? (
-            disk.word
-          ) : (
-            celsius(disk.temp)
-          )
-        ) : (
+        {own ? <StatusIcon status={disk.health} /> : null}
+        {own ? (
           disk.word
-        )}
+        ) : disk.power === "asleep" ? (
+          <>
+            <svg aria-hidden="true" viewBox="0 0 12 12" className="dm-moon">
+              <path d="M8.6 7.8A4 4 0 0 1 4.2 3.4 4 4 0 1 0 8.6 7.8Z" />
+            </svg>
+            Asleep
+          </>
+        ) : disk.temp !== null ? (
+          celsius(disk.temp)
+        ) : healthy ? (
+          disk.word
+        ) : null}
       </span>
     </button>
   );

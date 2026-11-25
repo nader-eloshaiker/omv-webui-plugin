@@ -489,14 +489,12 @@
   flex-basis: 100%;
   animation: fade-in var(--duration-fast) var(--ease-standard) both;
 }
+/* A tip is one line on the page ground: no border, no fill, no dashed outline. */
 .lf-tip {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
-  padding: 8px 10px;
-  border: 1px dashed var(--theme-border-control);
-  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   color: var(--theme-muted-foreground);
 }
@@ -508,17 +506,7 @@
   flex: 1;
 }
 .lf-tip-close {
-  padding: 2px 6px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--theme-link);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-}
-.lf-tip-close:hover {
-  background: var(--theme-muted-strong);
+  flex: none;
 }
 
 /* ─── Settings rows (pro options) ─────────────────────────────────────────────────────────────── */

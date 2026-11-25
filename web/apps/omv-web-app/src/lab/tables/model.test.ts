@@ -11,13 +11,34 @@ import {
   folderSummary,
   groupDisks,
   groupFolders,
+  listWords,
   middleTruncate,
+  sharedState,
   sortDisks,
   sortFolders,
   worst,
 } from "./model.ts";
 
 const mounted = DRIVES.map((d) => ({ ...d, mounted: true, free: d.size / 2 }));
+
+describe("a state said once for a group", () => {
+  it("picks the word most items share, when at least two share it", () => {
+    const words: (string | null)[] = ["Not checked", "OK", "Not checked", null];
+    const shared = sharedState(words, (w) => w);
+    expect(shared?.word).toBe("Not checked");
+    expect(shared?.items).toHaveLength(2);
+    expect(sharedState(["OK", "Warning", null], (w) => w)).toBeNull();
+  });
+
+  it("gives equal counts to the word met first", () => {
+    expect(sharedState(["A", "B", "B", "A"], (w) => w)?.word).toBe("A");
+  });
+
+  it("lists names with commas and a last and", () => {
+    expect(listWords(["sda"])).toBe("sda");
+    expect(listWords(["sda", "sdb", "sdc"])).toBe("sda, sdb and sdc");
+  });
+});
 
 describe("numbers and paths (spec 4.5, 4.8)", () => {
   it("writes binary units with one decimal and a non-breaking space", () => {

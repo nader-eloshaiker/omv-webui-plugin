@@ -65,6 +65,40 @@ export function plural(count: number, one: string, other: string): string {
   return `${String(count)} ${count === 1 ? one : other}`;
 }
 
+/** "Photos", "Photos and Music", "Photos, Music and Documents". */
+export function listWords(items: readonly string[]): string {
+  if (items.length <= 1) {
+    return items[0] ?? "";
+  }
+  return `${items.slice(0, -1).join(", ")} and ${items.at(-1) ?? ""}`;
+}
+
+/**
+ * The state a group says once instead of under every item: the word most of its items share, when
+ * at least two share it, with those items in their order. An item whose word is null has nothing to
+ * say (a healthy disk on the map shows its temperature instead). Equal counts go to the word met
+ * first. Every item whose word differs keeps its own.
+ */
+export function sharedState<T>(
+  items: readonly T[],
+  wordOf: (item: T) => string | null,
+): { word: string; items: T[] } | null {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const word = wordOf(item);
+    if (word !== null) {
+      groups.set(word, [...(groups.get(word) ?? []), item]);
+    }
+  }
+  let best: { word: string; items: T[] } | null = null;
+  for (const [word, group] of groups) {
+    if (group.length >= 2 && group.length > (best?.items.length ?? 0)) {
+      best = { word, items: group };
+    }
+  }
+  return best;
+}
+
 const GiB = 1024 ** 3;
 const TiB = 1024 ** 4;
 
