@@ -6,6 +6,31 @@
 import type { KeyboardEvent, RefObject } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
+/** The tab an arrow, Home or End key moves to from `index`, or null for any other key. */
+export function filterKeyTarget(
+  key: string,
+  index: number,
+  length: number,
+  rtl = false,
+): number | null {
+  const forward = rtl ? "ArrowLeft" : "ArrowRight";
+  const back = rtl ? "ArrowRight" : "ArrowLeft";
+  switch (key) {
+    case forward:
+    case "ArrowDown":
+      return (index + 1) % length;
+    case back:
+    case "ArrowUp":
+      return (index - 1 + length) % length;
+    case "Home":
+      return 0;
+    case "End":
+      return length - 1;
+    default:
+      return null;
+  }
+}
+
 /** Reduced motion: the system setting, or the lab's "Animations: Reduced" (spec decision 3). */
 export function reducedMotion(): boolean {
   return (

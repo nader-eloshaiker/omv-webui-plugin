@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The table pattern's pieces (rethink spec 4.1 to 4.8), lab-local until the owner has seen them:
 // development only (UI-11). Each is a candidate for the library (spec 8 row 4: TableSummary,
-// FilterChips, StatusCell, NumberCell, RowActions, RowDetail, SelectionBar). Styling is tables.css;
+// FilterTabs, StatusCell, NumberCell, RowActions, RowDetail, SelectionBar). Styling is tables.css;
 // geometry reaches the CSS as custom properties through the CSSOM (UI-1).
 import {
   Button,
@@ -12,7 +12,9 @@ import {
   StatusIcon,
 } from "@omv-webui/react-ui-components";
 import { ChevronDown, Ellipsis } from "lucide-react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
+import { useRef } from "react";
+import { filterKeyTarget } from "./grid.ts";
 import type { Health } from "./model.ts";
 import { bytes } from "./model.ts";
 
@@ -98,48 +100,77 @@ export function SummaryProblem({
 
 // ─── Toolbar ──────────────────────────────────────────────────────────────────────────────────
 
-export interface Chip<V extends string> {
+export interface FilterTab<V extends string> {
   value: V;
   label: string;
   count: number;
-  /** A chip for a problem state carries its shape. */
+  /** A filter for a problem state keeps its status icon before the word. */
   status?: Health;
 }
 
 /**
- * Filter chips (4.6): the two to five states people filter by, with counts. Toggle buttons in a
- * named group, so the current filter is announced and always visible.
+ * Filter tabs (4.6): the two to five states people filter by, as text with their counts. A radio
+ * group, so the chosen filter is announced and there is one tab stop: the arrow keys move and choose,
+ * Home and End go to the ends. The chosen one is underlined in the selection colour; the others are
+ * plain text. The count is plain secondary text after the word, never a badge, and a filter for a
+ * problem keeps its status icon before the word.
  */
-export function FilterChips<V extends string>({
+export function FilterTabs<V extends string>({
   label,
   value,
-  chips,
+  tabs,
   onChange,
 }: {
   label: string;
   value: V;
-  chips: readonly Chip<V>[];
+  tabs: readonly FilterTab<V>[];
   onChange: (value: V) => void;
 }) {
+  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const onKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const rtl = event.currentTarget.closest("[dir=rtl]") !== null;
+    const target = filterKeyTarget(event.key, index, tabs.length, rtl);
+    const tab = target === null ? undefined : tabs[target];
+    if (target === null || tab === undefined) {
+      return;
+    }
+    event.preventDefault();
+    onChange(tab.value);
+    tabsRef.current[target]?.focus();
+  };
   return (
-    <div className="lt-chips" role="group" aria-label={label}>
-      {chips.map((chip) => (
-        <button
-          key={chip.value}
-          type="button"
-          className="lt-chip"
-          aria-pressed={chip.value === value}
-          onClick={() => {
-            onChange(chip.value);
-          }}
-        >
-          {chip.status && chip.count > 0 ? (
-            <StatusIcon status={chip.status} />
-          ) : null}
-          {chip.label}
-          <span className="lt-chip-count">{chip.count}</span>
-        </button>
-      ))}
+    <div className="lt-filters" role="radiogroup" aria-label={label}>
+      {tabs.map((tab, i) => {
+        const chosen = tab.value === value;
+        return (
+          <button
+            key={tab.value}
+            ref={(el) => {
+              tabsRef.current[i] = el;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={chosen}
+            tabIndex={chosen ? 0 : -1}
+            className="lt-filter"
+            onClick={() => {
+              onChange(tab.value);
+            }}
+            onKeyDown={(event) => {
+              onKeyDown(event, i);
+            }}
+          >
+            {tab.status && tab.count > 0 ? (
+              <StatusIcon status={tab.status} />
+            ) : null}
+            <span className="lt-filter-word">{tab.label}</span>
+            <span className="lt-filter-count">{tab.count}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -260,11 +291,23 @@ export function Bytes({ n }: { n: number }) {
   );
 }
 
-/** A dash for an empty cell, named for assistive technology (4.8): never "None" repeated. */
-export function Missing({ label }: { label: string }) {
+/**
+ * A cell with nothing to show says what is true in a short label in secondary text (4.8): "Nobody",
+ * "Not shared", "Unknown". A label, not a sentence, so no full stop; the row's detail keeps a full
+ * sentence where one helps. `more` is read after the label by assistive technology only, where the
+ * column header and the label alone would leave out why.
+ */
+export function Missing({
+  children,
+  more,
+}: {
+  children: string;
+  more?: string;
+}) {
   return (
-    <span className="lt-missing" role="img" aria-label={label}>
-      —
+    <span className="lt-missing">
+      {children}
+      {more ? <span className="sr-only">{`, ${more}`}</span> : null}
     </span>
   );
 }

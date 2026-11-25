@@ -19,6 +19,7 @@ import {
   Icon,
   MenuItem,
   MenuSeparator,
+  StatusIcon,
   Switch,
   Table,
   TableBody,
@@ -46,7 +47,9 @@ import {
   groupDisks,
   holdsWords,
   HOT,
+  listWords,
   NOT_CHECKED,
+  sharedState,
   sortDisks,
 } from "./model.ts";
 import type { SummaryPart } from "./parts.tsx";
@@ -329,12 +332,28 @@ export function DisksTable({
       </Button>
     );
 
+  // A state several slots share is said once under the bay; only a slot whose state differs keeps
+  // its own word under its caddy. A healthy slot shows no word at all (generated-look rule 10): the
+  // summary already says how many are OK.
+  const slotWord = (d: Disk) =>
+    tracing === d.id
+      ? "Checking…"
+      : d.reason === NOT_CHECKED
+        ? "Not checked yet"
+        : HEALTH_WORD[d.health];
+  const healthy = (d: Disk) => tracing !== d.id && d.health === "ok";
+  const shared = sharedState(disks, (d) => (healthy(d) ? null : slotWord(d)));
+  const said = new Set([
+    ...(shared?.items.map((d) => d.id) ?? []),
+    ...disks.filter(healthy).map((d) => d.id),
+  ]);
+  const sharedHealth = shared?.items[0]?.health ?? "ok";
   const slots: DriveSlot[] = disks.map((d) => ({
     id: d.id,
     device: d.device,
     kind: BAY_FACE[d.kind],
     status: tracing === d.id ? "unknown" : d.health,
-    statusLabel: tracing === d.id ? "Checking…" : HEALTH_WORD[d.health],
+    statusLabel: slotWord(d),
     role: holdsWords(d.holds).replace(/ \(.*\)$/u, ""),
     detail:
       powerOf(d) === "asleep"
@@ -348,6 +367,19 @@ export function DisksTable({
         data-linked={linked === d.id || undefined}
         data-picked={selected.has(d.id) || undefined}
         data-asleep={powerOf(d) === "asleep" || undefined}
+        data-said={said.has(d.id) || undefined}
+        aria-label={[
+          d.device,
+          slotWord(d),
+          holdsWords(d.holds).replace(/ \(.*\)$/u, ""),
+          powerOf(d) === "asleep"
+            ? "asleep"
+            : d.temperature === null
+              ? ""
+              : `${String(d.temperature)} °C`,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         className="lt-slot"
         onPointerEnter={() => {
           setLinked(d.id);
@@ -611,6 +643,14 @@ export function DisksTable({
             arrived={rang}
             className="lt-bay"
           />
+          {shared ? (
+            <p className="lt-bay-said" data-health={sharedHealth}>
+              {sharedHealth === "warning" || sharedHealth === "critical" ? (
+                <StatusIcon status={sharedHealth} />
+              ) : null}
+              {`${shared.word}: ${listWords(shared.items.map((d) => d.device))}`}
+            </p>
+          ) : null}
           {tips && tipShown ? (
             <Tip
               onDismiss={() => {
@@ -767,14 +807,10 @@ export function DisksTable({
 /** Right-aligned with its unit (4.5); a warning word only when the threshold is crossed (4.9). */
 function Temperature({ disk, power }: { disk: Disk; power: PowerShown }) {
   if (disk.temperature === null) {
-    return (
-      <Missing
-        label={
-          power === "asleep"
-            ? "Not read while the disk is asleep"
-            : "Not reported"
-        }
-      />
+    return power === "asleep" ? (
+      <Missing more="it is not read while the disk is asleep">Not read</Missing>
+    ) : (
+      <Missing more="this disk does not report it">Not reported</Missing>
     );
   }
   return (
@@ -843,7 +879,7 @@ function HoldsCell({
 /** Awake or asleep (4.9), with the moon when asleep. A change swaps the glyph in place (7.5). */
 function PowerCell({ power }: { power: PowerShown }) {
   if (power === "none") {
-    return <Missing label="Does not report power" />;
+    return <Missing more="this disk does not report it">Not reported</Missing>;
   }
   return (
     <span key={power} className="lt-power" data-power={power}>
@@ -867,6 +903,16 @@ function DiskDetail({ disk }: { disk: Disk }) {
           <FactListLabel>Health</FactListLabel>
           <FactListValue>{disk.reason}</FactListValue>
         </FactListItem>
+        {disk.temperature === null ? (
+          <FactListItem>
+            <FactListLabel>Temperature</FactListLabel>
+            <FactListValue>
+              {disk.power === "asleep"
+                ? "The temperature is read only while the disk is awake, so reading it does not wake the disk."
+                : "This disk does not report its temperature."}
+            </FactListValue>
+          </FactListItem>
+        ) : null}
         <FactListItem>
           <FactListLabel>Device path</FactListLabel>
           <FactListValue variant="identifier">

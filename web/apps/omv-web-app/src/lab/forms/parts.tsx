@@ -369,7 +369,11 @@ export function Help({
   );
 }
 
-/** A one-line first-time tip (G2), dismissible; never shown with tips off. */
+/**
+ * A one-line first-time tip (G2), dismissible; never shown with tips off. It sits on the page
+ * ground: a small lightbulb, the tip in secondary text and "Got it" as a plain text button. No box,
+ * fill or outline round it (generated-look rule 7: a tip is not a unit the person handles).
+ */
 export function Tip({
   children,
   onDismiss,
@@ -379,11 +383,16 @@ export function Tip({
 }) {
   return (
     <p className="lf-tip">
-      <FormIcon name="tip" className="lf-tip-icon" />
+      <FormIcon name="tip" size={16} className="lf-tip-icon" />
       <span className="lf-tip-words">{children}</span>
-      <button type="button" className="lf-tip-close" onClick={onDismiss}>
+      <Button
+        variant="plain"
+        size="sm"
+        className="lf-tip-close"
+        onClick={onDismiss}
+      >
         Got it
-      </button>
+      </Button>
     </p>
   );
 }

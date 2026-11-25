@@ -10,7 +10,7 @@ export const FOLDER_TABLE_STATES = [
   { id: "selected", name: "2 selected" },
   { id: "expanded", name: "Photos expanded" },
   { id: "menu", name: "More menu open" },
-  { id: "filtered", name: "Chip: Not reachable" },
+  { id: "filtered", name: "Filter: Not reachable" },
   { id: "no-match", name: "Search finds nothing" },
   { id: "empty", name: "No folders yet" },
   { id: "loading", name: "Loading" },

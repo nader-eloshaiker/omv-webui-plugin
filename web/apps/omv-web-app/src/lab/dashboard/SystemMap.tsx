@@ -65,12 +65,14 @@ import {
   moveInRows,
   percent,
   plural,
+  rowDiskState,
   rowKeys,
   rowName,
   stripKey,
   traceOf,
   wayKey,
   wayName,
+  waysRunning,
 } from "./model.ts";
 import type { Assemble } from "./welcome.ts";
 
@@ -166,13 +168,22 @@ function rowTrace(ctx: MapCtx, rowId: string): "lit" | "dim" | undefined {
 
 // ─── The pieces of a row ──────────────────────────────────────────────────────────────────────
 
-function Slot({ rowId, disk }: { rowId: string; disk: RowDisk }) {
+function Slot({
+  rowId,
+  disk,
+  said,
+}: {
+  rowId: string;
+  disk: RowDisk;
+  said: boolean;
+}) {
   const ctx = useMapCtx();
   const item = useItem(diskKey(rowId, disk.id), rowId);
   return (
     <SlotTile
       disk={disk}
       alsoIn={disk.alsoIn}
+      said={said}
       item={item}
       onOpen={ctx.onNote}
     />
@@ -192,7 +203,11 @@ function Strip({ rowId, row }: { rowId: string; row: StorageRow | UnusedRow }) {
   );
 }
 
-/** The row's disks: full slots, then the strip when there are more than six. */
+/**
+ * The row's disks: full slots, then the strip when there are more than six. A state several of them
+ * share is said once under them ("Not checked yet: sda, sdb and sdc"); only a disk whose state
+ * differs keeps its own word.
+ */
 function Bay({
   row,
   failed,
@@ -211,6 +226,8 @@ function Bay({
   if (row.disks.length === 0) {
     return <span className="dm-bay dm-bay-none">Disks: none</span>;
   }
+  const shared = rowDiskState(row.bay.full);
+  const problem = shared?.health === "warning" || shared?.health === "critical";
   return (
     <span className="dm-bay" data-strip={row.bay.strip.length > 0 || undefined}>
       {row.bay.full.map((d, i) => (
@@ -219,10 +236,16 @@ function Bay({
           className="dm-slot-wrap"
           style={{ "--i": i } as CSSProperties}
         >
-          <Slot rowId={row.id} disk={d} />
+          <Slot rowId={row.id} disk={d} said={shared?.ids.has(d.id) ?? false} />
         </span>
       ))}
       {row.bay.strip.length > 0 ? <Strip rowId={row.id} row={row} /> : null}
+      {shared ? (
+        <span className="dm-bay-said" data-health={shared.health}>
+          {problem ? <StatusIcon status={shared.health} /> : null}
+          {shared.words}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -645,9 +668,12 @@ function SkeletonRows() {
 function WayTile({
   way,
   ifaces,
+  said,
 }: {
   way: MapWay;
   ifaces: readonly MapIface[];
+  /** "Running" is said once beside the heading, so a running way does not repeat it. */
+  said: boolean;
 }) {
   const ctx = useMapCtx();
   const item = useItem(wayKey(way.id), null, false);
@@ -670,14 +696,17 @@ function WayTile({
         <span className="dm-wt-name">
           {way.name} <span className="dm-wt-tech">{way.tech}</span>
         </span>
-        {/* A healthy thing shows its word only; a problem its icon and the word in its colour. */}
-        <span
-          className="dm-wt-state"
-          data-health={way.running ? undefined : "warning"}
-        >
-          {way.running ? null : <StatusIcon status="warning" />}
-          {way.running ? "Running" : "Not running"}
-        </span>
+        {/* A healthy thing shows its word only, unless the band says it once for all; a problem
+            its icon and the word in its colour. */}
+        {way.running && said ? null : (
+          <span
+            className="dm-wt-state"
+            data-health={way.running ? undefined : "warning"}
+          >
+            {way.running ? null : <StatusIcon status="warning" />}
+            {way.running ? "Running" : "Not running"}
+          </span>
+        )}
       </button>
     </li>
   );
@@ -735,6 +764,7 @@ function Band({
   const lit = ctx.trace !== null && ctx.trace.ways.size > 0;
   const waysFailed = failed.includes("ways");
   const netFailed = failed.includes("network");
+  const running = waysFailed ? null : waysRunning(view.ways.on);
   return (
     <div
       className="dm-band"
@@ -742,9 +772,12 @@ function Band({
       data-lit={lit || undefined}
     >
       <div className="dm-band-head" data-part="ways">
-        <h3 id="dm-band-ways-title" className="dm-col-title">
-          Ways in
-        </h3>
+        <span className="dm-band-title-row">
+          <h3 id="dm-band-ways-title" className="dm-col-title">
+            Ways in
+          </h3>
+          {running ? <span className="dm-band-note">{running}</span> : null}
+        </span>
         {captions.includes("ways") ? (
           <p className="dm-caption">{LANES[3]?.caption}</p>
         ) : null}
@@ -774,7 +807,12 @@ function Band({
         ) : view.ways.on.length > 0 ? (
           <ul className="dm-ways" aria-labelledby="dm-band-ways-title">
             {view.ways.on.map((w) => (
-              <WayTile key={w.id} way={w} ifaces={view.ifaces} />
+              <WayTile
+                key={w.id}
+                way={w}
+                ifaces={view.ifaces}
+                said={running !== null}
+              />
             ))}
           </ul>
         ) : (

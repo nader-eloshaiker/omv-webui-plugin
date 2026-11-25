@@ -157,8 +157,17 @@ describe("the map's rows (6.8)", () => {
     expect(within(ways).getAllByRole("listitem")[0]).toHaveAccessibleName(
       "Windows and Mac (SMB): running, over enp2s0",
     );
-    expect(within(ways).getAllByText("Running")).toHaveLength(3);
+    // All three run: said once beside the heading, not under each.
+    expect(within(ways).queryByText("Running")).toBeNull();
+    expect(screen.getByText("All running")).toBeInTheDocument();
     expect(screen.getByText("Off: Copies to other NAS")).toBeInTheDocument();
+  });
+
+  it("keeps a lone way in's own word", () => {
+    show("new-nas");
+    const ways = screen.getByRole("list", { name: "Ways in" });
+    expect(within(ways).getByText("Running")).toBeInTheDocument();
+    expect(screen.queryByText("All running")).toBeNull();
   });
 });
 
@@ -281,6 +290,19 @@ describe("a new NAS", () => {
     for (const action of ["Add storage", "Add a shared folder"]) {
       expect(screen.getAllByRole("button", { name: action })).toHaveLength(1);
     }
+  });
+
+  it("says once on the row that its disks are not checked, not under every disk", () => {
+    show("new-nas");
+    const unused = rowNamed("Not in use");
+    expect(
+      within(unused).getByText("Not checked yet: sda, sdb, sdc, sdd and sde"),
+    ).toBeInTheDocument();
+    expect(within(unused).getAllByText(/not checked/iu)).toHaveLength(1);
+    // Each disk's name still carries its state.
+    expect(
+      within(unused).getByRole("button", { name: /^sdb, .*Not checked yet/u }),
+    ).toBeInTheDocument();
   });
 
   it("drops the example and the captions with tips off; the unused row then offers Add storage in the accent", () => {

@@ -18,12 +18,14 @@ import {
   nasFor,
   needsYou,
   otherAddOns,
+  rowDiskState,
   rowKeys,
   rowName,
   stripWords,
   traceOf,
   wayName,
   waysLayout,
+  waysRunning,
   withFirstStorage,
   withoutSdbWarning,
   withSdbWarning,
@@ -131,6 +133,41 @@ describe("a row's caps (6.8 item 9)", () => {
     expect(full.map((d) => d.device)).toEqual(["bad", "worse"]);
     expect(strip).toHaveLength(7);
     expect(stripWords(strip, true)).toBe("7 more, all OK");
+  });
+
+  it("says a state the row's disks share once, and keeps a differing disk's own word", () => {
+    const unread = (id: string) => ({
+      ...disk(id, "unknown"),
+      word: "Not checked yet",
+    });
+    const all = rowDiskState([unread("sda"), unread("sdb"), unread("sdc")]);
+    expect(all?.words).toBe("Not checked yet: sda, sdb and sdc");
+    expect(all?.health).toBe("unknown");
+
+    const failing = { ...disk("sdd", "critical"), word: "Failing" };
+    const mixed = rowDiskState([unread("sda"), failing, unread("sdc")]);
+    expect(mixed?.words).toBe("Not checked yet: sda and sdc");
+    expect(mixed?.ids.has("d:sdd")).toBe(false);
+
+    // A healthy disk has no word to share, and one disk alone keeps its own.
+    expect(rowDiskState([disk("sda"), disk("sdb")])).toBeNull();
+    expect(rowDiskState([unread("sda"), disk("sdb")])).toBeNull();
+  });
+
+  it("says Running once for the ways in when two or more run", () => {
+    const way = (running: boolean) => ({
+      id: "smb" as const,
+      name: "Windows and Mac",
+      tech: "SMB",
+      on: true,
+      running,
+    });
+    expect(waysRunning([way(true), way(true), way(true)])).toBe("All running");
+    expect(waysRunning([way(true), way(true), way(false)])).toBe(
+      "2 of 3 running",
+    );
+    expect(waysRunning([way(true)])).toBeNull();
+    expect(waysRunning([way(true), way(false)])).toBeNull();
   });
 
   it("says how many in the strip are not checked", () => {

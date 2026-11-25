@@ -61,9 +61,9 @@ import {
   NEW_FOLDER,
   sortFolders,
 } from "./model.ts";
-import type { Chip, SummaryPart } from "./parts.tsx";
+import type { FilterTab, SummaryPart } from "./parts.tsx";
 import {
-  FilterChips,
+  FilterTabs,
   Identity,
   Missing,
   PageHead,
@@ -244,7 +244,7 @@ export function FoldersTable({
       </Button>
     );
 
-  const chips: Chip<FolderFilter>[] = [
+  const filterTabs: FilterTab<FolderFilter>[] = [
     { value: "all", label: "All", count: counts.all },
     {
       value: "unreachable",
@@ -255,7 +255,7 @@ export function FoldersTable({
     { value: "shared", label: "Shared", count: counts.shared },
     { value: "unshared", label: "Not shared", count: counts.unshared },
   ];
-  const chipName = chips.find((c) => c.value === filter)?.label ?? "";
+  const filterName = filterTabs.find((c) => c.value === filter)?.label ?? "";
 
   const menuFor = (folder: Folder) => (
     <>
@@ -541,7 +541,7 @@ export function FoldersTable({
           <TableStateRow colSpan={columns}>
             <NoMatch
               query={query}
-              chip={filter === "all" ? null : chipName}
+              filterName={filter === "all" ? null : filterName}
               onClear={() => {
                 setQuery("");
                 setFilter("all");
@@ -689,10 +689,10 @@ export function FoldersTable({
                 onValueChange={setQuery}
                 className="lt-search"
               />
-              <FilterChips
+              <FilterTabs
                 label="Show"
                 value={filter}
-                chips={chips}
+                tabs={filterTabs}
                 onChange={setFilter}
               />
               {wide ? (
@@ -805,8 +805,8 @@ export function FoldersTable({
 // ─── Cells ────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * How computers reach a folder. Empty is a plain dash in the table, whose column says what it is
- * missing; in the list form, which has no column, it is a labelled value.
+ * How computers reach a folder. Empty is "Not shared" in the table, under its column; in the list
+ * form, which has no column, it is a labelled value.
  */
 function ReachedBy({
   services,
@@ -819,7 +819,7 @@ function ReachedBy({
     return labelled ? (
       <span className="lt-secondary">Reached by: no computer</span>
     ) : (
-      <Missing label="No computer can reach it" />
+      <Missing more="no computer can reach it">Not shared</Missing>
     );
   }
   return (
@@ -846,7 +846,7 @@ function WhoCanOpen({
     return labelled ? (
       <span className="lt-secondary">Who can open it: nobody</span>
     ) : (
-      <Missing label="Nobody can open it" />
+      <Missing>Nobody</Missing>
     );
   }
   return (
@@ -1030,17 +1030,17 @@ function TeachingEmpty({ tips, onAdd }: { tips: boolean; onAdd: () => void }) {
 
 function NoMatch({
   query,
-  chip,
+  filterName,
   onClear,
 }: {
   query: string;
-  chip: string | null;
+  filterName: string | null;
   onClear: () => void;
 }) {
   const what =
     query.trim() === ""
-      ? `No folder is in "${chip ?? ""}".`
-      : `No folder matches "${query}"${chip ? ` in "${chip}"` : ""}.`;
+      ? `No folder is in "${filterName ?? ""}".`
+      : `No folder matches "${query}"${filterName ? ` in "${filterName}"` : ""}.`;
   return (
     <EmptyState
       variant="filtered"
