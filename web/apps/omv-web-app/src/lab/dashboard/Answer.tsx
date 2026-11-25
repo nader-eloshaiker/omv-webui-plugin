@@ -11,6 +11,7 @@ import {
   DisclosureTrigger,
   Icon,
   IconBadge,
+  IconPlate,
   Skeleton,
   StatusIcon,
   StatusPill,
@@ -29,7 +30,10 @@ const AREA_ICON: Record<AreaId, IconName> = {
   system: "nas",
 };
 
-/** The answer's mark: the state in its own shape, large (style guide 5.5), never a ring. */
+/**
+ * The answer's mark: the state in its own shape on a 32px plate, the size of the icon set's plate
+ * (5.2), so it marks the sentence without outweighing it. Keyed by the state, so a change settles in.
+ */
 function AnswerMark({
   tone,
   welcome,
@@ -38,22 +42,19 @@ function AnswerMark({
   welcome: boolean;
 }) {
   if (welcome) {
-    return (
-      <span className="dm-answer-mark" data-welcome="">
-        <Icon name="nas" size={24} motion="none" />
-      </span>
-    );
+    return <IconPlate name="nas" className="dm-answer-mark" />;
   }
   return (
-    <svg
+    <span
       key={tone}
       aria-hidden="true"
-      viewBox="0 0 24 24"
       className="dm-answer-mark"
       data-tone={tone}
     >
-      <IconBadge status={tone} cx={12} cy={12.5} r={10} strokeWidth={1.25} />
-    </svg>
+      <svg viewBox="0 0 24 24">
+        <IconBadge status={tone} cx={12} cy={12.5} r={8} strokeWidth={1.5} />
+      </svg>
+    </span>
   );
 }
 
@@ -155,11 +156,14 @@ export function AnswerRegion({
  */
 export function WelcomeLine({
   leaving,
+  compact,
   onDismiss,
   onLeft,
   onNote,
 }: {
   leaving: boolean;
+  /** Compact density keeps the first sentence only (owner decision 11). */
+  compact: boolean;
   onDismiss: () => void;
   onLeft: () => void;
   onNote: (text: string) => void;
@@ -180,8 +184,10 @@ export function WelcomeLine({
         <p className="dm-welcome-words">
           <Icon name="nas" size={20} motion="none" />
           <span>
-            Welcome to the new interface. Your settings and files are the same;
-            only the way you see them is new.
+            Welcome to the new interface.
+            {compact
+              ? null
+              : " Your settings and files are the same; only the way you see them is new."}
           </span>
         </p>
         <div className="dm-welcome-actions">
@@ -198,8 +204,8 @@ export function WelcomeLine({
                 <li>The menu groups are the ones you know.</li>
                 <li>Press / to go anywhere, or to run an action by name.</li>
                 <li>
-                  The map below shows what feeds what: disks, storage, folders,
-                  ways in.
+                  The map below has a row for each storage: its disks, then its
+                  shared folders and how computers reach them.
                 </li>
                 <li>
                   Saved changes still wait in the yellow bar until you apply

@@ -1,88 +1,90 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Region C, "Your NAS" (rethink spec 6.2 C, 6.3, 6.4, 7.6): the map in five lanes, Disks to
-// Storage to Shared folders to Ways in to Network, with lines for what feeds what. A problem lights
-// what it puts at risk; pointing at or focusing a node traces its lineage (the library's `lineage`)
-// and dims the rest. Each lane ends in its action on a shared baseline (a subgrid row), so lanes of
-// different heights end together. At 900 three lanes keep their lines and Ways in becomes a row of
-// tiles; at 390 each lane is a disclosure row that says in words what it feeds.
+// Region C, "Your NAS" (rethink spec 6.8): the NAS read by rows, not lines. Each storage is one row,
+// left to right its disks, a short straight connector, the storage with its usage bar, another
+// connector and its shared folders as wrapping chips that carry the ways they are reached by. What
+// hangs together sits on one row, so a problem flows right along its row and nowhere else; a 3px
+// tone bar at the row's start finds it from across the room. Unused disks end in "Add storage".
+// Under the rows, one band: the ways in that are on, fanning into the network through one bus.
+// Tracing is highlighting: pointing at or focusing a thing lights what it belongs to and reaches,
+// and shows the rest at reduced emphasis. The rows share their column tracks (a subgrid), so the
+// column headers read and the eye scans down a column as easily as along a row.
 //
-// Lab-local until the owner has seen it: the candidate *SystemMap of spec 8 row 1, an extension of
-// ConnectionMap (its model is reused as is). Development only (UI-11). Lines are SVG paths measured
-// from the DOM; motion runs through CSS keyframes and the Web Animations API, never a style
-// attribute in markup (UI-1).
+// Lab-local until the owner has seen it, the candidate *SystemMap of spec 8 row 1. Development
+// only (UI-11). Connectors are CSS borders between neighbours on one row, so none can cross another;
+// motion runs through CSS keyframes, and geometry from data (a row's place in the assembly) reaches
+// the CSS as custom properties through the CSSOM, never a style attribute in markup (UI-1).
 import type { IconName } from "@omv-webui/react-ui-components";
 import {
   Button,
   CapacityMeter,
-  Disclosure,
-  DisclosurePanel,
-  DisclosureTrigger,
   Icon,
-  lineage,
-  mapEdges,
-  moveOnMap,
   Skeleton,
   StatusIcon,
-  StatusPill,
 } from "@omv-webui/react-ui-components";
-import { ArrowRight, RotateCw } from "lucide-react";
+import { ArrowRight, House, RotateCw } from "lucide-react";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import {
   createContext,
   use,
   useCallback,
-  useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { Tip } from "../forms/parts.tsx";
-import { reducedMotion, token } from "../tables/grid.ts";
+import type { ItemProps } from "./Bay.tsx";
 import { BayStrip, SlotTile } from "./Bay.tsx";
 import type {
   AccentAt,
-  AreaState,
-  Health,
   LaneId,
   Layout,
+  MapAction,
   MapFolder,
   MapIface,
   MapStorage,
   MapView,
   MapWay,
+  MoreRow,
   Nas,
+  RowDisk,
+  StorageRow,
+  Trace,
+  UnusedRow,
+  WayId,
 } from "./model.ts";
 import {
-  feedsWords,
-  HEALTH_WORD,
-  laneOfId,
+  ADD_KEY,
+  diskKey,
+  folderState,
   LANES,
-  laneSummary,
-  MORE_ID,
+  listWords,
+  mapActions,
+  moreKey,
   moreWords,
+  moveInRows,
   percent,
   plural,
-  riskDepth,
-  riskTones,
-  wayNode,
+  rowKeys,
+  rowName,
+  stripKey,
+  traceOf,
+  wayKey,
+  wayName,
 } from "./model.ts";
+import type { Assemble } from "./welcome.ts";
 
-export type Assemble = "full" | "fade" | "none";
-
-const LANE_ICON: Record<LaneId, IconName> = {
-  disks: "disk",
-  storage: "file-system",
-  folders: "shared-folder",
-  ways: "service-smb",
-  network: "net-ethernet",
-};
-
-const WAY_ICON: Record<MapWay["id"], IconName> = {
+const WAY_ICON: Record<WayId, IconName> = {
   smb: "service-smb",
   nfs: "service-nfs",
   rsync: "service-rsync",
   ssh: "service-ssh",
+};
+
+const WAY_SHORT: Record<WayId, string> = {
+  smb: "Windows and Mac",
+  nfs: "Linux",
+  rsync: "rsync",
+  ssh: "SSH",
 };
 
 const STORAGE_ICON: Record<MapStorage["kind"], IconName> = {
@@ -91,304 +93,746 @@ const STORAGE_ICON: Record<MapStorage["kind"], IconName> = {
   zfs: "zfs-pool",
 };
 
+const ACTION_ICON: Partial<Record<MapAction, ReactNode>> = {
+  "Check disk health": <Icon name="check-health" size={16} />,
+  "Add storage": <Icon name="file-system" mark="create" size={16} />,
+  "Add a shared folder": <Icon name="shared-folder" mark="create" size={16} />,
+};
+
+const LANE_ERROR = "The request timed out after 10 seconds.";
+
+// ─── The map's context: tracing and the one tab stop ──────────────────────────────────────────
+
 interface MapCtx {
-  traced: Set<string> | null;
-  risk: Map<string, "warning" | "critical">;
+  trace: Trace | null;
   current: string | null;
-  /** Nodes that were not on the map when it was first drawn: a ghost that became real (7.2). */
-  fresh: (id: string) => boolean;
-  onTrace: (id: string | null) => void;
-  register: (id: string, el: HTMLElement | null) => void;
+  onTrace: (key: string | null) => void;
+  register: (key: string, el: HTMLElement | null) => void;
   onNote: (text: string) => void;
 }
 
 const MapContext = createContext<MapCtx | null>(null);
 
-function useMap(): MapCtx {
+function useMapCtx(): MapCtx {
   const ctx = use(MapContext);
   if (!ctx) {
-    throw new Error("A map node outside the map.");
+    throw new Error("A map item outside the map.");
   }
   return ctx;
 }
 
-function traceOf(ctx: MapCtx, id: string): "lit" | "dim" | undefined {
-  if (!ctx.traced) {
-    return undefined;
-  }
-  return ctx.traced.has(id) ? "lit" : "dim";
+/**
+ * A thing on the map: lit when the trace names it, left as it is on a lit row, dimmed otherwise.
+ * On the rows it is part of one roving tab stop; in the band each is its own.
+ */
+function useItem(key: string, rowId: string | null, roving = true): ItemProps {
+  const ctx = useMapCtx();
+  const t = ctx.trace;
+  return {
+    ref: (el) => {
+      ctx.register(key, el);
+    },
+    "data-key": key,
+    "data-trace": !t
+      ? undefined
+      : t.keys.has(key)
+        ? "lit"
+        : rowId !== null && t.rows.has(rowId)
+          ? undefined
+          : "dim",
+    tabIndex: roving ? (ctx.current === key ? 0 : -1) : 0,
+    onPointerEnter: () => {
+      ctx.onTrace(key);
+    },
+    onPointerLeave: () => {
+      ctx.onTrace(null);
+    },
+    onFocus: () => {
+      ctx.onTrace(key);
+    },
+    onBlur: () => {
+      ctx.onTrace(null);
+    },
+  };
 }
 
-// ─── Nodes ────────────────────────────────────────────────────────────────────────────────────
+function rowTrace(ctx: MapCtx, rowId: string): "lit" | "dim" | undefined {
+  if (!ctx.trace) {
+    return undefined;
+  }
+  return ctx.trace.rows.has(rowId) ? "lit" : "dim";
+}
 
-/** A node of the map: a box whose name is its one tab stop; what it holds sits under the name. */
-function MapNode({
-  id,
-  icon,
-  name,
-  tech,
-  health = "ok",
-  word,
-  stateBelow = false,
-  onOpen,
-  children,
-  index,
+// ─── The pieces of a row ──────────────────────────────────────────────────────────────────────
+
+function Slot({ rowId, disk }: { rowId: string; disk: RowDisk }) {
+  const ctx = useMapCtx();
+  const item = useItem(diskKey(rowId, disk.id), rowId);
+  return (
+    <SlotTile
+      disk={disk}
+      alsoIn={disk.alsoIn}
+      item={item}
+      onOpen={ctx.onNote}
+    />
+  );
+}
+
+function Strip({ rowId, row }: { rowId: string; row: StorageRow | UnusedRow }) {
+  const ctx = useMapCtx();
+  const item = useItem(stripKey(rowId), rowId);
+  return (
+    <BayStrip
+      disks={row.bay.strip}
+      hasFull={row.bay.full.length > 0}
+      item={item}
+      onOpen={ctx.onNote}
+    />
+  );
+}
+
+/** The row's disks: full slots, then the strip when there are more than six. */
+function Bay({
+  row,
+  failed,
 }: {
-  id: string;
-  icon: IconName;
-  name: string;
-  tech?: string;
-  health?: Health;
-  word?: string;
-  /** The state is said in the node's body (a meter's pill), so the name line leaves it out. */
-  stateBelow?: boolean;
-  onOpen: string;
-  children?: ReactNode;
-  index: number;
+  row: StorageRow | UnusedRow;
+  failed: boolean;
 }) {
-  const ctx = useMap();
-  const risk = ctx.risk.get(id);
-  const own = health === "warning" || health === "critical";
+  if (failed) {
+    return (
+      <span className="dm-bay dm-bay-unread">
+        <StatusIcon status="unknown" />
+        Not read
+      </span>
+    );
+  }
+  if (row.disks.length === 0) {
+    return <span className="dm-bay dm-bay-none">No disk</span>;
+  }
+  return (
+    <span className="dm-bay" data-strip={row.bay.strip.length > 0 || undefined}>
+      {row.bay.full.map((d, i) => (
+        <span
+          key={d.id}
+          className="dm-slot-wrap"
+          style={{ "--i": i } as CSSProperties}
+        >
+          <Slot rowId={row.id} disk={d} />
+        </span>
+      ))}
+      {row.bay.strip.length > 0 ? <Strip rowId={row.id} row={row} /> : null}
+    </span>
+  );
+}
+
+/** A short straight connector between neighbours on a row; it takes the row's tone. */
+function Wire({ tone, dashed }: { tone?: string | null; dashed?: boolean }) {
+  return (
+    <span
+      className="dm-wire"
+      data-tone={tone ?? undefined}
+      data-dashed={dashed || undefined}
+      aria-hidden="true"
+    />
+  );
+}
+
+function StorageNode({ row }: { row: StorageRow }) {
+  const ctx = useMapCtx();
+  const s = row.storage;
+  const item = useItem(s.id, row.id);
+  const own = s.health === "warning" || s.health === "critical";
+  // A disk in trouble puts the storage at risk; its own problem is said by the meter's pill.
+  const atRisk = !own && row.tone !== null;
+  const { ref, onPointerEnter, onPointerLeave, ...focus } = item;
   return (
     <div
-      ref={(el) => {
-        ctx.register(id, el);
-      }}
-      className="dm-node"
-      data-node={id}
-      data-health={health}
-      data-risk={risk}
-      data-trace={traceOf(ctx, id)}
-      data-arrived={ctx.fresh(id) || undefined}
-      style={{ "--i": index } as CSSProperties}
-      onPointerEnter={() => {
-        ctx.onTrace(id);
-      }}
-      onPointerLeave={() => {
-        ctx.onTrace(null);
-      }}
+      className="dm-store"
+      data-health={s.health}
+      data-risk={atRisk ? (row.tone ?? undefined) : undefined}
+      data-trace={item["data-trace"]}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
     >
       <button
+        ref={ref}
+        {...focus}
         type="button"
-        className="dm-node-main"
-        data-focus-node={id}
-        tabIndex={ctx.current === id ? 0 : -1}
-        onFocus={() => {
-          ctx.onTrace(id);
-        }}
-        onBlur={() => {
-          ctx.onTrace(null);
-        }}
+        className="dm-store-main"
         onClick={() => {
-          ctx.onNote(onOpen);
+          ctx.onNote(`Opens ${s.name}.`);
         }}
       >
-        <Icon name={icon} size={20} motion="none" className="dm-node-icon" />
-        <span className="dm-node-words">
-          <span className="dm-node-name">
-            <bdi>{name}</bdi>
+        <Icon name={STORAGE_ICON[s.kind]} size={20} motion="none" />
+        <span className="dm-store-words">
+          <span className="dm-store-name">
+            <bdi>{s.name}</bdi>
           </span>
-          {tech ? <span className="dm-node-tech">{tech}</span> : null}
+          <span className="dm-store-tech">{s.tech}</span>
         </span>
-        {stateBelow && own ? null : health !== "ok" ? (
-          <span key={health} className="dm-node-state" data-health={health}>
-            <StatusIcon status={health} />
-            {word ?? HEALTH_WORD[health]}
-          </span>
-        ) : risk && !own ? (
-          <span className="dm-node-state" data-health={risk}>
-            <StatusIcon status={risk} />
+        {atRisk ? (
+          <span className="dm-state" data-health={row.tone ?? undefined}>
+            <StatusIcon status={row.tone ?? "warning"} />
             At risk
           </span>
         ) : null}
       </button>
-      {children ? <div className="dm-node-body">{children}</div> : null}
-    </div>
-  );
-}
-
-/** "+3 more, all OK": the rest of a capped lane, a link to the full page, filtered (6.4). */
-function MoreNode({
-  id,
-  hidden,
-  page,
-  index,
-}: {
-  id: string;
-  hidden: readonly { health: Health }[];
-  page: string;
-  index: number;
-}) {
-  const ctx = useMap();
-  const allOk = hidden.every((h) => h.health === "ok");
-  return (
-    <div
-      ref={(el) => {
-        ctx.register(id, el);
-      }}
-      className="dm-more"
-      data-node={id}
-      data-trace={traceOf(ctx, id)}
-      style={{ "--i": index } as CSSProperties}
-      onPointerEnter={() => {
-        ctx.onTrace(id);
-      }}
-      onPointerLeave={() => {
-        ctx.onTrace(null);
-      }}
-    >
-      <button
-        type="button"
-        className="dm-more-main"
-        data-focus-node={id}
-        tabIndex={ctx.current === id ? 0 : -1}
-        onFocus={() => {
-          ctx.onTrace(id);
-        }}
-        onBlur={() => {
-          ctx.onTrace(null);
-        }}
-        onClick={() => {
-          ctx.onNote(`Opens ${page}.`);
-        }}
-      >
-        {allOk ? <StatusIcon status="ok" /> : null}+{moreWords(hidden)}
-      </button>
-    </div>
-  );
-}
-
-/** A ghost of what will appear here (7.3): dashed, "Example", hidden from assistive technology. */
-function Ghost({ icon, words }: { icon: IconName; words: string }) {
-  return (
-    <div className="dm-ghost" aria-hidden="true">
-      <Icon name={icon} size={20} motion="none" />
-      <span className="dm-ghost-words">{words}</span>
-      <span className="dm-ghost-tag">Example</span>
-    </div>
-  );
-}
-
-function StorageNode({ s, index }: { s: MapStorage; index: number }) {
-  const threshold =
-    s.health === "warning" || s.health === "critical"
-      ? { status: s.health, label: s.word }
-      : undefined;
-  return (
-    <MapNode
-      id={s.id}
-      icon={STORAGE_ICON[s.kind]}
-      name={s.name}
-      tech={s.tech}
-      health={s.health}
-      word={s.word}
-      stateBelow
-      onOpen={`Opens ${s.name}.`}
-      index={index}
-    >
       <CapacityMeter
         variant="compact"
         label={`${s.name}: space used`}
         value={s.used}
         max={1}
         valueText={`${percent(s.used)} · ${s.free} free`}
-        threshold={threshold}
+        threshold={
+          s.health === "warning" || s.health === "critical"
+            ? { status: s.health, label: s.word }
+            : undefined
+        }
         className="dm-usage"
       />
-    </MapNode>
+    </div>
   );
 }
 
-function FolderNode({ f, index }: { f: MapFolder; index: number }) {
+function FolderChip({
+  folder,
+  row,
+  index,
+}: {
+  folder: MapFolder;
+  row: StorageRow;
+  index: number;
+}) {
+  const ctx = useMapCtx();
+  const item = useItem(folder.id, row.id);
+  const state = folderState(folder, row.tone);
+  const via = folder.via.map((w) => WAY_SHORT[w]);
   return (
-    <MapNode
-      id={f.id}
-      icon="shared-folder"
-      name={f.name}
-      health={f.health}
-      word={f.word}
-      onOpen={`Opens the shared folder ${f.name}.`}
-      index={index}
+    <button
+      {...item}
+      type="button"
+      className="dm-folder"
+      data-health={state?.health}
+      style={{ "--i": index } as CSSProperties}
+      aria-label={`${folder.name}: ${via.length > 0 ? listWords(via) : "not shared"}${state ? `, ${state.word.toLowerCase()}` : ""}`}
+      onClick={() => {
+        ctx.onNote(`Opens the shared folder ${folder.name}.`);
+      }}
     >
-      <span className="dm-via">
-        {f.via.length === 0 ? (
-          <span className="dm-quiet">Not shared</span>
-        ) : (
-          f.via.map((w) => (
-            <span key={w} className="dm-via-item">
-              <Icon name={WAY_ICON[w]} size={16} motion="none" />
-              {w === "smb" ? "Windows and Mac" : w === "nfs" ? "Linux" : w}
-            </span>
-          ))
-        )}
+      <Icon name="shared-folder" size={16} motion="none" />
+      <span className="dm-folder-name">
+        <bdi>{folder.name}</bdi>
       </span>
-    </MapNode>
+      {folder.via.length === 0 ? (
+        <span className="dm-folder-none">Not shared</span>
+      ) : (
+        <span className="dm-folder-via">
+          {folder.via.map((w) => (
+            <span key={w} title={WAY_SHORT[w]} className="dm-folder-way">
+              <Icon name={WAY_ICON[w]} size={16} motion="none" />
+            </span>
+          ))}
+        </span>
+      )}
+      {state ? (
+        <span className="dm-state" data-health={state.health}>
+          <StatusIcon status={state.health} />
+          {state.word}
+        </span>
+      ) : null}
+    </button>
   );
 }
+
+function MoreFolders({ row }: { row: StorageRow }) {
+  const ctx = useMapCtx();
+  const item = useItem(moreKey(row.id), row.id);
+  return (
+    <button
+      {...item}
+      type="button"
+      className="dm-folder dm-folder-more"
+      style={{ "--i": row.folders.shown.length } as CSSProperties}
+      onClick={() => {
+        ctx.onNote(`Opens Shared folders, those on ${row.storage.name}.`);
+      }}
+    >
+      +{moreWords(row.folders.hidden)}
+      <ArrowRight aria-hidden="true" />
+    </button>
+  );
+}
+
+function Folders({ row, failed }: { row: StorageRow; failed: boolean }) {
+  if (failed) {
+    return (
+      <span className="dm-quiet-line">
+        <StatusIcon status="unknown" />
+        Not read
+      </span>
+    );
+  }
+  if (row.folders.shown.length === 0) {
+    return (
+      <span className="dm-quiet-line">
+        {row.system ? "Holds the system" : "No shared folders"}
+      </span>
+    );
+  }
+  return (
+    <span className="dm-folders">
+      {row.folders.shown.map((f, i) => (
+        <FolderChip key={f.id} folder={f} row={row} index={i} />
+      ))}
+      {row.folders.hidden.length > 0 ? <MoreFolders row={row} /> : null}
+    </span>
+  );
+}
+
+// ─── Rows ─────────────────────────────────────────────────────────────────────────────────────
+
+interface RowProps {
+  index: number;
+  fresh: boolean;
+  arrival: number | undefined;
+}
+
+function StorageRowView({
+  row,
+  failed,
+  index,
+  fresh,
+  arrival,
+}: RowProps & { row: StorageRow; failed: readonly LaneId[] }) {
+  const ctx = useMapCtx();
+  return (
+    <li
+      key={arrival}
+      className="dm-row"
+      data-kind="storage"
+      data-tone={row.tone ?? undefined}
+      data-trace={rowTrace(ctx, row.id)}
+      data-arrived={fresh || undefined}
+      data-arrival={arrival === undefined ? undefined : ""}
+      aria-label={rowName(row)}
+      style={{ "--r": index } as CSSProperties}
+    >
+      <span className="dm-edge" aria-hidden="true" />
+      <span className="dm-cell dm-cell-disks">
+        <Bay row={row} failed={failed.includes("disks")} />
+        <Wire tone={row.diskTrouble ? row.tone : null} />
+      </span>
+      <span className="dm-cell dm-cell-storage">
+        <StorageNode row={row} />
+      </span>
+      <span
+        className="dm-cell dm-cell-folders"
+        data-tone={row.tone ?? undefined}
+      >
+        {/* A connector only where it leads to folders. */}
+        {row.folders.shown.length > 0 ? <Wire tone={row.tone} /> : null}
+        <Folders row={row} failed={failed.includes("folders")} />
+      </span>
+    </li>
+  );
+}
+
+function UnusedRowView({
+  row,
+  index,
+  fresh,
+  ghostAdds,
+  accent,
+  failed,
+  captions,
+}: RowProps & {
+  row: UnusedRow;
+  ghostAdds: boolean;
+  accent: boolean;
+  failed: boolean;
+  captions: boolean;
+}) {
+  const ctx = useMapCtx();
+  const item = useItem(ADD_KEY, row.id);
+  const devices = listWords(row.disks.map((d) => d.device));
+  const verb = row.disks.length === 1 ? "is" : "are";
+  return (
+    <li
+      className="dm-row"
+      data-kind="unused"
+      data-trace={rowTrace(ctx, row.id)}
+      data-arrived={fresh || undefined}
+      aria-label={rowName(row)}
+      style={{ "--r": index } as CSSProperties}
+    >
+      <span className="dm-edge" aria-hidden="true" />
+      <span className="dm-cell dm-cell-disks">
+        <Bay row={row} failed={failed} />
+        <Wire dashed />
+      </span>
+      <span className="dm-cell dm-cell-storage">
+        <span className="dm-ghost-store" data-trace={item["data-trace"]}>
+          <span className="dm-ghost-words">
+            <span className="dm-ghost-title">
+              {ghostAdds ? "Not in use yet" : "New storage goes here"}
+            </span>
+            <span className="dm-ghost-line">
+              {devices} {verb} ready to become storage
+            </span>
+          </span>
+          {ghostAdds ? (
+            <Button
+              {...item}
+              variant={accent ? "primary" : "neutral"}
+              size="sm"
+              className="dm-ghost-action"
+              onClick={() => {
+                ctx.onNote("Add storage opens its page.");
+              }}
+            >
+              <Icon name="file-system" mark="create" size={16} />
+              Add storage
+            </Button>
+          ) : null}
+        </span>
+      </span>
+      <span className="dm-cell dm-cell-folders">
+        {captions ? (
+          <span className="dm-quiet-line">Shared folders live on storage.</span>
+        ) : null}
+      </span>
+    </li>
+  );
+}
+
+function MoreRowView({ row, index }: RowProps & { row: MoreRow }) {
+  const ctx = useMapCtx();
+  const item = useItem(row.id, row.id);
+  const names = row.hidden.map((r) => r.storage.name);
+  const disks = row.hidden.reduce((n, r) => n + r.disks.length, 0);
+  const folders = row.hidden.reduce(
+    (n, r) => n + r.folders.shown.length + r.folders.hidden.length,
+    0,
+  );
+  const allOk = row.hidden.every((r) => r.tone === null);
+  return (
+    <li
+      className="dm-row"
+      data-kind="more"
+      data-trace={rowTrace(ctx, row.id)}
+      aria-label={rowName(row)}
+      style={{ "--r": index } as CSSProperties}
+    >
+      <span className="dm-edge" aria-hidden="true" />
+      <span className="dm-cell dm-cell-disks">
+        <span className="dm-quiet-line">{plural(disks, "disk", "disks")}</span>
+      </span>
+      <span className="dm-cell dm-cell-storage">
+        <button
+          {...item}
+          type="button"
+          className="dm-more-rows"
+          onClick={() => {
+            ctx.onNote("Opens File systems, every drive.");
+          }}
+        >
+          {allOk ? <StatusIcon status="ok" /> : null}+
+          {moreWords(row.hidden.map((r) => ({ health: r.tone ?? "ok" })))}
+          <ArrowRight aria-hidden="true" />
+        </button>
+      </span>
+      <span className="dm-cell dm-cell-folders">
+        <span className="dm-quiet-line">
+          {listWords(names)} ·{" "}
+          {plural(folders, "shared folder", "shared folders")}
+        </span>
+      </span>
+    </li>
+  );
+}
+
+/** What a row will look like, for a NAS with nothing on it yet (7.3): hidden from assistive technology. */
+function ExampleRow() {
+  return (
+    <li
+      className="dm-row dm-row-example"
+      data-kind="example"
+      aria-hidden="true"
+    >
+      <span className="dm-edge" />
+      <span className="dm-cell dm-cell-disks">
+        <span className="dm-bay">
+          <span className="dm-slot dm-slot-ghost">
+            <Icon name="disk-hdd" size={20} motion="none" />
+            <span className="dm-slot-device">disk</span>
+          </span>
+        </span>
+        <Wire dashed />
+      </span>
+      <span className="dm-cell dm-cell-storage">
+        <span className="dm-store dm-store-ghost">
+          <span className="dm-store-main">
+            <Icon name="file-system" size={20} motion="none" />
+            <span className="dm-store-words">
+              <span className="dm-store-name">Data drive</span>
+              <span className="dm-store-tech">EXT4</span>
+            </span>
+          </span>
+          <span className="dm-ghost-bar" />
+        </span>
+      </span>
+      <span className="dm-cell dm-cell-folders">
+        <Wire dashed />
+        <span className="dm-folders">
+          <span className="dm-folder dm-folder-ghost">
+            <Icon name="shared-folder" size={16} motion="none" />
+            <span className="dm-folder-name">Photos</span>
+            <span className="dm-folder-via">
+              <Icon name="service-smb" size={16} motion="none" />
+            </span>
+          </span>
+          <span className="dm-example-tag">Example</span>
+        </span>
+      </span>
+    </li>
+  );
+}
+
+function SkeletonRows() {
+  return (
+    <>
+      {[0, 1, 2].map((r) => (
+        <li key={r} className="dm-row" data-kind="skeleton" aria-hidden="true">
+          <span className="dm-edge" />
+          <span className="dm-cell dm-cell-disks">
+            <span className="dm-bay">
+              <span className="dm-slot-skeleton" />
+              {r === 1 ? <span className="dm-slot-skeleton" /> : null}
+            </span>
+            <Wire />
+          </span>
+          <span className="dm-cell dm-cell-storage">
+            <Skeleton shape="block" className="dm-store-skeleton" />
+          </span>
+          <span className="dm-cell dm-cell-folders">
+            <Wire />
+            <span className="dm-folders">
+              {[0, 1].map((i) => (
+                <Skeleton
+                  key={i}
+                  shape="block"
+                  className="dm-folder-skeleton"
+                />
+              ))}
+            </span>
+          </span>
+        </li>
+      ))}
+    </>
+  );
+}
+
+// ─── The band: ways in into the network ───────────────────────────────────────────────────────
 
 function wayLine(w: MapWay): string {
   if (!w.running) {
     return "On · Not running";
   }
-  return w.connections === null || w.connections === 0
-    ? "On · Running"
-    : `On · ${plural(w.connections, "computer", "computers")} connected`;
+  return w.connections
+    ? `On · ${plural(w.connections, "computer", "computers")} connected`
+    : "On · Running";
 }
 
-function WayNode({ w, index }: { w: MapWay; index: number }) {
-  return (
-    <MapNode
-      id={wayNode(w.id)}
-      icon={WAY_ICON[w.id]}
-      name={w.name}
-      tech={w.tech}
-      health={w.running ? "ok" : "warning"}
-      word={w.running ? undefined : "Not running"}
-      onOpen={`Opens ${w.name} sharing (${w.tech}).`}
-      index={index}
-    >
-      <span className="dm-line2">{wayLine(w)}</span>
-    </MapNode>
-  );
-}
-
-function IfaceNode({
-  n,
-  index,
-  rate,
+function WayTile({
+  way,
+  ifaces,
 }: {
-  n: MapIface;
-  index: number;
-  rate: string | null;
+  way: MapWay;
+  ifaces: readonly MapIface[];
 }) {
+  const ctx = useMapCtx();
+  const item = useItem(wayKey(way.id), null, false);
   return (
-    <MapNode
-      id={n.id}
-      icon={n.kind}
-      name={n.name}
-      health={n.up ? "ok" : "critical"}
-      word={n.up ? undefined : "No link"}
-      onOpen={`Opens interface ${n.name}.`}
-      index={index}
+    <li
+      className="dm-way"
+      data-trace={item["data-trace"]}
+      aria-label={wayName(way, ifaces)}
     >
-      <span className="dm-line2">
-        {n.speed} · <span className="dm-mono">{n.address}</span>
-      </span>
-      {rate ? <span className="dm-line2 dm-num">{rate}</span> : null}
-    </MapNode>
+      <button
+        {...item}
+        type="button"
+        className="dm-wt"
+        data-health={way.running ? "ok" : "warning"}
+        onClick={() => {
+          ctx.onNote(`Opens ${way.name} sharing (${way.tech}).`);
+        }}
+      >
+        <Icon name={WAY_ICON[way.id]} size={20} motion="none" />
+        <span className="dm-wt-words">
+          <span className="dm-wt-name">
+            {way.name} <span className="dm-wt-tech">{way.tech}</span>
+          </span>
+          <span className="dm-wt-line">
+            {way.running ? null : <StatusIcon status="warning" />}
+            {wayLine(way)}
+          </span>
+        </span>
+      </button>
+    </li>
   );
 }
 
-// ─── Lane contents ────────────────────────────────────────────────────────────────────────────
+function IfaceTile({ iface, rate }: { iface: MapIface; rate: string | null }) {
+  const ctx = useMapCtx();
+  const item = useItem(iface.id, null, false);
+  const lit = ctx.trace !== null && ctx.trace.ways.size > 0;
+  return (
+    <li className="dm-iface" data-trace={lit ? "lit" : item["data-trace"]}>
+      <button
+        {...item}
+        data-trace={lit ? undefined : item["data-trace"]}
+        type="button"
+        className="dm-wt"
+        data-health={iface.up ? "ok" : "critical"}
+        onClick={() => {
+          ctx.onNote(`Opens interface ${iface.name}.`);
+        }}
+      >
+        <Icon name={iface.kind} size={20} motion="none" />
+        <span className="dm-wt-words">
+          <span className="dm-wt-name">
+            <span className="dm-mono">{iface.name}</span>{" "}
+            <span className="dm-wt-tech">{iface.speed}</span>
+          </span>
+          <span className="dm-wt-line">
+            {iface.up ? (
+              <span className="dm-mono">{iface.address}</span>
+            ) : (
+              <>
+                <StatusIcon status="critical" />
+                No link
+              </>
+            )}
+          </span>
+          {rate ? <span className="dm-wt-line dm-num">{rate}</span> : null}
+        </span>
+      </button>
+    </li>
+  );
+}
+
+function Band({
+  view,
+  failed,
+  rate,
+  captions,
+  retrying,
+  onRetry,
+}: {
+  view: MapView;
+  failed: readonly LaneId[];
+  rate: string | null;
+  captions: readonly LaneId[];
+  retrying: readonly LaneId[];
+  onRetry: (lane: LaneId) => void;
+}) {
+  const ctx = useMapCtx();
+  const lit = ctx.trace !== null && ctx.trace.ways.size > 0;
+  const waysFailed = failed.includes("ways");
+  const netFailed = failed.includes("network");
+  return (
+    <div
+      className="dm-band"
+      data-tracing={ctx.trace ? "" : undefined}
+      data-lit={lit || undefined}
+    >
+      <div className="dm-band-head" data-part="ways">
+        <h3 id="dm-band-ways-title" className="dm-col-title">
+          Ways in
+        </h3>
+        {captions.includes("ways") ? (
+          <p className="dm-caption">{LANES[3]?.caption}</p>
+        ) : null}
+      </div>
+      <div className="dm-band-head" data-part="net">
+        <h3 id="dm-band-net-title" className="dm-col-title">
+          Network
+        </h3>
+        {captions.includes("network") ? (
+          <p className="dm-caption">{LANES[4]?.caption}</p>
+        ) : null}
+      </div>
+      <div
+        id="dm-band-ways"
+        tabIndex={-1}
+        className="dm-band-part"
+        data-part="ways"
+      >
+        {waysFailed ? (
+          <LaneError
+            lane="ways in"
+            retrying={retrying.includes("ways")}
+            onRetry={() => {
+              onRetry("ways");
+            }}
+          />
+        ) : view.ways.on.length > 0 ? (
+          <ul className="dm-ways" aria-labelledby="dm-band-ways-title">
+            {view.ways.on.map((w) => (
+              <WayTile key={w.id} way={w} ifaces={view.ifaces} />
+            ))}
+          </ul>
+        ) : (
+          <p className="dm-quiet-line">No way in is on yet.</p>
+        )}
+      </div>
+      {view.ways.off && !waysFailed ? (
+        <p className="dm-off">{view.ways.off}</p>
+      ) : null}
+      <span className="dm-bus" data-part="in" aria-hidden="true" />
+      <div
+        id="dm-band-net"
+        tabIndex={-1}
+        className="dm-band-part"
+        data-part="net"
+      >
+        {netFailed ? (
+          <LaneError
+            lane="the network"
+            retrying={retrying.includes("network")}
+            onRetry={() => {
+              onRetry("network");
+            }}
+          />
+        ) : (
+          <ul className="dm-ifaces" aria-labelledby="dm-band-net-title">
+            {view.ifaces.map((n, i) => (
+              <IfaceTile key={n.id} iface={n} rate={i === 0 ? rate : null} />
+            ))}
+          </ul>
+        )}
+      </div>
+      <span className="dm-bus" data-part="out" aria-hidden="true" />
+      <div className="dm-world" data-trace={lit ? "lit" : undefined}>
+        <House aria-hidden="true" />
+        <span className="dm-wt-words">
+          <span className="dm-wt-name">Your network</span>
+          <span className="dm-wt-line">Computers, phones and TVs</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Errors ───────────────────────────────────────────────────────────────────────────────────
 
 function LaneError({
   lane,
-  message,
   retrying,
   onRetry,
 }: {
   lane: string;
-  message: string;
   retrying: boolean;
   onRetry: () => void;
 }) {
@@ -399,7 +843,7 @@ function LaneError({
         Could not read {lane}
       </p>
       {/* The backend's message, as text (UI-2, UI-9). */}
-      <p className="dm-lane-error-message">{message}</p>
+      <p className="dm-lane-error-message">{LANE_ERROR}</p>
       <Button variant="neutral" size="sm" disabled={retrying} onClick={onRetry}>
         <RotateCw aria-hidden="true" />
         {retrying ? "Reading…" : "Try again"}
@@ -408,494 +852,134 @@ function LaneError({
   );
 }
 
-function LaneSkeleton({ lane }: { lane: LaneId }) {
-  if (lane === "disks") {
-    return (
-      <div className="dm-bay" aria-hidden="true">
-        <div className="dm-slots">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <span key={i} className="dm-slot-skeleton" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="dm-lane-skeleton" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <Skeleton key={i} shape="block" className="dm-node-skeleton" />
-      ))}
-    </div>
-  );
-}
-
-interface LaneProps {
-  nas: Nas;
-  view: MapView;
-  tips: boolean;
-  rate: string | null;
-}
-
-function DisksBody({ view }: LaneProps) {
-  const ctx = useMap();
-  const { full, strip } = view.bay;
-  return (
-    <div className="dm-bay" data-line-edge="">
-      {full.length > 0 ? (
-        <div className="dm-slots">
-          {full.map((d, i) => (
-            <span
-              key={d.id}
-              className="dm-slot-wrap"
-              style={{ "--i": i } as CSSProperties}
-            >
-              <SlotTile
-                disk={d}
-                risk={ctx.risk.get(d.id)}
-                trace={traceOf(ctx, d.id)}
-                tabbable={ctx.current === d.id}
-                onTrace={ctx.onTrace}
-                onOpen={ctx.onNote}
-                register={ctx.register}
-              />
-            </span>
-          ))}
-        </div>
-      ) : null}
-      {strip.length > 0 ? (
-        <BayStrip
-          disks={strip}
-          hasFull={full.length > 0}
-          trace={traceOf(ctx, "strip:disks")}
-          tabbable={ctx.current === "strip:disks"}
-          onTrace={ctx.onTrace}
-          onOpen={ctx.onNote}
-          register={ctx.register}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function StorageBody({ nas, view, tips }: LaneProps) {
-  // Only the system drive: nothing is ready to keep files yet.
-  const empty = !nas.storage.some((s) => s.id !== "s:system");
-  return (
-    <>
-      {view.storage.shown.map((s, i) => (
-        <StorageNode key={s.id} s={s} index={i} />
-      ))}
-      {view.storage.hidden.length > 0 ? (
-        <MoreNode
-          id={MORE_ID.storage}
-          hidden={view.storage.hidden}
-          page="File systems, every drive"
-          index={view.storage.shown.length}
-        />
-      ) : null}
-      {empty ? (
-        tips ? (
-          <>
-            <Ghost icon="file-system" words="Your storage will appear here" />
-            <p className="sr-only">No storage for files yet.</p>
-          </>
-        ) : (
-          <p className="dm-empty">No storage for files yet.</p>
-        )
-      ) : null}
-    </>
-  );
-}
-
-function FoldersBody({ nas, view, tips }: LaneProps) {
-  if (nas.folders.length === 0) {
-    return tips ? (
-      <>
-        <Ghost
-          icon="shared-folder"
-          words="Your first shared folder will appear here"
-        />
-        <p className="dm-empty">
-          No shared folders yet. A shared folder is a folder your computers open
-          over the network, for example Photos for the whole family.
-        </p>
-      </>
-    ) : (
-      <p className="dm-empty">No shared folders yet.</p>
-    );
-  }
-  return (
-    <>
-      {view.folders.shown.map((f, i) => (
-        <FolderNode key={f.id} f={f} index={i} />
-      ))}
-      {view.folders.hidden.length > 0 ? (
-        <MoreNode
-          id={MORE_ID.folders}
-          hidden={view.folders.hidden}
-          page="Shared folders, all of them"
-          index={view.folders.shown.length}
-        />
-      ) : null}
-    </>
-  );
-}
-
-function WaysBody({ view }: LaneProps) {
-  return (
-    <>
-      {view.ways.on.map((w, i) => (
-        <WayNode key={w.id} w={w} index={i} />
-      ))}
-      {view.ways.off ? <p className="dm-off">{view.ways.off}</p> : null}
-    </>
-  );
-}
-
-function NetworkBody({ view, rate }: LaneProps) {
-  return (
-    <>
-      {view.ifaces.shown.map((n, i) => (
-        <IfaceNode key={n.id} n={n} index={i} rate={i === 0 ? rate : null} />
-      ))}
-    </>
-  );
-}
-
-const BODY: Record<LaneId, (props: LaneProps) => ReactNode> = {
-  disks: DisksBody,
-  storage: StorageBody,
-  folders: FoldersBody,
-  ways: WaysBody,
-  network: NetworkBody,
-};
-
-function NarrowBody({ lane, ...props }: LaneProps & { lane: LaneId }) {
-  const Body = BODY[lane];
-  return <Body {...props} />;
-}
-
 // ─── The map ──────────────────────────────────────────────────────────────────────────────────
-
-interface DrawnEdge {
-  key: string;
-  from: string;
-  to: string;
-  d: string;
-  tone: "ok" | "warning" | "critical" | "unknown";
-}
 
 export interface SystemMapProps {
   nas: Nas;
   view: MapView;
-  areas: readonly AreaState[];
   layout: Layout;
-  tips: boolean;
-  compact: boolean;
   loading: boolean;
   accent: AccentAt;
   assemble: Assemble;
-  /** A problem that just arrived: its lineage lights once from the node outward (7.6). */
+  /** The columns that show their one-line caption: a newcomer's visit, a new NAS, an empty column. */
+  captions: readonly LaneId[];
+  /** A problem that just arrived: its row's connectors draw again in its tone (7.6). */
   arrival: { node: string; n: number } | null;
   showTraceTip: boolean;
   onTraced: () => void;
   onDismissTip: () => void;
+  /** What the first steps already offer on this screen, so the map does not offer it again. */
+  stepActions: readonly string[];
   retrying: readonly LaneId[];
   onRetry: (lane: LaneId) => void;
   onNote: (text: string) => void;
-  /** The first interface's live rate, in words, for the Network lane. */
+  /** The first interface's live rate, in words. */
   rate: string | null;
 }
-
-const LANE_ERROR: Record<LaneId, string> = {
-  disks: "The request timed out after 10 seconds.",
-  storage: "",
-  folders: "",
-  ways: "",
-  network: "",
-};
 
 export function SystemMap(props: SystemMapProps) {
   const {
     nas,
     view,
     layout,
-    tips,
     loading,
     accent,
     assemble,
+    captions,
     arrival,
     showTraceTip,
     onTraced,
     onDismissTip,
+    stepActions,
     onNote,
   } = props;
   const [hot, setHot] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
-  const [edges, setEdges] = useState<DrawnEdge[]>([]);
   const elementsRef = useRef(new Map<string, HTMLElement>());
-  const gridRef = useRef<HTMLDivElement | null>(null);
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const seenEdgesRef = useRef<Set<string> | null>(null);
-  const playedRef = useRef(0);
-  const [firstIds] = useState(() => new Set(view.nodes.map((n) => n.id)));
+  // The rows there when the map was first drawn: one that appears later (a ghost becoming real)
+  // solidifies in (7.2).
+  const [firstRows] = useState(() => new Set(view.rows.map((r) => r.id)));
 
-  const lanes = useMemo<LaneId[]>(
+  // While loading there is no unused row yet, so the footer keeps "Add storage".
+  const { footer, ghostAdds } = mapActions(
+    loading ? { ...view, rows: [] } : view,
+    stepActions,
+  );
+  const storageFailed = nas.failed.includes("storage");
+  const grid = useMemo(
     () =>
-      layout === "wide"
-        ? ["disks", "storage", "folders", "ways", "network"]
-        : ["disks", "storage", "folders"],
-    [layout],
+      loading || storageFailed
+        ? []
+        : view.rows.map((r) => rowKeys(r, ghostAdds)),
+    [view.rows, loading, storageFailed, ghostAdds],
   );
-
-  const traced = useMemo(
-    () => (hot === null ? null : lineage(view.nodes, hot)),
-    [hot, view.nodes],
-  );
-  const risk = useMemo(() => riskTones(view.nodes), [view.nodes]);
-  const order = useMemo(
-    () =>
-      lanes.map((lane) =>
-        loading || nas.failed.includes(lane)
-          ? []
-          : view.nodes.map((n) => n.id).filter((id) => laneOfId(id) === lane),
-      ),
-    [view.nodes, lanes, loading, nas.failed],
-  );
-  const flat = order.flat();
+  const flat = grid.flat(2);
   const current =
     active !== null && flat.includes(active) ? active : (flat[0] ?? null);
+  const trace = useMemo(
+    () => (hot === null ? null : traceOf(view, hot)),
+    [hot, view],
+  );
+  const arrivalRow =
+    arrival === null
+      ? undefined
+      : view.rows.find(
+          (r) =>
+            r.kind === "storage" &&
+            (r.storage.id === arrival.node ||
+              r.disks.some((d) => d.id === arrival.node)),
+        )?.id;
 
-  const register = useCallback((id: string, el: HTMLElement | null) => {
+  const register = useCallback((key: string, el: HTMLElement | null) => {
     if (el) {
-      elementsRef.current.set(id, el);
+      elementsRef.current.set(key, el);
     } else {
-      elementsRef.current.delete(id);
+      elementsRef.current.delete(key);
     }
   }, []);
   const onTrace = useCallback(
-    (id: string | null) => {
-      setHot(id);
-      if (id !== null) {
-        setActive(id);
+    (key: string | null) => {
+      setHot(key);
+      if (key !== null) {
+        if (flat.includes(key)) {
+          setActive(key);
+        }
         onTraced();
       }
     },
-    [onTraced],
+    [flat, onTraced],
   );
 
-  // The lines, measured from the nodes: from the right edge of a node (or the bay) to the left
-  // edge of the node it feeds, through the gutter between the lanes.
-  useLayoutEffect(() => {
-    const grid = gridRef.current;
-    if (!grid || layout === "narrow" || loading) {
-      setEdges([]);
-      return;
-    }
-    const measure = () => {
-      const origin = grid.getBoundingClientRect();
-      const drawn: DrawnEdge[] = [];
-      for (const edge of mapEdges(view.nodes)) {
-        if (
-          !lanes.includes(laneOfId(edge.from)) ||
-          !lanes.includes(laneOfId(edge.to))
-        ) {
-          continue;
-        }
-        const a = elementsRef.current.get(edge.from);
-        const b = elementsRef.current.get(edge.to);
-        if (!a || !b) {
-          continue;
-        }
-        const ra = a.getBoundingClientRect();
-        const rb = b.getBoundingClientRect();
-        const edgeBox = a.closest("[data-line-edge]")?.getBoundingClientRect();
-        const x0 = (edgeBox?.right ?? ra.right) - origin.left;
-        const x1 = rb.left - origin.left;
-        if (x1 <= x0 + 4) {
-          continue;
-        }
-        const y0 = ra.top + ra.height / 2 - origin.top;
-        const y1 = rb.top + Math.min(rb.height / 2, 22) - origin.top;
-        const mx = (x0 + x1) / 2;
-        drawn.push({
-          key: `${edge.from}>${edge.to}`,
-          from: edge.from,
-          to: edge.to,
-          tone: edge.tone,
-          d: `M${x0.toFixed(1)} ${y0.toFixed(1)}C${mx.toFixed(1)} ${y0.toFixed(1)} ${mx.toFixed(1)} ${y1.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`,
-        });
-      }
-      setEdges(drawn);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(grid);
-    return () => {
-      observer.disconnect();
-    };
-  }, [view.nodes, lanes, layout, loading]);
-
-  // Which lines are new since the last drawing: those draw along their length (a ghost becoming
-  // real, a new folder). The first drawing is not news; it is the assembling, or nothing.
-  const newEdges = useMemo(() => {
-    const seen = seenEdgesRef.current;
-    return seen === null
-      ? new Set<string>()
-      : new Set(edges.map((e) => e.key).filter((k) => !seen.has(k)));
-  }, [edges]);
-  useEffect(() => {
-    if (edges.length > 0) {
-      seenEdgesRef.current = new Set(edges.map((e) => e.key));
-    }
-  }, [edges]);
-
-  // A problem arrives: its lineage lights once, from the node outward (7.6). Reduced motion: it is
-  // shown lit without travel.
-  useEffect(() => {
-    const svg = svgRef.current;
-    // Once per arrival, when its lines are drawn.
-    if (
-      !arrival ||
-      !svg ||
-      playedRef.current === arrival.n ||
-      edges.length === 0
-    ) {
-      return;
-    }
-    playedRef.current = arrival.n;
-    if (reducedMotion()) {
-      return;
-    }
-    const depth = riskDepth(view.nodes, arrival.node);
-    const glide = token("--duration-glide", 640);
-    const step = token("--duration-fast", 160);
-    for (const path of svg.querySelectorAll<SVGPathElement>(
-      "path[data-from]",
-    )) {
-      const from = path.dataset.from ?? "";
-      const to = path.dataset.to ?? "";
-      const dFrom = depth.get(from);
-      const dTo = depth.get(to);
-      if (dFrom === undefined || dTo === undefined) {
-        continue;
-      }
-      // Drawn from the end nearer the trouble.
-      const outward = dTo > dFrom;
-      path.animate(
-        [
-          {
-            strokeDasharray: "1",
-            strokeDashoffset: outward ? 1 : -1,
-          },
-          { strokeDasharray: "1", strokeDashoffset: 0 },
-        ],
-        {
-          duration: glide / 1.6,
-          delay: Math.min(dFrom, dTo) * step,
-          easing: "ease-out",
-          fill: "backwards",
-        },
-      );
-    }
-  }, [arrival, edges, view.nodes]);
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     if (current === null) {
       return;
     }
-    const target = moveOnMap(order, current, event.key);
+    const target = moveInRows(grid, current, event.key);
     if (target === null) {
       return;
     }
     event.preventDefault();
     setActive(target);
-    const el = elementsRef.current.get(target);
-    const focusable = el?.matches("button") ? el : el?.querySelector("button");
-    focusable?.focus();
+    elementsRef.current.get(target)?.focus();
   };
 
-  const ctx: MapCtx = {
-    traced,
-    risk,
-    current,
-    fresh: (id) => !loading && !firstIds.has(id),
-    onTrace,
-    register,
-    onNote,
-  };
+  const ctx: MapCtx = { trace, current, onTrace, register, onNote };
 
-  const laneProps: LaneProps = { nas, view, tips, rate: props.rate };
-  const laneAction = (lane: LaneId) => {
+  const columns = (["disks", "storage", "folders"] as const).map((lane) => {
     const meta = LANES.find((l) => l.id === lane);
-    const filled = lane === "folders" && accent === "folders-lane";
     return (
-      <Button
-        variant={filled ? "primary" : "ghost"}
-        size="sm"
-        className={filled ? undefined : "dm-lane-action"}
-        onClick={() => {
-          onNote(`${meta?.action ?? ""} opens its page.`);
-        }}
-      >
-        {lane === "folders" ? (
-          <Icon name="shared-folder" mark="create" size={16} />
-        ) : lane === "storage" ? (
-          <Icon name="file-system" mark="create" size={16} />
-        ) : lane === "disks" ? (
-          <Icon name="check-health" size={16} />
+      <span key={lane} className="dm-col" data-col={lane}>
+        <h3 className="dm-col-title">{meta?.title}</h3>
+        {captions.includes(lane) ? (
+          <span className="dm-caption">{meta?.caption}</span>
         ) : null}
-        {meta?.action}
-        {filled || lane === "disks" || lane === "storage" ? null : (
-          <ArrowRight aria-hidden="true" />
-        )}
-      </Button>
+      </span>
     );
-  };
+  });
 
-  const head = (
-    <header className="dm-map-head">
-      <h2 id="dm-map-title" className="dm-region-title">
-        <Icon name="nas" size={24} motion="none" />
-        Your NAS
-      </h2>
-      {loading ? null : (
-        <p className="dm-map-meta">
-          <span className="dm-mono">{nas.facts.name}</span>
-          {" · "}
-          {plural(nas.disks.length, "disk", "disks")}
-          {" · "}
-          {plural(nas.folders.length, "shared folder", "shared folders")}
-        </p>
-      )}
-      {showTraceTip && layout !== "narrow" ? (
-        <Tip onDismiss={onDismissTip}>
-          Point at a box on the map to see what it feeds.
-        </Tip>
-      ) : null}
-    </header>
+  const failedLanes = nas.failed.filter(
+    (l) => l === "disks" || l === "folders",
   );
-
-  if (layout === "narrow") {
-    return (
-      <MapContext value={ctx}>
-        <section
-          className="dm-map"
-          data-layout="narrow"
-          data-assemble={assemble}
-          aria-labelledby="dm-map-title"
-          aria-busy={loading || undefined}
-        >
-          {head}
-          <NarrowLanes
-            {...props}
-            laneProps={laneProps}
-            laneAction={laneAction}
-          />
-        </section>
-      </MapContext>
-    );
-  }
 
   return (
     <MapContext value={ctx}>
@@ -903,229 +987,161 @@ export function SystemMap(props: SystemMapProps) {
         className="dm-map"
         data-layout={layout}
         data-assemble={assemble}
-        data-tracing={traced ? "" : undefined}
+        data-tracing={trace ? "" : undefined}
         aria-labelledby="dm-map-title"
         aria-busy={loading || undefined}
+        style={{ "--rows": view.rows.length } as CSSProperties}
       >
-        {head}
-        <div
-          ref={gridRef}
-          className="dm-lanes"
-          data-count={lanes.length}
-          role="group"
-          aria-label="What feeds what, from disks to the network"
-          aria-describedby="dm-map-keys"
-          onKeyDown={onKeyDown}
-        >
-          <p id="dm-map-keys" className="sr-only">
-            Use the arrow keys to move between the boxes. Each box says what it
-            feeds.
-          </p>
-          <svg ref={svgRef} className="dm-lines" aria-hidden="true">
-            {edges.map((edge, i) => {
-              const r = risk.get(edge.from) && risk.get(edge.to);
-              const tone =
-                r &&
-                (risk.get(edge.from) === "critical" ||
-                  risk.get(edge.to) === "critical")
-                  ? "critical"
-                  : r
-                    ? "warning"
-                    : undefined;
-              const dashed = edge.tone === "unknown" && !tone;
-              const trace = traced
-                ? traced.has(edge.from) && traced.has(edge.to)
-                  ? "lit"
-                  : "dim"
-                : undefined;
+        <header className="dm-map-head">
+          <h2 id="dm-map-title" className="dm-region-title">
+            <Icon name="nas" size={24} motion="none" />
+            Your NAS
+          </h2>
+          {loading ? null : (
+            <p className="dm-map-meta">
+              <span className="dm-mono">{nas.facts.name}</span>
+              {" · "}
+              {plural(nas.disks.length, "disk", "disks")}
+              {" · "}
+              {plural(nas.storage.length, "storage", "storage")}
+              {" · "}
+              {plural(nas.folders.length, "shared folder", "shared folders")}
+            </p>
+          )}
+          {showTraceTip && layout !== "narrow" ? (
+            <Tip onDismiss={onDismissTip}>
+              Point at a shared folder or a way in to see what it reaches.
+            </Tip>
+          ) : null}
+        </header>
+
+        {failedLanes.map((lane) => (
+          <LaneError
+            key={lane}
+            lane={lane === "disks" ? "disks" : "shared folders"}
+            retrying={props.retrying.includes(lane)}
+            onRetry={() => {
+              props.onRetry(lane);
+            }}
+          />
+        ))}
+
+        <div className="dm-body">
+          <div className="dm-grid">
+            <div
+              className="dm-cols"
+              data-captions={
+                captions.some(
+                  (l) => l === "disks" || l === "storage" || l === "folders",
+                ) || undefined
+              }
+            >
+              <span className="dm-edge" />
+              {columns}
+            </div>
+            {storageFailed ? (
+              <LaneError
+                lane="storage"
+                retrying={props.retrying.includes("storage")}
+                onRetry={() => {
+                  props.onRetry("storage");
+                }}
+              />
+            ) : (
+              <ul
+                id="dm-rows"
+                tabIndex={-1}
+                className="dm-rows"
+                aria-label="Your storage, a row each"
+                aria-describedby="dm-map-keys"
+                onKeyDown={onKeyDown}
+              >
+                {loading ? (
+                  <SkeletonRows />
+                ) : (
+                  view.rows.map((row, index) => {
+                    const common = {
+                      index,
+                      fresh: !firstRows.has(row.id),
+                      arrival: row.id === arrivalRow ? arrival?.n : undefined,
+                    };
+                    switch (row.kind) {
+                      case "storage":
+                        return (
+                          <StorageRowView
+                            key={row.id}
+                            row={row}
+                            failed={nas.failed}
+                            {...common}
+                          />
+                        );
+                      case "unused":
+                        return (
+                          <UnusedRowView
+                            key={row.id}
+                            row={row}
+                            ghostAdds={ghostAdds}
+                            accent={accent === "add-storage"}
+                            failed={nas.failed.includes("disks")}
+                            captions={captions.includes("folders")}
+                            {...common}
+                          />
+                        );
+                      case "more":
+                        return (
+                          <MoreRowView key={row.id} row={row} {...common} />
+                        );
+                    }
+                  })
+                )}
+                {!loading && nas.newNas && captions.length > 0 ? (
+                  <ExampleRow />
+                ) : null}
+              </ul>
+            )}
+            <p id="dm-map-keys" className="sr-only">
+              Use the arrow keys to move along a row and between rows.
+            </p>
+          </div>
+
+          {loading ? null : (
+            <Band
+              view={view}
+              failed={nas.failed}
+              rate={props.rate}
+              captions={captions}
+              retrying={props.retrying}
+              onRetry={props.onRetry}
+            />
+          )}
+        </div>
+
+        {footer.length > 0 ? (
+          <footer className="dm-map-foot">
+            {footer.map((action) => {
+              const filled =
+                action === "Add a shared folder" && accent === "folders-lane";
               return (
-                <path
-                  key={edge.key}
-                  d={edge.d}
-                  data-from={edge.from}
-                  data-to={edge.to}
-                  data-risk={tone}
-                  data-trace={trace}
-                  data-dashed={dashed || undefined}
-                  data-new={newEdges.has(edge.key) || undefined}
-                  pathLength={dashed ? undefined : 1}
-                  className="dm-line"
-                  style={{ "--i": i } as CSSProperties}
-                />
+                <Button
+                  key={action}
+                  variant={filled ? "primary" : "ghost"}
+                  size="sm"
+                  className={filled ? undefined : "dm-map-action"}
+                  onClick={() => {
+                    onNote(`${action} opens its page.`);
+                  }}
+                >
+                  {ACTION_ICON[action] ?? null}
+                  {action}
+                  {ACTION_ICON[action] ? null : (
+                    <ArrowRight aria-hidden="true" />
+                  )}
+                </Button>
               );
             })}
-          </svg>
-          {lanes.map((lane, li) => {
-            const meta = LANES.find((l) => l.id === lane);
-            const Body = BODY[lane];
-            const failed = nas.failed.includes(lane);
-            const summary = laneSummary(nas, lane, props.areas);
-            const emptyLane =
-              (lane === "folders" && nas.folders.length === 0) ||
-              (lane === "storage" && nas.newNas);
-            return (
-              <div
-                key={lane}
-                id={`dm-lane-${lane}`}
-                className="dm-lane"
-                data-lane={lane}
-                tabIndex={-1}
-                aria-labelledby={`dm-lane-${lane}-title`}
-                role="group"
-                style={{ "--lane": li } as CSSProperties}
-              >
-                <div className="dm-lane-head">
-                  <h3 id={`dm-lane-${lane}-title`} className="dm-lane-title">
-                    {meta?.title}
-                  </h3>
-                  {summary.health === "ok" ? null : (
-                    <span
-                      className="dm-lane-state"
-                      data-health={summary.health}
-                    >
-                      <StatusIcon status={summary.health} />
-                      {summary.word}
-                    </span>
-                  )}
-                  {tips && (nas.newNas || emptyLane) ? (
-                    <p className="dm-caption">{meta?.caption}</p>
-                  ) : null}
-                </div>
-                <div className="dm-lane-body">
-                  {loading ? (
-                    <LaneSkeleton lane={lane} />
-                  ) : failed ? (
-                    <LaneError
-                      lane={meta?.title.toLowerCase() ?? lane}
-                      message={LANE_ERROR[lane]}
-                      retrying={props.retrying.includes(lane)}
-                      onRetry={() => {
-                        props.onRetry(lane);
-                      }}
-                    />
-                  ) : (
-                    <Body {...laneProps} />
-                  )}
-                </div>
-                <div className="dm-lane-foot">{laneAction(lane)}</div>
-              </div>
-            );
-          })}
-        </div>
-        {layout === "mid" && !loading ? (
-          <div
-            className="dm-ways-row"
-            role="group"
-            aria-labelledby="dm-ways-title"
-          >
-            <h3 id="dm-ways-title" className="dm-lane-title">
-              Ways in
-            </h3>
-            <div className="dm-ways-tiles">
-              {view.ways.on.map((w, i) => (
-                <WayNode key={w.id} w={w} index={i} />
-              ))}
-            </div>
-            {view.ways.off ? <p className="dm-off">{view.ways.off}</p> : null}
-            {laneAction("ways")}
-          </div>
+          </footer>
         ) : null}
       </section>
     </MapContext>
-  );
-}
-
-// ─── 390: each lane a disclosure row ──────────────────────────────────────────────────────────
-
-function NarrowLanes({
-  nas,
-  view,
-  areas,
-  compact,
-  loading,
-  laneProps,
-  laneAction,
-  retrying,
-  onRetry,
-}: SystemMapProps & {
-  laneProps: LaneProps;
-  laneAction: (lane: LaneId) => ReactNode;
-}) {
-  const names = new Map<string, string>([
-    ...nas.storage.map((s) => [s.id, s.name] as const),
-    ...nas.folders.map((f) => [f.id, f.name] as const),
-    ...nas.ways.map((w) => [wayNode(w.id), w.name] as const),
-  ]);
-  return (
-    <ul className="dm-rows">
-      {LANES.map((meta) => {
-        const summary = laneSummary(nas, meta.id, areas);
-        const problem =
-          summary.health === "warning" || summary.health === "critical";
-        const open = compact
-          ? problem
-          : problem || meta.id === "disks" || meta.id === "storage";
-        const failed = nas.failed.includes(meta.id);
-        return (
-          <li
-            key={meta.id}
-            id={`dm-lane-${meta.id}`}
-            tabIndex={-1}
-            className="dm-row"
-            data-health={summary.health}
-          >
-            <Disclosure defaultOpen={open}>
-              <DisclosureTrigger className="dm-row-trigger">
-                <Icon name={LANE_ICON[meta.id]} size={20} motion="none" />
-                <span className="dm-row-title">{meta.title}</span>
-                <span className="dm-row-summary">
-                  {summary.count}
-                  {" · "}
-                  {summary.health === "ok" ? (
-                    summary.word
-                  ) : (
-                    <StatusPill status={summary.health}>
-                      {summary.word}
-                    </StatusPill>
-                  )}
-                </span>
-              </DisclosureTrigger>
-              <DisclosurePanel>
-                <div className="dm-row-body">
-                  {loading ? (
-                    <LaneSkeleton lane={meta.id} />
-                  ) : failed ? (
-                    <LaneError
-                      lane={meta.title.toLowerCase()}
-                      message={LANE_ERROR[meta.id]}
-                      retrying={retrying.includes(meta.id)}
-                      onRetry={() => {
-                        onRetry(meta.id);
-                      }}
-                    />
-                  ) : meta.id === "storage" ? (
-                    <>
-                      <StorageBody {...laneProps} />
-                      {view.storage.shown.some((s) => s.feeds.length > 0) ? (
-                        <p className="dm-feeds">
-                          {feedsWords(
-                            view.storage.shown.flatMap((s) =>
-                              s.feeds.map((id) => names.get(id) ?? ""),
-                            ),
-                          )}
-                        </p>
-                      ) : null}
-                    </>
-                  ) : (
-                    <NarrowBody lane={meta.id} {...laneProps} />
-                  )}
-                  {laneAction(meta.id)}
-                </div>
-              </DisclosurePanel>
-            </Disclosure>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

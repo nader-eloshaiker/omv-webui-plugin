@@ -10,7 +10,6 @@ import type { SystemSample } from "../../live/liveSamples.ts";
 import { useLiveSamples } from "../../live/useLive.ts";
 import { FEED_MS } from "./liveFeed.ts";
 import { rate, rx, tx } from "./liveReadings.ts";
-import type { MapIface } from "./model.ts";
 
 const WINDOW_MS = 60_000;
 const MiB = 1024 ** 2;
@@ -39,13 +38,10 @@ function liveWords(ms: number | null): string {
 export function LiveStrip({
   loading,
   layout,
-  iface,
   connections,
 }: {
   loading: boolean;
   layout: "wide" | "mid" | "narrow";
-  /** At 900 the Network lane joins this strip: its address under the readout (6.3). */
-  iface: MapIface | undefined;
   connections: number | null;
 }) {
   const live = useLiveSamples();
@@ -116,14 +112,7 @@ export function LiveStrip({
         />
       </div>
       <div className="dm-readout" data-kind="net">
-        <span className="dm-readout-label">
-          Network
-          {layout !== "wide" && iface ? (
-            <span className="dm-readout-aside">
-              {iface.name} · <span className="dm-mono">{iface.address}</span>
-            </span>
-          ) : null}
-        </span>
+        <span className="dm-readout-label">Network</span>
         <span className="dm-net">
           <span className="dm-net-way">
             <span className="dm-net-dir" aria-hidden="true">

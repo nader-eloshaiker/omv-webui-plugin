@@ -129,25 +129,44 @@
 /* ─── A. The answer ───────────────────────────────────────────────────────────────────────────── */
 .dm-answer {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
   align-items: start;
-  gap: 14px 16px;
+  gap: 14px 14px;
 }
+/* The answer's mark: the plate's size (5.2), the state's wash and edge, its own shape inside. */
 .dm-answer-mark {
-  width: 48px;
-  height: 48px;
-  animation: settle-in var(--duration-slow) var(--ease-settle) both;
-}
-.dm-answer-mark[data-welcome] {
   display: inline-grid;
   place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-block-start: 3px;
   border-radius: var(--radius-squircle-md);
   background: var(--theme-muted);
   box-shadow: inset 0 0 0 1px var(--theme-border);
-  color: var(--theme-foreground);
+  animation: settle-in var(--duration-slow) var(--ease-settle) both;
+}
+.dm-answer-mark > svg {
+  width: 22px;
+  height: 22px;
+}
+.dm-answer-mark[data-tone="warning"] {
+  background: var(--theme-warning-wash);
+  box-shadow: inset 0 0 0 1px var(--theme-warning-stroke);
+}
+.dm-answer-mark[data-tone="critical"] {
+  background: var(--theme-critical-wash);
+  box-shadow: inset 0 0 0 1px var(--theme-critical-stroke);
+}
+.dm-answer-mark[data-tone="ok"] {
+  background: var(--theme-ok-wash);
+  box-shadow: inset 0 0 0 1px var(--theme-ok-stroke);
+}
+.dm-answer-mark[data-tone="unknown"] {
+  background: var(--theme-unknown-wash);
+  box-shadow: inset 0 0 0 1px var(--theme-unknown-stroke);
 }
 .dm-answer-mark-loading {
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-squircle-md);
 }
 .dm-answer-words {
   min-width: 0;
@@ -169,7 +188,8 @@
   animation: fade-in var(--duration-base) var(--ease-standard) both;
 }
 :root[data-density="compact"] .dm-answer {
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  /* The sentence keeps room for itself; the chips wrap beside it rather than crush it. */
+  grid-template-columns: 32px minmax(340px, 1fr) minmax(0, auto);
   align-items: center;
   gap: 8px 12px;
 }
@@ -409,312 +429,6 @@
   rotate: 180deg;
 }
 
-/* ─── C. The map ──────────────────────────────────────────────────────────────────────────────── */
-.dm-map {
-  position: relative;
-  padding: 16px 22px 14px;
-  border: 1px solid var(--theme-border);
-  border-radius: var(--radius-lg);
-  background: var(--theme-art-surface);
-  box-shadow: var(--shadow-raised);
-}
-.dm-map[data-layout="narrow"] {
-  padding: 12px 14px 6px;
-}
-:root[data-density="compact"] .dm-map {
-  padding: 10px 16px 8px;
-}
-.dm-map-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 16px;
-  margin-block-end: 18px;
-}
-:root[data-density="compact"] .dm-map-head {
-  margin-block-end: 10px;
-}
-.dm-map-head .dm-region-title svg {
-  color: var(--theme-muted-foreground);
-}
-.dm-map-meta {
-  margin: 0;
-  margin-inline-start: auto;
-  font-size: var(--text-sm);
-  color: var(--theme-tertiary-foreground);
-}
-.dm-map-head .lf-tip {
-  flex-basis: 100%;
-  margin: 0;
-}
-.dm-map[data-assemble="fade"] .dm-lanes,
-.dm-map[data-assemble="fade"] .dm-rows {
-  animation: fade-in var(--duration-fast) var(--ease-standard) both;
-}
-
-.dm-lanes {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1.05fr 1.1fr 1fr 0.85fr;
-  grid-template-rows: auto 1fr auto;
-  column-gap: 34px;
-}
-.dm-lanes[data-count="3"] {
-  grid-template-columns: 1fr 1fr 1.15fr;
-  column-gap: 52px;
-}
-.dm-lane {
-  grid-row: 1 / span 3;
-  display: grid;
-  grid-template-rows: subgrid;
-  min-width: 0;
-  border-radius: var(--radius-md);
-  outline: none;
-}
-.dm-lane:focus-visible,
-.dm-row:focus-visible,
-.dm-facts:focus-visible {
-  box-shadow: 0 0 0 2px var(--theme-focus-ring);
-}
-.dm-lane[data-arrived],
-.dm-row[data-arrived],
-.dm-facts[data-arrived] {
-  animation: dm-arrive 1.6s var(--ease-standard) both;
-}
-@keyframes dm-arrive {
-  0%,
-  40%,
-  80%,
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-  20%,
-  60% {
-    box-shadow: 0 0 0 3px var(--theme-focus-ring);
-  }
-}
-:root[data-motion="reduced"] .dm-lane[data-arrived],
-:root[data-motion="reduced"] .dm-row[data-arrived],
-:root[data-motion="reduced"] .dm-facts[data-arrived] {
-  animation: none;
-  box-shadow: 0 0 0 3px var(--theme-focus-ring);
-}
-.dm-lane-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  align-content: start;
-  gap: 4px 8px;
-  padding-block-end: 10px;
-}
-.dm-lane-title {
-  margin: 0;
-  font-size: 11.5px;
-  line-height: 16px;
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--theme-tertiary-foreground);
-}
-.dm-lane-state,
-.dm-node-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-  animation: fade-in var(--duration-base) var(--ease-standard) both;
-}
-.dm-lane-state svg,
-.dm-node-state svg {
-  width: 13px;
-  height: 13px;
-}
-[data-health="warning"] > .dm-node-main > .dm-node-state,
-.dm-lane-state[data-health="warning"],
-.dm-node-state[data-health="warning"] {
-  color: var(--theme-warning-label);
-}
-.dm-lane-state[data-health="critical"],
-.dm-node-state[data-health="critical"] {
-  color: var(--theme-critical-label);
-}
-.dm-lane-state[data-health="unknown"],
-.dm-node-state[data-health="unknown"] {
-  color: var(--theme-unknown-label);
-}
-.dm-caption {
-  flex-basis: 100%;
-  margin: 2px 0 0;
-  font-size: var(--text-xs);
-  line-height: 16px;
-  color: var(--theme-muted-foreground);
-}
-.dm-lane-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-:root[data-density="compact"] .dm-lane-body {
-  gap: 4px;
-}
-/* The shared baseline: every lane's action sits on one line, whatever the lane's height. */
-.dm-lane-foot {
-  display: flex;
-  align-items: flex-end;
-  margin-block-start: 14px;
-  padding-block-start: 8px;
-  border-block-start: 1px solid var(--theme-border);
-}
-.dm-lane-action {
-  margin-inline-start: -10px;
-}
-
-/* Lines: what feeds what, in the gutters between the lanes. */
-.dm-lines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-}
-.dm-line {
-  fill: none;
-  stroke: var(--theme-art-line);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  transition:
-    stroke var(--duration-base) var(--ease-standard),
-    stroke-width var(--duration-base) var(--ease-standard),
-    opacity var(--duration-base) var(--ease-standard);
-}
-.dm-line[data-dashed] {
-  stroke: var(--theme-unknown-stroke);
-  stroke-dasharray: 2 4;
-}
-/* A problem lights what it puts at risk, in its own status stroke. */
-.dm-line[data-risk="warning"] {
-  stroke: var(--theme-warning-stroke);
-  stroke-width: 2.25;
-}
-.dm-line[data-risk="critical"] {
-  stroke: var(--theme-critical-stroke);
-  stroke-width: 2.5;
-}
-.dm-line[data-trace="lit"]:not([data-risk]) {
-  stroke: var(--theme-art-path);
-  stroke-width: 2.5;
-}
-.dm-line[data-trace="dim"] {
-  opacity: 0.14;
-}
-.dm-line[data-new] {
-  stroke-linecap: butt;
-  stroke-dasharray: 1;
-  animation: line-draw var(--duration-slow) var(--ease-standard) both;
-}
-/* The first visit: the map draws lane by lane, left to right (7.2). */
-.dm-map[data-assemble="full"] .dm-line:not([data-dashed]) {
-  /* Butt ends: a round cap would show a dot where the line has not drawn yet. */
-  stroke-linecap: butt;
-  stroke-dasharray: 1;
-  animation: line-draw var(--duration-slow) var(--ease-standard) both;
-  animation-delay: calc(
-    var(--motion-stagger) * 5 + min(var(--i, 0), 16) * var(--motion-stagger) / 2
-  );
-}
-.dm-map[data-assemble="full"] .dm-lane-body > :not(.dm-bay) {
-  animation: slot-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: calc(
-    var(--lane, 0) * var(--motion-stagger) * 3 + min(var(--i, 0), 9) *
-      var(--motion-stagger)
-  );
-}
-.dm-map[data-assemble="full"] .dm-slot-wrap {
-  animation: dm-caddy-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: calc(min(var(--i, 0), 11) * var(--motion-stagger));
-}
-@keyframes dm-caddy-in {
-  from {
-    opacity: 0;
-    translate: 0 -12px;
-  }
-}
-
-/* ─── The bay ─────────────────────────────────────────────────────────────────────────────────── */
-.dm-bay {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 12px;
-  background: linear-gradient(
-    to bottom,
-    var(--theme-art-chassis-top),
-    var(--theme-art-chassis-bottom)
-  );
-  box-shadow:
-    var(--shadow-control),
-    inset 0 0 0 1px var(--theme-border);
-}
-.dm-slots {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.dm-page[data-layout="narrow"] .dm-slots {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 4px;
-}
-.dm-slot-wrap {
-  display: block;
-  min-width: 0;
-}
-.dm-slot {
-  display: grid;
-  justify-items: center;
-  gap: 1px;
-  width: 100%;
-  padding: 6px 2px 5px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--theme-foreground);
-  font: inherit;
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-base) var(--ease-standard),
-    opacity var(--duration-base) var(--ease-standard);
-}
-.dm-slot:hover {
-  background: var(--theme-surface);
-}
-.dm-slot:focus-visible {
-  outline: 2px solid var(--theme-focus-ring);
-  outline-offset: 1px;
-}
-.dm-slot[data-health="warning"] {
-  border-color: var(--theme-warning-stroke);
-  background: var(--theme-warning-wash);
-}
-.dm-slot[data-health="critical"] {
-  border-color: var(--theme-critical-stroke);
-  background: var(--theme-critical-wash);
-}
-.dm-slot[data-trace="dim"],
-.dm-strip[data-trace="dim"] {
-  opacity: 0.35;
-}
-.dm-slot[data-trace="lit"]:not(
-    [data-health="warning"],
-    [data-health="critical"]
-  ) {
-  border-color: var(--theme-art-path);
-}
 .dm-caddy {
   width: 30px;
   height: auto;
@@ -908,76 +622,301 @@
   color: var(--theme-ok-label);
 }
 
-/* ─── Nodes ───────────────────────────────────────────────────────────────────────────────────── */
-.dm-node {
+/* ─── C. The map, by rows (6.8) ──────────────────────────────────────────────────────────────── */
+.dm-map {
+  position: relative;
+  padding: 16px 22px 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  background: var(--theme-art-surface);
+  box-shadow: var(--shadow-raised);
+}
+.dm-map[data-layout="narrow"] {
+  padding: 12px 12px 6px;
+}
+:root[data-density="compact"] .dm-map {
+  padding: 10px 16px 6px;
+}
+.dm-map-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-block-end: 14px;
+}
+:root[data-density="compact"] .dm-map-head {
+  margin-block-end: 8px;
+}
+.dm-map-head .dm-region-title svg {
+  color: var(--theme-muted-foreground);
+}
+.dm-map-meta {
+  margin: 0;
+  margin-inline-start: auto;
+  font-size: var(--text-sm);
+  color: var(--theme-tertiary-foreground);
+}
+.dm-map-head .lf-tip {
+  flex-basis: 100%;
+  margin: 0;
+}
+.dm-map > .dm-lane-error {
+  margin-block-end: 12px;
+}
+.dm-map[data-assemble="fade"] .dm-body {
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+}
+
+/* The rows share their column tracks, so the headers read and the eye scans down a column: the
+ * tone edge, the disks (as wide as the widest row's, up to three slots, then the connector), the
+ * storage at a fixed width, and the shared folders taking the rest. */
+.dm-grid {
+  display: grid;
+  grid-template-columns:
+    [edge] 14px
+    [disks] minmax(0, max-content)
+    [storage] minmax(196px, 236px)
+    [folders] minmax(0, 1fr);
+}
+.dm-map[data-layout="mid"] .dm-grid {
+  grid-template-columns:
+    [edge] 12px
+    [disks] minmax(0, max-content)
+    [storage] minmax(180px, 204px)
+    [folders] minmax(0, 1fr);
+}
+.dm-cols,
+.dm-rows,
+.dm-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+.dm-cols {
+  align-items: end;
+  padding-block-end: 6px;
+}
+.dm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-inline-end: 12px;
+}
+/* The folders' header starts where the chips do: past the connector and the group's edge. */
+.dm-col[data-col="folders"] {
+  padding-inline-start: 36px;
+}
+.dm-col-title {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-caption {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--theme-muted-foreground);
+  animation: fade-in var(--duration-base) var(--ease-standard) both;
+}
+.dm-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+.dm-row {
+  position: relative;
+  align-items: center;
+  min-height: 64px;
+  padding-block: 9px;
+  border-block-start: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--duration-base) var(--ease-standard);
+}
+:root[data-density="compact"] .dm-row {
+  min-height: 0;
+  padding-block: 4px;
+}
+/* The tone edge: a problem row is found from across the room. */
+.dm-edge {
+  align-self: stretch;
+  width: 3px;
+  border-radius: var(--radius-full);
+}
+.dm-row[data-tone="warning"] > .dm-edge {
+  background: var(--theme-warning-stroke);
+}
+.dm-row[data-tone="critical"] > .dm-edge {
+  background: var(--theme-critical-stroke);
+}
+.dm-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.dm-cell-folders {
+  align-self: stretch;
+}
+
+/* Connectors: a short straight line between neighbours on one row, in the row's tone. */
+.dm-wire {
+  flex: 1 0 22px;
+  align-self: center;
+  height: 0;
+  border-block-start: 2px solid var(--theme-art-line);
+  transform-origin: left center;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard);
+}
+.dm-cell-folders > .dm-wire {
+  flex: 0 0 24px;
+}
+.dm-wire[data-tone="warning"] {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-wire[data-tone="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-wire[data-dashed] {
+  border-block-start-style: dashed;
+  border-color: var(--theme-art-faint);
+}
+
+/* The disks of a row. */
+.dm-bay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  max-width: 208px;
+  padding: 4px;
+  border-radius: 10px;
+  background: linear-gradient(
+    to bottom,
+    var(--theme-art-chassis-top),
+    var(--theme-art-chassis-bottom)
+  );
+  box-shadow:
+    var(--shadow-control),
+    inset 0 0 0 1px var(--theme-border);
+}
+.dm-bay-unread,
+.dm-bay-none {
+  gap: 5px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--theme-unknown-label);
+}
+.dm-bay-none {
+  color: var(--theme-tertiary-foreground);
+}
+.dm-bay-unread svg {
+  width: 13px;
+  height: 13px;
+}
+.dm-slot-wrap {
+  display: block;
+}
+.dm-slot {
+  display: grid;
+  justify-items: center;
+  gap: 0;
+  width: 64px;
+  padding: 4px 2px 3px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--theme-foreground);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+.dm-slot:hover {
+  background: var(--theme-surface);
+}
+.dm-slot:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-slot[data-health="warning"] {
+  border-color: var(--theme-warning-stroke);
+  background: var(--theme-warning-wash);
+}
+.dm-slot[data-health="critical"] {
+  border-color: var(--theme-critical-stroke);
+  background: var(--theme-critical-wash);
+}
+.dm-slot-link {
+  width: 11px;
+  height: 11px;
+  margin-inline-start: 2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  vertical-align: -1px;
+}
+.dm-slot-ghost {
+  border: 1.5px dashed var(--theme-art-faint);
+  color: var(--theme-tertiary-foreground);
+  cursor: default;
+}
+.dm-slot-skeleton {
+  display: block;
+  width: 64px;
+  height: 56px;
+  border: 1.5px dashed var(--theme-border-control);
+  border-radius: var(--radius-md);
+  animation: breathe 1.4s var(--ease-standard) infinite;
+}
+
+/* The storage. */
+.dm-store {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
+  width: 100%;
   min-width: 0;
-  padding: 8px 10px 9px;
+  padding: 7px 10px 8px;
   border: 1px solid var(--theme-border);
   border-radius: var(--radius-md);
   background: var(--theme-surface);
   box-shadow: var(--shadow-control);
   transition:
-    opacity var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard),
-    translate var(--duration-base) var(--ease-standard);
+    box-shadow var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
 }
-.dm-node:hover {
+.dm-store:hover {
   border-color: var(--theme-border-control);
 }
-.dm-node[data-health="warning"] {
+.dm-store[data-health="warning"] {
   border-color: var(--theme-warning-stroke);
   background: var(--theme-warning-wash);
 }
-.dm-node[data-health="critical"] {
+.dm-store[data-health="critical"] {
   border-color: var(--theme-critical-stroke);
   background: var(--theme-critical-wash);
 }
-/* At risk from a problem upstream: an edge in the problem's stroke, and "At risk" in words. */
-.dm-node[data-risk="warning"][data-health="ok"] {
-  box-shadow:
-    inset 3px 0 0 var(--theme-warning-stroke),
-    var(--shadow-control);
+.dm-store[data-risk="warning"] {
+  border-color: var(--theme-warning-stroke);
 }
-.dm-node[data-risk="critical"][data-health="ok"] {
-  box-shadow:
-    inset 3px 0 0 var(--theme-critical-stroke),
-    var(--shadow-control);
+.dm-store[data-risk="critical"] {
+  border-color: var(--theme-critical-stroke);
 }
-.dm-node[data-trace="dim"],
-.dm-more[data-trace="dim"] {
-  opacity: 0.4;
-}
-.dm-node[data-trace="lit"][data-health="ok"] {
-  border-color: var(--theme-art-path);
-}
-:root:not([data-motion="reduced"]) .dm-node[data-trace="lit"] {
-  translate: 2px 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .dm-node[data-trace="lit"] {
-    translate: none;
-  }
-}
-/* A ghost that became real: the dashes join into the outline, the name fades in (7.2). */
-.dm-node[data-arrived] {
-  animation: dm-solidify var(--duration-slow) var(--ease-standard) both;
-}
-.dm-node[data-arrived] .dm-node-words {
-  animation: fade-in var(--duration-slow) var(--ease-standard) both;
-}
-@keyframes dm-solidify {
-  from {
-    border-style: dashed;
-    border-color: var(--theme-art-faint);
-    background-color: transparent;
-    box-shadow: none;
-  }
-}
-.dm-node-main {
+.dm-store-main {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -992,30 +931,30 @@
   text-align: start;
   cursor: pointer;
 }
-.dm-node-main:focus-visible,
-.dm-more-main:focus-visible {
+.dm-store-main:focus-visible,
+.dm-more-rows:focus-visible {
   outline: 2px solid var(--theme-focus-ring);
-  outline-offset: 5px;
+  outline-offset: 4px;
 }
-.dm-node-icon {
+.dm-store-main > svg {
   color: var(--theme-muted-foreground);
 }
-.dm-node-words {
+.dm-store-words {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 8px;
   min-width: 0;
 }
-.dm-node-name {
-  display: -webkit-box;
+.dm-store-name {
   overflow: hidden;
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
   line-height: 18px;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.dm-node-tech {
+.dm-store-tech {
   overflow: hidden;
   font-size: 11.5px;
   line-height: 15px;
@@ -1023,62 +962,228 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.dm-node-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
-}
-/* In a node the meter stacks: the bar across the node, the figure and any pill under it. */
-.dm-node-body [data-slot="capacity-meter"] {
+/* The meter stacks in the node: the bar across it, the figure and any pill under it. */
+.dm-store [data-slot="capacity-meter"] {
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
 }
-.dm-node-body [data-slot="capacity-meter"] p {
+.dm-store [data-slot="capacity-meter"] p {
   font-size: 12px;
 }
-:root[data-density="compact"] .dm-node {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 8px;
-  padding: 4px 8px;
+.dm-store-ghost {
+  border: 1.5px dashed var(--theme-art-faint);
+  background: transparent;
+  box-shadow: none;
+  color: var(--theme-tertiary-foreground);
 }
-:root[data-density="compact"] .dm-node-main {
-  flex: 1 1 auto;
-  width: auto;
+.dm-store-ghost .dm-store-main {
+  cursor: default;
 }
-:root[data-density="compact"] .dm-node-tech {
-  display: none;
+.dm-ghost-bar {
+  display: block;
+  height: 6px;
+  border: 1px dashed var(--theme-art-faint);
+  border-radius: var(--radius-full);
 }
-:root[data-density="compact"] .dm-node-body {
-  flex: 0 1 auto;
+.dm-store-skeleton {
+  width: 100%;
+  height: 56px;
 }
-.dm-via {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 10px;
-}
-.dm-via-item {
+
+/* A state in words beside a name: "At risk", "Warning". */
+.dm-state {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-size: 11.5px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  animation: fade-in var(--duration-base) var(--ease-standard) both;
 }
-.dm-quiet {
-  color: var(--theme-tertiary-foreground);
+.dm-state svg {
+  width: 13px;
+  height: 13px;
 }
-.dm-line2 {
-  font-size: 12px;
+.dm-state[data-health="warning"] {
+  color: var(--theme-warning-label);
+}
+.dm-state[data-health="critical"] {
+  color: var(--theme-critical-label);
+}
+
+/* The shared folders of a row: a wrapping group, its edge the end of the row's connector. */
+.dm-folders {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  min-width: 0;
+  padding-block: 2px;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--theme-art-line);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+.dm-cell-folders[data-tone="warning"] > .dm-folders {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-cell-folders[data-tone="critical"] > .dm-folders {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  box-shadow: var(--shadow-control);
+  color: var(--theme-foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+.dm-folder:hover {
+  border-color: var(--theme-border-control);
+}
+.dm-folder:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-folder > svg {
+  flex: none;
   color: var(--theme-muted-foreground);
 }
-.dm-more-main {
+.dm-folder[data-health="warning"] {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-folder[data-health="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-folder-name {
+  overflow: hidden;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-folder-via {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--theme-muted-foreground);
+}
+.dm-folder-way {
+  display: inline-flex;
+}
+.dm-folder-none {
+  font-size: 12px;
+  color: var(--theme-tertiary-foreground);
+  white-space: nowrap;
+}
+.dm-folder-more {
+  gap: 4px;
+  border-style: dashed;
+  border-color: var(--theme-border-control);
+  background: none;
+  box-shadow: none;
+  color: var(--theme-link);
+}
+.dm-folder-more svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-folder-ghost {
+  border: 1.5px dashed var(--theme-art-faint);
+  background: none;
+  box-shadow: none;
+  color: var(--theme-tertiary-foreground);
+  cursor: default;
+}
+.dm-folder-skeleton {
+  width: 104px;
+  height: 32px;
+}
+.dm-example-tag {
+  padding: 0 6px;
+  border: 1px solid var(--theme-art-faint);
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-row-example .dm-wire,
+.dm-row-example .dm-folders {
+  border-color: var(--theme-art-faint);
+}
+.dm-row-example .dm-folders {
+  border-inline-start-style: dashed;
+}
+.dm-quiet-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-inline-start: 12px;
+  font-size: var(--text-sm);
+  color: var(--theme-tertiary-foreground);
+}
+.dm-cell-disks > .dm-quiet-line {
+  padding-inline-start: 0;
+}
+/* Without a connector, the words start where the chips and the column's header do. */
+.dm-cell-folders > .dm-quiet-line {
+  padding-inline-start: 36px;
+}
+.dm-quiet-line svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* The unused disks' row: a dashed connector into a dashed place for new storage. */
+.dm-ghost-store {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px 8px;
+  border: 1.5px dashed var(--theme-art-faint);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+.dm-ghost-words {
+  display: flex;
+  flex-direction: column;
+}
+.dm-ghost-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-muted-foreground);
+}
+.dm-ghost-line {
+  font-size: 12px;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-row[data-kind="unused"] .dm-slot-state {
+  color: var(--theme-unknown-label);
+}
+
+/* "+3 more, all OK": the storage rows beyond six. */
+.dm-more-rows {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   width: 100%;
+  min-height: 36px;
   padding: 6px 10px;
   border: 1px dashed var(--theme-border-control);
   border-radius: var(--radius-md);
@@ -1086,46 +1191,338 @@
   color: var(--theme-link);
   font: inherit;
   font-size: var(--text-sm);
-  text-align: start;
   cursor: pointer;
 }
-.dm-more-main:hover {
+.dm-more-rows:hover {
   background: var(--theme-muted-strong);
 }
-.dm-more-main svg {
+.dm-more-rows svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-more-rows [data-icon] svg {
   color: var(--theme-ok-label);
 }
-.dm-ghost {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 4px 8px;
-  padding: 10px;
-  border: 1.5px dashed var(--theme-art-faint);
-  border-radius: var(--radius-md);
+
+/* ─── Tracing by highlighting (6.8 item 5) ────────────────────────────────────────────────────── */
+/* Lit: an outline in the selected mark. The rest: reduced emphasis, text never below 3:1 (tertiary
+ * text keeps over 5:1); only lines, edges and drawings go fainter. */
+.dm-row[data-trace="lit"] {
+  box-shadow: 0 0 0 2px var(--theme-selected-mark);
+}
+.dm-row[data-trace="lit"] .dm-wire:not([data-tone]) {
+  border-color: var(--theme-selected-mark);
+}
+.dm-row[data-trace="lit"] .dm-cell-folders:not([data-tone]) > .dm-folders {
+  border-color: var(--theme-selected-mark);
+}
+.dm-row[data-trace="dim"] .dm-wire,
+.dm-row[data-trace="dim"] > .dm-edge {
+  opacity: 0.4;
+}
+/* Only the group's edge dims: a chip a way in reaches stays at full strength in a dimmed row. */
+.dm-row[data-trace="dim"] .dm-folders {
+  border-color: var(--theme-border);
+}
+.dm-slot[data-trace="lit"],
+.dm-folder[data-trace="lit"],
+.dm-store:has([data-trace="lit"]),
+.dm-wt[data-trace="lit"] {
+  box-shadow: 0 0 0 2px var(--theme-selected-mark);
+}
+.dm-slot[data-trace="dim"],
+.dm-strip[data-trace="dim"],
+.dm-folder[data-trace="dim"],
+.dm-store[data-trace="dim"],
+.dm-more-rows[data-trace="dim"],
+.dm-wt[data-trace="dim"],
+.dm-way[data-trace="dim"] .dm-wt {
+  border-color: var(--theme-border);
+  background: transparent;
+  box-shadow: none;
   color: var(--theme-tertiary-foreground);
-  font-size: var(--text-sm);
 }
-.dm-ghost-tag {
-  grid-column: 2;
-  justify-self: start;
-  padding: 0 6px;
-  border: 1px solid var(--theme-art-faint);
-  border-radius: var(--radius-sm);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.dm-slot[data-trace="dim"] svg,
+.dm-folder[data-trace="dim"] svg,
+.dm-store[data-trace="dim"] svg,
+.dm-store[data-trace="dim"] [data-slot="capacity-meter"] [role="meter"],
+.dm-wt[data-trace="dim"] svg,
+.dm-ghost-store[data-trace="dim"] {
+  opacity: 0.45;
 }
-.dm-empty {
+.dm-slot[data-trace="dim"] .dm-slot-state,
+.dm-store[data-trace="dim"] .dm-store-tech,
+.dm-store[data-trace="dim"] p,
+.dm-wt[data-trace="dim"] .dm-wt-line,
+.dm-wt[data-trace="dim"] .dm-wt-tech {
+  color: var(--theme-tertiary-foreground);
+}
+/* The folder chips a way in reaches stand out of their dimmed rows. */
+.dm-folder[data-trace="lit"] {
+  border-color: var(--theme-selected-mark);
+}
+
+/* ─── The band: ways in into the network (6.8 item 4) ─────────────────────────────────────────── */
+/* One fan-in, drawn so it reads at a glance: each way in that is on has a short stub to one bus, the
+ * bus has one stub to each interface, and each interface one to your network. Tiles of one height,
+ * so the bus's middle is the band's middle and every line is straight. */
+.dm-band {
+  --bus: 44px;
+  --gap: 8px;
+  display: grid;
+  grid-template-columns:
+    [ways] minmax(0, 1.05fr)
+    [bus-in] var(--bus)
+    [net] minmax(0, 1fr)
+    [bus-out] var(--bus)
+    [world] minmax(0, 0.8fr);
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  row-gap: 6px;
+  margin-block-start: 6px;
+  padding-block: 14px 4px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-band-head {
+  grid-row: 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dm-band-head[data-part="ways"] {
+  grid-column: ways;
+}
+.dm-band-head[data-part="net"] {
+  grid-column: net / -1;
+}
+.dm-band-part {
+  grid-row: 2;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  outline: none;
+}
+.dm-band-part[data-part="ways"] {
+  grid-column: ways;
+}
+.dm-band-part[data-part="net"] {
+  grid-column: net;
+}
+.dm-band > .dm-off {
+  grid-column: ways / -1;
+  grid-row: 3;
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
 }
 .dm-off {
-  margin: 2px 0 0;
   font-size: 12px;
   color: var(--theme-tertiary-foreground);
 }
+.dm-bus {
+  grid-row: 2;
+}
+.dm-bus[data-part="in"] {
+  grid-column: bus-in;
+}
+.dm-bus[data-part="out"] {
+  grid-column: bus-out;
+}
+.dm-ways,
+.dm-ifaces {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dm-way,
+.dm-iface {
+  position: relative;
+}
+/* Stubs and the bus, as borders on the tiles' own boxes, so they move with them. */
+.dm-way::after,
+.dm-iface::after,
+.dm-iface::before,
+.dm-world::before {
+  content: "";
+  position: absolute;
+  inset-block-start: calc(50% - 1px);
+  width: calc(var(--bus) / 2);
+  border-block-start: 2px solid var(--theme-art-line);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard);
+}
+.dm-way::after,
+.dm-iface::after {
+  inset-inline-start: 100%;
+}
+.dm-iface::before,
+.dm-world::before {
+  inset-inline-end: 100%;
+}
+/* The bus: from each tile's middle to the next one's, so the segments join into one line. */
+.dm-way:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  height: calc(100% + var(--gap));
+  border-inline-start: 2px solid var(--theme-art-line);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+.dm-way:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::after {
+  inset-inline-start: calc(100% + var(--bus) / 2 - 1px);
+}
+.dm-iface:not(:last-child) > .dm-wt::before {
+  inset-inline-end: calc(100% + var(--bus) / 2 - 1px);
+}
+.dm-band[data-lit] .dm-iface::before,
+.dm-band[data-lit] .dm-iface::after,
+.dm-band[data-lit] .dm-world::before,
+.dm-band[data-lit] .dm-wt::after,
+.dm-band[data-lit] .dm-iface > .dm-wt::before,
+.dm-way[data-trace="lit"]::after {
+  border-color: var(--theme-selected-mark);
+}
+.dm-band[data-tracing] .dm-way[data-trace="dim"]::after {
+  opacity: 0.4;
+}
+.dm-wt {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  box-shadow: var(--shadow-control);
+  color: var(--theme-foreground);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+.dm-iface .dm-wt {
+  min-height: 68px;
+}
+.dm-wt:hover {
+  border-color: var(--theme-border-control);
+}
+.dm-wt:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-wt > svg {
+  color: var(--theme-muted-foreground);
+}
+.dm-wt[data-health="warning"] {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-wt[data-health="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-wt-words {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dm-wt-name {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-wt-tech {
+  font-size: 11.5px;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-tertiary-foreground);
+}
+.dm-wt-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-wt-line svg {
+  width: 13px;
+  height: 13px;
+}
+.dm-world {
+  position: relative;
+  grid-row: 2;
+  grid-column: world;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 6px 12px;
+  border: 1px dashed var(--theme-border-control);
+  border-radius: var(--radius-full);
+  color: var(--theme-foreground);
+}
+.dm-world .dm-wt-line {
+  white-space: normal;
+}
+.dm-world > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--theme-muted-foreground);
+}
+.dm-world[data-trace="lit"] {
+  border-style: solid;
+  border-color: var(--theme-selected-mark);
+}
+:root[data-density="compact"] .dm-wt,
+:root[data-density="compact"] .dm-world {
+  min-height: 40px;
+  padding-block: 3px;
+}
+:root[data-density="compact"] .dm-iface .dm-wt {
+  min-height: 52px;
+}
+
+/* The map's actions: one line under the band, in reading order. */
+.dm-map-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-block-start: 10px;
+  padding-block-start: 6px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-map-action {
+  color: var(--theme-link);
+}
+.dm-map-foot > :first-child.dm-map-action {
+  margin-inline-start: -10px;
+}
+/* Wrapped at 390: every line's first action starts at the same edge. */
+.dm-map[data-layout="narrow"] .dm-map-foot {
+  margin-inline-start: -10px;
+}
+.dm-map[data-layout="narrow"] .dm-map-foot > :first-child.dm-map-action {
+  margin-inline-start: 0;
+}
+
 .dm-lane-error {
   display: flex;
   flex-direction: column;
@@ -1151,109 +1548,317 @@
   color: var(--theme-muted-foreground);
   overflow-wrap: anywhere;
 }
-.dm-lane-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+
+/* An area chip moves focus here and rings it twice (the foundation's "Arrival"). */
+#dm-rows:focus-visible,
+.dm-band-part:focus-visible,
+.dm-facts:focus-visible {
+  box-shadow: 0 0 0 2px var(--theme-focus-ring);
 }
-.dm-node-skeleton {
-  height: 58px;
+[data-arrived-ring] {
+  animation: dm-arrive 1.6s var(--ease-standard) both;
+}
+@keyframes dm-arrive {
+  0%,
+  40%,
+  80%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  20%,
+  60% {
+    box-shadow: 0 0 0 3px var(--theme-focus-ring);
+  }
+}
+:root[data-motion="reduced"] [data-arrived-ring] {
+  animation: none;
+  box-shadow: 0 0 0 3px var(--theme-focus-ring);
 }
 
-/* 900: Ways in as a row of tiles under the three lanes. */
-.dm-ways-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-  margin-block-start: 18px;
-  padding-block-start: 14px;
-  border-block-start: 1px solid var(--theme-border);
+/* ─── The first visit: the NAS assembles row by row (6.8, 7.2) ────────────────────────────────── */
+/* Each row in turn, top to bottom: its disks slide into their slots, the connector draws, the
+ * storage settles and its bar fills, the folder chips rise; then the band's tiles settle and its
+ * lines draw. About 900ms in all, every part usable as it lands. Reduced motion: a fade. */
+.dm-map[data-assemble="full"] .dm-row {
+  --t: calc(min(var(--r, 0), 6) * 85ms);
 }
-.dm-ways-row > .dm-lane-title {
-  flex-basis: 100%;
+.dm-map[data-assemble="full"] .dm-slot-wrap {
+  animation: dm-caddy-in var(--duration-slow) var(--ease-settle) both;
+  animation-delay: calc(var(--t) + min(var(--i, 0), 5) * 30ms);
 }
-.dm-ways-tiles {
-  display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  gap: 8px;
+.dm-map[data-assemble="full"] .dm-row .dm-wire {
+  animation: grow-x var(--duration-base) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 110ms);
 }
-.dm-ways-tiles .dm-node {
-  flex: 1 1 160px;
+.dm-map[data-assemble="full"] .dm-row .dm-cell-folders > .dm-wire {
+  animation-delay: calc(var(--t) + 230ms);
+}
+.dm-map[data-assemble="full"] .dm-store,
+.dm-map[data-assemble="full"] .dm-ghost-store,
+.dm-map[data-assemble="full"] .dm-more-rows {
+  animation: slot-in var(--duration-slow) var(--ease-settle) both;
+  animation-delay: calc(var(--t) + 150ms);
+}
+.dm-map[data-assemble="full"] .dm-store [role="meter"] > :first-child {
+  animation: dm-bar-fill var(--duration-glide) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 220ms);
+}
+.dm-map[data-assemble="full"] .dm-folders {
+  animation: fade-in var(--duration-fast) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 260ms);
+}
+.dm-map[data-assemble="full"] .dm-folder {
+  animation: slot-in var(--duration-slow) var(--ease-settle) both;
+  animation-delay: calc(var(--t) + 290ms + min(var(--i, 0), 6) * 35ms);
+}
+.dm-map[data-assemble="full"] .dm-band {
+  --t: calc(min(var(--rows, 4), 6) * 85ms + 260ms);
+}
+.dm-map[data-assemble="full"] .dm-band-part,
+.dm-map[data-assemble="full"] .dm-band > .dm-off,
+.dm-map[data-assemble="full"] .dm-world,
+.dm-map[data-assemble="full"] .dm-band-head {
+  animation: slot-in var(--duration-slow) var(--ease-settle) both;
+  animation-delay: var(--t);
+}
+.dm-map[data-assemble="full"] .dm-band-part[data-part="net"] {
+  animation-delay: calc(var(--t) + 90ms);
+}
+.dm-map[data-assemble="full"] .dm-world {
+  animation-delay: calc(var(--t) + 180ms);
+}
+.dm-map[data-assemble="full"] .dm-band .dm-way::after,
+.dm-map[data-assemble="full"] .dm-band .dm-iface::before,
+.dm-map[data-assemble="full"] .dm-band .dm-iface::after,
+.dm-map[data-assemble="full"] .dm-band .dm-world::before {
+  transform-origin: left center;
+  animation: grow-x var(--duration-base) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 120ms);
+}
+.dm-map[data-assemble="full"] .dm-band .dm-iface::after,
+.dm-map[data-assemble="full"] .dm-band .dm-world::before {
+  animation-delay: calc(var(--t) + 210ms);
+}
+@keyframes dm-caddy-in {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+@keyframes dm-bar-fill {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+/* A problem arrives (7.6): its row's connectors draw again in its tone, from the disks outward. */
+.dm-row[data-arrival] .dm-wire {
+  animation: grow-x var(--duration-glide) var(--ease-standard) both;
+}
+.dm-row[data-arrival] .dm-cell-folders > .dm-wire {
+  animation-delay: 220ms;
+}
+.dm-row[data-arrival] .dm-folder .dm-state {
+  animation-delay: 420ms;
+}
+/* A ghost became real (7.2): the new row's storage solidifies in, dashes joining into its outline. */
+.dm-row[data-arrived] .dm-store {
+  animation: dm-solidify var(--duration-slow) var(--ease-standard) both;
+}
+@keyframes dm-solidify {
+  from {
+    border-style: dashed;
+    border-color: var(--theme-art-faint);
+    background-color: transparent;
+    box-shadow: none;
+  }
 }
 
-/* 390: each lane a disclosure row; it says in words what it feeds. */
-.dm-rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.dm-row {
+/* ─── Compact density ─────────────────────────────────────────────────────────────────────────── */
+/* Tighter, not different: the same pieces in the same places, with less air. */
+:root[data-density="compact"] .dm-slot {
   padding-block: 2px;
-  border-block-start: 1px solid var(--theme-border);
-  border-radius: var(--radius-sm);
-  outline: none;
 }
-.dm-row:first-child {
-  border-block-start: 0;
+:root[data-density="compact"] .dm-store {
+  gap: 3px;
+  padding: 4px 8px 5px;
 }
-.dm-row-trigger {
-  width: 100%;
-  min-height: 44px;
-  margin: 0;
+:root[data-density="compact"] .dm-store-tech {
+  display: none;
 }
-.dm-row-trigger > span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
+:root[data-density="compact"] .dm-folder {
+  min-height: 28px;
+  padding-block: 2px;
 }
-/* The trigger turns every drawing inside it with its chevron; only the chevron should turn. */
-.dm-row-trigger [data-slot="icon"],
-.dm-row-summary svg {
-  rotate: none;
+
+/* ─── 390: each row a card, its connectors vertical (6.8 item 11) ─────────────────────────────── */
+.dm-map[data-layout="narrow"] .dm-grid {
+  display: block;
 }
-.dm-row-trigger [data-slot="icon"] {
-  width: 20px;
-  height: 20px;
-  color: var(--theme-muted-foreground);
+.dm-map[data-layout="narrow"] .dm-cols {
+  display: none;
 }
-.dm-row-summary svg {
-  width: 14px;
-  height: 14px;
-}
-.dm-row-title {
-  font-weight: var(--font-weight-semibold);
-}
-.dm-row-summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-inline-start: auto;
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-regular);
-  color: var(--theme-muted-foreground);
-}
-.dm-row-body {
+.dm-map[data-layout="narrow"] .dm-cols[data-captions] {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 2px 0 12px 24px;
+  align-items: stretch;
+  gap: 4px;
+  margin-block-end: 10px;
 }
-.dm-row-body > button:last-child {
+.dm-map[data-layout="narrow"] .dm-cols > .dm-edge {
+  display: none;
+}
+.dm-map[data-layout="narrow"] .dm-col {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  padding: 0;
+}
+.dm-map[data-layout="narrow"] .dm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dm-map[data-layout="narrow"] .dm-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px 12px 12px 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  background: var(--theme-muted);
+}
+.dm-map[data-layout="narrow"] .dm-row > .dm-edge {
+  position: absolute;
+  inset-block: 10px;
+  inset-inline-start: -1px;
+}
+.dm-map[data-layout="narrow"] .dm-cell {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.dm-map[data-layout="narrow"] .dm-cell-folders {
+  align-items: stretch;
+}
+/* The connectors run down the card's left, under the first slot's middle. */
+.dm-map[data-layout="narrow"] .dm-wire,
+.dm-map[data-layout="narrow"] .dm-cell-folders > .dm-wire {
+  flex: none;
   align-self: flex-start;
+  width: 0;
+  height: 12px;
+  margin-inline-start: 30px;
+  border-block-start: 0;
+  border-inline-start: 2px solid var(--theme-art-line);
+  transform-origin: center top;
 }
-.dm-feeds {
-  margin: 0;
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
+.dm-map[data-layout="narrow"] .dm-wire[data-tone="warning"] {
+  border-color: var(--theme-warning-stroke);
 }
-.dm-feeds::before {
-  content: "→ ";
+.dm-map[data-layout="narrow"] .dm-wire[data-tone="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-map[data-layout="narrow"] .dm-wire[data-dashed] {
+  border-inline-start-style: dashed;
+  border-color: var(--theme-art-faint);
+}
+.dm-map[data-layout="narrow"] .dm-bay {
+  max-width: none;
+}
+.dm-map[data-layout="narrow"] .dm-folders {
+  align-self: stretch;
+  padding-block: 8px 0;
+  padding-inline-start: 0;
+  border-inline-start: 0;
+  border-block-start: 2px solid var(--theme-art-line);
+}
+.dm-map[data-layout="narrow"]
+  .dm-cell-folders[data-tone="warning"]
+  > .dm-folders {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-map[data-layout="narrow"]
+  .dm-cell-folders[data-tone="critical"]
+  > .dm-folders {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-map[data-layout="narrow"] .dm-quiet-line {
+  padding: 4px 0 0;
+}
+.dm-map[data-layout="narrow"][data-assemble="full"] .dm-row .dm-wire {
+  animation-name: grow-y;
+}
+/* The band stacks: the ways in as a list, a short connector down to the network, another down to
+ * your network; the connectors run on the same line as the rows' own. */
+.dm-map[data-layout="narrow"] .dm-band {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  row-gap: 0;
+}
+.dm-map[data-layout="narrow"] .dm-band > * {
+  grid-row: auto;
+  grid-column: 1;
+}
+.dm-map[data-layout="narrow"] .dm-band-head[data-part="ways"] {
+  margin-block-end: 8px;
+}
+.dm-map[data-layout="narrow"] .dm-band-head[data-part="net"] {
+  display: none;
+}
+/* "Off:" after the stack, so the connector runs straight from the ways in to the network. */
+.dm-map[data-layout="narrow"] .dm-band > .dm-off {
+  order: 10;
+  margin-block-start: 6px;
+}
+.dm-map[data-layout="narrow"] .dm-band .dm-way::after,
+.dm-map[data-layout="narrow"] .dm-band .dm-iface::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-iface::after,
+.dm-map[data-layout="narrow"] .dm-band .dm-world::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-wt::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-wt::after {
+  display: none;
+}
+.dm-map[data-layout="narrow"] .dm-bus {
+  justify-self: start;
+  width: 0;
+  height: 14px;
+  margin-inline-start: 30px;
+  border-inline-start: 2px solid var(--theme-art-line);
+}
+.dm-map[data-layout="narrow"] .dm-band[data-lit] .dm-bus {
+  border-color: var(--theme-selected-mark);
+}
+.dm-map[data-layout="narrow"] .dm-world {
+  justify-self: start;
+  margin-block-end: 6px;
+}
+
+/* A slot's state on one line; "Not checked" says it in words, so its ring can go. */
+.dm-slot .dm-slot-state {
+  flex-wrap: nowrap;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.dm-slot .dm-slot-state[data-health="unknown"] [data-icon] {
+  display: none;
+}
+
+/* The caddy at row size. */
+.dm-slot .dm-caddy {
+  width: 22px;
+  margin-block-end: 1px;
+}
+:root[data-density="compact"] .dm-slot .dm-caddy {
+  width: 16px;
+}
+.dm-bay .dm-strip {
+  flex: 1 1 100%;
+  max-width: 200px;
+  padding: 6px;
+}
+.dm-strip[data-trace="lit"] {
+  box-shadow: 0 0 0 2px var(--theme-selected-mark);
 }
 
 /* ─── D. Right now ────────────────────────────────────────────────────────────────────────────── */
@@ -1488,11 +2093,14 @@
 .dm-foot {
   display: grid;
   grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
-  align-items: stretch;
+  /* Each block fits its content; they are drawn to about the same height, so neither stretches
+   * into a blank strip. */
+  align-items: start;
   gap: 16px;
 }
 .dm-foot[data-layout="mid"],
-.dm-foot[data-layout="narrow"] {
+.dm-foot[data-layout="narrow"],
+.dm-foot[data-single] {
   grid-template-columns: minmax(0, 1fr);
 }
 .dm-steps,
@@ -1645,22 +2253,107 @@
     clip-path: inset(0 100% 0 0 round var(--radius-md));
   }
 }
+/* Shortcuts: a short list of rows, the same height as This NAS beside it. */
 .dm-shortcut-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.dm-factlist dt,
-.dm-factlist dd {
+.dm-shortcut-list > li + li {
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
   font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: start;
+  cursor: pointer;
+}
+.dm-shortcut:hover {
+  background: var(--theme-muted);
+}
+.dm-shortcut:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 0;
+}
+.dm-shortcut-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  color: var(--theme-muted-foreground);
+}
+.dm-shortcut-icon > svg {
+  width: 18px;
+  height: 18px;
+}
+.dm-shortcut-go {
+  width: 16px;
+  height: 16px;
+  margin-inline-start: auto;
+  color: var(--theme-tertiary-foreground);
+}
+:root[data-density="compact"] .dm-shortcut {
+  min-height: 34px;
 }
 
-/* Compact: a drive keeps its bar, on the line under its name. */
-:root[data-density="compact"]
-  .dm-node:has([data-slot="capacity-meter"])
-  .dm-node-body {
-  flex-basis: 100%;
+/* This NAS: facts in two columns, label over value; Updates takes the last row. */
+.dm-facts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block: -4px;
+}
+.dm-show-around svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-factgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+  margin: 0;
+}
+.dm-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding-block: 6px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-fact-wide {
+  grid-column: 1 / -1;
+}
+.dm-fact dt {
+  font-size: 12px;
+  color: var(--theme-muted-foreground);
+}
+.dm-fact dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+:root[data-density="compact"] .dm-fact {
+  padding-block: 4px;
+}
+/* Alone (the steps moved up under A on a new NAS): the facts in one line of five. */
+.dm-foot[data-single] .dm-factgrid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.dm-foot[data-single] .dm-fact-wide {
+  grid-column: auto;
 }
