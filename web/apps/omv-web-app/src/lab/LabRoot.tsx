@@ -3,6 +3,7 @@
 // choose from (journal, 2026-11-23). Development only: main.tsx loads it behind import.meta.env.DEV,
 // so a production build emits none of it (UI-11; tools/build-check looks for the "omv-lab" marker).
 // The query string selects what is shown (?dir=, theme=, screen=, state=); it never acts (UI-4).
+// screen=add-folder and screen=add-person open the form prototypes (src/lab/forms/FormsLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -14,6 +15,8 @@ import {
 import type { Metric } from "./chartModel.ts";
 import type { Scenario } from "./data.ts";
 import { nas } from "./data.ts";
+import FormsLab from "./forms/FormsLab.tsx";
+import { FORM_SCREENS } from "./forms/states.ts";
 import "./lab.css";
 import { freeze } from "./live.ts";
 import { flyPending, pulse, viewChange, viewCommitted } from "./motion.ts";
@@ -60,7 +63,20 @@ function readQuery() {
   };
 }
 
+/**
+ * The form prototypes (rethink spec 8, rows 2 and 3) render in the system's own look with their own
+ * controls; every other screen is the three-direction lab below.
+ */
 export default function LabRoot() {
+  const screen = new URLSearchParams(window.location.search).get("screen");
+  return FORM_SCREENS.some((s) => s === screen) ? (
+    <FormsLab />
+  ) : (
+    <DirectionsLab />
+  );
+}
+
+function DirectionsLab() {
   const initial = useMemo(readQuery, []);
   const [dir, setDir] = useState<Dir>(initial.dir);
   const [theme, setTheme] = useState<Theme>(initial.theme);
