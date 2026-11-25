@@ -30,7 +30,7 @@ interface BreadcrumbItemProps extends useRender.ComponentProps<"a"> {
 }
 
 const linkClass =
-  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline [overflow-wrap:anywhere]";
+  "rounded-sm text-link underline underline-offset-2 hover:no-underline [overflow-wrap:anywhere]";
 
 /** One level. Renders an `<a>`; pass `render` to use the router's link. The current page is text. */
 function BreadcrumbItem({

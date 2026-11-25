@@ -91,7 +91,8 @@ function SizeField({
           readOnly={readOnly}
           value={value}
           onValueChange={(next) => onValueChange(next)}
-          className="w-[10ch] min-w-24 tabular-nums"
+          width="number"
+          className="tabular-nums"
         />
         <Field disabled={disabled} className="w-24 shrink-0">
           <Select

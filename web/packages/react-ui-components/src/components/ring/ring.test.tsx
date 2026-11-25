@@ -146,7 +146,7 @@ describe("ProgressRing", () => {
     expect(meter).toHaveAttribute("aria-valuetext", "1 of 2 done");
     expect(meter).toHaveAttribute("aria-valuenow", "1");
     expect(meter).toHaveAttribute("data-slot", "progress-ring");
-    expect(meter.querySelector("circle.stroke-usage")).not.toBeNull();
+    expect(meter.querySelector("circle.stroke-action-stroke")).not.toBeNull();
   });
 
   it("draws no arc at nothing done", () => {
@@ -159,7 +159,7 @@ describe("ProgressRing", () => {
         figure="0/2"
       />,
     );
-    expect(container.querySelector("circle.stroke-usage")).toBeNull();
+    expect(container.querySelector("circle.stroke-action-stroke")).toBeNull();
   });
 });
 

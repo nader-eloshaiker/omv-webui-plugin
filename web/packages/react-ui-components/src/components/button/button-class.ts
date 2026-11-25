@@ -14,22 +14,32 @@ export const buttonClass = cva(
   "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none " +
     "transition-[color,background-color,border-color,box-shadow,translate,scale,background-size] duration-fast ease-standard " +
     "active:not-data-disabled:translate-y-px active:not-data-disabled:scale-[0.985] active:duration-press " +
-    "data-disabled:cursor-not-allowed data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+    "data-disabled:cursor-not-allowed data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 " +
+    // A lucide glyph is 16px in a button; an icon of the set keeps the size it was given (16 or 20).
+    "[&_svg:not([data-slot=icon])]:size-4",
   {
     variants: {
       variant: {
-        // The one filled blue per view (style guide 2.1).
+        // The accent, Cobalt: the one action this person is expected to take here (rethink 1.2, A1).
+        // One filled per region. Edged in `action-stroke`, which is the fill itself in light and a
+        // lighter rim in dark, where the fill alone does not clear 3:1 against the ground.
         primary:
-          "border-transparent bg-primary text-primary-foreground shadow-control hover:bg-action-hover " +
-          "data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
+          "border-action-stroke bg-primary text-primary-foreground shadow-control hover:bg-action-hover " +
+          "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
+        // The accent, outlined: a next step that is not the region's one filled primary (A2: the
+        // other rows that need the person). Accent words and edge; the accent wash on hover.
+        primaryOutline:
+          "border-action-stroke bg-transparent text-action-label hover:bg-action-wash data-popup-open:bg-action-wash " +
+          "data-disabled:border-input data-disabled:bg-transparent data-disabled:text-subtle-foreground",
         // A neutral control: the edge is the control token, so it clears 3:1 on every ground.
         neutral:
           "border-input bg-surface text-foreground shadow-control hover:bg-muted-strong " +
           "data-popup-open:bg-muted-strong " +
           "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
-        // An action in place: blue words, a neutral hover.
+        // An action in place: Sky words, like a link ("you can interact with this"), a neutral hover.
+        // Never the accent: a quiet action is not the one to press.
         ghost:
-          "border-transparent bg-transparent text-action-label hover:bg-muted-strong data-popup-open:bg-muted-strong " +
+          "border-transparent bg-transparent text-link hover:bg-muted-strong data-popup-open:bg-muted-strong " +
           "data-disabled:bg-transparent data-disabled:text-subtle-foreground",
         // Only the confirm button of an irreversible act (style guide 3.6), with a verb. The red is a
         // fill painted as a background image, so the moment the act becomes possible (a typed name

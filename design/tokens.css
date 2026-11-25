@@ -49,12 +49,17 @@
        - the four chart series take the gaps between those hues (118, 195, 292, 345), so a series
          never looks like a state;
        - ink on a light fill is Sky's own navy, brand-950, never a new hue.
+       - the accent, Cobalt, is the base turned 18 degrees toward the screen's own blue (258), at
+         nearly twice the brand's chroma: analogous, so it belongs, and the most saturated colour on
+         a healthy screen, so the one thing to press is what the eye finds. It is "do this" and
+         nothing else (owner, 2026-11-25); Sky keeps "you can interact with this".
      A word in a hue darkens toward red and lightens toward yellow (warning's label sits at its
      fill's hue, pending's light words are navy), so no label goes olive or brown. */
 
   /* OMV sky blue. 400 is the stock OMV "corporate" blue, unchanged; the rest of the ramp is the
-     same hue (OKLCH ~240) stepped in lightness. It is the brand accent: the mark, the primary and
-     selected colour in dark, the focus ring, the live trace and the health ring. */
+     same hue (OKLCH ~240) stepped in lightness. It is the brand and the interaction hue: the mark,
+     links, selection and checked controls, the focus ring, the live trace and the health ring. It
+     is never the primary action: that is Cobalt's, below. */
   --color-brand-50: #edf7fe;
   --color-brand-100: #daeefe;
   --color-brand-200: #b4defc;
@@ -66,6 +71,22 @@
   --color-brand-800: #074469;
   --color-brand-900: #052e49;
   --color-brand-950: #021d30;
+
+  /* Cobalt, the accent: OKLCH hue 258 on the brand ramp's eleven lightness steps (0.971 to 0.222),
+     where sRGB holds the most chroma a blue can have at these lightnesses (0.20 at 500 and 600
+     against the brand's 0.12). The owner's choice of three candidates, 2026-11-25 (foundation
+     3.6). It does one job: the action this person is expected to take here. */
+  --color-cobalt-50: #f0f6fe; /* 0.971 0.012 258 */
+  --color-cobalt-100: #dfecff; /* 0.939 0.029 258 */
+  --color-cobalt-200: #c1daff; /* 0.881 0.058 258 */
+  --color-cobalt-300: #95c0ff; /* 0.800 0.101 258 */
+  --color-cobalt-400: #65a3ff; /* 0.715 0.150 258 */
+  --color-cobalt-500: #2c84ff; /* 0.630 0.201 258 */
+  --color-cobalt-600: #0065da; /* 0.530 0.196 258 */
+  --color-cobalt-700: #004faf; /* 0.449 0.167 258 */
+  --color-cobalt-800: #003b87; /* 0.371 0.139 258 */
+  --color-cobalt-900: #002860; /* 0.290 0.109 258 */
+  --color-cobalt-950: #001842; /* 0.222 0.086 258 */
 
   /* Slate: the one neutral family, a night sky. OKLCH hue 248 (the light steps) to 259 (the
      darkest), chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong together.
@@ -290,14 +311,40 @@
   --theme-border: var(--color-slate-300); /* dividers: decorative */
   --theme-border-control: var(--color-slate-600); /* the edge of an input, checkbox, track: 3:1 on every ground */
 
-  /* Action: the one interaction hue. */
-  --theme-action: var(--color-brand-600);
-  --theme-action-hover: var(--color-brand-700);
+  /* Action: Cobalt, the accent, which says "do this" and nothing else (rethink 1.2; owner,
+     2026-11-25): the primary button of a view, the next step on an item that needs the person, the
+     current step of a flow, the first-steps progress and an empty state's create button. Never a
+     status, pending, selection, a link, the focus ring, a hover, a heading or decoration; one filled
+     per region. shadcn's `primary` maps here; shadcn's `accent` stays neutral.
+       action             the fill (the primary button)
+       action-hover       a tonal step, not alpha
+       action-foreground  words and icons on the fill
+       action-label       accent words on a ground (an outlined next step)
+       action-stroke      what clears 3:1 against the ground: the edge of the primary and of the
+                          outlined next step, the progress arc. In light it is the fill itself
+       action-wash        the hover ground of the outlined next step, a tint behind accent words */
+  --theme-action: var(--color-cobalt-600);
+  --theme-action-hover: var(--color-cobalt-700);
   --theme-action-foreground: #ffffff;
-  --theme-action-label: var(--color-brand-700); /* links and blue words on a ground */
-  --theme-focus-ring: var(--color-brand-600);
-  /* The selected tint: a selected row, the current navigation item, a chosen option. */
+  --theme-action-label: var(--color-cobalt-700);
+  --theme-action-stroke: var(--color-cobalt-600);
+  --theme-action-wash: color-mix(in srgb, var(--color-cobalt-600) 8%, transparent);
+
+  /* Interaction: Sky, which says "you can interact with this" (style guide 2.1). Links and Sky
+     words; selection (a selected row, the current navigation item and tab, a chosen segment or
+     option); checked controls; the focus ring. A state of a control, never a call to act.
+       link                     links in running text, breadcrumbs, quiet in-place actions
+       selected                 the selected tint, behind a selected row or the current item
+       selected-label           the words of the selected or current item
+       selected-mark            a checked box, a radio dot's ring, a switch that is on, the current
+                                item's bar: 3:1 on every ground
+       selected-mark-foreground the check, the dot and the thumb on the mark */
+  --theme-link: var(--color-brand-700);
   --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
+  --theme-selected-label: var(--color-brand-700);
+  --theme-selected-mark: var(--color-brand-600);
+  --theme-selected-mark-foreground: #ffffff;
+  --theme-focus-ring: var(--color-brand-600);
   /* Text selection: opaque, so selected words keep their contrast. */
   --theme-selection: var(--color-brand-200);
 
@@ -370,6 +417,10 @@
   --theme-art-path: var(--color-brand-600); /* the lineage being traced on a map */
   --theme-art-chassis-top: var(--color-slate-50); /* material light: lit from above, one step */
   --theme-art-chassis-bottom: var(--color-slate-200);
+  /* The one inner plane of a two-tone icon (rethink 5.2): a tinted step of the base blue behind the
+     outline, which stays in currentColor. Translucent, so it sits on any ground and on the
+     primary button. */
+  --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
 
   /* Task and log output: a piece of the night theme in both themes, a dark slate ground with the
      slate text tiers (no green tint: green is OK's hue). */
@@ -404,13 +455,23 @@
   --theme-border: var(--color-slate-800);
   --theme-border-control: var(--color-slate-550);
 
-  /* In dark, the stock OMV sky blue IS the action colour, with dark ink on it. */
-  --theme-action: var(--color-brand-400);
-  --theme-action-hover: var(--color-brand-300);
-  --theme-action-foreground: var(--color-brand-950);
-  --theme-action-label: var(--color-brand-300);
-  --theme-focus-ring: var(--color-brand-300);
+  /* Cobalt keeps its light fill in dark, the same button in both themes with white words, edged in
+     the 500 step, which clears 3:1 on every dark ground where the fill alone does not and reads as
+     the dark theme's light from above. Its words take the 400 step. */
+  --theme-action: var(--color-cobalt-600);
+  --theme-action-hover: var(--color-cobalt-700);
+  --theme-action-foreground: #ffffff;
+  --theme-action-label: var(--color-cobalt-400);
+  --theme-action-stroke: var(--color-cobalt-500);
+  --theme-action-wash: color-mix(in srgb, var(--color-cobalt-500) 18%, transparent);
+
+  /* In dark, the stock OMV sky blue is the checked mark, with the navy on it. */
+  --theme-link: var(--color-brand-300);
   --theme-selected: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
+  --theme-selected-label: var(--color-brand-300);
+  --theme-selected-mark: var(--color-brand-400);
+  --theme-selected-mark-foreground: var(--color-brand-950);
+  --theme-focus-ring: var(--color-brand-300);
   --theme-selection: var(--color-brand-800);
 
   --theme-brand: var(--color-brand-400);
@@ -450,6 +511,7 @@
   --theme-art-path: var(--color-brand-300);
   --theme-art-chassis-top: var(--color-slate-850);
   --theme-art-chassis-bottom: var(--color-slate-900);
+  --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 18%, transparent);
 
   --theme-terminal: #0b0e11;
 

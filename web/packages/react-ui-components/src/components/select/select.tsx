@@ -3,7 +3,11 @@ import { Select as BaseSelect } from "@base-ui/react/select";
 import { Check, ChevronsUpDown } from "lucide-react";
 import type * as React from "react";
 import { cn } from "../../utils";
-import { controlClass } from "../field/control-class";
+import {
+  controlClass,
+  type FieldWidth,
+  fieldWidthClass,
+} from "../field/control-class";
 import { floatingListClass, itemHighlightClass } from "../menu/item-class";
 
 // The floating surface shared by select and menu popups (menu/item-class.ts).
@@ -33,19 +37,27 @@ interface SelectTriggerProps extends React.ComponentProps<
 > {
   /** Shown while nothing is chosen. An example, never the label (5.3). */
   placeholder?: React.ReactNode;
+  /**
+   * As wide as its longest option (owner decision 5): the step of the field width scale that fits
+   * it (`code`, `name`, `wide`...). `full` by default.
+   */
+  width?: FieldWidth;
 }
 
 /** The closed select: looks like an input, opens the list. */
 function SelectTrigger({
   className,
   placeholder,
+  width,
   ...props
 }: SelectTriggerProps) {
   return (
     <BaseSelect.Trigger
       data-slot="select-trigger"
+      data-width={width ?? "full"}
       className={cn(
         controlClass,
+        fieldWidthClass({ width }),
         "flex items-center justify-between gap-2 text-start shadow-control hover:bg-muted-strong data-popup-open:bg-muted-strong",
         className,
       )}
@@ -102,7 +114,7 @@ function SelectItem({
       )}
       {...props}
     >
-      <BaseSelect.ItemIndicator className="col-start-1 flex text-action-label">
+      <BaseSelect.ItemIndicator className="col-start-1 flex text-selected-label">
         <Check aria-hidden="true" className="size-4" />
       </BaseSelect.ItemIndicator>
       <BaseSelect.ItemText className="col-start-2">

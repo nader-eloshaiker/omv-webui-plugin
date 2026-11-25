@@ -40,7 +40,7 @@ const GROUP_WORDS: Omit<MemberPickerProps, "rows" | "value" | "onChange"> = {
     action: (
       <a
         href="#/usermgmt/groups/add"
-        className="rounded-sm text-action-label underline underline-offset-2 hover:no-underline"
+        className="rounded-sm text-link underline underline-offset-2 hover:no-underline"
       >
         Add a group
       </a>

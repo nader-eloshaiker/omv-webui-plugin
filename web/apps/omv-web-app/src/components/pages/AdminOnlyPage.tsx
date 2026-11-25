@@ -12,7 +12,7 @@ export function AdminOnlyPage({ title }: { title: string }) {
       <PageTitle>{title}</PageTitle>
       <p>{t("adminOnly.body")}</p>
       <p>
-        <Link to="/" className="text-action-label underline">
+        <Link to="/" className="text-link underline">
           {t("adminOnly.home")}
         </Link>
       </p>

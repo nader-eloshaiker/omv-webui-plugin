@@ -129,7 +129,7 @@ function ProductMark({ className }: { className?: string }) {
       aria-hidden="true"
       data-slot="product-mark"
       className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-control bg-selected text-action-label shadow-control",
+        "grid size-8 shrink-0 place-items-center rounded-control bg-selected text-brand shadow-control",
         className,
       )}
     >

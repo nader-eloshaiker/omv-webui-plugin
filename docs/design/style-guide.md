@@ -56,7 +56,7 @@ broke. The first two should be quick and quiet. The third must be unmistakable.
 
 | OMV trait | Decision | Why |
 | --- | --- | --- |
-| Sky "corporate" blue `#5dacdf` | **Kept, exactly**, as the brand accent (the mark, the light, the live trace, the focus ring) and the action colour in dark. No longer a top bar (foundation 3.2) | It is the most recognisable thing about OMV. It cannot be the light-theme action colour: see 3.3 |
+| Sky "corporate" blue `#5dacdf` | **Kept, exactly**, as the brand (the mark, the light, the live trace, the focus ring) and the checked mark in dark. No longer a top bar (foundation 3.2), and no longer the primary action, which is Cobalt's (foundation 3.6) | It is the most recognisable thing about OMV. It cannot carry white words: see 3.3 |
 | White text on the blue bar | **Gone with the bar** (foundation 3.2) | White on `#5dacdf` is 2.49:1 |
 | Slate-gray neutrals | **Kept as a family**, rebuilt as one ramp at one hue with lower chroma | Stock slate is already cool and near the brand hue; the ramp is made even so steps read as greys |
 | Yellow `#f8d400` with coffee ink `#4d2e25` | **Kept as the idea, warmed to gold `#ffcd47` with Sky's navy ink** (foundation 3.6, owner, 2026-11-24), with exactly one job: pending configuration changes | It is OMV's signature banner. In stock OMV the same yellow is also "accent" and "warning": one hue, three jobs. The coffee ink sat on neither side of the colour wheel |
@@ -72,7 +72,8 @@ broke. The first two should be quick and quiet. The third must be unmistakable.
 
 Colour in this console may say five things, and only five:
 
-1. **Where you can act**: the primary action, the focused control, the selected item, a link.
+1. **Where you can act**: the one action expected here (the accent, Cobalt), and where you can
+   interact (Sky): the focused control, the selected item, a link.
 2. **The state of a thing the system monitors**: a disk, a file system, a service, a task. OK,
    Warning, Critical, or Unknown/Disabled.
 3. **That configuration is pending**: changes are saved but not yet applied.
@@ -100,7 +101,8 @@ nothing around it is shouting. Each hue has one job.
 | Hue | Its one job | Never |
 | --- | --- | --- |
 | **Slate neutrals** | Every surface, border, divider and word that is not a signal | A second neutral temperature; a warm grey; an off-hue step |
-| **Action blue** (`action`, `action-label`, `focus-ring`) | The primary button, links, the focus ring, checked and selected states | A status; a chart series; an "info" severity; decoration |
+| **The accent, Cobalt** (`action`, `action-label`, `action-stroke`, `action-wash`; foundation 3.6) | "Do this": the primary button of a view, the next step on an item that needs the person, the current step of a flow, the first-steps progress, an empty state's create button | A status; pending; a link; selection; a checked control; the focus ring; a hover; a destructive confirm; a chart series; decoration; more than one filled per region |
+| **Interaction Sky** (`link`, `selected`, `selected-label`, `selected-mark`, `focus-ring`) | "You can interact with this": links, the ghost button, selection, the current navigation item and tab, checked controls, the focus ring | The primary action; a status; a chart series; an "info" severity; decoration |
 | **Brand sky blue** (`brand`, `trace`, `art-path`, `ambient`) | The mark, the live dot, the health ring, the live trace, the traced path on a map, the ambient light (foundation 3.2) | A surface fill or bar; a button or anything that looks pressable in light theme; a status |
 | **Pending gold** (`pending`) | Configuration saved but not applied: the banner, and a mark on the item that is pending | Warning; "accent"; highlight; a hover; a badge count; anything decorative |
 | **OK green** | A monitored thing is healthy | "Success" confetti; a positive button; decoration; a chart series |
@@ -109,16 +111,16 @@ nothing around it is shouting. Each hue has one job.
 | **Destructive red** (`destructive`) | The confirm button of an irreversible action | A status mark; a cancel button; a link |
 | **Unknown grey** (`unknown`) | No reading, not monitored, disabled, stopped on purpose | "Fine"; plain secondary text |
 | **Chart categorical** (`series-1..4`: violet, teal, magenta, moss, in the gaps of the scheme, foundation 3.6) | Telling series apart | Blue, gold, green, orange, red; a fifth generated hue |
-| **Usage ramp** (action blue by lightness) | How full something is, on a meter or a sequential chart | A status; thresholds are the status hues with words (5.6) |
+| **Usage ramp** (Sky blue by lightness) | How full something is, on a meter or a sequential chart | A status; thresholds are the status hues with words (5.6) |
 | **Terminal pair** | Task and log output | Any other surface |
 
 Checks that follow from the table:
 
-- **One interaction hue.** Blue means "you can act here". A control that acts in place hovers with
-  a neutral step (`muted` inside a card, `muted-strong` on a control); selected is the `selected`
-  tint; focus is the blue ring.
-- **One filled primary button per view or dialog.** If two things are filled blue, one of them is
-  not primary.
+- **One interaction hue, one accent.** Sky means "you can interact with this"; Cobalt means "this
+  is the one to press". A control that acts in place hovers with a neutral step (`muted` inside a
+  card, `muted-strong` on a control); selected is the `selected` tint; focus is the Sky ring.
+- **One filled accent per region, at most three accent elements in a viewport.** If two things are
+  filled Cobalt, one of them is not primary.
 - **Count the hues on a screen.** Neutrals, blue, the status hues actually present, and chart
   series. Any other hue must name its job from the table.
 - **There is no "info" colour.** Informational messages are neutral with an icon. Blue is taken.
@@ -144,10 +146,10 @@ Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind 
 | --- | --- | --- |
 | `background` / `foreground` | `page` / `foreground` | |
 | `card`, `popover` (+ `-foreground`) | `surface` / `foreground` | |
-| `primary` / `primary-foreground` | `action` / `action-foreground` | |
+| `primary` / `primary-foreground` | `action` / `action-foreground` | The accent, Cobalt (foundation 3.6) |
 | `secondary` / `secondary-foreground` | `muted` / `foreground` | A neutral button. There is no chromatic secondary |
 | `muted` / `muted-foreground` | `muted` / `muted-foreground` | |
-| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here. Mapping it to the pending gold would paint every menu hover as "pending" |
+| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here, and the product's accent is `primary`. Mapping a hue here would paint every menu hover as a call to act |
 | `destructive` / `destructive-foreground` | `destructive` / `destructive-foreground` | |
 | `border` | `border` | Dividers |
 | `input` | `border-control` | The edge of a control must clear 3:1 |
@@ -156,8 +158,10 @@ Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind 
 ### 3.3 Decision: the sky blue is identity; a deeper blue of the same hue acts
 
 **Superseded in part**: the identity bar is gone ([visual foundation](visual-foundation.md), section
-3.2), so the `identity` bullets below are history. The action decision stands, with the numbers
-measured on the new grounds.
+3.2), so the `identity` bullets below are history; and the primary action moved to the accent,
+Cobalt (foundation 3.6, owner, 2026-11-25). The split by job stands: the values below are now
+Sky's interaction roles, `selected-mark` (was `action`) and `link` and `selected-label` (were
+`action-label`), unchanged, with the numbers measured on the new grounds.
 
 Measured on the stock palette (`node tools/colour-audit.mjs legacy`):
 
@@ -174,13 +178,15 @@ the surrounding greys fixes that. So the hue is split by job, staying at one OKL
 
 - (History) `identity` was `#5dacdf` with deep-navy ink on the light top bar, and the container
   blue `#074469` in dark. Both went with the bar.
-- **`action` = `#1272ab`** (brand-600) for the light-theme primary button, checked controls and the
-  focus ring: white on it is 5.22:1, and it clears 3:1 as an edge on every ground (4.47 to 5.22:1).
-- **`action-label` = `#095a8a`** (brand-700) for links and blue words: 6.32 to 7.39:1 on the four
-  grounds, 6.54:1 on the selected-row tint.
-- **In dark, `#5dacdf` is the action colour itself**, with the navy ink on it (6.91:1), and
-  `#87c6f2` is the link colour (7.97 to 10.26:1). The dark theme is where OMV's blue does the most
-  work.
+- **`selected-mark` = `#1272ab`** (brand-600) for checked controls and the current item's bar, and
+  the focus ring: white on it is 5.22:1, and it clears 3:1 as an edge on every ground (4.47 to
+  5.22:1).
+- **`link` and `selected-label` = `#095a8a`** (brand-700) for links and Sky words: 6.32 to 7.39:1 on
+  the four grounds, 6.54:1 on the selected-row tint.
+- **In dark, `#5dacdf` is the checked mark itself**, with the navy ink on it (6.91:1), and `#87c6f2`
+  is the link colour (7.97 to 10.26:1).
+- **The primary button is Cobalt** in both themes, white on `#0065da` (5.42:1), edged where the
+  fill alone is under 3:1; its numbers are in foundation 3.6.
 
 ### 3.4 Decision: gold means "pending", and only that
 
@@ -198,7 +204,8 @@ In stock OMV, `$omv-color-accent`, `$omv-color-warning` and the pending-changes 
   `#f8d400` with the coffee ink `#4d2e25` (8.31:1); it is now the warmer gold `#ffcd47`, as light as
   the lemon, with navy ink (11.53:1).
 - **Warning moves to OMV's own dark orange `#f78f00`.**
-- **There is no accent colour.** shadcn's `accent` is neutral (3.2).
+- **Gold is not the accent.** The accent is Cobalt, with one job of its own, "do this" (foundation
+  3.6, owner, 2026-11-25); shadcn's `accent` stays neutral (3.2).
 
 Is orange far enough from the gold, and from red? From `node tools/colour-audit.mjs distinct` (OKLab
 distance x100; about 2 is one just-noticeable difference, and under 10 a pair needs its word or
@@ -310,7 +317,8 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - WCAG 2 flatters dark pairs, so read the APCA column too. The dark pairs the audit lists as
   advisory are all labels, captions or button text, not body copy: `tertiary-foreground` (Lc 40 to
   43), `muted-foreground` on the darker grounds and washes (Lc 57 to 60), `critical-label` (Lc 57
-  to 59), `action-foreground` on `action` (Lc 53) and `destructive-foreground` (Lc 48). Set them at
+  to 59), `action-label` (the outlined next step's words, Lc 46 to 52) and `destructive-foreground`
+  (Lc 48). Set them at
   medium weight (500) or above; do not use them for running text.
 - The same status must look like the same status in both themes.
 
@@ -319,7 +327,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - **Categorical: at most four series** (`series-1..4`). A fifth folds into "Other" or the chart
   becomes small multiples. **The hues and values are [visual foundation](visual-foundation.md),
   section 3.6**: violet, teal, magenta and moss sit in the gaps between the scheme's hues, never on
-  blue (action), the pending gold or the three status hues, so a line can never be mistaken for an
+  Sky or the Cobalt accent, the pending gold or the three status hues, so a line can never be mistaken for an
   alarm.
 - Each series clears 3:1 against the plot ground (page, surface or an inset): 3.09 to 8.27:1 light,
   4.16 to 13.77:1 dark. A single-series live chart draws in `trace` with its `trace-area` fill
@@ -328,7 +336,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
   deficiency, but not every pair is safe on colour alone: in light, violet / magenta falls to 8.2
   under protanopia, and the trace beside a series to 9.2 at worst. So **label lines directly** and
   give each series its own dash pattern or marker shape. The legend is never the only link.
-- **Sequential (how full, how much): one hue by lightness**, the action blue. Darker is more in
+- **Sequential (how full, how much): one hue by lightness**, Sky's usage blue. Darker is more in
   light; lighter is more in dark.
 - **Grey for context, colour for the series being discussed.**
 - **Thresholds are status, with words.** A capacity meter is blue; when it crosses a threshold the
@@ -340,7 +348,8 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 
 - Alpha is safe on one known ground and unpredictable over variable ones. The audited washes are
   tokens, not `x/NN` classes: `ok-wash`, `warning-wash`, `critical-wash`, `unknown-wash` and
-  `pending-wash` over each of the four grounds, and `selected` (the action blue at 9% light, 14%
+  `pending-wash` over each of the four grounds, `action-wash` (the accent at 8% light, 18% dark),
+  and `selected` (Sky at 9% light, 14%
   dark) for a selected row on `surface` and the current side-navigation item on `page`. Any other
   combination must be added to the audit before it ships.
 - **State layers** (hover, pressed) use the neutral steps (`muted`, `muted-strong`). Pick tonal step
@@ -444,7 +453,16 @@ difference) stand.
 
 ### 4.4 Icons
 
-- **lucide**, 16px beside text and 20px standalone, stroke width 2, `currentColor`.
+- **lucide** for interface glyphs (chevrons, copy, close, eye), 16px beside text and 20px
+  standalone, stroke width 2, `currentColor`.
+- **The custom set** (`Icon`, rethink 5.2) for domain objects and actions on them: disks by kind,
+  file systems, RAID, ZFS, shared folders, people, groups, each service, each network interface
+  kind, copy jobs, add-ons, the NAS; and create, share, mount, unmount, mirror, wipe, apply, undo,
+  check health, sleep, wake, restart. A 24 grid, a 1.75px stroke at every size (16, 20, 24, and the
+  32px `IconPlate`), outline in `currentColor` and one plane in `art-plane`; status and pending as
+  a badge cut out at the bottom right (`badge`), an object's create mark the same way (`mark`).
+  Decorative beside a word, named with `label` when alone. Action icons act out their action on the
+  hover of the button they sit in and on success (rethink 7.7), never in lists or navigation.
 - An icon-only button has an accessible name and a tooltip.
 - Status icons differ by **shape**, not only colour: check-in-circle (OK), triangle with
   exclamation mark (Warning), octagon with cross (Critical), dashed or hollow circle (Unknown),
@@ -491,7 +509,7 @@ foundation](visual-foundation.md), section 10. The stacking order and the skip l
   filled button; its controls are the `quiet` variant.
 - **Side navigation** on `page`, grouped as OMV groups it (System, Network, Storage, Services,
   Users, Diagnostics) so existing users find things. The current item has the `selected` tint and
-  `action-label` text (5.89:1 light, 8.28:1 dark) plus a non-colour cue (an `action` bar on the
+  `selected-label` text (5.89:1 light, 8.28:1 dark) plus a non-colour cue (a `selected-mark` bar on the
   leading edge, 4.16 and 6.13:1, and medium weight) and `aria-current="page"`. An item whose page
   exists only in the classic interface says so with a short word and the external-link mark.
 - Under 1024px wide the side navigation collapses to a drawer.
@@ -749,7 +767,8 @@ proof that a pair is safe.
 ## 9. Checklist
 
 - [ ] Every chromatic element names one of the five jobs (section 2); the rest is neutral.
-- [ ] Blue is the only interaction hue; hover is neutral; one filled primary per view.
+- [ ] Sky is the only interaction hue and Cobalt only says "do this"; hover is neutral; one filled
+      accent per region.
 - [ ] The pending gold appears only for pending configuration; nothing else is gold or yellow.
 - [ ] Every colour has its place in the scheme of foundation 3.6; ink on a light fill is navy.
 - [ ] Status hues mean only status; there is no blue "info" severity.

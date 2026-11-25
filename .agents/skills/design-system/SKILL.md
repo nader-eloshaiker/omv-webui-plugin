@@ -40,10 +40,19 @@ Rules:
   a card), `muted-strong` (hover on a control, chips, tracks). **Text** is `foreground`,
   `muted-foreground`, `tertiary-foreground` (captions, still 4.5:1) and `subtle-foreground`
   (placeholder and disabled only).
-- **There is no identity bar.** The sky blue is the brand accent: `brand` (the mark, the live dot,
-  the health ring), `trace` and `trace-area` (live data), `art-path` (the traced lineage), the
-  focus ring, and the action colour in dark. Nothing is painted sky blue as a surface; controls on the
-  top bar use the button's `quiet` variant.
+- **There is no identity bar.** The sky blue is the brand and the interaction hue: `brand` (the
+  mark, the live dot, the health ring), `trace` and `trace-area` (live data), `art-path` (the traced
+  lineage), `link`, `selected`, `selected-label`, `selected-mark` (checked controls, the current
+  item's bar) and the focus ring. Nothing is painted sky blue as a surface; controls on the top bar
+  use the button's `quiet` variant.
+- **The accent is Cobalt, the `action` family** (foundation 3.6): `action`, `action-hover`,
+  `action-foreground`, `action-label`, `action-stroke`, `action-wash`; shadcn's `primary` maps to
+  it. It says "do this" only: `Button` `primary` (edged in `action-stroke`), `primaryOutline` for a
+  next step that is not the region's one filled primary, the first-steps `ProgressRing`. Never a
+  link, selection, a checked control or the focus ring: those are Sky's roles above.
+- **Icons**: lucide for interface glyphs; the custom set (`Icon`, `IconPlate`, `IconBadge`) for
+  domain objects and actions, drawn as JSX on a 24 grid with one `art-plane` plane. Their motions
+  are CSS in css-ui-style `src/icons.css`, keyed on `data-part`, never inline.
 - **Washes and the selected tint are tokens**, not `x/NN` classes: `ok-wash`, `warning-wash`,
   `critical-wash`, `unknown-wash`, `pending-wash`, `selected`. An alpha a token does not name is a
   new pair for the audit first.
@@ -162,7 +171,7 @@ Everything under `/ui/` is served with `style-src 'self'` and `script-src 'self'
 ## 7. Charts and data display
 
 - Chart colours come from the `series-1..4` tokens, `trace` and `trace-area` for a single live
-  series, and the usage ramp, never hex in a chart config. No status hue, action blue or pending gold in a
+  series, and the usage ramp, never hex in a chart config. No status hue, the Cobalt accent or pending gold in a
   categorical series (style guide 3.9); a chart showing the trace beside a series labels each line
   directly and gives it its own dash.
 - Numeric display uses tabular numerals; callers format values and units.

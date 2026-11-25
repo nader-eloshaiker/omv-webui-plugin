@@ -134,7 +134,7 @@ function MenuRadioItem({
       {...props}
     >
       <BaseMenu.RadioItemIndicator className="col-start-1 flex">
-        <Check aria-hidden="true" className="text-action-label!" />
+        <Check aria-hidden="true" className="text-selected-label!" />
       </BaseMenu.RadioItemIndicator>
       <span className="col-start-2">{children}</span>
     </BaseMenu.RadioItem>

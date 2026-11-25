@@ -18,6 +18,8 @@
 /* The motions of charts, meters, rings, the map and the drawings (foundation 7.2 and 9). */
 @import "./src/visuals.css";
 @import "./src/shell.css";
+/* The icon set's two tones and the motions of action icons (rethink 5.2 and 7.7). */
+@import "./src/icons.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
    page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.
@@ -55,10 +57,11 @@
 
 /* ─── The shadcn vocabulary (style guide 3.2) ─────────────────────────────────────────────────── */
 /* Each semantic role is already a utility by its own name (`bg-page`, `text-warning-label`, from
-   generated/tokens.css). These are the shadcn names components are written in. `accent` and
-   `secondary` are neutral here: shadcn's `accent` is the hover ground of a menu item, and gold
-   would paint every hover as "pending". `inline` so each utility reads the `--theme-*` variable
-   where it is used and a `.dark` or `.light` subtree flips. */
+   generated/tokens.css). These are the shadcn names components are written in. `primary` is the
+   accent, Cobalt ("do this"); `accent` and `secondary` are neutral here: shadcn's `accent` is the
+   hover ground of a menu item, and a hue there would paint every hover as a call to act. `inline`
+   so each utility reads the `--theme-*` variable where it is used and a `.dark` or `.light`
+   subtree flips. */
 @theme inline {
   --color-background: var(--theme-page);
   --color-card: var(--theme-surface);
@@ -267,13 +270,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* The surfaces nobody drew: text selection and the caret. */
+  /* The surfaces nobody drew: text selection and the caret, in Sky (a control's state, never the
+     accent). */
   ::selection {
     background-color: var(--theme-selection);
     color: var(--theme-foreground);
   }
   :root {
-    caret-color: var(--theme-action);
+    caret-color: var(--theme-selected-mark);
   }
 
   /* The floor for every interactive element (style guide 4.6): a 2px ring with a 2px offset. A

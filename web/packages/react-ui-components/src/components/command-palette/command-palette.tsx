@@ -238,7 +238,7 @@ function CommandPalette({
                           ) : null}
                           <CornerDownLeft
                             aria-hidden="true"
-                            className="size-3.5 shrink-0 text-action-label opacity-0 group-data-highlighted/command:opacity-100"
+                            className="size-3.5 shrink-0 text-selected-label opacity-0 group-data-highlighted/command:opacity-100"
                           />
                         </Autocomplete.Item>
                       )}

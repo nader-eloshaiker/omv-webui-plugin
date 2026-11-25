@@ -20,7 +20,7 @@ function Switch({
         "transition-[background-color,border-color] duration-base ease-standard",
         // The track is 24px high, the WCAG 2.5.8 target; the pseudo-element keeps the target whole.
         "after:absolute after:-inset-px after:content-['']",
-        "data-checked:border-action data-checked:bg-action",
+        "data-checked:border-selected-mark data-checked:bg-selected-mark",
         "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:opacity-60",
         className,
       )}
@@ -33,7 +33,7 @@ function Switch({
           "block h-4.5 w-4.5 rounded-full bg-muted-foreground shadow-control",
           "transition-[translate,width,background-color] duration-slow ease-settle",
           "group-active/switch:w-5.5 group-data-disabled/switch:w-4.5",
-          "data-checked:translate-x-5 data-checked:bg-action-foreground rtl:data-checked:-translate-x-5",
+          "data-checked:translate-x-5 data-checked:bg-selected-mark-foreground rtl:data-checked:-translate-x-5",
           "data-checked:group-active/switch:translate-x-4 rtl:data-checked:group-active/switch:-translate-x-4",
         )}
       />

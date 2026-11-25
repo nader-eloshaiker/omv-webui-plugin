@@ -195,7 +195,7 @@ function RadioOption({
               "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-full border border-input bg-surface",
               "transition-[background-color,border-color] duration-fast ease-standard",
               "after:absolute after:-inset-1 after:rounded-full after:content-['']",
-              "data-checked:border-action data-checked:bg-action",
+              "data-checked:border-selected-mark data-checked:bg-selected-mark",
               "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:bg-muted",
               "data-readonly:cursor-default",
               unavailable &&
@@ -204,7 +204,7 @@ function RadioOption({
           >
             <Radio.Indicator
               className={cn(
-                "size-2 rounded-full bg-action-foreground transition-[scale] duration-base ease-settle data-starting-style:scale-0 data-unchecked:hidden data-disabled:bg-subtle-foreground",
+                "size-2 rounded-full bg-selected-mark-foreground transition-[scale] duration-base ease-settle data-starting-style:scale-0 data-unchecked:hidden data-disabled:bg-subtle-foreground",
                 unavailable && "bg-subtle-foreground",
               )}
             />

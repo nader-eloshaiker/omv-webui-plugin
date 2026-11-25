@@ -35,9 +35,9 @@ const segmentClass = cva(
   // (`overflow-hidden` clips the label, never the segment's own focus ring). It then stacks.
   "relative flex min-w-0 shrink cursor-default items-center overflow-hidden rounded-sm text-foreground select-none " +
     "transition-[background-color,color,box-shadow] duration-fast ease-standard hover:bg-muted-strong focus-visible:z-10 " +
-    // Checked is more than colour: a raised segment on the surface, the label in the action ink and
+    // Checked is more than colour: a raised segment on the surface, the label in Sky's selected ink and
     // semibold, and an inset edge in the same ink (its audited pair on the surface), plus aria-checked.
-    "data-checked:bg-surface data-checked:font-semibold data-checked:text-action-label data-checked:shadow-control data-checked:inset-ring data-checked:inset-ring-action-label data-checked:hover:bg-surface " +
+    "data-checked:bg-surface data-checked:font-semibold data-checked:text-selected-label data-checked:shadow-control data-checked:inset-ring data-checked:inset-ring-selected-label data-checked:hover:bg-surface " +
     "data-disabled:cursor-not-allowed data-disabled:text-subtle-foreground data-disabled:hover:bg-transparent " +
     "data-checked:data-disabled:bg-surface data-checked:data-disabled:text-muted-foreground data-checked:data-disabled:inset-ring-input",
   {

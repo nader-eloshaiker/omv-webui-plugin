@@ -19,7 +19,7 @@ type CheckboxProps = React.ComponentProps<typeof BaseCheckbox.Root> & {
 };
 
 /**
- * A checkbox on Base UI's Checkbox. Checked is the action blue with a mark, so selection never rests on
+ * A checkbox on Base UI's Checkbox. Checked is Sky's selected mark with a check, so selection never rests on
  * colour alone. `indeterminate` for a "select all" that covers part of a list. Give it a name: a
  * `<label>` around it, or `aria-label` in a table row.
  */
@@ -41,11 +41,11 @@ function Checkbox({
       // Only when set here: an undefined value would hide Base UI's own `aria-disabled`.
       {...(unavailable ? { "aria-disabled": true } : null)}
       className={cn(
-        "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-action-foreground",
+        "relative inline-flex size-4.5 shrink-0 items-center justify-center rounded-sm border border-input bg-surface text-selected-mark-foreground",
         "transition-[background-color,border-color] duration-fast ease-standard",
         // The box is 16px; the press target is 24px (WCAG 2.5.8) through an empty pseudo-element.
         "after:absolute after:-inset-1 after:content-['']",
-        "data-checked:border-action data-checked:bg-action data-indeterminate:border-action data-indeterminate:bg-action",
+        "data-checked:border-selected-mark data-checked:bg-selected-mark data-indeterminate:border-selected-mark data-indeterminate:bg-selected-mark",
         "data-disabled:cursor-not-allowed data-disabled:border-transparent data-disabled:bg-muted data-disabled:text-subtle-foreground",
         unavailable && unavailableClass,
         className,

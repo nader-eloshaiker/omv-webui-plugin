@@ -10,7 +10,7 @@ function Folder({ name }: { name: string }) {
     <a
       href="#/storage/shared-folders"
       dir="auto"
-      className="rounded-sm font-medium text-action-label underline underline-offset-2 hover:no-underline"
+      className="rounded-sm font-medium text-link underline underline-offset-2 hover:no-underline"
     >
       {name}
     </a>

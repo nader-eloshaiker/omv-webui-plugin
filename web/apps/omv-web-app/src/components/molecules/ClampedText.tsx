@@ -33,7 +33,7 @@ export function ClampedText({ children }: { children: string }) {
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
-          className="min-h-6 rounded-sm text-sm text-action-label hover:underline"
+          className="min-h-6 rounded-sm text-sm text-link hover:underline"
         >
           {open ? t("sharedFolders.showLess") : t("sharedFolders.showAll")}
         </button>

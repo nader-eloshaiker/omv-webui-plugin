@@ -44,6 +44,7 @@ export {
   whenLanded,
 } from "./components/flight/flight";
 export * from "./components/health-list/health-list";
+export * from "./components/icon/icon";
 export * from "./components/impact-line/impact-line";
 export * from "./components/inline-alert/inline-alert";
 export * from "./components/job-runner/job-runner";

@@ -70,7 +70,7 @@ export const WithCountInLabel: Story = { render: () => <CountedAdvanced /> };
 const KEY =
   "AAAAC3NzaC1lZDI1NTE5AAAAIGq3x8Lr0Zk9vVxQm2uYtP4Jc7sWnE1fHbD6aR5oLmKz";
 
-/** Inside running content: "Show full key" in the action blue, a smaller target of 24px. */
+/** Inside running content: "Show full key" in Sky's link ink, a smaller target of 24px. */
 export const Inline: Story = {
   render: () => (
     <div className="flex flex-col gap-1">

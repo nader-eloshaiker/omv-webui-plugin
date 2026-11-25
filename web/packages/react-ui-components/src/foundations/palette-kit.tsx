@@ -144,6 +144,7 @@ const SCHEME_SPOKES: readonly {
   anchor: boolean;
 }[] = [
   { hue: 240, label: "Sky 240", anchor: true },
+  { hue: 258, label: "Cobalt 258", anchor: true },
   { hue: 60, label: "complement 60", anchor: true },
   { hue: 30, label: "split 30", anchor: true },
   { hue: 90, label: "split 90", anchor: true },
@@ -162,7 +163,7 @@ const WHEEL_FAMILIES: readonly {
   bg: string;
 }[] = [
   { id: "brand", name: "Sky", fill: "fill-brand", bg: "bg-brand" },
-  { id: "action", name: "Action", fill: "fill-action", bg: "bg-action" },
+  { id: "action", name: "Cobalt", fill: "fill-action", bg: "bg-action" },
   { id: "ok", name: "OK", fill: "fill-ok", bg: "bg-ok" },
   { id: "warning", name: "Warning", fill: "fill-warning", bg: "bg-warning" },
   {
@@ -216,7 +217,7 @@ const point = (hue: number, r: number) => ({
 /**
  * Where each family sits: hue as the angle (0 at the right, counter-clockwise, as OKLCH), chroma as
  * the distance from the centre. Spokes mark the scheme: solid for the anchors, dashed for the gaps
- * the chart series take. Families painted the same (Sky and Action in dark) share one marker.
+ * the chart series take. Families painted the same share one marker.
  */
 export function HueWheel({ caption }: { caption: string }) {
   const [read, setRead] = React.useState<Readonly<Record<string, string>>>({});

@@ -4,7 +4,6 @@
 //   node tools/colour-audit.mjs                 # contrast + distinct + neutrals
 //   node tools/colour-audit.mjs contrast        # one section; add --quiet for failures only
 //   node tools/colour-audit.mjs legacy          # the measured defects of the stock OMV palette
-//   node tools/colour-audit.mjs accents         # the accent candidates (a proposal, not shipped)
 //   node tools/colour-audit.mjs measure '#fff' '#5dacdf'     # one ad-hoc pair (fg, bg)
 //   node tools/colour-audit.mjs measure '#8a4613' '#f78f00' 0.14 '#ffffff'   # fg on a wash over a base
 //   node tools/colour-audit.mjs oklch 0.55 0.12 240          # OKLCH -> hex (for building ramps)
@@ -19,8 +18,6 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CSS = path.join(ROOT, "design/tokens.css");
-// The accent candidates the owner is choosing between: a proposal, read only by the `accents` section.
-const ACCENTS_CSS = path.join(ROOT, "web/packages/react-ui-components/src/foundations/accent-candidates.css");
 const args = process.argv.slice(2);
 const QUIET = args.includes("--quiet");
 const positional = args.filter((a) => !a.startsWith("--"));
@@ -184,23 +181,14 @@ function parseColour(value, lookup) {
   }
   return null;
 }
-// `extra` is another stylesheet read the same way, after tokens.css. Its `[data-accent="name"]`
-// blocks are a candidate each: only the one named by `accent` applies, over both themes, the way the
-// attribute on a subtree overrides the theme it sits in.
-function loadTokens({ extra, accent } = {}) {
-  const strip = (file) => fs.readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-  const css = strip(CSS) + (extra ? "\n" + strip(extra) : "");
+function loadTokens() {
+  const css = fs.readFileSync(CSS, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
   const light = {};
   const darkOverrides = {};
-  const picked = {};
-  const accents = [];
   const blockRe = /([^{}]+)\{([^{}]*)\}/g;
   let m;
   while ((m = blockRe.exec(css))) {
-    const candidate = m[1].match(/\[data-accent="([\w-]+)"\]/);
-    if (candidate) accents.push(candidate[1]);
-    const target = candidate ? (candidate[1] === accent ? picked : null) : /\.dark\b/.test(m[1]) ? darkOverrides : light;
-    if (!target) continue;
+    const target = /\.dark\b/.test(m[1]) ? darkOverrides : light;
     for (const d of m[2].matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) target[d[1]] = d[2].replace(/\s+/g, " ").trim();
   }
   const resolve = (map) => {
@@ -212,10 +200,9 @@ function loadTokens({ extra, accent } = {}) {
     return get;
   };
   return {
-    light: resolve({ ...light, ...picked }),
-    dark: resolve({ ...light, ...darkOverrides, ...picked }),
+    light: resolve(light),
+    dark: resolve({ ...light, ...darkOverrides }),
     names: Object.keys(light),
-    accents,
   };
 }
 
@@ -263,25 +250,47 @@ const PAIRS = [
   ...onGrounds("theme-border", "deco", "divider (decorative)"),
   ...onGrounds("theme-border-control", "ui", "control outline (1.4.11)"),
   ["theme-border-control", AMBIENT, "ui", "control outline in the ambient light"],
-  // Action blue: the one interaction hue.
+  // Action: Cobalt, the accent, "do this". Its fill alone is reported: the primary button clears
+  // 3:1 against the ground by its edge, `action-stroke`, which is the fill itself in light.
   ["theme-action-foreground", "theme-action", "text", "words on the primary button"],
   ["theme-action-foreground", "theme-action-hover", "text", "words on the primary button, hovered"],
-  ...onGrounds("theme-action", "ui", "primary button edge / checked control"),
-  ["theme-action", AMBIENT, "ui", "primary button edge in the ambient light"],
-  ...onGrounds("theme-action-label", "text", "link and blue label"),
-  ["theme-action-label", AMBIENT, "text", "link in the ambient light"],
+  ["theme-action-foreground", on("theme-action", "theme-art-plane"), "ui", "an icon's outline over its plane on the primary button"],
+  ["theme-action-foreground", on("theme-action-hover", "theme-art-plane"), "ui", "an icon's outline over its plane on the primary button, hovered"],
+  ...onGrounds("theme-action", "deco", "the primary fill alone (edged by action-stroke)"),
+  ...onGrounds("theme-action-stroke", "ui", "the primary and outlined next step's edge"),
+  ["theme-action-stroke", AMBIENT, "ui", "the primary's edge in the ambient light"],
+  ...onGrounds("theme-action-label", "text", "accent words: the outlined next step"),
+  ["theme-action-label", AMBIENT, "text", "accent words in the ambient light"],
+  // The outlined next step, hovered: its words and edge on the accent wash.
+  ...["theme-surface", "theme-muted", "theme-page"].map((g) => ["theme-action-label", on(g, "theme-action-wash"), "text", "accent words on the accent wash"]),
+  ["theme-foreground", on("theme-surface", "theme-action-wash"), "text", "body text on the accent wash"],
+  ["theme-action-stroke", on("theme-surface", "theme-action-wash"), "ui", "the outlined next step's edge on its wash"],
+  // Where the accent meets a state: the next step on the pending wash (the job runner).
+  ["theme-action-label", on("theme-surface", "theme-pending-wash"), "text", "accent words on the pending wash"],
+  ["theme-action-stroke", on("theme-surface", "theme-pending-wash"), "ui", "the primary's edge on the pending wash"],
+  // The first-steps progress (A4): the arc on its track.
+  ["theme-action-stroke", "theme-usage-track", "ui", "the first-steps progress arc on its track"],
+  // Interaction: Sky, "you can interact with this": links, selection, checked controls, focus.
+  ...onGrounds("theme-link", "text", "a link"),
+  ["theme-link", AMBIENT, "text", "a link in the ambient light"],
+  ["theme-link", on("theme-surface", "theme-pending-wash"), "text", "a link on the pending wash"],
   ...onGrounds("theme-focus-ring", "ui", "focus ring (2.4.11 / 1.4.11)"),
   ["theme-focus-ring", AMBIENT, "ui", "focus ring in the ambient light"],
+  ...onGrounds("theme-selected-mark", "ui", "a checked control, the current item's bar"),
+  ["theme-selected-mark-foreground", "theme-selected-mark", "ui", "the check, the dot, the thumb on the mark"],
+  ...onGrounds("theme-selected-label", "text", "the chosen segment's words on its raised surface"),
   // The selected tint, and selected text.
-  ["theme-action-label", on("theme-surface", "theme-selected"), "text", "label on a selected row"],
+  ["theme-selected-label", on("theme-surface", "theme-selected"), "text", "label on a selected row"],
   ["theme-foreground", on("theme-surface", "theme-selected"), "text", "body text on a selected row"],
   ["theme-muted-foreground", on("theme-surface", "theme-selected"), "text", "secondary text on a selected row"],
-  ["theme-action-label", on("theme-page", "theme-selected"), "text", "current side-navigation item"],
+  ["theme-selected-label", on("theme-page", "theme-selected"), "text", "current side-navigation item"],
   ["theme-foreground", on("theme-page", "theme-selected"), "text", "current side-navigation item, ink"],
-  ["theme-action", on("theme-page", "theme-selected"), "ui", "current item's leading bar"],
+  ["theme-selected-mark", on("theme-page", "theme-selected"), "ui", "current item's leading bar"],
   ["theme-foreground", "theme-selection", "text", "selected text"],
   // Brand: the mark, the live dot, the health ring; and the live trace with its area fill.
   ...onGrounds("theme-brand", "ui", "the mark, the live dot, the health ring"),
+  ["theme-brand", on("theme-page", "theme-selected"), "ui", "the mark on its plate (the top bar)"],
+  ["theme-brand", on("theme-surface", "theme-selected"), "ui", "the mark on its plate, on a surface"],
   ...onGrounds("theme-trace", "ui", "the live trace", GROUNDS.slice(1)),
   ["theme-trace", on("theme-surface", "theme-trace-area"), "ui", "the trace over the top of its own area fill"],
   ["theme-trace", on("theme-muted", "theme-trace-area"), "ui", "the trace over its area fill, in an inset"],
@@ -323,7 +332,9 @@ const PAIRS = [
     [`theme-${s}-label`, statusLight(s), "text", `${s} word on the card lit in its state`],
     ["theme-foreground", statusLight(s), "text", `headline on the card lit ${s}`],
     ["theme-muted-foreground", statusLight(s), "text", `secondary text on the card lit ${s}`],
-    ["theme-action", statusLight(s), "ui", `primary button edge on the card lit ${s}`],
+    ["theme-action-stroke", statusLight(s), "ui", `the next step's edge on the card lit ${s}`],
+    ["theme-action-label", statusLight(s), "text", `the outlined next step's words on the card lit ${s}`],
+    ["theme-focus-ring", statusLight(s), "ui", `focus ring on the card lit ${s}`],
   ]),
   // The Save button's "Saved" settle: words on the OK fill, edged in the OK stroke.
   ["theme-ok-foreground", "theme-ok", "text", "'Saved' on the save button"],
@@ -346,6 +357,11 @@ const PAIRS = [
   ["theme-foreground", CHASSIS, "text", "a device name on the chassis"],
   ["theme-tertiary-foreground", CHASSIS, "text", "the chassis caption"],
   ...STATUS.map((s) => [`theme-${s}-stroke`, CHASSIS, "ui", `a ${s} slot light on the chassis`]),
+  // The icon set (rethink 5.2): the outline in the ink it stands in, over its one plane.
+  ...["theme-page", "theme-surface", "theme-muted", "theme-muted-strong"].flatMap((g) => [
+    ["theme-foreground", on(g, "theme-art-plane"), "ui", "an icon's outline over its plane"],
+    ["theme-muted-foreground", on(g, "theme-art-plane"), "ui", "a secondary icon's outline over its plane"],
+  ]),
   // Task output.
   ["theme-terminal-foreground", "theme-terminal", "text", "task and log output"],
   ["theme-terminal-muted", "theme-terminal", "text", "timestamps in task output"],
@@ -362,9 +378,19 @@ const DISTINCT = [
   ["theme-pending", "theme-warning"],
   ["theme-pending", "theme-ok"],
   ["theme-pending", "theme-critical"],
-  ["theme-action", "theme-ok"],
-  ["theme-action", "theme-unknown"],
   ["theme-brand", "theme-unknown"],
+  // The accent against every state it may sit beside (it never carries one), the pending gold and
+  // the destructive red; and against Sky, the interaction hue it must be told from.
+  ...["ok", "warning", "critical", "unknown", "pending", "destructive"].map((s) => ["theme-action", `theme-${s}`]),
+  ...["ok", "warning", "critical", "unknown", "pending"].map((s) => ["theme-action-label", `theme-${s}-label`]),
+  ["theme-action", "theme-brand"],
+  ["theme-action", "theme-selected-mark"],
+  ["theme-action", "theme-trace"],
+  ["theme-action-stroke", "theme-focus-ring"],
+  ["theme-action-label", "theme-link"],
+  // The nearest series on the wheel (violet, 292) shares the dashboard with the accent.
+  ["theme-action", "theme-series-1"],
+  ["theme-action-label", "theme-series-1"],
   ["theme-series-1", "theme-series-2"],
   ["theme-series-1", "theme-series-3"],
   ["theme-series-1", "theme-series-4"],
@@ -385,52 +411,6 @@ const DISTINCT = [
   ["theme-series-4", "theme-ok"],
   ["theme-series-2", "theme-ok"],
   ["theme-series-3", "theme-critical"],
-];
-// The accent candidates (accent-candidates.css): each points the action roles at its own hue and adds
-// a tint. Every pair above that the action roles enter is measured again, plus the tint and the places
-// the accent meets the states; and the accent is told apart from the brand, the trace, every state,
-// the pending gold and every series, which is what makes it an accent rather than one more blue.
-const ACTION_ROLES = new Set([
-  "theme-action",
-  "theme-action-hover",
-  "theme-action-foreground",
-  "theme-action-label",
-  "theme-focus-ring",
-  "theme-action-edge",
-  "theme-action-tint",
-]);
-// What must clear 3:1 against a ground is the accent's edge: the fill itself, or the stroke a light
-// fill is edged in. So a pair above that holds the fill to 3:1 holds the edge, and the fill alone is
-// reported.
-const asEdge = ([fg, g, bar, note]) =>
-  fg === "theme-action" && bar === "ui" ? ["theme-action-edge", g, bar, `${note} (the edge)`] : [fg, g, bar, note];
-const groundTokens = (g) =>
-  typeof g === "string" ? [g] : g.stops ? g.stops.flatMap(groundTokens) : [g.base, ...g.layers];
-const ACCENT_PAIRS = [
-  ...PAIRS.filter(([fg, g]) => ACTION_ROLES.has(fg) || groundTokens(g).some((t) => ACTION_ROLES.has(t))).map(asEdge),
-  ...onGrounds("theme-action", "deco", "the fill alone (a light fill is edged)"),
-  // The tint: a wash behind accent words (the next step's chip), over the card, an inset and the page.
-  ...["theme-surface", "theme-muted", "theme-page"].map((g) => ["theme-action-label", on(g, "theme-action-tint"), "text", "accent words on the accent tint"]),
-  ["theme-foreground", on("theme-surface", "theme-action-tint"), "text", "body text on the accent tint"],
-  ["theme-action-edge", on("theme-surface", "theme-action-tint"), "ui", "the accent's mark on its tint"],
-  // Where the accent meets a state: the next step on a card lit warning or critical, a link in the
-  // pending wash, and the live key figure in the ambient light (the link pair) and on a card.
-  ...["warning", "critical"].map((s) => ["theme-action-label", statusLight(s), "text", `the next step's words on the card lit ${s}`]),
-  ["theme-focus-ring", statusLight("warning"), "ui", "focus ring on the card lit warning"],
-  ["theme-action-label", on("theme-surface", "theme-pending-wash"), "text", "a link on the pending wash"],
-];
-const ACCENT_DISTINCT = [
-  ["theme-action", "theme-brand"],
-  ["theme-action", "theme-trace"],
-  ["theme-action-label", "theme-trace"],
-  ...["ok", "warning", "critical", "unknown", "pending"].map((s) => ["theme-action", `theme-${s}`]),
-  ["theme-action", "theme-destructive"],
-  ...[1, 2, 3, 4].map((n) => ["theme-action", `theme-series-${n}`]),
-  ...[1, 2, 3, 4].map((n) => ["theme-action-label", `theme-series-${n}`]),
-  ["theme-action-label", "theme-pending-label"],
-  ["theme-action-label", "theme-warning-label"],
-  ["theme-action-label", "theme-critical-label"],
-  ["theme-action-label", "theme-ok-label"],
 ];
 const neutralSteps = (names) =>
   names
@@ -546,60 +526,6 @@ function neutrals(themes) {
   console.log(`neutrals: median hue ${f(median, 0)}, ${bad} step(s) off-hue.`);
 }
 
-// The accent candidates, one after another: the roles each one sets (with their OKLCH), the contrast
-// pairs the action roles enter, and how far the accent sits from everything it must not be taken for.
-// "today" is the shipped action roles, the baseline. Exits 1 if any candidate fails a required pair.
-function accents() {
-  const { accents: names } = loadTokens({ extra: ACCENTS_CSS });
-  const roles = ["theme-action", "theme-action-hover", "theme-action-foreground", "theme-action-label", "theme-focus-ring", "theme-action-edge", "theme-action-tint"];
-  let failed = 0;
-  const summary = [];
-  for (const name of names) {
-    const t = loadTokens({ extra: ACCENTS_CSS, accent: name });
-    const byTheme = { light: t.light, dark: t.dark };
-    console.log(`\n######## accent: ${name} ########`);
-    for (const [themeName, get] of Object.entries(byTheme)) {
-      const shown = roles.map((r) => {
-        const c = get(r);
-        if (!c) return `${short(r)} MISSING`;
-        const [L, C, H] = oklch(c.rgb);
-        return `${short(r)} ${toHex(c.rgb)}${c.a < 1 ? ` @${f(c.a * 100, 0)}%` : ""} (${f(L, 3)} ${f(C, 3)} ${f(H, 0)})`;
-      });
-      console.log(`${themeName}: ${shown.join(", ")}`);
-    }
-    const fails = contrast(byTheme, ACCENT_PAIRS);
-    failed += fails;
-    distinct(byTheme, ACCENT_DISTINCT);
-    // The weakest distance, over the four kinds of vision, from each group the accent must not meet.
-    const groups = {
-      "brand/trace": (a, b) => /brand|trace/.test(b),
-      "state fills": (a, b) => a === "theme-action" && /ok|warning|critical|unknown|pending|destructive/.test(b),
-      "state words": (a, b) => /label/.test(b),
-      series: (a, b) => /series/.test(b),
-    };
-    const parts = [];
-    for (const [themeName, get] of Object.entries(byTheme)) {
-      for (const [group, test] of Object.entries(groups)) {
-        let worst = { d: Infinity };
-        for (const [a, b] of ACCENT_DISTINCT.filter(([a, b]) => test(a, b))) {
-          const [x, y] = [get(a)?.rgb, get(b)?.rgb];
-          if (!x || !y) continue;
-          const views = { normal: dE(x, y), ...Object.fromEntries(["deutan", "protan", "tritan"].map((k) => [k, dE(simulate(x, k), simulate(y, k))])) };
-          for (const [view, d] of Object.entries(views)) if (d < worst.d) worst = { d, view, pair: `${short(a)}/${short(b)}` };
-        }
-        const normal = ACCENT_DISTINCT.filter(([a, b]) => test(a, b))
-          .map(([a, b]) => [get(a)?.rgb, get(b)?.rgb])
-          .filter(([x, y]) => x && y)
-          .map(([x, y]) => dE(x, y));
-        parts.push(`${themeName} ${group}: weakest ${f(worst.d, 1)} (${worst.pair}, ${worst.view}); normal vision ${f(Math.min(...normal), 1)}`);
-      }
-    }
-    summary.push(`${name}: ${fails} failed\n  ${parts.join("\n  ")}`);
-  }
-  console.log(`\n== accents: summary ==\n${summary.join("\n")}`);
-  return failed;
-}
-
 // The stock OMV workbench palette (workbench/src/scss/defaults/_colors.scss), measured so the guide
 // can quote real numbers for what it changes.
 function legacy() {
@@ -647,8 +573,6 @@ if (section === "oklch") {
   console.log(`${toHex(fg)} on ${toHex(bg)}: ${f(ratio(fg, bg))}:1, APCA Lc ${f(apca(fg, bg), 0)}; foreground OKLCH ${f(L, 3)} ${f(C, 3)} ${f(H, 0)}`);
 } else if (section === "legacy") {
   legacy();
-} else if (section === "accents") {
-  process.exit(accents() ? 1 : 0);
 } else {
   const themes = loadTokens();
   const byTheme = { light: themes.light, dark: themes.dark };
@@ -657,7 +581,7 @@ if (section === "oklch") {
   if (!section || section === "distinct") distinct(byTheme);
   if (!section || section === "neutrals") neutrals(themes);
   if (section && !["contrast", "distinct", "neutrals"].includes(section)) {
-    console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, accents, measure, oklch)`);
+    console.error(`unknown section '${section}' (contrast, distinct, neutrals, legacy, measure, oklch)`);
     process.exit(2);
   }
   process.exit(fails ? 1 : 0);

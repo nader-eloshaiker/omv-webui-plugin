@@ -192,9 +192,9 @@ const PAGE_SIZES = [25, 50, 100] as const;
 const tableClass =
   "grid grid-cols-1 @2xl:grid-cols-[minmax(0,1fr)_auto_max-content]";
 const rowGroupClass = "grid @2xl:col-span-3 @2xl:grid-cols-subgrid";
-// The name as a link: the action ink, underlined so it is not colour alone (style guide 6).
+// The name as a link: Sky's link ink, underlined so it is not colour alone (style guide 6).
 const nameLinkClass =
-  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline";
+  "rounded-sm text-link underline underline-offset-2 hover:no-underline";
 const rowClass =
   "relative grid grid-cols-[minmax(0,1fr)_auto] @2xl:col-span-3 @2xl:grid-cols-subgrid";
 

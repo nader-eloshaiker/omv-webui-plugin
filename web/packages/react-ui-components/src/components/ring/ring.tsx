@@ -51,6 +51,8 @@ const arcClass = cva(
     variants: {
       tone: {
         usage: "stroke-usage",
+        // The first-steps progress (rethink A4): the accent's stroke, which clears 3:1 on the track.
+        action: "stroke-action-stroke",
         warning: "stroke-warning",
         critical: "stroke-critical",
       },
@@ -97,7 +99,7 @@ function UsageArc({
   r: number;
   stroke: number;
   ratio: number;
-  tone: "usage" | "warning" | "critical";
+  tone: "usage" | "action" | "warning" | "critical";
 }) {
   if (ratio <= 0) {
     return null;
@@ -391,8 +393,9 @@ type ProgressRingProps = Omit<
 
 /**
  * A ring and its figure only, named by a heading outside it (foundation 8): how many of a set of
- * steps are done, as the first steps' "1/2" beside the card title. The usage blue on its track,
- * never a status hue, since configuration is not health. A `meter` on Base UI. `xs` beside a
+ * steps are done, as the first steps' "1/2" beside the card title. The accent, Cobalt, on the usage
+ * track (rethink A4: the first-steps progress is the next thing to do), never a status hue, since
+ * configuration is not health. A `meter` on Base UI. `xs` beside a
  * heading, the other sizes as `CapacityRing`.
  */
 function ProgressRing({
@@ -436,7 +439,7 @@ function ProgressRing({
               r={r}
               stroke={g.stroke}
               ratio={ratioOf(value, max)}
-              tone="usage"
+              tone="action"
             />
           </svg>
           <span

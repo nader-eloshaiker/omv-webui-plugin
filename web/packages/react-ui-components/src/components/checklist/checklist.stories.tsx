@@ -52,7 +52,7 @@ export const SetUpYourNas: Story = {
               action={
                 <a
                   href="#password"
-                  className="text-action-label underline underline-offset-2 hover:no-underline"
+                  className="text-link underline underline-offset-2 hover:no-underline"
                 >
                   Change your password
                 </a>

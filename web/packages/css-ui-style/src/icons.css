@@ -1,0 +1,239 @@
+/* The custom icon set (rethink 5.2) and the motions of its action icons (rethink 7.7), in the
+ * stylesheet so nothing is inserted at run time (UI-1). The drawings are JSX in react-ui-components
+ * (components/icon); each names its parts with `data-part`, and this file gives them their second
+ * tone and their motion.
+ *
+ * Two tones and no third: the outline is `currentColor`, and one inner plane takes `art-plane`, a
+ * tinted step of the base blue. The accent never enters an icon except as the ink of a primary
+ * button the icon sits on (A5), which is `currentColor` there.
+ *
+ * Motion, by the rules of 7.1 and 7.7:
+ *   - only an action icon inside the thing that will act (a button or a menu item), on that
+ *     control's hover or keyboard focus, after an 80ms intent delay, once per hover-enter (the
+ *     animation restarts each time the selector starts to match, and a pointer that leaves within
+ *     80ms cancels it). Never on navigation, a table's identity icon or a decorative icon;
+ *   - on success, once, when the caller sets `data-state="done"`;
+ *   - a single short motion inside the 24px box, on the motion tokens, ending on the resting drawing
+ *     (or, for `done`, on the done drawing);
+ *   - under reduced motion every duration is 0 (design/tokens.css) and the base rule runs each
+ *     animation once at once, so the icon is simply at its end state.
+ */
+@layer components {
+  [data-slot="icon"] [data-part="plane"] {
+    fill: var(--theme-art-plane);
+    stroke: none;
+  }
+
+  /* Every moving part turns and travels about its own box. */
+  [data-slot="icon"] [data-part] {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* The drawings a success leaves behind: the check a plus becomes, the lid a mount closes. Hidden
+     at rest, shown in the done state, and drawn along their length as they appear. */
+  [data-slot="icon"] :is([data-part="done"], [data-part="lid"]) {
+    opacity: 0;
+  }
+  [data-slot="icon"][data-state="done"]
+    :is([data-part="done"], [data-part="lid"]) {
+    opacity: 1;
+    stroke-dasharray: 1;
+    animation: draw var(--duration-slow) var(--ease-standard) both;
+  }
+  [data-slot="icon"][data-state="done"] [data-part="mark"] {
+    opacity: 0;
+    animation: icon-mark-out var(--duration-fast) var(--ease-exit) both;
+  }
+
+  /* ─── Hover and keyboard focus of the control that will act ─────────────────────────────────── */
+  :is(button, [role="menuitem"]):not(:disabled, [data-disabled]):is(
+      :hover,
+      :focus-visible
+    )
+    [data-slot="icon"][data-motion="auto"]:not([data-state="done"]) {
+    /* Create, and an object's create mark: the plus turns a quarter on the settle spring. */
+    &:is([data-icon="create"], [data-mark="create"]) [data-part="mark"] {
+      animation: icon-turn-in var(--duration-slow) var(--ease-settle) 80ms both;
+    }
+    /* Share: the ribbon slides out of the folder. */
+    &[data-icon="share"] [data-part="ribbon"] {
+      animation: icon-nudge-x var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    /* Mount and unmount: the arrow nudges into, or out of, the socket. */
+    &[data-icon="mount"] [data-part="arrow"] {
+      animation: icon-nudge-down var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    &[data-icon="unmount"] [data-part="arrow"] {
+      animation: icon-nudge-up var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    /* Apply: the check nudges toward the bar. */
+    &[data-icon="apply"] [data-part="check"] {
+      animation: icon-nudge-down var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    /* Undo: the arrow turns back 30 degrees. */
+    &[data-icon="undo"] [data-part="arrow"] {
+      animation: icon-turn-back var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    /* Check health: the pulse line traces once along its path. */
+    &[data-icon="check-health"] [data-part="pulse"] {
+      stroke-dasharray: 1;
+      animation: draw var(--duration-slow) var(--ease-standard) 80ms both;
+    }
+    /* Restart: the loop arrow turns a quarter, landing on its resting drawing. */
+    &[data-icon="restart"] [data-part="loop"] {
+      animation: icon-turn-in var(--duration-slow) var(--ease-settle) 80ms both;
+    }
+    /* Not in 7.7's table, proposed in the same spirit (one short motion, ending at rest): the
+       mirror's equals mark parts and closes, the moon dips, the sun's rays reach out. */
+    &[data-icon="mirror"] [data-part="equals-top"] {
+      animation: icon-nudge-up var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    &[data-icon="mirror"] [data-part="equals-bottom"] {
+      animation: icon-nudge-down var(--duration-base) var(--ease-standard) 80ms
+        both;
+    }
+    &[data-icon="sleep"] [data-part="moon"] {
+      animation: icon-dip var(--duration-base) var(--ease-standard) 80ms both;
+    }
+    &[data-icon="wake"] [data-part="rays"] {
+      animation: icon-reach var(--duration-base) var(--ease-standard) 80ms both;
+    }
+    /* Wipe has no hover motion: no playfulness on a destructive entry point. */
+  }
+
+  /* ─── Success, once per cause ───────────────────────────────────────────────────────────────── */
+  [data-slot="icon"][data-state="done"] {
+    &[data-icon="share"] [data-part="ribbon"] {
+      animation: icon-extend var(--duration-slow) var(--ease-settle) both;
+    }
+    &[data-icon="mount"] [data-part="arrow"] {
+      animation: icon-nudge-down var(--duration-slow) var(--ease-standard) both;
+    }
+    &[data-icon="unmount"] [data-part="arrow"] {
+      animation: icon-lift-out var(--duration-slow) var(--ease-standard) both;
+    }
+    /* Wipe: on the confirm button's arm the three sweep strokes draw across once, in turn. */
+    &[data-icon="wipe"] [data-part^="sweep-"] {
+      stroke-dasharray: 1;
+      animation: draw var(--duration-slow) var(--ease-standard) both;
+    }
+    &[data-icon="wipe"] [data-part="sweep-2"] {
+      animation-delay: var(--motion-stagger);
+    }
+    &[data-icon="wipe"] [data-part="sweep-3"] {
+      animation-delay: calc(2 * var(--motion-stagger));
+    }
+    /* Apply: the check slides into the bar, and the resting check settles back in. */
+    &[data-icon="apply"] [data-part="check"] {
+      animation: icon-slide-in var(--duration-slow) var(--ease-standard) both;
+    }
+    /* Undo: one quarter turn back, landing at rest. */
+    &[data-icon="undo"] [data-part="arrow"] {
+      animation: icon-turn-back-in var(--duration-slow) var(--ease-settle) both;
+    }
+    &[data-icon="check-health"] [data-part="pulse"] {
+      stroke-dasharray: 1;
+      animation: draw var(--duration-slow) var(--ease-standard) both;
+    }
+    &[data-icon="wake"] [data-part="rays"] {
+      animation: icon-reach var(--duration-slow) var(--ease-settle) both;
+    }
+  }
+
+  /* A status badge that changes (not one that is there from the start) crossfades in and grows from
+     0.9, so the change of shape is seen (triangle to check). */
+  [data-slot="icon-badge"][data-changed] {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: icon-badge-in var(--duration-base) var(--ease-settle) both;
+  }
+}
+
+@keyframes icon-turn-in {
+  from {
+    rotate: -90deg;
+  }
+}
+@keyframes icon-turn-back {
+  50% {
+    rotate: -30deg;
+  }
+}
+@keyframes icon-turn-back-in {
+  from {
+    rotate: 90deg;
+  }
+}
+@keyframes icon-nudge-x {
+  50% {
+    translate: 2px 0;
+  }
+}
+@keyframes icon-extend {
+  45% {
+    translate: 3px 0;
+  }
+}
+@keyframes icon-nudge-down {
+  50% {
+    translate: 0 1.5px;
+  }
+}
+@keyframes icon-nudge-up {
+  50% {
+    translate: 0 -1.5px;
+  }
+}
+@keyframes icon-lift-out {
+  60% {
+    translate: 0 -4px;
+    opacity: 0;
+  }
+  61% {
+    translate: 0 2px;
+    opacity: 0;
+  }
+}
+@keyframes icon-slide-in {
+  55% {
+    translate: 0 6px;
+    opacity: 0;
+  }
+  56% {
+    translate: 0 -3px;
+    opacity: 0;
+  }
+}
+@keyframes icon-dip {
+  50% {
+    translate: 0 1px;
+    rotate: -12deg;
+  }
+}
+@keyframes icon-reach {
+  50% {
+    scale: 1.14;
+  }
+}
+@keyframes icon-mark-out {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    scale: 0.6;
+  }
+}
+@keyframes icon-badge-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}

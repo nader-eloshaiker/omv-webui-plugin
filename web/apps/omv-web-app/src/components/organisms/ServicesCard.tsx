@@ -40,7 +40,7 @@ function ServiceName({ service }: { service: ServiceStatus }) {
   return page !== undefined ? (
     <Link
       to={page}
-      className="text-action-label underline underline-offset-2 hover:no-underline"
+      className="text-link underline underline-offset-2 hover:no-underline"
     >
       <span dir="auto">{service.title}</span>
     </Link>
@@ -78,7 +78,7 @@ export function ServicesCard({
   const footer = (
     <Link
       to="/diagnostics/services"
-      className="text-action-label underline underline-offset-2 hover:no-underline"
+      className="text-link underline underline-offset-2 hover:no-underline"
     >
       {t("dashboard.services.link")}
     </Link>

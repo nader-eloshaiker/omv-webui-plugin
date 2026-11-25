@@ -15,6 +15,34 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = { args: { variant: "primary" } };
+// The accent outlined (rethink A2): a next step that is not the region's one filled primary, as the
+// other rows that need the person on the dashboard. Shown beside the filled primary it defers to.
+export const PrimaryOutline: Story = {
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button>See what to do</Button>
+        <span className="text-sm text-muted-foreground">
+          Disk in bay 2 reports a problem
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="primaryOutline">Free up space</Button>
+        <span className="text-sm text-muted-foreground">
+          Data drive is 91% full
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="primaryOutline" disabled>
+          Check again
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Unavailable while a check runs
+        </span>
+      </div>
+    </div>
+  ),
+};
 export const Neutral: Story = {
   args: { variant: "neutral", children: "Cancel" },
 };

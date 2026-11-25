@@ -15,6 +15,7 @@
 :root {
   --brand-50:#edf7fe; --brand-100:#daeefe; --brand-200:#b4defc; --brand-300:#87c6f2; --brand-400:#5dacdf;
   --brand-500:#3991cb; --brand-600:#1272ab; --brand-700:#095a8a; --brand-800:#074469; --brand-900:#052e49; --brand-950:#021d30;
+  --cobalt-400:#65a3ff; --cobalt-500:#2c84ff; --cobalt-600:#0065da; --cobalt-700:#004faf;
   --slate-50:#f5f8fb; --slate-100:#eef3f8; --slate-200:#e8eef4; --slate-300:#dbe3eb; --slate-400:#a9b6c4; --slate-500:#8593a1;
   --slate-550:#7d8b9b; --slate-600:#6b7885; --slate-650:#566373; --slate-700:#485667; --slate-800:#233042; --slate-850:#1d2939;
   --slate-900:#16212f; --slate-925:#111a27; --slate-950:#0a111c;
@@ -24,8 +25,9 @@
   --page:var(--slate-100); --surface:#ffffff; --muted:var(--slate-50); --muted-strong:var(--slate-200);
   --foreground:var(--slate-925); --muted-foreground:var(--slate-700); --tertiary-foreground:var(--slate-650); --subtle-foreground:var(--slate-550);
   --border:var(--slate-300); --border-control:var(--slate-600);
-  --action:var(--brand-600); --action-hover:var(--brand-700); --action-foreground:#ffffff;
-  --action-label:var(--brand-700); --focus-ring:var(--brand-600);
+  --action:var(--cobalt-600); --action-hover:var(--cobalt-700); --action-foreground:#ffffff;
+  --action-label:var(--cobalt-700); --action-stroke:var(--cobalt-600); --action-wash:color-mix(in srgb, var(--cobalt-600) 8%, transparent);
+  --link:var(--brand-700); --selected-label:var(--brand-700); --selected-mark:var(--brand-600); --focus-ring:var(--brand-600);
   --selected:color-mix(in srgb, var(--brand-600) 9%, transparent); --selection:var(--brand-200);
   --brand:var(--brand-600); --trace:var(--brand-600); --trace-area:color-mix(in srgb, var(--brand-600) 32%, transparent);
   --ambient:color-mix(in srgb, var(--brand-400) 12%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 7%, transparent);
@@ -58,8 +60,9 @@
   --page:var(--slate-950); --surface:var(--slate-925); --muted:var(--slate-900); --muted-strong:var(--slate-850);
   --foreground:var(--slate-200); --muted-foreground:var(--slate-400); --tertiary-foreground:var(--slate-500); --subtle-foreground:var(--slate-600);
   --border:var(--slate-800); --border-control:var(--slate-550);
-  --action:var(--brand-400); --action-hover:var(--brand-300); --action-foreground:var(--brand-950);
-  --action-label:var(--brand-300); --focus-ring:var(--brand-300);
+  --action:var(--cobalt-600); --action-hover:var(--cobalt-700); --action-foreground:#ffffff;
+  --action-label:var(--cobalt-400); --action-stroke:var(--cobalt-500); --action-wash:color-mix(in srgb, var(--cobalt-500) 18%, transparent);
+  --link:var(--brand-300); --selected-label:var(--brand-300); --selected-mark:var(--brand-400); --focus-ring:var(--brand-300);
   --selected:color-mix(in srgb, var(--brand-400) 14%, transparent); --selection:var(--brand-800);
   --brand:var(--brand-400); --trace:var(--brand-300); --trace-area:color-mix(in srgb, var(--brand-300) 32%, transparent);
   --ambient:color-mix(in srgb, var(--brand-400) 10%, transparent); --ambient-soft:color-mix(in srgb, var(--brand-300) 3%, transparent);
@@ -92,7 +95,7 @@ h3 { font-size:var(--text-caption); font-weight:600; color:var(--tertiary-foregr
 .secondary { color:var(--muted-foreground); }
 .tertiary { color:var(--tertiary-foreground); font-size:var(--text-caption); }
 .subtle { color:var(--subtle-foreground); }
-a { color:var(--action-label); text-underline-offset:2px; }
+a { color:var(--link); text-underline-offset:2px; }
 :focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 
 .bar { color:var(--foreground); display:flex; align-items:center; gap:16px; padding:0 24px; height:60px; }
@@ -122,12 +125,14 @@ main { max-width:1080px; margin:0 auto; padding:8px 24px 64px; }
 .ground p + p { margin-top:4px; }
 
 .btn { min-height:var(--density-control); padding:0 14px; border-radius:var(--radius-md); font:550 var(--text-body) var(--font-sans); cursor:pointer; border:1px solid transparent; box-shadow:var(--shadow-control); transition:background-color var(--duration-fast) var(--ease-standard); }
-.btn-primary { background:var(--action); color:var(--action-foreground); }
+.btn-primary { background:var(--action); color:var(--action-foreground); border-color:var(--action-stroke); }
+.btn-primary-outline { background:transparent; color:var(--action-label); border-color:var(--action-stroke); box-shadow:none; }
+.btn-primary-outline:hover { background:var(--action-wash); }
 .btn-primary:hover { background:var(--action-hover); }
 .btn-neutral { background:var(--surface); color:var(--foreground); border-color:var(--border-control); }
 .btn-neutral:hover { background:var(--muted-strong); }
 .btn-destructive { background:var(--destructive); color:var(--destructive-foreground); }
-.btn-ghost { background:transparent; color:var(--action-label); box-shadow:none; }
+.btn-ghost { background:transparent; color:var(--link); box-shadow:none; }
 .btn-ghost:hover { background:var(--muted); }
 .btn[disabled] { background:var(--muted); color:var(--subtle-foreground); border-color:transparent; cursor:not-allowed; }
 
@@ -158,7 +163,7 @@ td.r, th.r { text-align:right; }
 tbody tr:hover { background:var(--muted); }
 tbody tr.selected { background:var(--selected); }
 .tablewrap { background:var(--surface); box-shadow:var(--shadow-raised); border-radius:var(--radius-lg); overflow:auto; }
-input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
+input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16px; }
 
 .figure { font-size:var(--text-figure); font-family:var(--font-readout); font-weight:600; line-height:1.15; letter-spacing:-0.02em; }
 .meter { height:8px; border-radius:9999px; background:var(--usage-track); outline:1px solid var(--usage-track-edge); overflow:hidden; margin:10px 0 6px; }
@@ -233,10 +238,11 @@ input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
     <div class="ground" style="background:var(--muted-strong)"><h3>muted-strong</h3><p>Body text</p><p class="secondary">Secondary text</p><p class="tertiary">Caption, metadata</p><p class="subtle">Placeholder / disabled</p><p><a href="#x">A link</a></p></div>
   </div>
 
-  <h2>Brand, action and pending</h2>
+  <h2>Brand, the accent and pending</h2>
   <div class="grid">
     <div class="swatch" style="background:var(--surface);color:var(--foreground)"><span class="dot" style="background:var(--brand);border-color:var(--brand);margin-right:8px"></span>brand: mark, live dot, health ring</div>
-    <div class="swatch" style="background:var(--action);color:var(--action-foreground)">action + foreground</div>
+    <div class="swatch" style="background:var(--action);color:var(--action-foreground);border:1px solid var(--action-stroke)">action (Cobalt, "do this") + foreground</div>
+    <div class="swatch" style="background:var(--surface);color:var(--link)">link and selection (Sky)</div>
     <div class="swatch" style="background:var(--pending);color:var(--pending-foreground)">pending + ink</div>
     <div class="swatch" style="background:var(--destructive);color:var(--destructive-foreground)">destructive + foreground</div>
   </div>
@@ -244,6 +250,7 @@ input[type=checkbox] { accent-color:var(--action); width:16px; height:16px; }
   <h2>Buttons</h2>
   <div class="card row">
     <button class="btn btn-primary" type="button">Save</button>
+    <button class="btn btn-primary-outline" type="button">See what to do</button>
     <button class="btn btn-neutral" type="button">Cancel</button>
     <button class="btn btn-ghost" type="button">Refresh</button>
     <button class="btn btn-destructive" type="button">Wipe disk</button>

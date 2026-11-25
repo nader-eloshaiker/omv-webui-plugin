@@ -141,9 +141,10 @@ OMV's sky blue `#5dacdf` stays the identity, and now does more (tokens in bracke
   memory, network, temperature) draw in the brand blue: they are "how much", which the old guide
   already gave to the usage ramp.
 - **As the path** (`art-path`). On maps, the lineage you are tracing lights in brand blue.
-- **As action and selection**, as before: the action blue in light (`#1272ab`, labels `#095a8a`),
-  the sky blue itself in dark with navy ink; the `selected` tint is the same blue at 9% (light) and
-  14% (dark).
+- **As interaction and selection**: links, checked controls and the focus ring in light are
+  `#1272ab` (words `#095a8a`), in dark the sky blue itself with navy ink; the `selected` tint is the
+  same blue at 9% (light) and 14% (dark). The primary action is no longer Sky's: it is the accent,
+  Cobalt (3.6, owner, 2026-11-25).
 
 **The identity bar is gone** (owner, 2026-11-24): no surface is painted sky blue. The top bar sits
 on the page ground and identity comes from the mark, the light and the blue that runs through live
@@ -231,7 +232,8 @@ it at the top of its primitives.
 
 | Place | Hue | Who sits there |
 | --- | --- | --- |
-| The base | 240 | Sky blue: brand, action, selection, the live trace, usage, the map path, the ambient light. The slate neutrals lean toward it (248 to 259) |
+| The base | 240 | Sky blue: brand, links, selection, checked controls, the focus ring, the live trace, usage, the map path, the ambient light. The slate neutrals lean toward it (248 to 259) |
+| The accent | 258 | Cobalt `#0065da`: "do this", the one action expected here (owner, 2026-11-25; below) |
 | The complement | 62 | Warning, OMV's orange `#f78f00` |
 | The split complements | 27 and 87 | Critical `#d01d21`, and pending gold `#ffcd47` |
 | A quarter turn | 151 | OK `#74e791` |
@@ -292,6 +294,74 @@ the complement and its red on a split complement.
 - The band's buttons keep the one audited pair in every state. Unavailable while applying, they are
   dashed outlines in the ink rather than faded, since navy at partial opacity over the gold is a
   khaki no one measured.
+
+**The accent: Cobalt (owner, 2026-11-25).** With Sky doing brand, action, selection, links and
+focus at once, the interface read as monochrome and the primary button was the weakest filled thing
+on the page (rethink 1.1). The accent takes one job from Sky: **the action this person is expected
+to take here**. Sky keeps "you can interact with this".
+
+- **Its place.** Analogous to the base, 18 degrees round toward the screen's own blue primary, where
+  sRGB holds the most chroma a blue can have at these lightnesses: 0.196 at the fill against the
+  brand's 0.12. It stands out by chroma, not temperature, because the warm arc is status and
+  pending (a warm accent would read as a state) and the gaps hold the chart series. It is the most
+  saturated colour on a healthy screen and quieter than Critical's pill and wash on an unhealthy
+  one. No series moves: Cobalt sits outside the gaps.
+- **Its roles** (`--theme-action-*`; shadcn's `primary` maps here, shadcn's `accent` stays neutral):
+
+  | Role | Light | Dark | Job |
+  | --- | --- | --- | --- |
+  | `action` | cobalt-600 `#0065da` | cobalt-600 | The fill: the primary button, the same button in both themes |
+  | `action-hover` | cobalt-700 `#004faf` | cobalt-700 | A tonal step, not alpha |
+  | `action-foreground` | white | white | Words and icons on the fill |
+  | `action-label` | cobalt-700 | cobalt-400 `#65a3ff` | Accent words on a ground: the outlined next step |
+  | `action-stroke` | cobalt-600 | cobalt-500 `#2c84ff` | The edge that clears 3:1: the primary's, the outlined next step's, the first-steps arc |
+  | `action-wash` | cobalt-600 at 8% | cobalt-500 at 18% | The outlined next step's hover ground |
+
+- **What takes it** (rethink 1.2): the primary button of a view, dialog or flow (`Button`, one per
+  region); the next step on an item that needs the person (filled on the worst, `primaryOutline` on
+  the rest); the current step of a flow; the first-steps progress (`ProgressRing`); an empty
+  state's create button; an action icon's mark on the primary button, in its ink. **Never**: a
+  status, pending, a destructive confirm, a link, selection, a checked control, the current
+  navigation item or tab, the focus ring, a hover, a heading, a chart series, decoration.
+- **What Sky keeps**, now on roles of their own where they shared the action roles: `link` (links,
+  breadcrumbs, the ghost button), `selected` and `selected-label` (a selected row, the current
+  navigation item and tab, the chosen segment), `selected-mark` and `selected-mark-foreground` (a
+  checked box, a radio dot, a switch that is on, the current item's bar, the caret), `focus-ring`,
+  and the brand roles (the top bar's mark is `brand`). Their values did not change; the old
+  `action` and `action-label` values moved to them.
+- **The icon plane**: `art-plane`, brand-400 at 14% light and 18% dark, is the one inner plane of the
+  custom icon set (rethink 5.2), under an outline in `currentColor`.
+
+**Measured** (`node tools/colour-audit.mjs`), light / dark:
+
+- White on the fill 5.42:1, hovered 7.67:1, in both themes; an icon's outline over its plane on the
+  fill 4.87 / 4.73:1.
+- The edge, `action-stroke`, on the four grounds: 4.64 to 5.42:1 / 4.10 to 5.27:1, and 4.31 / 4.32:1
+  at the worst point of the ambient light. The fill alone on the dark grounds is 2.71 to 3.49:1,
+  which is why the dark button is edged in the 500 step.
+- `action-label` on the four grounds: 6.56 to 7.67:1 / 5.77 to 7.42:1. In dark its APCA is Lc 46 to
+  52, so accent words are set at medium weight or above (they are button labels).
+- On the accent wash: the words 6.15 to 6.83:1 / 5.01 to 5.96:1, the edge 4.83 / 3.85:1. On a card
+  lit warning or critical: the edge 4.81 and 4.30:1 / 3.93 and 4.55:1, the words 6.09 to 6.80:1 /
+  5.52 to 6.41:1. The first-steps arc on its track: 4.64 / 4.10:1.
+- Apart from every state (normal / deuteranopia / protanopia / tritanopia, the weakest of the
+  five fills and the pending gold): 23.7 or more in every view, in both themes. Accent words
+  against the status words fall to 4.4 (OK) and 6.0 (Unknown) under tritanopia in light; accent
+  words are always on a button with its own edge, never a bare word beside a status.
+- **Cobalt against Sky**: in dark 21.0 / 20.9 / 21.0 / 15.9 (fills) and 11.1 / 11.8 / 10.8 / 8.4
+  (words). In light they share their lightness (0.53), so the fills are 8.6 / 8.3 / 9.0 / 2.3 and
+  the words 7.2 / 6.8 / 7.5 / 1.9, under the 10 the rethink asked for. They are told apart by form
+  there: the accent is only ever a filled or outlined button with a verb; Sky is an underlined
+  link, a small checked mark or a tint. **Open for the owner**: moving the light theme's
+  `selected-mark` and `focus-ring` to brand-700 would part them by lightness (12.8 / 12.8 / 9.8
+  against the Cobalt fill) and darken every checked control in light.
+- Against the nearest chart series (violet, 292): 14.4 / 11.5 / 13.7 / 14.6 light, 20.9 / 18.9 /
+  14.7 / 16.3 dark.
+
+**Chosen over** Iris (ultramarine-violet, 276) and Glacier (electric cyan, 218). Iris was the most
+distinct from Sky in light (13.7 under normal vision) but met the violet series in dark (5.3);
+Glacier's dark fill sat on the live trace (6.6). The candidates, their story and their audit
+section were removed once the owner chose; they are in the history at commit `66ca288`.
 
 **For a colour added later**: name its job (style guide 2.1), give it a place in this scheme (the
 base, the attention arc, the quarter turn or a gap), ink it in navy if words sit on it, and measure
