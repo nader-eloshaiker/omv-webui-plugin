@@ -377,8 +377,8 @@
     outline-color: transparent;
   }
 }
-:root[data-motion="reduced"] .lt-row[data-arrived],
-:root[data-motion="reduced"] .lt-item[data-arrived] {
+[data-motion="reduced"] .lt-row[data-arrived],
+[data-motion="reduced"] .lt-item[data-arrived] {
   animation: lt-arrive-still 1s step-end both;
 }
 /* The system setting: the base layer cuts every animation short with `!important`, which only a
@@ -610,7 +610,7 @@
     stroke-dashoffset: 0;
   }
 }
-:root[data-motion="reduced"] .lt-trace-icon [data-part="pulse"] {
+[data-motion="reduced"] .lt-trace-icon [data-part="pulse"] {
   animation: none;
   stroke-dashoffset: 0;
 }
@@ -648,7 +648,7 @@
   pointer-events: auto;
   transition-delay: 80ms;
 }
-:root[data-motion="reduced"] .lt-row:is(:hover, :focus-within) .lt-quick {
+[data-motion="reduced"] .lt-row:is(:hover, :focus-within) .lt-quick {
   transition-delay: 0ms;
 }
 .lt-expand svg {

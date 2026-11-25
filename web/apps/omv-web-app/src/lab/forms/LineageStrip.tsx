@@ -99,7 +99,8 @@ function useLight(go: boolean) {
         { strokeDashoffset: -0.9, opacity: 1, offset: 0.92 },
         { strokeDashoffset: -1, opacity: 0 },
       ],
-      { duration: glide * 1.6, easing: "cubic-bezier(0.2, 0, 0, 1)" },
+      // One glide (640ms), the "It is live" timing of the motion catalogue.
+      { duration: glide, easing: "cubic-bezier(0.2, 0, 0, 1)" },
     );
     return () => {
       animation.cancel();

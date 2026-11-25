@@ -1304,13 +1304,22 @@
 /* The one entrance on the page, and only on a first visit or "Show me around". Each row in turn,
  * top to bottom: its disks slide into place, the connector draws, the storage settles and its bar
  * fills, the folders come in; then the band's items settle and its lines draw. About 900ms in all,
- * every part usable as it lands. */
+ * every part usable as it lands.
+ *
+ * Seen at once (the motion reel's check): the fades are separate from the movement and tight, so
+ * every part is fully opaque within 400ms of the cause (each fades over 160ms, the last starting at
+ * 160ms, so there is room for a late frame), while the movement, the drawing and the bar fill carry on at full opacity to about 900ms.
+ * --t is a part's movement delay, --f its fade delay. */
 .dm-map[data-assemble="full"] .dm-row {
   --t: calc(min(var(--r, 0), 6) * 85ms);
+  --f: calc(min(var(--r, 0), 6) * 16ms);
 }
 .dm-map[data-assemble="full"] .dm-slot-wrap {
-  animation: dm-caddy-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: calc(var(--t) + min(var(--i, 0), 5) * 30ms);
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard)
+      calc(var(--f) + min(var(--i, 0), 5) * 6ms) both,
+    dm-caddy-in var(--duration-slow) var(--ease-settle)
+      calc(var(--t) + min(var(--i, 0), 5) * 30ms) both;
 }
 .dm-map[data-assemble="full"] .dm-row .dm-wire {
   animation: grow-x var(--duration-base) var(--ease-standard) both;
@@ -1322,32 +1331,40 @@
 .dm-map[data-assemble="full"] .dm-store,
 .dm-map[data-assemble="full"] .dm-ghost-store,
 .dm-map[data-assemble="full"] .dm-more-rows {
-  animation: slot-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: calc(var(--t) + 150ms);
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard) calc(var(--f) + 12ms)
+      both,
+    dm-rise-in var(--duration-slow) var(--ease-settle) calc(var(--t) + 150ms)
+      both;
 }
 .dm-map[data-assemble="full"] .dm-store [role="meter"] > :first-child {
   animation: dm-bar-fill var(--duration-glide) var(--ease-standard) both;
   animation-delay: calc(var(--t) + 220ms);
 }
 .dm-map[data-assemble="full"] .dm-folder {
-  animation: slot-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: calc(var(--t) + 290ms + min(var(--i, 0), 6) * 35ms);
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard)
+      calc(var(--f) + 24ms + min(var(--i, 0), 6) * 6ms) both,
+    dm-rise-in var(--duration-slow) var(--ease-settle)
+      calc(var(--t) + 290ms + min(var(--i, 0), 6) * 35ms) both;
 }
 .dm-map[data-assemble="full"] .dm-band {
   --t: calc(min(var(--rows, 4), 6) * 85ms + 260ms);
+  --f: 120ms;
 }
 .dm-map[data-assemble="full"] .dm-band-part,
 .dm-map[data-assemble="full"] .dm-band > .dm-off,
 .dm-map[data-assemble="full"] .dm-world,
 .dm-map[data-assemble="full"] .dm-band-head {
-  animation: slot-in var(--duration-slow) var(--ease-settle) both;
-  animation-delay: var(--t);
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard) var(--f) both,
+    dm-rise-in var(--duration-slow) var(--ease-settle) var(--t) both;
 }
 .dm-map[data-assemble="full"] .dm-band-part[data-part="net"] {
-  animation-delay: calc(var(--t) + 90ms);
+  animation-delay: calc(var(--f) + 20ms), calc(var(--t) + 90ms);
 }
 .dm-map[data-assemble="full"] .dm-world {
-  animation-delay: calc(var(--t) + 180ms);
+  animation-delay: calc(var(--f) + 40ms), calc(var(--t) + 180ms);
 }
 .dm-map[data-assemble="full"] .dm-band .dm-way::after,
 .dm-map[data-assemble="full"] .dm-band .dm-iface::before,
@@ -1361,9 +1378,18 @@
 .dm-map[data-assemble="full"] .dm-band .dm-world::before {
   animation-delay: calc(var(--t) + 210ms);
 }
-@keyframes dm-caddy-in {
+@keyframes dm-fade-in {
   from {
     opacity: 0;
+  }
+}
+@keyframes dm-rise-in {
+  from {
+    translate: 0 var(--motion-rise);
+  }
+}
+@keyframes dm-caddy-in {
+  from {
     translate: 0 -10px;
   }
 }
