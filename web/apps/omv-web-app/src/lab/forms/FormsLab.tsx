@@ -343,7 +343,7 @@ export default function FormsLab() {
   );
 }
 
-function Toggle<V extends string>({
+export function Toggle<V extends string>({
   label,
   value,
   options,
