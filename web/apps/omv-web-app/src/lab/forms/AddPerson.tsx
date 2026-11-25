@@ -19,7 +19,7 @@ import type { CSSProperties, KeyboardEvent, RefObject } from "react";
 import { useId, useRef, useState } from "react";
 import type { AccessRow } from "./AccessRows.tsx";
 import { AccessRows } from "./AccessRows.tsx";
-import { LabIcon } from "./LabIcon.tsx";
+import { FormIcon } from "./FormIcon.tsx";
 import { PersonPicture } from "./LineageStrip.tsx";
 import type { PersonField, PersonForm, Role } from "./model.ts";
 import {
@@ -44,6 +44,7 @@ import {
   FormLayout,
   FormSection,
   MoreOptions,
+  ReviewSheet,
   RunSteps,
   SettingRow,
 } from "./parts.tsx";
@@ -143,6 +144,7 @@ export function AddPerson({
     who: false,
     powers: state === "admin",
   });
+  const [review, setReview] = useState(false);
   const [phase, setPhase] = useState<Phase>(
     state === "run" ? "run" : state === "done" ? "done" : "edit",
   );
@@ -265,7 +267,8 @@ export function AddPerson({
           <FieldLabel>Name</FieldLabel>
           <FieldControl
             ref={nameRef}
-            className="lf-w-name lf-mono"
+            width="name"
+            className="lf-mono"
             autoFocus={state === "empty"}
             autoComplete="off"
             autoCapitalize="none"
@@ -287,7 +290,7 @@ export function AddPerson({
         <Field>
           <FieldLabel>Who they are</FieldLabel>
           <FieldControl
-            className="lf-w-full"
+            width="full"
             placeholder="For example: Alex at home"
             value={form.who}
             onChange={(event) => {
@@ -308,7 +311,7 @@ export function AddPerson({
             <FieldLabel>Email address</FieldLabel>
             <FieldControl
               type="email"
-              className="lf-w-email"
+              width="wide"
               autoComplete="off"
               value={form.email}
               onChange={(event) => {
@@ -362,7 +365,7 @@ export function AddPerson({
                   </svg>
                 </span>
                 <span className="lf-chip-icon" aria-hidden="true">
-                  <LabIcon name="group" />
+                  <FormIcon name="group" />
                 </span>
                 <span className="lf-chip-name">{group.name}</span>
                 <span className="lf-chip-line">
@@ -428,22 +431,26 @@ export function AddPerson({
     </div>
   );
 
+  const picture = (
+    <PersonPicture
+      name={name}
+      admin={form.role === "admin"}
+      groups={GROUPS.map((g) => ({
+        name: g.name,
+        on: form.groups.includes(g.name),
+        opens: g.opens.map((o) => o.folder),
+      }))}
+      folders={access.map((a) => ({
+        name: a.folder,
+        access: a.access,
+        through: a.through,
+      }))}
+    />
+  );
+
   const rail = (
     <>
-      <PersonPicture
-        name={name}
-        admin={form.role === "admin"}
-        groups={GROUPS.map((g) => ({
-          name: g.name,
-          on: form.groups.includes(g.name),
-          opens: g.opens.map((o) => o.folder),
-        }))}
-        folders={access.map((a) => ({
-          name: a.folder,
-          access: a.access,
-          through: a.through,
-        }))}
-      />
+      {picture}
       {phase === "edit" ? (
         <>
           {wide ? errorSummary : null}
@@ -495,7 +502,7 @@ export function AddPerson({
               Open {name}&apos;s page
             </Button>
             <Button
-              variant="ghost"
+              variant="primaryOutline"
               size="lg"
               onClick={() => {
                 setForm(initialPerson());
@@ -538,12 +545,21 @@ export function AddPerson({
               narrow={{
                 first: first ? first.parts.join("") : "",
                 onReview: () => {
-                  document.getElementById(railHeadingId)?.focus();
+                  setReview(true);
                 },
               }}
             />
           ) : null
         }
+      />
+      <ReviewSheet
+        open={review}
+        onOpenChange={setReview}
+        picture={picture}
+        sentences={sentences}
+        iconFor={ICON_FOR}
+        primary={primary}
+        onPrimary={submit}
       />
     </>
   );
@@ -583,7 +599,8 @@ function PasswordPart({
             ref={passwordRef}
             key={form.suggested ? form.password : "typed"}
             type={form.revealed ? "text" : "password"}
-            className="lf-w-password lf-mono lf-password-input"
+            width="name"
+            className="lf-mono lf-password-input"
             autoComplete="new-password"
             spellCheck={false}
             aria-describedby={https ? undefined : noticeId}
@@ -595,7 +612,7 @@ function PasswordPart({
           <IconButton
             className="lf-password-reveal"
             label={form.revealed ? "Hide the password" : "Show the password"}
-            icon={<LabIcon name={form.revealed ? "conceal" : "reveal"} />}
+            icon={<FormIcon name={form.revealed ? "conceal" : "reveal"} />}
             onClick={() => {
               set({ revealed: !form.revealed });
             }}
@@ -626,7 +643,7 @@ function PasswordPart({
         ) : null}
         {https ? null : (
           <p id={noticeId} className="lf-http">
-            <LabIcon name="warning" />
+            <FormIcon name="warning" />
             <span>
               This connection is not encrypted, so this password can be read by
               others on your network.{" "}
@@ -652,7 +669,7 @@ function PasswordPart({
             });
           }}
         >
-          <LabIcon name="suggest" />
+          <FormIcon name="suggest" />
           Suggest a strong password
         </Button>
         {form.suggested ? (
@@ -682,7 +699,8 @@ function PasswordPart({
           <FieldControl
             ref={againRef}
             type="password"
-            className="lf-w-password lf-mono"
+            width="name"
+            className="lf-mono"
             autoComplete="new-password"
             value={form.again}
             onChange={(event) => {

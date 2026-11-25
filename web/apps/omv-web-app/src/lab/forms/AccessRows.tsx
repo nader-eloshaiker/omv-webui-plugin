@@ -5,7 +5,7 @@
 // focused row to set its level (3.10).
 import { SegmentedChoice } from "@omv-webui/react-ui-components";
 import type { CSSProperties, KeyboardEvent } from "react";
-import { LabIcon } from "./LabIcon.tsx";
+import { FormIcon } from "./FormIcon.tsx";
 import type { Access } from "./model.ts";
 
 export interface AccessRow {
@@ -63,7 +63,7 @@ export function AccessRows({
             </span>
           ) : (
             <span className="lf-row-icon" aria-hidden="true">
-              <LabIcon
+              <FormIcon
                 name={row.kind === "group" ? "group" : "shared-folder"}
                 size={20}
               />

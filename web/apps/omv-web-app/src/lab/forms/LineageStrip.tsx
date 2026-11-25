@@ -8,8 +8,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useTween } from "../motion.ts";
-import type { LabIconName } from "./LabIcon.tsx";
-import { LabIcon } from "./LabIcon.tsx";
+import type { FormIconName } from "./FormIcon.tsx";
+import { FormIcon } from "./FormIcon.tsx";
 import type { Access } from "./model.ts";
 
 function Line({
@@ -48,7 +48,7 @@ function Node({
   y: number;
   w: number;
   h: number;
-  icon: LabIconName;
+  icon: FormIconName;
   /** "new": dashed until it has a name; "off": dashed and quiet; "on": solid. */
   state: "new" | "off" | "on";
   children?: ReactNode;
@@ -64,7 +64,7 @@ function Node({
         rx={10}
       />
       <g transform={`translate(${x - 10} ${y - 10})`} className="lf-node-icon">
-        <LabIcon name={icon} size={20} />
+        <FormIcon name={icon} size={20} />
       </g>
       {children}
     </g>

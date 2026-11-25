@@ -45,7 +45,7 @@
   gap: 6px;
 }
 .lf-crumb-parent {
-  color: var(--theme-action-label);
+  color: var(--theme-link);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -56,21 +56,6 @@
   display: flex;
   align-items: center;
   gap: 14px;
-}
-.lf-plate {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: var(--theme-selected);
-  color: var(--theme-brand);
-  box-shadow: var(--theme-shadow-control);
-}
-.lf-plate svg {
-  width: 24px;
-  height: 24px;
 }
 .lf-title {
   margin: 0;
@@ -143,7 +128,7 @@
   padding: 4px 10px;
   border-radius: var(--radius-sm);
   background: var(--theme-surface);
-  color: var(--theme-action-label);
+  color: var(--theme-link);
   box-shadow: var(--theme-shadow-floating);
   clip-path: inset(50%);
 }
@@ -227,26 +212,7 @@
   animation: fade-in var(--duration-base) var(--ease-standard) both;
 }
 
-/* ─── Fields sized to what they hold (owner decision 5) ──────────────────────────────────────── */
-.lf-w-name {
-  width: 24ch;
-  max-width: 100%;
-}
-.lf-w-ip {
-  width: 18ch;
-  max-width: 100%;
-}
-.lf-w-password {
-  width: 28ch;
-  max-width: 100%;
-}
-.lf-w-email {
-  width: 34ch;
-  max-width: 100%;
-}
-.lf-w-full {
-  width: 100%;
-}
+/* ─── Fields: sized by the library's `width` (owner decision 5) ────────────────────────────── */
 /* A refused field draws its critical edge once, from the start (7.4 "Errors on submit"). */
 .lf-field[data-flagged] [data-slot="field-control"] {
   background-image: linear-gradient(
@@ -327,7 +293,7 @@
   border-radius: var(--radius-lg);
   background: var(--theme-surface);
   box-shadow:
-    inset 0 0 0 0 var(--theme-brand),
+    inset 0 0 0 0 var(--theme-selected-mark),
     var(--theme-shadow-control);
   cursor: pointer;
   transition:
@@ -339,13 +305,13 @@
 .lf-toggle:hover {
   border-color: var(--theme-muted-foreground);
 }
-/* Selected: the blue selection ground and a 2px edge in the brand blue, never the accent (3.6). */
+/* Selected: the selection tint and a 2px edge in the selection mark, never the accent (3.6). */
 .lf-card[data-checked],
 .lf-toggle[data-checked] {
-  border-color: var(--theme-brand);
+  border-color: var(--theme-selected-mark);
   background: var(--theme-selected);
   box-shadow:
-    inset 0 0 0 1px var(--theme-brand),
+    inset 0 0 0 1px var(--theme-selected-mark),
     var(--theme-shadow-control);
 }
 .lf-card:has(:focus-visible),
@@ -383,12 +349,12 @@
   position: absolute;
   inset: 3px;
   border-radius: var(--radius-full);
-  background: var(--theme-brand);
+  background: var(--theme-selected-mark);
   scale: 0;
   transition: scale var(--duration-fast) var(--ease-settle);
 }
 .lf-card[data-checked] .lf-card-dot {
-  border-color: var(--theme-brand);
+  border-color: var(--theme-selected-mark);
 }
 .lf-card[data-checked] .lf-card-dot::after {
   scale: 1;
@@ -403,8 +369,10 @@
   color: var(--theme-muted-foreground);
 }
 .lf-card[data-checked] .lf-card-icon,
-.lf-toggle[data-checked] .lf-card-icon {
-  color: var(--theme-brand);
+.lf-toggle[data-checked] .lf-card-icon,
+.lf-card[data-checked] .lf-card-title,
+.lf-toggle[data-checked] .lf-card-title {
+  color: var(--theme-selected-label);
 }
 .lf-card-title {
   padding-inline-end: 24px;
@@ -507,12 +475,12 @@
     background-color var(--duration-base) var(--ease-standard);
 }
 .lf-toggle[data-checked] .lf-toggle-track {
-  border-color: var(--theme-brand);
-  background: var(--theme-brand);
+  border-color: var(--theme-selected-mark);
+  background: var(--theme-selected-mark);
 }
 .lf-toggle[data-checked] .lf-toggle-thumb {
   translate: 14px 0;
-  background: var(--theme-surface);
+  background: var(--theme-selected-mark-foreground);
 }
 .lf-nfs {
   display: flex;
@@ -598,7 +566,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--theme-action-label);
+  color: var(--theme-link);
   font: inherit;
   font-weight: 500;
   cursor: pointer;
@@ -774,8 +742,11 @@
   border-color: var(--theme-muted-foreground);
 }
 .lf-chip[data-checked] {
-  border-color: var(--theme-brand);
+  border-color: var(--theme-selected-mark);
   background: var(--theme-selected);
+}
+.lf-chip[data-checked] .lf-chip-name {
+  color: var(--theme-selected-label);
 }
 .lf-chip-box {
   display: grid;
@@ -790,7 +761,7 @@
   width: 14px;
   height: 14px;
   fill: none;
-  stroke: var(--theme-surface);
+  stroke: var(--theme-selected-mark-foreground);
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -801,8 +772,8 @@
   transition: stroke-dashoffset var(--duration-base) var(--ease-standard);
 }
 .lf-chip[data-checked] .lf-chip-box {
-  border-color: var(--theme-brand);
-  background: var(--theme-brand);
+  border-color: var(--theme-selected-mark);
+  background: var(--theme-selected-mark);
 }
 .lf-chip[data-checked] .lf-chip-box path {
   stroke-dashoffset: 0;
@@ -858,7 +829,7 @@
   height: 100%;
   width: 100%;
   border-radius: inherit;
-  background: var(--theme-brand);
+  background: var(--theme-usage);
   transform-origin: left center;
   scale: var(--v, 0) 1;
   transition:
@@ -1173,7 +1144,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--theme-action-label);
+  color: var(--theme-link);
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
@@ -1230,23 +1201,33 @@
   height: 32px;
   overflow: visible;
 }
-.lf-run-track {
-  fill: none;
-  stroke: var(--theme-border);
-  stroke-width: 2.5;
+.lf-run-face {
+  fill: var(--theme-muted-strong);
+  stroke: var(--theme-border-control);
+  stroke-width: 1;
+  transition:
+    fill var(--duration-base) var(--ease-standard),
+    stroke var(--duration-base) var(--ease-standard);
+}
+/* In progress: the accent's filled disc with its edge (A3), and a ring that fills over the step's
+   expected time. */
+.lf-run-step[data-state="running"] .lf-run-face {
+  fill: var(--theme-action);
+  stroke: var(--theme-action-stroke);
 }
 .lf-run-ring {
   fill: none;
-  stroke: var(--theme-action);
-  stroke-width: 2.5;
+  stroke: var(--theme-action-stroke);
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   transform: rotate(-90deg);
   transform-origin: 16px 16px;
+  visibility: hidden;
 }
-/* The current step's ring fills over the step's expected time, in the accent (A3). */
 .lf-run-step[data-state="running"] .lf-run-ring {
+  visibility: visible;
   animation: lf-ring var(--step-ms, 900ms) linear both;
 }
 @keyframes lf-ring {
@@ -1254,24 +1235,23 @@
     stroke-dashoffset: 0.06;
   }
 }
-/* Finished: the ring closes and a check draws in the ink. Never a green flash (7.1 rule 6). */
-.lf-run-step[data-state="done"] .lf-run-ring {
-  stroke: var(--theme-art-path);
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset var(--duration-base) var(--ease-standard);
+/* Finished: OK's check, drawn as it lands. */
+.lf-run-step[data-state="done"] .lf-run-face {
+  fill: var(--theme-ok);
+  stroke: var(--theme-ok-stroke);
 }
 .lf-run-check {
   fill: none;
-  stroke: var(--theme-foreground);
+  stroke: var(--theme-ok-foreground);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
   animation: draw var(--duration-base) var(--ease-standard) both;
 }
-.lf-run-step[data-state="failed"] .lf-run-ring {
+.lf-run-step[data-state="failed"] .lf-run-face {
+  fill: var(--theme-critical-wash);
   stroke: var(--theme-critical-stroke);
-  stroke-dashoffset: 0;
 }
 .lf-run-cross {
   fill: none;
@@ -1286,7 +1266,7 @@
   color: var(--theme-muted-foreground);
 }
 .lf-run-step[data-state="running"] .lf-run-n {
-  color: var(--theme-action-label);
+  color: var(--theme-action-foreground);
 }
 .lf-run-label {
   overflow-wrap: anywhere;
@@ -1322,13 +1302,14 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: var(--theme-muted-strong);
+  border: 1px solid var(--theme-ok-stroke);
+  background: var(--theme-ok);
 }
 .lf-done-check svg {
   width: 18px;
   height: 18px;
   fill: none;
-  stroke: var(--theme-foreground);
+  stroke: var(--theme-ok-foreground);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1452,10 +1433,6 @@
   padding-block: 12px var(--density-card);
   border-block-start: 1px solid var(--theme-border);
   background: var(--theme-surface);
-}
-/* A waiting step's ring is not drawn at all (a round cap would leave a dot at twelve o'clock). */
-.lf-run-step[data-state="waiting"] .lf-run-ring {
-  visibility: hidden;
 }
 /* The rail's heading takes focus only to move the reader there; it is not a control. */
 .lf-rail-title:focus {

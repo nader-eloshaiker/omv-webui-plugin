@@ -7,17 +7,22 @@
 import {
   Button,
   CopyButton,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   Disclosure,
   DisclosurePanel,
   DisclosureTrigger,
+  FormColumn,
   LeavingItem,
   Switch,
   useLeavingItems,
 } from "@omv-webui/react-ui-components";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import { useEffect, useId, useRef, useState } from "react";
-import type { LabIconName } from "./LabIcon.tsx";
-import { LabIcon } from "./LabIcon.tsx";
+import type { FormIconName } from "./FormIcon.tsx";
+import { FormIcon, FormPlate } from "./FormIcon.tsx";
 import type { Sentence } from "./model.ts";
 
 // ─── Header and layout ────────────────────────────────────────────────────────────────────────
@@ -28,7 +33,7 @@ export function FormHeader({
   line,
   parent,
 }: {
-  icon: LabIconName;
+  icon: FormIconName;
   title: string;
   line: string;
   parent: string;
@@ -47,9 +52,7 @@ export function FormHeader({
         </ol>
       </nav>
       <div className="lf-head-row">
-        <span className="lf-plate" aria-hidden="true">
-          <LabIcon name={icon} size={20} />
-        </span>
+        <FormPlate name={icon} />
         <div className="lf-head-words">
           <h1 className="lf-title">{title}</h1>
           <p className="lf-line">{line}</p>
@@ -86,7 +89,7 @@ export function FormLayout({
       data-wide={wide || undefined}
       data-busy={busy || undefined}
     >
-      <div className="lf-questions">{questions}</div>
+      <FormColumn className="lf-questions">{questions}</FormColumn>
       <aside className="lf-rail" aria-label="What this does">
         <div className="lf-rail-inner">{rail}</div>
       </aside>
@@ -139,14 +142,14 @@ export function StatementRow({
   children,
   fact,
 }: {
-  icon: LabIconName;
+  icon: FormIconName;
   children: ReactNode;
   fact?: ReactNode;
 }) {
   return (
     <p className="lf-statement">
       <span className="lf-statement-icon" aria-hidden="true">
-        <LabIcon name={icon} size={20} />
+        <FormIcon name={icon} size={20} />
       </span>
       <span className="lf-statement-words">{children}</span>
       {fact ? <span className="lf-statement-fact">{fact}</span> : null}
@@ -158,7 +161,7 @@ export interface ChoiceOption<V extends string> {
   value: V;
   title: string;
   line: string;
-  icon?: LabIconName;
+  icon?: FormIconName;
   /** A fact in tabular figures: "412 GiB free of 931 GiB". */
   fact?: ReactNode;
   /** A usage bar under the fact, 0 to 1. */
@@ -215,7 +218,7 @@ export function ChoiceCards<V extends string>({
             <span className="lf-card-dot" aria-hidden="true" />
             {option.icon ? (
               <span className="lf-card-icon" aria-hidden="true">
-                <LabIcon name={option.icon} size={24} />
+                <FormIcon name={option.icon} size={24} />
               </span>
             ) : null}
             <span className="lf-card-title">
@@ -240,7 +243,7 @@ export function ChoiceCards<V extends string>({
             ) : null}
             {option.recommended ? (
               <span className="lf-recommended">
-                <LabIcon name="check" />
+                <FormIcon name="check" />
                 Recommended
               </span>
             ) : null}
@@ -264,7 +267,7 @@ export function ToggleCard({
   onChange,
   children,
 }: {
-  icon: LabIconName;
+  icon: FormIconName;
   title: string;
   term: string;
   line: string;
@@ -277,7 +280,7 @@ export function ToggleCard({
     <div className="lf-toggle" data-checked={checked || undefined}>
       <label className="lf-toggle-label" htmlFor={id}>
         <span className="lf-card-icon" aria-hidden="true">
-          <LabIcon name={icon} size={24} />
+          <FormIcon name={icon} size={24} />
         </span>
         <span className="lf-card-title">
           {title}
@@ -381,7 +384,7 @@ export function Help({
           setOpen(!open);
         }}
       >
-        <LabIcon name="help" />
+        <FormIcon name="help" />
       </button>
       <span id={panelId} hidden={!open} className="lf-help-pop">
         {children}
@@ -400,7 +403,7 @@ export function Tip({
 }) {
   return (
     <p className="lf-tip">
-      <LabIcon name="tip" className="lf-tip-icon" />
+      <FormIcon name="tip" className="lf-tip-icon" />
       <span className="lf-tip-words">{children}</span>
       <button type="button" className="lf-tip-close" onClick={onDismiss}>
         Got it
@@ -411,7 +414,7 @@ export function Tip({
 
 // ─── The rail ─────────────────────────────────────────────────────────────────────────────────
 
-const SENTENCE_ICON: Record<Sentence["icon"], LabIconName> = {
+const SENTENCE_ICON: Record<Sentence["icon"], FormIconName> = {
   made: "create-shared-folder",
   people: "group",
   smb: "smb",
@@ -447,7 +450,7 @@ export function ConsequenceList({
   iconFor = SENTENCE_ICON,
 }: {
   sentences: Sentence[];
-  iconFor?: Record<Sentence["icon"], LabIconName>;
+  iconFor?: Record<Sentence["icon"], FormIconName>;
 }) {
   const { entries, left } = useLeavingItems(sentences, (s) => s.id);
   const firstRef = useRef(true);
@@ -468,7 +471,7 @@ export function ConsequenceList({
         >
           <div className="lf-sum-row">
             <span className="lf-sum-icon" aria-hidden="true">
-              <LabIcon name={iconFor[item.icon]} />
+              <FormIcon name={iconFor[item.icon]} />
             </span>
             <span key={item.parts.join("")} className="lf-sum-words">
               <SentenceWords parts={item.parts} />
@@ -522,7 +525,7 @@ export function ErrorSummary({
       className="lf-errors"
     >
       <p className="lf-errors-title">
-        <LabIcon name="error" />
+        <FormIcon name="error" />
         {problems.length === 1
           ? "1 thing to fix"
           : `${problems.length} things to fix`}
@@ -620,9 +623,10 @@ const STEP_WORD: Record<StepState, string> = {
 };
 
 /**
- * The run in place of the summary (3.9, 7.4 "The run"): each step's disc; the current one carries a
- * progress ring in the accent (A3) for the step's expected time; a finished ring closes into a
- * drawn check. Every state also has its word.
+ * The run in place of the summary (3.9, 7.4 "The run"): each step's disc. The step in progress is
+ * the accent (a filled disc with its number, A3) with a ring that fills over the step's expected
+ * time; a finished step is OK's check, drawn as it lands; a failed one is the critical cross; steps
+ * still to come are neutral. Every state also has its word.
  */
 export function RunSteps({
   steps,
@@ -646,23 +650,23 @@ export function RunSteps({
         >
           <span className="lf-run-disc" aria-hidden="true">
             <svg viewBox="0 0 32 32" className="lf-run-svg">
-              <circle className="lf-run-track" cx="16" cy="16" r="14" />
+              <circle className="lf-run-face" cx="16" cy="16" r="11.5" />
               <circle
                 className="lf-run-ring"
                 cx="16"
                 cy="16"
-                r="14"
+                r="15"
                 pathLength={1}
               />
               {step.state === "done" ? (
                 <path
                   className="lf-run-check"
-                  d="m10 16.5 4 4 8-9"
+                  d="m11 16.5 3.5 3.5 6.5-7.5"
                   pathLength={1}
                 />
               ) : null}
               {step.state === "failed" ? (
-                <path className="lf-run-cross" d="m11 11 10 10M21 11 11 21" />
+                <path className="lf-run-cross" d="m12 12 8 8M20 12l-8 8" />
               ) : null}
             </svg>
             {step.state === "waiting" || step.state === "running" ? (
@@ -734,7 +738,7 @@ export function SettingRow({
         </p>
         {warn ? (
           <p className="lf-setting-warn lf-arrive">
-            <LabIcon name="warning" />
+            <FormIcon name="warning" />
             {warn}
           </p>
         ) : null}
@@ -746,5 +750,49 @@ export function SettingRow({
         onCheckedChange={onChange}
       />
     </div>
+  );
+}
+
+/**
+ * The full summary on a narrow screen (3.7: "Review opens the full summary as a sheet"), the same
+ * way on every form: the picture, the sentences and the action bar, in a dialog.
+ */
+export function ReviewSheet({
+  open,
+  onOpenChange,
+  picture,
+  sentences,
+  iconFor,
+  primary,
+  onPrimary,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  picture: ReactNode;
+  sentences: Sentence[];
+  iconFor?: Record<Sentence["icon"], FormIconName>;
+  primary: string;
+  onPrimary: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="lf-sheet">
+        <DialogHeader>
+          <DialogTitle>What this does</DialogTitle>
+        </DialogHeader>
+        {picture}
+        <ConsequenceList sentences={sentences} iconFor={iconFor} />
+        <ActionBar
+          primary={primary}
+          onPrimary={() => {
+            onOpenChange(false);
+            onPrimary();
+          }}
+          onCancel={() => {
+            onOpenChange(false);
+          }}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

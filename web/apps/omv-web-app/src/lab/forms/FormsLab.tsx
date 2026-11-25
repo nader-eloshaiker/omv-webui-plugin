@@ -28,8 +28,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { AddFolder } from "./AddFolder.tsx";
 import { AddPerson } from "./AddPerson.tsx";
+import { FormIcon } from "./FormIcon.tsx";
 import "./forms.css";
-import { LabIcon } from "./LabIcon.tsx";
 import { DRIVES_ONE, DRIVES_SEVERAL } from "./model.ts";
 import type { FolderState, FormScreen, PersonState } from "./states.ts";
 import { FOLDER_STATES, FORM_SCREENS, PERSON_STATES } from "./states.ts";
@@ -334,7 +334,7 @@ export default function FormsLab() {
                 setChrome(false);
               }}
             >
-              <LabIcon name="close" />
+              <FormIcon name="close" />
             </button>
           </aside>
         ) : null}

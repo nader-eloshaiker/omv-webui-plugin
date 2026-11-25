@@ -6,10 +6,6 @@
 // simulated job: the lab never writes (UI-4).
 import {
   Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   Field,
   FieldControl,
   FieldError,
@@ -57,6 +53,7 @@ import {
   FormSection,
   Help,
   MoreOptions,
+  ReviewSheet,
   RunSteps,
   SettingRow,
   StatementRow,
@@ -337,7 +334,7 @@ export function AddFolder({
           <FieldLabel>Name</FieldLabel>
           <FieldControl
             ref={nameRef}
-            className="lf-w-name"
+            width="name"
             autoFocus={state === "empty"}
             autoComplete="off"
             spellCheck={false}
@@ -370,7 +367,7 @@ export function AddFolder({
           <Field>
             <FieldLabel>Description</FieldLabel>
             <FieldControl
-              className="lf-w-full"
+              width="full"
               value={form.description}
               onChange={(event) => {
                 set({ description: event.target.value });
@@ -431,7 +428,8 @@ export function AddFolder({
           <Field>
             <FieldLabel>Folder on the drive</FieldLabel>
             <FieldControl
-              className="lf-w-full lf-mono"
+              width="full"
+              className="lf-mono"
               placeholder={name ? `${name}/` : "The same as the name"}
               value={form.path}
               onChange={(event) => {
@@ -592,7 +590,8 @@ export function AddFolder({
                 <FieldLabel>Its address</FieldLabel>
                 <FieldControl
                   ref={computerRef}
-                  className="lf-w-ip lf-mono"
+                  width="address"
+                  className="lf-mono"
                   inputMode="decimal"
                   placeholder="192.0.2.20"
                   value={form.nfsComputer}
@@ -762,7 +761,7 @@ export function AddFolder({
             >
               Open {name}
             </Button>
-            <Button variant="ghost" size="lg" onClick={reset}>
+            <Button variant="primaryOutline" size="lg" onClick={reset}>
               Add another shared folder
             </Button>
           </div>
@@ -835,25 +834,14 @@ export function AddFolder({
         rail={rail}
         bar={bar}
       />
-      <Dialog open={review} onOpenChange={setReview}>
-        <DialogContent className="lf-sheet">
-          <DialogHeader>
-            <DialogTitle>What this does</DialogTitle>
-          </DialogHeader>
-          {picture}
-          <ConsequenceList sentences={sentences} />
-          <ActionBar
-            primary={primary}
-            onPrimary={() => {
-              setReview(false);
-              submit();
-            }}
-            onCancel={() => {
-              setReview(false);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <ReviewSheet
+        open={review}
+        onOpenChange={setReview}
+        picture={picture}
+        sentences={sentences}
+        primary={primary}
+        onPrimary={submit}
+      />
     </>
   );
 }
