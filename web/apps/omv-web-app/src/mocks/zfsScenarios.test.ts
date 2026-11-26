@@ -15,6 +15,7 @@ import {
   normalise,
   validate,
 } from "../../../../packages/react-api-omv/src/transport/schema.ts";
+import { isDashboardScenario } from "./dashboardScenarios.ts";
 import {
   newMockSession,
   scenarioAnswers,
@@ -167,7 +168,9 @@ const SDE = ID(6);
 const columns = (report: string) => report.replace(/ {2,}/g, "  ");
 
 const OTHER_SCENARIOS = SCENARIOS.filter(
-  (n) => !(ZFS_SCENARIOS as readonly string[]).includes(n),
+  (n) =>
+    !(ZFS_SCENARIOS as readonly string[]).includes(n) &&
+    !isDashboardScenario(n),
 );
 
 describe("the ZFS plugin in the mock", () => {

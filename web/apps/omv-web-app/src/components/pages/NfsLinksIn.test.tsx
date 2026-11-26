@@ -5,7 +5,7 @@
 // read; the NFS menu item has its route here.
 import { CONTRACT_EXAMPLES } from "@omv-webui/react-api-omv/examples";
 import type { FixedAnswer } from "@omv-webui/react-api-omv/mocks";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { openNavGroup } from "../../test/nav.ts";
 import { nfsEntry, nfsMock } from "../../test/nfsAnswers.ts";
@@ -26,19 +26,22 @@ const nfsService = (running: boolean): FixedAnswer => ({
 });
 
 describe("the dashboard (12.2)", () => {
-  it("leads the NFS row of the Services card to Linux and Unix sharing", async () => {
-    await renderApp({
+  it("leads the map's way in for NFS to Linux and Unix sharing", async () => {
+    const { app, user } = await renderApp({
       signedIn: true,
       answers: { servicesGetStatus: nfsService(true) },
     });
-    const services = await screen.findByRole(
-      "region",
-      { name: "Services" },
-      LONG,
+    const map = await screen.findByRole("region", { name: "Your NAS" }, LONG);
+    await user.click(
+      await within(map).findByRole(
+        "button",
+        { name: /^Linux and Unix \(NFS\): running/ },
+        LONG,
+      ),
     );
-    expect(
-      await within(services).findByRole("link", { name: "NFS" }, LONG),
-    ).toHaveAttribute("href", "/ui/services/nfs");
+    await waitFor(() =>
+      expect(app.router.state.location.pathname).toBe("/services/nfs"),
+    );
   });
 
   it("leads the attention row for NFS on but not running there, not to the classic interface", async () => {

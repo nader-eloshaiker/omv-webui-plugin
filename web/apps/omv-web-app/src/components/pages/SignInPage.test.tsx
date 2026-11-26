@@ -11,6 +11,8 @@ import {
   THEME_STORAGE_KEY,
   useThemeStore,
 } from "../../stores/useThemeStore.ts";
+import { WELCOME_STORAGE_KEY } from "../../stores/useWelcomeStore.ts";
+import { findDashboard } from "../../test/dashboard.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
@@ -52,9 +54,7 @@ describe("signing in with a password", () => {
   it("signs an administrator in and lands on the start page", async () => {
     const { user } = await renderApp();
     await signIn(user);
-    expect(
-      await screen.findByRole("heading", { name: "Dashboard" }),
-    ).toBeInTheDocument();
+    expect(await findDashboard()).toBeInTheDocument();
     expect(
       await screen.findByRole("button", { name: "Account: example-admin" }),
     ).toBeInTheDocument();
@@ -301,9 +301,7 @@ describe("the session ending", () => {
     );
     expect(mock.signedIn).toBe(false);
     await signIn(user);
-    expect(
-      await screen.findByRole("heading", { name: "Dashboard" }),
-    ).toBeInTheDocument();
+    expect(await findDashboard()).toBeInTheDocument();
     expect(window.location.pathname).toBe("/ui/");
   });
 });
@@ -335,7 +333,7 @@ describe("secrets after submit (UI-6, UI-13)", () => {
     const code = await screen.findByLabelText("6-digit code");
     await user.type(code, "123456");
     await user.click(screen.getByRole("button", { name: "Verify" }));
-    await screen.findByRole("heading", { name: "Dashboard" });
+    await findDashboard();
 
     await waitFor(() =>
       expect(app.queryClient.getMutationCache().getAll()).toHaveLength(0),
@@ -352,9 +350,16 @@ describe("secrets after submit (UI-6, UI-13)", () => {
     expect(everything).not.toContain("correct horse");
     expect(everything).not.toContain("123456");
     expect(everything).not.toContain("EXAMPLE-SESSION-ID");
-    // Storage holds the theme preference and nothing else: no user name, no server data.
+    // Storage holds the theme preference and the dashboard's first-visit flag (one boolean), and
+    // nothing else: no user name, no server data.
     const { local, session } = storageSnapshot();
-    expect(Object.keys(local)).toEqual([THEME_STORAGE_KEY]);
+    expect(Object.keys(local).sort()).toEqual(
+      [THEME_STORAGE_KEY, WELCOME_STORAGE_KEY].sort(),
+    );
+    expect(JSON.parse(local[WELCOME_STORAGE_KEY] ?? "")).toEqual({
+      state: { seen: true },
+      version: 1,
+    });
     expect(JSON.parse(local[THEME_STORAGE_KEY] ?? "")).toEqual({
       state: { preference: "dark" },
       version: 1,

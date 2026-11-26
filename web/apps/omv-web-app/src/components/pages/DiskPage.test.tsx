@@ -309,11 +309,28 @@ describe("the summary card", () => {
       scenario: "disksNas",
       path: "/",
     });
-    const card = await screen.findByRole("region", { name: "Disks" });
-    await user.click(
-      within(card).getByRole("button", { name: "Check disk health" }),
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
     );
-    await within(card).findByText("Check again", {}, { timeout: 5000 });
+    await user.click(
+      within(map).getByRole("button", { name: "Check disk health" }),
+    );
+    await waitFor(
+      () =>
+        expect(
+          within(map).queryByRole("button", { name: /Checking disk health/ }),
+        ).not.toBeInTheDocument(),
+      { timeout: 5000 },
+    );
+    await waitFor(() =>
+      expect(seenCalls.some((c) => c.call === "Exec.getOutput")).toBe(true),
+    );
+    // The dashboard reads the kind of the disks awake (journal 2026-11-27); the disk pages add none.
+    const kinds = seenCalls.filter(
+      (c) => c.call === "Smart.getInformation",
+    ).length;
     await act(() =>
       app.router.navigate({
         to: "/storage/disks/$disk",
@@ -336,7 +353,9 @@ describe("the summary card", () => {
     expect(seenCalls.filter((c) => c.call === "Smart.getListBg")).toHaveLength(
       1,
     );
-    expect(callNames()).not.toContain("Smart.getInformation");
+    expect(
+      seenCalls.filter((c) => c.call === "Smart.getInformation"),
+    ).toHaveLength(kinds);
   });
 
   it("names the vendor when it is a maker's name, and says when the disk is a hardware RAID set", async () => {

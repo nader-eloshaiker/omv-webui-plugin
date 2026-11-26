@@ -1,50 +1,40 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The dashboard's Network card with the network pages built (phase 5 network design 13.2): each name
-// a router link to the interface's page, "This page uses it" on the row this page reaches the NAS
-// through (0.4), the footer a router link to the Interfaces page, and still no status colour. The
-// NAS's name is read only when the page was opened by a name.
-import { screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import type { ScenarioName } from "../../mocks/scenarios.ts";
+// The network on the dashboard's map (rethink 6.8 item 4): the ways in that are on, fanning into each
+// interface and the network, with the loopback never shown. Pressing an interface opens its page in
+// this interface (phase 5 network design 13.2); the map's footer leads to the Interfaces page.
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useSeenStore } from "../../stores/useSeenStore.ts";
+import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
 import { renderApp } from "../../test/renderApp.tsx";
-import { callNames } from "../../test/server.ts";
 
-async function networkCard(scenario: ScenarioName) {
-  await renderApp({ signedIn: true, scenario, path: "/" });
-  await screen.findByRole("heading", { level: 1, name: "Dashboard" });
-  const card = screen.getByRole("region", { name: "Network" });
-  await within(card).findByRole("link", { name: "enp2s0" });
-  return card;
-}
+beforeEach(() => {
+  useWelcomeStore.setState({ seen: true });
+  useSeenStore.setState({ seen: ["tip.new-interface", "tip.trace"] });
+});
 
-describe("13.2: the dashboard's network card", () => {
-  it("links each interface to its page and the footer to the Interfaces page, and marks this page's", async () => {
-    const card = await networkCard("networkOne");
-    expect(within(card).getByRole("link", { name: "enp2s0" })).toHaveAttribute(
-      "href",
-      "/ui/network/interfaces/enp2s0",
+describe("the map's network band", () => {
+  it("shows the interface without the loopback, opens its page, and leads to Interfaces", async () => {
+    const { app, user } = await renderApp({
+      signedIn: true,
+      scenario: "dashboardAllOk",
+    });
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
     );
-    expect(card).toHaveTextContent("This page uses it");
+    const iface = await within(map).findByRole("button", { name: /^enp2s0/ });
+    expect(map).not.toHaveTextContent(/\blo\b/);
     expect(
-      within(card).getByRole("link", { name: "Network interfaces" }),
+      within(map).getByRole("link", { name: "Interfaces" }),
     ).toHaveAttribute("href", "/ui/network/interfaces");
-    expect(card.querySelector("[data-slot=status-pill]")).toBeNull();
-    // Opened at an address: the name is not needed.
-    expect(callNames()).not.toContain("Network.getGeneralSettings");
-  });
-
-  it("marks the interface this page most likely uses when opened by name", async () => {
-    const card = await networkCard("networkByName");
-    expect(await within(card).findByText("This page uses it")).toBeVisible();
-    expect(callNames()).toContain("Network.getGeneralSettings");
-  });
-
-  it("marks none when this page cannot tell (a tunnel)", async () => {
-    await renderApp({ signedIn: true, path: "/" });
-    await screen.findByRole("heading", { level: 1, name: "Dashboard" });
-    const card = screen.getByRole("region", { name: "Network" });
-    await within(card).findByRole("link", { name: "enp2s0" });
-    expect(card).not.toHaveTextContent("This page uses it");
-    expect(callNames()).not.toContain("Network.getGeneralSettings");
+    await user.click(iface);
+    await waitFor(() =>
+      expect(app.router.state.location.pathname).toBe(
+        "/network/interfaces/enp2s0",
+      ),
+    );
+    await act(() => app.router.navigate({ to: "/" }));
   });
 });

@@ -5,6 +5,7 @@
 import { configIsDirty } from "@omv-webui/react-api-omv/generated";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { findDashboard } from "../../test/dashboard.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { seenCalls } from "../../test/server.ts";
 
@@ -26,7 +27,7 @@ async function signedIn(answers?: Parameters<typeof renderApp>[0]) {
     advanceTimers: (ms) => vi.advanceTimersByTime(ms),
     ...answers,
   });
-  await screen.findByRole("heading", { name: "Dashboard" });
+  await findDashboard();
   // StrictMode mounts twice in development, which can cancel and repeat the first read.
   await waitFor(() => expect(timeoutReads().length).toBeGreaterThan(0));
   await new Promise((resolve) => setTimeout(resolve, 20));

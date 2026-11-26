@@ -30,6 +30,11 @@ interface NasAnswerProps extends Omit<
   loading?: boolean;
   /** The heading's level: the dashboard's answer is its page's `h1`. */
   headingLevel?: 1 | 2;
+  /**
+   * The heading, for the page to move focus to it (after a navigation, or when what held focus
+   * went). It takes focus from code only (`tabIndex` -1), never from the Tab key.
+   */
+  titleRef?: React.Ref<HTMLHeadingElement>;
 }
 
 /**
@@ -47,6 +52,7 @@ function NasAnswer({
   reason,
   loading = false,
   headingLevel = 1,
+  titleRef,
   className,
   ...props
 }: NasAnswerProps) {
@@ -92,8 +98,10 @@ function NasAnswer({
       )}
       <div className="min-w-0" aria-live="polite">
         <Heading
+          ref={titleRef}
           id={titleId}
-          className="text-title text-balance text-foreground"
+          tabIndex={-1}
+          className="text-title text-balance text-foreground outline-hidden"
         >
           <Crossfade contentKey={title} reduced="cut">
             {title}
