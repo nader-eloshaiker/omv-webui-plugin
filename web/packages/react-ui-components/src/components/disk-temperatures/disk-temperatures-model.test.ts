@@ -5,6 +5,7 @@
 // never a disk over the limit behind the disclosure.
 import { describe, expect, it } from "vitest";
 import {
+  dashboardTemperatureGroups,
   DISKS_24,
   DISKS_6,
   SMART_SETTINGS,
@@ -355,5 +356,85 @@ describe("on the dashboard", () => {
       hi: null,
       all: true,
     });
+  });
+});
+
+describe("a disk whose kind was not read (owner, 2026-11-27)", () => {
+  const unknown = (device: string, c: number | null = 40): DiskTemperature => ({
+    ...temp(device, c),
+    kind: null,
+  });
+
+  it("takes a null kind and keeps it", () => {
+    const sdd = DISKS_6.find((x) => x.row.devicename === "sdd");
+    expect(sdd).toBeDefined();
+    const d =
+      sdd && diskTemperatureOf({ disk: sdd.row, kind: null }, SMART_SETTINGS);
+    expect(d?.kind).toBeNull();
+    expect(d?.asleep).toBe(true);
+  });
+
+  it("puts the disks in no volume with no kind in their own group, after hard disks, SSDs and NVMe", () => {
+    const groups = diskGroups(
+      [
+        unknown("sdc"),
+        temp("sdb"),
+        { ...temp("nvme0n1"), kind: "nvme" },
+        unknown("sda", null),
+        { ...temp("sdd"), kind: "ssd" },
+      ],
+      none,
+    );
+    expect(groups.map((g) => [g.id, names(g)])).toEqual([
+      ["kind:hdd", ["sdb"]],
+      ["kind:ssd", ["sdd"]],
+      ["kind:nvme", ["nvme0n1"]],
+      ["kind:unknown", ["sda", "sdc"]],
+    ]);
+    const last = groups.at(-1);
+    expect(last?.from === "kind" && last.kind).toBeNull();
+    expect(diskGroups([temp("sdb")], none).map((g) => g.id)).toEqual([
+      "kind:hdd",
+    ]);
+  });
+
+  it("keeps a disk with no kind in its array or pool", () => {
+    const groups = dashboardTemperatureGroups(DISKS_24, VOLUMES_24, [
+      "sdb",
+      "sde",
+    ]);
+    expect(names(groups.find((g) => g.id === "md:/dev/md0"))).toEqual([
+      "sdb",
+      "sdc",
+    ]);
+    expect(names(groups.find((g) => g.id === "zfs:tank"))).toEqual([
+      "sdd",
+      "sde",
+    ]);
+    // Asleep and in no volume, sdi and sdu have no kind; an NVMe stick asleep would keep its name.
+    expect(names(groups.find((g) => g.id === "kind:unknown"))).toEqual([
+      "sdi",
+      "sdu",
+    ]);
+    const six6 = dashboardTemperatureGroups(DISKS_6, VOLUMES_6);
+    const tank = six6.find((g) => g.id === "zfs:tank");
+    expect(tank?.disks.map((d) => [d.device, d.kind])).toEqual([["sdd", null]]);
+    expect(six6.find((g) => g.id === "kind:unknown")).toBeUndefined();
+  });
+
+  it("never hides one over the limit on the dashboard", () => {
+    const groups = dashboardTemperatureGroups(DISKS_24, VOLUMES_24, ["sdt"]);
+    const split = dashboardSplit(groups);
+    expect(split.shown.map((g) => g.id)).toEqual(["kind:unknown"]);
+    expect(names(split.shown[0])).toEqual(["sdi", "sdt", "sdu"]);
+    expect(split.rest.flatMap((g) => g.disks).filter(diskOverLimit)).toEqual(
+      [],
+    );
+    // And sums the group up with the rest when none of it is over.
+    const cool = dashboardSplit(
+      dashboardTemperatureGroups(DISKS_24, VOLUMES_24),
+    );
+    expect(cool.rest.map((g) => g.id)).toContain("kind:unknown");
+    expect(cool.shown.map((g) => g.id)).toEqual(["kind:hdd"]);
   });
 });

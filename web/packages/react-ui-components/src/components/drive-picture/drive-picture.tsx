@@ -2,7 +2,8 @@
 // The three kinds of disk drawn as what they are (owner, 2026-11-26): a 3.5" hard disk seen from above
 // with its platter, spindle and head arm; a 2.5" SSD with its flash chips, controller and SATA
 // connector; an M.2 NVMe stick with its contact fingers and key notch at one end and the half-round
-// mounting cut-out at the other. They follow the icon set's disk-hdd, disk-ssd and disk-nvme.
+// mounting cut-out at the other. They follow the icon set's disk-hdd, disk-ssd and disk-nvme. A disk
+// whose kind was not read is drawn as a plain drive with a blank label, claiming none (2026-11-27).
 //
 // Each comes in three sizes, each drawn for its size on a pixel grid (the viewBox is the size), not
 // scaled from one drawing: the marker for a key or a line of text, the tile in the temperatures and
@@ -13,7 +14,7 @@ import type * as React from "react";
 import { cn } from "../../utils";
 import {
   DRIVE_PICTURE_BOX,
-  type DrivePictureKind,
+  type DrivePictureShape,
   type DrivePictureSize,
 } from "./drive-picture-model";
 
@@ -472,13 +473,63 @@ function NvmeStick({ size }: { size: DrivePictureSize }) {
   );
 }
 
+// ─── A drive of no known kind: a plain body with a blank label ─────────────────────────────────
+
+/**
+ * The drive bay's `disk` seen from above: the body and a blank label plate with one line on it, and
+ * nothing that says a kind (no platter, no chips, no connector, no stick). The hard disk's box, so it
+ * stands where every upright tile has its picture.
+ */
+function PlainDisk({ size }: { size: DrivePictureSize }) {
+  const { w, h } = DRIVE_PICTURE_BOX[size].disk;
+  const sw = STROKE[size];
+  const i = sw / 2;
+  const plate =
+    size === "marker"
+      ? { x: 2.75, y: 2.75, w: 6.5, h: 7, rx: 0.75 }
+      : size === "large"
+        ? { x: 10, y: 13, w: 32, h: 40, rx: 2.5 }
+        : { x: 8, y: 10, w: 24, h: 30, rx: 2 };
+  return (
+    <>
+      <rect
+        x={i}
+        y={i}
+        width={w - sw}
+        height={h - sw}
+        rx={size === "marker" ? 1.75 : size === "large" ? 4.5 : 3.5}
+        {...part("body")}
+        strokeWidth={sw}
+      />
+      <rect
+        x={plate.x}
+        y={plate.y}
+        width={plate.w}
+        height={plate.h}
+        rx={plate.rx}
+        {...part("faint")}
+      />
+      {size === "marker" ? null : (
+        <path
+          d={`M${String(plate.x + plate.w / 4)} ${String(plate.y + plate.h / 4)}h${String(plate.w / 2)}`}
+          {...part("pin")}
+          strokeWidth={sw}
+        />
+      )}
+    </>
+  );
+}
+
 function Drawing({
   kind,
   size,
 }: {
-  kind: DrivePictureKind;
+  kind: DrivePictureShape;
   size: DrivePictureSize;
 }) {
+  if (kind === "disk") {
+    return <PlainDisk size={size} />;
+  }
   if (kind === "ssd") {
     return <Ssd size={size} />;
   }
@@ -492,8 +543,11 @@ interface DrivePictureProps extends Omit<
   React.ComponentProps<"svg">,
   "children" | "width" | "height" | "viewBox"
 > {
-  /** What the disk is: a hard disk, an SATA SSD or an NVMe SSD. */
-  kind: DrivePictureKind;
+  /**
+   * What the disk is: a hard disk, an SATA SSD or an NVMe SSD; or `disk`, a plain drive that claims
+   * no kind, for a disk whose kind was not read (`driveKindOf` gave null).
+   */
+  kind: DrivePictureShape;
   /**
    * `marker`: beside a word or in a key, 12 to 16px. `tile`: in the temperatures, the scale's length
    * (56px) tall, or long for a stick. `large`: a disk's own page.

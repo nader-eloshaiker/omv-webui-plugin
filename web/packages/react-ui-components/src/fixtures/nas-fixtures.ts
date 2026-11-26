@@ -165,6 +165,56 @@ export function baseNas(): NasMapInput {
   };
 }
 
+/**
+ * The mock's NAS as the dashboard reads it (owner, 2026-11-27): MdMgmt.enumerateDevices is never
+ * read, so the Backup mirror is only its file system from FileSystemMgmt.getList (on md0, EXT4), with
+ * no disk attached, and sdb and sdc, which DiskMgmt.getList marks `israid`, stand on a row of their
+ * own.
+ */
+export function dashboardReadsNas(): NasMapInput {
+  const nas = baseNas();
+  return {
+    ...nas,
+    disks: nas.disks.map((d) =>
+      d.storage.includes("backup")
+        ? { ...d, storage: [], raidMember: true }
+        : d,
+    ),
+    storage: nas.storage.map((s) =>
+      s.id === "backup"
+        ? {
+            ...s,
+            tech: "EXT4",
+            disksNote: "Its disks are listed on the RAID page.",
+          }
+        : s,
+    ),
+  };
+}
+
+/**
+ * The same, with Zfs.getPoolDevices failed for tank: the pool comes with no disk, so sdd is in no
+ * storage the map knows of, and no disk is called unused.
+ */
+export function poolDisksUnreadNas(): NasMapInput {
+  const nas = dashboardReadsNas();
+  return {
+    ...nas,
+    disks: nas.disks.map((d) =>
+      d.storage.includes("tank") ? { ...d, storage: [] } : d,
+    ),
+    storage: nas.storage.map((s) =>
+      s.id === "tank"
+        ? {
+            ...s,
+            disksNote: "Which disks it is on could not be read.",
+            disksUnread: true,
+          }
+        : s,
+    ),
+  };
+}
+
 /** sdb reports a problem (the lab's "a problem arrives"). */
 export function withSdbWarning(nas: NasMapInput): NasMapInput {
   return {

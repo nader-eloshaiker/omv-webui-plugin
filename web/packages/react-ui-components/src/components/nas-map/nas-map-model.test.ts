@@ -2,10 +2,13 @@
 import {
   ALL_READ,
   baseNas,
+  dashboardReadsNas,
   diskCriticalNas,
   manyNas,
   needsYouNas,
   newNas,
+  poolDisksUnreadNas,
+  withSdbWarning,
 } from "../../fixtures/nas-fixtures";
 import {
   ADD_STORAGE_KEY,
@@ -15,11 +18,13 @@ import {
   folderKey,
   folderState,
   isNewNas,
+  MORE_ROW,
   moreFoldersKey,
   moveInRows,
   nasMapActions,
   nasMapRows,
   nasMapView,
+  RAID_ROW,
   rowKeys,
   sharedDiskState,
   storageKey,
@@ -30,8 +35,10 @@ import {
   waysRunning,
   type NasFolder,
   type NasMapInput,
+  type NasRaidRow,
   type NasRowDisk,
   type NasStorageRow,
+  type NasUnusedRow,
 } from "./nas-map-model";
 
 const names = (input: NasMapInput) =>
@@ -327,5 +334,132 @@ describe("the map's actions, each once on the screen", () => {
     ]);
     expect(ghostAdds).toBe(false);
     expect(footer).toEqual(["check-health", "sharing", "interfaces"]);
+  });
+});
+
+describe("what the dashboard does not read (owner, 2026-11-27)", () => {
+  const ids = (input: NasMapInput) => nasMapRows(input).map((r) => r.id);
+
+  it("puts the RAID members on a row of their own after the system drive, never as unused", () => {
+    const rows = nasMapRows(dashboardReadsNas());
+    expect(rows.map((r) => r.id)).toEqual([
+      "row:data",
+      "row:backup",
+      "row:tank",
+      "row:system",
+      RAID_ROW,
+      UNUSED_ROW,
+    ]);
+    const raid = rows.find((r): r is NasRaidRow => r.kind === "raid");
+    expect(raid?.disks.map((d) => d.device)).toEqual(["sdb", "sdc"]);
+    expect(raid?.tone).toBeNull();
+    const unused = rows.find((r): r is NasUnusedRow => r.kind === "unused");
+    expect(unused?.disks.map((d) => d.id)).toEqual(["sde"]);
+    expect(storageRow(dashboardReadsNas(), "backup")?.disks).toEqual([]);
+  });
+
+  it("never makes the ghost or a new NAS from RAID members", () => {
+    const nas = dashboardReadsNas();
+    const onlyMembers: NasMapInput = {
+      ...nas,
+      disks: nas.disks.filter((d) => d.id !== "sde"),
+    };
+    expect(ids(onlyMembers)).not.toContain(UNUSED_ROW);
+    expect(nasMapActions(nasMapView(onlyMembers), []).ghostAdds).toBe(false);
+    // A new NAS whose other disks are all in an array the dashboard does not read.
+    const fresh = newNas();
+    const members: NasMapInput = {
+      ...fresh,
+      disks: fresh.disks.map((d) =>
+        d.id === "nvme0n1" ? d : { ...d, raidMember: true },
+      ),
+    };
+    expect(ids(members)).toEqual(["row:system", RAID_ROW]);
+    expect(nasMapActions(nasMapView(members), []).ghostAdds).toBe(false);
+    expect(isNewNas(members)).toBe(isNewNas(fresh));
+  });
+
+  it("moves the RAID row up with the problems, after storage rows as bad or worse", () => {
+    const warned = withSdbWarning(dashboardReadsNas());
+    expect(ids(warned)[0]).toBe(RAID_ROW);
+    const raid = nasMapRows(warned).find(
+      (r): r is NasRaidRow => r.kind === "raid",
+    );
+    expect(raid?.tone).toBe("warning");
+    const failing: NasMapInput = {
+      ...warned,
+      disks: warned.disks.map((d) =>
+        d.id === "sda"
+          ? { ...d, health: "critical", healthLabel: "Failing" }
+          : d,
+      ),
+    };
+    expect(ids(failing).slice(0, 2)).toEqual(["row:data", RAID_ROW]);
+    const full: NasMapInput = {
+      ...warned,
+      storage: warned.storage.map((s) =>
+        s.id === "data"
+          ? { ...s, used: 0.92, health: "warning", healthLabel: "Almost full" }
+          : s,
+      ),
+    };
+    expect(ids(full).slice(0, 2)).toEqual(["row:data", RAID_ROW]);
+  });
+
+  it("stays out of the 'more' row and keeps the unused disks last", () => {
+    const many = manyNas();
+    const spare = {
+      kind: "hdd",
+      health: "ok",
+      healthLabel: "OK",
+      storage: [],
+    } as const;
+    const input: NasMapInput = {
+      ...many,
+      disks: [
+        ...many.disks,
+        { ...spare, id: "sdx", device: "sdx" },
+        { ...spare, id: "sdy", device: "sdy", raidMember: true },
+      ],
+    };
+    expect(ids(input).slice(-3)).toEqual([MORE_ROW, RAID_ROW, UNUSED_ROW]);
+  });
+
+  it("is shown only when the disks were read", () => {
+    const nas = dashboardReadsNas();
+    expect(
+      ids({ ...nas, reads: { ...ALL_READ, disks: "failed" } }),
+    ).not.toContain(RAID_ROW);
+    expect(
+      ids({ ...nas, reads: { ...ALL_READ, storage: "loading" } }),
+    ).toContain(RAID_ROW);
+  });
+
+  it("traces and moves through a RAID member like any other disk", () => {
+    const view = nasMapView(dashboardReadsNas());
+    const key = diskKey(RAID_ROW, "sdb");
+    expect(view.items.get(key)).toEqual({
+      kind: "disk",
+      rowId: RAID_ROW,
+      id: "sdb",
+    });
+    expect([...(traceOf(view, key)?.rows ?? [])]).toEqual([RAID_ROW]);
+    const grid = view.rows.map((r) => rowKeys(r, true));
+    expect(grid.at(-2)).toEqual([
+      [diskKey(RAID_ROW, "sdb"), diskKey(RAID_ROW, "sdc")],
+      [],
+      [],
+    ]);
+    expect(moveInRows(grid, storageKey("system"), "ArrowDown")).toBe(key);
+    expect(moveInRows(grid, key, "ArrowRight")).toBe(diskKey(RAID_ROW, "sdc"));
+    expect(moveInRows(grid, key, "ArrowDown")).toBe(diskKey(UNUSED_ROW, "sde"));
+  });
+
+  it("calls no disk unused when a pool's disks could not be read", () => {
+    const input = poolDisksUnreadNas();
+    expect(ids(input)).not.toContain(UNUSED_ROW);
+    expect(storageRow(input, "tank")?.disks).toEqual([]);
+    expect(nasMapActions(nasMapView(input), []).ghostAdds).toBe(false);
+    expect(isNewNas(input)).toBe(false);
   });
 });

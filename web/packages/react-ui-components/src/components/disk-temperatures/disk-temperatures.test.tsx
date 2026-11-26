@@ -8,6 +8,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
+  dashboardTemperatureGroups,
   DISKS_24,
   DISKS_6,
   REST_LABELS,
@@ -260,6 +261,103 @@ describe("DiskTemperatures", () => {
     await user.hover(sda);
     expect(
       await screen.findByText("Hard disk, alert limit 45 °C"),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("DiskTemperatures, a disk whose kind was not read", () => {
+  it("draws it as the plain drive in the hard disk's footprint, its level and limit where every upright tile has them", () => {
+    const { container } = render(
+      <DiskTemperatures
+        groups={dashboardTemperatureGroups(DISKS_6, VOLUMES_6, ["sde"])}
+        labels={labels}
+      />,
+    );
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
+    ).toEqual([
+      "Backup, Mirror (RAID 1)",
+      "tank, ZFS pool (single disk)",
+      "Hard disks",
+      "NVMe SSDs, on the mainboard",
+      "Disks whose kind is not known",
+    ]);
+    const unknown = screen.getByRole("list", {
+      name: "Disks whose kind is not known, read at 10:31",
+    });
+    const sde = within(unknown).getByRole("listitem");
+    expect(sde.textContent).toBe(nb("sde: 31 °C"));
+    expect(sde).toHaveAttribute("data-kind", "unknown");
+    const hdd = container.querySelector("li[data-kind=hdd]");
+    // The same tile, art box, track and limit as a hard disk's; only the drawing differs.
+    expect(sde.className).toBe(hdd?.className);
+    for (const part of [
+      ":scope > span",
+      "[data-part=track]",
+      "[data-part=limit]",
+    ]) {
+      expect(sde.querySelector(part)?.className).toBe(
+        hdd?.querySelector(part)?.className,
+      );
+    }
+    expect(sde.querySelector("svg[data-slot=drive-picture]")).toHaveAttribute(
+      "data-kind",
+      "disk",
+    );
+    expect(sde.querySelector("[data-part=limit]")).toHaveAttribute(
+      "data-at",
+      "0.8",
+    );
+    // Asleep in the pool, sdd keeps its place there, drawn the same way.
+    const tank = screen.getByRole("list", {
+      name: "tank, ZFS pool (single disk), read at 10:31",
+    });
+    expect(tank.querySelector("svg[data-slot=drive-picture]")).toHaveAttribute(
+      "data-kind",
+      "disk",
+    );
+  });
+
+  it("on the dashboard, shows its group when one of it is over the limit", () => {
+    render(
+      <DiskTemperatures
+        groups={dashboardTemperatureGroups(DISKS_24, VOLUMES_24, ["sdt"])}
+        labels={labels}
+        mode="dashboard"
+        restLabels={REST_LABELS}
+      />,
+    );
+    const unknown = screen.getByRole("list", {
+      name: "Disks whose kind is not known, read at 10:31",
+    });
+    expect(
+      within(unknown)
+        .getAllByRole("listitem")
+        .map((t) => t.textContent.split(":")[0]),
+    ).toEqual(["sdi", "sdt", "sdu"]);
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      screen.getByText("sdt is at 46 °C, at or over the alert limit of 45 °C."),
+    ).toBeInTheDocument();
+  });
+
+  it("gives a hint without a kind", async () => {
+    const user = userEvent.setup();
+    render(
+      <DiskTemperatures
+        groups={dashboardTemperatureGroups(DISKS_6, VOLUMES_6, ["sde"])}
+        labels={labels}
+      />,
+    );
+    const sde = screen
+      .getAllByRole("listitem")
+      .find((t) => t.textContent.startsWith("sde"));
+    if (!sde) {
+      throw new Error("no sde");
+    }
+    await user.hover(sde);
+    expect(
+      await screen.findByText("Kind not known, alert limit 45 °C"),
     ).toBeInTheDocument();
   });
 });

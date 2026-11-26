@@ -27,7 +27,11 @@ import {
 
 /** The words of the temperatures, from the caller: the library carries none of its own. */
 interface DiskTemperaturesLabels {
-  /** A group's heading: "Backup, Mirror (RAID 1)", "tank, ZFS pool (mirror)", "Hard disks". */
+  /**
+   * A group's heading: "Backup, Mirror (RAID 1)", "tank, ZFS pool (mirror)", "Hard disks", and for
+   * the disks whose kind was not read (a kind group with `kind: null`) a heading that says so: "Disks
+   * whose kind is not known".
+   */
   groupTitle: (group: DiskGroup) => string;
   /** An array's or pool's state beside its heading, with the status icon: "Rebuilding". */
   groupState: (state: VolumeState) => React.ReactNode;
@@ -50,8 +54,9 @@ interface DiskTemperaturesLabels {
   /** The sentence for the disks asleep: "sdd is asleep, so its temperature was not read." */
   asleepNote: (devices: readonly string[]) => React.ReactNode;
   /**
-   * A hint on pointing at a disk, in a Tooltip: "Hard disk, alert limit 45 °C". Never the only place
-   * a fact appears: every figure is also in the tile and its list.
+   * A hint on pointing at a disk, in a Tooltip: "Hard disk, alert limit 45 °C"; for a disk whose kind
+   * was not read (`kind: null`), without a kind. Never the only place a fact appears: every figure is
+   * also in the tile and its list.
    */
   hint?: (disk: DiskTemperature) => React.ReactNode;
 }
@@ -104,14 +109,17 @@ type DiskTemperaturesProps = DiskTemperaturesBaseProps &
 
 const tileClass = cva("flex flex-none flex-col items-center gap-0.5", {
   variants: {
-    kind: { hdd: "w-13", ssd: "w-13", nvme: "w-18" },
+    kind: { hdd: "w-13", ssd: "w-13", nvme: "w-18", disk: "w-13" },
   },
 });
 
 // Upright: the picture and the level beside it on one baseline. Lying (a stick): the level under it.
+// A disk of no known kind (`disk`, the plain drive) is upright, in the hard disk's footprint, so its
+// level and the alert line sit where every upright tile has them.
 const artClass = cva("relative mb-1.5 flex", {
   variants: {
     kind: {
+      disk: "h-14 items-end justify-center gap-1 self-stretch",
       hdd: "h-14 items-end justify-center gap-1 self-stretch",
       ssd: "h-14 items-end justify-center gap-1 self-stretch",
       nvme: "w-14 flex-col items-stretch gap-1 self-center",
@@ -125,7 +133,12 @@ const artClass = cva("relative mb-1.5 flex", {
 // stays where every other tile has it.
 const barClass = cva("relative flex-none overflow-hidden rounded-[2px]", {
   variants: {
-    kind: { hdd: "h-full w-2", ssd: "h-full w-2", nvme: "h-2 w-full" },
+    kind: {
+      hdd: "h-full w-2",
+      ssd: "h-full w-2",
+      nvme: "h-2 w-full",
+      disk: "h-full w-2",
+    },
     read: { true: "bg-usage-empty", false: "bg-transparent" },
   },
 });
@@ -136,6 +149,7 @@ const levelClass = cva(
     variants: {
       kind: {
         hdd: "inset-x-0 bottom-0",
+        disk: "inset-x-0 bottom-0",
         ssd: "inset-x-0 bottom-0",
         nvme: "inset-y-0 start-0",
       },
@@ -154,6 +168,7 @@ const limitClass = cva(
     variants: {
       kind: {
         hdd: "-inset-x-[5px]",
+        disk: "-inset-x-[5px]",
         ssd: "-inset-x-[5px]",
         nvme: "top-1/2 w-9 -translate-x-1/2 -translate-y-1/2 rotate-90 rtl:translate-x-1/2",
       },
@@ -193,26 +208,28 @@ function Tile({
   const over = diskOverLimit(d);
   const k = d.c === null ? 0 : temperatureShare(d.c, scale);
   const limitAt = limit === null ? null : temperatureShare(limit, scale);
-  const upright = d.kind !== "nvme";
+  // A disk whose kind was not read is drawn as the plain drive, claiming none.
+  const shape = d.kind ?? "disk";
+  const upright = shape !== "nvme";
   const state = d.c === null ? "unread" : over ? "over" : "read";
   const hint = labels.hint?.(d);
   const tile = (
     <li
       data-slot="disk-temperature"
-      data-kind={d.kind}
+      data-kind={d.kind ?? "unknown"}
       data-state={state}
-      className={tileClass({ kind: d.kind })}
+      className={tileClass({ kind: shape })}
     >
-      <span aria-hidden="true" className={artClass({ kind: d.kind })}>
-        <DrivePicture kind={d.kind} size="tile" />
+      <span aria-hidden="true" className={artClass({ kind: shape })}>
+        <DrivePicture kind={shape} size="tile" />
         <span
           data-part="track"
-          className={barClass({ kind: d.kind, read: d.c !== null })}
+          className={barClass({ kind: shape, read: d.c !== null })}
         >
           {d.c === null ? null : (
             <span
               data-part="level"
-              className={levelClass({ kind: d.kind, over })}
+              className={levelClass({ kind: shape, over })}
               style={
                 upright
                   ? { height: `${String(k * 100)}%` }
@@ -225,7 +242,7 @@ function Tile({
           <span
             data-part="limit"
             data-at={limitAt}
-            className={limitClass({ kind: d.kind })}
+            className={limitClass({ kind: shape })}
             style={
               upright
                 ? { top: `${String((1 - limitAt) * 100)}%` }
@@ -317,7 +334,8 @@ function Group({
 
 /**
  * The disks' temperatures by kind (owner, 2026-11-26): each RAID array and ZFS pool is a group of its
- * own, then the disks in neither by kind. Each disk is drawn as its kind with its temperature as a
+ * own, then the disks in neither by kind, those of no known kind last. Each disk is drawn as its kind
+ * (a plain drive claiming none when its kind was not read) with its temperature as a
  * filled level beside it, on one scale shared by every group, so the alert limit is one dashed line at
  * the same height through every upright tile and a mark at the same temperature on each stick. A
  * sleeping disk shows its word and no bar. The warning colour appears only on a disk at or past its

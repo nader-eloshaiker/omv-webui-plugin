@@ -4,11 +4,14 @@ import * as React from "react";
 import { StoryMeter } from "../../fixtures/nas-dashboard";
 import {
   baseNas,
+  dashboardReadsNas,
   diskCriticalNas,
   laneFailedNas,
   loadingNas,
   manyNas,
   newNas,
+  poolDisksUnreadNas,
+  withSdbWarning,
 } from "../../fixtures/nas-fixtures";
 import { NAS_MAP_WORDS } from "../../fixtures/nas-words";
 import { Phone } from "../../fixtures/story-frames";
@@ -98,6 +101,35 @@ export const NewNasWithExample: Story = {
 
 /** 24 disks, 8 storage: a strip for the healthy disks beyond six, "+4 more" folders, "3 more" rows. */
 export const Many: Story = { args: { input: manyNas() } };
+
+/**
+ * As the dashboard reads the NAS (owner, 2026-11-27): it never reads the RAID arrays, so Backup is a
+ * file system with no disk attached and says where its disks are, with no connector, and sdb and sdc
+ * stand on a row of their own after the system drive. Neither is called unused: only sde is.
+ */
+export const DashboardReads: Story = { args: { input: dashboardReadsNas() } };
+
+/**
+ * A RAID member reports a problem: its row moves up with the problems, starts with the warning icon
+ * and its connector takes the tone. sdb's word shows in place.
+ */
+export const RaidMemberWarning: Story = {
+  args: { input: withSdbWarning(dashboardReadsNas()) },
+};
+
+/**
+ * The pool's disks could not be read (Zfs.getPoolDevices failed): tank says so where its disks would
+ * be, and since sdd may be in it, no disk is called unused and there is no "Add storage".
+ */
+export const PoolDisksUnread: Story = {
+  args: { input: poolDisksUnreadNas(), addStorage: true },
+};
+
+/** The dashboard's reads at 390px: the sentence stands where the disks would. */
+export const DashboardReadsNarrow: Story = {
+  args: { input: withSdbWarning(dashboardReadsNas()) },
+  decorators: [(Story) => <Phone>{Story()}</Phone>],
+};
 
 /** The disks could not be read: the error in place, the rest stands. */
 export const DisksUnread: Story = { args: { input: laneFailedNas() } };

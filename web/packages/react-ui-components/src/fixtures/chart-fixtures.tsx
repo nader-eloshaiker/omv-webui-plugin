@@ -569,13 +569,31 @@ export function temperatureGroups(
 ): DiskGroup[] {
   const disks = list.map((d) =>
     diskTemperatureOf(
-      {
-        disk: d.row,
-        kind: driveKindOf(d.row, d.information) ?? "hdd",
-      },
+      { disk: d.row, kind: driveKindOf(d.row, d.information) },
       SMART_SETTINGS,
     ),
   );
+  return diskGroups(disks, volumes);
+}
+
+/**
+ * The dashboard's mapping (owner, 2026-11-27): Smart.getInformation is read only for the disks
+ * DiskMgmt.getList reports awake, so a sleeping SATA disk has no kind; an NVMe disk is still known by
+ * its name. `unread` names the disks whose Smart.getInformation read failed.
+ */
+export function dashboardTemperatureGroups(
+  list: readonly DemoDisk[],
+  volumes: VolumeRows,
+  unread: readonly string[] = [],
+): DiskGroup[] {
+  const disks = list.map((d) => {
+    const asleep = d.row.powermode === "STANDBY" || d.row.powermode === "SLEEP";
+    const read = !asleep && !unread.includes(d.row.devicename);
+    return diskTemperatureOf(
+      { disk: d.row, kind: driveKindOf(d.row, read ? d.information : null) },
+      SMART_SETTINGS,
+    );
+  });
   return diskGroups(disks, volumes);
 }
 
@@ -624,9 +642,15 @@ export function groupTitle(g: DiskGroup): string {
     case "zfs":
       return `${g.name}, ZFS pool (${layoutWords(g.layout)})`;
     case "kind":
-      return KIND_TITLE[g.kind];
+      return g.kind === null
+        ? "Disks whose kind is not known"
+        : KIND_TITLE[g.kind];
   }
 }
+
+/** A disk's kind in the hint; a disk whose kind was not read says so. */
+const kindName = (d: DiskTemperature) =>
+  d.kind === null ? "Kind not known" : KIND_NAME[d.kind];
 
 const STATE_WORDS: Record<VolumeState["reason"], string> = {
   rebuilding: "Rebuilding",
@@ -652,8 +676,8 @@ export function temperatureLabels(readAt: string): DiskTemperaturesLabels {
       `${listWords(devices)} ${devices.length === 1 ? "is" : "are"} asleep, so ${devices.length === 1 ? "its temperature was" : "their temperatures were"} not read: the disk list never wakes a disk to read it.`,
     hint: (d) =>
       d.limit === null
-        ? KIND_NAME[d.kind]
-        : `${KIND_NAME[d.kind]}, alert limit ${celsius(d.limit)}`,
+        ? kindName(d)
+        : `${kindName(d)}, alert limit ${celsius(d.limit)}`,
   };
 }
 

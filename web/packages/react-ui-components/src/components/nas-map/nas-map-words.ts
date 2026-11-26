@@ -76,6 +76,18 @@ export interface NasMapWords {
     folders: readonly string[];
     atRisk: boolean;
     system: boolean;
+    /** `NasStorage.disksNote`, for a storage with no disk attached. */
+    disksNote?: string;
+  }) => string;
+  /**
+   * The RAID members' row, in its storage column: "Disks sdb and sdc are part of a RAID array, shown
+   * on the RAID page."
+   */
+  raidMembers: (devices: readonly string[]) => string;
+  /** Its name: "In a RAID array: disks sdb and sdc, disk sdb warning. The RAID page shows the array." */
+  raidMembersLabel: (r: {
+    devices: readonly string[];
+    sick: readonly { device: string; label: string }[];
   }) => string;
   /** The unused row: "Disk sde is not in use yet." */
   unused: (devices: readonly string[]) => string;

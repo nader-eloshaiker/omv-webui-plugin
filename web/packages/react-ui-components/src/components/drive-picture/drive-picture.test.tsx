@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DrivePicture } from "./drive-picture";
 import { DRIVE_PICTURE_BOX, driveKindOf } from "./drive-picture-model";
 
-const KINDS = ["hdd", "ssd", "nvme"] as const;
+const KINDS = ["hdd", "ssd", "nvme", "disk"] as const;
 const SIZES = ["marker", "tile", "large"] as const;
 
 describe("DrivePicture", () => {
@@ -22,7 +22,7 @@ describe("DrivePicture", () => {
       </>,
     );
     const svgs = container.querySelectorAll("svg[data-slot=drive-picture]");
-    expect(svgs).toHaveLength(9);
+    expect(svgs).toHaveLength(12);
     for (const kind of KINDS) {
       for (const size of SIZES) {
         const svg = container.querySelector(
@@ -67,6 +67,33 @@ describe("DrivePicture", () => {
     }
     expect(DRIVE_PICTURE_BOX.tile.hdd.h).toBe(56);
     expect(DRIVE_PICTURE_BOX.tile.nvme.w).toBe(56);
+  });
+
+  it("draws a disk of no known kind as a plain drive that claims none, in the hard disk's box", () => {
+    const { container } = render(
+      <>
+        {SIZES.map((size) => (
+          <DrivePicture key={size} kind="disk" size={size} />
+        ))}
+      </>,
+    );
+    for (const size of SIZES) {
+      expect(DRIVE_PICTURE_BOX[size].disk).toEqual(DRIVE_PICTURE_BOX[size].hdd);
+    }
+    for (const svg of container.querySelectorAll("svg")) {
+      const parts = [...svg.querySelectorAll("[data-part]")].map((p) =>
+        p.getAttribute("data-part"),
+      );
+      expect(parts[0]).toBe("body");
+      // A body and a blank label: no platter, hub or arm, no chips, no connector, no stick.
+      expect(new Set(parts)).toEqual(
+        new Set(
+          svg.getAttribute("data-size") === "marker"
+            ? ["body", "faint"]
+            : ["body", "faint", "pin"],
+        ),
+      );
+    }
   });
 });
 

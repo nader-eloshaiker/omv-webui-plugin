@@ -132,7 +132,16 @@ export const NAS_MAP_WORDS: NasMapWords = {
         : r.system
           ? "It holds the system, so it keeps no shared folders."
           : "It has no shared folders yet.";
-    return `${r.name}${on}: ${used}${own}${sick}. ${held}`;
+    const note = r.disksNote ? ` ${r.disksNote}` : "";
+    return `${r.name}${on}: ${used}${own}${sick}. ${held}${note}`;
+  },
+  raidMembers: (devices) =>
+    `${devices.length === 1 ? "Disk" : "Disks"} ${listWords(devices)} ${devices.length === 1 ? "is" : "are"} part of a RAID array, shown on the RAID page.`,
+  raidMembersLabel: ({ devices, sick }) => {
+    const ill = sick
+      .map((d) => `, disk ${d.device} ${d.label.toLowerCase()}`)
+      .join("");
+    return `In a RAID array: ${devices.length === 1 ? "disk" : "disks"} ${listWords(devices)}${ill}. The RAID page shows the array.`;
   },
   unused: (devices) =>
     `${devices.length === 1 ? "Disk" : "Disks"} ${listWords(devices)} ${devices.length === 1 ? "is" : "are"} not in use yet.`,

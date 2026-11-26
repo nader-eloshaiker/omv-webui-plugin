@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
+  dashboardTemperatureGroups,
   DISKS_24,
   DISKS_6,
   REST_LABELS,
@@ -172,6 +173,46 @@ export const DashboardNoneOver: Story = {
     ),
     mode: "dashboard",
     restLabels: REST_LABELS,
+  },
+};
+
+/**
+ * As the dashboard reads the kinds (owner, 2026-11-27): sdd was asleep, so its kind was not read; it
+ * keeps its place in the pool tank, drawn as a plain drive. sde's Smart.getInformation read failed:
+ * awake at 31 °C, it stands in the last group, of disks whose kind is not known, on the same scale.
+ */
+export const DashboardKindsNotRead: Story = {
+  args: {
+    groups: dashboardTemperatureGroups(DISKS_6, VOLUMES_6, ["sde"]),
+    mode: "dashboard",
+    restLabels: REST_LABELS,
+  },
+};
+
+/**
+ * 24 disks on the dashboard, sdi and sdu asleep and sdt's kind not read: sdt is at 46 °C, over the
+ * limit, so its group of disks of no known kind is shown whole and the other groups are summed up.
+ */
+export const DashboardOverLimitKindNotKnown: Story = {
+  args: {
+    groups: dashboardTemperatureGroups(DISKS_24, VOLUMES_24, ["sdt"]),
+    mode: "dashboard",
+    restLabels: REST_LABELS,
+  },
+};
+
+/** The same at 390px, opened. */
+export const DashboardKindsNotReadAt390px: Story = {
+  render: (args) => (
+    <Phone>
+      <DiskTemperatures {...args} />
+    </Phone>
+  ),
+  args: {
+    groups: dashboardTemperatureGroups(DISKS_24, VOLUMES_24, ["sdt"]),
+    mode: "dashboard",
+    restLabels: REST_LABELS,
+    defaultRestOpen: true,
   },
 };
 
