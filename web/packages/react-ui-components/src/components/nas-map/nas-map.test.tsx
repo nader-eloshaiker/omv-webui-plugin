@@ -132,6 +132,19 @@ describe("NasMap", () => {
     }
   });
 
+  it("reads each heading of the band just before its own list", () => {
+    renderMap(baseNas());
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const waysHead = screen.getByRole("heading", { name: "Ways in" });
+    const ways = screen.getByRole("list", { name: "Ways in" });
+    const netHead = screen.getByRole("heading", { name: "Network" });
+    const net = screen.getByRole("list", { name: "Network" });
+    expect(before(waysHead, ways)).toBe(true);
+    expect(before(ways, netHead)).toBe(true);
+    expect(before(netHead, net)).toBe(true);
+  });
+
   it("keeps an interface's name apart from its speed and address", () => {
     renderMap(baseNas());
     expect(

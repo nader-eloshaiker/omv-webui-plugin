@@ -1374,22 +1374,6 @@ function Band({
         ) : null}
       </div>
       <div
-        data-part="band-head"
-        className="col-start-3 col-end-7 row-start-1 flex flex-col gap-0.5 self-end @max-[37.5rem]/nasmap:hidden"
-      >
-        <h3
-          id={`${id}-net`}
-          className="text-sm leading-4.5 font-normal text-muted-foreground"
-        >
-          {words.lanes.network.title}
-        </h3>
-        {captions.includes("network") ? (
-          <p className="text-xs text-tertiary-foreground compact:hidden">
-            {words.lanes.network.caption}
-          </p>
-        ) : null}
-      </div>
-      <div
         data-part="band-ways"
         className={cn("col-start-1 row-start-2 min-w-0", narrowPlace)}
       >
@@ -1423,6 +1407,24 @@ function Band({
           {words.off(view.ways.off.map((w) => w.name))}
         </p>
       ) : null}
+      {/* The network's heading comes after the ways in and their "Off" line in the markup, so a screen
+          reader hears each heading just before its own list; the grid places it over its column. */}
+      <div
+        data-part="band-head"
+        className="col-start-3 col-end-7 row-start-1 flex flex-col gap-0.5 self-end @max-[37.5rem]/nasmap:hidden"
+      >
+        <h3
+          id={`${id}-net`}
+          className="text-sm leading-4.5 font-normal text-muted-foreground"
+        >
+          {words.lanes.network.title}
+        </h3>
+        {captions.includes("network") ? (
+          <p className="text-xs text-tertiary-foreground compact:hidden">
+            {words.lanes.network.caption}
+          </p>
+        ) : null}
+      </div>
       <Bus column="col-start-2" count={view.ways.on.length} />
       <div
         data-part="band-net"
