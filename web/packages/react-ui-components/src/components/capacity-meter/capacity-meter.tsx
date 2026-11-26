@@ -31,7 +31,7 @@ interface CapacityMeterProps {
   valueText: string;
   /** The first reading has not arrived: a placeholder bar, and `valueText` says so ("Loading…"). */
   loading?: boolean;
-  /** Set when a configured threshold is crossed: a status label beside the figure, and only then a status fill. */
+  /** Set when a configured threshold is crossed: a status label beside the figure, and only then the status colour on the amount. */
   threshold?: CapacityThreshold;
   /**
    * In compact density (`data-density="compact"`) the bar is drawn as cells, so the amount can be
@@ -69,10 +69,12 @@ const rootClass = cva("flex", {
   defaultVariants: { variant: "default" },
 });
 
-// In compact density the track gives way to its cells: no edge, no ground, a little taller.
+// Filled, never outlined (style guide 5.6): the rest of the whole is the `usage-empty` slate, which
+// clears 3:1 against the amount, and there is no edge round it. In compact density the track gives way
+// to its cells, the empty ones in the same slate, a little taller.
 const trackClass = cva(
-  "relative h-2 w-full overflow-hidden rounded-full border border-usage-track-edge bg-usage-track " +
-    "compact:h-2.5 compact:overflow-visible compact:rounded-none compact:border-0 compact:bg-transparent",
+  "relative h-2 w-full overflow-hidden rounded-full bg-usage-empty " +
+    "compact:h-2.5 compact:overflow-visible compact:rounded-none compact:bg-transparent",
   {
     variants: {
       // On one line with the figure, the bar takes the room the figure leaves, and never less than 4rem.
@@ -86,16 +88,18 @@ const trackClass = cva(
 // there is room, and wraps (the status first) rather than push the cell wider when there is not.
 const figureRowClass = "flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1";
 
-// The fill: the usage blue, or the status fill only with its status label. It grows from zero on entrance
-// and glides to a new value (foundation 7.2); both land at once under reduced motion.
+// The amount: the usage blue, or past a threshold the status stroke, only with its status label. The
+// stroke, not the fill: the warning fill falls under 3:1 on the empty part in light and the critical
+// fill in dark. It grows from zero on entrance and glides to a new value (foundation 7.2); both land
+// at once under reduced motion.
 const fillClass = cva(
   "h-full rounded-full transition-[width] duration-glide ease-standard animate-grow-x ltr:origin-left rtl:origin-right compact:hidden",
   {
     variants: {
       tone: {
         usage: "bg-usage",
-        warning: "bg-warning",
-        critical: "bg-critical",
+        warning: "bg-warning-stroke",
+        critical: "bg-critical-stroke",
       },
     },
     defaultVariants: { tone: "usage" },
@@ -106,9 +110,9 @@ const cellClass = cva("h-full min-w-0 flex-1 rounded-[1px]", {
   variants: {
     tone: {
       usage: "bg-usage",
-      warning: "bg-warning",
-      critical: "bg-critical",
-      empty: "bg-usage-track",
+      warning: "bg-warning-stroke",
+      critical: "bg-critical-stroke",
+      empty: "bg-usage-empty",
     },
   },
 });
@@ -142,9 +146,9 @@ function MeterCells({
 
 /**
  * How full something is (style guide 5.6, foundation 8), on Base UI's Meter (`role="meter"` with its
- * values). The bar is the usage blue; crossing a threshold adds a Warning or Critical status label, and only
- * with that label does the bar take the status fill. The numbers are always beside it. In compact
- * density it is segmented into cells (Instrument).
+ * values). Filled, never outlined: the amount is the usage blue, the rest the `usage-empty` slate. Crossing
+ * a threshold adds a Warning or Critical status label, and only with that label does the amount take
+ * the status colour. The numbers are always beside it. In compact density it is segmented into cells.
  */
 function CapacityMeter({
   label,
@@ -173,7 +177,11 @@ function CapacityMeter({
           aria-hidden="true"
           className={cn(
             trackClass({ variant }),
-            loading ? "compact:bg-usage-track" : "border-dashed compact:border",
+            // Loading: the skeleton step, still, so it never reads as empty. No reading: hollow and
+            // dashed in the Unknown stroke, as the ring and the Unknown icon, never an empty track.
+            loading
+              ? "bg-muted-strong compact:bg-muted-strong"
+              : "border border-dashed border-unknown-stroke bg-transparent",
           )}
         />
         <p

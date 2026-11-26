@@ -50,10 +50,13 @@ const arcClass = cva(
     variants: {
       tone: {
         usage: "stroke-usage",
-        // The first-steps progress (rethink A4): the accent's stroke, which clears 3:1 on the track.
-        action: "stroke-action-stroke",
-        warning: "stroke-warning",
-        critical: "stroke-critical",
+        // The first-steps progress (rethink A4): the accent at its label step, which clears 3:1 on the
+        // empty part in both themes (the accent's stroke does not in dark).
+        action: "stroke-action-label",
+        // Past a threshold, the status stroke: the status fills fall under 3:1 on the empty part in
+        // one theme each (warning in light, critical in dark).
+        warning: "stroke-warning-stroke",
+        critical: "stroke-critical-stroke",
       },
     },
     defaultVariants: { tone: "usage" },
@@ -157,7 +160,7 @@ type CapacityRingProps = Omit<React.ComponentProps<"div">, "children"> &
     valueText: string;
     /** The figure inside the ring, formatted by the caller: "62%". */
     figure: React.ReactNode;
-    /** A crossed threshold, or a known bad state: the arc takes the status fill, and only with this status label. */
+    /** A crossed threshold, or a known bad state: the arc takes the status colour, and only with this status label. */
     threshold?: CapacityRingThreshold;
     /** Words beside the ring, under the label and the numbers: the type, where it lives. */
     children?: React.ReactNode;
@@ -196,8 +199,9 @@ function TileLink({
 
 /**
  * How full something is, for a few capacities side by side (foundation 8, Sky): an arc of the usage
- * blue that draws on entrance, the figure inside and the words beside. Past an administrator's
- * threshold the arc takes the warning or critical fill together with its status label. A `meter` on Base UI.
+ * blue on a ring of the `usage-empty` slate, filled and never outlined (style guide 5.6), that draws
+ * on entrance, the figure inside and the words beside. Past an administrator's threshold the arc
+ * takes the warning or critical stroke together with its status label. A `meter` on Base UI.
  *
  * - No reading (`value={null}`): a thin dashed ring with the Unknown icon, and no `meter`.
  * - No reading but known bad (`value={null}` with `threshold`, a missing file system): the dashed
@@ -240,7 +244,7 @@ function CapacityRing({
           className={
             noReading
               ? dashedClass({ tone: dashedTone })
-              : "fill-none stroke-usage-track"
+              : "fill-none stroke-usage-empty"
           }
           strokeDasharray={noReading ? "3 4" : undefined}
         />
@@ -385,8 +389,8 @@ type ProgressRingProps = Omit<
 
 /**
  * A ring and its figure only, named by a heading outside it (foundation 8): how many of a set of
- * steps are done, as the first steps' "1/2" beside the card title. The accent, Cobalt, on the usage
- * track (rethink A4: the first-steps progress is the next thing to do), never a status hue, since
+ * steps are done, as the first steps' "1/2" beside the card title. The accent, Cobalt, on the
+ * `usage-empty` ring (rethink A4: the first-steps progress is the next thing to do), never a status hue, since
  * configuration is not health. A `meter` on Base UI. `xs` beside a
  * heading, the other sizes as `CapacityRing`.
  */
@@ -424,7 +428,7 @@ function ProgressRing({
               cy={c}
               r={r}
               strokeWidth={g.stroke}
-              className="fill-none stroke-usage-track"
+              className="fill-none stroke-usage-empty"
             />
             <UsageArc
               c={c}
@@ -525,6 +529,7 @@ function HealthRing({
             cy={c}
             r={r}
             strokeWidth={g.stroke}
+            // Not an amount of a whole: the ground between the segments of a roll-up.
             className="fill-none stroke-usage-track"
           />
           {areas.map((area, i) => {

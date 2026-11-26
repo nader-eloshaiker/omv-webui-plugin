@@ -43,6 +43,42 @@ export const KnownWithoutTimeLeft: Story = {
   ),
 };
 
+const GROUNDS = [
+  { name: "On the page", className: "bg-page" },
+  { name: "On a card", className: "bg-surface ring-1 ring-border" },
+  { name: "In an inset", className: "bg-muted" },
+] as const;
+
+/**
+ * Filled, never outlined (style guide 5.6): the done part in the usage blue, the rest in the empty
+ * slate, with no edge round the track, on each ground a running job lands on.
+ */
+export const OnEachGround: Story = {
+  render: () => (
+    <div className="flex flex-col gap-3">
+      {GROUNDS.map((ground) => (
+        <div
+          key={ground.name}
+          className={`flex flex-col gap-3 rounded-control p-3 ${ground.className}`}
+        >
+          <p className="text-caption text-tertiary-foreground">{ground.name}</p>
+          <ProgressBar
+            label="Installing updates"
+            value={30}
+            valueText="12 of 40 packages installed"
+          />
+          <ProgressBar
+            aria-label="Synchronising RAID md0"
+            value={72.4}
+            valueText="72.4% done, about 40 minutes left"
+            size="compact"
+          />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /**
  * A check, whose progress is not known: a third-width bar that stands still, and the words say it
  * is working. Nothing pulses (style guide 10).

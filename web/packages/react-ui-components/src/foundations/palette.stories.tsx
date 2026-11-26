@@ -332,12 +332,15 @@ function UsageTerminalDrawing() {
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="flex flex-col gap-2 rounded-control bg-surface p-3 ring-1 ring-border">
         <span className="text-xs text-tertiary-foreground">
-          Usage on its track
+          Used and empty, filled with no outline
         </span>
-        <span className="h-2.5 overflow-hidden rounded-full border border-usage-track-edge bg-usage-track">
+        <span className="h-2.5 overflow-hidden rounded-full bg-usage-empty">
           <span className="block h-full w-3/5 rounded-full bg-usage" />
         </span>
-        <Hex bg="bg-usage" />
+        <span className="flex flex-wrap gap-x-3 gap-y-1">
+          <Hex bg="bg-usage" />
+          <Hex bg="bg-usage-empty" />
+        </span>
       </div>
       <div className="flex flex-col gap-1 rounded-control bg-terminal p-3 font-mono text-xs">
         <span className="text-terminal-muted">12:04:21</span>

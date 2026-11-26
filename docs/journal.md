@@ -955,3 +955,7 @@ The owner chose from the chart prototype (`/ui/lab?screen=charts`):
    - in bay order, as drive caddies.
 
    The recommendation is stacked on the dashboard and bay order on the Disks page. That waits for the owner.
+
+## 2026-11-26 — Progress is filled, never outlined (owner)
+
+The owner approved the slate for the waffle's empty squares and asked that the bars follow the waffle: all filled, with no outline, and the same for every picture of progress. The used part is the usage blue and the rest is a new slate, `usage-empty`, with no edge round the track, the ring or the cells. This covers capacity meters, waffles, progress bars, task and job progress, the first-steps progress, a password-strength line and levels such as temperature. The light slate was made a little lighter than the one shown in the lab, `#c2cfdb`, so the used blue stands 3.29:1 from it instead of exactly 3:1; dark stays `#3b495b` at 3.68:1. Past a threshold the used part takes the status stroke colour, always with its word, because the warning fill does not stand out from the slate in light and the critical fill does not in dark.

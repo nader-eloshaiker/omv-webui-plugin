@@ -48,8 +48,9 @@ interface BarChartProps<Row> extends Omit<
   /** The measure; `null` when there is none (a disk over USB reports no temperature): no bar, and `missingLabel` where it would be. */
   value: ValueOf<Row>;
   /**
-   * The whole a bar is part of (a file system's size): the rest is drawn as the track, so each bar
-   * shows both how big the thing is and how much of it is used, to one scale.
+   * The whole a bar is part of (a file system's size): the rest is drawn filled in the `usage-empty`
+   * slate, with no outline, so each bar shows both how big the thing is and how much of it is used,
+   * to one scale.
    */
   total?: ValueOf<Row>;
   /** `columns` stand up from a baseline (one measure across things); `rows` lie along the axis (sizes). */
@@ -298,7 +299,7 @@ function BarChart<Row>({
                 isAnimationActive={false}
                 fill="currentColor"
                 radius={across ? [0, 3, 3, 0] : [3, 3, 0, 0]}
-                className="text-usage-track"
+                className="text-usage-empty"
               >
                 <LabelList
                   position={across ? "right" : "top"}
