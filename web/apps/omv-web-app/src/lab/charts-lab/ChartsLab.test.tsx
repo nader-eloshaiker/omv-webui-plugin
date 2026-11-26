@@ -103,7 +103,7 @@ describe("the chart lab", () => {
   it("gives the used squares past the mark the warning fill only where the drive is almost full", () => {
     const { container } = open("still=1");
     const overSquares = container.querySelectorAll(
-      ".ch-wf [data-over] .ch-wf-used",
+      "[data-slot=waffle] [data-over] [data-part=used]",
     );
     // Media is past its mark in the map row (six 1 % squares) and the table (three 2.5 % squares).
     expect(overSquares).toHaveLength(9);
@@ -185,7 +185,9 @@ describe("the chart lab", () => {
     for (const name of ["Hard disk", "SSD", "NVMe SSD"]) {
       expect(within(sheet).getByText(name)).toBeInTheDocument();
     }
-    const sheetPictures = sheet.querySelectorAll("svg.ch-dp");
+    const sheetPictures = sheet.querySelectorAll(
+      "svg[data-slot=drive-picture]",
+    );
     expect(sheetPictures).toHaveLength(9);
     for (const kind of ["hdd", "ssd", "nvme"]) {
       for (const size of ["marker", "tile", "large"]) {
@@ -194,13 +196,15 @@ describe("the chart lab", () => {
         ).not.toBeNull();
       }
     }
-    // Every picture is decorative, and its inks come from the stylesheet's neutral classes alone:
-    // no colour is written into the drawing.
-    for (const svg of container.querySelectorAll("svg.ch-dp")) {
+    // Every picture is the library's, decorative, and its inks come from classes alone: no colour
+    // is written into the drawing.
+    for (const svg of container.querySelectorAll(
+      "svg[data-slot=drive-picture]",
+    )) {
       expect(svg.closest("[aria-hidden='true']")).not.toBeNull();
       expect(svg.querySelectorAll("[fill], [stroke], [style]")).toHaveLength(0);
       for (const part of svg.querySelectorAll("[class]")) {
-        expect(part.getAttribute("class")).toMatch(/^dp-[a-z]+$/u);
+        expect(part.getAttribute("data-part")).toMatch(/^[a-z]+$/u);
       }
     }
   });
@@ -337,13 +341,12 @@ describe("the chart lab", () => {
 
   it("draws every bar and the waffle filled, with no outline", () => {
     const { container } = open("still=1&disks=24");
-    // The stylesheet: the track, the level and the squares are fills, and none has a border, an
-    // outline, a shadow or a stroke; the empty part is the one --ch-empty.
+    // The stylesheet: the temperature track and level are fills, and none has a border, an
+    // outline, a shadow or a stroke; the empty part is the one --ch-empty. The waffle is the
+    // library's, tested there (waffle.test.tsx) and below in the markup.
     const rules = [...chartsCss.matchAll(/([^{}]+)\{([^}]*)\}/gu)];
     const amounts = rules.filter(([, selector]) =>
-      /\.ch-kt-bar|\.ch-kt-level|\.ch-wf-empty|\.ch-wf-used/u.test(
-        selector ?? "",
-      ),
+      /\.ch-kt-bar|\.ch-kt-level/u.test(selector ?? ""),
     );
     expect(amounts.length).toBeGreaterThan(4);
     for (const [, selector, body] of amounts) {
@@ -356,13 +359,19 @@ describe("the chart lab", () => {
     expect(chartsCss).toMatch(
       /\.ch-kt-bar \{[^}]*background: var\(--ch-empty\)/u,
     );
-    expect(chartsCss).toMatch(/\.ch-wf-empty \{[^}]*fill: var\(--ch-empty\)/u);
     // The empty part is the system's slate token, in both themes.
     expect(chartsCss).toMatch(/--ch-empty: var\(--theme-usage-empty\);/u);
     expect(chartsCss).not.toMatch(/dashed var\(--theme-usage-track-edge\)/u);
     // The markup: no stroke on a square, no element drawn round a bar.
-    for (const rect of container.querySelectorAll(".ch-wf-svg rect")) {
+    const squares = container.querySelectorAll("[data-slot=waffle] rect");
+    expect(squares.length).toBeGreaterThan(100);
+    for (const rect of squares) {
       expect(rect.getAttribute("stroke")).toBeNull();
+    }
+    for (const empty of container.querySelectorAll(
+      "[data-slot=waffle] [data-part=empty]",
+    )) {
+      expect(empty.getAttribute("class")).toBe("fill-usage-empty");
     }
     for (const bar of container.querySelectorAll(".ch-kt-bar")) {
       expect(
