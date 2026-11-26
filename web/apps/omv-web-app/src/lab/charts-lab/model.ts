@@ -8,12 +8,17 @@
 //   Network.enumerateDevicesList `stats.rx_bytes` and `stats.tx_bytes` between two readings, through
 //   the app's own sample functions (src/live/liveSamples.ts);
 // - temperatures: DiskMgmt.getList `temperature` and `powermode` (it never wakes a sleeping disk),
-//   with the alert limit from Smart.getSettings `tempmax` and Smart.getDeviceSettings `tempmax`.
+//   with the alert limit from Smart.getSettings `tempmax` and Smart.getDeviceSettings `tempmax`;
+// - the groups of disks: MdMgmt.enumerateDevices, Zfs.getPoolStatus and Zfs.getPoolDevices, matched
+//   to DiskMgmt.getList `canonicaldevicefile` and `devicelinks` (see "The groups" below).
 // A history is only what this page read: it starts empty and is never filled in backwards.
 import type {
   ConfiguredFilesystem,
   DiskDevice,
+  MdArray,
   SmartSettings,
+  ZfsPoolDevice,
+  ZfsPoolStatus,
 } from "@omv-webui/react-api-omv/generated";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
 
@@ -620,10 +625,14 @@ export function spread(a: number, b: number, gap: number): [number, number] {
 
 // ─── Disk temperatures ────────────────────────────────────────────────────────────────────────
 
-/** The fields of a DiskMgmt.getList row the temperature charts read. */
+/** The fields of a DiskMgmt.getList row the temperatures and the groups read. */
 export type DiskRead = Pick<
   DiskDevice,
-  "devicename" | "temperature" | "powermode"
+  | "devicename"
+  | "canonicaldevicefile"
+  | "devicelinks"
+  | "temperature"
+  | "powermode"
 >;
 
 /** A disk's kind, for its picture and its group only. */
@@ -642,6 +651,9 @@ export interface TempFixture {
 
 export interface DiskTemp {
   device: string;
+  /** DiskMgmt.getList `canonicaldevicefile` and `devicelinks`: how a member of an array or pool is found. */
+  file: string;
+  links: readonly string[];
   kind: TempFixture["kind"];
   /** Degrees Celsius; null when the disk reports none or is asleep. */
   c: number | null;
@@ -670,6 +682,8 @@ export function tempOf(
     f.tempmax > 0 ? f.tempmax : settings.tempmax > 0 ? settings.tempmax : null;
   return {
     device: f.read.devicename,
+    file: f.read.canonicaldevicefile,
+    links: f.read.devicelinks,
     kind: f.kind,
     c: asleep ? null : celsiusOf(f.read.temperature),
     asleep,
@@ -706,44 +720,27 @@ export function tempScale(
   return { lo, hi, ticks };
 }
 
-/** At or past its alert limit: only then may its mark take the warning colour, with the words. */
+/** At or past its alert limit: only then may its level take the warning colour, with the words. */
 export function overLimit(d: DiskTemp): boolean {
   return d.c !== null && d.limit !== null && d.c >= d.limit;
 }
 
-// ─── Along one scale, stacked ─────────────────────────────────────────────────────────────────
-//
-// SMART reports whole degrees, so several disks often share one. Disks at the same degree stack
-// upward into a column, one marker each (the disk's picture at marker size), so the spread reads
-// like a histogram and no marker hides another. A column of up to three names its disks above it; a
-// taller one says how many and names them on pointer or focus. The hottest column always names its
-// disks. Everything here is in pixels, with y measured up from the axis.
-
-/**
- * Each kind's marker, in pixels: a 3.5" hard disk upright, a smaller 2.5" SSD upright, and an M.2
- * stick lying down. None is wider than MARKER_W or taller than the pitch leaves room for.
- */
-export const MARKER_BOX: Record<DriveKind, { w: number; h: number }> = {
-  hdd: { w: 12, h: 15 },
-  ssd: { w: 10, h: 13 },
-  nvme: { w: 16, h: 6 },
-};
-export const MARKER_W = 16;
-/** The step between two markers in a column: 3px clear above the tallest. */
-export const MARKER_PITCH = 18;
-
-/** The drive pictures' sizes (DrivePicture.tsx): on the scale, on the Disks page, in a key. */
+/** The drive pictures' sizes (DrivePicture.tsx): small, on the Disks page, in a key. */
 export type DriveSize = "marker" | "tile" | "large";
 
 /**
  * Each picture's size in pixels. The hard disk and the SSD keep the 3.5" to 2.5" proportion; the
- * tile hard disk's height and the tile stick's length are the by-kind view's scale (56px).
+ * tile hard disk's height and the tile stick's length are the temperature scale's length (56px).
  */
 export const DRIVE_BOX: Record<
   DriveSize,
   Record<DriveKind, { w: number; h: number }>
 > = {
-  marker: MARKER_BOX,
+  marker: {
+    hdd: { w: 12, h: 15 },
+    ssd: { w: 10, h: 13 },
+    nvme: { w: 16, h: 6 },
+  },
   tile: {
     hdd: { w: 40, h: 56 },
     ssd: { w: 29, h: 40 },
@@ -756,361 +753,346 @@ export const DRIVE_BOX: Record<
   },
 };
 
-/** The disks read at one whole degree, in device order. */
-export interface Stack {
-  c: number;
-  disks: DiskTemp[];
-}
-
-/** The read disks by whole degree, coolest first; a sleeping or unread disk is in none. */
-export function stacksOf(disks: readonly DiskTemp[]): Stack[] {
-  const by = new Map<number, DiskTemp[]>();
-  for (const d of disks) {
-    if (d.c === null) {
-      continue;
-    }
-    const c = Math.round(d.c);
-    by.set(c, [...(by.get(c) ?? []), d]);
-  }
-  return [...by.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([c, list]) => ({ c, disks: list }));
-}
-
-/** A degree either side of the readings and the limit, and at least 12 degrees across. */
-export function stackRange(
-  stacks: readonly Stack[],
-  limit: number | null,
-): { lo: number; hi: number } {
-  const all = [...stacks.map((s) => s.c), ...(limit === null ? [] : [limit])];
-  if (all.length === 0) {
-    return { lo: 20, hi: 50 };
-  }
-  let lo = Math.floor(Math.min(...all)) - 1;
-  let hi = Math.ceil(Math.max(...all)) + 1;
-  while (hi - lo < 12) {
-    lo -= 1;
-    if (hi - lo < 12) {
-      hi += 1;
-    }
-  }
-  return { lo, hi };
-}
-
-export interface Box {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
-
-export function overlaps(a: Box, b: Box): boolean {
-  return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
-}
-
-export interface StackLabel {
-  /** The names, one a line; or the count, which names them on pointer or focus. */
-  kind: "names" | "count";
-  lines: string[];
-  box: Box;
-  /** Lifted clear of its neighbours, so a leader joins it to its column. */
-  leader: boolean;
-}
-
-export interface PlacedStack extends Stack {
-  x: number;
-  /** Each marker's centre, bottom first, in the order of `disks`. */
-  markers: { x: number; y: number }[];
-  /** The top of the column. */
-  top: number;
-  label: StackLabel;
-}
-
-export interface StackLayout {
-  width: number;
-  /** The height above the axis that the columns and their labels need. */
-  height: number;
-  /**
-   * The widest marker, the step between two markers in a column, and the markers' scale: 1, the
-   * size they are drawn for, unless the degrees are closer than a marker is wide.
-   */
-  m: number;
-  pitch: number;
-  k: number;
-  stacks: PlacedStack[];
-  /** The degrees written under the axis: every column's, unless two would touch. */
-  axis: { c: number; x: number }[];
-  /** Where a temperature sits across the chart. */
-  x0: number;
-  perDegree: number;
-}
-
-/** Room at either end so a marker on the first or last degree is whole. */
-const STACK_PAD = 14;
-/** Roboto Mono at 12px is about this wide a character; the labels are sized from it. */
-export const NAME_PX = 7.3;
-const LINE_PX = 15;
-
-function labelSize(lines: readonly string[], kind: StackLabel["kind"]) {
-  const longest = Math.max(...lines.map((l) => l.length));
-  return kind === "count"
-    ? { w: longest * 7.2 + 18, h: 22 }
-    : { w: longest * NAME_PX + 8, h: lines.length * LINE_PX + 2 };
-}
-
 /** "5 disks". */
 export function diskCount(n: number): string {
   return n === 1 ? "1 disk" : `${String(n)} disks`;
 }
 
-export function stackLayout(
-  stacks: readonly Stack[],
-  { width, lo, hi }: { width: number; lo: number; hi: number },
-): StackLayout {
-  const perDegree = (width - 2 * STACK_PAD) / Math.max(1, hi - lo);
-  // A pixel clear between the widest markers of two neighbouring degrees.
-  const k = Math.min(1, Math.max(0.3, (perDegree - 1) / MARKER_W));
-  const m = MARKER_W * k;
-  const pitch = MARKER_PITCH * k;
-  const xOf = (c: number) => STACK_PAD + (c - lo) * perDegree;
-  const hottest = stacks.at(-1)?.c ?? null;
-  const columns = stacks.map((s) => {
-    const x = xOf(s.c);
-    const markers = s.disks.map((_, i) => ({
-      x,
-      y: 2 + pitch / 2 + i * pitch,
-    }));
-    return { ...s, x, markers, top: 2 + s.disks.length * pitch };
-  });
-  // Every column's markers are in the way of every label.
-  const obstacles: Box[] = columns.map((s) => ({
-    x1: s.x - m / 2 - 2,
-    y1: 0,
-    x2: s.x + m / 2 + 2,
-    y2: s.top + 2,
-  }));
-  const placed: Box[] = [];
-  const labels = new Map<number, StackLabel>();
-  const done = new Set<number>();
-  // The hottest first, so it sits on its column, then left to right.
-  const order = [...columns].sort((a, b) =>
-    a.c === hottest ? -1 : b.c === hottest ? 1 : a.x - b.x,
-  );
-  for (const s of order) {
-    const kind: StackLabel["kind"] =
-      s.disks.length <= 3 || s.c === hottest ? "names" : "count";
-    const lines =
-      kind === "names"
-        ? s.disks.map((d) => d.device)
-        : [diskCount(s.disks.length)];
-    const { w, h } = labelSize(lines, kind);
-    const inside = (x: number) =>
-      Math.min(Math.max(0, x), Math.max(0, width - w));
-    // Centred on its column, or slid to one side while it still covers its column, so a wide
-    // count can stay clear of a neighbour's column.
-    const xs = [
-      inside(s.x - w / 2),
-      inside(s.x - w + 6),
-      inside(s.x - 6),
-    ].filter((x, i, all) => all.indexOf(x) === i);
-    const base = s.top + 4;
-    const ys = [
-      base,
-      ...obstacles.map((o) => o.y2 + 4),
-      ...placed.map((p) => p.y1 - h - 4),
-    ]
-      .filter((y) => y >= base)
-      .sort((a, b) => a - b);
-    // The space above a column whose label is still to come, where its leader may need to run.
-    const open = columns
-      .filter((o) => o.c !== s.c && !done.has(o.c))
-      .map((o) => ({ x1: o.x - 1, y1: o.top, x2: o.x + 1, y2: Infinity }));
-    const fits = (x: number, y: number, keepOpen: boolean) => {
-      const box = { x1: x, y1: y, x2: x + w, y2: y + h };
-      if (obstacles.some((o) => overlaps(o, box))) {
-        return false;
-      }
-      if (keepOpen && open.some((o) => overlaps(o, box))) {
-        return false;
-      }
-      const leader = { x1: s.x - 0.5, y1: s.top, x2: s.x + 0.5, y2: y };
-      return y <= base || !placed.some((p) => overlaps(p, leader));
-    };
-    const find = (keepOpen: boolean) => {
-      for (const y of ys) {
-        const x = xs.find((xx) => fits(xx, y, keepOpen));
-        if (x !== undefined) {
-          return { x, y };
-        }
-      }
-      return undefined;
-    };
-    const spot = (s.c === hottest ? undefined : find(true)) ??
-      find(false) ?? {
-        x: xs[0] ?? 0,
-        y: Math.max(...obstacles.map((o) => o.y2)) + 4,
-      };
-    const box = { x1: spot.x, y1: spot.y, x2: spot.x + w, y2: spot.y + h };
-    placed.push(box);
-    obstacles.push(box);
-    if (spot.y > base) {
-      obstacles.push({ x1: s.x - 1, y1: s.top, x2: s.x + 1, y2: spot.y });
-    }
-    done.add(s.c);
-    labels.set(s.c, { kind, lines, box, leader: spot.y > base });
-  }
-  const placedStacks = columns.map((s) => {
-    const label = labels.get(s.c);
-    if (!label) {
-      throw new Error(`no label for ${String(s.c)}`);
-    }
-    return { ...s, label };
-  });
-  // The degrees under the axis, the hottest first, each at least 16px from the next.
-  const axis: { c: number; x: number }[] = [];
-  for (const s of order) {
-    if (axis.every((a) => Math.abs(a.x - s.x) >= 16)) {
-      axis.push({ c: s.c, x: s.x });
-    }
-  }
-  axis.sort((a, b) => a.x - b.x);
-  const height = Math.max(
-    24,
-    ...placedStacks.map((s) => Math.max(s.top, s.label.box.y2)),
-  );
-  return {
-    width,
-    height: height + 4,
-    m,
-    pitch,
-    k,
-    stacks: placedStacks,
-    axis,
-    x0: STACK_PAD - lo * perDegree,
-    perDegree,
-  };
+// ─── The groups: each array and pool, then the rest by kind ───────────────────────────────────
+//
+// Owner, round four: "It should also group by RAID volume." Each RAID array and each ZFS pool is a
+// group of its own with its member disks; then the disks in no array or pool, by kind. A disk is in
+// one group only. Where each grouping comes from:
+//
+// - RAID arrays: MdMgmt.enumerateDevices, one read for every array: its `devicefile`, `level`,
+//   `devices` (the members as device files, a whole disk such as /dev/sdb or a partition such as
+//   /dev/sdb1), `state` and `syncaction`. MdMgmt.getSlaves gives the same members one array at a
+//   time, and MdMgmt.getDetail is display text, so neither is needed here. When the RAID plugin is
+//   not installed the read fails with 404, which means no arrays.
+// - The array's name: mdadm's `name` is empty for an array made on this NAS (contract, MdArray), so
+//   the name is the `label` of the file system on the array (FileSystemMgmt.getList, matched by
+//   `devicename`), else the part of mdadm's `name` after the colon, else "RAID md0", as the app's
+//   RAID page calls an array.
+// - ZFS pools: Zfs.getPoolStatus for every pool's `name` and `state` (it reads no member disk), and
+//   Zfs.getPoolDevices once for each pool, for its members' `devicefile` (the by-id path ZFS opened
+//   the disk by, often a partition of it) and `vdev` (the arrangement: "mirror-0", "raidz1-0", empty
+//   for a disk directly under the pool). Zfs.listPools gives the same names with every file system
+//   in them, which the groups do not need.
+// - A member is found in DiskMgmt.getList by `canonicaldevicefile` (an array's member) or
+//   `devicelinks` (a pool's), and a partition belongs to the disk it is on by the kernel's naming
+//   (sdb1 on sdb, nvme0n1p1 on nvme0n1, by-id "…-part1" on "…"). A member that matches no disk is
+//   left out. A disk with partitions in two volumes is shown in the first one only.
+
+/** The fields of an MdMgmt.enumerateDevices row the groups read. */
+export type MdRead = Pick<
+  MdArray,
+  "devicefile" | "name" | "level" | "devices" | "state" | "syncaction"
+>;
+
+/** One pool: its Zfs.getPoolStatus row and its Zfs.getPoolDevices list. */
+export interface PoolRead {
+  status: Pick<ZfsPoolStatus, "name" | "state">;
+  devices: readonly Pick<ZfsPoolDevice, "devicefile" | "vdev">[];
 }
 
-// ─── By kind ──────────────────────────────────────────────────────────────────────────────────
-//
-// DiskMgmt.getList does not say which physical slot a disk is in, and an NVMe SSD normally sits on
-// the mainboard rather than in a drive bay. So the Disks page groups the disks by kind and keeps
-// device order within a group, and claims nothing about where a disk sits in the case.
+export interface VolumesRead {
+  /** MdMgmt.enumerateDevices; empty when there is no array or no RAID plugin. */
+  arrays: readonly MdRead[];
+  /** Zfs.getPoolStatus, each pool with its Zfs.getPoolDevices. */
+  pools: readonly PoolRead[];
+  /** FileSystemMgmt.getList `devicename` and `label`: the name of the file system on an array. */
+  labels: readonly Pick<ConfiguredFilesystem, "devicename" | "label">[];
+}
 
-/** The kind's name, as the key and the page write it. */
+/** Whether a member's device file is this disk, or a partition on it, by the kernel's naming. */
+export function onDisk(member: string, disk: string): boolean {
+  if (member === disk) {
+    return true;
+  }
+  if (disk === "" || !member.startsWith(disk)) {
+    return false;
+  }
+  const rest = member.slice(disk.length);
+  if (disk.startsWith("/dev/disk/")) {
+    return /^-part\d+$/u.test(rest);
+  }
+  // A disk whose name ends in a digit (nvme0n1) numbers its partitions after a "p" (nvme0n1p1), so
+  // nvme0n10 is another disk, not a partition of nvme0n1.
+  return /\d$/u.test(disk) ? /^p\d+$/u.test(rest) : /^\d+$/u.test(rest);
+}
+
+function isMember(member: string, d: DiskTemp): boolean {
+  return [d.file, ...d.links].some((path) => onDisk(member, path));
+}
+
+/** The plain words for MdMgmt.enumerateDevices `level`, as the app's RAID pages write them. */
+const RAID_LEVEL: Record<string, string> = {
+  raid0: "Stripe (RAID 0)",
+  raid1: "Mirror (RAID 1)",
+  raid4: "Parity disk (RAID 4)",
+  raid5: "Parity (RAID 5)",
+  raid6: "Double parity (RAID 6)",
+  raid10: "Mirror and stripe (RAID 10)",
+  linear: "Joined (linear)",
+};
+
+export function raidWords(level: string): string {
+  return RAID_LEVEL[level] ?? `RAID (${level})`;
+}
+
+/** An array's plain name: the file system's label, else mdadm's name after the colon, else "RAID md0". */
+export function arrayName(
+  a: Pick<MdRead, "devicefile" | "name">,
+  labels: VolumesRead["labels"],
+): string {
+  const device = a.devicefile.replace(/^\/dev\//u, "");
+  const label = labels.find((l) => l.devicename === device)?.label;
+  if (label !== undefined && label !== null && label !== "") {
+    return label;
+  }
+  const own = a.name.split(":").at(-1) ?? "";
+  return own !== "" ? own : `RAID ${device}`;
+}
+
+const ZFS_LAYOUT: Record<string, string> = {
+  mirror: "mirror",
+  raidz1: "RAID-Z1",
+  raidz2: "RAID-Z2",
+  raidz3: "RAID-Z3",
+  draid: "dRAID",
+};
+
+/**
+ * A pool's arrangement in words, from Zfs.getPoolDevices `vdev`: "mirror", "RAID-Z1", "single disk"
+ * or "stripe" for disks directly under the pool. A disk being replaced sits in a "replacing-1" group
+ * inside its mirror, so those groups are not an arrangement of their own.
+ */
+export function poolLayout(devices: PoolRead["devices"]): string {
+  const groups = new Set(
+    devices
+      .map((d) => d.vdev)
+      .filter((v) => v !== "" && !/^(replacing|spare)/u.test(v)),
+  );
+  if (groups.size === 0) {
+    return devices.length === 1 ? "single disk" : "stripe";
+  }
+  const kinds = new Set(
+    [...groups].map((g) => {
+      const kind = g.replace(/-\d+$/u, "").replace(/^draid.*/u, "draid");
+      return ZFS_LAYOUT[kind] ?? kind;
+    }),
+  );
+  const words = [...kinds].join(" and ");
+  return groups.size === 1 ? words : `${words}, ${String(groups.size)} groups`;
+}
+
+export interface VolumeState {
+  tone: "warning" | "critical";
+  words: string;
+}
+
+/**
+ * What an array is doing, when it needs saying: MdMgmt.enumerateDevices `syncaction` "recover" is a
+ * rebuild, and "degraded" in `state` is an array short of a disk. Otherwise nothing.
+ */
+export function arrayState(
+  a: Pick<MdRead, "state" | "syncaction">,
+): VolumeState | null {
+  if (a.syncaction === "recover") {
+    return { tone: "warning", words: "Rebuilding" };
+  }
+  if (typeof a.state === "string" && /\bdegraded\b/u.test(a.state)) {
+    return { tone: "warning", words: "A disk is missing or has failed" };
+  }
+  return null;
+}
+
+/** A pool's state, when it needs saying: Zfs.getPoolStatus `state`, and a disk being replaced. */
+export function poolState(p: PoolRead): VolumeState | null {
+  if (p.status.state === "ONLINE") {
+    return null;
+  }
+  if (p.status.state === "DEGRADED") {
+    return p.devices.some((d) => d.vdev.startsWith("replacing"))
+      ? { tone: "warning", words: "Rebuilding" }
+      : { tone: "warning", words: "A disk is missing or has failed" };
+  }
+  return { tone: "critical", words: "Cannot be used now" };
+}
+
+export interface DiskGroup {
+  /** "md:/dev/md0", "zfs:tank" or "kind:hdd". */
+  id: string;
+  /** "Backup, Mirror (RAID 1)", "tank, ZFS pool (mirror)" or "Hard disks". */
+  title: string;
+  /** The read the group comes from: an array, a pool, or the disks in neither, by kind. */
+  from: "md" | "zfs" | "kind";
+  /** What the array or pool is doing, when it needs saying. */
+  state: VolumeState | null;
+  /** In device order. */
+  disks: DiskTemp[];
+}
+
+const byDevice = new Intl.Collator("en", { numeric: true });
+
+const inDeviceOrder = (list: readonly DiskTemp[]) =>
+  [...list].sort((a, b) => byDevice.compare(a.device, b.device));
+
+const KIND_ORDER: readonly DriveKind[] = ["hdd", "ssd", "nvme"];
+
+const KIND_TITLE: Record<DriveKind, string> = {
+  hdd: "Hard disks",
+  ssd: "SSDs",
+  nvme: "NVMe SSDs, on the mainboard",
+};
+
+/** The kind's name, as the drive sheet writes it. */
 export const KIND_NAME: Record<DriveKind, string> = {
   hdd: "Hard disk",
   ssd: "SSD",
   nvme: "NVMe SSD",
 };
 
-const KIND_PLURAL: Record<DriveKind, string> = {
-  hdd: "hard disks",
-  ssd: "SSDs",
-  nvme: "NVMe SSDs",
-};
-
-const KIND_ORDER: readonly DriveKind[] = ["hdd", "ssd", "nvme"];
-
-export interface KindGroup {
-  kind: DriveKind;
-  title: string;
-  disks: DiskTemp[];
+/**
+ * Each array (in device order), then each pool (by name), each with the disks it is made of; then
+ * the disks in no array or pool, by kind: hard disks, SSDs, NVMe SSDs. Every disk is in exactly one
+ * group, in device order within it, and a group with no disk is left out.
+ */
+export function diskGroups(
+  disks: readonly DiskTemp[],
+  volumes: VolumesRead,
+): DiskGroup[] {
+  const placed = new Set<string>();
+  const take = (members: readonly string[]) => {
+    const list = disks.filter(
+      (d) => !placed.has(d.device) && members.some((m) => isMember(m, d)),
+    );
+    for (const d of list) {
+      placed.add(d.device);
+    }
+    return inDeviceOrder(list);
+  };
+  const arrays = [...volumes.arrays]
+    .sort((a, b) => byDevice.compare(a.devicefile, b.devicefile))
+    .map((a): DiskGroup => ({
+      id: `md:${a.devicefile}`,
+      title: `${arrayName(a, volumes.labels)}, ${raidWords(a.level)}`,
+      from: "md",
+      state: arrayState(a),
+      disks: take(a.devices),
+    }));
+  const pools = [...volumes.pools]
+    .sort((a, b) => byDevice.compare(a.status.name, b.status.name))
+    .map((p): DiskGroup => ({
+      id: `zfs:${p.status.name}`,
+      title: `${p.status.name}, ZFS pool (${poolLayout(p.devices)})`,
+      from: "zfs",
+      state: poolState(p),
+      disks: take(p.devices.map((d) => d.devicefile)),
+    }));
+  const rest = KIND_ORDER.map((kind): DiskGroup => ({
+    id: `kind:${kind}`,
+    title: KIND_TITLE[kind],
+    from: "kind",
+    state: null,
+    disks: inDeviceOrder(
+      disks.filter((d) => d.kind === kind && !placed.has(d.device)),
+    ),
+  }));
+  return [...arrays, ...pools, ...rest].filter((g) => g.disks.length > 0);
 }
 
-const byDevice = new Intl.Collator("en", { numeric: true });
+// ─── On the dashboard: the groups that need the person, and the rest behind a disclosure ──────
+//
+// The dashboard answers "does anything need me?", and the Disks page shows every disk. So on the
+// dashboard, up to DASHBOARD_ALL disks are all shown; past that, the groups with a disk at or over
+// its alert limit are shown whole, the others are summed up in one sentence (how many, and the
+// range they are in), and "Show the other 16 disks" opens them in place. A disk over its limit is
+// never behind the disclosure.
 
-/** The disks by kind, hard disks first, each group in device order; a kind with no disk is left out. */
-export function kindGroups(disks: readonly DiskTemp[]): KindGroup[] {
-  const titles: Record<DriveKind, string> = {
-    hdd: "Hard disks",
-    ssd: "SSDs",
-    nvme: "NVMe SSDs, on the mainboard",
+/** Up to this many disks, the dashboard shows them all. */
+export const DASHBOARD_ALL = 8;
+
+export interface DashboardSplit {
+  shown: DiskGroup[];
+  rest: DiskGroup[];
+}
+
+export function dashboardSplit(groups: readonly DiskGroup[]): DashboardSplit {
+  const total = groups.reduce((n, g) => n + g.disks.length, 0);
+  if (total <= DASHBOARD_ALL) {
+    return { shown: [...groups], rest: [] };
+  }
+  return {
+    shown: groups.filter((g) => g.disks.some(overLimit)),
+    rest: groups.filter((g) => !g.disks.some(overLimit)),
   };
-  return KIND_ORDER.flatMap((kind) => {
-    const list = disks
-      .filter((d) => d.kind === kind)
-      .sort((a, b) => byDevice.compare(a.device, b.device));
-    return list.length === 0
-      ? []
-      : [{ kind, title: titles[kind], disks: list }];
-  });
 }
 
 /**
- * The disks with their kind in words, for the text that stands in for the pictures: "the hard
- * disks sda and sdh, and the SSD sdq". Kinds in the order of the groups, devices in the given order.
+ * The sentence for the disks behind the disclosure: "The other 16 disks are between 31 °C and 43 °C,
+ * under the alert limit of 45 °C." A disk asleep or unread is not counted as being in the range.
  */
-export function diskWords(disks: readonly DiskTemp[]): string {
-  const parts = KIND_ORDER.flatMap((kind) => {
-    const names = disks.filter((d) => d.kind === kind).map((d) => d.device);
-    if (names.length === 0) {
-      return [];
-    }
-    const word =
-      names.length === 1
-        ? KIND_NAME[kind].replace(/^Hard/u, "hard")
-        : KIND_PLURAL[kind];
-    return [`the ${word} ${listWords(names)}`];
-  });
-  if (parts.length <= 1) {
-    return parts.join("");
+export function restWords(
+  rest: readonly DiskTemp[],
+  all: boolean,
+  limit: number | null,
+): string {
+  const read = rest.flatMap((d) => (d.c === null ? [] : [d.c]));
+  const n = rest.length;
+  const which = all ? `the ${diskCount(n)}` : `the other ${diskCount(n)}`;
+  const under =
+    limit === null ? "" : `, under the alert limit of ${celsius(limit)}`;
+  if (read.length === 0) {
+    return `None of ${which} has a temperature reading.`;
   }
-  return `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1) ?? ""}`;
+  const lo = Math.min(...read);
+  const hi = Math.max(...read);
+  const range =
+    lo === hi
+      ? `at ${celsius(lo)}`
+      : `between ${celsius(lo)} and ${celsius(hi)}`;
+  if (read.length === n) {
+    const subject = all ? `All ${diskCount(n)}` : `The other ${diskCount(n)}`;
+    return n === 1
+      ? `${subject} is ${range}${under}.`
+      : `${subject} are ${range}${under}.`;
+  }
+  return `${String(read.length)} of ${which} ${read.length === 1 ? "is" : "are"} ${range}${under}.`;
 }
+
+// ─── The lab's NAS ────────────────────────────────────────────────────────────────────────────
 
 /** The lab's Smart.getSettings: the admin asked to hear when a disk reaches 45 °C. */
 export const SMART_SETTINGS: Pick<SmartSettings, "tempmax"> = { tempmax: 45 };
 
-/** The lab's DiskMgmt.getList, the dashboard lab's six disks; sdd is asleep, so it has no reading. */
-export const DISKS: readonly TempFixture[] = [
-  {
-    read: { devicename: "nvme0n1", temperature: "34", powermode: "UNKNOWN" },
-    kind: "nvme",
-    tempmax: 0,
-  },
-  {
-    read: { devicename: "sda", temperature: "36", powermode: "ACTIVE or IDLE" },
-    kind: "hdd",
-    tempmax: 0,
-  },
-  {
-    read: { devicename: "sdb", temperature: "35", powermode: "ACTIVE or IDLE" },
-    kind: "hdd",
-    tempmax: 0,
-  },
-  {
-    read: { devicename: "sdc", temperature: "37", powermode: "ACTIVE or IDLE" },
-    kind: "hdd",
-    tempmax: 0,
-  },
-  {
-    read: { devicename: "sdd", temperature: "", powermode: "STANDBY" },
-    kind: "hdd",
-    tempmax: 0,
-  },
-  {
-    read: { devicename: "sde", temperature: 31, powermode: "ACTIVE or IDLE" },
-    kind: "ssd",
-    tempmax: 0,
-  },
-];
+const BY_ID: Record<DriveKind, string> = {
+  hdd: "ata-EXAMPLE_Hard_Disk",
+  ssd: "ata-EXAMPLE_SSD",
+  nvme: "nvme-EXAMPLE_NVMe_SSD",
+};
 
+/** A DiskMgmt.getList row; `serial` makes its by-id link, scrubbed as the captures are. */
 function listDisk(
   devicename: string,
-  temperature: string,
-  kind: TempFixture["kind"] = "hdd",
+  temperature: string | number,
+  kind: DriveKind,
+  serial: number,
 ): TempFixture {
+  const asleep = temperature === "";
   return {
     read: {
       devicename,
+      canonicaldevicefile: `/dev/${devicename}`,
+      devicelinks: [
+        `/dev/disk/by-id/${BY_ID[kind]}_EXAMPLE-SERIAL-${String(serial).padStart(4, "0")}`,
+      ],
       temperature,
-      powermode:
-        temperature === ""
-          ? "STANDBY"
-          : kind === "nvme"
-            ? "UNKNOWN"
-            : "ACTIVE or IDLE",
+      powermode: asleep
+        ? "STANDBY"
+        : kind === "nvme"
+          ? "UNKNOWN"
+          : "ACTIVE or IDLE",
     },
     kind,
     tempmax: 0,
@@ -1118,36 +1100,132 @@ function listDisk(
 }
 
 /**
- * A 24-disk DiskMgmt.getList, in device order: two NVMe sticks and 22 drives, two of them SSDs. SMART
- * reports whole degrees, so ties are common: five disks at 35 °C, four at 36 °C, three each at 34 °C
- * and 37 °C. sdi and sdu are asleep, and sdt is past the 45 °C limit.
+ * The lab's DiskMgmt.getList, the dashboard lab's six disks: sdb and sdc make the Backup mirror and
+ * sdd the pool tank, as on the dashboard. sdd is asleep, so it has no reading.
+ */
+export const DISKS: readonly TempFixture[] = [
+  listDisk("nvme0n1", "34", "nvme", 1),
+  listDisk("sda", "36", "hdd", 2),
+  listDisk("sdb", "35", "hdd", 3),
+  listDisk("sdc", "37", "hdd", 4),
+  listDisk("sdd", "", "hdd", 5),
+  listDisk("sde", 31, "ssd", 6),
+];
+
+/** A pool member as Zfs.getPoolDevices names it: the disk's by-id link and the partition ZFS made. */
+function zfsMember(list: readonly TempFixture[], device: string, vdev: string) {
+  const link = list.find((f) => f.read.devicename === device)?.read
+    .devicelinks[0];
+  if (link === undefined) {
+    throw new Error(`no disk ${device}`);
+  }
+  return { devicefile: `${link}-part1`, vdev };
+}
+
+function md(
+  devicefile: string,
+  level: string,
+  devices: string[],
+  state = "clean",
+  syncaction = "idle",
+): MdRead {
+  return { devicefile, name: "", level, devices, state, syncaction };
+}
+
+/** The labels of the file systems on the arrays, from FileSystemMgmt.getList (FILE_SYSTEMS). */
+const LABELS = FILE_SYSTEMS.map((f) => ({
+  devicename: f.read.devicename,
+  label: f.read.label,
+}));
+
+/**
+ * The six disks' arrays and pools, as the dashboard lab has them: MdMgmt.enumerateDevices lists the
+ * Backup mirror md0 of sdb and sdc, and Zfs.getPoolStatus the pool tank, on sdd alone.
+ */
+export const VOLUMES: VolumesRead = {
+  arrays: [md("/dev/md0", "raid1", ["/dev/sdb", "/dev/sdc"])],
+  pools: [
+    {
+      status: { name: "tank", state: "ONLINE" },
+      devices: [zfsMember(DISKS, "sdd", "")],
+    },
+  ],
+  labels: LABELS,
+};
+
+/**
+ * A 24-disk DiskMgmt.getList, in device order: two NVMe sticks and 22 drives, two of them SSDs. sdi
+ * and sdu are asleep, and sdt is past the 45 °C limit.
  */
 export const DISKS_24: readonly TempFixture[] = [
-  listDisk("nvme0n1", "41", "nvme"),
-  listDisk("nvme1n1", "43", "nvme"),
-  listDisk("sda", "34"),
-  listDisk("sdb", "35"),
-  listDisk("sdc", "35"),
-  listDisk("sdd", "36"),
-  listDisk("sde", "35"),
-  listDisk("sdf", "37"),
-  listDisk("sdg", "36"),
-  listDisk("sdh", "34"),
-  listDisk("sdi", ""),
-  listDisk("sdj", "38"),
-  listDisk("sdk", "35"),
-  listDisk("sdl", "36"),
-  listDisk("sdm", "37"),
-  listDisk("sdn", "39"),
-  listDisk("sdo", "35"),
-  listDisk("sdp", "36"),
-  listDisk("sdq", "33", "ssd"),
-  listDisk("sdr", "34"),
-  listDisk("sds", "37"),
-  listDisk("sdt", "46"),
-  listDisk("sdu", ""),
-  listDisk("sdv", "31", "ssd"),
-];
+  ["nvme0n1", "41", "nvme"],
+  ["nvme1n1", "43", "nvme"],
+  ["sda", "34"],
+  ["sdb", "35"],
+  ["sdc", "35"],
+  ["sdd", "36"],
+  ["sde", "35"],
+  ["sdf", "37"],
+  ["sdg", "36"],
+  ["sdh", "34"],
+  ["sdi", ""],
+  ["sdj", "38"],
+  ["sdk", "35"],
+  ["sdl", "36"],
+  ["sdm", "37"],
+  ["sdn", "39"],
+  ["sdo", "35"],
+  ["sdp", "36"],
+  ["sdq", "33", "ssd"],
+  ["sdr", "34"],
+  ["sds", "37"],
+  ["sdt", "46"],
+  ["sdu", ""],
+  ["sdv", "31", "ssd"],
+].map(([name, temperature, kind], i) =>
+  listDisk(
+    name ?? "",
+    temperature ?? "",
+    (kind ?? "hdd") as DriveKind,
+    101 + i,
+  ),
+);
+
+/**
+ * The 24 disks' arrays and pools: the Backup mirror md0 of sdb and sdc, as on the six-disk NAS; the
+ * Apps mirror md1 of the two NVMe sticks, on a partition each; the Archive md2, a double parity
+ * array of sdf to sdn without sdi, on a partition each and rebuilding, on purpose, to show how a
+ * group says so; and the pool tank, a mirror of sdd and sde. The other ten disks are in none.
+ */
+export const VOLUMES_24: VolumesRead = {
+  arrays: [
+    md("/dev/md0", "raid1", ["/dev/sdb", "/dev/sdc"]),
+    md("/dev/md1", "raid1", ["/dev/nvme0n1p1", "/dev/nvme1n1p1"]),
+    md(
+      "/dev/md2",
+      "raid6",
+      ["sdf", "sdg", "sdh", "sdj", "sdk", "sdl", "sdm", "sdn"].map(
+        (d) => `/dev/${d}1`,
+      ),
+      "clean, degraded, recovering (31.2% (1219571712/3906886144) finish=312.4min speed=143290K/sec)",
+      "recover",
+    ),
+  ],
+  pools: [
+    {
+      status: { name: "tank", state: "ONLINE" },
+      devices: [
+        zfsMember(DISKS_24, "sdd", "mirror-0"),
+        zfsMember(DISKS_24, "sde", "mirror-0"),
+      ],
+    },
+  ],
+  labels: [
+    ...LABELS,
+    { devicename: "md1", label: "Apps" },
+    { devicename: "md2", label: "Archive" },
+  ],
+};
 
 /** A temperature with its unit: "36 °C". */
 export function celsius(c: number): string {

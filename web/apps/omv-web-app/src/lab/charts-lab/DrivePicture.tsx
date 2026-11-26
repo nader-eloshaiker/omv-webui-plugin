@@ -5,13 +5,13 @@
 // mounting cut-out at the other. They follow the library's disk-hdd, disk-ssd and disk-nvme icons.
 //
 // Each comes in three sizes, each drawn for its size on a pixel grid (the viewBox is the size), not
-// scaled from one drawing: the marker on the temperature scale, the tile on the Disks page and the
-// large one for a key or a disk's own page. Lines and fills are the neutral inks only (charts.css,
+// scaled from one drawing: the marker for a key or a line of text, the tile in the temperatures and
+// the large one for a disk's own page. Lines and fills are the neutral inks only (charts.css,
 // .dp-*): the shape says the kind, so no kind takes a colour, and no drive has a light. JSX from
 // props, never an SVG string (UI-2). Decorative: the kind is always said in text beside it.
 // Development only (UI-11).
 import type { DriveKind, DriveSize } from "./model.ts";
-import { DRIVE_BOX, MARKER_BOX } from "./model.ts";
+import { DRIVE_BOX } from "./model.ts";
 
 const STROKE: Record<DriveSize, number> = {
   marker: 1.1,
@@ -518,31 +518,6 @@ export function DrivePicture({
       strokeLinecap="round"
     >
       <Drawing kind={kind} size={size} />
-    </svg>
-  );
-}
-
-/**
- * A drive's marker inside a chart's own SVG, centred on the chart's origin and drawn at `k` times its
- * size (1 unless the chart's degrees are closer than a marker is wide).
- */
-export function DriveMarker({ kind, k }: { kind: DriveKind; k: number }) {
-  const { w, h } = MARKER_BOX[kind];
-  return (
-    <svg
-      className="ch-dp"
-      data-kind={kind}
-      data-size="marker"
-      x={(-w * k) / 2}
-      y={(-h * k) / 2}
-      width={w * k}
-      height={h * k}
-      viewBox={`0 0 ${String(w)} ${String(h)}`}
-      overflow="visible"
-      strokeLinejoin="round"
-      strokeLinecap="round"
-    >
-      <Drawing kind={kind} size="marker" />
     </svg>
   );
 }

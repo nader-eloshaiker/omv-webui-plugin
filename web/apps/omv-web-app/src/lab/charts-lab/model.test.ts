@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart lab's pure rules: what a meter reads from a file system row, the waffle's squares and
 // its gap at the mark, the live window and its honest span, the chart geometry's gaps, each network
-// half's own scale, and the temperatures' limit, stacks, marker pictures, labels and kind groups.
+// half's own scale, and the temperatures' limit, their groups by array, pool and kind, and what the
+// dashboard shows past eight disks.
 import { describe, expect, it } from "vitest";
 import {
   NO_READINGS,
@@ -12,35 +13,39 @@ import {
   stillFeed,
   stillReadings,
 } from "./feed.ts";
-import type { Box, DiskTemp, StackLayout } from "./model.ts";
+import type { DiskGroup, DiskTemp, VolumesRead } from "./model.ts";
 import {
+  arrayName,
+  arrayState,
+  DASHBOARD_ALL,
+  dashboardSplit,
+  diskGroups,
   DISKS,
   DISKS_24,
-  diskWords,
   DRIVE_BOX,
   EVERY_MS,
   FILE_SYSTEMS,
-  kindGroups,
   linePath,
   liveAlt,
-  MARKER_BOX,
-  MARKER_PITCH,
   MIN_RATE_SCALE,
   niceMax,
-  overlaps,
+  onDisk,
+  overLimit,
   PLOT_H,
+  poolLayout,
+  poolState,
   rateScale,
+  restWords,
   runsOf,
   sharedLimit,
   SMART_SETTINGS,
   spaceOf,
   spanWords,
-  stackLayout,
-  stackRange,
-  stacksOf,
   tempOf,
   tempScale,
   trimmed,
+  VOLUMES,
+  VOLUMES_24,
   waffleDrawing,
   waffleOf,
   WINDOW_MS,
@@ -51,6 +56,9 @@ import {
 /** The figures carry a non-breaking space before their unit, as the pages write them. */
 const nb = (words: string) =>
   words.replace(/(\d) (?=[%A-Za-z°])/gu, "$1\u00a0");
+
+/** Only the degrees carry the non-breaking space: "16 disks" keeps an ordinary one. */
+const degrees = (words: string) => words.replace(/ °C/gu, "\u00a0°C");
 
 const fixture = (id: string) => {
   const f = FILE_SYSTEMS.find((x) => x.id === id);
@@ -261,213 +269,265 @@ describe("temperatures", () => {
   });
 });
 
-describe("temperatures along one scale, stacked", () => {
-  const six = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
-  const bay = DISKS_24.map((d) => tempOf(d, SMART_SETTINGS));
-  // The chart's width at 390 (the frame's 358 less its padding), at the lab's full width and wider.
-  const WIDTHS = [326, 640, 900];
-
-  function layoutAt(list: DiskTemp[], width: number): StackLayout {
-    const stacks = stacksOf(list);
-    return stackLayout(stacks, {
-      width,
-      ...stackRange(stacks, sharedLimit(list)),
-    });
-  }
-
-  it("stacks the 24 disks by whole degree, coolest first, in device order within a degree", () => {
-    const stacks = stacksOf(bay);
-    expect(stacks.map((s) => [s.c, s.disks.length])).toEqual([
-      [31, 1],
-      [33, 1],
-      [34, 3],
-      [35, 5],
-      [36, 4],
-      [37, 3],
-      [38, 1],
-      [39, 1],
-      [41, 1],
-      [43, 1],
-      [46, 1],
-    ]);
-    expect(stacks.find((s) => s.c === 35)?.disks.map((d) => d.device)).toEqual([
-      "sdb",
-      "sdc",
-      "sde",
-      "sdk",
-      "sdo",
-    ]);
-    // The two sleeping disks are in no stack.
-    expect(stacks.reduce((n, s) => n + s.disks.length, 0)).toBe(22);
-  });
-
-  it("draws every marker picture at its own size, within the widest and with room in the pitch", () => {
-    for (const box of Object.values(MARKER_BOX)) {
-      expect(box.w).toBeLessThanOrEqual(16);
-      expect(box.h).toBeLessThanOrEqual(MARKER_PITCH - 3);
+describe("the drive pictures", () => {
+  it("keeps the hard disk to SSD proportion, and the tile's length is the temperature scale's", () => {
+    for (const size of ["marker", "tile", "large"] as const) {
+      const { hdd, ssd } = DRIVE_BOX[size];
+      expect(ssd.h / hdd.h).toBeGreaterThan(0.7);
+      expect(ssd.h / hdd.h).toBeLessThan(0.9);
     }
-    // The three outlines differ: the hard disk upright, the SSD a smaller slab, the stick long.
-    expect(MARKER_BOX.hdd.h).toBeGreaterThan(MARKER_BOX.ssd.h);
-    expect(MARKER_BOX.nvme.w / MARKER_BOX.nvme.h).toBeGreaterThan(2);
-    expect(DRIVE_BOX.marker).toBe(MARKER_BOX);
-    // The by-kind view's one scale: the tile hard disk's height is the tile stick's length.
-    expect(DRIVE_BOX.tile.hdd.h).toBe(DRIVE_BOX.tile.nvme.w);
-  });
-
-  it("never lets one marker picture overlap another, ties included", () => {
-    for (const list of [six, bay]) {
-      for (const width of WIDTHS) {
-        const layout = layoutAt(list, width);
-        // At these widths the degrees are far enough apart for the pictures at their drawn size.
-        expect(layout.k).toBe(1);
-        expect(layout.pitch).toBe(MARKER_PITCH);
-        const boxes: Box[] = layout.stacks.flatMap((s) =>
-          s.disks.map((d, i) => {
-            const p = s.markers[i] ?? { x: 0, y: 0 };
-            const { w, h } = MARKER_BOX[d.kind];
-            return {
-              x1: p.x - w / 2,
-              y1: p.y - h / 2,
-              x2: p.x + w / 2,
-              y2: p.y + h / 2,
-            };
-          }),
-        );
-        expect(boxes).toHaveLength(list.filter((d) => d.c !== null).length);
-        boxes.forEach((a, i) => {
-          expect(a.y1).toBeGreaterThanOrEqual(0);
-          boxes.slice(i + 1).forEach((b) => {
-            expect(overlaps(a, b)).toBe(false);
-          });
-        });
-      }
-    }
-  });
-
-  it("shrinks the markers only when the degrees are closer than a marker is wide", () => {
-    const stacks = stacksOf(bay);
-    const narrow = stackLayout(stacks, { width: 326, lo: 20, hi: 60 });
-    expect(narrow.k).toBeLessThan(1);
-    expect(narrow.m).toBeLessThan(narrow.perDegree);
-  });
-
-  it("keeps every label inside the chart and clear of the other labels and every column", () => {
-    for (const list of [six, bay]) {
-      for (const width of WIDTHS) {
-        const layout = layoutAt(list, width);
-        const labels = layout.stacks.map((s) => s.label.box);
-        const columns: Box[] = layout.stacks.map((s) => ({
-          x1: s.x - layout.m / 2,
-          y1: 0,
-          x2: s.x + layout.m / 2,
-          y2: s.top,
-        }));
-        labels.forEach((a, i) => {
-          expect(a.x1).toBeGreaterThanOrEqual(0);
-          expect(a.x2).toBeLessThanOrEqual(width);
-          labels.forEach((b, j) => {
-            if (i !== j) {
-              expect(overlaps(a, b)).toBe(false);
-            }
-          });
-          for (const c of columns) {
-            expect(overlaps(a, c)).toBe(false);
-          }
-        });
-      }
-    }
-  });
-
-  it("never runs a leader through another column's label", () => {
-    // At 390 the six disks' nvme0n1 label is wide enough to reach over sdb's column: sdb's leader
-    // must not cross it.
-    const crossings: string[] = [];
-    for (const list of [six, bay]) {
-      for (const width of WIDTHS) {
-        const layout = layoutAt(list, width);
-        for (const s of layout.stacks.filter((t) => t.label.leader)) {
-          const leader: Box = {
-            x1: s.x - 0.5,
-            y1: s.top,
-            x2: s.x + 0.5,
-            y2: s.label.box.y1,
-          };
-          for (const other of layout.stacks) {
-            if (other.c !== s.c && overlaps(leader, other.label.box)) {
-              crossings.push(
-                `${String(list.length)} disks at ${String(width)}px: ${String(s.c)} crosses ${String(other.c)}`,
-              );
-            }
-          }
-        }
-      }
-    }
-    expect(crossings).toEqual([]);
-  });
-
-  it("names a column of up to three, counts a taller one, and always names the hottest", () => {
-    const layout = layoutAt(bay, 640);
-    const at = (c: number) => layout.stacks.find((s) => s.c === c)?.label;
-    expect(at(34)).toMatchObject({
-      kind: "names",
-      lines: ["sda", "sdh", "sdr"],
-    });
-    expect(at(35)).toMatchObject({ kind: "count", lines: ["5 disks"] });
-    expect(at(36)).toMatchObject({ kind: "count", lines: ["4 disks"] });
-    expect(at(46)).toMatchObject({ kind: "names", lines: ["sdt"] });
-    // The hottest sits on its column, never lifted away from it.
-    expect(at(46)?.leader).toBe(false);
+    expect(DRIVE_BOX.tile.hdd.h).toBe(56);
+    expect(DRIVE_BOX.tile.nvme.w).toBe(56);
   });
 });
 
-describe("temperatures by kind", () => {
+describe("the groups: each array and pool, then the rest by kind", () => {
+  const six = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
+  const bay = DISKS_24.map((d) => tempOf(d, SMART_SETTINGS));
+  const names = (g: DiskGroup | undefined) => g?.disks.map((d) => d.device);
+  const temp = (device: string): DiskTemp => ({
+    device,
+    file: `/dev/${device}`,
+    links: [`/dev/disk/by-id/ata-EXAMPLE-${device}`],
+    kind: "hdd",
+    c: 40,
+    asleep: false,
+    limit: 45,
+  });
+  const none: VolumesRead = { arrays: [], pools: [], labels: [] };
+
+  it("groups the six disks as the dashboard has them: Backup of sdb and sdc, tank on sdd", () => {
+    const groups = diskGroups(six, VOLUMES);
+    expect(groups.map((g) => [g.title, names(g)])).toEqual([
+      ["Backup, Mirror (RAID 1)", ["sdb", "sdc"]],
+      ["tank, ZFS pool (single disk)", ["sdd"]],
+      ["Hard disks", ["sda"]],
+      ["SSDs", ["sde"]],
+      ["NVMe SSDs, on the mainboard", ["nvme0n1"]],
+    ]);
+    expect(groups.map((g) => g.from)).toEqual([
+      "md",
+      "zfs",
+      "kind",
+      "kind",
+      "kind",
+    ]);
+    expect(groups.every((g) => g.state === null)).toBe(true);
+  });
+
+  it("puts every one of the 24 disks in exactly one group", () => {
+    const groups = diskGroups(bay, VOLUMES_24);
+    const all = groups.flatMap((g) => g.disks.map((d) => d.device));
+    expect(all).toHaveLength(24);
+    expect(new Set(all).size).toBe(24);
+    expect([...all].sort()).toEqual(bay.map((d) => d.device).sort());
+    expect(groups.map((g) => [g.title, g.disks.length])).toEqual([
+      ["Backup, Mirror (RAID 1)", 2],
+      ["Apps, Mirror (RAID 1)", 2],
+      ["Archive, Double parity (RAID 6)", 8],
+      ["tank, ZFS pool (mirror)", 2],
+      ["Hard disks", 8],
+      ["SSDs", 2],
+    ]);
+    // At least two arrays, one pool and some disks in none.
+    expect(groups.filter((g) => g.from === "md").length).toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(groups.filter((g) => g.from === "zfs")).toHaveLength(1);
+    expect(groups.filter((g) => g.from === "kind").length).toBeGreaterThan(0);
+  });
+
+  it("keeps the members in their array, partitions and by-id paths included, in device order", () => {
+    const groups = diskGroups(bay, VOLUMES_24);
+    expect(names(groups[0])).toEqual(["sdb", "sdc"]);
+    // md2's members are partitions (/dev/sdf1), tank's are by-id paths to a partition.
+    expect(names(groups[2])).toEqual([
+      "sdf",
+      "sdg",
+      "sdh",
+      "sdj",
+      "sdk",
+      "sdl",
+      "sdm",
+      "sdn",
+    ]);
+    expect(names(groups[3])).toEqual(["sdd", "sde"]);
+    // None of a volume's members is in a kind group as well.
+    const inKind = groups
+      .filter((g) => g.from === "kind")
+      .flatMap((g) => g.disks.map((d) => d.device));
+    for (const g of groups.filter((x) => x.from !== "kind")) {
+      for (const d of g.disks) {
+        expect(inKind).not.toContain(d.device);
+      }
+    }
+  });
+
+  it("keeps an NVMe stick in its array, drawn as a stick, and out of the NVMe group", () => {
+    const groups = diskGroups(bay, VOLUMES_24);
+    const apps = groups.find((g) => g.title.startsWith("Apps"));
+    expect(names(apps)).toEqual(["nvme0n1", "nvme1n1"]);
+    expect(apps?.disks.every((d) => d.kind === "nvme")).toBe(true);
+    expect(groups.find((g) => g.id === "kind:nvme")).toBeUndefined();
+    // Without the arrays, the same sticks are the NVMe group.
+    expect(
+      names(diskGroups(bay, none).find((g) => g.id === "kind:nvme")),
+    ).toEqual(["nvme0n1", "nvme1n1"]);
+  });
+
+  it("shows a disk in two volumes once, in the first", () => {
+    const groups = diskGroups([temp("sda"), temp("sdb")], {
+      arrays: [
+        {
+          devicefile: "/dev/md0",
+          name: "",
+          level: "raid1",
+          devices: ["/dev/sda1", "/dev/sdb1"],
+          state: "clean",
+          syncaction: "idle",
+        },
+      ],
+      pools: [
+        {
+          status: { name: "tank", state: "ONLINE" },
+          devices: [
+            { devicefile: "/dev/disk/by-id/ata-EXAMPLE-sda-part2", vdev: "" },
+          ],
+        },
+      ],
+      labels: [],
+    });
+    expect(groups.map((g) => [g.title, names(g)])).toEqual([
+      ["RAID md0, Mirror (RAID 1)", ["sda", "sdb"]],
+    ]);
+  });
+
+  it("matches a partition to its disk by the kernel's naming, and nothing else", () => {
+    expect(onDisk("/dev/sdb", "/dev/sdb")).toBe(true);
+    expect(onDisk("/dev/sdb1", "/dev/sdb")).toBe(true);
+    expect(onDisk("/dev/sdba", "/dev/sdb")).toBe(false);
+    expect(onDisk("/dev/nvme0n1p1", "/dev/nvme0n1")).toBe(true);
+    // nvme0n10 is another disk, not a partition of nvme0n1.
+    expect(onDisk("/dev/nvme0n10", "/dev/nvme0n1")).toBe(false);
+    expect(onDisk("/dev/disk/by-id/ata-X-part1", "/dev/disk/by-id/ata-X")).toBe(
+      true,
+    );
+    expect(onDisk("/dev/disk/by-id/ata-X2", "/dev/disk/by-id/ata-X")).toBe(
+      false,
+    );
+  });
+
+  it("names an array by its file system's label, then mdadm's own name, then its device", () => {
+    const labels = [{ devicename: "md0", label: "Backup" }];
+    expect(arrayName({ devicefile: "/dev/md0", name: "" }, labels)).toBe(
+      "Backup",
+    );
+    expect(
+      arrayName({ devicefile: "/dev/md1", name: "othernas:media" }, labels),
+    ).toBe("media");
+    expect(arrayName({ devicefile: "/dev/md2", name: "" }, labels)).toBe(
+      "RAID md2",
+    );
+  });
+
+  it("says a pool's arrangement from its groups, not from a disk being replaced", () => {
+    const d = (vdev: string) => ({ devicefile: "/dev/sdx", vdev });
+    expect(poolLayout([d("mirror-0"), d("mirror-0")])).toBe("mirror");
+    expect(
+      poolLayout([d("mirror-0"), d("replacing-1"), d("replacing-1")]),
+    ).toBe("mirror");
+    expect(poolLayout([d("raidz1-0"), d("raidz1-0"), d("raidz1-0")])).toBe(
+      "RAID-Z1",
+    );
+    expect(poolLayout([d("")])).toBe("single disk");
+    expect(poolLayout([d(""), d("")])).toBe("stripe");
+  });
+
+  it("says an array or pool is rebuilding or short of a disk only when it is", () => {
+    const groups = diskGroups(bay, VOLUMES_24);
+    expect(groups.find((g) => g.title.startsWith("Archive"))?.state).toEqual({
+      tone: "warning",
+      words: "Rebuilding",
+    });
+    expect(groups.filter((g) => g.state !== null).map((g) => g.title)).toEqual([
+      "Archive, Double parity (RAID 6)",
+    ]);
+    expect(
+      arrayState({ state: "clean, degraded", syncaction: "idle" }),
+    ).toEqual({ tone: "warning", words: "A disk is missing or has failed" });
+    expect(arrayState({ state: "clean", syncaction: "idle" })).toBeNull();
+    const pool = (state: string, vdev = "mirror-0") => ({
+      status: { name: "tank", state },
+      devices: [{ devicefile: "/dev/sdx", vdev }],
+    });
+    expect(poolState(pool("ONLINE"))).toBeNull();
+    expect(poolState(pool("DEGRADED"))?.words).toBe(
+      "A disk is missing or has failed",
+    );
+    expect(poolState(pool("DEGRADED", "replacing-1"))?.words).toBe(
+      "Rebuilding",
+    );
+    expect(poolState(pool("FAULTED"))?.tone).toBe("critical");
+  });
+});
+
+describe("on the dashboard", () => {
   const six = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
   const bay = DISKS_24.map((d) => tempOf(d, SMART_SETTINGS));
 
-  it("groups hard disks, SSDs and NVMe SSDs, each in device order, and says the sticks are on the mainboard", () => {
-    const groups = kindGroups(bay);
-    expect(groups.map((g) => [g.title, g.disks.length])).toEqual([
-      ["Hard disks", 20],
-      ["SSDs", 2],
-      ["NVMe SSDs, on the mainboard", 2],
-    ]);
-    const hdd = groups[0]?.disks.map((d) => d.device) ?? [];
-    expect(hdd.slice(0, 3)).toEqual(["sda", "sdb", "sdc"]);
-    expect(hdd.at(-1)).toBe("sdu");
-    expect(groups[1]?.disks.map((d) => d.device)).toEqual(["sdq", "sdv"]);
-    // Device order counts numerically: nvme2n1 before nvme10n1.
-    const sticks = kindGroups(
-      ["nvme10n1", "nvme2n1"].map((device) => ({
-        device,
-        kind: "nvme" as const,
-        c: 40,
-        asleep: false,
-        limit: null,
-      })),
-    );
-    expect(sticks[0]?.disks.map((d) => d.device)).toEqual([
-      "nvme2n1",
-      "nvme10n1",
-    ]);
+  it("shows every disk up to eight", () => {
+    const groups = diskGroups(six, VOLUMES);
+    expect(six.length).toBeLessThanOrEqual(DASHBOARD_ALL);
+    expect(dashboardSplit(groups)).toEqual({ shown: groups, rest: [] });
   });
 
-  it("leaves out a kind with no disk", () => {
-    const hddOnly = six.filter((d) => d.kind === "hdd");
-    expect(kindGroups(hddOnly).map((g) => g.kind)).toEqual(["hdd"]);
-    expect(kindGroups([])).toEqual([]);
+  it("past eight, shows the groups with a disk over the limit and sums up the rest", () => {
+    const split = dashboardSplit(diskGroups(bay, VOLUMES_24));
+    expect(split.shown.map((g) => g.title)).toEqual(["Hard disks"]);
+    const rest = split.rest.flatMap((g) => g.disks);
+    expect(rest).toHaveLength(16);
+    expect(restWords(rest, false, 45)).toBe(
+      degrees(
+        "The other 16 disks are between 31 °C and 43 °C, under the alert limit of 45 °C.",
+      ),
+    );
   });
 
-  it("says each disk's kind in words, for the text that stands in for the pictures", () => {
-    const pick = (...names: string[]) =>
-      bay.filter((d) => names.includes(d.device));
-    expect(diskWords(pick("sdq"))).toBe("the SSD sdq");
-    expect(diskWords(pick("sda"))).toBe("the hard disk sda");
-    expect(diskWords(pick("nvme0n1"))).toBe("the NVMe SSD nvme0n1");
-    expect(diskWords(pick("sda", "sdh", "sdr"))).toBe(
-      "the hard disks sda, sdh and sdr",
+  it("never hides a disk over the limit, wherever it is", () => {
+    // Each disk in turn over the limit, in an array, a pool or no volume.
+    for (const hot of bay) {
+      const disks = bay.map((d) =>
+        d.device === hot.device ? { ...d, c: 47, asleep: false } : d,
+      );
+      const split = dashboardSplit(diskGroups(disks, VOLUMES_24));
+      const hidden = split.rest.flatMap((g) => g.disks);
+      expect(hidden.filter(overLimit)).toEqual([]);
+      expect(
+        split.shown.flatMap((g) => g.disks).map((d) => d.device),
+      ).toContain(hot.device);
+    }
+  });
+
+  it("says what the hidden disks are, counting only those read", () => {
+    const disk = (device: string, c: number | null): DiskTemp => ({
+      device,
+      file: `/dev/${device}`,
+      links: [],
+      kind: "hdd",
+      c,
+      asleep: c === null,
+      limit: 45,
+    });
+    expect(restWords([disk("sda", 30), disk("sdb", 34)], true, 45)).toBe(
+      degrees(
+        "All 2 disks are between 30 °C and 34 °C, under the alert limit of 45 °C.",
+      ),
     );
-    expect(diskWords(pick("sda", "sdh", "sdq", "nvme0n1"))).toBe(
-      "the hard disks sda and sdh, the SSD sdq, and the NVMe SSD nvme0n1",
+    expect(restWords([disk("sda", 30), disk("sdb", null)], false, null)).toBe(
+      degrees("1 of the other 2 disks is at 30 °C."),
+    );
+    expect(restWords([disk("sda", null)], false, 45)).toBe(
+      "None of the other 1 disk has a temperature reading.",
     );
   });
 });

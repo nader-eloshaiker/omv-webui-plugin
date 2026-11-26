@@ -3,14 +3,14 @@
 // and the ones not chosen, one line each. Development only (UI-11).
 import { PairedStrip } from "./LiveCharts.tsx";
 import { Waffle } from "./SpaceCharts.tsx";
-import { TempByKind, TempStacks } from "./TempCharts.tsx";
+import { TempByKind } from "./TempCharts.tsx";
 
 export const SPACE_CANDIDATES = [
   {
     id: "waffle",
     title: "The waffle",
     caption:
-      "Each square is a fixed share of the drive, used squares in the usage blue and empty ones solid, and the warning mark is a gap with a rule in it, so the room left before the warning can be counted at a glance.",
+      "Each square is a fixed share of the drive, used squares in the usage blue and empty ones in a solid slate, and the warning mark is a gap with a rule in it, so the room left before the warning can be counted at a glance.",
     Chart: Waffle,
   },
 ] as const;
@@ -27,22 +27,15 @@ export const LIVE_CANDIDATES = [
 
 export const TEMP_CANDIDATES = [
   {
-    id: "stacked",
-    title: "Along one scale, stacked",
-    caption:
-      "Disks at the same whole degree stack upward into a column, each drawn as a small picture of its kind, so the spread across all the disks reads like a histogram and no picture hides another.",
-    Chart: TempStacks,
-  },
-  {
     id: "by-kind",
-    title: "By kind, each with its level",
+    title: "By kind, with each array and pool as a group",
     caption:
-      "Hard disks, SSDs and NVMe SSDs in groups of their own, each disk drawn as its kind with its temperature as a level on one scale shared by every group, and the alert limit at the same height through every tile. The order within a group is the device order, because the NAS does not report which slot of the case a disk is in.",
+      "Each RAID array and ZFS pool is a group headed by its name and arrangement, with its disks in it; then the disks in no array or pool, by kind. Each disk is drawn as its kind with its temperature as a filled level on one scale shared by every group, and the alert limit at the same height through every tile. The order within a group is the device order, because the NAS does not report which slot of the case a disk is in.",
     Chart: TempByKind,
   },
 ] as const;
 
-/** Round one's candidates the owner did not pick, kept as one line each so the choice is on record. */
+/** The candidates the owner did not pick, kept as one line each so the choice is on record. */
 export const NOT_CHOSEN = [
   {
     subject: "Space",
@@ -73,5 +66,10 @@ export const NOT_CHOSEN = [
     subject: "Temperatures",
     title: "One thermometer for each disk",
     line: "A thermometer tube per disk on a shared scale, in device order; the owner found it easier to read but not outstanding.",
+  },
+  {
+    subject: "Temperatures",
+    title: "Along one scale, stacked",
+    line: "Disks at the same whole degree stacked into columns of small pictures; the owner chose the disks by kind, on the dashboard and on the Disks page alike.",
   },
 ] as const;

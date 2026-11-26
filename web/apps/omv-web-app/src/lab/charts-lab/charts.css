@@ -2,16 +2,26 @@
  *
  * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
  * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
- * densities follow. No colour literal. Geometry from data reaches the CSS as custom properties
+ * densities follow. One colour literal, --ch-empty below, until its token lands. Geometry from data reaches the CSS as custom properties
  * through the CSSOM (--w, --x, --y, --h, --k, --left, --top, --lw); nothing is a style attribute
  * in markup (UI-1).
  *
- * Colour: the usage blue for how full and how warm (one hue), the series teal and violet for the
+ * Colour: the usage blue for how full and how warm (one hue) on the slate of what is empty, every
+ * amount filled and none outlined; the series teal and violet for the
  * lines of the two live charts, warning only past an admin's mark or limit with its words, the text
  * inks for every word and figure, and the text and divider inks for the drive pictures, whose shape
  * says the kind. No accent, no glow, no pulse, no card, no light on a drive.
  */
 
+/* The empty part of every amount: the waffle's empty squares and the temperature bars' tracks
+   (owner, round four: "all filled and no outline"). The slate the owner approved; a design-system
+   builder is adding it as a token, and this one property then takes the token. */
+.omv-lab-charts {
+  --ch-empty: #b9c6d2;
+}
+.dark .omv-lab-charts {
+  --ch-empty: #3b495b;
+}
 .omv-lab-charts {
   min-height: 100dvh;
   background: var(--theme-page);
@@ -268,20 +278,9 @@
   width: 100%;
   height: auto;
 }
-/* Empty squares are solid (owner, round two). The divider colour keeps them apart from the used
-   squares; `empty=edge` shows the owner's ask, the track's outline colour, for comparison. */
+/* Empty squares are solid slate, used ones solid blue: filled, never outlined. */
 .ch-wf-empty {
-  fill: var(--theme-border);
-}
-.ch-frame[data-empty="edge"] .ch-wf-empty {
-  fill: var(--theme-usage-track-edge);
-}
-/* A proposed colour, lab only, not a token: the owner judges it before the colour audit takes it. */
-.ch-frame[data-empty="slate"] .ch-wf-empty {
-  fill: #b9c6d2;
-}
-.dark .ch-frame[data-empty="slate"] .ch-wf-empty {
-  fill: #3b495b;
+  fill: var(--ch-empty);
 }
 .ch-wf-used {
   fill: var(--theme-usage);
@@ -475,106 +474,7 @@
   height: 8px;
 }
 
-/* ─── Temperatures: along one scale, stacked ──────────────────────────────────────────────────── */
-.ch-st {
-  max-width: 760px;
-}
-.ch-st-plot {
-  position: relative;
-  height: calc(var(--h) * 1px);
-}
-.ch-st-svg {
-  position: absolute;
-  inset: 0;
-  display: block;
-  overflow: visible;
-}
-.ch-tick {
-  fill: none;
-  stroke: var(--theme-border-control);
-}
-.ch-st-degree {
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
-  fill: var(--theme-foreground);
-  font-variant-numeric: tabular-nums;
-}
-/* A disk at or past its limit: its marker in the warning ink, with its sentence under the chart. */
-.ch-st-mark[data-over] .ch-dp .dp-body,
-.ch-st-mark[data-over] .ch-dp .dp-platter,
-.ch-st-mark[data-over] .ch-dp .dp-arm {
-  stroke: var(--theme-warning-stroke);
-}
-.ch-st-mark[data-over] .ch-dp .dp-ink,
-.ch-st-mark[data-over] .ch-dp .dp-chip {
-  fill: var(--theme-warning-stroke);
-}
-.ch-st-leader {
-  fill: none;
-  stroke: var(--theme-border-control);
-  stroke-width: 1;
-}
-.ch-st-limit {
-  fill: none;
-  stroke: var(--theme-foreground);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
-}
-.ch-st-names,
-.ch-st-count {
-  position: absolute;
-  inset-inline-start: calc(var(--left) * 1px);
-  inset-block-start: calc(var(--top) * 1px);
-  width: calc(var(--lw) * 1px);
-}
-.ch-st-names {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 15px;
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
-}
-/* A tall column says how many; pointer or focus names them (the library's Tooltip). */
-.ch-st-count {
-  height: 22px;
-  padding: 0 8px;
-  border: 1px solid var(--theme-border-control);
-  border-radius: var(--radius-sm);
-  background: var(--theme-page);
-  color: var(--theme-foreground);
-  font: inherit;
-  font-size: 12px;
-  line-height: 20px;
-  font-weight: var(--font-weight-semibold);
-  white-space: nowrap;
-  cursor: default;
-  transition: background-color var(--duration-fast) var(--ease-standard);
-}
-.ch-st-count:hover {
-  background: var(--theme-muted-strong);
-}
-.ch-st-count:focus-visible {
-  outline: 2px solid var(--theme-focus-ring);
-  outline-offset: 2px;
-}
-.ch-st-limit-words {
-  position: absolute;
-  inset-block-start: calc(var(--top) * 1px);
-  inset-inline-start: calc(var(--x) * 1px + 6px);
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
-}
-.ch-st-limit-words[data-side="left"] {
-  translate: calc(-100% - 12px) 0;
-}
-.ch-st-key {
-  margin-block-start: 10px;
-}
+/* A disk over its limit: its sentence under the tiles. */
 .ch-over-note {
   margin-block-start: 8px;
 }
@@ -671,42 +571,75 @@
   color: var(--theme-tertiary-foreground);
 }
 
-/* ─── Temperatures: by kind, each with its level ──────────────────────────────────────────────── */
+/* ─── Temperatures: by kind, each array and pool a group ─────────────────────────────────────── */
 /* --lv is the scale's length in every group: the height of an upright level and of the tile hard
    disk, and the length of a lying level and of the tile stick, so a degree is the same distance
    everywhere and the limit sits at one height. */
 .ch-kinds {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
   min-width: 0;
   --lv: 56px;
 }
+.ch-kinds > .ch-note {
+  margin: 0;
+}
+/* The groups side by side, each as wide as its heading or its tiles, wrapping where they meet the
+   edge, so a NAS of 24 disks is a few rows and not one group under another. */
+.ch-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px 40px;
+}
+:root[data-density="compact"] .ch-groups {
+  gap: 18px 32px;
+}
+.ch-kind {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Every head is at least one status label tall, so a group that says "Rebuilding" starts its tiles
+   at the same height as its neighbours and the limit stays one line across a row. */
+.ch-kind-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  min-height: 24px;
+  margin: 0 0 8px;
+}
 .ch-kind-title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: var(--text-sm);
   line-height: 20px;
   font-weight: var(--font-weight-semibold);
   color: var(--theme-foreground);
 }
 .ch-kind-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 52px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px 10px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.ch-kind-tiles[data-kind="nvme"] {
-  grid-template-columns: repeat(auto-fill, 72px);
-  gap: 16px 12px;
+:root[data-density="compact"] .ch-kind-tiles {
+  row-gap: 12px;
 }
 .ch-kt {
   display: flex;
+  flex: none;
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  width: 52px;
   min-width: 0;
+}
+.ch-kt[data-kind="nvme"] {
+  width: 72px;
 }
 /* Upright: the picture, and the level beside it, both standing on one baseline. */
 .ch-kt-art {
@@ -719,28 +652,20 @@
   height: var(--lv);
   margin-block-end: 6px;
 }
+/* The bar: a solid slate track and a solid level, no outline, no border, no shadow. */
 .ch-kt-bar {
   position: relative;
   flex: none;
   width: 8px;
   height: 100%;
   border-radius: 2px;
-  background: var(--theme-usage-track);
+  background: var(--ch-empty);
   overflow: hidden;
 }
-.ch-kt-bar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
-}
-.ch-kt[data-asleep] .ch-kt-bar {
+/* No reading (asleep, or not read): no track at all, only the word under the disk. The slot keeps
+   its width, so the picture stays where every other tile has it. */
+.ch-kt[data-unread] .ch-kt-bar {
   background: none;
-}
-.ch-kt[data-asleep] .ch-kt-bar::after {
-  box-shadow: none;
-  border: 1px dashed var(--theme-usage-track-edge);
 }
 .ch-kt-level {
   position: absolute;
@@ -753,7 +678,7 @@
   background: var(--theme-warning-stroke);
 }
 /* The alert limit: one dashed line at its height, through the tile and half the gap either side, so
-   the tiles of a row join it into one straight line. */
+   the tiles of a row join it into one straight line. A mark on the scale, not an outline. */
 .ch-kt-limit {
   position: absolute;
   inset-inline: -5px;
@@ -804,6 +729,9 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.ch-kt[data-unread] .ch-kt-value {
+  color: var(--theme-muted-foreground);
+}
 .ch-kt[data-over] .ch-kt-value {
   color: var(--theme-warning-label);
   font-weight: var(--font-weight-semibold);
@@ -811,6 +739,26 @@
 .ch-kt-value svg {
   width: 12px;
   height: 12px;
+}
+/* On the dashboard past eight disks: the rest in a sentence, and the disclosure that opens them. */
+.ch-rest {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.ch-rest-words {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.ch-rest [data-slot="disclosure"] {
+  align-self: stretch;
+}
+.ch-rest [data-slot="disclosure-panel"] .ch-groups {
+  padding-block-start: 12px;
 }
 
 /* ─── In place ────────────────────────────────────────────────────────────────────────────────── */
@@ -853,7 +801,7 @@
   color: var(--theme-muted-foreground);
 }
 
-/* For screen readers only: the temperatures as a list. */
+/* For screen readers only: words the pictures stand in for. */
 .ch-sr {
   position: absolute;
   width: 1px;
