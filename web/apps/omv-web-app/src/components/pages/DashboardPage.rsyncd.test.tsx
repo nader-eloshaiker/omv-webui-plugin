@@ -42,7 +42,7 @@ describe("the dashboard's rsync server row (12.2)", () => {
     expect(
       within(screen.getByRole("region", { name: "Your NAS" })).getByRole(
         "button",
-        { name: /Copies to other NAS \(rsync\): on but not running/ },
+        { name: /Copies to other NAS, rsync: not running/ },
       ),
     ).toBeInTheDocument();
   });
