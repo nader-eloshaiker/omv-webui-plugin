@@ -46,6 +46,41 @@ describe("DriveBay", () => {
     expect(container.querySelectorAll("path.stroke-art-faint")).toHaveLength(1);
   });
 
+  it("draws each kind as its own shape in a bare bay, where vents would not show", () => {
+    const kinds = ["hdd", "ssd", "nvme", "disk"] as const;
+    const { container } = render(
+      <DriveBay
+        aria-label="Disks"
+        variant="bare"
+        slots={kinds.map((kind) => ({
+          ...(SLOTS[0] as DriveSlot),
+          id: kind,
+          kind,
+        }))}
+      />,
+    );
+    const faces = [...container.querySelectorAll("svg[data-kind]")];
+    expect(faces.map((f) => f.getAttribute("data-kind"))).toEqual([...kinds]);
+    const [hdd, ssd, nvme, plain] = faces as SVGElement[];
+    // A platter and its hub; two flash chips and a controller; a stick and its mounting hole; a blank plate.
+    expect(hdd?.querySelectorAll("circle")).toHaveLength(2);
+    expect(ssd?.querySelectorAll("rect")).toHaveLength(5);
+    expect(nvme?.querySelectorAll("circle")).toHaveLength(1);
+    expect(plain?.querySelectorAll("circle, path")).toHaveLength(0);
+    // No vents in a bare bay.
+    expect(container.querySelectorAll("path.stroke-art-faint")).toHaveLength(1);
+  });
+
+  it("draws an NVMe stick with the SSD's face on the chassis", () => {
+    const { container } = render(
+      <DriveBay
+        aria-label="Disks"
+        slots={[{ ...(SLOTS[0] as DriveSlot), kind: "nvme" }]}
+      />,
+    );
+    expect(container.querySelector("svg")).toHaveAttribute("data-kind", "ssd");
+  });
+
   it("turns the caddy's edge and word when a result lands, slot after slot, and draws no light", () => {
     const { container, rerender } = render(
       <DriveBay aria-label="Disks" slots={SLOTS} />,

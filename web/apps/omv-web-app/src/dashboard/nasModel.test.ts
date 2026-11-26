@@ -256,15 +256,49 @@ describe("the map's input", () => {
     });
   });
 
-  it("draws a disk of no known kind as a plain disk, and a USB disk as one", () => {
+  it("draws each disk as the kind the temperatures draw it, and a plain disk only when not known", () => {
+    const disks = [
+      disk("nvme0n1", { powermode: "UNKNOWN" }),
+      disk("sda"),
+      disk("sdb"),
+      disk("sdc"),
+      disk("sdd", { powermode: "STANDBY", temperature: "" }),
+    ];
+    // sda and sdb were read awake; sdc's read has not come back; sdd is asleep, so never read.
+    const kinds = new Map([
+      ["nvme0n1", "nvme" as const],
+      ["sda", "hdd" as const],
+      ["sdb", "ssd" as const],
+    ]);
+    const { input: nas } = nasModel(input({ disks, kinds }), WORDS);
+    expect(nas.disks.map((d) => [d.id, d.kind])).toEqual([
+      ["nvme0n1", "nvme"],
+      ["sda", "hdd"],
+      ["sdb", "ssd"],
+      ["sdc", "disk"],
+      ["sdd", "disk"],
+    ]);
+    const temps = temperatureGroups(disks, kinds, 45, null, new Map(), []);
+    const tempKind = new Map(
+      temps.flatMap((g) => g.disks.map((d) => [d.device, d.kind ?? "disk"])),
+    );
+    for (const d of nas.disks) {
+      expect(tempKind.get(d.id)).toBe(d.kind);
+    }
+  });
+
+  it("never draws a hot-pluggable disk as USB: OMV says hot-pluggable for SAS and hot-plug SATA ports", () => {
     const { input: nas } = nasModel(
       input({
-        disks: [disk("sda"), disk("sdb"), disk("sdc", { hotpluggable: true })],
+        disks: [
+          disk("sda", { hotpluggable: true }),
+          disk("sdb", { hotpluggable: true }),
+        ],
         kinds: new Map([["sda", "hdd"]]),
       }),
       WORDS,
     );
-    expect(nas.disks.map((d) => d.kind)).toEqual(["hdd", "disk", "usb"]);
+    expect(nas.disks.map((d) => d.kind)).toEqual(["hdd", "disk"]);
   });
 
   it("calls a missing file system Missing, never fine, and lists the system drive by name", () => {
