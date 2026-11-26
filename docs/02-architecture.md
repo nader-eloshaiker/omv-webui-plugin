@@ -94,7 +94,7 @@ docs/
 | Polling | TanStack Query `refetchInterval` per page | Sent with `options.updatelastaccess: false` so background polling does not keep a session alive |
 | Mocks | MSW in development and tests | Serve the contract's examples; excluded from the production bundle |
 | i18n | i18next, typed keys | English catalogue first; no user-facing string in code |
-| Theme | `prefers-color-scheme` in the stylesheet, a `.dark` / `.light` class on `<html>` only for an explicit choice | The OS preference applies from the first paint with no script (UI-1 forbids an inline script). The user's choice is set by the entry module before the first render, so at most a stored choice that differs from the OS shows the OS theme for a moment |
+| Theme | Dark by default (owner, 2026-11-27): `index.html` puts `.dark` on `<html>` and the stored preference defaults to dark. A `.light` class for that choice; no class for "system", where `prefers-color-scheme` in the stylesheet follows the OS | The page is dark from the first paint with no script (UI-1 forbids an inline script). The user's stored choice is set by the entry module before the first render, so at most a stored light or system choice shows dark for a moment |
 
 ## What is deliberately absent
 
