@@ -11,6 +11,7 @@
 // scrolls to one entry for a screenshot.
 import {
   Button,
+  MotionProvider,
   SegmentedChoice,
   Shell,
   SideNav,
@@ -21,6 +22,7 @@ import {
   TopBar,
   TopBarBrand,
   UiProvider,
+  useSystemReducedMotion,
 } from "@omv-webui/react-ui-components";
 import {
   Activity,
@@ -41,7 +43,6 @@ import { Toggle } from "../forms/FormsLab.tsx";
 import "../tables/tables.css";
 import { ENTRIES, LEFT_OUT } from "./entries/index.ts";
 import { Entry } from "./Entry.tsx";
-import { useSystemReducedMotion } from "./helpers/useReducedMotion.ts";
 import "./reel.css";
 import type { CheckResult, ReelSettings } from "./reel.ts";
 import { ReelContext } from "./reel.ts";
@@ -201,189 +202,193 @@ export default function MotionLab() {
 
   return (
     <UiProvider>
-      <div
-        className="omv-lab-forms omv-lab-dash omv-lab-tables omv-lab-reel"
-        data-motion={view.motion}
+      <MotionProvider
+        reduced={view.motion === "reduced" || preference === "reduced"}
       >
-        <Shell
-          mainId="lab-main"
-          topBar={
-            <TopBar
-              brand={
-                <TopBarBrand productName="openmediavault" hostName="nas" />
-              }
-            />
-          }
-          sidebar={
-            <SideNav aria-label="Main">
-              <SideNavList>
-                <SideNavItem icon={<LayoutGrid />}>Dashboard</SideNavItem>
-              </SideNavList>
-              <SideNavGroup label="System" icon={<Settings />}>
-                <SideNavItem>Web interface</SideNavItem>
-              </SideNavGroup>
-              <SideNavGroup label="Network" icon={<Network />}>
-                <SideNavItem>Interfaces</SideNavItem>
-              </SideNavGroup>
-              <SideNavGroup label="Storage" icon={<HardDrive />}>
-                <SideNavItem>Disks</SideNavItem>
-                <SideNavItem>File systems</SideNavItem>
-                <SideNavItem>Shared folders</SideNavItem>
-              </SideNavGroup>
-              <SideNavGroup label="Services" icon={<Share2 />}>
-                <SideNavItem>Windows and Mac (SMB)</SideNavItem>
-              </SideNavGroup>
-              <SideNavGroup label="Users" icon={<Users />}>
-                <SideNavItem>People</SideNavItem>
-              </SideNavGroup>
-              <SideNavGroup label="Diagnostics" icon={<Activity />}>
-                <SideNavItem>System logs</SideNavItem>
-              </SideNavGroup>
-            </SideNav>
-          }
+        <div
+          className="omv-lab-forms omv-lab-dash omv-lab-tables omv-lab-reel"
+          data-motion={view.motion}
         >
-          <div className="dm-width" data-width={view.width}>
-            <StillContext value={initial.still}>
-              <ReelContext value={settings}>
-                <div className="rl-page">
-                  <header className="rl-head">
-                    <h1 className="rl-title">Motion</h1>
-                    <p className="rl-lede">
-                      Each motion runs when you press its cause. The Full and
-                      Reduced panes run it at the same moment, and 400ms later
-                      the reel checks that nothing in either pane is still
-                      faded.
-                    </p>
-                    <div className="rl-controls">
-                      <div className="rl-control">
-                        <span className="rl-control-label" id="rl-anim">
-                          Animations
-                        </span>
-                        <SegmentedChoice
-                          aria-label="Animations"
-                          size="sm"
-                          value={view.motion}
-                          options={[
-                            { value: "full", label: "Full" },
-                            { value: "reduced", label: "Reduced" },
-                          ]}
-                          onValueChange={(motion) => {
-                            update({ motion });
-                            useMotionStore.getState().setMotion(motion);
-                          }}
-                        />
-                      </div>
-                      <Button
-                        variant="neutral"
-                        size="sm"
-                        onClick={() => {
-                          useSeenStore.getState().reset();
-                        }}
-                      >
-                        Forget first times
-                      </Button>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        disabled={sweep.kind === "running"}
-                        onClick={() => {
-                          void checkAll();
-                        }}
-                      >
-                        Check every motion
-                      </Button>
-                    </div>
-                    <SweepReport sweep={sweep} total={ENTRIES.length} />
-                  </header>
-
-                  {SECTIONS.map((section) => (
-                    <section
-                      key={section.id}
-                      className="rl-section"
-                      aria-labelledby={`rl-s-${section.id}`}
-                    >
-                      <h2
-                        id={`rl-s-${section.id}`}
-                        className="rl-section-title"
-                      >
-                        {section.title}
-                      </h2>
-                      {ENTRIES.filter((e) => e.section === section.id).map(
-                        (entry) => (
-                          <Entry key={entry.id} def={entry} />
-                        ),
-                      )}
-                    </section>
-                  ))}
-
-                  <section className="rl-section" aria-labelledby="rl-s-out">
-                    <h2 id="rl-s-out" className="rl-section-title">
-                      Left out, and why
-                    </h2>
-                    <ul className="rl-out">
-                      {LEFT_OUT.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                  </section>
-                </div>
-              </ReelContext>
-            </StillContext>
-          </div>
-        </Shell>
-        {chrome ? (
-          <aside
-            className="lx-labbar lf-labbar"
-            aria-label="Design lab controls"
+          <Shell
+            mainId="lab-main"
+            topBar={
+              <TopBar
+                brand={
+                  <TopBarBrand productName="openmediavault" hostName="nas" />
+                }
+              />
+            }
+            sidebar={
+              <SideNav aria-label="Main">
+                <SideNavList>
+                  <SideNavItem icon={<LayoutGrid />}>Dashboard</SideNavItem>
+                </SideNavList>
+                <SideNavGroup label="System" icon={<Settings />}>
+                  <SideNavItem>Web interface</SideNavItem>
+                </SideNavGroup>
+                <SideNavGroup label="Network" icon={<Network />}>
+                  <SideNavItem>Interfaces</SideNavItem>
+                </SideNavGroup>
+                <SideNavGroup label="Storage" icon={<HardDrive />}>
+                  <SideNavItem>Disks</SideNavItem>
+                  <SideNavItem>File systems</SideNavItem>
+                  <SideNavItem>Shared folders</SideNavItem>
+                </SideNavGroup>
+                <SideNavGroup label="Services" icon={<Share2 />}>
+                  <SideNavItem>Windows and Mac (SMB)</SideNavItem>
+                </SideNavGroup>
+                <SideNavGroup label="Users" icon={<Users />}>
+                  <SideNavItem>People</SideNavItem>
+                </SideNavGroup>
+                <SideNavGroup label="Diagnostics" icon={<Activity />}>
+                  <SideNavItem>System logs</SideNavItem>
+                </SideNavGroup>
+              </SideNav>
+            }
           >
-            <span className="lx-labbar-tag">Lab</span>
-            <Toggle
-              label="Width"
-              value={view.width}
-              options={[
-                ["full", "Full"],
-                ["900", "900"],
-                ["390", "390"],
-              ]}
-              onChange={(width) => {
-                update({ width });
-              }}
-            />
-            <Toggle
-              label="Theme"
-              value={view.theme}
-              options={[
-                ["dark", "Dark"],
-                ["light", "Light"],
-              ]}
-              onChange={(theme) => {
-                update({ theme });
-              }}
-            />
-            <Toggle
-              label="Density"
-              value={view.density}
-              options={[
-                ["comfortable", "Comfy"],
-                ["compact", "Compact"],
-              ]}
-              onChange={(density) => {
-                update({ density });
-              }}
-            />
-            <button
-              type="button"
-              className="lx-labbar-solo"
-              aria-label="Hide the lab controls"
-              onClick={() => {
-                setChrome(false);
-              }}
+            <div className="dm-width" data-width={view.width}>
+              <StillContext value={initial.still}>
+                <ReelContext value={settings}>
+                  <div className="rl-page">
+                    <header className="rl-head">
+                      <h1 className="rl-title">Motion</h1>
+                      <p className="rl-lede">
+                        Each motion runs when you press its cause. The Full and
+                        Reduced panes run it at the same moment, and 400ms later
+                        the reel checks that nothing in either pane is still
+                        faded.
+                      </p>
+                      <div className="rl-controls">
+                        <div className="rl-control">
+                          <span className="rl-control-label" id="rl-anim">
+                            Animations
+                          </span>
+                          <SegmentedChoice
+                            aria-label="Animations"
+                            size="sm"
+                            value={view.motion}
+                            options={[
+                              { value: "full", label: "Full" },
+                              { value: "reduced", label: "Reduced" },
+                            ]}
+                            onValueChange={(motion) => {
+                              update({ motion });
+                              useMotionStore.getState().setMotion(motion);
+                            }}
+                          />
+                        </div>
+                        <Button
+                          variant="neutral"
+                          size="sm"
+                          onClick={() => {
+                            useSeenStore.getState().reset();
+                          }}
+                        >
+                          Forget first times
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          disabled={sweep.kind === "running"}
+                          onClick={() => {
+                            void checkAll();
+                          }}
+                        >
+                          Check every motion
+                        </Button>
+                      </div>
+                      <SweepReport sweep={sweep} total={ENTRIES.length} />
+                    </header>
+
+                    {SECTIONS.map((section) => (
+                      <section
+                        key={section.id}
+                        className="rl-section"
+                        aria-labelledby={`rl-s-${section.id}`}
+                      >
+                        <h2
+                          id={`rl-s-${section.id}`}
+                          className="rl-section-title"
+                        >
+                          {section.title}
+                        </h2>
+                        {ENTRIES.filter((e) => e.section === section.id).map(
+                          (entry) => (
+                            <Entry key={entry.id} def={entry} />
+                          ),
+                        )}
+                      </section>
+                    ))}
+
+                    <section className="rl-section" aria-labelledby="rl-s-out">
+                      <h2 id="rl-s-out" className="rl-section-title">
+                        Left out, and why
+                      </h2>
+                      <ul className="rl-out">
+                        {LEFT_OUT.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  </div>
+                </ReelContext>
+              </StillContext>
+            </div>
+          </Shell>
+          {chrome ? (
+            <aside
+              className="lx-labbar lf-labbar"
+              aria-label="Design lab controls"
             >
-              <FormIcon name="close" />
-            </button>
-          </aside>
-        ) : null}
-      </div>
+              <span className="lx-labbar-tag">Lab</span>
+              <Toggle
+                label="Width"
+                value={view.width}
+                options={[
+                  ["full", "Full"],
+                  ["900", "900"],
+                  ["390", "390"],
+                ]}
+                onChange={(width) => {
+                  update({ width });
+                }}
+              />
+              <Toggle
+                label="Theme"
+                value={view.theme}
+                options={[
+                  ["dark", "Dark"],
+                  ["light", "Light"],
+                ]}
+                onChange={(theme) => {
+                  update({ theme });
+                }}
+              />
+              <Toggle
+                label="Density"
+                value={view.density}
+                options={[
+                  ["comfortable", "Comfy"],
+                  ["compact", "Compact"],
+                ]}
+                onChange={(density) => {
+                  update({ density });
+                }}
+              />
+              <button
+                type="button"
+                className="lx-labbar-solo"
+                aria-label="Hide the lab controls"
+                onClick={() => {
+                  setChrome(false);
+                }}
+              >
+                <FormIcon name="close" />
+              </button>
+            </aside>
+          ) : null}
+        </div>
+      </MotionProvider>
     </UiProvider>
   );
 }

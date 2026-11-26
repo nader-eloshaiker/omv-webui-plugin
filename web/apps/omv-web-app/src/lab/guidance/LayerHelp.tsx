@@ -7,12 +7,15 @@ import {
   Field,
   FieldControl,
   FieldLabel,
+  GlossaryTerm,
+  HelpDisclosure,
+  HelpPopover,
   RadioGroupField,
   RadioOption,
 } from "@omv-webui/react-ui-components";
 import { useState } from "react";
 import { Region, Specimen } from "./Region.tsx";
-import { GlossaryTerm, HelpDisclosure, HelpPopover } from "./parts/Help.tsx";
+import { termLabel } from "./tipWords.ts";
 
 export function LayerHelp() {
   const [how, setHow] = useState("smb");
@@ -71,10 +74,11 @@ export function LayerHelp() {
             </Field>
             <p className="g-specimen-line">
               Windows and Mac sharing (
-              <GlossaryTerm
-                term="SMB"
-                meaning="Server Message Block, the way Windows and Mac computers open folders over a network. Forum answers about Samba mean the same thing."
-              />
+              <GlossaryTerm term="SMB" label={termLabel("SMB")}>
+                Server Message Block, the way Windows and Mac computers open
+                folders over a network. Forum answers about Samba mean the same
+                thing.
+              </GlossaryTerm>
               ) is on for the whole NAS.
             </p>
           </div>

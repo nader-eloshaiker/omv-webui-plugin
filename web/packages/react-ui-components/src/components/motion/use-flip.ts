@@ -8,13 +8,12 @@
 // Nothing a reader is reading moves (7.1 rule 3): while the pointer or keyboard focus is inside the
 // container the order is held, the items' new data still shows in place, and `waiting` says a move
 // is waiting, so the caller can offer it ("1 row changed. Show it"). `release()` runs it; so does the
-// pointer and focus leaving. A second change interrupts the first, which jumps to its end. Written
-// for the library (spec 8 row 7).
+// pointer and focus leaving. A second change interrupts the first, which jumps to its end.
 import type { FocusEvent, RefCallback } from "react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import type { CurveToken, DurationToken } from "./tokens.ts";
-import { animate, curveAt, durationAt } from "./tokens.ts";
-import { useReducedMotion } from "./useReducedMotion.ts";
+import type { CurveToken, DurationToken } from "./motion-tokens";
+import { animateElement, curveAt, durationAt } from "./motion-tokens";
+import { useReducedMotion } from "./reduced-motion";
 
 export interface FlipOptions {
   /** How long a move takes: `--duration-slow` by default. */
@@ -155,11 +154,11 @@ export function useFlip<T>(
         continue;
       }
       const animation = reduced
-        ? animate(el, [{ opacity: 0 }, { opacity: 1 }], {
+        ? animateElement(el, [{ opacity: 0 }, { opacity: 1 }], {
             duration: durationAt(el, "--duration-fast"),
             easing: curveAt(el, "--ease-standard"),
           })
-        : animate(
+        : animateElement(
             el,
             [
               {

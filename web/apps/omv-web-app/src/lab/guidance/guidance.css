@@ -169,58 +169,15 @@
 #g-trace-rows:focus-visible {
   box-shadow: 0 0 0 2px var(--theme-focus-ring);
 }
-.dm-map-head .g-tip-leave {
+.dm-map-head [data-slot="leaving-item"]:has(> [data-slot="tip"]) {
   flex-basis: 100%;
 }
 
-/* ─── A tip: one line, no box ──────────────────────────────────────────────────────────────────── */
+/* ─── A tip: the library's Tip. The palette field's placeholder keeps its slot here. ─────────── */
 .g-tip-slot {
   display: contents;
 }
-.g-tip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  min-width: 0;
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
-}
-.g-tip-icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--theme-tertiary-foreground);
-}
-.g-tip-icon > svg {
-  width: 16px;
-  height: 16px;
-}
-.g-tip-line {
-  flex: 0 1 auto;
-  min-width: 0;
-  margin: 0;
-}
-.g-tip-done {
-  flex: none;
-}
-/* A tip that appears because of something the person did rises in; one there on load is simply
-   there. Its leaving is the library's LeavingItem (animate-leave). */
-.g-tip[data-arrive] {
-  animation: rise var(--duration-slow) var(--ease-enter) both;
-}
 
-/* The welcome is the one tip that speaks at body size: it is the first thing on the dashboard. */
-.g-welcome {
-  font-size: var(--text-base);
-  color: var(--theme-foreground);
-}
-.g-welcome .g-tip-icon {
-  color: var(--theme-muted-foreground);
-}
-.g-welcome .g-tip-icon > svg {
-  width: 20px;
-  height: 20px;
-}
 .g-welcome-actions {
   display: flex;
   flex-wrap: wrap;
@@ -261,96 +218,14 @@
   align-items: flex-start;
   gap: 16px;
 }
-.g-help {
-  max-width: 34rem;
-}
-.g-help-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
-}
-.g-help-body p,
-.g-pop-panel p {
-  margin: 0;
-}
 .g-label-row {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.g-pop,
-.g-term {
-  position: relative;
-  display: inline-flex;
-}
-.g-pop-q {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: none;
-  color: var(--theme-muted-foreground);
-  cursor: pointer;
-}
-.g-pop-q:hover,
-.g-pop-q[aria-expanded="true"] {
-  color: var(--theme-foreground);
-  background: var(--theme-muted-strong);
-}
-.g-pop-q > svg {
-  width: 16px;
-  height: 16px;
-}
-.g-pop-q:focus-visible,
-.g-term-word:focus-visible,
 .g-account:focus-visible {
   outline: 2px solid var(--theme-focus-ring);
   outline-offset: 2px;
-}
-.g-pop-panel:not([hidden]) {
-  position: absolute;
-  inset-block-start: calc(100% + 6px);
-  inset-inline-start: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: max-content;
-  max-width: min(20rem, calc(100vw - 48px));
-  padding: 12px 14px;
-  border: 1px solid var(--theme-border);
-  border-radius: var(--radius-md);
-  background: var(--theme-surface);
-  box-shadow: var(--theme-shadow-floating);
-  font-size: var(--text-sm);
-  line-height: 1.45;
-  color: var(--theme-foreground);
-  text-align: start;
-  animation: fade-in var(--duration-fast) var(--ease-standard) both;
-}
-.g-term-panel:not([hidden]) {
-  display: block;
-}
-.g-term-name {
-  font-weight: var(--font-weight-semibold);
-}
-.g-term-word {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-  cursor: help;
-}
-.g-term-word:hover {
-  color: var(--theme-link);
 }
 
 /* The forms lab flattens capsules in the top bar (its host name); the menu's switch and choices sit
@@ -425,34 +300,4 @@
   align-items: flex-start;
   padding: 6px 8px 8px;
   border-block-start: 1px solid var(--theme-border);
-}
-.g-switch-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.g-switch-words {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.g-switch-label {
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-.g-switch-hint {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--theme-muted-foreground);
-}
-
-/* ─── Reduced motion: the meaning stays, the travel goes ──────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .g-tip[data-arrive] {
-    animation: fade-in var(--duration-fast) var(--ease-standard) both;
-  }
-}
-:root[data-motion="reduced"] .g-tip[data-arrive] {
-  animation: fade-in var(--duration-fast) var(--ease-standard) both;
 }

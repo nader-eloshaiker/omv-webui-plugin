@@ -3,11 +3,17 @@
 // an erase picture's strike, a delete picture's links. `pathLength="1"` and a dash of 1, so the dash
 // offset runs 1 (nothing drawn) to 0 (drawn) whatever the length of the path; the Web Animations API
 // moves it on the motion tokens. Retracting runs 0 to 1 on the exit curve. Under reduced motion the
-// path is set to its end and crossfades over `--duration-fast` instead. Written for the library (spec
-// 8 row 7). Nothing is written into markup: the end state is set through the CSSOM (UI-1).
-import type { CurveToken, DurationToken } from "./tokens.ts";
-import { animate, curveAt, durationAt, settled } from "./tokens.ts";
-import { reducedMotionAt } from "./useReducedMotion.ts";
+// path is set to its end and crossfades over `--duration-fast` instead. Nothing is written into
+// markup: the end state is set through the CSSOM (UI-1). Reduced motion comes from the system and
+// the nearest `data-motion="reduced"` (`reducedMotionAt`), or from `reduced`.
+import type { CurveToken, DurationToken } from "./motion-tokens";
+import {
+  animateElement,
+  animationSettled,
+  curveAt,
+  durationAt,
+} from "./motion-tokens";
+import { reducedMotionAt } from "./reduced-motion";
 
 export interface DrawPathOptions {
   /** `draw` (the default) draws it; `retract` takes it back, on the exit curve unless told. */
@@ -56,12 +62,12 @@ export function drawPath(
     }
     animation =
       direction === "draw"
-        ? animate(element, [{ opacity: 0 }, { opacity: 1 }], {
+        ? animateElement(element, [{ opacity: 0 }, { opacity: 1 }], {
             duration: fast,
             delay: 0,
             easing: curveAt(element, "--ease-standard"),
           })
-        : animate(
+        : animateElement(
             element,
             [
               { opacity: 1, strokeDashoffset: 0 },
@@ -81,7 +87,7 @@ export function drawPath(
     if (duration <= 0) {
       return Promise.resolve();
     }
-    animation = animate(
+    animation = animateElement(
       element,
       [{ strokeDashoffset: from }, { strokeDashoffset: to }],
       {
@@ -101,7 +107,7 @@ export function drawPath(
     return Promise.resolve();
   }
   running.set(element, animation);
-  const done = settled(animation);
+  const done = animationSettled(animation);
   void done.then(() => {
     if (running.get(element) === animation) {
       running.delete(element);

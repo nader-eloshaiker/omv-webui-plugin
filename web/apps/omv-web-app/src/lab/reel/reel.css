@@ -301,22 +301,8 @@
   animation: none;
 }
 
-/* Crossfade: two renderings in one cell. */
-.rl-xf {
-  display: inline-grid;
-  vertical-align: top;
-}
-.rl-xf > * {
-  grid-area: 1 / 1;
-  min-width: 0;
-}
-.rl-xf-in {
-  animation: rl-fade-in var(--duration-fast) var(--ease-standard) both;
-}
-.rl-xf-out {
-  pointer-events: none;
-  animation: rl-fade-out var(--duration-fast) var(--ease-standard) both;
-}
+/* Crossfade: the library's `Crossfade` (two renderings in one cell). Its root is
+   [data-slot="crossfade"]; what arrives is [data-crossfade="in"], what leaves [data-crossfade="out"]. */
 
 /* A count that rolls: the new figure rises in, the old leaves upward. */
 .rl-roll {
@@ -959,7 +945,7 @@
   width: 16px;
   height: 16px;
 }
-.rl-glyph-swap .rl-xf-in {
+.rl-glyph-swap [data-crossfade="in"] {
   animation:
     rl-fade-in var(--duration-fast) var(--ease-standard) both,
     rl-scale-in var(--duration-fast) var(--ease-settle) both;
@@ -1197,7 +1183,7 @@
   scale: 0.7 1;
   background: var(--theme-warning-stroke);
 }
-.rl-impact-xf .rl-xf-in [data-slot="impact-line-icon"] {
+.rl-impact-xf [data-crossfade="in"] [data-slot="impact-line-icon"] {
   animation: rl-scale-in var(--duration-base) var(--ease-settle) both;
 }
 
@@ -1354,7 +1340,7 @@
   flex-direction: column;
   gap: 6px;
 }
-.rl-selection > .rl-xf {
+.rl-selection > [data-slot="crossfade"] {
   display: grid;
 }
 .rl-toolbar,
@@ -1379,10 +1365,10 @@
     translate: 0 -8px;
   }
 }
-.rl-xf-in > .rl-selbar {
+[data-crossfade="in"] > .rl-selbar {
   animation: rl-drop var(--duration-base) var(--ease-standard) both;
 }
-[data-motion="reduced"] .rl-xf-in > .rl-selbar {
+[data-motion="reduced"] [data-crossfade="in"] > .rl-selbar {
   animation: none;
 }
 .rl-selbar-count {
@@ -1456,7 +1442,7 @@
   flex-direction: column;
   gap: 14px;
 }
-.rl-answer-block .rl-xf {
+.rl-answer-block [data-slot="crossfade"] {
   display: grid;
 }
 .rl-answer-words {

@@ -6,25 +6,27 @@
 // Development only (UI-11).
 import {
   Button,
+  Crossfade,
   Disclosure,
   DisclosurePanel,
   DisclosureTrigger,
+  drawPath,
   flyPendingMark,
   ImpactLine,
   LeavingItem,
   popElement,
+  useDrawPath,
   useLeavingItems,
 } from "@omv-webui/react-ui-components";
 import { Check, Copy, Monitor, Server } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useFirstTime } from "../../../hooks/useFirstTime.ts";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
 import { FolderPicture, PersonPicture } from "../../forms/LineageStrip.tsx";
 import type { Access } from "../../forms/model.ts";
-import { drawPath } from "../helpers/drawPath.ts";
-import { useFirstTime } from "../helpers/useFirstTime.ts";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
-import { Crossfade, DrawnCheck, RollingNumber, StageNote } from "../parts.tsx";
-import { useDraw, useStill } from "../stage.ts";
+import { DrawnCheck, RollingNumber, StageNote } from "../parts.tsx";
+import { useStill } from "../stage.ts";
 import type { StageProps } from "../types.ts";
 
 /** A value that changed since the stage was drawn: only a change is news (7.1 rule 1). */
@@ -121,7 +123,7 @@ export function SummaryStage({ state }: StageProps<SummaryState>) {
   const words: Record<string, ReactNode> = {
     new: "Photos is a new shared folder on Data drive.",
     who: (
-      <Crossfade k={state.family ? "family" : "pair"} reduced="cut">
+      <Crossfade contentKey={state.family ? "family" : "pair"} reduced="cut">
         {state.family
           ? "Everyone in Family can open it and change its files."
           : "Alex and Sam can open it and change its files."}
@@ -334,7 +336,7 @@ export function ChoiceStage({
       </div>
       <div className="rl-arr-side" data-pane-drawing={pane}>
         {reduced ? (
-          <Crossfade k={state.picked ?? "none"}>{drawing}</Crossfade>
+          <Crossfade contentKey={state.picked ?? "none"}>{drawing}</Crossfade>
         ) : (
           <div
             key={state.picked ?? "none"}
@@ -413,7 +415,7 @@ export function StrengthStage({
         />
       </div>
       <p id={`${id}-strength`} className="rl-strength-word">
-        <Crossfade k={state.strong ? "strong" : "weak"} reduced="cut">
+        <Crossfade contentKey={state.strong ? "strong" : "weak"} reduced="cut">
           {state.strong
             ? "Strong: long and hard to guess."
             : "Weak: short and a common word."}
@@ -462,7 +464,7 @@ export function CopyGlyphButton({
       aria-label={copied ? "Copied" : label}
     >
       <Crossfade
-        k={copied ? "check" : "copy"}
+        contentKey={copied ? "check" : "copy"}
         reduced="cut"
         className="rl-glyph-swap"
       >
@@ -597,7 +599,7 @@ function RunStep({
   words: string;
   state: "waiting" | "running" | "done";
 }) {
-  const check = useDraw(state === "done", { duration: "--duration-base" });
+  const check = useDrawPath(state === "done", { duration: "--duration-base" });
   return (
     <li className="rl-run-step" data-state={state}>
       <svg viewBox="0 0 20 20" className="rl-run-mark" aria-hidden="true">
@@ -775,7 +777,7 @@ export function SaveStage({ state, update }: StageProps<{ saves: number }>) {
             update((s) => ({ saves: s.saves + 1 }));
           }}
         >
-          <Crossfade k={saved ? "saved" : "save"} reduced="cut">
+          <Crossfade contentKey={saved ? "saved" : "save"} reduced="cut">
             {saved ? (
               <span className="rl-saved">
                 <DrawnCheck />
@@ -825,7 +827,10 @@ export function ImpactStage({ state }: StageProps<{ changed: boolean }>) {
           NAS
         </span>
       </div>
-      <Crossfade k={state.changed ? "cut" : "none"} className="rl-impact-xf">
+      <Crossfade
+        contentKey={state.changed ? "cut" : "none"}
+        className="rl-impact-xf"
+      >
         {state.changed ? (
           <ImpactLine
             impact="mayCut"

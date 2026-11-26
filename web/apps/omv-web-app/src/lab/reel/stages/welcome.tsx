@@ -2,17 +2,22 @@
 // The reel's welcome and first visit (rethink 7.2, with 6.8 for the map): the NAS assembling, the
 // welcome line leaving, a ghost becoming the first storage, a first step landing and the first steps folding
 // into Shortcuts. Lab fixtures only, the dashboard lab's own. Development only (UI-11).
-import { Button } from "@omv-webui/react-ui-components";
+import {
+  animateElement,
+  Button,
+  Crossfade,
+  curveAt,
+  durationAt,
+  useDrawPath,
+} from "@omv-webui/react-ui-components";
 import type { CSSProperties } from "react";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
 import { WelcomeLine } from "../../dashboard/Answer.tsx";
 import type { Nas } from "../../dashboard/model.ts";
 import { accentAt, layoutFor, mapView } from "../../dashboard/model.ts";
 import { SystemMap } from "../../dashboard/SystemMap.tsx";
-import { animate, curveAt, durationAt } from "../helpers/tokens.ts";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
-import { Crossfade, StepMark } from "../parts.tsx";
-import { useDraw } from "../stage.ts";
+import { StepMark } from "../parts.tsx";
 import type { StageProps } from "../types.ts";
 import { twoRowNas } from "./fixtures.ts";
 import { useWidth } from "./useWidth.ts";
@@ -107,7 +112,7 @@ export function WelcomeStage({ state, update }: StageProps<{ gone: boolean }>) {
 // ─── A ghost becomes the first storage ─────────────────────────────────────────────────────────────────────
 
 export function GhostStage({ state }: StageProps<{ created: boolean }>) {
-  const wire = useDraw(state.created, { duration: "--duration-slow" });
+  const wire = useDrawPath(state.created, { duration: "--duration-slow" });
   return (
     <div className="rl-ghostrow">
       <span className="rl-disk-chip">sda</span>
@@ -119,7 +124,7 @@ export function GhostStage({ state }: StageProps<{ created: boolean }>) {
         <svg className="rl-node-edge" aria-hidden="true">
           <rect x="1" y="1" rx="9" />
         </svg>
-        <Crossfade k={state.created ? "created" : "ghost"}>
+        <Crossfade contentKey={state.created ? "created" : "ghost"}>
           {state.created ? (
             <span className="rl-node-words">
               <span className="rl-node-name">Data drive</span>
@@ -258,7 +263,7 @@ export function SetUpStage({ state }: StageProps<{ setUp: boolean }>) {
     }
     const slow = durationAt(box, "--duration-slow");
     const settle = curveAt(box, "--ease-settle");
-    animate(
+    animateElement(
       box,
       [
         { height: `${String(before)}px` },
@@ -271,7 +276,7 @@ export function SetUpStage({ state }: StageProps<{ setUp: boolean }>) {
     for (const mark of marks) {
       const r = mark.getBoundingClientRect();
       if (first) {
-        animate(
+        animateElement(
           mark,
           [
             { translate: "0 0" },
@@ -286,7 +291,7 @@ export function SetUpStage({ state }: StageProps<{ setUp: boolean }>) {
     for (const words of ghost.querySelectorAll(
       ".rl-step-title, .rl-step-state, button",
     )) {
-      animate(words, [{ opacity: 1 }, { opacity: 0 }], {
+      animateElement(words, [{ opacity: 1 }, { opacity: 0 }], {
         duration: durationAt(box, "--duration-fast"),
         easing: curveAt(box, "--ease-exit"),
         fill: "forwards",
@@ -303,7 +308,7 @@ export function SetUpStage({ state }: StageProps<{ setUp: boolean }>) {
   return (
     <div ref={boxRef} className="rl-setup-box">
       {reduced ? (
-        <Crossfade k={state.setUp ? "set" : "steps"}>
+        <Crossfade contentKey={state.setUp ? "set" : "steps"}>
           {state.setUp ? <SetUpView /> : <StepsList done={3} />}
         </Crossfade>
       ) : state.setUp ? (

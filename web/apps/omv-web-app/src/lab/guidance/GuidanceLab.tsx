@@ -14,16 +14,20 @@ import type { CommandItem } from "@omv-webui/react-ui-components";
 import {
   CommandPalette,
   CommandPaletteTrigger,
+  MotionProvider,
   Shell,
   SideNav,
   SideNavGroup,
   SideNavItem,
   SideNavList,
+  TipsProvider,
   Toaster,
   TopBar,
   TopBarBrand,
   UiProvider,
   useCommandKeys,
+  useCurrentTip,
+  useShowTips,
 } from "@omv-webui/react-ui-components";
 import {
   Activity,
@@ -35,6 +39,12 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMotionPreference } from "../../hooks/useMotionPreference.ts";
+import {
+  endTip,
+  useStoredHideTipsOffer,
+  useTipsPreference,
+} from "../../hooks/useTipsPreference.ts";
 import { hasSeen, useSeenStore } from "../../stores/useSeenStore.ts";
 import { useTipsStore } from "../../stores/useTipsStore.ts";
 import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
@@ -48,26 +58,26 @@ import { AccountMenu } from "./AccountMenu.tsx";
 import "./guidance.css";
 import { PALETTE_LABEL, PALETTE_TIP } from "./guidanceModel.ts";
 import { GuidancePage } from "./GuidancePage.tsx";
-import type { OfferCause } from "./parts/hideTipsOffer.ts";
-import { useHideTipsOffer } from "./parts/hideTipsOffer.ts";
-import { tipsCommand } from "./parts/tipsCommand.ts";
-import { endTip, useCurrentTip, useShowTips } from "./parts/tipsContext.ts";
-import { TipsProvider } from "./parts/TipsProvider.tsx";
 import type { GuidanceView, GuidanceWidth } from "./states.ts";
 import { guidanceQuery, readGuidanceView } from "./states.ts";
+import type { OfferCause } from "./tipWords.ts";
+import { labTipsCommand, OFFER_ACTION, OFFER_WORDS } from "./tipWords.ts";
 
 export default function GuidanceLab() {
   const initial = useMemo(() => readGuidanceView(window.location.search), []);
   // `tips=` seeds what is shown; the stored preference changes only when the person changes it.
   const [seed, setSeed] = useState<boolean | null>(initial.tips);
-  const stored = useTipsStore((s) => s.show);
   const setShow = useCallback((show: boolean) => {
     setSeed(null);
     useTipsStore.getState().setShow(show);
   }, []);
+  const tips = useTipsPreference({
+    show: seed ?? undefined,
+    onShowChange: setShow,
+  });
   return (
     <UiProvider>
-      <TipsProvider show={seed ?? stored} onShowChange={setShow}>
+      <TipsProvider {...tips}>
         <GuidanceScreen
           initial={initial}
           onStartOver={() => {
@@ -98,7 +108,9 @@ function GuidanceScreen({
   const [note, setNote] = useState<{ id: number; text: string } | null>(null);
   const [show, setShow] = useShowTips();
   const current = useCurrentTip();
-  const { offer, preview } = useHideTipsOffer();
+  const { offer: offerWords, preview } = useStoredHideTipsOffer(OFFER_ACTION);
+  const offer = (cause: OfferCause) => offerWords(OFFER_WORDS[cause]);
+  const preference = useMotionPreference();
 
   // The query string mirrors the view, so it can be reopened or screenshotted. It never acts.
   useEffect(() => {
@@ -137,7 +149,7 @@ function GuidanceScreen({
     if (initial.offer && !previewedRef.current) {
       previewedRef.current = true;
       preview(
-        initial.density === "compact" ? "compact" : "keys",
+        OFFER_WORDS[initial.density === "compact" ? "compact" : "keys"],
         initial.still,
       );
     }
@@ -235,7 +247,7 @@ function GuidanceScreen({
         onNote("Opens People.");
       },
     },
-    tipsCommand(show, setShow, "Preferences"),
+    labTipsCommand(show, setShow, "Preferences"),
     {
       id: "preference.density",
       label: density === "compact" ? "Comfortable rows" : "Compact rows",
@@ -266,149 +278,160 @@ function GuidanceScreen({
   ];
 
   return (
-    <div
-      className="omv-lab-forms omv-lab-dash omv-lab-guidance"
-      data-motion={motion}
-    >
-      <Shell
-        mainId="lab-main"
-        topBar={
-          <TopBar
-            brand={<TopBarBrand productName="openmediavault" hostName="nas" />}
-            search={
-              <PaletteTrigger
-                onOpen={() => {
-                  openPalette(null);
-                }}
-              />
-            }
-            user={
-              <AccountMenu
-                open={menu}
-                onOpenChange={setMenu}
-                theme={theme}
-                onTheme={setTheme}
-                density={density}
-                onDensity={chooseDensity}
-                motion={motion}
-                onMotion={setMotion}
-                onNote={onNote}
-              />
-            }
-          />
-        }
-        sidebar={
-          <SideNav aria-label="Main">
-            <SideNavList>
-              <SideNavItem icon={<LayoutGrid />}>Dashboard</SideNavItem>
-            </SideNavList>
-            <SideNavGroup label="System" icon={<Settings />}>
-              <SideNavItem>Web interface</SideNavItem>
-            </SideNavGroup>
-            <SideNavGroup label="Network" icon={<Network />}>
-              <SideNavItem>Interfaces</SideNavItem>
-            </SideNavGroup>
-            <SideNavGroup label="Storage" icon={<HardDrive />}>
-              <SideNavItem>Disks</SideNavItem>
-              <SideNavItem>File systems</SideNavItem>
-              <SideNavItem>Shared folders</SideNavItem>
-            </SideNavGroup>
-            <SideNavGroup label="Services" icon={<Share2 />}>
-              <SideNavItem>Windows and Mac (SMB)</SideNavItem>
-            </SideNavGroup>
-            <SideNavGroup label="Users" icon={<Users />}>
-              <SideNavItem>People</SideNavItem>
-            </SideNavGroup>
-            <SideNavGroup label="Diagnostics" icon={<Activity />}>
-              <SideNavItem>System logs</SideNavItem>
-            </SideNavGroup>
-          </SideNav>
-        }
+    <MotionProvider reduced={motion === "reduced" || preference}>
+      <div
+        className="omv-lab-forms omv-lab-dash omv-lab-guidance"
+        data-motion={motion}
       >
-        <div className="dm-width" data-width={width}>
-          <GuidancePage
-            key={run}
-            compact={density === "compact"}
-            chrome={chrome}
-            onNote={onNote}
-            onOpenPalette={() => {
-              openPalette(null);
-            }}
-          />
-        </div>
-      </Shell>
-      <CommandPalette
-        open={palette}
-        onOpenChange={setPalette}
-        items={items}
-        label="Command palette"
-        inputLabel={PALETTE_LABEL}
-        emptyMessage={(query) => `Nothing matches "${query}".`}
-        closeLabel="Close"
-        keysHint="Arrow keys move, Enter goes, Escape closes."
-        externalLabel="Opens in a new tab"
-      />
-      <p className="lf-note" role="status">
-        {note ? <span key={note.id}>{note.text}</span> : null}
-      </p>
-      {chrome ? (
-        <aside className="lx-labbar lf-labbar" aria-label="Design lab controls">
-          <span className="lx-labbar-tag">Lab</span>
-          <Toggle
-            label="Width"
-            value={width}
-            options={[
-              ["full", "Full"],
-              ["900", "900"],
-              ["390", "390"],
-            ]}
-            onChange={setWidth}
-          />
-          <Toggle
-            label="Tips"
-            value={show ? "on" : "off"}
-            options={[
-              ["on", "Tips"],
-              ["off", "No tips"],
-            ]}
-            onChange={(t) => {
-              setShow(t === "on");
-            }}
-          />
-          <Toggle
-            label="Theme"
-            value={theme}
-            options={[
-              ["dark", "Dark"],
-              ["light", "Light"],
-            ]}
-            onChange={setTheme}
-          />
-          <Toggle
-            label="Density"
-            value={density}
-            options={[
-              ["comfortable", "Comfy"],
-              ["compact", "Compact"],
-            ]}
-            onChange={chooseDensity}
-          />
-          <button type="button" className="lx-labbar-solo" onClick={startOver}>
-            Start over
-          </button>
-          <button
-            type="button"
-            className="lx-labbar-solo"
-            aria-label="Hide the lab controls"
-            onClick={() => {
-              setChrome(false);
-            }}
+        <Shell
+          mainId="lab-main"
+          topBar={
+            <TopBar
+              brand={
+                <TopBarBrand productName="openmediavault" hostName="nas" />
+              }
+              search={
+                <PaletteTrigger
+                  onOpen={() => {
+                    openPalette(null);
+                  }}
+                />
+              }
+              user={
+                <AccountMenu
+                  open={menu}
+                  onOpenChange={setMenu}
+                  theme={theme}
+                  onTheme={setTheme}
+                  density={density}
+                  onDensity={chooseDensity}
+                  motion={motion}
+                  onMotion={setMotion}
+                  onNote={onNote}
+                />
+              }
+            />
+          }
+          sidebar={
+            <SideNav aria-label="Main">
+              <SideNavList>
+                <SideNavItem icon={<LayoutGrid />}>Dashboard</SideNavItem>
+              </SideNavList>
+              <SideNavGroup label="System" icon={<Settings />}>
+                <SideNavItem>Web interface</SideNavItem>
+              </SideNavGroup>
+              <SideNavGroup label="Network" icon={<Network />}>
+                <SideNavItem>Interfaces</SideNavItem>
+              </SideNavGroup>
+              <SideNavGroup label="Storage" icon={<HardDrive />}>
+                <SideNavItem>Disks</SideNavItem>
+                <SideNavItem>File systems</SideNavItem>
+                <SideNavItem>Shared folders</SideNavItem>
+              </SideNavGroup>
+              <SideNavGroup label="Services" icon={<Share2 />}>
+                <SideNavItem>Windows and Mac (SMB)</SideNavItem>
+              </SideNavGroup>
+              <SideNavGroup label="Users" icon={<Users />}>
+                <SideNavItem>People</SideNavItem>
+              </SideNavGroup>
+              <SideNavGroup label="Diagnostics" icon={<Activity />}>
+                <SideNavItem>System logs</SideNavItem>
+              </SideNavGroup>
+            </SideNav>
+          }
+        >
+          <div className="dm-width" data-width={width}>
+            <GuidancePage
+              key={run}
+              compact={density === "compact"}
+              chrome={chrome}
+              onNote={onNote}
+              onOpenPalette={() => {
+                openPalette(null);
+              }}
+            />
+          </div>
+        </Shell>
+        <CommandPalette
+          open={palette}
+          onOpenChange={setPalette}
+          items={items}
+          label="Command palette"
+          inputLabel={PALETTE_LABEL}
+          emptyMessage={(query) => `Nothing matches "${query}".`}
+          closeLabel="Close"
+          keysHint="Arrow keys move, Enter goes, Escape closes."
+          externalLabel="Opens in a new tab"
+        />
+        <p className="lf-note" role="status">
+          {note ? <span key={note.id}>{note.text}</span> : null}
+        </p>
+        {chrome ? (
+          <aside
+            className="lx-labbar lf-labbar"
+            aria-label="Design lab controls"
           >
-            <FormIcon name="close" />
-          </button>
-        </aside>
-      ) : null}
-    </div>
+            <span className="lx-labbar-tag">Lab</span>
+            <Toggle
+              label="Width"
+              value={width}
+              options={[
+                ["full", "Full"],
+                ["900", "900"],
+                ["390", "390"],
+              ]}
+              onChange={setWidth}
+            />
+            <Toggle
+              label="Tips"
+              value={show ? "on" : "off"}
+              options={[
+                ["on", "Tips"],
+                ["off", "No tips"],
+              ]}
+              onChange={(t) => {
+                setShow(t === "on");
+              }}
+            />
+            <Toggle
+              label="Theme"
+              value={theme}
+              options={[
+                ["dark", "Dark"],
+                ["light", "Light"],
+              ]}
+              onChange={setTheme}
+            />
+            <Toggle
+              label="Density"
+              value={density}
+              options={[
+                ["comfortable", "Comfy"],
+                ["compact", "Compact"],
+              ]}
+              onChange={chooseDensity}
+            />
+            <button
+              type="button"
+              className="lx-labbar-solo"
+              onClick={startOver}
+            >
+              Start over
+            </button>
+            <button
+              type="button"
+              className="lx-labbar-solo"
+              aria-label="Hide the lab controls"
+              onClick={() => {
+                setChrome(false);
+              }}
+            >
+              <FormIcon name="close" />
+            </button>
+          </aside>
+        ) : null}
+      </div>
+    </MotionProvider>
   );
 }
 

@@ -4,11 +4,15 @@
 // "Sign out". It holds controls, so it is a button that opens a panel (aria-expanded, Escape closes
 // and gives focus back), not a menu of commands. Development only (UI-11): the lab's static copy.
 import type { SegmentedChoiceOption } from "@omv-webui/react-ui-components";
-import { Button, SegmentedChoice } from "@omv-webui/react-ui-components";
+import {
+  Button,
+  SegmentedChoice,
+  ShowTipsSwitch,
+} from "@omv-webui/react-ui-components";
 import { CircleUser, LogOut, Play } from "lucide-react";
 import type { KeyboardEvent } from "react";
 import { useEffect, useId, useRef } from "react";
-import { ShowTipsSwitch } from "./parts/ShowTipsSwitch.tsx";
+import { SHOW_TIPS_HINT, SHOW_TIPS_LABEL } from "./tipWords.ts";
 
 export type Theme = "dark" | "light";
 export type Density = "comfortable" | "compact";
@@ -142,7 +146,11 @@ export function AccountMenu({
             value={density}
             onChange={onDensity}
           />
-          <ShowTipsSwitch className="g-menu-switch" />
+          <ShowTipsSwitch
+            label={SHOW_TIPS_LABEL}
+            hint={SHOW_TIPS_HINT}
+            className="g-menu-switch"
+          />
           <ChoiceRow
             label="Animations"
             options={MOTIONS}

@@ -1,78 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Motion that depends on geometry (foundation 7.2): the pending flight and the pop of what it lands
-// on. Native only: the Web Animations API, with the duration and curve read from the motion tokens,
-// so a change to the tokens changes these too. The moving element is made with `createElement` and
-// positioned through the CSSOM, never from markup or a string (UI-1, UI-2). Under
-// `prefers-reduced-motion: reduce` nothing moves: the flight does not run and the pop is skipped;
-// what they announce is said in words by the pill and the band.
+// on. Native only: the Web Animations API, with the duration and curve read from the motion tokens
+// (motion/motion-tokens.ts), so a change to the tokens changes these too. The moving element is made
+// with `createElement` and positioned through the CSSOM, never from markup or a string (UI-1, UI-2).
+// Under reduced motion (the system's, or a `data-motion="reduced"` scope round the element) nothing
+// moves: the flight does not run and the pop is skipped; what they announce is said in words by the
+// pill and the band.
+import { animateElement, curveAt, durationAt } from "../motion/motion-tokens";
+import { reducedMotionAt, systemReducedMotion } from "../motion/reduced-motion";
 
-/** The reader asked for less motion. JavaScript motion checks the same query as the stylesheet. */
+/** The reader's system asks for less motion. JavaScript motion checks the same query as the stylesheet. */
 export function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-/** A motion token's value on <html>, or the fallback when the stylesheet is not loaded (tests). */
-function motionToken(name: string, fallback: string): string {
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  return value === "" ? fallback : value;
-}
-
-/** A CSS time ("360ms", "0.36s") in milliseconds; 0 for anything else. */
-export function timeInMs(value: string): number {
-  const match = /^(-?[\d.]+)(ms|s)$/.exec(value.trim());
-  if (!match) {
-    return 0;
-  }
-  const n = Number(match[1]);
-  return match[2] === "s" ? n * 1000 : n;
-}
-
-/** A duration token in milliseconds: 0 under reduced motion, as the token file sets it. */
-export function durationToken(
-  name:
-    | "--duration-press"
-    | "--duration-fast"
-    | "--duration-base"
-    | "--duration-slow"
-    | "--duration-glide",
-): number {
-  const fallback = {
-    "--duration-press": "90ms",
-    "--duration-fast": "160ms",
-    "--duration-base": "240ms",
-    "--duration-slow": "360ms",
-    "--duration-glide": "640ms",
-  }[name];
-  return timeInMs(motionToken(name, fallback));
+  return systemReducedMotion();
 }
 
 const canAnimate = (element: Element): boolean =>
   typeof (element as HTMLElement).animate === "function";
-
-/**
- * `element.animate`, with the token's curve; a curve the browser cannot parse (an older engine and
- * `linear()`) falls back to the standard curve rather than throwing.
- */
-function animate(
-  element: Element,
-  frames: Keyframe[],
-  options: KeyframeAnimationOptions & { easing: string },
-): Animation {
-  try {
-    return element.animate(frames, options);
-  } catch {
-    return element.animate(frames, {
-      ...options,
-      easing: "cubic-bezier(0.2, 0, 0, 1)",
-    });
-  }
-}
 
 /** The flights on their way to each element, so what they land on can wait for them. */
 const inFlight = new WeakMap<Element, Promise<void>>();
@@ -102,7 +45,7 @@ function centre(rect: DOMRect): { x: number; y: number } {
  * did not: reduced motion, no Web Animations API, or either end not on screen.
  */
 export function flyPendingMark(from: Element, to: Element): Promise<boolean> {
-  if (prefersReducedMotion() || !canAnimate(document.body)) {
+  if (reducedMotionAt(from) || !canAnimate(document.body)) {
     return Promise.resolve(false);
   }
   const a = from.getBoundingClientRect();
@@ -110,7 +53,8 @@ export function flyPendingMark(from: Element, to: Element): Promise<boolean> {
   if ((a.width === 0 && a.height === 0) || (b.width === 0 && b.height === 0)) {
     return Promise.resolve(false);
   }
-  const duration = durationToken("--duration-glide");
+  const root = document.documentElement;
+  const duration = durationAt(root, "--duration-glide");
   if (duration <= 0) {
     return Promise.resolve(false);
   }
@@ -144,11 +88,15 @@ export function flyPendingMark(from: Element, to: Element): Promise<boolean> {
   mark.dataset.slot = "pending-flight";
   document.body.append(mark);
 
-  const animation = animate(mark, frames, {
+  const animation = animateElement(mark, frames, {
     duration,
-    easing: motionToken("--ease-standard", "cubic-bezier(0.2, 0, 0, 1)"),
+    easing: curveAt(root, "--ease-standard"),
     fill: "forwards",
   });
+  if (!animation) {
+    mark.remove();
+    return Promise.resolve(false);
+  }
   const landed = animation.finished.then(
     () => undefined,
     () => undefined,
@@ -174,15 +122,19 @@ export function flyPendingMark(from: Element, to: Element): Promise<boolean> {
  * with the spring's overshoot, so the eye goes to what just changed. Nothing under reduced motion.
  */
 export function popElement(element: Element | null): void {
-  if (!element || prefersReducedMotion() || !canAnimate(element)) {
+  if (!element || reducedMotionAt(element) || !canAnimate(element)) {
     return;
   }
-  const duration = durationToken("--duration-glide");
+  const duration = durationAt(element, "--duration-glide");
   if (duration <= 0) {
     return;
   }
-  animate(element, [{ transform: "scale(0.82)" }, { transform: "scale(1)" }], {
-    duration: Math.round(duration * 0.8),
-    easing: motionToken("--ease-settle", "cubic-bezier(0.2, 0, 0, 1)"),
-  });
+  animateElement(
+    element,
+    [{ transform: "scale(0.82)" }, { transform: "scale(1)" }],
+    {
+      duration: Math.round(duration * 0.8),
+      easing: curveAt(element, "--ease-settle"),
+    },
+  );
 }

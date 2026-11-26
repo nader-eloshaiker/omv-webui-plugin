@@ -52,7 +52,15 @@ interface DriveBayProps extends Omit<
    * second and fades out. Under reduced motion it is shown still and removed without the fade.
    */
   arrived?: string;
+  /**
+   * How each slot shows its health. `word`, the default: its icon and its word under the caddy.
+   * `icon`: the icon alone, for a picture whose surroundings already say each disk's state in words
+   * (the dashboard's map); the word stays for assistive technology and in a slot link's name.
+   */
+  health?: "word" | "icon";
 }
+
+type HealthDisplay = NonNullable<DriveBayProps["health"]>;
 
 const bodyClass = cva("fill-surface stroke-art-line", {
   variants: {
@@ -74,6 +82,14 @@ const wordClass = cva("", {
       unknown: "text-unknown-label",
     },
   },
+});
+
+// The word beside the icon, or only for assistive technology when the picture shows the icon alone.
+const healthWordClass = cva("", {
+  variants: {
+    health: { word: "", icon: "sr-only" },
+  },
+  defaultVariants: { health: "word" },
 });
 
 // A change of state after mount (the disk check's result landing) turns the caddy's edge and the
@@ -149,7 +165,13 @@ const slotBodyClass =
   "grid min-w-0 content-start justify-items-center gap-0.5 rounded-control px-1 pt-1.5 pb-2 text-center";
 
 /** A slot's words under its caddy, and the link round both when it has one. */
-function SlotBody({ slot }: { slot: DriveSlot }) {
+function SlotBody({
+  slot,
+  health,
+}: {
+  slot: DriveSlot;
+  health: HealthDisplay;
+}) {
   const tone = toneOf(slot.status);
   const content = (
     <>
@@ -165,7 +187,12 @@ function SlotBody({ slot }: { slot: DriveSlot }) {
         )}
       >
         <StatusIcon status={slot.status} className="size-3" />
-        {slot.statusLabel}
+        <span
+          data-slot="drive-slot-state"
+          className={healthWordClass({ health })}
+        >
+          {slot.statusLabel}
+        </span>
       </span>
       {slot.role ? (
         <span className="text-caption text-tertiary-foreground [overflow-wrap:anywhere]">
@@ -205,11 +232,13 @@ function SlotBody({ slot }: { slot: DriveSlot }) {
  *
  * A slot with `link` opens its disk's page. When a slot's state changes after mount (the disk check's
  * result lands), the edges and words change in turn, a slot at a time; under reduced motion they change at once.
+ * With `health="icon"` a slot shows its health by its icon, and a non-OK caddy by its edge, alone.
  */
 function DriveBay({
   slots,
   name,
   arrived,
+  health = "word",
   className,
   ...props
 }: DriveBayProps) {
@@ -239,7 +268,7 @@ function DriveBay({
                 : "animate-slot-in stagger",
             )}
           >
-            <SlotBody slot={slot} />
+            <SlotBody slot={slot} health={health} />
           </li>
         ))}
       </ol>

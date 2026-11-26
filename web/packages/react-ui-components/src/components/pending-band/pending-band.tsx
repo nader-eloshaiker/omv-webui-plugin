@@ -3,7 +3,7 @@ import { Check, LoaderCircle, OctagonX } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { Button } from "../button/button";
-import { durationToken } from "../flight/flight";
+import { durationToken } from "../motion/motion";
 import { useShrinkOnScroll } from "./use-shrink-on-scroll";
 
 type PendingBandState = "idle" | "applying" | "applied" | "failed";

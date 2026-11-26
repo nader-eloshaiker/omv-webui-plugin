@@ -4,7 +4,11 @@
 // the entry's state, which both panes draw, so the motion runs in both at once; 400ms later both
 // panes are walked for anything still faded. Replay puts the panes back where they were before the
 // last cause, without motion, and runs it again. Development only (UI-11).
-import { Button, StatusIcon } from "@omv-webui/react-ui-components";
+import {
+  Button,
+  MotionScope,
+  StatusIcon,
+} from "@omv-webui/react-ui-components";
 import { RotateCcw } from "lucide-react";
 import {
   use,
@@ -17,7 +21,6 @@ import {
 } from "react";
 import type { Faded } from "./check.ts";
 import { CHECK_AFTER_MS, checkSentence, fadedIn } from "./check.ts";
-import { MotionScope } from "./helpers/MotionScope.tsx";
 import type { CheckResult } from "./reel.ts";
 import { ReelContext } from "./reel.ts";
 import type { AnyEntry, Cause } from "./types.ts";
