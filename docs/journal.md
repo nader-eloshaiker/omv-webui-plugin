@@ -985,3 +985,15 @@ The rebuilt dashboard draws the NAS map and the disk temperatures by kind, group
 ## 2026-11-27 — The accessibility check uses axe in Playwright (owner)
 
 The accessibility pass on the dashboard's library pieces runs axe with the WCAG 2.2 AA rules over their Storybook stories. The owner agreed to add `@axe-core/playwright` as a development dependency of the app, beside `@playwright/test`. It has no install script. It is pinned to 4.14.0, which had been public for more than a week, as the catalog does for Recharts.
+
+## 2026-11-27 — Follow-ups to the accessibility pass (owner)
+
+The owner took the recommendations after the accessibility pass on the dashboard's library pieces:
+
+1. **axe stays as a test**, opt-in like the lab's browser test and outside `pnpm test`, over the dashboard's stories in Storybook. It is added in a pull request of its own.
+2. **The band reads each heading just before its own list.** The network's heading moves after the ways in in the markup; nothing moves on screen.
+3. **A way in's name is "Windows and Mac, SMB: running, over enp2s0".** A control's name starts with the words it shows (WCAG 2.5.3), and brackets that are not on screen fail that check. "Computers connected" leaves the spec: no read the dashboard makes gives that count (style guide 10, rule 17).
+4. **Every picture of progress in the lab takes `usage-empty`** for the rest, as style guide 5.6 says. `usage-track` stays the health ring's ground.
+5. **`usage-track-edge` is removed** from the tokens and the colour audit, now that nothing reads it.
+6. **The design documents keep their record of the first lab screens**, with a note that the files were removed.
+7. **The disk temperatures' groups are labelled groups, not landmarks**, so a dashboard with many arrays and kinds does not crowd a screen reader's landmark list.

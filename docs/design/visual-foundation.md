@@ -562,7 +562,8 @@ depends on what, which way a copy goes, what a delete takes away, what to do nex
 Nothing parses or injects SVG text; backend strings appear only as React text children; no external
 or third-party asset. lucide stays for small interface icons.
 
-**The set** (all in `src/lab/art.tsx` except the map in `screens/parts.tsx`):
+**The set** (first drawn in `src/lab/art.tsx` and `screens/parts.tsx`, both removed on 2026-11-27;
+see section 15):
 
 | Drawing | Removes the question |
 | --- | --- |
@@ -737,6 +738,12 @@ columns. Atlas's map is the single most useful drawing in the lab (dependencies 
 can reach a folder) and works inside Sky's cards.
 
 ## 15. The lab
+
+**Removed on 2026-11-27.** The three-direction screens this section describes, with
+`src/lab/art.tsx`, `charts.tsx`, `chartModel.ts` and `screens/`, were retired once the owner had
+approved the later prototypes. `/ui/lab` now opens the NAS map; `?screen=` picks the others (the
+forms, tables, motion reel, guidance and charts prototypes, listed in `src/lab/LabRoot.tsx`). The
+section is kept as the record of what the directions were.
 
 - **Open it**: `cd web/apps/omv-web-app && pnpm dev:mock --port 5180`, then
   `http://localhost:5180/ui/lab`. The query string selects a view and never acts (UI-4):
