@@ -6,8 +6,9 @@
 //
 // A needed restart is a Warning, not pending gold: the band's Apply cannot fix it. One row stands for
 // every service that is on but not running, because the fix is the same. A disk row says when it was
-// read, since disk readings do not update by themselves. A clock difference is advice with no health
-// to report, so it is Unknown.
+// read, since disk readings do not update by themselves. The disks at or over their temperature alert
+// limit are one Warning row, in the temperatures' own sentence, with the Disks page as the next step. A
+// clock difference is advice with no health to report, so it is Unknown.
 import type { AttentionItem } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink as ExternalIcon } from "lucide-react";
@@ -22,6 +23,7 @@ import { useFormat } from "../format/useFormat.ts";
 import { CLASSIC, CLASSIC_HOME } from "../navigation/navigation.ts";
 import { isPoolAddress } from "../zfs/zfsModel.ts";
 import { useFileSystemNameText } from "./useFileSystemNameText.ts";
+import { useNasWords } from "./useNasWords.ts";
 
 const SERVICE_SETTINGS = {
   samba: CLASSIC.smbSettings,
@@ -52,6 +54,7 @@ export function useAttentionItems(
   const { t } = useTranslation();
   const format = useFormat();
   const nameText = useFileSystemNameText();
+  const words = useNasWords();
 
   const fsNext = (row: {
     name: Parameters<typeof nameText>[0];
@@ -202,6 +205,17 @@ export function useAttentionItems(
               },
         };
       }
+      case "disksHot":
+        return {
+          health: "warning",
+          // The temperatures' own sentence, then what to check.
+          body: `${words.overNote(row.disks)} ${t("dashboard.attention.disksHot")}`,
+          next: {
+            kind: "route",
+            link: <Link to="/storage/disks" />,
+            words: t("dashboard.attention.disksHotLink"),
+          },
+        };
       case "servicesDown": {
         const [only] = row.services;
         const one = row.services.length === 1 && only !== undefined;

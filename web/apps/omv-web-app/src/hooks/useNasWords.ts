@@ -310,6 +310,23 @@ export function useNasWords() {
     }
   };
 
+  /**
+   * The disks at or over their alert limit, in one sentence: "sdk is at 46 °C and sdt is at 46 °C, at
+   * or over the alert limit of 45 °C." The temperatures and what needs you both say it with this.
+   */
+  const overNote = (over: readonly DiskTemperature[]): string =>
+    t("dashboard.temps.overNote", {
+      list: list(
+        over.map((d) =>
+          t("dashboard.temps.overOne", {
+            device: d.device,
+            c: celsius(d.c ?? 0),
+          }),
+        ),
+      ),
+      limit: celsius(over[0]?.limit ?? 0),
+    });
+
   const temperatures = (readAt: string): DiskTemperaturesLabels => ({
     groupTitle,
     groupState: (s) => t(`dashboard.temps.state.${s.reason}`),
@@ -318,18 +335,7 @@ export function useNasWords() {
     asleep: t("dashboard.temps.asleep"),
     notRead: t("dashboard.temps.notRead"),
     overLimit: t("dashboard.temps.overLimit"),
-    overNote: (over) =>
-      t("dashboard.temps.overNote", {
-        list: list(
-          over.map((d) =>
-            t("dashboard.temps.overOne", {
-              device: d.device,
-              c: celsius(d.c ?? 0),
-            }),
-          ),
-        ),
-        limit: celsius(over[0]?.limit ?? 0),
-      }),
+    overNote,
     asleepNote: (devices) =>
       t("dashboard.temps.asleepNote", {
         count: devices.length,
@@ -387,5 +393,14 @@ export function useNasWords() {
         : t("dashboard.temps.showOther", { count: s.count }),
   };
 
-  return { model, map, answer, temperatures, rest, list, celsius };
+  return {
+    model,
+    map,
+    answer,
+    temperatures,
+    rest,
+    list,
+    celsius,
+    overNote,
+  };
 }

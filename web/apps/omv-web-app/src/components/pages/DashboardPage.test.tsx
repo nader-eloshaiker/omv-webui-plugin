@@ -110,6 +110,27 @@ describe("the answer", () => {
     expect(needs()).toHaveTextContent(/Disk \/dev\/sdb reported a problem/);
   });
 
+  it("counts the disks over their temperature alert limit, in the temperatures' own sentence", async () => {
+    await dashboard({ scenario: "dashboard24Disks" });
+    await within(region("Disk temperatures")).findByText(/^Read at /, {}, LONG);
+    const sentence =
+      "sdk is at 46 °C, sdt is at 46 °C, and nvme1n1 is at 47 °C, at or over the alert limit of 45 °C.";
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("One thing needs you."),
+    );
+    const rows = within(needs()!).getAllByRole("listitem");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent(/^Warning:3 disks are running hot/);
+    expect(rows[0]).toHaveTextContent(sentence);
+    expect(
+      within(rows[0]!).getByRole("link", { name: "Open Disks" }),
+    ).toHaveAttribute("href", "/ui/storage/disks");
+    // The temperatures say the same.
+    expect(
+      within(region("Disk temperatures")).getByText(sentence),
+    ).toBeInTheDocument();
+  });
+
   it("fails closed: a read that failed says which part could not be read, with a foreground retry in place", async () => {
     let fail = true;
     const { user } = await dashboard({

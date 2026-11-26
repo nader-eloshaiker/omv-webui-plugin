@@ -8,6 +8,10 @@ import type {
   SmartDevice,
   SmartDeviceList,
 } from "@omv-webui/react-api-omv/generated";
+import {
+  diskTemperatureOf,
+  type DiskTemperature,
+} from "@omv-webui/react-ui-components";
 import { describe, expect, it } from "vitest";
 import { addressIn } from "../filesystems/fsModel.ts";
 import {
@@ -507,6 +511,85 @@ describe("attentionRows: storage, disks and services", () => {
         pending: ["samba"],
       }),
     ).toEqual([]);
+  });
+});
+
+describe("attentionRows: disks at or over their temperature alert limit", () => {
+  const now = 1_795_089_029_000;
+  const info = { ts: now / 1000, rebootRequired: false };
+  /** A reading as the temperatures make it: DiskMgmt.getList's row and Smart.getSettings `tempmax`. */
+  const reading = (
+    devicename: string,
+    temperature: string,
+    powermode = "ACTIVE or IDLE",
+  ): DiskTemperature =>
+    diskTemperatureOf(
+      {
+        disk: {
+          devicename,
+          canonicaldevicefile: `/dev/${devicename}`,
+          devicelinks: [],
+          temperature,
+          powermode,
+        },
+        kind: "hdd",
+      },
+      { tempmax: 45 },
+    );
+  const hot = (temperatures: DiskTemperature[]) =>
+    attentionRows({ info, receivedAtMs: now, temperatures }).filter(
+      (r) => r.kind === "disksHot",
+    );
+
+  it("raises no row when every disk is under its limit", () => {
+    expect(hot([reading("sda", "36"), reading("sdb", "44")])).toEqual([]);
+  });
+
+  it("raises one Warning row for one disk over its limit", () => {
+    const rows = hot([reading("sda", "36"), reading("sdb", "47")]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      key: "disks-hot",
+      disks: [{ device: "sdb", c: 47, limit: 45 }],
+    });
+  });
+
+  it("names three disks over their limit in one row, in the temperatures' order", () => {
+    const rows = hot([
+      reading("sdk", "46"),
+      reading("sda", "34"),
+      reading("sdt", "46"),
+      reading("nvme1n1", "47"),
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(
+      rows[0]?.kind === "disksHot" ? rows[0].disks.map((d) => d.device) : [],
+    ).toEqual(["sdk", "sdt", "nvme1n1"]);
+  });
+
+  it("counts a disk exactly at its limit, since the temperatures say at or over", () => {
+    expect(hot([reading("sda", "45")])).toMatchObject([
+      { disks: [{ device: "sda", c: 45 }] },
+    ]);
+  });
+
+  it("never raises it for a disk asleep or with no reading", () => {
+    expect(
+      hot([
+        reading("sda", "", "STANDBY"),
+        reading("sdb", "50", "STANDBY"),
+        reading("sdc", ""),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("places it with the other warnings, before the restart", () => {
+    const rows = attentionRows({
+      info: { ...info, rebootRequired: true },
+      receivedAtMs: now,
+      temperatures: [reading("sda", "46")],
+    });
+    expect(rows.map((r) => r.kind)).toEqual(["disksHot", "restart"]);
   });
 });
 

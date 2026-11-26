@@ -74,6 +74,18 @@ export function AttentionTitle({ row }: { row: AttentionRow }) {
           components={{ device: <IdentifierText value={row.device} /> }}
         />
       );
+    case "disksHot": {
+      const [only] = row.disks;
+      return row.disks.length === 1 && only !== undefined ? (
+        <Trans
+          i18nKey="dashboard.attention.title.disksHot"
+          count={1}
+          components={{ device: <IdentifierText value={only.device} /> }}
+        />
+      ) : (
+        t("dashboard.attention.title.disksHot", { count: row.disks.length })
+      );
+    }
     case "servicesDown": {
       const [only] = row.services;
       return row.services.length === 1 && only !== undefined

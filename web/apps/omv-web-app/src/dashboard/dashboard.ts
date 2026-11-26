@@ -10,7 +10,11 @@ import type {
   SmartDevice,
   SystemInformation,
 } from "@omv-webui/react-api-omv/generated";
-import { rollUp } from "@omv-webui/react-ui-components";
+import {
+  diskOverLimit,
+  rollUp,
+  type DiskTemperature,
+} from "@omv-webui/react-ui-components";
 import {
   naturalCompare,
   parseByteCount,
@@ -502,6 +506,12 @@ export type AttentionRow =
       pool: string;
       health: "degraded" | "unusable" | "damaged";
     }
+  | {
+      kind: "disksHot";
+      key: string;
+      /** Each disk at or over its alert limit, as the temperatures read it, in their order. */
+      disks: DiskTemperature[];
+    }
   | { kind: "restart"; key: string }
   | { kind: "clock"; key: string; seconds: number };
 
@@ -520,12 +530,22 @@ export interface AttentionInput {
   pending?: readonly string[];
   /** Zfs.getPoolStatus, read once per visit when the ZFS plugin is installed (ZFS design 10.1). */
   pools?: readonly { name: string; state: string; status: string }[];
+  /**
+   * Every disk's temperature reading, as the temperatures draw it (`diskTemperatureOf` on
+   * DiskMgmt.getList with Smart.getSettings `tempmax`), in their order: the hot disks' row.
+   */
+  temperatures?: readonly DiskTemperature[];
 }
 
 /**
  * The rows of the attention list, worst first, then in a fixed order of kinds so rows do not change
  * places between polls: file system full, missing, disk failing, services down, file system nearly
- * full, disk warning, restart, clock. No row for Unknown, and none for "disk health not checked".
+ * full, disk warning, disks at or over their temperature alert limit, restart, clock. No row for
+ * Unknown, and none for "disk health not checked".
+ *
+ * The hot disks are one Warning row naming them all, from the same readings and the same rule
+ * (`diskOverLimit`, at or over the limit) as the temperatures, so the two never disagree. A disk
+ * asleep, or with no reading, has no figure and so is never in it.
  */
 export function attentionRows(input: AttentionInput): AttentionRow[] {
   const storage = input.storage ?? [];
@@ -620,6 +640,8 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
     }
   }
 
+  const hot = (input.temperatures ?? []).filter(diskOverLimit);
+
   const rows: AttentionRow[] = [
     ...full,
     ...missing,
@@ -628,6 +650,9 @@ export function attentionRows(input: AttentionInput): AttentionRow[] {
     ...down,
     ...nearlyFull,
     ...warned,
+    ...(hot.length > 0
+      ? [{ kind: "disksHot" as const, key: "disks-hot", disks: hot }]
+      : []),
   ];
   if (input.info === undefined) {
     return rows;
