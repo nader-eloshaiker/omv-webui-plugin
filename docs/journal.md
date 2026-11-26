@@ -918,3 +918,20 @@ The owner then left three questions to the recommendation:
 1. **Breadcrumbs** show only the parent page, as one link above the title ("Shared folders"). That needs no separator, so there is no chevron and no slash.
 2. **Table filters** are text tabs with their counts, the chosen one underlined, instead of pill-shaped buttons.
 3. **The jump highlight** (the ring round the thing a link or search jumped to) appears once, holds still briefly and fades, instead of flashing twice.
+
+## 2026-11-26 — Motion and guidance are right; the charts are not (owner)
+
+The owner saw the motion reel and the guidance prototype in the lab. Both look right and can move into the library and the pages.
+
+The charts look boring and generic. The owner saw two kinds:
+
+- the thin, flat blue usage bars in the NAS map, in the empty shared-folders example and in the tables;
+- the live readouts, which were figures with nothing drawn.
+
+A charts prototype in the lab (`?screen=charts`) puts several candidates side by side for each kind, and the owner chooses before the dashboard is re-composed. The rules do not change:
+
+- every figure comes from a contract read;
+- a live history shows only the readings the page itself took;
+- sequential colour is one hue by lightness;
+- series are labelled directly;
+- nothing pulses.
