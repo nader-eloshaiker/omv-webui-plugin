@@ -1,27 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The welcome prototype's screen (journal 2026-11-27: the first visit must welcome, and read as
-// professionally made) and the view the query string selects. Development only (UI-11). The query
+// The dashboard design's lab screen (journal 2026-11-27: the first visit must welcome, and read as
+// professionally made; the owner then asked for one dashboard with the life of the Instrument view and
+// the decisions of /ui) and the view the query string selects. Development only (UI-11). The query
 // only selects what is shown and never acts (UI-4): it seeds the view and writes no preference.
 //
 //   screen=welcome
-//   candidate=drawn|annotated|start   the three candidates
-//   case=existing|new|later           the new interface on an existing NAS, a new NAS, a later visit
-//   check=before|after                disk health not yet checked, or checked (the later visit)
-//   theme=dark|light, density=comfortable|compact, motion=full|reduced, tips=on|off
-//   still=1                           nothing assembles on open (for screenshots of the end state)
-//   chrome=0                          hides the lab's controls and the candidate's notes
+//   case=existing|new|later           the first visit on an existing NAS, a new NAS, a later visit
+//   nas=ok|needs                      the mock's NAS fine, or with the Data drive almost full
+//   check=before|after                disk health not yet checked, or checked
+//   theme=dark|light (dark first), density=comfortable|compact, motion=full|reduced, tips=on|off
+//   still=1                           no live readings and nothing assembling: the same every time
+//   chrome=0                          hides the lab's controls and the notes on the design
 export const WELCOME_SCREENS = ["welcome"] as const;
 
-export const CANDIDATES = [
-  { id: "drawn", name: "A. Your NAS, drawn" },
-  { id: "annotated", name: "B. Pointed out in place" },
-  { id: "start", name: "C. Start the work" },
-] as const;
-export type CandidateId = (typeof CANDIDATES)[number]["id"];
-
 export const CASES = [
-  { id: "existing", name: "Existing NAS, first visit" },
-  { id: "new", name: "New NAS, first visit" },
+  { id: "existing", name: "First visit, existing NAS" },
+  { id: "new", name: "First visit, new NAS" },
   { id: "later", name: "A later visit" },
 ] as const;
 export type CaseId = (typeof CASES)[number]["id"];
@@ -29,8 +23,8 @@ export type CaseId = (typeof CASES)[number]["id"];
 export type CheckState = "before" | "checking" | "after";
 
 export interface WelcomeView {
-  candidate: CandidateId;
   case: CaseId;
+  nas: "ok" | "needs";
   check: "before" | "after";
   theme: "dark" | "light";
   density: "comfortable" | "compact";
@@ -51,16 +45,12 @@ function pick<T extends string>(
 export function readWelcomeView(search: string): WelcomeView {
   const q = new URLSearchParams(search);
   return {
-    candidate: pick(
-      q.get("candidate"),
-      CANDIDATES.map((c) => c.id),
-      "drawn",
-    ),
     case: pick(
       q.get("case"),
       CASES.map((c) => c.id),
       "existing",
     ),
+    nas: pick(q.get("nas"), ["ok", "needs"] as const, "ok"),
     check: pick(q.get("check"), ["before", "after"] as const, "before"),
     theme: pick(q.get("theme"), ["dark", "light"] as const, "dark"),
     density: pick(
@@ -79,12 +69,14 @@ export function readWelcomeView(search: string): WelcomeView {
 export function welcomeQuery(view: WelcomeView): string {
   const q = new URLSearchParams({
     screen: "welcome",
-    candidate: view.candidate,
     case: view.case,
     theme: view.theme,
     density: view.density,
     motion: view.motion,
   });
+  if (view.nas === "needs") {
+    q.set("nas", "needs");
+  }
   if (view.check === "after") {
     q.set("check", "after");
   }

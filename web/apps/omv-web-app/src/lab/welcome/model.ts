@@ -208,6 +208,8 @@ export interface WelcomeWordsIn {
   kind: (kind: NasDiskKind) => string;
   notChecked: string;
   ok: string;
+  /** A storage past its warning mark: "Almost full". */
+  almostFull: string;
   asleep: string;
   celsius: (value: string) => string;
   speed: (mbit: number) => string;
@@ -264,10 +266,17 @@ export function labNas(
   which: CaseId,
   check: CheckState,
   words: WelcomeWordsIn,
+  /**
+   * The lab's "something needs you": the Data drive at 92 %, past its 85 % mark, as in the mock's
+   * dashboardNeedsYou scenario (FileSystemMgmt.getList `percentage`, `usagewarnthreshold`).
+   */
+  needs = false,
 ): LabNas {
   const newNas = which === "new";
   const checked = check === "after";
-  const storageRows = newNas ? STORAGE.filter((s) => s.system) : STORAGE;
+  const storageRows = (newNas ? STORAGE.filter((s) => s.system) : STORAGE).map(
+    (s) => (needs && s.id === "data" ? { ...s, percent: 92 } : s),
+  );
   const folders = newNas ? [] : FOLDERS;
 
   const disks: LabDisk[] = DISKS.map((d) => {
@@ -293,14 +302,15 @@ export function labNas(
 
   const storage: LabStorage[] = storageRows.map((s) => {
     const free = s.size * (1 - s.percent / 100);
+    const over = s.mark !== null && s.percent >= s.mark;
     return {
       id: s.id,
       name: s.name,
       tech: s.tech,
       kind: s.kind,
       used: s.percent / 100,
-      health: "ok",
-      healthLabel: words.ok,
+      health: over ? "warning" : "ok",
+      healthLabel: over ? words.almostFull : words.ok,
       folders: s.folders,
       system: s.system,
       disksNote: s.disksNote,

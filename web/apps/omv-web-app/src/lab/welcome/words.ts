@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Every word of the three welcome candidates, final copy shaped for the catalogue (the keys would sit
-// under dashboard.welcome.<candidate> in locales/en/common.json once the owner chooses). Development
-// only (UI-11). `{{name}}` is filled from the reads by `fill`; counts are written in words up to ten.
-// The words of the map, the answer and the first steps are the catalogue's own (useNasWords).
+// Every new word of the dashboard design in the lab, final copy shaped for the catalogue (the keys
+// would sit under dashboard.welcome, dashboard.answer and dashboard.scan in locales/en/common.json).
+// Development only (UI-11). `{{name}}` is filled from the reads by `fill`; counts are written in
+// words up to ten. The words of the map, the live charts, the temperatures, the first steps and This
+// NAS are the catalogue's own.
 
 const NUMBER_WORDS = [
   "no",
@@ -25,6 +26,13 @@ export const count = (n: number): string => NUMBER_WORDS[n] ?? String(n);
 export const counted = (n: number, one: string, other: string): string =>
   `${count(n)} ${n === 1 ? one : other}`;
 
+/** A non-breaking space, between a figure and its word. */
+const NBSP = String.fromCharCode(160);
+
+/** "6 disks", "1 disk": figures, for the scan line's short counts. */
+export const figure = (n: number, one: string, other: string): string =>
+  `${String(n)}${NBSP}${n === 1 ? one : other}`;
+
 /** "sda, sdb and sdc". */
 export function listWords(items: readonly string[]): string {
   if (items.length <= 1) {
@@ -38,7 +46,6 @@ export function fill(text: string, values: Record<string, string>): string {
   return text.replace(/\{\{(\w+)\}\}/gu, (_, key: string) => values[key] ?? "");
 }
 
-/** Shared by the three candidates. */
 export const COMMON = {
   hide: "Hide the welcome",
   hideName: "Hide the welcome to the new interface",
@@ -47,15 +54,14 @@ export const COMMON = {
   newTab: "(opens in a new tab)",
   check: "Check disk health",
   checking: "Checking disk health…",
-  checkNow: "Check disk health now",
-  /** The answer before the check: the catalogue's title, a new reason. */
+  /** The answer before the check: the catalogue's title, this reason, and the button after it. */
   notCheckedReason:
-    "Disk health is checked only when you ask, because the check can wake sleeping disks.",
+    "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you.",
   checkingReason:
-    "The disks are being checked. A sleeping disk wakes up for it.",
+    "Every disk is being asked for its health. A disk that was asleep wakes up for it.",
 };
 
-/** A. The person's NAS, drawn large, assembling as the welcome. */
+/** The welcome: the person's own NAS, drawn large, assembling as the entrance. */
 export const DRAWN = {
   title: "Welcome to {{host}}.",
   existing: {
@@ -64,125 +70,77 @@ export const DRAWN = {
   },
   new: {
     lead: "It found {{disks}}. One holds the system, and the other {{free}} are ready to keep your files.",
-    more: "Make one of them into storage, put a shared folder on it, and every computer at home can open it. The first steps below take you there.",
+    more: "Make one of them into storage, put a shared folder on it, and every computer at home can open it. The first steps take you there.",
   },
   picture: "The disks in {{host}} and the drives they make",
   board: "On the mainboard",
   raid: "RAID array",
   unused: "Not in use",
   ready: "Ready for storage",
-  /** The later visit's small picture beside the answer, for assistive technology. */
+  /** The small drawing beside a later answer, for assistive technology. */
   mini: "The disks in {{host}}: {{state}}",
   miniBefore: "not checked since you signed in",
   miniAfter: "all reported no problem",
 };
 
-/** B. A strong statement, and the three things that work differently, pointed out in place. */
-export const ANNOTATED = {
-  existing: {
-    title: "Now you can see all of {{host}} at a glance.",
-    lead: "This is the new interface for openmediavault, running on the settings {{host}} already has. Three things work differently, and this page points each one out.",
-  },
-  new: {
-    title: "Set up {{host}} from one page.",
-    lead: "This is the new interface for openmediavault. Everything {{host}} has is drawn below, and this page points out the three things that get you started.",
-  },
-  notesLabel: "What works differently",
-  palette: {
-    lead: "Any page is one key away.",
-    body: "Press / on any page, or use the search at the top, and type what you want, such as share {{folder}}.",
-  },
-  answer: {
-    lead: "The answer comes first.",
-    body: "It names the worst problem before anything else, and it says everything is working only after the disks have been checked.",
-  },
-  map: {
-    lead: "Your NAS is drawn as a map.",
-    body: "Each row is one drive, from its disks to its shared folders. Point at {{folder}} to see the disk it is on and how computers reach it.",
-  },
-  steps: {
-    lead: "Start with the first steps.",
-    body: "Storage comes first, then a shared folder on it. Each button opens the page that does it.",
-  },
-  mapNew: {
-    lead: "Your NAS is drawn as a map.",
-    body: "Its {{free}} free disks are on the left. Storage you add appears in the middle, and its shared folders on the right.",
+/** The scan line: one status per area of the NAS, each a link to its part of the page. */
+export const SCAN = {
+  label: "The NAS at a glance",
+  disks: "Disks",
+  storage: "Storage",
+  sharing: "Sharing",
+  network: "Network",
+  notChecked: "Not checked",
+  disksCount: "{{count}}, {{asleep}} asleep",
+  drivesAll: "{{count}}, all with space",
+  drivesSome: "{{name}}, {{percent}} used",
+  notSetUp: "Not set up",
+  drivesNone: "Only the system drive",
+  sharingOn: "{{folders}}, {{ways}} on",
+  sharingNone: "No shared folders yet",
+  networkUp: "{{name}} at {{speed}}",
+  /** For assistive technology: "Disks: Not checked, 6 disks, 1 asleep. Go to the disks." */
+  goTo: "Go to {{part}}",
+  parts: {
+    disks: "the disk temperatures",
+    storage: "the map of your NAS",
+    sharing: "the ways in",
+    network: "the network",
   },
 };
 
-/** C. The welcome is the start of the work. */
-export const START = {
-  title: "Welcome to {{host}}.",
-  existing: {
-    lead: "Type what you want to do, or start with one of these.",
-  },
-  new: {
-    lead: "Its {{free}} free disks are ready for your files. Type what you want to do, or start with the first step.",
-  },
-  field: "Find a page, a setting or a task",
-  suggestions: "Suggested for {{host}}",
-  check: {
-    title: "Check the health of all {{disks}}.",
-    asleep: "{{asleep}} is asleep, and the check wakes it up.",
-    asleepMany: "{{asleep}} are asleep, and the check wakes them up.",
-    awake: "Each disk reports whether it is wearing out.",
-    action: "Check disk health",
-  },
-  unused: {
-    title: "Put {{device}} to use.",
-    detail:
-      "This {{size}} {{kind}} is in {{host}}, but no storage is made from it yet.",
-    action: "Add storage",
-  },
-  unreached: {
-    title: "Let computers open {{folder}}.",
-    detail: "It is a shared folder, but no way in reaches it yet.",
-    action: "Share {{folder}}",
-  },
-  /** A later visit, while the suggestions still hold (G1, "Show tips" on). */
-  also: "You could also {{list}}.",
-  alsoUnused: "put {{device}} to use",
-  alsoUnreached: "let computers open {{folder}}",
-  /** Between the two phrases of `also`. */
-  alsoOr: ", or ",
+/** What still holds on a later visit, under the answer (G1: it ends when it is done). */
+export const ALSO = {
+  sentence: "You could also {{list}}.",
+  unused: "put {{device}} to use",
+  unreached: "let computers open {{folder}}",
+  or: ", or ",
 };
 
-/** What each candidate does, for the owner, shown under the page in the lab (never in a shot). */
-export const BEHAVIOUR: Record<
-  "drawn" | "annotated" | "start",
-  { idea: string; rules: readonly string[] }
-> = {
-  drawn: {
-    idea: "The welcome is the person's own NAS, drawn large: every disk by its kind in the chassis, and under them the drives they make. On the first visit the disks drop into their bays and the brackets draw under them. On later visits a small copy of the drawing stands beside the answer, and the disk health check is drawn on it.",
-    rules: [
-      "Dismissed with Hide the welcome: it folds up and focus moves to the answer. Pointing at or clicking the page does not end it, so nothing jumps under the pointer.",
-      "It never comes back by itself: the browser remembers that the dashboard was seen (a preference, UI-13), so the next visit opens on the answer.",
-      "Show me around (This NAS, the account menu) brings it back for one visit and plays the drawing again, whatever Show tips says.",
-      "Show tips off: no welcome on the first visit. The small drawing beside the answer stays, because it is the answer's picture, not a tip.",
-      "Motion: the disks drop in left to right and the brackets draw, about 900 ms, every part usable as it lands; the map under it is already there. Reduced: the drawing fades in whole. After a check, each disk's dashed outline joins into a solid one.",
-      "Compact: the second paragraph and each disk's kind and size go; the drawing is smaller.",
-    ],
-  },
-  annotated: {
-    idea: "One strong statement, then the three things that work differently, each pointed out beside the thing itself on the person's own page: the search, the answer and the map. Nothing covers a control; the notes sit in the empty side of each region and draw their line to it.",
-    rules: [
-      "Dismissed with Hide the welcome: the statement and the three notes fold away together and the answer becomes the page's heading.",
-      "Never comes back by itself (the same remembered preference as today).",
-      "Show me around brings the statement and the notes back for one visit and replays the map.",
-      "Show tips off: no statement and no notes; the page opens on the answer.",
-      "Motion: the map assembles as approved, and each note's line draws to its region as that region lands. Pointing at a note rings the thing it is about (a note is not a control, so it takes no focus; the words name the place). Reduced: the lines are drawn and the ring appears without a transition.",
-      "Compact: each note keeps its first sentence, and the statement keeps its first sentence.",
-    ],
-  },
-  start: {
-    idea: "The welcome turns into the start of the work: a large search for any page, setting or task, and beside the answer, the few things this NAS suggests right now, each with its button. On a new NAS those are the first steps.",
-    rules: [
-      "Dismissed with Hide the welcome. A suggestion that is done leaves the list; when none is left, the welcome folds away by itself.",
-      "Never comes back by itself. Suggestions that still hold appear on later visits as one sentence under the answer, until they are done or tips are off.",
-      "Show me around brings the welcome back for one visit and replays the map.",
-      "Show tips off: no welcome and no suggestions; the page opens on the answer, with Check disk health in it.",
-      "Motion: the map assembles as approved. Pressing a suggestion's button turns it into its progress, and when it is done the row leaves and the answer changes its words. Reduced: rows go at once.",
-      "Compact: the suggestions keep their title and button, and the search is the normal field height.",
-    ],
-  },
+/** What needs you in the lab's "something needs you" state: the catalogue's attention words. */
+export const NEEDS = {
+  label: "What needs you",
+  title: "{{name}} is almost full",
+  detail: "It is {{percent}} full, at or above its warning level of {{mark}}.",
+  reason:
+    "{{name}} is {{percent}} full. Make room or add storage before it fills.",
+  action: "Open {{name}}",
+};
+
+export const GROUNDS = {
+  side: "This NAS",
+};
+
+/** The design, for the owner, under the page in the lab (never in a shot). */
+export const BEHAVIOUR = {
+  title: "The dashboard: your NAS, drawn, read like an instrument",
+  idea: "The page opens dark. On the first visit it greets the NAS by name with its own figures, and the NAS drawn large assembles beside the greeting. Under that, on every visit: the answer at full size, a line with one status per area, the live instrument panel beside what needs you or This NAS, then the map on its own plate, the temperatures and the shortcuts.",
+  rules: [
+    "Dismissed with Hide the welcome only; pointing at or clicking the page leaves it where it is (a change to rethink P.2).",
+    "Never comes back by itself: the browser remembers the dashboard was seen (UI-13). Show me around brings it back for one visit and plays the drawing again, whatever Show tips says.",
+    "Show tips off: no welcome, no newcomer captions on the map and no sentence of what still holds. The small drawing beside the answer stays, because it is the answer's picture.",
+    "The answer carries Check disk health right after the sentence that says why it waits. It takes the filled accent only when nothing else is the next step.",
+    "Motion: on the first visit the disks rise into their bays and the brackets draw (about 880 ms, each part usable as it lands); after a check, the small drawing's outlines join up disk by disk; the live charts move left with time. Reduced: everything lands at once with a short fade.",
+    "Compact: the welcome's second paragraph, each disk's kind and size, the map's captions and the steps' explanations go; the panels tighten.",
+  ],
 };

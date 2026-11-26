@@ -15,12 +15,12 @@
 
 .omv-lab-welcome {
   --wl-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem);
-  --wl-gap: 44px;
+  --wl-gap: 28px;
   --wl-col: 19rem;
 }
 :root[data-density="compact"] .omv-lab-welcome {
   --wl-hero: var(--text-display);
-  --wl-gap: 24px;
+  --wl-gap: 16px;
 }
 
 .wl-page {
@@ -87,8 +87,9 @@
   align-items: start;
   min-width: 0;
 }
-.wl-answer[data-size="display"] {
-  grid-template-columns: 2.25rem minmax(0, max-content) auto minmax(0, 1fr);
+.wl-answer[data-size="hero"] {
+  grid-template-columns: 2.75rem minmax(0, max-content) auto minmax(0, 1fr);
+  column-gap: 16px;
 }
 .wl-answer-mark {
   display: inline-grid;
@@ -100,7 +101,7 @@
   width: 100%;
   height: auto;
 }
-.wl-answer[data-size="display"] .wl-answer-mark {
+.wl-answer[data-size="hero"] .wl-answer-mark {
   margin-top: 4px;
 }
 .wl-answer-words {
@@ -117,9 +118,9 @@
   outline: none;
   text-wrap: balance;
 }
-.wl-answer[data-size="display"] .wl-answer-title {
-  font-size: var(--text-display);
-  line-height: var(--text-display--line-height);
+.wl-answer[data-size="hero"] .wl-answer-title {
+  font-size: var(--wl-hero);
+  line-height: 1.04;
   letter-spacing: var(--text-display--letter-spacing);
   font-weight: var(--text-display--font-weight);
 }
@@ -478,290 +479,177 @@
   animation: fade-in var(--duration-fast) var(--ease-standard) 120ms both;
 }
 
-/* ─── B. Pointed out in place ────────────────────────────────────────────────────────────────── */
+/* ─── The grounds ────────────────────────────────────────────────────────────────────────────────
+   Four, each for one kind of thing, so the eye gets a frame and a rhythm without everything boxed:
+     page ground   the welcome, the answer, the side column's lists: words, not instruments;
+     strip         the NAS at a glance: one line read as one;
+     raised panel  "Right now", the temperatures, the side panel: things read and moving as one,
+                   on the surface token with the raised elevation;
+     plate         the map: a drawing on a sunken ground (the muted token), no shadow, so it reads as
+                   a sheet the rows are drawn on, not as one more card. */
 
-.wl-b,
-.wl-b-row {
-  display: grid;
-  gap: 18px;
-  align-items: start;
+.wl-panel {
   min-width: 0;
-}
-@container wlpage (min-width: 60rem) {
-  .wl-b,
-  .wl-b-row {
-    grid-template-columns: minmax(0, 1fr) var(--wl-col);
-    column-gap: 56px;
-  }
-}
-.wl-b-statement {
-  min-width: 0;
-}
-.wl-b .wl-display {
-  max-width: 15em;
-}
-.wl-b .wl-lead {
-  max-width: 40rem;
-}
-.wl-region {
-  min-width: 0;
-  border-radius: var(--radius-lg);
-  outline: 2px solid transparent;
-  outline-offset: 10px;
-  transition: outline-color var(--duration-fast) var(--ease-standard);
-}
-.wl-region[data-hot] {
-  outline-color: var(--theme-art-path);
-}
-.omv-lab-welcome [data-wl-hot] {
-  outline: 2px solid var(--theme-art-path);
-  outline-offset: 4px;
-}
-
-.wl-note {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  min-width: 0;
-  font-size: var(--text-body);
-  line-height: 1.5;
-  color: var(--theme-muted-foreground);
-}
-.wl-note p {
-  margin: 0;
-  max-width: 44rem;
-}
-.wl-note strong {
-  display: block;
-  margin-block-end: 2px;
-  font-size: var(--text-section);
-  font-weight: 600;
-  color: var(--theme-foreground);
-}
-:root[data-density="compact"] .wl-note strong {
-  display: inline;
-  font-size: var(--text-body);
-}
-.wl-leader {
-  flex: none;
-  width: 36px;
-  margin-block-start: 0.8em;
-  border-block-start: 1.5px solid var(--theme-art-path);
-  transform-origin: 0 50%;
-}
-@container wlpage (min-width: 60rem) {
-  /* Beside its region, the line reaches back across the gap towards it. */
-  .wl-note[data-place="side"] .wl-leader {
-    width: 44px;
-    margin-inline-start: -56px;
-    transform-origin: 100% 50%;
-  }
-  .wl-note[data-place="side"] {
-    margin-block-start: 6px;
-  }
-  /* Under the search in the top bar, the line rises to it. */
-  .wl-note[data-place="up"] {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .wl-note[data-place="up"] .wl-leader {
-    width: 0;
-    height: 44px;
-    margin: -32px 0 0 48px;
-    border-block-start: 0;
-    border-inline-start: 1.5px solid var(--theme-art-path);
-    transform-origin: 50% 0;
-  }
-}
-@container wlpage (max-width: 59.99rem) {
-  /* Stacked under its region, a note needs no line: it is next to what it names. */
-  .wl-note .wl-leader {
-    display: none;
-  }
-}
-/* A note's mark: the thing itself in small, on the drawing's plane. */
-.wl-note-mark {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--theme-art-plane);
-  color: var(--theme-foreground);
-}
-.wl-note-mark svg {
-  width: 24px;
-  height: 24px;
-}
-.wl-note-mark kbd {
-  font-family: var(--font-mono);
-  font-size: var(--text-section);
-  font-weight: 600;
-}
-:root[data-density="compact"] .wl-note-mark {
-  width: 28px;
-  height: 28px;
-}
-.wl-note[data-place="head"] {
-  margin-block: 4px 6px;
-}
-.wl-note[data-place="head"] .wl-leader {
-  width: 20px;
-}
-.wl-page[data-assemble="full"] .wl-leader {
-  animation: grow-x var(--duration-slow) var(--ease-standard) 140ms both;
-}
-.wl-page[data-assemble="full"] .wl-note[data-place="up"] .wl-leader {
-  animation-name: grow-y;
-  animation-delay: 60ms;
-}
-.wl-page[data-assemble="full"] .wl-note[data-target="map"] .wl-leader {
-  animation-delay: 260ms;
-}
-.wl-page[data-assemble="full"] .wl-note p {
-  animation: fade-in var(--duration-fast) var(--ease-standard) 80ms both;
-}
-
-/* ─── C. Start the work ──────────────────────────────────────────────────────────────────────── */
-
-.wl-c {
-  display: grid;
-  gap: 32px;
-  align-items: start;
-  min-width: 0;
-}
-@container wlpage (min-width: 60rem) {
-  .wl-c {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    column-gap: 56px;
-  }
-}
-.wl-c-words,
-.wl-c-work {
-  min-width: 0;
-}
-.wl-c-answer {
-  margin-block-start: 32px;
-}
-:root[data-density="compact"] .wl-c-answer {
-  margin-block-start: 16px;
-}
-.wl-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 56px;
-  padding: 0 14px 0 18px;
-  border: 1px solid var(--theme-border-control);
-  border-radius: var(--radius-md);
-  background: var(--theme-surface);
-  box-shadow: var(--theme-shadow-control);
-  color: var(--theme-muted-foreground);
-  font: inherit;
-  font-size: var(--text-lg);
-  text-align: start;
-  cursor: text;
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-.wl-field:hover {
-  border-color: var(--theme-focus-ring);
-}
-.wl-field:focus-visible {
-  outline: 2px solid var(--theme-focus-ring);
-  outline-offset: 2px;
-}
-.wl-field > svg {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  color: var(--theme-foreground);
-}
-.wl-field-words {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.wl-field kbd {
-  flex: none;
-  min-width: 28px;
-  padding: 2px 8px;
+  padding: var(--density-card);
   border: 1px solid var(--theme-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-raised);
+}
+.wl-plate {
+  min-width: 0;
+  padding: var(--density-card);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
   background: var(--theme-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  text-align: center;
-  color: var(--theme-foreground);
+  outline: none;
 }
-:root[data-density="compact"] .wl-field {
-  min-height: var(--density-control-lg);
-  font-size: var(--text-body);
+.wl-panel:focus,
+.wl-plate:focus {
+  outline: none;
 }
-.wl-c-work > .wl-field + :is([data-slot="first-steps"], section) {
-  margin-block-start: 28px;
+.wl-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-block-end: 16px;
 }
-:root[data-density="compact"]
-  .wl-c-work
-  > .wl-field
-  + :is([data-slot="first-steps"], section) {
-  margin-block-start: 14px;
-}
-.wl-start-title {
-  margin: 0 0 6px;
+.wl-panel-title {
+  margin: 0;
   font-size: var(--text-section);
   line-height: var(--text-section--line-height);
   font-weight: var(--text-section--font-weight);
   color: var(--theme-foreground);
 }
-.wl-start-list {
+.wl-panel-note {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--theme-muted-foreground);
+}
+
+/* The top: the answer, then the strip under it. */
+.wl-top {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+:root[data-density="compact"] .wl-top {
+  gap: 12px;
+}
+
+/* The grid: a primary column of instruments and a secondary column of the lists beside them. */
+.wl-grid {
+  display: grid;
+  gap: var(--density-gutter);
+  align-items: start;
+  min-width: 0;
+}
+.wl-main,
+.wl-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gutter);
+  min-width: 0;
+}
+/* What needs you, or the first steps, come before the instruments when the page reads as one column. */
+.wl-grid[data-side-first] .wl-aside {
+  order: -1;
+}
+@container wlpage (min-width: 60rem) {
+  .wl-grid {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  }
+  .wl-grid[data-side-first] .wl-aside {
+    order: 0;
+  }
+  .wl-grid[data-whole] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.wl-side {
+  min-width: 0;
+}
+.wl-shortcuts {
+  padding-inline: 4px;
+}
+
+/* ─── The NAS at a glance ────────────────────────────────────────────────────────────────────── */
+
+.wl-scan {
+  min-width: 0;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  background: var(--theme-surface);
+  box-shadow: var(--theme-shadow-raised);
+}
+.wl-scan ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.wl-start-row {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px 16px;
-  min-height: 0;
-  padding-block: 14px;
-  border-block-start: 1px solid var(--theme-border);
-  color: var(--theme-foreground);
-}
-:root[data-density="compact"] .wl-start-row {
-  padding-block: 8px;
-}
-.wl-start-words {
+.wl-scan li {
   min-width: 0;
 }
-.wl-start-name {
-  margin: 0;
-  font-weight: 600;
+.wl-scan li + li {
+  border-inline-start: 1px solid var(--theme-border);
 }
-.wl-start-detail {
-  margin: 2px 0 0;
+.wl-scan a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.wl-scan a:hover {
+  background: var(--theme-muted-strong);
+}
+.wl-scan a:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: -2px;
+}
+.wl-scan-label {
   font-size: var(--text-caption);
-  line-height: 1.4;
   color: var(--theme-muted-foreground);
 }
-@container wlpage (max-width: 30rem) {
-  .wl-start-row {
-    grid-template-columns: 24px minmax(0, 1fr);
-    align-items: start;
+.wl-scan-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  font-size: var(--text-body);
+}
+.wl-scan-value [data-slot="status-pill"] {
+  font-weight: 600;
+}
+.wl-scan-count {
+  color: var(--theme-muted-foreground);
+}
+:root[data-density="compact"] .wl-scan a {
+  padding: 8px 12px;
+}
+@container wlpage (max-width: 48rem) {
+  .wl-scan ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .wl-start-row > button {
-    grid-column: 2;
-    justify-self: start;
-    margin-block-start: 8px;
+  .wl-scan li:nth-child(3) {
+    border-inline-start: 0;
+  }
+  .wl-scan li:nth-child(n + 3) {
+    border-block-start: 1px solid var(--theme-border);
   }
 }
+
+/* What still holds, under the answer: one sentence whose phrases open their pages. */
 .wl-also {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
   font-size: var(--text-body);
   color: var(--theme-muted-foreground);
 }
@@ -779,6 +667,172 @@
   outline: 2px solid var(--theme-focus-ring);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* ─── Right now: the instrument panel ────────────────────────────────────────────────────────── */
+
+.wl-now-charts {
+  display: grid;
+  gap: 28px 32px;
+  min-width: 0;
+}
+@container wlpage (min-width: 40rem) {
+  .wl-now-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.wl-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.wl-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--theme-muted-foreground);
+}
+.wl-chart-aside {
+  font-size: var(--text-xs);
+  color: var(--theme-tertiary-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.wl-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+}
+.wl-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.wl-figure-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-caption);
+  color: var(--theme-muted-foreground);
+}
+.wl-figure-name svg {
+  width: 20px;
+  height: 8px;
+}
+.wl-figure-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-figure);
+  line-height: 1.1;
+  font-weight: 500;
+  color: var(--theme-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.wl-figure-unit {
+  margin-inline-start: 6px;
+  font-size: var(--text-section);
+  font-weight: 400;
+  color: var(--theme-muted-foreground);
+}
+.wl-plot {
+  position: relative;
+  height: 140px;
+  margin-inline-end: 64px;
+}
+:root[data-density="compact"] .wl-plot {
+  height: 120px;
+}
+.wl-plot > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.wl-plot path {
+  vector-effect: non-scaling-stroke;
+}
+.wl-rule {
+  fill: none;
+  stroke: var(--theme-border);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.wl-base {
+  fill: none;
+  stroke: var(--theme-border-control);
+  stroke-width: 1;
+}
+.wl-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wl-line[data-stroke="solid"],
+.wl-figure-name svg[data-stroke="solid"] path {
+  stroke: var(--theme-series-2);
+}
+.wl-line[data-stroke="dashed"],
+.wl-figure-name svg[data-stroke="dashed"] path {
+  stroke: var(--theme-series-1);
+  stroke-dasharray: 6 4;
+}
+.wl-figure-name svg path {
+  fill: none;
+  stroke-width: 2;
+}
+/* The area under a live line: the one gradient style guide 10 keeps, because it shows the data. */
+.wl-stop-strong[data-stroke="solid"] {
+  stop-color: var(--theme-series-2);
+  stop-opacity: 0.42;
+}
+.wl-stop-strong[data-stroke="dashed"] {
+  stop-color: var(--theme-series-1);
+  stop-opacity: 0.42;
+}
+.wl-stop-faint[data-stroke="solid"] {
+  stop-color: var(--theme-series-2);
+  stop-opacity: 0.02;
+}
+.wl-stop-faint[data-stroke="dashed"] {
+  stop-color: var(--theme-series-1);
+  stop-opacity: 0.02;
+}
+.wl-scale {
+  position: absolute;
+  inset-inline-start: 0;
+  padding-inline-end: 4px;
+  font-size: var(--text-xs);
+  line-height: 12px;
+  color: var(--theme-tertiary-foreground);
+  font-variant-numeric: tabular-nums;
+  background: var(--theme-surface);
+}
+.wl-scale[data-at="top"] {
+  inset-block-start: -1px;
+}
+.wl-scale[data-at="middle"] {
+  inset-block-start: calc(50% - 6px);
+}
+.wl-scale[data-at="bottom"] {
+  inset-block-end: -1px;
+}
+.wl-ends {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: calc(100% + 8px);
+  width: 56px;
+}
+.wl-endname {
+  position: absolute;
+  inset-block-start: var(--y);
+  translate: 0 -50%;
+  font-size: var(--text-xs);
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
 }
 
 /* ─── The page's foot and the lab's notes on each candidate ──────────────────────────────────── */

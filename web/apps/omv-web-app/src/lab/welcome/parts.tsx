@@ -56,12 +56,19 @@ function Meter({ storage }: { storage: LabStorage }) {
       }),
     );
   }
+  const over = storage.health !== "ok";
+  if (over) {
+    words.push(t("dashboard.map.spaceOver"));
+  }
   return (
     <Waffle
       aria-label={t("dashboard.map.space", { name: storage.name })}
       size="row"
       value={storage.percent}
       mark={storage.mark}
+      threshold={
+        over ? { status: "warning", label: storage.healthLabel } : undefined
+      }
       markLabel={
         storage.mark === null
           ? undefined
@@ -229,18 +236,17 @@ export interface AnswerProps {
   nas: LabNas;
   check: CheckState;
   onCheck: () => void;
+  /** What needs the person, worst first; the first one's reason is the answer's reason. */
+  needs?: readonly { health: "warning" | "critical"; reason: string }[];
   /** The page's h1 on a later visit; an h2 under a welcome that holds the h1. */
   level: 1 | 2;
-  /** `display`: the page's one headline. `title`: under a welcome. */
-  size: "display" | "title";
-  /**
-   * Where Check disk health goes: `beside` the sentence (under it when narrow), `inline` at the end
-   * of the reason as a text button, `below` the reason, or `none` (the welcome above holds it).
-   */
-  place: "beside" | "inline" | "below" | "none";
-  /** Something drawn beside the answer, at the far end of its row (candidate A's small NAS). */
+  /** `hero`: the page's one headline. `title`: under a welcome. */
+  size: "hero" | "title";
+  /** Check disk health takes the screen's one filled accent: nothing else is the next step. */
+  accent: boolean;
+  /** Something drawn at the far end of the answer's row: the small drawing of the NAS. */
   aside?: ReactNode;
-  /** Under the reason: candidate C's sentence of what still holds. */
+  /** Under the button: the sentence of what still holds. */
   after?: ReactNode;
   titleRef?: Ref<HTMLHeadingElement>;
   className?: string;
@@ -248,17 +254,19 @@ export interface AnswerProps {
 
 /**
  * The everyday answer, fail-closed as the library's `nasAnswerState` decides it: before the disks'
- * health is read it can only say "No problems found so far.", and "Everything is working." comes
- * only with Smart.getListBg's reply. The words are the catalogue's, except the new reason before
- * the check, which says why the check waits for the person.
+ * health is read it can only say "No problems found so far.", and "Everything is working." comes only
+ * with Smart.getListBg's reply. Before that, the answer carries the check itself, as a button right
+ * after the sentence that says why the check waits for a press. The words are the catalogue's, except
+ * that reason, which is new.
  */
 export function Answer({
   nas,
   check,
   onCheck,
+  needs = [],
   level,
   size,
-  place,
+  accent,
   aside,
   after,
   titleRef,
@@ -270,7 +278,7 @@ export function Answer({
       check === "checking"
         ? { ...nas.input.reads, health: "loading" }
         : nas.input.reads,
-    needs: [],
+    needs,
     newNas: false,
     storage: {
       total: nas.storage.length,
@@ -279,42 +287,42 @@ export function Answer({
     checkedAt: check === "after" ? CHECKED_AT : undefined,
   });
   const said =
-    state.kind === "ok"
-      ? words.answer(false).ok(state)
-      : state.kind === "reading"
-        ? {
-            title: words.answer(false).reading(state.waiting).title,
-            reason:
-              check === "checking"
-                ? COMMON.checkingReason
-                : COMMON.notCheckedReason,
-          }
-        : { title: "", reason: "" };
+    state.kind === "needs"
+      ? {
+          title: words.answer(false).needs(state.count),
+          reason: needs[0]?.reason ?? "",
+        }
+      : state.kind === "ok"
+        ? words.answer(false).ok(state)
+        : state.kind === "reading"
+          ? {
+              title: words.answer(false).reading(state.waiting).title,
+              reason:
+                check === "checking"
+                  ? COMMON.checkingReason
+                  : COMMON.notCheckedReason,
+            }
+          : { title: "", reason: "" };
   const tone = nasAnswerTone(state);
   const Heading = level === 1 ? "h1" : "h2";
-  const checked = check === "after";
   const button =
-    checked || place === "none" ? null : (
+    check === "after" ? null : (
       <Button
-        variant={place === "inline" ? "ghost" : "neutral"}
+        variant={accent ? "primary" : "neutral"}
         size="sm"
         loading={check === "checking"}
         onClick={onCheck}
         className="wl-answer-check"
       >
         <Icon name="check-health" size={16} />
-        {check === "checking"
-          ? COMMON.checking
-          : place === "inline"
-            ? COMMON.checkNow
-            : COMMON.check}
+        {check === "checking" ? COMMON.checking : COMMON.check}
       </Button>
     );
   return (
     <section
       className={`wl-answer ${className ?? ""}`}
       data-size={size}
-      data-place={place}
+      data-tone={tone}
       aria-label={said.title}
     >
       <Crossfade
@@ -332,18 +340,10 @@ export function Answer({
             {said.title}
           </Crossfade>
         </Heading>
-        <p className="wl-answer-reason">
-          {said.reason}
-          {place === "inline" && button ? <> {button}</> : null}
-        </p>
-        {place === "below" && button ? (
-          <p className="wl-answer-actions">{button}</p>
-        ) : null}
+        <p className="wl-answer-reason">{said.reason}</p>
+        {button ? <p className="wl-answer-actions">{button}</p> : null}
         {after}
       </div>
-      {place === "beside" && button ? (
-        <div className="wl-answer-beside">{button}</div>
-      ) : null}
       {aside ? <div className="wl-answer-aside">{aside}</div> : null}
     </section>
   );

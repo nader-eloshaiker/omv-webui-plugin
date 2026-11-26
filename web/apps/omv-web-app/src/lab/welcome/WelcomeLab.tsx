@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The welcome prototype (journal 2026-11-27): three candidates for the top of the dashboard on a first
-// visit, side by side in the lab for the owner to choose from, as the charts were. Development only
+// The dashboard design (journal 2026-11-27, and the owner's word after it: the decisions of /ui with
+// the life of the Instrument lab), the whole page from the welcome down, in the lab. Development only
 // (UI-11). It renders in the system's own look inside a static copy of the shell, with the command
-// palette in the top bar, and the NAS is the mock's (model.ts).
+// palette in the top bar, and the NAS is the mock's (model.ts, reads.ts, live.ts).
 //
 // The query string selects what is shown and never acts (UI-4); states.ts lists it. The lab's
-// controls switch candidate, case, the point in the disk health check, tips, animations, theme and
-// density, and "Play the first visit" stands for "Show me around": it plays the candidate's first
-// visit again. Under the page, with the controls, each candidate says how it is dismissed, how it
-// stays away, what Show me around and Show tips do, its motion and its compact form.
+// controls switch the case, the state of the NAS, the point in the disk health check, tips,
+// animations, theme and density, and "Play the first visit" stands for "Show me around". Under the
+// page, with the controls, the design says how the welcome is dismissed, how it stays away, what
+// Show me around and Show tips do, its motion and its compact form.
 import type { CommandItem } from "@omv-webui/react-ui-components";
 import {
   CommandPalette,
@@ -39,13 +39,11 @@ import { useFormat } from "../../format/useFormat.ts";
 import { FormIcon } from "../forms/FormIcon.tsx";
 import "../forms/forms.css";
 import { Toggle } from "../forms/FormsLab.tsx";
-import { Annotated } from "./Annotated.tsx";
-import { Drawn } from "./Drawn.tsx";
+import type { DashProps } from "./Dashboard.tsx";
+import { Dashboard } from "./Dashboard.tsx";
 import { labNas } from "./model.ts";
-import type { CandidateProps } from "./parts.tsx";
-import { StartHere } from "./StartHere.tsx";
-import type { CandidateId, CaseId, CheckState, WelcomeView } from "./states.ts";
-import { CANDIDATES, CASES, readWelcomeView, welcomeQuery } from "./states.ts";
+import type { CaseId, CheckState, WelcomeView } from "./states.ts";
+import { CASES, readWelcomeView, welcomeQuery } from "./states.ts";
 import "./welcome.css";
 import { BEHAVIOUR, COMMON } from "./words.ts";
 
@@ -90,7 +88,7 @@ export default function WelcomeLab() {
       delete root.dataset.density;
     }
     root.dataset.motion = view.motion;
-    document.title = "Lab: The welcome";
+    document.title = "Lab: The dashboard";
   }, [view.theme, view.density, view.motion]);
 
   useEffect(() => {
@@ -150,11 +148,12 @@ export default function WelcomeLab() {
     kind: (kind: string) => t(`dashboard.kind.${kind as "hdd"}`),
     notChecked: t("dashboard.map.notChecked"),
     ok: t("health.ok"),
+    almostFull: t("dashboard.map.storageState.warning"),
     asleep: t("dashboard.map.asleep"),
     celsius: (value: string) => t("dashboard.temps.celsius", { value }),
     speed: (mbit: number) => format.speed(mbit) ?? "",
   };
-  const nas = labNas(view.case, check, words);
+  const nas = labNas(view.case, check, words, view.nas === "needs");
   const newNas = view.case === "new";
   const welcome = view.case !== "later" && view.tips && !hidden;
 
@@ -166,7 +165,7 @@ export default function WelcomeLab() {
     enabled: !palette,
   });
 
-  const props: CandidateProps = {
+  const props: DashProps = {
     nas,
     newNas,
     welcome,
@@ -174,15 +173,13 @@ export default function WelcomeLab() {
     assemble: assemble && view.case !== "later",
     compact: view.density === "compact",
     tips: view.tips,
+    still: view.still,
     check,
     landed,
     onCheck,
     onHide,
     onNote,
     onShowAround,
-    onOpenPalette: () => {
-      setPalette(true);
-    },
   };
 
   const items: CommandItem[] = [
@@ -252,14 +249,6 @@ export default function WelcomeLab() {
     },
   ];
 
-  const Candidate =
-    view.candidate === "drawn"
-      ? Drawn
-      : view.candidate === "annotated"
-        ? Annotated
-        : StartHere;
-  const behaviour = BEHAVIOUR[view.candidate];
-
   return (
     <UiProvider>
       <MotionProvider reduced={view.motion === "reduced"}>
@@ -314,16 +303,13 @@ export default function WelcomeLab() {
               </SideNav>
             }
           >
-            <Candidate
-              key={`${view.candidate}:${view.case}:${String(run)}`}
-              {...props}
-            />
+            <Dashboard key={`${view.case}:${String(run)}`} {...props} />
             {chrome ? (
-              <section className="wl-about" aria-label="About this candidate">
-                <h2>{CANDIDATES.find((c) => c.id === view.candidate)?.name}</h2>
-                <p>{behaviour.idea}</p>
+              <section className="wl-about" aria-label="About this design">
+                <h2>{BEHAVIOUR.title}</h2>
+                <p>{BEHAVIOUR.idea}</p>
                 <ul>
-                  {behaviour.rules.map((rule) => (
+                  {BEHAVIOUR.rules.map((rule) => (
                     <li key={rule}>{rule}</li>
                   ))}
                 </ul>
@@ -350,15 +336,15 @@ export default function WelcomeLab() {
               aria-label="Design lab controls"
             >
               <span className="lx-labbar-tag">Lab</span>
-              <Toggle<CandidateId>
-                label="Candidate"
-                value={view.candidate}
-                options={CANDIDATES.map((c) => [
-                  c.id,
-                  c.name.slice(0, 2).replace(".", ""),
-                ])}
-                onChange={(candidate) => {
-                  replay({ candidate });
+              <Toggle
+                label="State of the NAS"
+                value={view.nas}
+                options={[
+                  ["ok", "All fine"],
+                  ["needs", "Needs you"],
+                ]}
+                onChange={(nasState) => {
+                  update({ nas: nasState });
                 }}
               />
               <label className="lf-labbar-select">
