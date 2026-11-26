@@ -3,9 +3,11 @@
 // Trusted Types enforced), as the guidance prototype and the motion reel use them: the welcome tip
 // ended with Got it, the (?) and a glossary term opened (Base UI's Popover) and closed, and every
 // motion of the reel run by its own check. Any CSP or Trusted Types violation, console error, page
-// error or request to another origin fails the test.
+// error or request to another origin fails the test; the canary proves the policy is enforced.
 import { test as base, expect } from "@playwright/test";
 import {
+  breakThePolicy,
+  CANARY_VIOLATIONS,
   expectNothingObserved,
   observe,
   type Observed,
@@ -81,4 +83,20 @@ test("motion reel: every motion passes its own check", async ({ page }) => {
     timeout: 170_000,
   });
   expect(await page.locator("style").count()).toBe(0);
+});
+
+test("the canary: the policy is enforced on the lab's pages", async ({
+  page,
+  observed,
+}) => {
+  await page.goto("/ui/lab?screen=guidance&theme=dark&chrome=0");
+  await expect(page.getByRole("heading").first()).toBeVisible();
+  await breakThePolicy(page);
+  for (const expected of CANARY_VIOLATIONS) {
+    await expect
+      .poll(() => observed.violations)
+      .toContainEqual(expect.stringMatching(expected));
+  }
+  observed.violations.length = 0;
+  observed.consoleErrors.length = 0;
 });
