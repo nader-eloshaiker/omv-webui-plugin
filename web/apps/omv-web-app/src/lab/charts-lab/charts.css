@@ -275,6 +275,13 @@
 .ch-frame[data-empty="edge"] .ch-wf-empty {
   fill: var(--theme-usage-track-edge);
 }
+/* A proposed colour, lab only, not a token: the owner judges it before the colour audit takes it. */
+.ch-frame[data-empty="slate"] .ch-wf-empty {
+  fill: #b9c6d2;
+}
+.dark .ch-frame[data-empty="slate"] .ch-wf-empty {
+  fill: #3b495b;
+}
 .ch-wf-used {
   fill: var(--theme-usage);
 }

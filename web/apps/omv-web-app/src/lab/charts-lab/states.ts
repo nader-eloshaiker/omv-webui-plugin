@@ -15,9 +15,12 @@ export type ChartsDisks = (typeof CHARTS_DISKS)[number];
  * The waffle's empty squares: `divider`, the default, in the divider colour (`border`), which keeps
  * the used squares 4.0:1 / 5.4:1 apart from them; `edge`, the owner's ask, in the track's outline
  * colour (`usage-track-edge`), which shows the empty squares on the page but leaves the used ones
- * 1.2:1 / 1.4:1 from them. Light / dark, measured with tools/colour-audit.mjs.
+ * 1.2:1 / 1.4:1 from them; `slate`, a proposed colour that is not a token yet (light #b9c6d2, 3.00:1
+ * from the used squares and 1.56:1 on the page; dark #3b495b, 3.68:1 and 2.06:1), shown only here so
+ * the owner can judge it before it goes through the colour audit. Light / dark, measured with
+ * tools/colour-audit.mjs.
  */
-export const CHARTS_EMPTY = ["divider", "edge"] as const;
+export const CHARTS_EMPTY = ["divider", "edge", "slate"] as const;
 export type ChartsEmpty = (typeof CHARTS_EMPTY)[number];
 
 export interface ChartsView {

@@ -459,6 +459,7 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
             options={[
               ["divider", "Divider"],
               ["edge", "Edge"],
+              ["slate", "Slate"],
             ]}
             onChange={setEmpty}
           />
