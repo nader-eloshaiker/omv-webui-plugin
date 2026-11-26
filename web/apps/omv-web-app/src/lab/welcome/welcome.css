@@ -15,12 +15,12 @@
 
 .omv-lab-welcome {
   --wl-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem);
-  --wl-gap: 28px;
+  /* One rhythm between every region of the page, the same gutter as between the grid's panels. */
+  --wl-gap: var(--density-gutter);
   --wl-col: 19rem;
 }
 :root[data-density="compact"] .omv-lab-welcome {
   --wl-hero: var(--text-display);
-  --wl-gap: 16px;
 }
 
 .wl-page {
@@ -532,11 +532,8 @@
 .wl-top {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: var(--wl-gap);
   min-width: 0;
-}
-:root[data-density="compact"] .wl-top {
-  gap: 12px;
 }
 
 /* The grid: a primary column of instruments and a secondary column of the lists beside them. */
@@ -553,19 +550,24 @@
   gap: var(--density-gutter);
   min-width: 0;
 }
-/* What needs you, or the first steps, come before the instruments when the page reads as one column. */
-.wl-grid[data-side-first] .wl-aside {
-  order: -1;
+/* As one column, what needs you or the first steps come before the instruments, and the Shortcuts
+   after them: the side column's parts join the grid so that each can take its own place. */
+@container wlpage (width < 60rem) {
+  .wl-grid[data-side-first] .wl-aside {
+    display: contents;
+  }
+  .wl-grid[data-side-first] .wl-aside > :first-child {
+    order: -1;
+  }
 }
+/* As two columns, both end together: "Right now" takes the row's height and its plots the extra. */
 @container wlpage (min-width: 60rem) {
   .wl-grid {
     grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    align-items: stretch;
   }
-  .wl-grid[data-side-first] .wl-aside {
-    order: 0;
-  }
-  .wl-grid[data-whole] {
-    grid-template-columns: minmax(0, 1fr);
+  .wl-main > .wl-now {
+    flex: 1 1 auto;
   }
 }
 .wl-side {
@@ -671,7 +673,12 @@
 
 /* ─── Right now: the instrument panel ────────────────────────────────────────────────────────── */
 
+.wl-now {
+  display: flex;
+  flex-direction: column;
+}
 .wl-now-charts {
+  flex: 1 1 auto;
   display: grid;
   gap: 28px 32px;
   min-width: 0;
@@ -737,15 +744,19 @@
   font-weight: 400;
   color: var(--theme-muted-foreground);
 }
+/* At least 140px (120px compact), and taller when the panel is stretched beside a longer column. The
+   drawing is laid over the box, so the box's height comes from the panel and never from the drawing. */
 .wl-plot {
   position: relative;
-  height: 140px;
+  flex: 1 0 140px;
   margin-inline-end: 64px;
 }
 :root[data-density="compact"] .wl-plot {
-  height: 120px;
+  flex-basis: 120px;
 }
 .wl-plot > svg {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;

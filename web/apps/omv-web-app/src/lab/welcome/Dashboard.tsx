@@ -254,8 +254,28 @@ export function Dashboard(p: DashProps) {
   // The one filled accent: what needs you first, then the first step, then the check.
   const checkAccent = items.length === 0 && !p.newNas;
 
-  const side: ReactNode =
-    items.length > 0 ? (
+  // The grid's two columns end together. "Right now" takes the height its row is given, and its
+  // plots take the extra, so the side column sets the row. What goes beside it is chosen per state
+  // and density so that the side column is never shorter than the panel:
+  //   needs you   the list, then the Shortcuts; This NAS as one line at the foot of the page;
+  //   new NAS     the first steps; This NAS as one line under "Right now" when comfortable, and at
+  //               the foot when compact, where the steps are no taller than the panel alone;
+  //   otherwise   This NAS, then the Shortcuts.
+  // The temperatures always take the whole width, so nothing beside them ends early.
+  const needsYou = items.length > 0;
+  const factsUnderNow = p.newNas && !p.compact;
+  const factsAtFoot = needsYou || (p.newNas && p.compact);
+  const factsLine = (
+    <ThisNas
+      nas={p.nas}
+      info={reads.info}
+      onShowAround={p.onShowAround}
+      layout="row"
+    />
+  );
+
+  const side: ReactNode = needsYou ? (
+    <>
       <div className="wl-panel wl-side">
         <div className="wl-panel-head">
           <h2 className="wl-panel-title">{NEEDS.label}</h2>
@@ -268,34 +288,18 @@ export function Dashboard(p: DashProps) {
           fewerLabel={t("dashboard.needs.fewer")}
         />
       </div>
-    ) : p.newNas ? (
-      <div className="wl-panel wl-side">
-        <Steps accent="filled" onNote={p.onNote} />
-      </div>
-    ) : (
-      <>
-        <ThisNas nas={p.nas} info={reads.info} onShowAround={p.onShowAround} />
-        <LabShortcuts onNote={p.onNote} />
-      </>
-    );
-  // The columns are balanced per state so neither leaves a hole: with something needing you, This
-  // NAS follows the list and the Shortcuts sit beside the temperatures; on a new NAS the first steps
-  // are tall, so This NAS runs as one line under "Right now"; otherwise the temperatures take the
-  // whole width.
-  const sideTail: ReactNode =
-    items.length > 0 ? (
+      <LabShortcuts onNote={p.onNote} />
+    </>
+  ) : p.newNas ? (
+    <div className="wl-panel wl-side">
+      <Steps accent="filled" onNote={p.onNote} />
+    </div>
+  ) : (
+    <>
       <ThisNas nas={p.nas} info={reads.info} onShowAround={p.onShowAround} />
-    ) : null;
-  const mainTail: ReactNode = p.newNas ? (
-    <ThisNas
-      nas={p.nas}
-      info={reads.info}
-      onShowAround={p.onShowAround}
-      layout="row"
-    />
-  ) : null;
-  const sideLater: ReactNode =
-    items.length > 0 ? <LabShortcuts onNote={p.onNote} /> : null;
+      <LabShortcuts onNote={p.onNote} />
+    </>
+  );
 
   return (
     <div className="wl-page" data-welcome={p.welcome || undefined}>
@@ -360,16 +364,13 @@ export function Dashboard(p: DashProps) {
 
       <div
         className="wl-grid"
-        data-side-first={items.length > 0 || p.newNas || undefined}
+        data-side-first={needsYou || p.newNas || undefined}
       >
         <div className="wl-main">
           <RightNow live={live} />
-          {mainTail}
+          {factsUnderNow ? factsLine : null}
         </div>
-        <div className="wl-aside">
-          {side}
-          {sideTail}
-        </div>
+        <div className="wl-aside">{side}</div>
       </div>
 
       <div id="wl-map" tabIndex={-1} className="wl-plate">
@@ -387,21 +388,18 @@ export function Dashboard(p: DashProps) {
         />
       </div>
 
-      <div className="wl-grid" data-whole={sideLater === null || undefined}>
-        <div id="wl-temps" tabIndex={-1} className="wl-main wl-panel">
-          <DashboardTemperatures
-            groups={reads.temperatures}
-            state="ok"
-            error={null}
-            readAt={live.since ?? 0}
-            retrying={false}
-            onRetry={() => undefined}
-          />
-        </div>
-        {sideLater === null ? null : (
-          <div className="wl-aside">{sideLater}</div>
-        )}
+      <div id="wl-temps" tabIndex={-1} className="wl-panel">
+        <DashboardTemperatures
+          groups={reads.temperatures}
+          state="ok"
+          error={null}
+          readAt={live.since ?? 0}
+          retrying={false}
+          onRetry={() => undefined}
+        />
       </div>
+
+      {factsAtFoot ? factsLine : null}
     </div>
   );
 }
