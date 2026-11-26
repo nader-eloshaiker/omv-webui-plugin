@@ -409,13 +409,10 @@
      against the amount (WCAG 1.4.11), so the amount reads without an edge. Past a threshold the
      amount takes the status stroke (warning-stroke, critical-stroke), which clears 3:1 on the empty
      part where the status fill does not.
-     --theme-usage-track: the health ring's ground between its segments (not an amount).
-     --theme-usage-track-edge: DEPRECATED. Progress has no outline; nothing in the library reads it.
-     Kept only while the lab's prototypes still do. */
+     --theme-usage-track: the health ring's ground between its segments (not an amount). */
   --theme-usage: var(--color-brand-600);
   --theme-usage-empty: var(--color-slate-350);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: var(--color-slate-600);
 
   /* Drawings and maps (foundation 9): ink from currentColor, fills and lines from these. */
   --theme-art-surface: var(--color-slate-50); /* the body of a part: a disk, a node */
@@ -510,7 +507,6 @@
   --theme-usage: var(--color-brand-400);
   --theme-usage-empty: var(--color-slate-750);
   --theme-usage-track: var(--color-slate-850);
-  --theme-usage-track-edge: var(--color-slate-550);
 
   --theme-art-surface: var(--color-slate-900);
   --theme-art-line: var(--color-slate-550);
@@ -596,7 +592,6 @@
     --theme-usage: var(--color-brand-400);
     --theme-usage-empty: var(--color-slate-750);
     --theme-usage-track: var(--color-slate-850);
-    --theme-usage-track-edge: var(--color-slate-550);
     --theme-art-surface: var(--color-slate-900);
     --theme-art-line: var(--color-slate-550);
     --theme-art-faint: var(--color-slate-800);
@@ -659,7 +654,6 @@
   --theme-usage: var(--color-brand-600);
   --theme-usage-empty: var(--color-slate-350);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: var(--color-slate-600);
   --theme-art-surface: var(--color-slate-50);
   --theme-art-line: var(--color-slate-600);
   --theme-art-faint: var(--color-slate-300);
@@ -751,7 +745,6 @@
   --color-usage: var(--theme-usage);
   --color-usage-empty: var(--theme-usage-empty);
   --color-usage-track: var(--theme-usage-track);
-  --color-usage-track-edge: var(--theme-usage-track-edge);
   --color-art-surface: var(--theme-art-surface);
   --color-art-line: var(--theme-art-line);
   --color-art-faint: var(--theme-art-faint);

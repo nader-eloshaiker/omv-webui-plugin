@@ -327,9 +327,6 @@ const PAIRS = [
   ...onGrounds("theme-usage-empty", "deco", "the rest of a meter or waffle on its ground (the amount is read against the rest)"),
   // A bar of a bar chart (react-ui-components/charts) stands on the card or an inset, not a track.
   ...onGrounds("theme-usage", "ui", "a bar in a bar chart", GROUNDS.slice(1, 3)),
-  // Deprecated: the old outlined track. Reported while the lab's prototypes still read it.
-  ["theme-usage", "theme-usage-track", "deco", "deprecated: the amount on the old track"],
-  ["theme-usage-track-edge", "theme-surface", "deco", "deprecated: the old track's outline"],
   // Drawings and maps.
   ...DRAWING_GROUNDS.map((g) => ["theme-art-line", g, "ui", "drawing outline"]),
   ...DRAWING_GROUNDS.map((g) => ["theme-art-path", g, "ui", "the traced lineage on a map"]),
