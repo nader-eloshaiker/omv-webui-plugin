@@ -4,6 +4,14 @@ import type * as React from "react";
 import { BothDensities, Phone } from "../../fixtures/story-frames";
 import { CapacityMeter } from "./capacity-meter";
 
+/**
+ * The capacity meter stays beside the `Waffle` (journal 2026-11-26) and should not become a waffle
+ * variant. The waffle is one reading only, the share of a whole in percent against the admin's warning
+ * mark, which it draws as a gap. This meter takes any amount out of any `max`, and it has the "no
+ * reading" and loading forms, which the waffle lacks. Space used on a file system is the waffle's job.
+ * When the file system pages move to it, this meter's compact cells (the `cells` prop in compact
+ * density) do the same work as `Waffle size="cell"`, and are the part to retire.
+ */
 const meta = {
   title: "Components/Capacity meter",
   component: CapacityMeter,

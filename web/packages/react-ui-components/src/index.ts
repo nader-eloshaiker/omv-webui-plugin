@@ -141,4 +141,28 @@ export * from "./components/type-to-confirm/type-to-confirm-field";
 export { typedMatches } from "./components/type-to-confirm/typed-matches";
 export * from "./components/ui-provider/ui-provider";
 export * from "./components/used-by/used-by-panel";
+// The hand-drawn charts the owner chose (journal 2026-11-26, "The charts are settled"): no Recharts.
+export * from "./components/disk-temperatures/disk-temperatures";
+export * from "./components/disk-temperatures/disk-temperatures-model";
+export * from "./components/drive-picture/drive-picture";
+export * from "./components/drive-picture/drive-picture-model";
+export * from "./components/live-pair/live-pair";
+export {
+  LIVE_INTERVAL_MS,
+  LIVE_WINDOW_MS,
+  MIN_RATE_SCALE,
+  liveRange,
+  liveSpan,
+  liveSummary,
+  newestOf,
+  rateScale,
+} from "./components/live-pair/live-pair-model";
+export type {
+  LivePoint,
+  LiveRange,
+  LiveSpan,
+  LiveSummary,
+} from "./components/live-pair/live-pair-model";
+export * from "./components/waffle/waffle";
+export * from "./components/waffle/waffle-model";
 export { cn } from "./utils";

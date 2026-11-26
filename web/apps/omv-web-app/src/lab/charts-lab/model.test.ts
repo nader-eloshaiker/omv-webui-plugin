@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The chart lab's pure rules: what a meter reads from a file system row, the waffle's squares and
-// its gap at the mark, the live window and its honest span, the chart geometry's gaps, each network
-// half's own scale, and the temperatures' limit, their groups by array, pool and kind, and what the
-// dashboard shows past eight disks.
+// The chart lab's pure rules: what a meter reads from a file system row, the live window and its
+// honest span, each network half's own scale over the lab's readings (the scale itself is the
+// component library's), and the temperatures' limit, their groups by array, pool and kind, and what
+// the dashboard shows past eight disks. The waffle's geometry, the live charts' geometry and the
+// drive pictures' boxes are tested with the library (react-ui-components).
+import { MIN_RATE_SCALE, rateScale } from "@omv-webui/react-ui-components";
 import { describe, expect, it } from "vitest";
 import {
   NO_READINGS,
@@ -22,21 +24,13 @@ import {
   diskGroups,
   DISKS,
   DISKS_24,
-  DRIVE_BOX,
   EVERY_MS,
   FILE_SYSTEMS,
-  linePath,
-  liveAlt,
-  MIN_RATE_SCALE,
-  niceMax,
   onDisk,
   overLimit,
-  PLOT_H,
   poolLayout,
   poolState,
-  rateScale,
   restWords,
-  runsOf,
   sharedLimit,
   SMART_SETTINGS,
   spaceOf,
@@ -46,11 +40,8 @@ import {
   trimmed,
   VOLUMES,
   VOLUMES_24,
-  waffleDrawing,
-  waffleOf,
   WINDOW_MS,
   withCopy,
-  yAt,
 } from "./model.ts";
 
 /** The figures carry a non-breaking space before their unit, as the pages write them. */
@@ -110,61 +101,6 @@ describe("space", () => {
       over: true,
     });
   });
-
-  it("fills squares exactly, the last one in part, a column at a time from the bottom", () => {
-    const w = waffleOf(62.4, 85, { cols: 20, rows: 5 });
-    expect(w.share).toBe(1);
-    expect(w.squares.slice(0, 62).every((q) => q.fill === 1)).toBe(true);
-    expect(w.squares[62]?.fill).toBeCloseTo(0.4);
-    expect(w.squares[63]?.fill).toBe(0);
-    // Square 62 is the third from the bottom of the thirteenth column.
-    expect(w.squares[62]).toMatchObject({ col: 12, row: 2 });
-    expect(waffleOf(50, null, { cols: 10, rows: 2 }).mark).toBeNull();
-  });
-
-  it("puts OMV's default mark between two columns at every size", () => {
-    for (const shape of [
-      { cols: 20, rows: 5 },
-      { cols: 20, rows: 2 },
-    ]) {
-      const w = waffleOf(62, 85, shape);
-      expect(w.mark).toMatchObject({ value: 85, col: 17, j: 0 });
-      expect(w.squares.findIndex((q) => q.past)).toBe(w.mark?.at);
-    }
-  });
-
-  it("opens a gap at the mark: a straight rule between columns, a stepped one inside a column", () => {
-    const shape = { cols: 20, rows: 5 };
-    const size = { sq: 7, gap: 2, wide: 6, ext: 3 };
-    const straight = waffleDrawing(waffleOf(62, 85, shape), shape, size);
-    expect(straight.width).toBe(20 * 9 - 2 + 6);
-    expect(straight.rule).toMatch(/^M[\d.]+ 0V[\d.]+$/u);
-    // The last square before the mark and the first past it are a wider gap apart than any others.
-    const before = straight.at[84];
-    const after = straight.at[85];
-    expect(before && after && after.x - (before.x + size.sq)).toBe(
-      size.gap + size.wide,
-    );
-    const stepped = waffleDrawing(waffleOf(41, 88, shape), shape, size);
-    expect(stepped.rule).toMatch(/H/u);
-    // 88 % is 17 columns and three squares: the fourth square of column 17 moves with the past ones.
-    expect(stepped.at[87]?.x).toBe(17 * 9);
-    expect(stepped.at[88]?.x).toBe(17 * 9 + 6);
-    const none = waffleDrawing(waffleOf(28, null, shape), shape, size);
-    expect(none.rule).toBeNull();
-    expect(none.width).toBe(20 * 9 - 2);
-  });
-
-  it("marks the used squares past the mark, which take the warning fill only with the word", () => {
-    const media = spaceOf(fixture("media"));
-    const w = waffleOf(media?.used ?? 0, media?.mark ?? null, {
-      cols: 20,
-      rows: 5,
-    });
-    expect(w.squares.filter((q) => q.past && q.fill > 0)).toHaveLength(6);
-    expect(media?.over).toBe(true);
-    expect(spaceOf(fixture("data"))?.over).toBe(false);
-  });
 });
 
 describe("live readings", () => {
@@ -198,37 +134,6 @@ describe("live readings", () => {
     expect(a.last).toBe(STILL_START + (STILL_COUNT - 1) * EVERY_MS);
   });
 
-  it("breaks the line at a pause or a missing value, never joining across it", () => {
-    const points = [
-      { t: 0, v: 1 },
-      { t: 2000, v: 2 },
-      { t: 4000, v: null },
-      { t: 6000, v: 3 },
-      { t: 30000, v: 4 },
-      { t: 32000, v: 5 },
-    ];
-    expect(runsOf(points).map((r) => r.length)).toEqual([2, 1, 2]);
-    expect(linePath(points, 32000, 10).match(/M/gu)).toHaveLength(3);
-  });
-
-  it("states the value now and the range seen", () => {
-    const points = [
-      { t: STILL_START, v: 3 },
-      { t: STILL_START + EVERY_MS, v: 41 },
-      { t: STILL_START + 2 * EVERY_MS, v: 12 },
-    ];
-    expect(
-      liveAlt("Processor", points, false, (n) => nb(`${String(n)} %`)),
-    ).toBe(nb("Processor: 12 % now, between 3 % and 41 % since 10:31."));
-  });
-
-  it("rounds a scale up to 1, 2 or 5 times a power of ten", () => {
-    expect(niceMax(0.2)).toBe(1);
-    expect(niceMax(1.3)).toBe(2);
-    expect(niceMax(38)).toBe(50);
-    expect(niceMax(92)).toBe(100);
-  });
-
   it("scales each half of the network chart on its own, from the readings seen", () => {
     const at = (vs: number[]) =>
       vs.map((v, i) => ({ t: STILL_START + i * EVERY_MS, v }));
@@ -239,17 +144,6 @@ describe("live readings", () => {
     const s = seriesOf(stillReadings().readings);
     expect(rateScale(s.rx)).toBe(100);
     expect(rateScale(s.tx)).toBe(2);
-  });
-
-  it("keeps a trickle out of 0.1 MiB/s clear of the baseline on the minimum scale", () => {
-    const tiny = rateScale([{ t: 0, v: 0.1 }]);
-    expect(tiny).toBe(1);
-    const middle = PLOT_H / 2;
-    // On its own scale a tenth of the half's height: about 5 of the plot's 100 units, so 5px on
-    // the 112px plot and 4px on the compact one.
-    expect(yAt(0.1, tiny, "down") - middle).toBeGreaterThan(4.5);
-    // On the traffic in's scale it would lie on the baseline.
-    expect(yAt(0.1, 100, "down") - middle).toBeLessThan(0.1);
   });
 });
 
@@ -266,18 +160,6 @@ describe("temperatures", () => {
     const none = DISKS.map((d) => tempOf(d, { tempmax: 0 }));
     expect(sharedLimit(none)).toBeNull();
     expect(tempScale(disks, 45)).toMatchObject({ lo: 25, hi: 50 });
-  });
-});
-
-describe("the drive pictures", () => {
-  it("keeps the hard disk to SSD proportion, and the tile's length is the temperature scale's", () => {
-    for (const size of ["marker", "tile", "large"] as const) {
-      const { hdd, ssd } = DRIVE_BOX[size];
-      expect(ssd.h / hdd.h).toBeGreaterThan(0.7);
-      expect(ssd.h / hdd.h).toBeLessThan(0.9);
-    }
-    expect(DRIVE_BOX.tile.hdd.h).toBe(56);
-    expect(DRIVE_BOX.tile.nvme.w).toBe(56);
   });
 });
 
