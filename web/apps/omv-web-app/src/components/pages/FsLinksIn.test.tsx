@@ -10,29 +10,30 @@ import { renderApp } from "../../test/renderApp.tsx";
 const SDA1 = CONTRACT_EXAMPLES.fileSystemMgmtGetList.configured.value.data[0];
 
 describe("links into the file systems pages (9)", () => {
-  it("links the Storage card to File systems, and a file system's name to its page", async () => {
-    await renderApp({ signedIn: true, path: "/" });
-    const card = (
-      await screen.findByRole("heading", { name: "Storage" })
-    ).closest("section") as HTMLElement;
-    expect(
-      await within(card).findByRole("link", { name: "Open File systems" }),
-    ).toHaveAttribute("href", "/ui/storage/filesystems");
-    await waitFor(() =>
-      expect(
-        within(card).getByRole("link", { name: "Open file system /dev/sda1" }),
-      ).toHaveAttribute("href", `/ui/storage/filesystems/${SDA1.uuid}`),
+  it("opens a file system's page from the dashboard's map", async () => {
+    const { app, user } = await renderApp({ signedIn: true, path: "/" });
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
     );
-    // The system drive has no page.
-    expect(
-      within(card).queryByRole("link", { name: /System drive/ }),
-    ).toBeNull();
+    const fs = await within(map).findByRole("button", { name: /\/dev\/sda1/ });
+    await user.click(fs);
+    await waitFor(() =>
+      expect(app.router.state.location.pathname).toBe(
+        `/storage/filesystems/${SDA1.uuid ?? ""}`,
+      ),
+    );
   });
 
   it("offers Add storage when there is no file system", async () => {
     await renderApp({ signedIn: true, path: "/", scenario: "storageEmpty" });
-    const storage = await screen.findByRole("region", { name: "Storage" });
-    const link = await within(storage).findByRole("link", {
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
+    );
+    const [link] = await within(map).findAllByRole("link", {
       name: "Add storage",
     });
     expect(link).toHaveAttribute("href", "/ui/storage/filesystems/add");

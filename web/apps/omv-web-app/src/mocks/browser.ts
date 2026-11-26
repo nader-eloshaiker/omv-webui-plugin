@@ -6,6 +6,7 @@ import { createRpcHandlers } from "@omv-webui/react-api-omv/mocks";
 import { setupWorker } from "msw/browser";
 import { setApparentPageLocation } from "../network/pageLocation.ts";
 import { useMockScenarioStore } from "../stores/useMockScenarioStore.ts";
+import { dashboardDelayHandlers } from "./dashboardScenarios.ts";
 import { networkPageAddress } from "./networkScenarios.ts";
 import {
   newMockSession,
@@ -29,6 +30,7 @@ export async function startMockWorker(): Promise<void> {
   // A story's pass-through handlers (a slow deletion, slow home folders) run first, then hand the
   // call on.
   const worker = setupWorker(
+    ...dashboardDelayHandlers(scenario),
     ...sharesDelayHandlers(scenario),
     ...usersDelayHandlers(scenario),
     ...createRpcHandlers(scenarioAnswers(scenario, session)),

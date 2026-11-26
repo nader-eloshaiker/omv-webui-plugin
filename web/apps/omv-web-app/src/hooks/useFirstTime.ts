@@ -6,6 +6,7 @@ import { useFirstTime as useLibraryFirstTime } from "@omv-webui/react-ui-compone
 import { useCallback } from "react";
 import type { SeenKey } from "../stores/useSeenStore.ts";
 import { hasSeen, useSeenStore } from "../stores/useSeenStore.ts";
+import { useWelcomeStore } from "../stores/useWelcomeStore.ts";
 
 /** Whether this browser has seen `key` yet (`first`), and `done()` to remember that it has. */
 export function useFirstTime(key: SeenKey): {
@@ -22,4 +23,17 @@ export function useFirstTime(key: SeenKey): {
 /** Forget one flag, so its first time comes again (the reel's "First visit to the page"). */
 export function forgetFirstTime(key: SeenKey): void {
   useSeenStore.getState().forget(key);
+}
+
+/**
+ * The dashboard's first visit (rethink 6.8, owner decision 10): the map assembling and the welcome,
+ * on its own flag (useWelcomeStore, `omv-webui.seen.dashboard-welcome`). The map takes `!first` as
+ * `seen` and `done` as `onSeen`.
+ */
+export function useDashboardFirstVisit(): { first: boolean; done: () => void } {
+  const seen = useWelcomeStore((s) => s.seen);
+  const markSeen = useCallback(() => {
+    useWelcomeStore.getState().setSeen(true);
+  }, []);
+  return useLibraryFirstTime(seen, markSeen);
 }

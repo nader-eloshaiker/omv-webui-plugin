@@ -64,7 +64,7 @@ async function admin(options: Parameters<typeof renderApp>[0] = {}) {
     path: "/account/settings",
     ...options,
   });
-  await screen.findByRole("banner");
+  await screen.findAllByRole("banner");
   await settle();
   return app;
 }
@@ -157,7 +157,7 @@ describe("the combined read's cadence", () => {
 
   it("does not poll for a normal user, and never reads the counters (an administrator's method)", async () => {
     await renderApp({ signedIn: true, scenario: "user" });
-    await screen.findByRole("banner");
+    await screen.findAllByRole("banner");
     await settle();
     const info = count(INFO);
     showChart();

@@ -22,11 +22,14 @@ import {
   MenuTrigger,
   ServerMessage,
 } from "@omv-webui/react-ui-components";
+import { useNavigate } from "@tanstack/react-router";
 import { ExternalLink as ExternalIcon, UserRound } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CLASSIC_HOME } from "../../navigation/navigation.ts";
+import { useSession } from "../../session/sessionContext.ts";
 import { useSignOut } from "../../session/useSignOut.ts";
+import { askShowAround } from "../../shell/showAround.ts";
 import {
   isThemePreference,
   THEME_PREFERENCES,
@@ -36,6 +39,10 @@ import { AboutDialog } from "./AboutDialog.tsx";
 
 export function UserMenu({ username }: { username: string | null }) {
   const { t } = useTranslation();
+  const session = useSession();
+  const navigate = useNavigate();
+  // "Show me around" replays the dashboard's first visit, which only an administrator's has.
+  const admin = session.status === "signedIn" && session.role === "admin";
   const preference = useThemeStore((s) => s.preference);
   const setPreference = useThemeStore((s) => s.setPreference);
   const { signOut, failure } = useSignOut();
@@ -85,6 +92,17 @@ export function UserMenu({ username }: { username: string | null }) {
             </MenuRadioGroup>
           </MenuGroup>
           <MenuSeparator />
+          {admin ? (
+            <MenuItem
+              onClick={() => {
+                // Asked first, so the dashboard plays it whether it is on screen or about to be.
+                askShowAround();
+                void navigate({ to: "/" });
+              }}
+            >
+              {t("dashboard.facts.showAround")}
+            </MenuItem>
+          ) : null}
           <MenuLinkItem
             href={CLASSIC_HOME}
             target="_blank"
