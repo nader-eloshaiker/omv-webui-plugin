@@ -935,3 +935,7 @@ A charts prototype in the lab (`?screen=charts`) puts several candidates side by
 - sequential colour is one hue by lightness;
 - series are labelled directly;
 - nothing pulses.
+
+## 2026-11-26 — Sort arrows stay in table headers (owner)
+
+Rule 1 of the generated look ("arrows on every button") is about call-to-action buttons. A sortable table header keeps its arrow: one arrow on the sorted column shows its direction, and a faint up-and-down pair marks the other sortable columns. This is the usual way to show sort order. The arrow turns when the direction changes, as in the motion reel.
