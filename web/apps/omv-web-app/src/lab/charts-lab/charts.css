@@ -700,13 +700,13 @@
   width: calc(var(--k) * 100%);
   height: auto;
 }
+/* Lying down, the limit is the same dashed line, standing up across the stick and its level. */
 .ch-kt[data-kind="nvme"] .ch-kt-limit {
   inset-inline: calc(var(--y) * 100%) auto;
-  inset-block: auto -4px;
-  height: 16px;
-  translate: -1px 0;
+  inset-block: -4px;
+  translate: -0.75px 0;
   border-block-start: none;
-  border-inline-start: 2px solid var(--theme-foreground);
+  border-inline-start: 1.5px dashed var(--theme-foreground);
 }
 .ch-kt-device {
   font-family: var(--font-mono);
