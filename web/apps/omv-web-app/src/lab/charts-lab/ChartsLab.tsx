@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The chart prototype, in the lab: development only (UI-11). The owner found the charts boring and
-// generic (2026-11-26): the thin flat usage bars and the live readouts that were numbers only. This
-// screen shows candidates for each subject side by side, each with one sentence on what it shows
-// and why, and ends with the strongest in place, at real size.
+// The chart prototype, in the lab: development only (UI-11). Round two (owner, 2026-11-26): the
+// waffle for space, "Two charts, four series" for the live readouts, and two ways to draw the
+// temperatures (along one scale, stacked; in bay order, as caddies). Each subject shows its chart
+// with one sentence on what it shows and why, the page ends with them in place at real size, and
+// the round-one candidates the owner did not pick are listed under "Not chosen", one line each.
 //
 // The query string selects what is shown and never acts (UI-4): screen=charts, theme=dark|light,
 // density=comfortable|compact, width=full|900|390 (frames the page), motion=full|reduced, still=1 (a
 // fixed set of 40 readings, paused, for screenshots), copy=1 (the Data drive read after a 1 TiB
-// copy), chrome=0 hides the lab's controls.
+// copy), disks=24 (the 24-disk bay), empty=edge (the waffle's empty squares in the outline colour),
+// chrome=0 hides the lab's controls.
 import { Button, UiProvider } from "@omv-webui/react-ui-components";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -20,6 +22,7 @@ import { useContentWidth } from "../guidance/useContentWidth.ts";
 import { MotionScope } from "../reel/helpers/MotionScope.tsx";
 import {
   LIVE_CANDIDATES,
+  NOT_CHOSEN,
   SPACE_CANDIDATES,
   TEMP_CANDIDATES,
 } from "./candidates.ts";
@@ -31,6 +34,7 @@ import type { Space } from "./model.ts";
 import {
   clock,
   DISKS,
+  DISKS_24,
   FILE_SYSTEMS,
   NBSP,
   SMART_SETTINGS,
@@ -40,7 +44,12 @@ import {
 } from "./model.ts";
 import type { SpaceSize } from "./SpaceCharts.tsx";
 import { OverWord } from "./SpaceCharts.tsx";
-import type { ChartsView, ChartsWidth } from "./states.ts";
+import type {
+  ChartsDisks,
+  ChartsEmpty,
+  ChartsView,
+  ChartsWidth,
+} from "./states.ts";
 import { chartsQuery, readChartsView } from "./states.ts";
 
 type Chart = (props: { space: Space; size: SpaceSize }) => ReactNode;
@@ -122,6 +131,8 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
   const [width, setWidth] = useState<ChartsWidth>(initial.width);
   const [copy, setCopy] = useState(initial.copy);
   const [chrome, setChrome] = useState(initial.chrome);
+  const [diskSet, setDiskSet] = useState<ChartsDisks>(initial.disks);
+  const [empty, setEmpty] = useState<ChartsEmpty>(initial.empty);
   const [paused, setPaused] = useState(initial.still);
   const [note, setNote] = useState<{ id: number; text: string } | null>(null);
   const { readings, take } = useReadings(initial.still, paused);
@@ -139,7 +150,9 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
     return s ? [s] : [];
   });
   const dataDrive = spaces.find((s) => s.id === "data");
-  const disks = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
+  const disks = (diskSet === "24" ? DISKS_24 : DISKS).map((d) =>
+    tempOf(d, SMART_SETTINGS),
+  );
 
   useEffect(() => {
     const q = chartsQuery({
@@ -150,9 +163,21 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
       still: initial.still,
       copy,
       chrome,
+      disks: diskSet,
+      empty,
     });
     window.history.replaceState(null, "", `${window.location.pathname}?${q}`);
-  }, [theme, density, motion, width, copy, chrome, initial.still]);
+  }, [
+    theme,
+    density,
+    motion,
+    width,
+    copy,
+    chrome,
+    diskSet,
+    empty,
+    initial.still,
+  ]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -187,14 +212,19 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
   return (
     <div className="omv-lab-dash omv-lab-charts" data-motion={motion}>
       <MotionScope reduced={motion === "reduced"}>
-        <div ref={frameRef} className="ch-frame" data-width={width}>
+        <div
+          ref={frameRef}
+          className="ch-frame"
+          data-width={width}
+          data-empty={empty}
+        >
           <header className="ch-head">
             <h1>Charts</h1>
             <p>
-              Candidates for the space a file system uses, the live readouts and
-              the disks&apos; temperatures, then the strongest of each in place.
-              Every figure comes from a read the contract names, and the live
-              charts draw only the readings this page took.
+              The charts chosen for the space a file system uses and the live
+              readouts, two ways to draw the disks&apos; temperatures, then all
+              of them in place. Every figure comes from a read the contract
+              names, and the live charts draw only the readings this page took.
             </p>
           </header>
 
@@ -204,8 +234,9 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 <h2 id="ch-space-title">Space used on a file system</h2>
                 <p className="ch-intro">
                   From the file system list: its size, what is free, the share
-                  used and the warning mark the admin set. tank has no mark, and
-                  Media is past its mark.
+                  used and the warning mark the admin set. tank has no mark,
+                  Backup&apos;s mark is at 88{NBSP}%, so its gap steps inside a
+                  column, and Media is past its mark.
                 </p>
               </div>
               <div className="ch-tools">
@@ -294,8 +325,33 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                   From the disk list, read once at {readAt} when the page
                   opened; it never wakes a sleeping disk. The alert limit is the
                   one set in the disk health settings, 45{NBSP}°C here, and is
-                  drawn only when one is set.
+                  drawn only when one is set.{" "}
+                  {diskSet === "24"
+                    ? "This is a bay of 24 disks: five share 35\u00a0°C, four 36\u00a0°C, and three each 34\u00a0°C and 37\u00a0°C."
+                    : "This is the dashboard's bay of six disks."}
                 </p>
+              </div>
+              <div className="ch-tools" role="group" aria-label="Disks">
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  aria-pressed={diskSet === "6"}
+                  onClick={() => {
+                    setDiskSet("6");
+                  }}
+                >
+                  6 disks
+                </Button>
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  aria-pressed={diskSet === "24"}
+                  onClick={() => {
+                    setDiskSet("24");
+                  }}
+                >
+                  24 disks
+                </Button>
               </div>
             </div>
             {TEMP_CANDIDATES.map((c) => (
@@ -320,9 +376,9 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               <div>
                 <h2 id="ch-inplace-title">In place</h2>
                 <p className="ch-intro">
-                  The counted bar in a row of the NAS map, and figures first in
-                  the Right now strip, at the size they would have on the
-                  dashboard.
+                  The waffle in a row of the NAS map, the two live charts as the
+                  Right now strip, and the temperatures along one scale under
+                  them, at the size they would have on the dashboard.
                 </p>
               </div>
             </div>
@@ -331,10 +387,35 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 space={dataDrive}
                 series={series}
                 paused={paused}
+                disks={disks}
+                readAt={readAt}
                 layout={layout}
                 onNote={onNote}
               />
             ) : null}
+          </section>
+
+          <section className="ch-subject" aria-labelledby="ch-not-title">
+            <div className="ch-subject-head">
+              <div>
+                <h2 id="ch-not-title">Not chosen</h2>
+                <p className="ch-intro">
+                  The round-one candidates the owner did not pick, one line
+                  each.
+                </p>
+              </div>
+            </div>
+            <dl className="ch-not">
+              {NOT_CHOSEN.map((n) => (
+                <div key={n.title} className="ch-not-item">
+                  <dt>
+                    {n.title}
+                    <span className="ch-not-subject">{n.subject}</span>
+                  </dt>
+                  <dd>{n.line}</dd>
+                </div>
+              ))}
+            </dl>
           </section>
         </div>
       </MotionScope>
@@ -371,6 +452,15 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               ["compact", "Compact"],
             ]}
             onChange={setDensity}
+          />
+          <Toggle
+            label="Empty squares"
+            value={empty}
+            options={[
+              ["divider", "Divider"],
+              ["edge", "Edge"],
+            ]}
+            onChange={setEmpty}
           />
           <Toggle
             label="Animations"

@@ -3,11 +3,12 @@
  * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
  * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
  * densities follow. No colour literal. Geometry from data reaches the CSS as custom properties
- * through the CSSOM (--v, --f, --m, --y, --x, --row); nothing is a style attribute in markup (UI-1).
+ * through the CSSOM (--w, --x, --y, --h, --left, --top, --lw, --per-row); nothing is a style
+ * attribute in markup (UI-1).
  *
- * Colour: the usage blue for how full (one hue), the trace blue and its one gradient for a single
- * live line, series 1 to 4 for the lines of a shared chart, warning only past an admin's mark with
- * its word, and the text inks for every word and figure. No accent, no glow, no pulse, no card.
+ * Colour: the usage blue for how full and how warm (one hue), the series teal and violet for the
+ * lines of the two live charts, warning only past an admin's mark or limit with its words, and the
+ * text inks for every word and figure. No accent, no glow, no pulse, no card.
  */
 
 .omv-lab-charts {
@@ -235,106 +236,7 @@
   padding-inline-end: 0;
 }
 
-/* ─── A. The counted bar ──────────────────────────────────────────────────────────────────────── */
-.ch-cb-line {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-}
-.ch-cb[data-size="map"] .ch-cb-line {
-  padding-block-start: 14px;
-}
-.ch-cb-used {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-}
-.ch-cb-free {
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.ch-cb[data-size="map"] .ch-cb-used,
-.ch-cb[data-size="map"] .ch-cb-free {
-  font-size: 12px;
-}
-.ch-cb-bar {
-  position: relative;
-  display: flex;
-  gap: 2px;
-  height: 12px;
-}
-.ch-cb[data-size="cell"] .ch-cb-bar {
-  gap: 1px;
-  height: 8px;
-  min-width: 80px;
-}
-.ch-cb[data-size="page"] .ch-cb-bar {
-  gap: 3px;
-  height: 28px;
-  margin-block-end: 26px;
-}
-.ch-cb-cell {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
-  border-radius: 2px;
-  background: var(--theme-usage-track);
-  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
-}
-.ch-cb[data-size="page"] .ch-cb-cell {
-  border-radius: 3px;
-}
-.ch-cb-fill {
-  position: absolute;
-  inset: 0;
-  background: var(--theme-usage);
-  transform-origin: left center;
-  scale: var(--f, 0) 1;
-}
-.ch-cb-cell[data-over] .ch-cb-fill {
-  background: var(--theme-warning-stroke);
-}
-/* The mark: a notch through the bar in the body ink, its value above it. */
-.ch-cb-notch {
-  position: absolute;
-  inset-block: -4px;
-  inset-inline-start: calc(var(--m) * 100%);
-  width: 2px;
-  margin-inline-start: -1px;
-  border-radius: 1px;
-  background: var(--theme-foreground);
-}
-.ch-cb[data-size="cell"] .ch-cb-notch {
-  inset-block: -3px;
-}
-.ch-cb-notch-value {
-  position: absolute;
-  inset-block-end: calc(100% + 1px);
-  inset-inline-start: 50%;
-  translate: -50% 0;
-  font-size: 11px;
-  line-height: 13px;
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.ch-cb[data-size="page"] .ch-cb-notch {
-  inset-block: -6px;
-}
-.ch-cb[data-size="page"] .ch-cb-notch-value {
-  inset-block: calc(100% + 4px) auto;
-  font-size: var(--text-sm);
-  line-height: 18px;
-}
-.ch-over {
-  display: inline-flex;
-  margin-block-start: 6px;
-}
-
-/* ─── B. The waffle ───────────────────────────────────────────────────────────────────────────── */
+/* ─── The waffle ──────────────────────────────────────────────────────────────────────────────── */
 .ch-wf {
   display: flex;
   flex-direction: column;
@@ -346,55 +248,63 @@
   align-items: center;
   gap: 10px;
 }
+/* The drawing at its own pixel size, scaled down only where the column is narrower. */
 .ch-wf-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), 7px);
-  grid-template-rows: repeat(var(--rows), 7px);
-  gap: 2px;
-}
-.ch-wf[data-size="cell"] .ch-wf-grid {
-  grid-template-columns: repeat(var(--cols), 4px);
-  grid-template-rows: repeat(var(--rows), 4px);
-  gap: 1px;
-}
-.ch-wf[data-size="page"] .ch-wf-grid {
-  grid-template-columns: repeat(var(--cols), 16px);
-  grid-template-rows: repeat(var(--rows), 16px);
-  gap: 3px;
-}
-.ch-frame[data-width="390"] .ch-wf[data-size="page"] .ch-wf-grid {
-  grid-template-columns: repeat(var(--cols), 10px);
-  grid-template-rows: repeat(var(--rows), 10px);
-  gap: 2px;
-}
-.ch-wf-sq {
   position: relative;
-  grid-column: var(--col);
-  grid-row: var(--row);
-  overflow: hidden;
-  border-radius: 1.5px;
-  background: var(--theme-usage-track);
-  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
+  display: block;
+  width: calc(var(--w) * 1px);
+  max-width: 100%;
+  flex: none;
 }
-.ch-wf[data-size="page"] .ch-wf-sq {
-  border-radius: 3px;
+.ch-wf-grid[data-marked] {
+  padding-block-start: 14px;
 }
-/* Past the mark the empty squares are hollow, so the room before the warning can be counted. */
-.ch-wf-sq[data-zone] {
-  background: none;
+.ch-wf[data-size="page"] .ch-wf-grid[data-marked] {
+  padding-block-start: 22px;
 }
-.ch-wf[data-size="page"] .ch-wf-sq[data-zone] {
-  box-shadow: inset 0 0 0 1.5px var(--theme-usage-track-edge);
+.ch-wf-svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.ch-wf-fill {
+/* Empty squares are solid (owner, round two). The divider colour keeps them apart from the used
+   squares; `empty=edge` shows the owner's ask, the track's outline colour, for comparison. */
+.ch-wf-empty {
+  fill: var(--theme-border);
+}
+.ch-frame[data-empty="edge"] .ch-wf-empty {
+  fill: var(--theme-usage-track-edge);
+}
+.ch-wf-used {
+  fill: var(--theme-usage);
+}
+.ch-wf-svg [data-over] .ch-wf-used {
+  fill: var(--theme-warning-stroke);
+}
+/* The warning mark: a rule in the body ink down the gap, its value above it. */
+.ch-wf-rule {
+  fill: none;
+  stroke: var(--theme-foreground);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ch-wf[data-size="cell"] .ch-wf-rule {
+  stroke-width: 1.25;
+}
+.ch-wf-mark {
   position: absolute;
-  inset: 0;
-  background: var(--theme-usage);
-  transform-origin: center bottom;
-  scale: 1 var(--f, 0);
+  inset-block-start: 0;
+  inset-inline-start: calc(var(--x) * 100%);
+  translate: -50% 0;
+  font-size: 11px;
+  line-height: 13px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-.ch-wf-sq[data-over] .ch-wf-fill {
-  background: var(--theme-warning-stroke);
+.ch-wf[data-size="page"] .ch-wf-mark {
+  font-size: var(--text-sm);
+  line-height: 18px;
 }
 .ch-wf-words {
   font-size: 12px;
@@ -409,111 +319,11 @@
 .ch-wf[data-size="page"] .ch-wf-words {
   font-size: var(--text-sm);
 }
-
-/* ─── C. The drive filling ────────────────────────────────────────────────────────────────────── */
-.ch-dr {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.ch-dr[data-size="cell"] {
-  gap: 10px;
-}
-.ch-dr-svg {
-  flex: none;
-  width: 30px;
-  height: 41px;
-  overflow: visible;
-}
-.ch-dr-svg[data-two] {
-  width: 66px;
-}
-.ch-dr-svg[data-across] {
-  width: 52px;
-  height: 19px;
-}
-.ch-dr[data-size="cell"] .ch-dr-svg {
-  width: 16px;
-  height: 22px;
-}
-.ch-dr[data-size="cell"] .ch-dr-svg[data-two] {
-  width: 35px;
-}
-.ch-dr[data-size="cell"] .ch-dr-svg[data-across] {
-  width: 33px;
-  height: 12px;
-}
-.ch-dr[data-size="page"] {
-  gap: 28px;
-}
-.ch-dr[data-size="page"] .ch-dr-svg {
-  width: 96px;
-  height: 132px;
-}
-.ch-dr[data-size="page"] .ch-dr-svg[data-two] {
-  width: 210px;
-}
-.ch-dr[data-size="page"] .ch-dr-svg[data-across] {
-  width: 176px;
-  height: 64px;
-}
-.ch-dr-body {
-  fill: var(--theme-page);
-  stroke: var(--theme-border-control);
-  stroke-width: 1.5;
-}
-.ch-dr-track {
-  fill: var(--theme-usage-track);
-}
-.ch-dr-level {
-  fill: var(--theme-usage);
-}
-.ch-dr-past {
-  fill: var(--theme-warning-stroke);
-}
-.ch-dr-mark {
-  fill: none;
-  stroke: var(--theme-foreground);
-  stroke-width: 1.5;
-  stroke-dasharray: 2.5 1.5;
-}
-.ch-dr[data-size="page"] .ch-dr-mark {
-  stroke-width: 0.9;
-  stroke-dasharray: 1.6 1;
-}
-.ch-dr-words {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
-}
-.ch-dr[data-size="cell"] .ch-dr-words {
-  display: inline;
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
-}
-.ch-dr[data-size="page"] .ch-dr-words {
-  gap: 6px;
-  font-size: var(--text-sm);
-  line-height: 20px;
-}
-.ch-dr-free {
-  color: var(--theme-muted-foreground);
-}
-.ch-dr-note {
-  color: var(--theme-tertiary-foreground);
-}
-.ch-frame[data-width="390"] .ch-dr[data-size="page"] {
-  flex-direction: column;
-  align-items: flex-start;
+.ch-over {
+  display: inline-flex;
 }
 
-/* ─── Live: the shared parts ──────────────────────────────────────────────────────────────────── */
+/* ─── Live: the two charts ────────────────────────────────────────────────────────────────────── */
 .ch-strip {
   display: flex;
   flex-wrap: wrap;
@@ -532,8 +342,7 @@
   height: 100%;
   overflow: hidden;
 }
-.ch-svg path,
-.ch-svg rect {
+.ch-svg path {
   vector-effect: non-scaling-stroke;
 }
 .ch-base {
@@ -553,46 +362,21 @@
   stroke-linejoin: round;
   stroke-linecap: round;
 }
-.ch-line-trace {
-  stroke: var(--theme-trace);
-}
-.ch-area-top {
-  stop-color: var(--theme-trace-area);
-}
-.ch-area-bottom {
-  stop-color: var(--theme-trace-area);
-  stop-opacity: 0;
-}
-.ch-line-s1 {
-  stroke: var(--theme-series-1);
-}
-.ch-line-s2 {
+/* The analogous pair that flanks Sky's base: teal solid, violet dashed, in both charts. */
+.ch-line-teal {
   stroke: var(--theme-series-2);
+}
+.ch-line-violet {
+  stroke: var(--theme-series-1);
   stroke-dasharray: 6 4;
 }
-.ch-line-s3 {
-  stroke: var(--theme-series-3);
-}
-.ch-line-s4 {
-  stroke: var(--theme-series-4);
-  stroke-dasharray: 6 4;
-}
-/* A chart: its name over it, the plot, and the gutter where the line's end is labelled. */
-.ch-tr,
+/* A chart: its name over it, the plot, and the gutter where the lines' ends are named. */
 .ch-pair {
   display: flex;
+  flex: 1 1 300px;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-}
-.ch-tr {
-  flex: 1 1 180px;
-}
-.ch-tr:nth-child(n + 3) {
-  flex: 1.3 1 220px;
-}
-.ch-pair {
-  flex: 1 1 300px;
 }
 .ch-tr-head {
   display: flex;
@@ -604,30 +388,22 @@
   font-size: var(--text-sm);
   color: var(--theme-muted-foreground);
 }
-.ch-tr-aside {
+.ch-tr-aside,
+.ch-tr-note {
   font-size: 12px;
   color: var(--theme-tertiary-foreground);
   font-variant-numeric: tabular-nums;
 }
 .ch-plot {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 92px;
-  gap: 8px;
-}
-.ch-plot[data-gutter="wide"] {
   grid-template-columns: minmax(0, 1fr) 104px;
+  gap: 8px;
 }
 .ch-plot-area {
   position: relative;
-  height: 80px;
-}
-.ch-plot-tall {
   height: 112px;
 }
 :root[data-density="compact"] .ch-plot-area {
-  height: 56px;
-}
-:root[data-density="compact"] .ch-plot-tall {
   height: 88px;
 }
 .ch-scale {
@@ -675,7 +451,9 @@
 .ch-key {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px 16px;
+  margin: 0;
   font-size: 12px;
   color: var(--theme-muted-foreground);
 }
@@ -689,276 +467,223 @@
   height: 8px;
 }
 
-/* ─── C. Figures first ────────────────────────────────────────────────────────────────────────── */
-.ch-figs {
-  gap: 20px 44px;
+/* ─── Temperatures: along one scale, stacked ──────────────────────────────────────────────────── */
+.ch-st {
+  max-width: 760px;
 }
-.ch-fig {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-.ch-fig[data-w="cpu"] {
-  flex: 0 1 200px;
-}
-.ch-fig[data-w="mem"] {
-  flex: 0 1 240px;
-}
-.ch-fig[data-w="net"] {
-  flex: 1 1 300px;
-  max-width: 440px;
-}
-.ch-fig dt {
-  font-size: var(--text-sm);
-  color: var(--theme-muted-foreground);
-}
-.ch-fig dd {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-}
-.ch-fig-value {
-  font-size: 22px;
-  line-height: 28px;
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-:root[data-density="compact"] .ch-fig-value {
-  font-size: var(--text-base);
-  line-height: 22px;
-}
-.ch-fig-aside {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-regular);
-  color: var(--theme-muted-foreground);
-}
-.ch-cols {
+.ch-st-plot {
   position: relative;
-  display: block;
-  height: 32px;
+  height: calc(var(--h) * 1px);
 }
-.ch-cols-mirror {
-  height: 44px;
-}
-.ch-col rect {
-  transform-box: fill-box;
-  transform-origin: center bottom;
-}
-.ch-col rect[data-dir="down"] {
-  transform-origin: center top;
-}
-.ch-col-trace {
-  fill: var(--theme-trace);
-}
-.ch-col-s1 {
-  fill: var(--theme-series-1);
-}
-.ch-col-s2 {
-  fill: var(--theme-series-2);
-}
-.ch-cols-side {
-  position: absolute;
-  inset-inline-start: 0;
-  padding-inline-end: 4px;
-  font-size: 11px;
-  line-height: 12px;
-  color: var(--theme-muted-foreground);
-  background: var(--theme-page);
-}
-.ch-cols-side-in {
-  inset-block-start: 0;
-}
-.ch-cols-side-out {
-  inset-block-end: 0;
-}
-.ch-mem {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-block-start: 6px;
-}
-.ch-mem-bar {
-  position: relative;
-  display: block;
-  height: 14px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--theme-usage-track);
-  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
-}
-.ch-mem-fill {
+.ch-st-svg {
   position: absolute;
   inset: 0;
-  background: var(--theme-usage);
-  transform-origin: left center;
-  scale: var(--v, 0) 1;
-}
-/* The range this page saw, as a bracket under the bar. */
-.ch-mem-range {
-  position: relative;
   display: block;
-  height: 5px;
-  margin-inline-start: calc(var(--lo) * 100%);
-  width: max(2px, calc((var(--hi) - var(--lo)) * 100%));
-  border: 1.5px solid var(--theme-muted-foreground);
-  border-block-start: 0;
-}
-
-.ch-mem-seen {
-  font-size: 11px;
-  line-height: 13px;
-  color: var(--theme-tertiary-foreground);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ─── Temperatures ────────────────────────────────────────────────────────────────────────────── */
-.ch-ts {
-  position: relative;
-  max-width: 720px;
-  padding-inline: 10px;
-}
-.ch-ts-labels {
-  position: relative;
-  height: calc(var(--label-rows) * 36px + 14px);
-}
-.ch-ts-label {
-  position: absolute;
-  inset-block-end: calc(var(--row) * 36px + 2px);
-  inset-inline-start: calc(var(--x) * 100%);
-  translate: -50% 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: var(--text-sm);
-  line-height: 16px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-/* The leader from a label down to its marker. */
-.ch-ts-label::after {
-  content: "";
-  position: absolute;
-  inset-block-start: 100%;
-  inset-inline-start: 50%;
-  width: 1px;
-  height: calc(var(--row) * 36px + 12px);
-  background: var(--theme-border-control);
-}
-.ch-ts-device {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
-}
-.ch-ts-limit {
-  position: absolute;
-  inset-block: 0 -22px;
-  inset-inline-start: calc(var(--x) * 100%);
-  border-inline-start: 1.5px dashed var(--theme-foreground);
-}
-.ch-ts-limit-words {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 6px;
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
-}
-.ch-ts-axis {
-  display: block;
-  width: 100%;
   overflow: visible;
 }
 .ch-tick {
+  fill: none;
   stroke: var(--theme-border-control);
 }
-.ch-tick-text {
+.ch-st-degree {
   font-size: 11px;
-  fill: var(--theme-tertiary-foreground);
+  font-weight: var(--font-weight-semibold);
+  fill: var(--theme-foreground);
+  font-variant-numeric: tabular-nums;
 }
-.ch-ts-mark {
+.ch-st-mark {
   fill: var(--theme-usage);
-  stroke: var(--theme-page);
-  stroke-width: 2;
 }
-.ch-tb {
-  max-width: 560px;
+.ch-st-mark[data-over] {
+  fill: var(--theme-warning-stroke);
 }
-.ch-tb-row {
-  position: relative;
+.ch-st-leader {
+  fill: none;
+  stroke: var(--theme-border-control);
+  stroke-width: 1;
+}
+.ch-st-limit {
+  fill: none;
+  stroke: var(--theme-foreground);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.ch-st-names,
+.ch-st-count {
+  position: absolute;
+  inset-inline-start: calc(var(--left) * 1px);
+  inset-block-start: calc(var(--top) * 1px);
+  width: calc(var(--lw) * 1px);
+}
+.ch-st-names {
   display: flex;
-  gap: 14px;
-  padding-inline-end: 96px;
-}
-.ch-frame[data-width="390"] .ch-tb-row {
-  gap: 8px;
-  padding-inline-end: 0;
-  padding-block-start: 22px;
-}
-.ch-tb-disk {
-  display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 15px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+}
+/* A tall column says how many; pointer or focus names them (the library's Tooltip). */
+.ch-st-count {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--theme-border-control);
+  border-radius: var(--radius-sm);
+  background: var(--theme-page);
+  color: var(--theme-foreground);
+  font: inherit;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: default;
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+.ch-st-count:hover {
+  background: var(--theme-muted-strong);
+}
+.ch-st-count:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.ch-st-limit-words {
+  position: absolute;
+  inset-block-start: calc(var(--top) * 1px);
+  inset-inline-start: calc(var(--x) * 1px + 6px);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+}
+.ch-st-limit-words[data-side="left"] {
+  translate: calc(-100% - 12px) 0;
+}
+.ch-st-key {
+  margin-block-start: 10px;
+}
+.ch-st-key-mark {
+  width: 12px;
+  height: 12px;
+  fill: var(--theme-usage);
+}
+.ch-over-note {
+  margin-block-start: 8px;
+}
+
+/* ─── Temperatures: in bay order, as caddies ──────────────────────────────────────────────────── */
+.ch-bay-wrap {
   min-width: 0;
 }
-.ch-tb-tube {
+/* The chassis, as the library's DriveBay draws it: a flat fill and a hairline, no light. */
+.ch-bay {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 14px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--theme-art-chassis-top);
+  box-shadow: inset 0 0 0 1px var(--theme-border);
+  --cw: 44px;
+}
+:root[data-density="compact"] .ch-bay {
+  --cw: 36px;
+}
+.ch-bay-row {
   position: relative;
-  width: 14px;
-  height: 96px;
-  overflow: hidden;
-  border-radius: 7px;
-  background: var(--theme-usage-track);
-  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
+  display: grid;
+  grid-template-columns: repeat(var(--per-row), 48px);
+  gap: 8px;
 }
-.ch-tb-disk[data-asleep] .ch-tb-tube {
-  background: none;
-  box-shadow: none;
-  outline: 1px dashed var(--theme-usage-track-edge);
-  outline-offset: -1px;
+:root[data-density="compact"] .ch-bay-row {
+  grid-template-columns: repeat(var(--per-row), 44px);
 }
-.ch-tb-fill {
-  position: absolute;
-  inset: 0;
-  background: var(--theme-usage);
-  transform-origin: center bottom;
-  scale: 1 var(--v, 0);
+.ch-bay-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
 }
-.ch-tb-fill[data-over] {
-  background: var(--theme-warning-stroke);
+.ch-bay-caddy {
+  display: block;
+  width: var(--cw);
+  height: calc(var(--cw) * 120 / 56);
+  margin-block-end: 4px;
+  stroke-linejoin: round;
 }
-.ch-tb-value {
-  font-size: var(--text-sm);
+.ch-bay-body {
+  fill: var(--theme-surface);
+  stroke: var(--theme-art-line);
+  stroke-width: 1.5;
+}
+.ch-bay-slot[data-over] .ch-bay-body {
+  stroke: var(--theme-warning-stroke);
+  stroke-width: 2.5;
+}
+.ch-bay-window {
+  fill: var(--theme-usage-track);
+}
+.ch-bay-window-edge {
+  fill: none;
+  stroke: var(--theme-usage-track-edge);
+  stroke-width: 1;
+}
+.ch-bay-slot[data-asleep] .ch-bay-window-edge {
+  stroke-dasharray: 3 2.5;
+}
+.ch-bay-level {
+  fill: var(--theme-usage);
+}
+.ch-bay-slot[data-over] .ch-bay-level {
+  fill: var(--theme-warning-stroke);
+}
+.ch-bay-handle {
+  fill: var(--theme-muted-strong);
+  stroke: var(--theme-art-line);
+  stroke-width: 1.5;
+}
+.ch-bay-faint {
+  fill: none;
+  stroke: var(--theme-art-faint);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.ch-bay-device {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
   font-weight: var(--font-weight-semibold);
+  color: var(--theme-foreground);
+}
+.ch-bay-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.ch-tb-disk[data-asleep] .ch-tb-value {
-  font-weight: var(--font-weight-regular);
-  color: var(--theme-muted-foreground);
+.ch-bay-slot[data-over] .ch-bay-value {
+  color: var(--theme-warning-label);
+  font-weight: var(--font-weight-semibold);
 }
-.ch-tb-device {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
+.ch-bay-value svg {
+  width: 12px;
+  height: 12px;
 }
-/* The alert limit across every tube, at its height on the shared scale. */
-.ch-tb-limit {
+/* The alert limit: one dashed line straight across every caddy of the row, at its height. */
+.ch-bay-limit {
   position: absolute;
-  inset-inline: -6px 0;
-  inset-block-start: calc((1 - var(--y)) * 96px);
+  inset-inline: -6px;
+  inset-block-start: calc(var(--cw) * (10 + 72 * (1 - var(--y))) / 56);
   border-block-start: 1.5px dashed var(--theme-foreground);
-}
-.ch-tb-limit-words {
-  position: absolute;
-  inset-inline-end: 0;
-  inset-block-end: 2px;
-  font-size: 12px;
-  color: var(--theme-muted-foreground);
-  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ─── In place ────────────────────────────────────────────────────────────────────────────────── */
@@ -972,6 +697,46 @@
 }
 .dm-map[data-layout="narrow"] .ch-inplace-meter {
   padding-inline-start: 0;
+}
+
+/* ─── Not chosen: one line each ───────────────────────────────────────────────────────────────── */
+.ch-not {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 18px 40px;
+  margin: 0;
+}
+.ch-not-item dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+}
+.ch-not-subject {
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-tertiary-foreground);
+}
+.ch-not-item dd {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+}
+
+/* For screen readers only: the temperatures as a list. */
+.ch-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ─── Reduced motion: values change in place ──────────────────────────────────────────────────── */
