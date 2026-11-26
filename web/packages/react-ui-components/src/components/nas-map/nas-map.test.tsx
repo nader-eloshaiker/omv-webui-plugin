@@ -3,11 +3,14 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
 import {
   baseNas,
+  dashboardReadsNas,
   diskCriticalNas,
   laneFailedNas,
   loadingNas,
   newNas,
+  poolDisksUnreadNas,
   withFirstStorage,
+  withSdbWarning,
 } from "../../fixtures/nas-fixtures";
 import { NAS_MAP_WORDS } from "../../fixtures/nas-words";
 import { NasMap, type NasMapProps } from "./nas-map";
@@ -263,6 +266,89 @@ describe("NasMap", () => {
       "aria-label",
       expect.stringMatching(/^Data drive/),
     );
+  });
+
+  it("says where an array's disks are in their place, with no connector to nothing", () => {
+    renderMap(dashboardReadsNas());
+    const backup = rows().find((r) =>
+      r.getAttribute("aria-label")?.startsWith("Backup"),
+    );
+    expect(backup).toHaveAccessibleName(
+      "Backup: 41 percent used. Shared folders: Time Machine and a4share. Its disks are listed on the RAID page.",
+    );
+    const cell = within(backup as HTMLElement);
+    expect(
+      cell.getByText("Its disks are listed on the RAID page."),
+    ).toBeVisible();
+    expect(cell.queryByText("Disks: none")).toBeNull();
+    // Only the connector to its folders is drawn.
+    expect(
+      [...(backup?.querySelectorAll('[data-part="wire"]') ?? [])].map((w) =>
+        w.getAttribute("data-place"),
+      ),
+    ).toEqual(["folders"]);
+  });
+
+  it("draws the RAID members on a row of their own, before the unused disks", () => {
+    renderMap(dashboardReadsNas());
+    const labels = rows().map((r) => r.getAttribute("aria-label"));
+    expect(labels.slice(-2)).toEqual([
+      "In a RAID array: disks sdb and sdc. The RAID page shows the array.",
+      "Not in use: disk sde. Add storage to keep files on it.",
+    ]);
+    const raid = rows().at(-2) as HTMLElement;
+    expect(raid).toHaveAttribute("data-kind", "raid");
+    expect(
+      within(raid).getByText(
+        "Disks sdb and sdc are part of a RAID array, shown on the RAID page.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByText(/sdb.*not in use/u)).toBeNull();
+  });
+
+  it("shows a RAID member's warning in place and moves its row up", () => {
+    const { onOpen } = renderMap(withSdbWarning(dashboardReadsNas()));
+    const raid = rows()[0] as HTMLElement;
+    expect(raid).toHaveAttribute("data-kind", "raid");
+    expect(raid).toHaveAttribute("data-tone", "warning");
+    expect(raid.querySelector('[data-part="wire"]')).toHaveAttribute(
+      "data-tone",
+      "warning",
+    );
+    expect(raid).toHaveAccessibleName(
+      "In a RAID array: disks sdb and sdc, disk sdb warning. The RAID page shows the array.",
+    );
+    const sdb = within(raid).getByRole("button", { name: /^sdb, Hard disk/ });
+    expect(within(raid).getByText("Warning")).toBeVisible();
+    fireEvent.click(sdb);
+    expect(onOpen).toHaveBeenCalledWith({
+      kind: "disk",
+      rowId: "row:raid",
+      id: "sdb",
+    });
+  });
+
+  it("moves into the RAID row with the arrow keys", () => {
+    renderMap(dashboardReadsNas());
+    const system = screen.getByRole("button", { name: /^System drive/ });
+    act(() => {
+      system.focus();
+    });
+    fireEvent.keyDown(system, { key: "ArrowDown" });
+    expect(
+      screen.getByRole("button", { name: /^sdb, Hard disk/ }),
+    ).toHaveFocus();
+  });
+
+  it("says a pool's disks could not be read, and calls no disk unused", () => {
+    renderMap(poolDisksUnreadNas(), {
+      addStorage: <button type="button">Add storage</button>,
+    });
+    expect(
+      screen.getByText("Which disks it is on could not be read."),
+    ).toBeVisible();
+    expect(rows().some((r) => r.dataset.kind === "unused")).toBe(false);
+    expect(screen.queryByRole("button", { name: "Add storage" })).toBeNull();
   });
 
   it("writes no style attribute but its own custom properties", () => {

@@ -37,6 +37,7 @@ import {
   type NasMapItem,
   type NasMapView,
   type NasMoreRow,
+  type NasRaidRow,
   type NasRowDisk,
   type NasRowTone,
   type NasStorage,
@@ -302,10 +303,11 @@ function DiskCell({
   row,
   read,
 }: {
-  row: NasStorageRow | NasUnusedRow;
+  row: NasStorageRow | NasRaidRow | NasUnusedRow;
   read: "ok" | "loading" | "failed";
 }) {
   const { words } = useMap();
+  const note = row.kind === "storage" ? row.storage.disksNote : undefined;
   if (read === "failed") {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-unknown-label">
@@ -318,7 +320,16 @@ function DiskCell({
     return <Skeleton shape="block" className="h-12 w-10" />;
   }
   if (row.disks.length === 0) {
-    return (
+    // Where its disks are, in the app's sentence, in their place; kept narrow so a long sentence
+    // does not widen the disks column of every row.
+    return note ? (
+      <span
+        data-part="disks-note"
+        className="max-w-44 text-xs text-balance text-muted-foreground @max-[37.5rem]/nasmap:mb-1.5 @max-[37.5rem]/nasmap:max-w-none"
+      >
+        {note}
+      </span>
+    ) : (
       <span className="text-xs text-tertiary-foreground">
         {words.disksNone}
       </span>
@@ -808,7 +819,11 @@ function StorageRowView({
     folders: folders.map((f) => f.name),
     atRisk: row.tone !== null,
     system: Boolean(row.storage.system),
+    disksNote: row.disks.length === 0 ? row.storage.disksNote : undefined,
   });
+  const disksRead = readOf(reads, "disks");
+  // A storage with no disk attached has nothing to connect from: its disks column holds a sentence.
+  const wire = disksRead !== "ok" || row.disks.length > 0;
   return (
     <li
       data-slot="nas-map-row"
@@ -823,8 +838,10 @@ function StorageRowView({
     >
       <Edge tone={row.tone} />
       <span className={cellClass}>
-        <DiskCell row={row} read={readOf(reads, "disks")} />
-        <NasMapWire tone={row.diskTrouble ? (row.tone ?? "none") : "none"} />
+        <DiskCell row={row} read={disksRead} />
+        {wire ? (
+          <NasMapWire tone={row.diskTrouble ? (row.tone ?? "none") : "none"} />
+        ) : null}
       </span>
       <span className={cellClass}>
         <StorageCell row={row} meter={meter} />
@@ -832,6 +849,59 @@ function StorageRowView({
       <span className={cn(cellClass, foldersCellClass)}>
         <FoldersCell row={row} read={readOf(reads, "folders")} />
       </span>
+    </li>
+  );
+}
+
+/**
+ * The disks in a RAID array the dashboard does not read: their bay, a connector into the array, and
+ * in the storage column the app's sentence saying where the array is shown. A member in trouble
+ * starts the row with its icon and gives the connector its tone, as on a storage row.
+ */
+function RaidRowView({
+  row,
+  index,
+  fresh,
+  reads,
+}: RowCommon & { row: NasRaidRow; reads: NasMapView["reads"] }) {
+  const { trace, words } = useMap();
+  const devices = row.disks.map((d) => d.device);
+  return (
+    <li
+      data-slot="nas-map-row"
+      data-kind="raid"
+      data-tone={row.tone ?? undefined}
+      data-trace={rowTrace(trace, row.id)}
+      data-fresh={fresh || undefined}
+      aria-label={words.raidMembersLabel({
+        devices,
+        sick: row.disks
+          .filter((d) => d.health === "warning" || d.health === "critical")
+          .map((d) => ({ device: d.device, label: d.healthLabel })),
+      })}
+      className={rowClass}
+      style={{ "--r": index } as React.CSSProperties}
+    >
+      <Edge tone={row.tone} />
+      <span className={cellClass}>
+        <DiskCell row={row} read={readOf(reads, "disks")} />
+        <NasMapWire tone={row.tone ?? "none"} />
+      </span>
+      <span className={cellClass}>
+        <span
+          data-part="raid-note"
+          className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 text-sm text-muted-foreground transition-colors duration-base group-data-[trace=dim]/row:text-tertiary-foreground"
+        >
+          <Icon
+            name="raid-array"
+            size={20}
+            motion="none"
+            className="group-data-[trace=dim]/row:opacity-45"
+          />
+          <span className="text-balance">{words.raidMembers(devices)}</span>
+        </span>
+      </span>
+      <span className={cn(cellClass, foldersCellClass)} />
     </li>
   );
 }
@@ -1488,7 +1558,10 @@ const gridClass =
  * storage is a row, left to right: its disks, a short straight connector, the storage with its meter,
  * another connector and its shared folders with the ways they are reached by. What hangs together
  * sits on one row, so a problem flows along its row and nowhere else: the row starts with the
- * problem's icon and its connectors take the tone. Unused disks end where new storage will go. Under
+ * problem's icon and its connectors take the tone. A storage with no disk attached (a file system on
+ * an array the dashboard does not read) says where its disks are in their place, with no connector;
+ * the disks in an array stand on a row of their own and are never called unused. Unused disks end
+ * where new storage will go. Under
  * the rows, one band: the ways in that are on, fanning into the network through one bus.
  *
  * Tracing is highlighting: pointing at or focusing a thing lights what it belongs to and reaches, the
@@ -1735,6 +1808,16 @@ function NasMap({
                           fresh={fresh}
                           arrival={row.id === arrivalRow}
                           meter={meter(row.storage)}
+                          reads={view.reads}
+                        />
+                      );
+                    case "raid":
+                      return (
+                        <RaidRowView
+                          key={row.id}
+                          row={row}
+                          index={index}
+                          fresh={fresh}
                           reads={view.reads}
                         />
                       );

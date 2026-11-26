@@ -60,6 +60,12 @@ export interface NasDisk {
    * Zfs.getPoolDevices.
    */
   storage: readonly string[];
+  /**
+   * In a RAID array: DiskMgmt.getList `israid`. The dashboard does not read the arrays
+   * (MdMgmt.enumerateDevices), so such a disk comes with `storage: []`; it stands on the row of RAID
+   * members, never on the unused row, and never makes the "Add storage" ghost.
+   */
+  raidMember?: boolean;
 }
 
 export type NasStorageKind = "fs" | "raid" | "zfs";
@@ -82,6 +88,20 @@ export interface NasStorage {
   folders: readonly string[];
   /** It holds the operating system (FileSystemMgmt.getList mount point "/"): its row goes last. */
   system?: boolean;
+  /**
+   * Where its disks are when none is attached to it, in the app's words, shown in the disks column
+   * in their place: "Its disks are listed on the RAID page." for a file system on an array
+   * (FileSystemMgmt.getList `devicename` md0; the dashboard does not read MdMgmt.enumerateDevices),
+   * "Its disks could not be read." for a pool whose Zfs.getPoolDevices failed. Without it, a storage
+   * with no disk says `words.disksNone`.
+   */
+  disksNote?: string;
+  /**
+   * Which disks it is made of could not be read (Zfs.getPoolDevices failed). Any disk in no storage
+   * may then be one of its own, so no disk is called unused and the unused row is left out, as when
+   * the storage read fails.
+   */
+  disksUnread?: boolean;
 }
 
 /** A way computers reach the shared folders. */
@@ -190,6 +210,19 @@ export interface NasUnusedRow {
   bay: NasBay;
 }
 
+/**
+ * The disks in a RAID array (`NasDisk.raidMember`), whose arrays the dashboard does not read: a row of
+ * their own, so none is called unused. Its storage cell says, in the app's words, where the array is.
+ */
+export interface NasRaidRow {
+  kind: "raid";
+  id: string;
+  disks: NasRowDisk[];
+  bay: NasBay;
+  /** The worst of its disks, when one is in trouble. */
+  tone: NasRowTone | null;
+}
+
 /** The storage rows beyond the cap, as one row (item 9). */
 export interface NasMoreRow {
   kind: "more";
@@ -197,7 +230,7 @@ export interface NasMoreRow {
   hidden: NasStorageRow[];
 }
 
-export type NasRow = NasStorageRow | NasUnusedRow | NasMoreRow;
+export type NasRow = NasStorageRow | NasRaidRow | NasUnusedRow | NasMoreRow;
 
 /** What a key on the map stands for. */
 export type NasMapItem =
@@ -222,6 +255,7 @@ export interface NasMapView {
 }
 
 export const UNUSED_ROW = "row:unused";
+export const RAID_ROW = "row:raid";
 export const MORE_ROW = "row:more";
 
 const SEVERITY: Record<NasHealth, number> = {
@@ -322,7 +356,15 @@ export function byRow(a: NasStorageRow, b: NasStorageRow): number {
   return (b.storage.used ?? 0) - (a.storage.used ?? 0);
 }
 
-/** The map's rows (6.8): storage rows in order, capped, then the unused disks. */
+/**
+ * The map's rows (6.8): storage rows in order, capped; the RAID members' row; then the unused disks.
+ *
+ * Where the RAID members' row goes, by the order of item 7: with a disk in trouble it stands among
+ * the problem rows, after the storage rows of the same tone or worse and before milder ones, so a
+ * failing member is near the top. Otherwise it follows every storage row, the system drive and the
+ * "more" row included: it is not storage, so it does not take the system drive's place at the end
+ * of the storage rows. The unused disks stay at the very end.
+ */
 export function nasMapRows(
   input: NasMapInput,
   limits: NasMapLimits = {},
@@ -366,10 +408,37 @@ export function nasMapRows(
           { kind: "more", id: MORE_ROW, hidden: rows.slice(maxRows - 1) },
         ]
       : rows;
-  // Which disks are unused is known only when both the disks and the storage were read.
-  const known = input.reads.disks === "ok" && input.reads.storage === "ok";
+  // Which disks are in an array is known from the disks read alone (DiskMgmt.getList `israid`).
+  const members = input.disks
+    .filter((d) => d.raidMember === true)
+    .map((d) => rowDisk(d, null));
+  if (input.reads.disks === "ok" && members.length > 0) {
+    const tone = toneOf(members.map((d) => d.health));
+    const at =
+      tone === null
+        ? out.length
+        : out.filter(
+            (r) =>
+              r.kind === "storage" &&
+              r.tone !== null &&
+              TONE_RANK[r.tone] <= TONE_RANK[tone],
+          ).length;
+    out.splice(at, 0, {
+      kind: "raid",
+      id: RAID_ROW,
+      disks: members,
+      bay: bayLayout(members, maxDisks),
+      tone,
+    });
+  }
+  // Which disks are unused is known only when the disks and the storage were read, each storage's
+  // disks with them. A RAID member is never unused.
+  const known =
+    input.reads.disks === "ok" &&
+    input.reads.storage === "ok" &&
+    !input.storage.some((s) => s.disksUnread === true);
   const unused = input.disks
-    .filter((d) => d.storage.length === 0)
+    .filter((d) => d.storage.length === 0 && d.raidMember !== true)
     .map((d) => rowDisk(d, null));
   if (known && unused.length > 0) {
     out.push({
@@ -417,6 +486,8 @@ export function rowKeys(row: NasRow, addable: boolean): string[][] {
           ...(row.folders.hidden.length > 0 ? [moreFoldersKey(row.id)] : []),
         ],
       ];
+    case "raid":
+      return [bayKeys(row.id, row.bay), [], []];
     case "unused":
       return [bayKeys(row.id, row.bay), addable ? [ADD_STORAGE_KEY] : [], []];
     case "more":
@@ -458,6 +529,16 @@ export function nasMapView(
           kind: "more-folders",
           rowId: row.id,
         });
+        break;
+      case "raid":
+        for (const d of row.bay.full) {
+          items.set(diskKey(row.id, d.id), {
+            kind: "disk",
+            rowId: row.id,
+            id: d.id,
+          });
+        }
+        items.set(stripKey(row.id), { kind: "strip", rowId: row.id });
         break;
       case "unused":
         for (const d of row.bay.full) {
@@ -727,6 +808,8 @@ export function nasMapActions(
 /**
  * A NAS with nothing on it yet (P.2): no storage but the system's and no shared folders. Only known
  * when the storage and the folders were read; a read that failed or has not arrived is not "new".
+ * It reads the storage, never the disks, so a disk in no storage (a RAID member among them) neither
+ * makes a NAS new nor stops it being new.
  */
 export function isNewNas(input: NasMapInput): boolean {
   return (

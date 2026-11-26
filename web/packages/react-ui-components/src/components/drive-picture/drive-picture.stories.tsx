@@ -2,7 +2,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { KIND_NAME } from "../../fixtures/chart-fixtures";
 import { DrivePicture } from "./drive-picture";
-import type { DrivePictureKind, DrivePictureSize } from "./drive-picture-model";
+import type {
+  DrivePictureShape,
+  DrivePictureSize,
+} from "./drive-picture-model";
 
 const meta = {
   title: "Components/Drive picture",
@@ -13,7 +16,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const KINDS: readonly DrivePictureKind[] = ["hdd", "ssd", "nvme"];
+const KINDS: readonly DrivePictureShape[] = ["hdd", "ssd", "nvme", "disk"];
+const NAME: Record<DrivePictureShape, string> = {
+  ...KIND_NAME,
+  disk: "Kind not known",
+};
 const SIZES: readonly { size: DrivePictureSize; name: string }[] = [
   { size: "marker", name: "Marker" },
   { size: "tile", name: "Tile" },
@@ -21,8 +28,9 @@ const SIZES: readonly { size: DrivePictureSize; name: string }[] = [
 ];
 
 /**
- * Each kind at its three sizes, bottom-aligned and named. The shape alone tells the kinds apart, in
- * the text and divider inks only: no kind takes a colour, and no drive has a light.
+ * Each kind at its three sizes, bottom-aligned and named, and the plain drive for a disk whose kind
+ * was not read. The shape alone tells the kinds apart, in the text and divider inks only: no kind
+ * takes a colour, and no drive has a light.
  */
 export const Sheet: Story = {
   render: () => (
@@ -30,7 +38,7 @@ export const Sheet: Story = {
       {KINDS.map((kind) => (
         <li key={kind} className="flex flex-col gap-3.5">
           <span className="text-body font-semibold text-foreground">
-            {KIND_NAME[kind]}
+            {NAME[kind]}
           </span>
           <span className="flex flex-wrap items-end gap-x-5.5 gap-y-4">
             {SIZES.map((s) => (
@@ -54,6 +62,12 @@ export const HardDisk: Story = { args: { kind: "hdd", size: "large" } };
 export const Ssd: Story = { args: { kind: "ssd", size: "large" } };
 export const NvmeStick: Story = { args: { kind: "nvme", size: "large" } };
 
+/**
+ * A disk whose kind was not read (asleep when the dashboard read the disks, or its Smart.getInformation
+ * read failed): a plain body with a blank label, claiming no kind, in the hard disk's box.
+ */
+export const KindNotKnown: Story = { args: { kind: "disk", size: "large" } };
+
 /** The marker beside its word, as in a key or a line of text. */
 export const MarkerInText: Story = {
   render: () => (
@@ -61,7 +75,7 @@ export const MarkerInText: Story = {
       {KINDS.map((kind) => (
         <span key={kind} className="inline-flex items-center gap-1.5">
           <DrivePicture kind={kind} size="marker" />
-          {KIND_NAME[kind]}
+          {NAME[kind]}
         </span>
       ))}
     </p>

@@ -9,7 +9,8 @@
 // - a disk: DiskMgmt.getList (DiskDevice) or Smart.getList (SmartDevice) `devicename`,
 //   `canonicaldevicefile`, `devicelinks` and `temperature`, and DiskMgmt.getList `powermode` (a read
 //   that never wakes a sleeping disk, so one in standby has no figure);
-// - its kind: `driveKindOf` (drive-picture-model.ts), from `devicename` and Smart.getInformation;
+// - its kind: `driveKindOf` (drive-picture-model.ts), from `devicename` and Smart.getInformation,
+//   which the dashboard reads only for disks awake, so the kind may be null;
 // - the alert limit: Smart.getSettings `tempmax`, or Smart.getDeviceSettings `tempmax` for one disk;
 // - the groups: MdMgmt.enumerateDevices (MdArray), Zfs.getPoolStatus (ZfsPoolStatus) with
 //   Zfs.getPoolDevices (ZfsPoolDevice) for each pool, and FileSystemMgmt.getList
@@ -30,8 +31,13 @@ export interface DiskRow {
 /** One disk, as the app hands it over. */
 export interface DiskTemperatureInput {
   disk: DiskRow;
-  /** For the picture and the group only. */
-  kind: DrivePictureKind;
+  /**
+   * For the picture and the group only: `driveKindOf`, null when it could not say. The dashboard reads
+   * Smart.getInformation only for the disks awake (owner, 2026-11-27), so a sleeping SATA disk, or
+   * one whose read failed, has no kind: it is drawn as a plain drive and, in no array or pool, stands
+   * in the group of disks of no known kind.
+   */
+  kind: DrivePictureKind | null;
   /** Smart.getDeviceSettings `tempmax`; 0 or absent uses the setting for every disk. */
   tempmax?: number;
 }
@@ -42,7 +48,8 @@ export interface DiskTemperature {
   /** `canonicaldevicefile` and `devicelinks`: how a member of an array or pool is found. */
   file: string;
   links: readonly string[];
-  kind: DrivePictureKind;
+  /** Null when its kind was not read. */
+  kind: DrivePictureKind | null;
   /** Degrees Celsius; null when the disk reports none or is asleep. */
   c: number | null;
   asleep: boolean;
@@ -259,7 +266,7 @@ export function poolStateOf(p: PoolRows): VolumeState | null {
 }
 
 interface GroupBase {
-  /** "md:/dev/md0", "zfs:tank" or "kind:hdd". */
+  /** "md:/dev/md0", "zfs:tank", "kind:hdd", or "kind:unknown" for the disks of no known kind. */
   id: string;
   /** What the array or pool is doing, when it needs saying. */
   state: VolumeState | null;
@@ -282,10 +289,10 @@ export interface PoolGroup extends GroupBase {
   layout: PoolLayout;
 }
 
-/** The disks in no array or pool, of one kind. */
+/** The disks in no array or pool, of one kind; `null` for those whose kind was not read. */
 export interface KindGroup extends GroupBase {
   from: "kind";
-  kind: DrivePictureKind;
+  kind: DrivePictureKind | null;
 }
 
 export type DiskGroup = ArrayGroup | PoolGroup | KindGroup;
@@ -295,11 +302,17 @@ const byDevice = new Intl.Collator("en", { numeric: true });
 const inDeviceOrder = (list: readonly DiskTemperature[]) =>
   [...list].sort((a, b) => byDevice.compare(a.device, b.device));
 
-const KIND_ORDER: readonly DrivePictureKind[] = ["hdd", "ssd", "nvme"];
+const KIND_ORDER: readonly (DrivePictureKind | null)[] = [
+  "hdd",
+  "ssd",
+  "nvme",
+  null,
+];
 
 /**
- * Each array (in device order), then each pool (by name), each with the disks it is made of; then
- * the disks in no array or pool, by kind: hard disks, SSDs, NVMe SSDs. Every disk is in exactly one
+ * Each array (in device order), then each pool (by name), each with the disks it is made of, whatever
+ * their kind; then the disks in no array or pool, by kind: hard disks, SSDs, NVMe SSDs, and last
+ * those whose kind was not read ("kind:unknown"). Every disk is in exactly one
  * group, in device order within it, and a group with no disk is left out. A member is found by
  * `canonicaldevicefile` (an array's) or `devicelinks` (a pool's), a partition belongs to the disk it
  * is on, a member that matches no disk is left out, and a disk in two volumes is in the first only.
@@ -340,7 +353,7 @@ export function diskGroups(
       disks: take(p.devices.map((d) => d.devicefile)),
     }));
   const rest = KIND_ORDER.map((kind): KindGroup => ({
-    id: `kind:${kind}`,
+    id: `kind:${kind ?? "unknown"}`,
     from: "kind",
     kind,
     state: null,
