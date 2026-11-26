@@ -89,9 +89,10 @@ export const NAS_MAP_WORDS: NasMapWords = {
   diskLabel: (d) =>
     [
       d.device,
-      d.summary,
-      d.healthLabel,
+      d.healthShown ? d.healthLabel : undefined,
       d.detail,
+      d.healthShown ? undefined : d.healthLabel,
+      d.summary,
       d.alsoIn.length > 0 ? `also in ${listWords(d.alsoIn)}` : undefined,
     ]
       .filter(Boolean)
@@ -110,7 +111,14 @@ export const NAS_MAP_WORDS: NasMapWords = {
     ssh: "SSH",
   },
   folderLabel: ({ name, ways, state }) =>
-    `${name}: ${ways.length > 0 ? `reached by ${listWords(ways)}` : "no way in reaches it"}${state ? `, ${state.toLowerCase()}` : ""}`,
+    [
+      name,
+      ways.length > 0 ? undefined : "ways in: none",
+      state?.toLowerCase(),
+      ways.length > 0 ? `reached by ${listWords(ways)}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(", "),
   moreFolders: (n, ok) =>
     ok ? `${String(n)} more, all OK` : `${String(n)} more`,
   rowLabel: (r) => {
@@ -170,7 +178,7 @@ export const NAS_MAP_WORDS: NasMapWords = {
   noWayOn: "No way in is on yet.",
   off: (names) => `Off: ${listWords(names)}`,
   wayLabel: ({ name, tech, running, over }) =>
-    `${name} (${tech}): ${running ? "running" : "on but not running"}${over.length > 0 ? `, over ${listWords(over)}` : ""}`,
+    `${name}, ${tech}: ${running ? "running" : "not running"}${over.length > 0 ? `, over ${listWords(over)}` : ""}`,
   notConnected: "Not connected",
   world: "Your network",
   laneError: (lane) =>

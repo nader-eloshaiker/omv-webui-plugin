@@ -2,6 +2,11 @@
 // Everything the NAS map says, from the app's catalogue: the library carries no words of its own.
 // Each entry names where it shows. Functions receive the figures and names from the input, never
 // invent one, and return a whole sentence or a label that is part of a field (style guide 10).
+//
+// A control's name (`diskLabel`, `folderLabel`, `wayLabel`) starts with the words the control shows,
+// in the order it shows them, and only then adds what it does not show (WCAG 2.5.3, label in name):
+// a person using voice control says what they see. Commas and colons may join the words; brackets
+// may not, because the visible words have none.
 import type { NasLane, NasWayId } from "./nas-map-model";
 
 export interface NasMapWords {
@@ -30,11 +35,17 @@ export interface NasMapWords {
     unchecked: number;
     more: boolean;
   }) => string;
-  /** A disk's name: "sdb, Hard disk 3.6 TiB, Warning, 41 °C, also in System drive". */
+  /**
+   * A disk's name, what the slot shows first: its device, its state's word when `healthShown`, its
+   * detail, then the rest: "sdb, Warning, 41 °C, Hard disk 3.6 TiB, also in System drive", and for
+   * a healthy disk, whose word is not on screen, "sda, 36 °C, OK, Hard disk 3.6 TiB".
+   */
   diskLabel: (d: {
     device: string;
     summary?: string;
     healthLabel: string;
+    /** The slot shows `healthLabel` (a disk in trouble); otherwise only assistive technology reads it. */
+    healthShown?: boolean;
     detail?: string;
     alsoIn: readonly string[];
   }) => string;
@@ -56,7 +67,10 @@ export interface NasMapWords {
   noWayIn: string;
   /** The short name of each way in, a folder's icon's tooltip: "Windows and Mac". */
   wayShort: Record<NasWayId, string>;
-  /** A folder's name: "Photos: reached by Windows and Mac, at risk". */
+  /**
+   * A folder's name, what the chip shows first (its name, "Ways in: none" when none reaches it, its
+   * own state): "Photos, at risk, reached by Windows and Mac", "Archive, ways in: none".
+   */
   folderLabel: (f: {
     name: string;
     ways: readonly string[];
@@ -122,7 +136,10 @@ export interface NasMapWords {
   noWayOn: string;
   /** "Off: Copies to other NAS". */
   off: (names: readonly string[]) => string;
-  /** A way in's name: "Windows and Mac (SMB): running, over enp2s0". */
+  /**
+   * A way in's name, what the tile shows first (its name, its technical term, `running` or
+   * `notRunning`): "Windows and Mac, SMB: running, over enp2s0".
+   */
   wayLabel: (w: {
     name: string;
     tech: string;
