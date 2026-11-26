@@ -357,10 +357,8 @@ describe("the chart lab", () => {
       /\.ch-kt-bar \{[^}]*background: var\(--ch-empty\)/u,
     );
     expect(chartsCss).toMatch(/\.ch-wf-empty \{[^}]*fill: var\(--ch-empty\)/u);
-    expect(chartsCss).toMatch(/--ch-empty: #b9c6d2;/u);
-    expect(chartsCss).toMatch(
-      /\.dark \.omv-lab-charts \{\s*--ch-empty: #3b495b;/u,
-    );
+    // The empty part is the system's slate token, in both themes.
+    expect(chartsCss).toMatch(/--ch-empty: var\(--theme-usage-empty\);/u);
     expect(chartsCss).not.toMatch(/dashed var\(--theme-usage-track-edge\)/u);
     // The markup: no stroke on a square, no element drawn round a bar.
     for (const rect of container.querySelectorAll(".ch-wf-svg rect")) {

@@ -2,7 +2,7 @@
  *
  * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
  * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
- * densities follow. One colour literal, --ch-empty below, until its token lands. Geometry from data reaches the CSS as custom properties
+ * densities follow. Geometry from data reaches the CSS as custom properties
  * through the CSSOM (--w, --x, --y, --h, --k, --left, --top, --lw); nothing is a style attribute
  * in markup (UI-1).
  *
@@ -14,13 +14,9 @@
  */
 
 /* The empty part of every amount: the waffle's empty squares and the temperature bars' tracks
-   (owner, round four: "all filled and no outline"). The slate the owner approved; a design-system
-   builder is adding it as a token, and this one property then takes the token. */
+   (owner, round four: "all filled and no outline"), in the system's usage-empty slate. */
 .omv-lab-charts {
-  --ch-empty: #b9c6d2;
-}
-.dark .omv-lab-charts {
-  --ch-empty: #3b495b;
+  --ch-empty: var(--theme-usage-empty);
 }
 .omv-lab-charts {
   min-height: 100dvh;
