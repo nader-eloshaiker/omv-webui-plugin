@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The chosen charts at real size, where the owner judges them: a copy of one row of the NAS map (the
-// dashboard lab's markup and stylesheet) with the waffle in its storage cell, a copy of the "Right
-// now" strip with the two live charts, and the temperatures along one scale under them; then the
-// Disks page's temperatures, the bay in its order as caddies (the lead's suggestion: the spread on
-// the dashboard, the place in the bay on the Disks page).
+// The chosen charts at the size they would have, where the owner judges them: a copy of one row of
+// the NAS map (the dashboard lab's markup and stylesheet) with the waffle in its storage cell, a copy
+// of the "Right now" strip with the two live charts, and the temperatures along one scale under
+// them; then the Disks page's temperatures, by kind with a level each (the lead's suggestion: the
+// spread on the dashboard, each disk's own level on the Disks page). Both draw the disks' pictures.
 // Development only (UI-11).
 import type { IconName } from "@omv-webui/react-ui-components";
 import { Icon, StatusIcon } from "@omv-webui/react-ui-components";
@@ -15,7 +15,7 @@ import { PairedStrip } from "./LiveCharts.tsx";
 import type { DiskTemp, Space } from "./model.ts";
 import { spanWords } from "./model.ts";
 import { Waffle } from "./SpaceCharts.tsx";
-import { TempCaddies, TempStacks } from "./TempCharts.tsx";
+import { TempByKind, TempStacks } from "./TempCharts.tsx";
 
 const noop = () => undefined;
 
@@ -214,15 +214,15 @@ export function InPlace({
       <section
         className="dm-live"
         data-layout={layout}
-        aria-labelledby="ch-bay-title"
+        aria-labelledby="ch-kind-title"
       >
         <header className="dm-region-head">
-          <h3 id="ch-bay-title" className="dm-region-title">
-            Temperatures in the bay
+          <h3 id="ch-kind-title" className="dm-region-title">
+            Temperatures by kind
           </h3>
           <p className="dm-region-note">Read at {readAt}</p>
         </header>
-        <TempCaddies disks={disks} readAt={readAt} />
+        <TempByKind disks={disks} readAt={readAt} />
       </section>
     </div>
   );
