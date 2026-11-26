@@ -385,13 +385,14 @@ export interface DiskInput {
   health: readonly SmartDevice[] | undefined;
 }
 
-function nasDiskKind(
-  disk: DiskDevice,
+/**
+ * A disk's drawing on the map: the kind the temperatures draw it as (`driveKindOf`, from its name or
+ * the Smart.getInformation read made while it was awake), or the plain `disk` when that is not known.
+ * Never `usb` from `hotpluggable`: OMV sets that for SAS disks and SATA disks on a hot-plug port too.
+ */
+export function nasDiskKind(
   kind: DrivePictureKind | null | undefined,
 ): NasDiskKind {
-  if (disk.hotpluggable) {
-    return "usb";
-  }
   return kind ?? "disk";
 }
 
@@ -416,7 +417,7 @@ export function buildDisks(
           : words.health(state);
     const asleep = isAsleep(disk.powermode);
     const c = asleep ? null : diskTemperature(disk.temperature);
-    const kind = nasDiskKind(disk, input.kinds.get(disk.devicename));
+    const kind = nasDiskKind(input.kinds.get(disk.devicename));
     const size = parseByteCount(disk.size);
     return {
       id: disk.devicename,

@@ -354,8 +354,18 @@ function AdminDashboard({ username }: { username: string | null }) {
   const view = nasMapView(input);
   const newNas = isNewNas(input);
 
-  // What needs you: the dashboard model's rows, as the library's attention rows.
+  // What needs you: the dashboard model's rows, as the library's attention rows. The hot disks' row
+  // reads the temperatures' own readings, so the two never disagree.
   const configured = r.configured.data?.data ?? [];
+  const temperatures = temperatureGroups(
+    r.diskList.data?.data ?? [],
+    r.kinds,
+    r.smart.data?.tempmax ?? 0,
+    r.zfsPlugin === "missing" ? null : r.pools.data,
+    r.poolDevices,
+    configured.map((f) => ({ devicename: f.devicename, label: f.label })),
+  );
+
   const storage =
     r.mounted.data === undefined
       ? undefined
@@ -375,6 +385,7 @@ function AdminDashboard({ username }: { username: string | null }) {
     services: r.services.data?.data,
     pending,
     pools: r.pools.data,
+    temperatures: temperatures.flatMap((g) => g.disks),
   });
   const needs = useAttentionItems(rows);
   const ordered = orderAttention(needs);
@@ -610,15 +621,6 @@ function AdminDashboard({ username }: { username: string | null }) {
     askShowAround();
     rootRef.current?.scrollIntoView?.({ block: "start" });
   };
-
-  const temperatures = temperatureGroups(
-    r.diskList.data?.data ?? [],
-    r.kinds,
-    r.smart.data?.tempmax ?? 0,
-    r.zfsPlugin === "missing" ? null : r.pools.data,
-    r.poolDevices,
-    configured.map((f) => ({ devicename: f.devicename, label: f.label })),
-  );
 
   const firstSteps = (
     <div className="flex min-w-0 flex-col gap-2">

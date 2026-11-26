@@ -339,7 +339,7 @@ function DiskCell({
   const slots: DriveSlot[] = row.bay.full.map((d) => ({
     id: d.id,
     device: d.device,
-    kind: d.kind === "nvme" ? "ssd" : d.kind,
+    kind: d.kind,
     status: d.health,
     statusLabel: d.healthLabel,
     // A disk whose state the row says once shows what a healthy one shows; one that says its own

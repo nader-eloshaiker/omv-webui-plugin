@@ -198,6 +198,8 @@
       "diskUnmonitored": "Monitoring is off for this disk, so the NAS will not email you about it.",
       "diskReadAt": "Read at {{time}}.",
       "diskLink": "Open disk <device></device>",
+      "disksHot": "Check that nothing blocks the NAS's air vents and that its fans are running.",
+      "disksHotLink": "Open Disks",
       "serviceDown_one": "It is turned on, but it has stopped. Computers cannot use it until it starts.",
       "serviceDown_other": "{{list}} are turned on, but have stopped. Computers cannot use them until they start.",
       "serviceLink": {
@@ -226,6 +228,8 @@
         "zfsDamaged": "ZFS pool <pool></pool> has damaged files",
         "diskCritical": "Disk <device></device> may fail soon",
         "diskWarning": "Disk <device></device> reported a problem",
+        "disksHot_one": "Disk <device></device> is running hot",
+        "disksHot_other": "{{count}} disks are running hot",
         "serviceDown_one": "{{title}} is not running",
         "serviceDown_other": "{{count}} services are not running",
         "restart": "The NAS needs a restart",

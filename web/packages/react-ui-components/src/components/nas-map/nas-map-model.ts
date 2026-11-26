@@ -41,7 +41,12 @@ export interface NasDisk {
   id: string;
   /** DiskMgmt.getList `devicename`: "sda". */
   device: string;
-  /** From DiskMgmt.getList (`devicename` nvme*, `hotpluggable`) and the S.M.A.R.T. device details. */
+  /**
+   * `driveKindOf`: DiskMgmt.getList `devicename` (nvme*) and Smart.getInformation `rotationrate`, the
+   * same kind the temperatures draw; `disk` when it was not read. Not from DiskMgmt.getList
+   * `hotpluggable`: OMV sets it for SAS disks and SATA disks on a hot-plug port as well as USB ones,
+   * so it does not say USB.
+   */
   kind: NasDiskKind;
   /** Smart.getListBg `overallstatus` (GOOD ok, BAD_* warning or critical), `unknown` with no reading. */
   health: NasHealth;

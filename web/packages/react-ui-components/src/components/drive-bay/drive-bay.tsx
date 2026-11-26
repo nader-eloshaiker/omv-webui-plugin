@@ -8,7 +8,7 @@ import { StatusIcon } from "../status/status";
 import { STATUS_DRAWING, type HealthStatus } from "../status/status-kinds";
 
 /** The caddy's face. `disk` is the generic one, for when what the disk is is not known. */
-type DriveKind = "hdd" | "ssd" | "usb" | "disk";
+type DriveKind = "hdd" | "ssd" | "nvme" | "usb" | "disk";
 type Tone = "ok" | "warning" | "critical" | "unknown";
 const toneOf = (status: HealthStatus): Tone =>
   STATUS_DRAWING[status].tone as Tone;
@@ -26,8 +26,10 @@ interface DriveSlot {
   /** The device, in mono: "sdb". */
   device: string;
   /**
-   * What it is, which changes the caddy's face: a hard disk with vents, an SSD, a USB stick, or
-   * `disk`, a plain face that claims neither, when the type is not known (never guess).
+   * What it is, which changes the caddy's face: a hard disk, an SSD, an NVMe stick, a USB stick, or
+   * `disk`, a plain face that claims neither, when the type is not known (never guess). The chassis
+   * draws an NVMe stick with the SSD's face; the bare bay, too small for vents, draws each kind as
+   * its own shape (a platter, flash chips, a stick).
    */
   kind: DriveKind;
   status: HealthStatus;
@@ -131,6 +133,113 @@ const turn =
   "transition-[opacity,fill,stroke,color] duration-base ease-standard [transition-delay:calc(min(var(--stagger-index,0),11)*var(--motion-stagger)*2)]";
 
 /**
+ * The bare bay's faces (the NAS map's rows), drawn about 18px wide: too small for the chassis's
+ * vents, which there leave a hard disk looking like the plain `disk`. Each kind is its own shape, as
+ * in the lab's map and the drive pictures: a hard disk's platter and hub, an SSD's flash chips and
+ * controller, an NVMe stick with its contacts and mounting hole, and the plain drive's blank plate.
+ * The lines keep their width at this size.
+ */
+function BareFace({ kind }: { kind: Exclude<DriveKind, "usb"> }) {
+  const line = {
+    vectorEffect: "non-scaling-stroke",
+    strokeWidth: 1,
+  } as const;
+  const part = "fill-muted-strong stroke-art-line";
+  const handle = (
+    <rect
+      x="10"
+      y="92"
+      width="36"
+      height="16"
+      rx="4"
+      className={part}
+      {...line}
+    />
+  );
+  switch (kind) {
+    case "hdd":
+      return (
+        <>
+          <circle cx="28" cy="46" r="19" className={part} {...line} />
+          <circle cx="28" cy="46" r="5" className={part} {...line} />
+          {handle}
+        </>
+      );
+    case "ssd":
+      return (
+        <>
+          <rect
+            x="10"
+            y="22"
+            width="16"
+            height="26"
+            rx="2"
+            className={part}
+            {...line}
+          />
+          <rect
+            x="30"
+            y="22"
+            width="16"
+            height="26"
+            rx="2"
+            className={part}
+            {...line}
+          />
+          <rect
+            x="16"
+            y="56"
+            width="24"
+            height="18"
+            rx="2"
+            className={part}
+            {...line}
+          />
+          {handle}
+        </>
+      );
+    case "nvme":
+      return (
+        <>
+          <rect
+            x="17"
+            y="12"
+            width="22"
+            height="96"
+            rx="3"
+            className={part}
+            {...line}
+          />
+          <path d="M22 20h12M22 28h12" className="stroke-art-faint" {...line} />
+          <circle
+            cx="28"
+            cy="96"
+            r="4"
+            className="fill-surface stroke-art-line"
+            {...line}
+          />
+        </>
+      );
+    case "disk":
+      return (
+        <>
+          {/* A blank label plate: a disk, without saying which kind. */}
+          <rect
+            x="12"
+            y="24"
+            width="32"
+            height="52"
+            rx="3"
+            className="fill-surface stroke-art-line"
+            {...line}
+          />
+          {handle}
+        </>
+      );
+  }
+}
+
+/**
  * One caddy, front view: its face by kind and a handle. No light of any kind: a coloured dot on a
  * drawing reads as a "live dot" (style guide 10), and OMV gives no activity per disk. A caddy in a
  * non-OK state is edged in its stroke; the icon and the word under it say which state.
@@ -149,6 +258,7 @@ function Caddy({
     <svg
       aria-hidden="true"
       viewBox="0 0 56 120"
+      data-kind={variant === "chassis" && kind === "nvme" ? "ssd" : kind}
       className={caddyClass({ variant })}
       strokeWidth={1.5}
       strokeLinecap="round"
@@ -163,7 +273,9 @@ function Caddy({
         vectorEffect="non-scaling-stroke"
         className={cn(bodyClass({ tone }), turn)}
       />
-      {kind === "disk" ? (
+      {variant === "bare" && kind !== "usb" ? (
+        <BareFace kind={kind} />
+      ) : kind === "disk" ? (
         <>
           {/* A blank label plate: a disk, without saying which kind. */}
           <rect x="12" y="30" width="32" height="48" rx="3" className={part} />
@@ -187,7 +299,7 @@ function Caddy({
             />
           ))}
           <rect x="10" y="90" width="36" height="18" rx="4" className={part} />
-          {kind === "ssd" ? (
+          {kind === "ssd" || kind === "nvme" ? (
             <path d="M18 99h20" strokeWidth={2} className="stroke-art-faint" />
           ) : null}
         </>
