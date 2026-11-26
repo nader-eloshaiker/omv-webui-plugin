@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The chart lab's pure rules: what a meter reads from a file system row, the cells, the live window
-// and its honest span, the chart geometry's gaps, and the temperatures' limit and labels.
+// The chart lab's pure rules: what a meter reads from a file system row, the waffle's squares and
+// its gap at the mark, the live window and its honest span, the chart geometry's gaps, each network
+// half's own scale, and the temperatures' limit, stacks, labels and bay rows.
 import { describe, expect, it } from "vitest";
 import {
   NO_READINGS,
@@ -11,25 +12,37 @@ import {
   stillFeed,
   stillReadings,
 } from "./feed.ts";
+import type { Box, DiskTemp, StackLayout } from "./model.ts";
 import {
-  cellsOf,
+  bayPerRow,
+  bayRows,
   DISKS,
+  DISKS_24,
   EVERY_MS,
   FILE_SYSTEMS,
-  labelRows,
   linePath,
   liveAlt,
+  MIN_RATE_SCALE,
   niceMax,
+  overlaps,
+  PLOT_H,
+  rateScale,
   runsOf,
   sharedLimit,
   SMART_SETTINGS,
   spaceOf,
   spanWords,
+  stackLayout,
+  stackRange,
+  stacksOf,
   tempOf,
   tempScale,
   trimmed,
+  waffleDrawing,
+  waffleOf,
   WINDOW_MS,
   withCopy,
+  yAt,
 } from "./model.ts";
 
 /** The figures carry a non-breaking space before their unit, as the pages write them. */
@@ -87,13 +100,59 @@ describe("space", () => {
     });
   });
 
-  it("fills cells exactly, the last one in part, and marks the cells past the mark", () => {
-    const cells = cellsOf(62, 85, 20);
-    expect(cells.slice(0, 12).every((c) => c.fill === 1)).toBe(true);
-    expect(cells[12]?.fill).toBeCloseTo(0.4);
-    expect(cells[13]?.fill).toBe(0);
-    expect(cells.findIndex((c) => c.zone)).toBe(17);
-    expect(cellsOf(50, null, 10).some((c) => c.zone)).toBe(false);
+  it("fills squares exactly, the last one in part, a column at a time from the bottom", () => {
+    const w = waffleOf(62.4, 85, { cols: 20, rows: 5 });
+    expect(w.share).toBe(1);
+    expect(w.squares.slice(0, 62).every((q) => q.fill === 1)).toBe(true);
+    expect(w.squares[62]?.fill).toBeCloseTo(0.4);
+    expect(w.squares[63]?.fill).toBe(0);
+    // Square 62 is the third from the bottom of the thirteenth column.
+    expect(w.squares[62]).toMatchObject({ col: 12, row: 2 });
+    expect(waffleOf(50, null, { cols: 10, rows: 2 }).mark).toBeNull();
+  });
+
+  it("puts OMV's default mark between two columns at every size", () => {
+    for (const shape of [
+      { cols: 20, rows: 5 },
+      { cols: 20, rows: 2 },
+    ]) {
+      const w = waffleOf(62, 85, shape);
+      expect(w.mark).toMatchObject({ value: 85, col: 17, j: 0 });
+      expect(w.squares.findIndex((q) => q.past)).toBe(w.mark?.at);
+    }
+  });
+
+  it("opens a gap at the mark: a straight rule between columns, a stepped one inside a column", () => {
+    const shape = { cols: 20, rows: 5 };
+    const size = { sq: 7, gap: 2, wide: 6, ext: 3 };
+    const straight = waffleDrawing(waffleOf(62, 85, shape), shape, size);
+    expect(straight.width).toBe(20 * 9 - 2 + 6);
+    expect(straight.rule).toMatch(/^M[\d.]+ 0V[\d.]+$/u);
+    // The last square before the mark and the first past it are a wider gap apart than any others.
+    const before = straight.at[84];
+    const after = straight.at[85];
+    expect(before && after && after.x - (before.x + size.sq)).toBe(
+      size.gap + size.wide,
+    );
+    const stepped = waffleDrawing(waffleOf(41, 88, shape), shape, size);
+    expect(stepped.rule).toMatch(/H/u);
+    // 88 % is 17 columns and three squares: the fourth square of column 17 moves with the past ones.
+    expect(stepped.at[87]?.x).toBe(17 * 9);
+    expect(stepped.at[88]?.x).toBe(17 * 9 + 6);
+    const none = waffleDrawing(waffleOf(28, null, shape), shape, size);
+    expect(none.rule).toBeNull();
+    expect(none.width).toBe(20 * 9 - 2);
+  });
+
+  it("marks the used squares past the mark, which take the warning fill only with the word", () => {
+    const media = spaceOf(fixture("media"));
+    const w = waffleOf(media?.used ?? 0, media?.mark ?? null, {
+      cols: 20,
+      rows: 5,
+    });
+    expect(w.squares.filter((q) => q.past && q.fill > 0)).toHaveLength(6);
+    expect(media?.over).toBe(true);
+    expect(spaceOf(fixture("data"))?.over).toBe(false);
   });
 });
 
@@ -158,6 +217,29 @@ describe("live readings", () => {
     expect(niceMax(38)).toBe(50);
     expect(niceMax(92)).toBe(100);
   });
+
+  it("scales each half of the network chart on its own, from the readings seen", () => {
+    const at = (vs: number[]) =>
+      vs.map((v, i) => ({ t: STILL_START + i * EVERY_MS, v }));
+    expect(rateScale(at([0.4, 38, 12]))).toBe(50);
+    expect(rateScale(at([0.8, 1.7, 1.1]))).toBe(2);
+    expect(rateScale(at([]))).toBe(MIN_RATE_SCALE);
+    // The still set: a copy in at up to about 90 MiB/s, with about 1 MiB/s going out.
+    const s = seriesOf(stillReadings().readings);
+    expect(rateScale(s.rx)).toBe(100);
+    expect(rateScale(s.tx)).toBe(2);
+  });
+
+  it("keeps a trickle out of 0.1 MiB/s clear of the baseline on the minimum scale", () => {
+    const tiny = rateScale([{ t: 0, v: 0.1 }]);
+    expect(tiny).toBe(1);
+    const middle = PLOT_H / 2;
+    // On its own scale a tenth of the half's height: about 5 of the plot's 100 units, so 5px on
+    // the 112px plot and 4px on the compact one.
+    expect(yAt(0.1, tiny, "down") - middle).toBeGreaterThan(4.5);
+    // On the traffic in's scale it would lie on the baseline.
+    expect(yAt(0.1, 100, "down") - middle).toBeLessThan(0.1);
+  });
 });
 
 describe("temperatures", () => {
@@ -174,14 +256,114 @@ describe("temperatures", () => {
     expect(sharedLimit(none)).toBeNull();
     expect(tempScale(disks, 45)).toMatchObject({ lo: 25, hi: 50 });
   });
+});
 
-  it("puts labels that would overlap in separate rows", () => {
-    expect(
-      labelRows([
-        { x: 100, width: 60 },
-        { x: 120, width: 60 },
-        { x: 300, width: 60 },
-      ]),
-    ).toEqual([0, 1, 0]);
+describe("temperatures along one scale, stacked", () => {
+  const six = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
+  const bay = DISKS_24.map((d) => tempOf(d, SMART_SETTINGS));
+  // The chart's width at 390 (the frame's 358 less its padding), at the lab's full width and wider.
+  const WIDTHS = [326, 640, 900];
+
+  function layoutAt(list: DiskTemp[], width: number): StackLayout {
+    const stacks = stacksOf(list);
+    return stackLayout(stacks, {
+      width,
+      ...stackRange(stacks, sharedLimit(list)),
+    });
+  }
+
+  it("stacks the 24 disks by whole degree, coolest first, in bay order within a degree", () => {
+    const stacks = stacksOf(bay);
+    expect(stacks.map((s) => [s.c, s.disks.length])).toEqual([
+      [31, 1],
+      [33, 1],
+      [34, 3],
+      [35, 5],
+      [36, 4],
+      [37, 3],
+      [38, 1],
+      [39, 1],
+      [41, 1],
+      [43, 1],
+      [46, 1],
+    ]);
+    expect(stacks.find((s) => s.c === 35)?.disks.map((d) => d.device)).toEqual([
+      "sdb",
+      "sdc",
+      "sde",
+      "sdk",
+      "sdo",
+    ]);
+    // The two sleeping disks are in no stack.
+    expect(stacks.reduce((n, s) => n + s.disks.length, 0)).toBe(22);
+  });
+
+  it("never lets one marker overlap another, ties included", () => {
+    for (const list of [six, bay]) {
+      for (const width of WIDTHS) {
+        const layout = layoutAt(list, width);
+        const marks = layout.stacks.flatMap((s) => s.markers);
+        expect(marks).toHaveLength(list.filter((d) => d.c !== null).length);
+        marks.forEach((a, i) => {
+          marks.slice(i + 1).forEach((b) => {
+            const apart = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+            expect(apart).toBeGreaterThanOrEqual(layout.m);
+          });
+        });
+      }
+    }
+  });
+
+  it("keeps every label inside the chart and clear of the other labels and every column", () => {
+    for (const list of [six, bay]) {
+      for (const width of WIDTHS) {
+        const layout = layoutAt(list, width);
+        const labels = layout.stacks.map((s) => s.label.box);
+        const columns: Box[] = layout.stacks.map((s) => ({
+          x1: s.x - layout.m / 2,
+          y1: 0,
+          x2: s.x + layout.m / 2,
+          y2: s.top,
+        }));
+        labels.forEach((a, i) => {
+          expect(a.x1).toBeGreaterThanOrEqual(0);
+          expect(a.x2).toBeLessThanOrEqual(width);
+          labels.forEach((b, j) => {
+            if (i !== j) {
+              expect(overlaps(a, b)).toBe(false);
+            }
+          });
+          for (const c of columns) {
+            expect(overlaps(a, c)).toBe(false);
+          }
+        });
+      }
+    }
+  });
+
+  it("names a column of up to three, counts a taller one, and always names the hottest", () => {
+    const layout = layoutAt(bay, 640);
+    const at = (c: number) => layout.stacks.find((s) => s.c === c)?.label;
+    expect(at(34)).toMatchObject({
+      kind: "names",
+      lines: ["sda", "sdh", "sdr"],
+    });
+    expect(at(35)).toMatchObject({ kind: "count", lines: ["5 disks"] });
+    expect(at(36)).toMatchObject({ kind: "count", lines: ["4 disks"] });
+    expect(at(46)).toMatchObject({ kind: "names", lines: ["sdt"] });
+    // The hottest sits on its column, never lifted away from it.
+    expect(at(46)?.leader).toBe(false);
+  });
+});
+
+describe("temperatures in bay order", () => {
+  it("fills a row when the disks fit, and otherwise uses rows of 12, 8 or 6 as a chassis does", () => {
+    expect(bayPerRow(6, 330, 48, 8)).toBe(6);
+    expect(bayPerRow(24, 330, 48, 8)).toBe(6);
+    expect(bayPerRow(24, 700, 48, 8)).toBe(12);
+    expect(bayPerRow(24, 500, 48, 8)).toBe(8);
+    const rows = bayRows(DISKS_24, 6);
+    expect(rows.map((r) => r.length)).toEqual([6, 6, 6, 6]);
+    expect(rows[3]?.at(-1)?.read.devicename).toBe("sdv");
   });
 });

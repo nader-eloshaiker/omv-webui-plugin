@@ -118,28 +118,143 @@ export function pct(n: number): string {
   return `${String(Math.round(n))}${NBSP}%`;
 }
 
-/** One cell of a waffle or a segmented bar: how much of it is filled, and whether it is past the mark. */
-export interface Cell {
-  /** 0 to 1. */
+// ─── The waffle ───────────────────────────────────────────────────────────────────────────────
+//
+// Squares that each stand for a fixed share of the drive, filled a column at a time from the left
+// and each column from the bottom, so the picture still reads as "more to the right". Every column
+// is 5 % at every size (5 squares of 1 %, or 2 of 2.5 % in a table cell), so OMV's default mark of
+// 85 % falls between two columns. A mark between columns splits its column: the gap steps round the
+// squares before it.
+
+/** How many squares across and up. */
+export interface WaffleShape {
+  cols: number;
+  rows: number;
+}
+
+export interface Square {
+  /** The column, from the left. */
+  col: number;
+  /** The row, from the bottom. */
+  row: number;
+  /** How much of it is used, 0 to 1: the last used square is filled in part, nothing is rounded. */
   fill: number;
-  /** The cell ends past the admin's mark. */
-  zone: boolean;
+  /** It lies past the admin's mark. */
+  past: boolean;
+}
+
+export interface WaffleMark {
+  /** The admin's mark, percent. */
+  value: number;
+  /** How many squares lie before it: the mark at the nearest square boundary. */
+  at: number;
+  /** The column it falls in, and how many of that column's squares (from the bottom) are before it. */
+  col: number;
+  j: number;
+}
+
+export interface WaffleModel {
+  squares: Square[];
+  /** What one square stands for, percent. */
+  share: number;
+  mark: WaffleMark | null;
+}
+
+export function waffleOf(
+  used: number,
+  mark: number | null,
+  shape: WaffleShape,
+): WaffleModel {
+  const count = shape.cols * shape.rows;
+  const share = 100 / count;
+  const at =
+    mark === null
+      ? null
+      : Math.min(count, Math.max(0, Math.round(mark / share)));
+  const squares = Array.from({ length: count }, (_, i) => ({
+    col: Math.floor(i / shape.rows),
+    row: i % shape.rows,
+    fill: Math.min(1, Math.max(0, used / share - i)),
+    past: at !== null && i >= at,
+  }));
+  return {
+    squares,
+    share,
+    mark:
+      at === null || mark === null
+        ? null
+        : {
+            value: mark,
+            at,
+            col: Math.floor(at / shape.rows),
+            j: at % shape.rows,
+          },
+  };
+}
+
+/** A waffle's drawing size in pixels: the square, the gap, the wider gap at the mark, the overhang. */
+export interface WaffleSize {
+  sq: number;
+  gap: number;
+  /** How much wider the gap at the mark is than the others. */
+  wide: number;
+  /** How far the mark's rule reaches past the squares, above and below. */
+  ext: number;
+}
+
+export interface WaffleDrawing {
+  width: number;
+  height: number;
+  /** Each square's top left corner, in the order of `squares`. */
+  at: { x: number; y: number }[];
+  /** The rule in the gap at the mark: straight between two columns, or stepping round a split one. */
+  rule: string | null;
+  /** Where the rule meets the top, for the mark's value written above it. */
+  ruleX: number | null;
 }
 
 /**
- * `count` equal cells, each a fixed share of the drive (2 % for 50). The last filled cell is filled
- * in part, so the picture is as exact as the bar: nothing is rounded up or down to a whole square.
+ * Where everything sits. The squares past the mark move right by `wide`, which opens the gap; when
+ * the mark splits a column, the top of that column moves with them and the gap steps.
  */
-export function cellsOf(
-  used: number,
-  mark: number | null,
-  count: number,
-): Cell[] {
-  const share = 100 / count;
-  return Array.from({ length: count }, (_, i) => ({
-    fill: Math.min(1, Math.max(0, used / share - i)),
-    zone: mark !== null && (i + 1) * share > mark + 1e-9,
+export function waffleDrawing(
+  model: WaffleModel,
+  shape: WaffleShape,
+  size: WaffleSize,
+): WaffleDrawing {
+  const { sq, gap, wide, ext } = size;
+  const pitch = sq + gap;
+  const shift = model.mark === null ? 0 : wide;
+  const width = shape.cols * pitch - gap + shift;
+  const height = shape.rows * pitch - gap + 2 * ext;
+  const at = model.squares.map((s) => ({
+    x: s.col * pitch + (s.past ? shift : 0),
+    y: ext + (shape.rows - 1 - s.row) * pitch,
   }));
+  const m = model.mark;
+  if (m === null) {
+    return { width, height, at, rule: null, ruleX: null };
+  }
+  const top = m.col * pitch + (wide - gap) / 2;
+  const f = (n: number) => (Math.round(n * 100) / 100).toString();
+  if (m.j === 0) {
+    return {
+      width,
+      height,
+      at,
+      rule: `M${f(top)} 0V${f(height)}`,
+      ruleX: top,
+    };
+  }
+  const bottom = m.col * pitch + sq + (gap + wide) / 2;
+  const step = ext + (shape.rows - m.j) * pitch - gap / 2;
+  return {
+    width,
+    height,
+    at,
+    rule: `M${f(top)} 0V${f(step)}H${f(bottom)}V${f(height)}`,
+    ruleX: top,
+  };
 }
 
 function fs(
@@ -153,7 +268,8 @@ function fs(
 
 /**
  * The lab's FileSystemMgmt.getList: the dashboard lab's drives (System drive, Data drive, Backup,
- * tank) and an SSD past its mark. OMV's default warning mark is 85 %; tank's admin turned it off.
+ * tank) and an SSD past its mark. OMV's default warning mark is 85 %; tank's admin turned it off, and
+ * Backup's moved it to 88 %.
  */
 export const FILE_SYSTEMS: readonly SpaceFixture[] = [
   fs(
@@ -193,7 +309,8 @@ export const FILE_SYSTEMS: readonly SpaceFixture[] = [
       size: "3958168383488",
       available: "2308974166016",
       percentage: 41,
-      usagewarnthreshold: 85,
+      // The admin moved this one's mark, so it falls inside a column and the gap steps.
+      usagewarnthreshold: 88,
     },
     "mirror",
     "Mirror (RAID 1), EXT4",
@@ -372,6 +489,21 @@ export function scaleText(mibPerSecond: number): string {
 
 export const toMiB = (bytesPerSecond: number): number => bytesPerSecond / MiB;
 
+/**
+ * The smallest scale a half of the network chart takes, so a trickle of 0.1 MiB/s still stands
+ * clear of the baseline (a tenth of the half's height) instead of lying on it.
+ */
+export const MIN_RATE_SCALE = 1;
+
+/**
+ * One half of the mirrored network chart: its own scale, from the readings this page holds, rounded
+ * up to 1, 2 or 5 times a power of ten, and never under MIN_RATE_SCALE. In and out are scaled
+ * apart, so a copy in at 90 MiB/s does not flatten the 1 MiB/s going out.
+ */
+export function rateScale(points: readonly Point[]): number {
+  return niceMax(rangeOf(points)?.max ?? 0, MIN_RATE_SCALE);
+}
+
 /** Memory in GiB, two decimals under one: "0.35 GiB", "3.8 GiB". */
 export function gibText(bytes: number): string {
   const v = bytes / GiB;
@@ -460,32 +592,6 @@ export function linePath(
             `${i === 0 ? "M" : "L"}${f1(xAt(p.t, last))} ${f1(yAt(p.v, max, mode))}`,
         )
         .join("");
-    })
-    .join("");
-}
-
-/** The area under the line, closed to its baseline, for the `trace-area` fill. */
-export function areaPath(
-  points: readonly Point[],
-  last: number,
-  max: number,
-): string {
-  const base = f1(PLOT_H - PAD);
-  return runsOf(points)
-    .filter((run) => run.length > 1)
-    .map((run) => {
-      const first = run[0];
-      const end = run.at(-1);
-      if (first === undefined || end === undefined) {
-        return "";
-      }
-      const line = run
-        .map(
-          (p, i) =>
-            `${i === 0 ? "M" : "L"}${f1(xAt(p.t, last))} ${f1(yAt(p.v, max, "full"))}`,
-        )
-        .join("");
-      return `${line}L${f1(xAt(end.t, last))} ${base}L${f1(xAt(first.t, last))} ${base}Z`;
     })
     .join("");
 }
@@ -594,28 +700,240 @@ export function tempScale(
   return { lo, hi, ticks };
 }
 
-/**
- * Rows for labels along a scale so none overlaps the one before it in its row: each label goes in
- * the first row where it fits. Positions and widths in pixels.
- */
-export function labelRows(
-  items: readonly { x: number; width: number }[],
-  gap = 8,
-): number[] {
-  const order = items
-    .map((item, i) => ({ ...item, i }))
-    .sort((a, b) => a.x - b.x);
-  const ends: number[] = [];
-  const rows = Array.from({ length: items.length }, () => 0);
-  for (const item of order) {
-    const start = item.x - item.width / 2;
-    let row = ends.findIndex((end) => end + gap <= start);
-    if (row === -1) {
-      row = ends.length;
-      ends.push(0);
+/** At or past its alert limit: only then may its mark take the warning colour, with the words. */
+export function overLimit(d: DiskTemp): boolean {
+  return d.c !== null && d.limit !== null && d.c >= d.limit;
+}
+
+// ─── Along one scale, stacked ─────────────────────────────────────────────────────────────────
+//
+// SMART reports whole degrees, so several disks often share one. Disks at the same degree stack
+// upward into a column, one marker each, so the spread reads like a histogram and no marker hides
+// another. A column of up to three names its disks above it; a taller one says how many and names
+// them on pointer or focus. The hottest column always names its disks. Everything here is in
+// pixels, with y measured up from the axis.
+
+/** The disks read at one whole degree, in bay order. */
+export interface Stack {
+  c: number;
+  disks: DiskTemp[];
+}
+
+/** The read disks by whole degree, coolest first; a sleeping or unread disk is in none. */
+export function stacksOf(disks: readonly DiskTemp[]): Stack[] {
+  const by = new Map<number, DiskTemp[]>();
+  for (const d of disks) {
+    if (d.c === null) {
+      continue;
     }
-    ends[row] = item.x + item.width / 2;
-    rows[item.i] = row;
+    const c = Math.round(d.c);
+    by.set(c, [...(by.get(c) ?? []), d]);
+  }
+  return [...by.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([c, list]) => ({ c, disks: list }));
+}
+
+/** A degree either side of the readings and the limit, and at least 12 degrees across. */
+export function stackRange(
+  stacks: readonly Stack[],
+  limit: number | null,
+): { lo: number; hi: number } {
+  const all = [...stacks.map((s) => s.c), ...(limit === null ? [] : [limit])];
+  if (all.length === 0) {
+    return { lo: 20, hi: 50 };
+  }
+  let lo = Math.floor(Math.min(...all)) - 1;
+  let hi = Math.ceil(Math.max(...all)) + 1;
+  while (hi - lo < 12) {
+    lo -= 1;
+    if (hi - lo < 12) {
+      hi += 1;
+    }
+  }
+  return { lo, hi };
+}
+
+export interface Box {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+export function overlaps(a: Box, b: Box): boolean {
+  return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+}
+
+export interface StackLabel {
+  /** The names, one a line; or the count, which names them on pointer or focus. */
+  kind: "names" | "count";
+  lines: string[];
+  box: Box;
+  /** Lifted clear of its neighbours, so a leader joins it to its column. */
+  leader: boolean;
+}
+
+export interface PlacedStack extends Stack {
+  x: number;
+  /** Each marker's centre, bottom first, in the order of `disks`. */
+  markers: { x: number; y: number }[];
+  /** The top of the column. */
+  top: number;
+  label: StackLabel;
+}
+
+export interface StackLayout {
+  width: number;
+  /** The height above the axis that the columns and their labels need. */
+  height: number;
+  /** The marker's size and the step between two markers in a column. */
+  m: number;
+  pitch: number;
+  stacks: PlacedStack[];
+  /** The degrees written under the axis: every column's, unless two would touch. */
+  axis: { c: number; x: number }[];
+  /** Where a temperature sits across the chart. */
+  x0: number;
+  perDegree: number;
+}
+
+/** Room at either end so a marker on the first or last degree is whole. */
+const STACK_PAD = 14;
+/** Roboto Mono at 12px is about this wide a character; the labels are sized from it. */
+export const NAME_PX = 7.3;
+const LINE_PX = 15;
+
+function labelSize(lines: readonly string[], kind: StackLabel["kind"]) {
+  const longest = Math.max(...lines.map((l) => l.length));
+  return kind === "count"
+    ? { w: longest * 7.2 + 18, h: 22 }
+    : { w: longest * NAME_PX + 8, h: lines.length * LINE_PX + 2 };
+}
+
+/** "5 disks". */
+export function diskCount(n: number): string {
+  return n === 1 ? "1 disk" : `${String(n)} disks`;
+}
+
+export function stackLayout(
+  stacks: readonly Stack[],
+  { width, lo, hi }: { width: number; lo: number; hi: number },
+): StackLayout {
+  const perDegree = (width - 2 * STACK_PAD) / Math.max(1, hi - lo);
+  const m = Math.min(12, Math.max(7, perDegree - 3));
+  const pitch = m + 2;
+  const xOf = (c: number) => STACK_PAD + (c - lo) * perDegree;
+  const hottest = stacks.at(-1)?.c ?? null;
+  const columns = stacks.map((s) => {
+    const x = xOf(s.c);
+    const markers = s.disks.map((_, i) => ({ x, y: 2 + m / 2 + i * pitch }));
+    return { ...s, x, markers, top: 2 + s.disks.length * pitch };
+  });
+  // Every column's markers are in the way of every label.
+  const obstacles: Box[] = columns.map((s) => ({
+    x1: s.x - m / 2 - 2,
+    y1: 0,
+    x2: s.x + m / 2 + 2,
+    y2: s.top + 2,
+  }));
+  const placed: Box[] = [];
+  const labels = new Map<number, StackLabel>();
+  // The hottest first, so it sits on its column, then left to right.
+  const order = [...columns].sort((a, b) =>
+    a.c === hottest ? -1 : b.c === hottest ? 1 : a.x - b.x,
+  );
+  for (const s of order) {
+    const kind: StackLabel["kind"] =
+      s.disks.length <= 3 || s.c === hottest ? "names" : "count";
+    const lines =
+      kind === "names"
+        ? s.disks.map((d) => d.device)
+        : [diskCount(s.disks.length)];
+    const { w, h } = labelSize(lines, kind);
+    const x1 = Math.min(Math.max(0, s.x - w / 2), Math.max(0, width - w));
+    const base = s.top + 4;
+    const candidates = [
+      base,
+      ...obstacles.map((o) => o.y2 + 4),
+      ...placed.map((p) => p.y1 - h - 4),
+    ]
+      .filter((y) => y >= base)
+      .sort((a, b) => a - b);
+    const fits = (y: number) => {
+      const box = { x1, y1: y, x2: x1 + w, y2: y + h };
+      if (obstacles.some((o) => overlaps(o, box))) {
+        return false;
+      }
+      const leader = { x1: s.x - 0.5, y1: s.top, x2: s.x + 0.5, y2: y };
+      return y <= base || !placed.some((p) => overlaps(p, leader));
+    };
+    const y =
+      candidates.find(fits) ?? Math.max(...obstacles.map((o) => o.y2)) + 4;
+    const box = { x1, y1: y, x2: x1 + w, y2: y + h };
+    placed.push(box);
+    obstacles.push(box);
+    if (y > base) {
+      obstacles.push({ x1: s.x - 1, y1: s.top, x2: s.x + 1, y2: y });
+    }
+    labels.set(s.c, { kind, lines, box, leader: y > base });
+  }
+  const placedStacks = columns.map((s) => {
+    const label = labels.get(s.c);
+    if (!label) {
+      throw new Error(`no label for ${String(s.c)}`);
+    }
+    return { ...s, label };
+  });
+  // The degrees under the axis, the hottest first, each at least 16px from the next.
+  const axis: { c: number; x: number }[] = [];
+  for (const s of order) {
+    if (axis.every((a) => Math.abs(a.x - s.x) >= 16)) {
+      axis.push({ c: s.c, x: s.x });
+    }
+  }
+  axis.sort((a, b) => a.x - b.x);
+  const height = Math.max(
+    24,
+    ...placedStacks.map((s) => Math.max(s.top, s.label.box.y2)),
+  );
+  return {
+    width,
+    height: height + 4,
+    m,
+    pitch,
+    stacks: placedStacks,
+    axis,
+    x0: STACK_PAD - lo * perDegree,
+    perDegree,
+  };
+}
+
+// ─── In bay order, as caddies ─────────────────────────────────────────────────────────────────
+
+/**
+ * How many caddies go in one row of the bay: all of them when they fit in `width` (pixels, each
+ * slot `slot` wide with `gap` between), otherwise the largest of 12, 8, 6, 4, 3 or 2 that fits, as
+ * the rows of a real chassis are.
+ */
+export function bayPerRow(
+  n: number,
+  width: number,
+  slot: number,
+  gap: number,
+): number {
+  const fit = Math.max(1, Math.floor((width + gap) / (slot + gap)));
+  if (n <= fit) {
+    return Math.max(1, n);
+  }
+  return [12, 8, 6, 4, 3, 2].find((k) => k <= fit) ?? 1;
+}
+
+/** The disks in rows of `perRow`, keeping the bay's order. */
+export function bayRows<T>(disks: readonly T[], perRow: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < disks.length; i += perRow) {
+    rows.push(disks.slice(i, i + perRow));
   }
   return rows;
 }
@@ -655,6 +973,59 @@ export const DISKS: readonly TempFixture[] = [
     kind: "ssd",
     tempmax: 0,
   },
+];
+
+function bayDisk(
+  devicename: string,
+  temperature: string,
+  kind: TempFixture["kind"] = "hdd",
+): TempFixture {
+  return {
+    read: {
+      devicename,
+      temperature,
+      powermode:
+        temperature === ""
+          ? "STANDBY"
+          : kind === "nvme"
+            ? "UNKNOWN"
+            : "ACTIVE or IDLE",
+    },
+    kind,
+    tempmax: 0,
+  };
+}
+
+/**
+ * A 24-disk DiskMgmt.getList, in bay order: two NVMe sticks and 22 drives, two of them SSDs. SMART
+ * reports whole degrees, so ties are common: five disks at 35 °C, four at 36 °C, three each at 34 °C
+ * and 37 °C. sdi and sdu are asleep, and sdt, in the warm middle of the bay, is past the 45 °C limit.
+ */
+export const DISKS_24: readonly TempFixture[] = [
+  bayDisk("nvme0n1", "41", "nvme"),
+  bayDisk("nvme1n1", "43", "nvme"),
+  bayDisk("sda", "34"),
+  bayDisk("sdb", "35"),
+  bayDisk("sdc", "35"),
+  bayDisk("sdd", "36"),
+  bayDisk("sde", "35"),
+  bayDisk("sdf", "37"),
+  bayDisk("sdg", "36"),
+  bayDisk("sdh", "34"),
+  bayDisk("sdi", ""),
+  bayDisk("sdj", "38"),
+  bayDisk("sdk", "35"),
+  bayDisk("sdl", "36"),
+  bayDisk("sdm", "37"),
+  bayDisk("sdn", "39"),
+  bayDisk("sdo", "35"),
+  bayDisk("sdp", "36"),
+  bayDisk("sdq", "33", "ssd"),
+  bayDisk("sdr", "34"),
+  bayDisk("sds", "37"),
+  bayDisk("sdt", "46"),
+  bayDisk("sdu", ""),
+  bayDisk("sdv", "31", "ssd"),
 ];
 
 /** A temperature with its unit: "36 °C". */

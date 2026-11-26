@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The strongest candidates at real size, where the owner judges them: a copy of one row of the NAS
-// map (the dashboard lab's markup and stylesheet) with the space meter in its storage cell, and a
-// copy of the "Right now" strip with the live readouts. Development only (UI-11).
+// The chosen charts at real size, where the owner judges them: a copy of one row of the NAS map (the
+// dashboard lab's markup and stylesheet) with the waffle in its storage cell, a copy of the "Right
+// now" strip with the two live charts, and the temperatures along one scale under them.
+// Development only (UI-11).
 import type { IconName } from "@omv-webui/react-ui-components";
 import { Icon, StatusIcon } from "@omv-webui/react-ui-components";
 import type { ItemProps } from "../dashboard/Bay.tsx";
 import { SlotTile } from "../dashboard/Bay.tsx";
 import type { Layout, MapDisk } from "../dashboard/model.ts";
 import type { Series } from "./feed.ts";
-import { FiguresStrip } from "./LiveCharts.tsx";
-import type { Space } from "./model.ts";
+import { PairedStrip } from "./LiveCharts.tsx";
+import type { DiskTemp, Space } from "./model.ts";
 import { spanWords } from "./model.ts";
-import { CountedBar } from "./SpaceCharts.tsx";
+import { Waffle } from "./SpaceCharts.tsx";
+import { TempStacks } from "./TempCharts.tsx";
 
 const noop = () => undefined;
 
@@ -56,11 +58,15 @@ export function InPlace({
   space,
   series,
   paused,
+  disks,
+  readAt,
   layout,
   onNote,
 }: {
   space: Space;
   series: Series;
+  disks: readonly DiskTemp[];
+  readAt: string;
   paused: boolean;
   layout: Layout;
   onNote: (words: string) => void;
@@ -133,7 +139,7 @@ export function InPlace({
                       </span>
                     </button>
                     <span className="ch-inplace-meter">
-                      <CountedBar space={space} size="map" />
+                      <Waffle space={space} size="map" />
                     </span>
                   </span>
                 </span>
@@ -186,7 +192,20 @@ export function InPlace({
             {paused ? ", paused" : ""}
           </p>
         </header>
-        <FiguresStrip s={series} />
+        <PairedStrip s={series} />
+      </section>
+      <section
+        className="dm-live"
+        data-layout={layout}
+        aria-labelledby="ch-temps-title"
+      >
+        <header className="dm-region-head">
+          <h3 id="ch-temps-title" className="dm-region-title">
+            Disk temperatures
+          </h3>
+          <p className="dm-region-note">Read at {readAt}</p>
+        </header>
+        <TempStacks disks={disks} readAt={readAt} />
       </section>
     </div>
   );

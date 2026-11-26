@@ -183,12 +183,13 @@ export const STILL_COUNT = 40;
 const STILL_SEED = 7;
 
 /**
- * The still set: a copy to the NAS in readings 6 to 19, then a film played from it from reading
- * 30 on, so the shape is the same on every screenshot.
+ * The still set: a computer copies files to the NAS in readings 6 to 17 and again from reading 26
+ * on, so the traffic in is high while the traffic out stays near 1 MiB/s: the case where one shared
+ * scale lost the traffic out. The shape is the same on every screenshot.
  */
 export function stillFeed(): Feed {
   return createFeed(STILL_SEED, (i) =>
-    i >= 6 && i < 20 ? "copy-in" : i >= 30 ? "read-out" : "idle",
+    (i >= 6 && i < 18) || i >= 26 ? "copy-in" : "idle",
   );
 }
 
