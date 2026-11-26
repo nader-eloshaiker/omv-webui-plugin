@@ -96,6 +96,83 @@ describe("DriveBay health icon", () => {
     );
   });
 
+  it("shows only problems with health=problems, and nothing for a slot that says none", () => {
+    const { container } = render(
+      <DriveBay
+        aria-label="Disks"
+        variant="bare"
+        health="problems"
+        slots={[
+          {
+            id: "a",
+            device: "sda",
+            kind: "hdd",
+            status: "ok",
+            statusLabel: "OK",
+            detail: "36 °C",
+          },
+          {
+            id: "b",
+            device: "sdb",
+            kind: "hdd",
+            status: "warning",
+            statusLabel: "Warning",
+          },
+          {
+            id: "c",
+            device: "sdc",
+            kind: "hdd",
+            status: "unknown",
+            statusLabel: "Not checked",
+            health: "none",
+          },
+        ]}
+      />,
+    );
+    const words = [
+      ...container.querySelectorAll("[data-slot=drive-slot-state]"),
+    ];
+    expect(words.map((w) => w.classList.contains("sr-only"))).toEqual([
+      true,
+      false,
+      true,
+    ]);
+    expect(container.querySelectorAll("li [data-icon]")).toHaveLength(1);
+    expect(screen.getByText("36 °C")).toBeVisible();
+    // A bare bay has no chassis and no entrance of its own.
+    expect(container.querySelector("[data-slot=drive-bay]")).toHaveAttribute(
+      "data-variant",
+      "bare",
+    );
+    expect(container.querySelector("li")?.className).not.toMatch(
+      /animate-slot-in/,
+    );
+  });
+
+  it("merges a slot link's own classes and props with the slot's", () => {
+    render(
+      <DriveBay
+        aria-label="Disks"
+        variant="bare"
+        slots={[
+          {
+            id: "a",
+            device: "sda",
+            kind: "hdd",
+            status: "ok",
+            statusLabel: "OK",
+            link: (
+              <button type="button" className="mine" aria-label="sda, OK" />
+            ),
+          },
+        ]}
+      />,
+    );
+    const button = screen.getByRole("button", { name: "sda, OK" });
+    expect(button).toHaveClass("mine");
+    expect(button.className).toMatch(/justify-items-center/);
+  });
+
   it("shows the word by default", () => {
     const { container } = render(<DriveBay aria-label="Disks" slots={SLOTS} />);
     const word = container.querySelector("[data-slot=drive-slot-state]");

@@ -140,3 +140,34 @@ export const Narrow: Story = {
   decorators: [(Story) => <div className="w-72">{Story()}</div>],
   render: Normal.render,
 };
+
+/**
+ * `layout="grid"`: a short set of facts in two columns, label over value, each under a hairline (the
+ * dashboard's This NAS). A long value takes `span="full"`.
+ */
+export const Grid: Story = {
+  render: () => (
+    <FactList layout="grid">
+      <FactListItem>
+        <FactListLabel>Name</FactListLabel>
+        <FactListValue variant="identifier">nas</FactListValue>
+      </FactListItem>
+      <FactListItem>
+        <FactListLabel>Version</FactListLabel>
+        <FactListValue>8.6.1-1</FactListValue>
+      </FactListItem>
+      <FactListItem>
+        <FactListLabel>Running for</FactListLabel>
+        <FactListValue>5 h 25 min</FactListValue>
+      </FactListItem>
+      <FactListItem>
+        <FactListLabel>Time on the NAS</FactListLabel>
+        <FactListValue>Thu 19 Nov, 11:50</FactListValue>
+      </FactListItem>
+      <FactListItem span="full">
+        <FactListLabel>Add-ons</FactListLabel>
+        <FactListValue>compose, wol</FactListValue>
+      </FactListItem>
+    </FactList>
+  ),
+};
