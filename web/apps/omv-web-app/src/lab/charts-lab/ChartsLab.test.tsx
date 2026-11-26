@@ -125,8 +125,8 @@ describe("the chart lab", () => {
     const lists = screen.getAllByRole("list", {
       name: "Disk temperatures read at 10:31",
     });
-    // Both candidates, and the one in place.
-    expect(lists).toHaveLength(3);
+    // Both candidates, and both in place (the dashboard and the Disks page).
+    expect(lists).toHaveLength(4);
     const items = within(lists[0] as HTMLElement)
       .getAllByRole("listitem")
       .map((li) => li.textContent);
@@ -141,7 +141,7 @@ describe("the chart lab", () => {
     );
     expect(
       screen.getAllByText(/sdd is asleep, so its temperature was not read/u),
-    ).toHaveLength(3);
+    ).toHaveLength(4);
   });
 
   it("stacks the 24 disks' ties, counts a tall column and names it on focus", async () => {

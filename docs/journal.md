@@ -939,3 +939,19 @@ A charts prototype in the lab (`?screen=charts`) puts several candidates side by
 ## 2026-11-26 — Sort arrows stay in table headers (owner)
 
 Rule 1 of the generated look ("arrows on every button") is about call-to-action buttons. A sortable table header keeps its arrow: one arrow on the sorted column shows its direction, and a faint up-and-down pair marks the other sortable columns. This is the usual way to show sort order. The arrow turns when the direction changes, as in the motion reel.
+
+## 2026-11-26 — The waffle and the paired live charts (owner)
+
+The owner chose from the chart prototype (`/ui/lab?screen=charts`):
+
+1. **Space used is a waffle.** Each square is a fixed share of the drive, and the warning mark is a gap with a rule between columns. Empty squares are solid in a new slate:
+   - light: about `#b9c6d2`, 3.00:1 from the used blue;
+   - dark: about `#3b495b`, 3.68:1 from the used blue.
+
+   Both existing candidates failed in light. The divider colour faded into the page, and the track's outline colour was 1.16:1 from the used squares. The slate goes through the colour audit before it becomes a token.
+2. **Live readouts are two charts with four series.** Processor and memory share one percent scale. The network is mirrored, in above the line and out below, and each half has its own scale with a minimum of 1 MiB/s, so a small out stays visible. The two hues are teal (solid) and violet (dashed), the series on either side of the Sky base, replacing magenta and moss, which the owner found did not harmonise. Each line is named at its end.
+3. **Temperatures** have two candidates, both built for ties and a 24-disk bay:
+   - stacked along one scale, where disks at the same degree form a column;
+   - in bay order, as drive caddies.
+
+   The recommendation is stacked on the dashboard and bay order on the Disks page. That waits for the owner.

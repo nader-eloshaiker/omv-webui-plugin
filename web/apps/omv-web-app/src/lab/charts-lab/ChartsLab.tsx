@@ -2,7 +2,7 @@
 // The chart prototype, in the lab: development only (UI-11). Round two (owner, 2026-11-26): the
 // waffle for space, "Two charts, four series" for the live readouts, and two ways to draw the
 // temperatures (along one scale, stacked; in bay order, as caddies). Each subject shows its chart
-// with one sentence on what it shows and why, the page ends with them in place at real size, and
+// with one sentence on what it shows and why, the page ends with them in place at the size they would have, and
 // the round-one candidates the owner did not pick are listed under "Not chosen", one line each.
 //
 // The query string selects what is shown and never acts (UI-4): screen=charts, theme=dark|light,
@@ -376,9 +376,12 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               <div>
                 <h2 id="ch-inplace-title">In place</h2>
                 <p className="ch-intro">
-                  The waffle in a row of the NAS map, the two live charts as the
-                  Right now strip, and the temperatures along one scale under
-                  them, at the size they would have on the dashboard.
+                  On the dashboard, the waffle in a row of the NAS map, the two
+                  live charts as the Right now strip, and the temperatures
+                  stacked along one scale, where the spread across the bay
+                  matters. On the Disks page, the temperatures in bay order,
+                  where finding the hot disk in the case matters. Both at the
+                  size they would have.
                 </p>
               </div>
             </div>
