@@ -145,6 +145,25 @@ export const HealthIconOnly: Story = {
 };
 
 /**
+ * `variant="bare"` with `health="problems"`, as each row of the NAS map draws its disks: small slots
+ * on the page ground with no chassis, a healthy disk showing only its temperature, a disk in trouble
+ * its icon and word in place of it.
+ */
+export const BareForTheMap: Story = {
+  args: {
+    variant: "bare",
+    health: "problems",
+    name: undefined,
+    slots: TROUBLE.map((slot, i) => ({
+      ...slot,
+      role: undefined,
+      detail: slot.status === "ok" ? `${String(33 + i)}\u00a0°C` : undefined,
+    })),
+  },
+  decorators: [(Story) => <div className="max-w-xs">{Story()}</div>],
+};
+
+/**
  * The disk check's result lands: the lights change from the hollow ring to their state in turn, a
  * slot at a time (at once under reduced motion). Press the button to run it again.
  */

@@ -142,3 +142,15 @@ export { typedMatches } from "./components/type-to-confirm/typed-matches";
 export * from "./components/ui-provider/ui-provider";
 export * from "./components/used-by/used-by-panel";
 export { cn } from "./utils";
+
+// The dashboard: the answer, what needs you, the NAS map and the footer (rethink 6, 6.8).
+export * from "./components/attention-list/attention-list";
+export * from "./components/first-steps/first-steps";
+export * from "./components/nas-answer/nas-answer";
+export * from "./components/nas-answer/nas-answer-model";
+export * from "./components/nas-answer/welcome-line";
+export * from "./components/nas-facts/nas-facts";
+export * from "./components/nas-map/nas-map";
+export * from "./components/nas-map/nas-map-model";
+export type * from "./components/nas-map/nas-map-words";
+export * from "./components/shortcuts/shortcuts";

@@ -20,6 +20,8 @@
 @import "./src/shell.css";
 /* The icon set's two tones and the motions of action icons (rethink 5.2 and 7.7). */
 @import "./src/icons.css";
+/* The NAS map's assembly, a problem arriving and a ghost becoming real (rethink 6.8, 7.2, 7.6). */
+@import "./src/nas-map.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
    page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.

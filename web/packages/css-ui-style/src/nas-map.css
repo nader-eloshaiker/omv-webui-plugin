@@ -1,0 +1,162 @@
+/* The NAS map's motions (rethink 6.8, 7.2, 7.6, 7.10), in the stylesheet so nothing is inserted at
+ * run time (UI-1). The map is react-ui-components' `NasMap`; its parts are named with `data-slot`
+ * and `data-part`, and the only geometry from data is a row's and an item's place in the assembly,
+ * set as `--r`, `--i` (and the drive bay's own `--stagger-index`) through React's `style`.
+ *
+ * Three motions, each answering a cause, none on scroll and none repeating:
+ *   - the first visit (or "Show me around"): the NAS assembles row by row, the one entrance the
+ *     owner approved (style guide 10, rule 19). Its fades are separate from its movement and tight,
+ *     so every part is fully opaque within 400ms of the cause (each fades over --duration-fast, the
+ *     last starting by about 160ms), while the slides and the connectors' drawing carry on at full
+ *     opacity to about 900ms (7.10). The meters fill by their own motion.
+ *   - a problem arriving: its row's connectors draw again in its tone (7.6).
+ *   - a ghost becoming real: a row that appears after the map was drawn (the first storage added)
+ *     comes out of the secondary ink of the picture it replaces and its connectors draw (7.2).
+ *
+ * Durations and curves are the motion tokens. Under reduced motion (the system setting, or a
+ * `MotionScope reduced` / the "Animations: Reduced" preference, which set the reduced tokens) every
+ * movement and drawing lands at once and the fades keep --duration-fast: the map fades in whole.
+ */
+@layer components {
+  [data-slot="nas-map"] [data-part="wire"],
+  [data-slot="nas-map-band"] [data-part="bus"] > span {
+    transform-origin: 0 50%;
+  }
+  [dir="rtl"] [data-slot="nas-map"] [data-part="wire"] {
+    transform-origin: 100% 50%;
+  }
+
+  /* ─── The first visit ─────────────────────────────────────────────────────────────────────── */
+  [data-slot="nas-map"][data-assemble="full"] [data-slot="nas-map-row"] {
+    --nas-move: calc(min(var(--r, 0), 6) * 85ms);
+    --nas-fade: calc(min(var(--r, 0), 6) * 16ms);
+  }
+  [data-slot="nas-map"][data-assemble="full"] [data-slot="drive-slot"] {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard)
+        calc(var(--nas-fade) + min(var(--stagger-index, 0), 5) * 6ms) both,
+      nas-map-drop var(--duration-slow) var(--ease-settle)
+        calc(var(--nas-move) + min(var(--stagger-index, 0), 5) * 30ms) both;
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-row"]
+    [data-part="wire"] {
+    animation: grow-x var(--duration-base) var(--ease-standard)
+      calc(var(--nas-move) + 110ms) both;
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-row"]
+    [data-part="wire"][data-place="folders"] {
+    animation-delay: calc(var(--nas-move) + 230ms);
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    :is(
+      [data-slot="nas-map-storage"],
+      [data-slot="nas-map-ghost"],
+      [data-part="more-rows"]
+    ) {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard)
+        calc(var(--nas-fade) + 12ms) both,
+      nas-map-rise var(--duration-slow) var(--ease-settle)
+        calc(var(--nas-move) + 150ms) both;
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-row"]
+    [data-slot="nas-map-folder"] {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard)
+        calc(var(--nas-fade) + 24ms + min(var(--i, 0), 6) * 6ms) both,
+      nas-map-rise var(--duration-slow) var(--ease-settle)
+        calc(var(--nas-move) + 290ms + min(var(--i, 0), 6) * 35ms) both;
+  }
+  [data-slot="nas-map"][data-assemble="full"] [data-slot="nas-map-band"] {
+    --nas-move: calc(min(var(--rows, 4), 6) * 85ms + 260ms);
+    --nas-fade: 120ms;
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-band"]
+    > :is(
+      [data-part="band-head"],
+      [data-part="band-ways"],
+      [data-part="band-off"],
+      [data-part="band-net"],
+      [data-part="band-world"]
+    ) {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard) var(--nas-fade) both,
+      nas-map-rise var(--duration-slow) var(--ease-settle) var(--nas-move) both;
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-band"]
+    > [data-part="band-net"] {
+    animation-delay: calc(var(--nas-fade) + 20ms), calc(var(--nas-move) + 90ms);
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-band"]
+    > [data-part="band-world"] {
+    animation-delay:
+      calc(var(--nas-fade) + 40ms), calc(var(--nas-move) + 180ms);
+  }
+  [data-slot="nas-map"][data-assemble="full"]
+    [data-slot="nas-map-band"]
+    [data-part="bus"]
+    > span {
+    animation: grow-y var(--duration-base) var(--ease-standard)
+      calc(var(--nas-move) + 120ms) both;
+    transform-origin: 50% 0;
+  }
+
+  /* ─── A problem arrives: its row's connectors draw again in its tone ─────────────────────────── */
+  [data-slot="nas-map-row"][data-arrival] [data-part="wire"] {
+    animation: grow-x var(--duration-glide) var(--ease-standard) both;
+  }
+  [data-slot="nas-map-row"][data-arrival]
+    [data-part="wire"][data-place="folders"] {
+    animation-delay: 220ms;
+  }
+
+  /* ─── A ghost becomes real ─────────────────────────────────────────────────────────────────── */
+  [data-slot="nas-map-row"][data-fresh] [data-part="wire"] {
+    animation: grow-x var(--duration-slow) var(--ease-standard) both;
+  }
+  [data-slot="nas-map-row"][data-fresh]
+    :is([data-slot="nas-map-storage"], [data-slot="nas-map-folder"]) {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard) both,
+      nas-map-solidify var(--duration-slow) var(--ease-standard) both;
+  }
+
+  /* Narrow (the map's own width under 37.5rem): the row's connectors are vertical and draw down. */
+  @container nasmap (max-width: 37.5rem) {
+    [data-slot="nas-map"] [data-part="wire"] {
+      transform-origin: 50% 0;
+    }
+    [data-slot="nas-map"][data-assemble="full"]
+      [data-slot="nas-map-row"]
+      [data-part="wire"],
+    [data-slot="nas-map-row"]:is([data-arrival], [data-fresh])
+      [data-part="wire"] {
+      animation-name: grow-y;
+    }
+  }
+}
+
+/* A caddy drops into its slot from above. */
+@keyframes nas-map-drop {
+  from {
+    translate: 0 calc(var(--motion-rise) * -0.85);
+  }
+}
+/* A part settles up into place, at full opacity (its fade is separate). */
+@keyframes nas-map-rise {
+  from {
+    translate: 0 var(--motion-rise);
+  }
+}
+/* From the example's secondary ink to the real thing's. */
+@keyframes nas-map-solidify {
+  from {
+    color: var(--theme-tertiary-foreground);
+  }
+}

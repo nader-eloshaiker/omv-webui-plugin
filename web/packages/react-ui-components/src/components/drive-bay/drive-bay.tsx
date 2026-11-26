@@ -13,6 +13,13 @@ type Tone = "ok" | "warning" | "critical" | "unknown";
 const toneOf = (status: HealthStatus): Tone =>
   STATUS_DRAWING[status].tone as Tone;
 
+/**
+ * How a slot shows its health: see `DriveBayProps.health`. A slot alone may also take `none`: no
+ * mark and no word on screen, for a state the picture says once beside several slots; the word is
+ * still read.
+ */
+type DriveHealthDisplay = "word" | "icon" | "problems" | "none";
+
 interface DriveSlot {
   /** Stable across renders. */
   id: string;
@@ -33,9 +40,14 @@ interface DriveSlot {
   /**
    * Makes the slot a link to the disk's page: the element to render, `<a href=… />` or the router's
    * `<Link to=… />`. Its name is the slot's words ("sdb Warning data 41 °C") unless the element
-   * carries an `aria-label` of its own.
+   * carries an `aria-label` of its own. Any element works, a `<button>` included.
    */
   link?: useRender.RenderProp;
+  /**
+   * How this slot shows its health, in place of the bay's `health`: `icon` for a slot whose state
+   * the picture around it says once for several disks.
+   */
+  health?: DriveHealthDisplay;
 }
 
 interface DriveBayProps extends Omit<
@@ -54,13 +66,22 @@ interface DriveBayProps extends Omit<
   arrived?: string;
   /**
    * How each slot shows its health. `word`, the default: its icon and its word under the caddy.
-   * `icon`: the icon alone, for a picture whose surroundings already say each disk's state in words
-   * (the dashboard's map); the word stays for assistive technology and in a slot link's name.
+   * `icon`: the icon alone, for a picture whose surroundings already say each disk's state in words;
+   * the word stays for assistive technology and in a slot link's name. `problems`: a healthy slot
+   * shows no mark at all (a healthy thing says nothing, style guide 10) and its `detail` in its
+   * place; a slot in any other state shows its icon and its word. The word is always read.
    */
-  health?: "word" | "icon";
+  health?: DriveHealthDisplay;
+  /**
+   * `chassis`, the default: the front panel, slots in a grid on the flat chassis. `bare`: the slots
+   * alone, small and side by side on the page ground with nothing round them, for a picture that
+   * holds several bays (the NAS map's rows). A bare bay has no entrance of its own: the picture that
+   * holds it decides (its slots carry `data-slot="drive-slot"` for that).
+   */
+  variant?: "chassis" | "bare";
 }
 
-type HealthDisplay = NonNullable<DriveBayProps["health"]>;
+type BayVariant = NonNullable<DriveBayProps["variant"]>;
 
 const bodyClass = cva("fill-surface stroke-art-line", {
   variants: {
@@ -87,9 +108,19 @@ const wordClass = cva("", {
 // The word beside the icon, or only for assistive technology when the picture shows the icon alone.
 const healthWordClass = cva("", {
   variants: {
-    health: { word: "", icon: "sr-only" },
+    health: { word: "", icon: "sr-only", problems: "", none: "sr-only" },
   },
   defaultVariants: { health: "word" },
+});
+
+const caddyClass = cva("h-auto w-full", {
+  variants: {
+    variant: {
+      chassis: "mb-1 max-w-16 compact:max-w-11",
+      bare: "mb-0.5 max-w-4.5 compact:max-w-3.5",
+    },
+  },
+  defaultVariants: { variant: "chassis" },
 });
 
 // A change of state after mount (the disk check's result landing) turns the caddy's edge and the
@@ -104,13 +135,21 @@ const turn =
  * drawing reads as a "live dot" (style guide 10), and OMV gives no activity per disk. A caddy in a
  * non-OK state is edged in its stroke; the icon and the word under it say which state.
  */
-function Caddy({ kind, tone }: { kind: DriveKind; tone: Tone }) {
+function Caddy({
+  kind,
+  tone,
+  variant,
+}: {
+  kind: DriveKind;
+  tone: Tone;
+  variant: BayVariant;
+}) {
   const part = "fill-muted-strong stroke-art-line";
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 56 120"
-      className="mb-1 h-auto w-full max-w-16 compact:max-w-11"
+      className={caddyClass({ variant })}
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -161,46 +200,107 @@ const chassisClass =
   "m-0 rounded-card bg-art-chassis-top px-3.5 pt-2.5 pb-3.5 shadow-control ring-1 ring-border ring-inset";
 const slotGridClass =
   "grid grid-cols-[repeat(auto-fit,minmax(3.75rem,1fr))] gap-2 compact:grid-cols-[repeat(auto-fit,minmax(3.25rem,1fr))] compact:gap-1.5";
-const slotBodyClass =
-  "grid min-w-0 content-start justify-items-center gap-0.5 rounded-control px-1 pt-1.5 pb-2 text-center";
+
+const bayClass = cva("", {
+  variants: {
+    variant: { chassis: chassisClass, bare: "m-0 min-w-0" },
+  },
+  defaultVariants: { variant: "chassis" },
+});
+
+const listClass = cva("", {
+  variants: {
+    variant: {
+      chassis: slotGridClass,
+      bare: "flex flex-wrap items-start gap-x-1.5 gap-y-0.5",
+    },
+  },
+  defaultVariants: { variant: "chassis" },
+});
+
+const slotBodyClass = cva(
+  "grid min-w-0 content-start justify-items-center text-center",
+  {
+    variants: {
+      variant: {
+        chassis: "gap-0.5 rounded-control px-1 pt-1.5 pb-2",
+        bare: "min-w-12 gap-0 rounded-sm p-0.5",
+      },
+    },
+    defaultVariants: { variant: "chassis" },
+  },
+);
+
+const deviceClass = cva("font-mono font-semibold text-foreground", {
+  variants: {
+    variant: { chassis: "text-sm", bare: "text-xs" },
+  },
+  defaultVariants: { variant: "chassis" },
+});
+
+const smallClass = cva("", {
+  variants: {
+    variant: { chassis: "text-caption", bare: "text-xs leading-4" },
+  },
+  defaultVariants: { variant: "chassis" },
+});
 
 /** A slot's words under its caddy, and the link round both when it has one. */
 function SlotBody({
   slot,
   health,
+  variant,
 }: {
   slot: DriveSlot;
-  health: HealthDisplay;
+  health: DriveHealthDisplay;
+  variant: BayVariant;
 }) {
   const tone = toneOf(slot.status);
+  const shown = slot.health ?? health;
+  // `problems`: a healthy slot keeps its word for assistive technology only, and shows no mark.
+  const silent = shown === "none" || (shown === "problems" && tone === "ok");
   const content = (
     <>
-      <Caddy kind={slot.kind} tone={tone} />
-      <span className="font-mono text-sm font-semibold text-foreground">
-        {slot.device}
-      </span>
+      <Caddy kind={slot.kind} tone={tone} variant={variant} />
+      <span className={deviceClass({ variant })}>{slot.device}</span>
       <span
         className={cn(
-          "inline-flex flex-wrap items-center justify-center gap-1 text-caption font-medium",
+          "inline-flex flex-wrap items-center justify-center gap-1 font-medium",
+          smallClass({ variant }),
+          variant === "bare" && "whitespace-nowrap",
           wordClass({ tone }),
+          silent && "sr-only",
           turn,
         )}
       >
-        <StatusIcon status={slot.status} className="size-3" />
+        {silent ? null : <StatusIcon status={slot.status} className="size-3" />}
         <span
           data-slot="drive-slot-state"
-          className={healthWordClass({ health })}
+          className={healthWordClass({ health: silent ? "none" : shown })}
         >
           {slot.statusLabel}
         </span>
       </span>
       {slot.role ? (
-        <span className="text-caption text-tertiary-foreground [overflow-wrap:anywhere]">
+        <span
+          className={cn(
+            "text-tertiary-foreground [overflow-wrap:anywhere]",
+            smallClass({ variant }),
+          )}
+        >
           {slot.role}
         </span>
       ) : null}
       {slot.detail ? (
-        <span className="text-caption text-tertiary-foreground tabular-nums [overflow-wrap:anywhere]">
+        <span
+          className={cn(
+            "tabular-nums [overflow-wrap:anywhere]",
+            variant === "bare"
+              ? "text-muted-foreground"
+              : "text-tertiary-foreground",
+            smallClass({ variant }),
+          )}
+        >
           {slot.detail}
         </span>
       ) : null}
@@ -213,14 +313,18 @@ function SlotBody({
       "data-slot": "drive-slot-link",
       // The neutral hover on the slot, never on the state's marks, so they read the same under the pointer.
       className: cn(
-        slotBodyClass,
+        slotBodyClass({ variant }),
         "h-full transition-[background-color,translate] duration-fast ease-standard hover:bg-muted active:translate-y-px",
       ),
       children: content,
     },
     enabled: slot.link !== undefined,
   });
-  return slot.link ? link : <div className={slotBodyClass}>{content}</div>;
+  return slot.link ? (
+    link
+  ) : (
+    <div className={slotBodyClass({ variant })}>{content}</div>
+  );
 }
 
 /**
@@ -233,19 +337,22 @@ function SlotBody({
  * A slot with `link` opens its disk's page. When a slot's state changes after mount (the disk check's
  * result lands), the edges and words change in turn, a slot at a time; under reduced motion they change at once.
  * With `health="icon"` a slot shows its health by its icon, and a non-OK caddy by its edge, alone.
+ * `variant="bare"` draws the slots small with no chassis, for the NAS map.
  */
 function DriveBay({
   slots,
   name,
   arrived,
   health = "word",
+  variant = "chassis",
   className,
   ...props
 }: DriveBayProps) {
   return (
     <figure
       data-slot="drive-bay"
-      className={cn(chassisClass, className)}
+      data-variant={variant}
+      className={cn(bayClass({ variant }), className)}
       {...props}
     >
       {name ? (
@@ -253,22 +360,24 @@ function DriveBay({
           {name}
         </div>
       ) : null}
-      <ol className={slotGridClass}>
+      <ol className={listClass({ variant })}>
         {slots.map((slot, i) => (
           <li
             key={slot.id}
+            data-slot="drive-slot"
             data-status={slot.status}
             data-arrived={arrived === slot.id ? "" : undefined}
             style={{ "--stagger-index": i } as React.CSSProperties}
             className={cn(
               "grid min-w-0 rounded-control",
-              // The slot jumped to is ringed once instead of entering in turn.
+              // The slot jumped to is ringed once instead of entering in turn; a bare bay's slots
+              // come in as the picture holding them says.
               arrived === slot.id
                 ? "animate-arrive"
-                : "animate-slot-in stagger",
+                : variant === "chassis" && "animate-slot-in stagger",
             )}
           >
-            <SlotBody slot={slot} health={health} />
+            <SlotBody slot={slot} health={health} variant={variant} />
           </li>
         ))}
       </ol>
@@ -304,7 +413,7 @@ function DriveBaySkeleton({
       <Skeleton className="mb-2.5 w-16 text-xs" />
       <div className={slotGridClass}>
         {Array.from({ length: slots }, (_, i) => (
-          <div key={i} className={cn(slotBodyClass, "gap-1")}>
+          <div key={i} className={cn(slotBodyClass(), "gap-1")}>
             <Skeleton
               shape="block"
               className="mb-1 aspect-[56/120] w-full max-w-16 compact:max-w-11"
@@ -319,4 +428,10 @@ function DriveBaySkeleton({
 }
 
 export { DriveBay, DriveBaySkeleton };
-export type { DriveBayProps, DriveBaySkeletonProps, DriveKind, DriveSlot };
+export type {
+  DriveBayProps,
+  DriveBaySkeletonProps,
+  DriveHealthDisplay,
+  DriveKind,
+  DriveSlot,
+};
