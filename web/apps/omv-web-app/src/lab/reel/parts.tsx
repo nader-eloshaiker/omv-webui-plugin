@@ -1,93 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Small components the reel's stages share: a crossfade between two renderings, a count that rolls
-// to its new value, a step's mark whose check draws, a drawn check for a button, and a caption. Each
-// takes its reduced form from useReducedMotion. Development only (UI-11).
+// Small components the reel's stages share: a count that rolls to its new value, a step's mark whose
+// check draws, a drawn check for a button, and a caption. Each takes its reduced form from
+// useReducedMotion. The crossfade between two renderings is the library's `Crossfade`. Development
+// only (UI-11).
+import { drawPath, useDrawPath } from "@omv-webui/react-ui-components";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { drawPath } from "./helpers/drawPath.ts";
-import { useReducedMotion } from "./helpers/useReducedMotion.ts";
-import { useDraw } from "./stage.ts";
-
-interface Layer {
-  key: string;
-  node: ReactNode;
-}
-
-interface Layers {
-  key: string;
-  node: ReactNode;
-  out: Layer[];
-  changed: boolean;
-}
-
-/**
- * Two renderings in one grid cell: when `k` changes the new one fades in over `--duration-fast`
- * while the old one fades out, then the old one goes. Under reduced motion `reduced="cut"` swaps at
- * once; the default keeps the short crossfade (fade is not travel, 7.1 rule 5).
- */
-export function Crossfade({
-  k,
-  children,
-  reduced = "crossfade",
-  className,
-}: {
-  k: string;
-  children: ReactNode;
-  reduced?: "crossfade" | "cut";
-  className?: string;
-}) {
-  const isReduced = useReducedMotion();
-  const cut = isReduced && reduced === "cut";
-  const [layers, setLayers] = useState<Layers>(() => ({
-    key: k,
-    node: children,
-    out: [],
-    changed: false,
-  }));
-  let shown = layers;
-  // Adjusting state while rendering: the old layer is known in the same render that replaces it.
-  if (layers.key !== k) {
-    shown = {
-      key: k,
-      node: children,
-      out: cut
-        ? []
-        : [
-            ...layers.out.filter((l) => l.key !== k),
-            { key: layers.key, node: layers.node },
-          ],
-      changed: !cut,
-    };
-    setLayers(shown);
-  } else if (layers.node !== children) {
-    shown = { ...layers, node: children };
-    setLayers(shown);
-  }
-  return (
-    <span className={className ? `rl-xf ${className}` : "rl-xf"}>
-      {shown.out.map((layer) => (
-        <span
-          key={layer.key}
-          className="rl-xf-out"
-          aria-hidden="true"
-          onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget) {
-              setLayers((s) => ({
-                ...s,
-                out: s.out.filter((l) => l.key !== layer.key),
-              }));
-            }
-          }}
-        >
-          {layer.node}
-        </span>
-      ))}
-      <span key={shown.key} className={shown.changed ? "rl-xf-in" : undefined}>
-        {shown.node}
-      </span>
-    </span>
-  );
-}
+import { useReducedMotion } from "../../hooks/useMotionPreference.ts";
 
 /**
  * A count that rolls to its new value: the new figure rises into place and the old one leaves
@@ -139,7 +58,7 @@ export function RollingNumber({ value }: { value: number }) {
  * (`--duration-base`). Decorative; the words beside it say the state.
  */
 export function StepMark({ done }: { done: boolean }) {
-  const checkRef = useDraw(done, { duration: "--duration-base" });
+  const checkRef = useDrawPath(done, { duration: "--duration-base" });
   return (
     <svg
       viewBox="0 0 20 20"

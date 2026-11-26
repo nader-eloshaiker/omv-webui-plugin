@@ -6,20 +6,21 @@
 import {
   Button,
   Checkbox,
+  Crossfade,
   Disclosure,
   DisclosurePanel,
   DisclosureTrigger,
   LeavingItem,
   StatusLabel,
+  useFlip,
   useLeavingItems,
 } from "@omv-webui/react-ui-components";
 import { ArrowUp, Ellipsis } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
-import { useFirstTime } from "../helpers/useFirstTime.ts";
-import { useFlip } from "../helpers/useFlip.ts";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
-import { Crossfade, RollingNumber } from "../parts.tsx";
+import { useFirstTime } from "../../../hooks/useFirstTime.ts";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
+import { RollingNumber } from "../parts.tsx";
 import type { StageProps } from "../types.ts";
 import { CopyGlyphButton } from "./forms.tsx";
 
@@ -169,7 +170,7 @@ export function MovesStage({ state }: StageProps<{ warn: boolean }>) {
                   </span>
                 </td>
                 <td>
-                  <Crossfade k={line.health}>
+                  <Crossfade contentKey={line.health}>
                     {line.health === "warning" ? (
                       <StatusLabel status="warning">
                         Reports a problem
@@ -390,7 +391,7 @@ export function SelectStage({
   const count = state.picked.length;
   return (
     <div className="rl-selection">
-      <Crossfade k={count > 0 ? "bar" : "tools"}>
+      <Crossfade contentKey={count > 0 ? "bar" : "tools"}>
         {count > 0 ? (
           <div
             className="rl-selbar"

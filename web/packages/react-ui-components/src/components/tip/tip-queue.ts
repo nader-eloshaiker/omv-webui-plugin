@@ -3,8 +3,7 @@
 // to show at once; only the first in reading order does. A tip that has the turn keeps it until it
 // no longer wants it (it ended, or is leaving), so a tip on screen never vanishes because another,
 // earlier one became due; then the first waiting tip in reading order takes the turn. Reading order
-// is the document's order of each tip's anchor element, so a tip needs no number. Development only
-// (UI-11) until the owner has seen it.
+// is the document's order of each tip's anchor element, so a tip needs no number.
 
 /** The waiting tips and the one whose turn it is. */
 export interface TipQueue {
@@ -12,7 +11,7 @@ export interface TipQueue {
   turn: string | null;
 }
 
-export const EMPTY_QUEUE: TipQueue = { wanting: new Map(), turn: null };
+export const EMPTY_TIP_QUEUE: TipQueue = { wanting: new Map(), turn: null };
 
 /** The id of the tip whose anchor comes first in the document, or null when none is waiting. */
 export function firstInReadingOrder(

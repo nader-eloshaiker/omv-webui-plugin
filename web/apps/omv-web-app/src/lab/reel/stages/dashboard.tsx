@@ -6,19 +6,21 @@
 // (processor and memory) and the interface's traffic. Development only (UI-11).
 import {
   Button,
+  Crossfade,
   flyPendingMark,
   popElement,
   StatusIcon,
   StatusLabel,
+  useDrawPath,
+  useGlide,
 } from "@omv-webui/react-ui-components";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
 import type { Nas } from "../../dashboard/model.ts";
 import { answerOf, needsYou, withSdbWarning } from "../../dashboard/model.ts";
 import { NeedsYou } from "../../dashboard/NeedsYou.tsx";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
-import { Crossfade, RollingNumber, StageNote } from "../parts.tsx";
-import { useDraw, useGlideValue } from "../stage.ts";
+import { RollingNumber, StageNote } from "../parts.tsx";
 import type { StageProps } from "../types.ts";
 import { twoRowNas } from "./fixtures.ts";
 
@@ -59,7 +61,7 @@ function Moon() {
 
 /** A connector between neighbours on a row; `lit` redraws it in the warning tone. */
 function Wire({ lit, delay = 0 }: { lit: boolean; delay?: number }) {
-  const draw = useDraw(lit, { duration: "--duration-slow", delay });
+  const draw = useDrawPath(lit, { duration: "--duration-slow", delay });
   return (
     <svg
       className="rl-mapwire"
@@ -123,7 +125,7 @@ function ProblemStage({
   return (
     <div className="rl-problem">
       <div className="rl-answer-block">
-        <Crossfade k={answer.title}>
+        <Crossfade contentKey={answer.title}>
           <span className="rl-answer-words">
             <span className="rl-answer">{answer.title}</span>
             <span className="rl-muted">{answer.reason}</span>
@@ -137,7 +139,7 @@ function ProblemStage({
           disks={
             <>
               <Slot device="sdb">
-                <Crossfade k={atRisk ? "w" : "ok"}>
+                <Crossfade contentKey={atRisk ? "w" : "ok"}>
                   {atRisk ? (
                     <StatusLabel status="warning">Warning</StatusLabel>
                   ) : (
@@ -202,7 +204,7 @@ function Figure({
   digits: number;
   unit: string;
 }) {
-  const shown = useGlideValue(value);
+  const shown = useGlide(value) ?? value;
   return (
     <span className="rl-figure">
       {shown.toFixed(digits)} <span className="rl-muted">{unit}</span>
@@ -268,7 +270,10 @@ export function PowerStage({ state }: StageProps<{ asleep: boolean }>) {
         <Caddy asleep={state.asleep} />
         <span className="rl-slot-device">sdb</span>
         <span className="rl-slot-state">
-          <Crossfade k={state.asleep ? "asleep" : "awake"} reduced="cut">
+          <Crossfade
+            contentKey={state.asleep ? "asleep" : "awake"}
+            reduced="cut"
+          >
             {state.asleep ? (
               <span className="rl-asleep">
                 <Moon />
@@ -297,8 +302,8 @@ export function SpaceStage({ state }: StageProps<{ added: boolean }>) {
   const reduced = useReducedMotion();
   const usedGib = state.added ? 3136.6 : 3096.6;
   const used = usedGib / TOTAL_GIB;
-  const percent = useGlideValue(used * 100);
-  const free = useGlideValue(TOTAL_GIB - usedGib);
+  const percent = useGlide(used * 100) ?? used * 100;
+  const free = useGlide(TOTAL_GIB - usedGib) ?? TOTAL_GIB - usedGib;
   const full = used >= WARN_AT;
   return (
     <div className="rl-space">

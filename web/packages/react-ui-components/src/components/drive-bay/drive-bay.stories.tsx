@@ -88,7 +88,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Healthy: Story = {};
-/** A warning disk, a failing one and a USB disk that is not checked: each with its light, icon and word. */
+/** A warning disk, a failing one and a USB disk that is not checked: each with its icon and word. */
 export const WarningDisk: Story = { args: { slots: TROUBLE } };
 /**
  * After "View disk sdb": a ring appears round that slot once, holds still for about a second and
@@ -134,6 +134,15 @@ const CHECKED: DriveSlot[] = UNCHECKED.map((slot) => {
 });
 
 export const LinkedWithDetails: Story = { args: { slots: UNCHECKED } };
+
+/**
+ * The health by its icon alone (`health="icon"`), for the dashboard's map, where the rows beside the
+ * bay already say each disk's state in words. A warning or failing caddy keeps its edge; the word
+ * stays for assistive technology and in each slot link's name.
+ */
+export const HealthIconOnly: Story = {
+  args: { slots: CHECKED, health: "icon" },
+};
 
 /**
  * The disk check's result lands: the lights change from the hollow ring to their state in turn, a

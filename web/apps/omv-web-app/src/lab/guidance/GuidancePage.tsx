@@ -5,12 +5,13 @@
 //
 // The welcome (P.2) is dismissed by "Got it" or by doing anything on the page: a press or a key
 // anywhere here outside the welcome line itself, while it is on screen.
+import { useCurrentTip } from "@omv-webui/react-ui-components";
 import type { KeyboardEvent, PointerEvent } from "react";
+import { endTip } from "../../hooks/useTipsPreference.ts";
 import { LayerHelp } from "./LayerHelp.tsx";
 import { LayerInterface } from "./LayerInterface.tsx";
 import { LayerState } from "./LayerState.tsx";
 import { LayerTips } from "./LayerTips.tsx";
-import { endTip, useCurrentTip } from "./parts/tipsContext.ts";
 
 /** Keys that only move around the page; they are not doing anything on it. */
 const MOVING = new Set(["Tab", "Shift", "Control", "Alt", "Meta", "Escape"]);

@@ -28,6 +28,8 @@ export const isSeenKey = (value: unknown): value is SeenKey =>
 interface SeenState {
   seen: SeenKey[];
   markSeen: (key: SeenKey) => void;
+  /** Forget one flag, so its first time comes again (the reel's "First visit to the page"). */
+  forget: (key: SeenKey) => void;
   /** Forget every flag: "Show me around" and the lab's reset. */
   reset: () => void;
 }
@@ -39,6 +41,12 @@ export const useSeenStore = create<SeenState>()(
       markSeen: (key) =>
         set((state) =>
           state.seen.includes(key) ? state : { seen: [...state.seen, key] },
+        ),
+      forget: (key) =>
+        set((state) =>
+          state.seen.includes(key)
+            ? { seen: state.seen.filter((k) => k !== key) }
+            : state,
         ),
       reset: () => set({ seen: [] }),
     }),

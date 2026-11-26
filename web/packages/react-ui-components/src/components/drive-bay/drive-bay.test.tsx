@@ -79,6 +79,30 @@ describe("DriveBay", () => {
   });
 });
 
+describe("DriveBay health icon", () => {
+  it("shows the health by its icon alone and keeps the word for assistive technology", () => {
+    const { container } = render(
+      <DriveBay aria-label="Disks" slots={SLOTS} health="icon" />,
+    );
+    const words = container.querySelectorAll("[data-slot=drive-slot-state]");
+    expect(words).toHaveLength(2);
+    for (const word of words) {
+      expect(word).toHaveClass("sr-only");
+    }
+    expect(container.querySelectorAll("li [data-icon]")).toHaveLength(2);
+    // The slot link is still named with the state.
+    expect(screen.getByRole("link")).toHaveAccessibleName(
+      /sda.*Not checked.*System/,
+    );
+  });
+
+  it("shows the word by default", () => {
+    const { container } = render(<DriveBay aria-label="Disks" slots={SLOTS} />);
+    const word = container.querySelector("[data-slot=drive-slot-state]");
+    expect(word).not.toHaveClass("sr-only");
+  });
+});
+
 describe("DriveBaySkeleton", () => {
   it("stands in for the caddies, hidden from assistive technology", () => {
     const { container } = render(<DriveBaySkeleton slots={4} />);

@@ -5,7 +5,7 @@
 import { Button } from "@omv-webui/react-ui-components";
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
 import type { StageProps } from "../types.ts";
 
 // ─── The ghost hands over ─────────────────────────────────────────────────────────────────────

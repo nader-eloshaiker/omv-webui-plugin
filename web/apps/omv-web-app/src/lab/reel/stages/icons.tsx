@@ -5,11 +5,10 @@
 // Give access and Refresh are lucide stand-ins that move as a whole. Delete and Wipe do nothing on
 // hover. Development only (UI-11).
 import type { IconName } from "@omv-webui/react-ui-components";
-import { Button, Icon } from "@omv-webui/react-ui-components";
+import { Button, Crossfade, Icon } from "@omv-webui/react-ui-components";
 import { KeyRound, LoaderCircle, RotateCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useReducedMotion } from "../helpers/useReducedMotion.ts";
-import { Crossfade } from "../parts.tsx";
+import { useReducedMotion } from "../../../hooks/useMotionPreference.ts";
 import type { StageProps } from "../types.ts";
 
 export type Act =
@@ -170,7 +169,7 @@ export function IconsStage({ state, update }: StageProps<IconsState>) {
         <Icon name="disk-hdd" size={24} badge={state.badge} />
         <span>
           Disk sdb:{" "}
-          <Crossfade k={state.badge}>
+          <Crossfade contentKey={state.badge}>
             {state.badge === "ok" ? "OK" : "Warning"}
           </Crossfade>
         </span>

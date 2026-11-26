@@ -25,6 +25,7 @@ export * from "./components/connection-map/connection-map";
 export * from "./components/connection-map/connection-map-model";
 export * from "./components/copy-button/copy-button";
 export * from "./components/copy-direction/copy-direction";
+export * from "./components/crossfade/crossfade";
 export * from "./components/delete-picture/delete-picture";
 export * from "./components/density-toggle/density-toggle";
 export * from "./components/dialog/dialog";
@@ -44,6 +45,7 @@ export {
   whenLanded,
 } from "./components/flight/flight";
 export * from "./components/health-list/health-list";
+export * from "./components/help/help";
 export * from "./components/icon/icon";
 export * from "./components/impact-line/impact-line";
 export * from "./components/inline-alert/inline-alert";
@@ -55,7 +57,32 @@ export * from "./components/live-figure/live-figure";
 export * from "./components/live-tile/live-tile";
 export * from "./components/member-picker/member-picker";
 export * from "./components/menu/menu";
+export * from "./components/motion/draw-path";
 export * from "./components/motion/motion";
+export * from "./components/motion/motion-scope";
+export {
+  animateElement,
+  animationSettled,
+  curveAt,
+  durationAt,
+  timeMs,
+} from "./components/motion/motion-tokens";
+export type {
+  CurveToken,
+  DurationToken,
+} from "./components/motion/motion-tokens";
+export {
+  REDUCED_MOTION_TOKENS,
+  ReducedMotionContext,
+  applyReducedMotion,
+  reducedMotionAt,
+  systemReducedMotion,
+  useReducedMotion,
+  useSystemReducedMotion,
+} from "./components/motion/reduced-motion";
+export * from "./components/motion/use-draw-path";
+export * from "./components/motion/use-first-time";
+export * from "./components/motion/use-flip";
 export * from "./components/new-password-fields/new-password-fields";
 export * from "./components/now-after-table/now-after-table";
 export * from "./components/number-field/number-field";
@@ -94,6 +121,18 @@ export * from "./components/text/identifier";
 export * from "./components/text/isolated-identifier";
 export * from "./components/text/server-message";
 export * from "./components/textarea-field/textarea-field";
+export * from "./components/tip/show-tips-switch";
+export * from "./components/tip/tip";
+export * from "./components/tip/tips-command";
+export {
+  useCurrentTip,
+  useShowTips,
+  useTipTurn,
+  useTips,
+} from "./components/tip/tips-context";
+export type { TipsContextValue } from "./components/tip/tips-context";
+export * from "./components/tip/tips-provider";
+export * from "./components/tip/use-hide-tips-offer";
 export * from "./components/toast/toast";
 export * from "./components/toast/use-toast";
 export * from "./components/tooltip/tooltip";

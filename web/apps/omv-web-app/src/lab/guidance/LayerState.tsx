@@ -6,7 +6,7 @@
 // places keep their sentence and action but drop the example and the caption, and First steps
 // become Shortcuts. Compact density drops the steps' explanations and the captions (owner decision
 // 11). Development only (UI-11): the dashboard's and the table's own lab parts.
-import { Icon } from "@omv-webui/react-ui-components";
+import { Icon, useShowTips } from "@omv-webui/react-ui-components";
 import { useMemo, useRef, useState } from "react";
 import { FirstSteps, Shortcuts } from "../dashboard/Footer.tsx";
 import type { Nas } from "../dashboard/model.ts";
@@ -22,7 +22,6 @@ import {
 import { SystemMap } from "../dashboard/SystemMap.tsx";
 import { FoldersTable, LabCauses } from "../tables/FoldersTable.tsx";
 import { captionsFor } from "./guidanceModel.ts";
-import { useShowTips } from "./parts/tipsContext.ts";
 import { Region, Specimen } from "./Region.tsx";
 import { useContentWidth } from "./useContentWidth.ts";
 

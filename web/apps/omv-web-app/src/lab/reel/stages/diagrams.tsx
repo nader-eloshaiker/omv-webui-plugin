@@ -7,13 +7,13 @@ import {
   Arrangement,
   Button,
   CopyDirection,
-  TypeToConfirmField,
+  drawPath,
   typedMatches,
+  TypeToConfirmField,
 } from "@omv-webui/react-ui-components";
 import { Monitor, Server } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef } from "react";
-import { drawPath } from "../helpers/drawPath.ts";
 import type { StageProps } from "../types.ts";
 import { twoRowNas } from "./fixtures.ts";
 import { PaneMap } from "./welcome.tsx";

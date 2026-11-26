@@ -3,11 +3,11 @@
 // that has it keeps it until it lets go.
 import { afterEach, describe, expect, it } from "vitest";
 import {
-  EMPTY_QUEUE,
+  EMPTY_TIP_QUEUE,
   firstInReadingOrder,
   releaseTurn,
   wantTurn,
-} from "./tipQueue.ts";
+} from "./tip-queue";
 
 function anchors(...names: string[]): Record<string, Element> {
   const out: Record<string, Element> = {};
@@ -38,7 +38,7 @@ describe("the tip queue", () => {
 
   it("gives the turn to the first in reading order, and the next once it lets go", () => {
     const a = anchors("first", "second");
-    let q = wantTurn(EMPTY_QUEUE, "later", a.second!);
+    let q = wantTurn(EMPTY_TIP_QUEUE, "later", a.second!);
     expect(q.turn).toBe("later");
     q = releaseTurn(q, "later");
     q = wantTurn(q, "later", a.second!);
@@ -53,7 +53,7 @@ describe("the tip queue", () => {
 
   it("returns the same queue when nothing changes", () => {
     const a = anchors("first");
-    const q = wantTurn(EMPTY_QUEUE, "a", a.first!);
+    const q = wantTurn(EMPTY_TIP_QUEUE, "a", a.first!);
     expect(wantTurn(q, "a", a.first!)).toBe(q);
     expect(releaseTurn(q, "b")).toBe(q);
   });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The motion reel's tables entries: each motion's causes, its timing in words and its stage
 // (src/lab/reel/stages/tables.tsx). Development only (UI-11).
-import { forgetFirstTime } from "../helpers/useFirstTime.ts";
+import { forgetFirstTime } from "../../../hooks/useFirstTime.ts";
 import type { BarsState, SortKey } from "../stages/tables.tsx";
 import {
   ArrivesStage,

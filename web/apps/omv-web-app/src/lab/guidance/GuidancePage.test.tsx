@@ -2,15 +2,16 @@
 // The guidance page with Show tips off: the tips, the captions and the ghost examples go, and no
 // control, status, consequence or technical value goes with them (rethink P.3). Lab fixtures only;
 // nothing here reaches the network.
-import { UiProvider } from "@omv-webui/react-ui-components";
+import { TipsProvider, UiProvider } from "@omv-webui/react-ui-components";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
+import { useTipsPreference } from "../../hooks/useTipsPreference.ts";
 import { clearStorage } from "../../stores/storageSnapshot.ts";
 import { useSeenStore } from "../../stores/useSeenStore.ts";
 import { useTipsStore } from "../../stores/useTipsStore.ts";
 import { GuidancePage } from "./GuidancePage.tsx";
-import { TipsProvider } from "./parts/TipsProvider.tsx";
 
 afterEach(() => {
   useTipsStore.setState({ show: true, offered: false });
@@ -18,17 +19,24 @@ afterEach(() => {
   clearStorage();
 });
 
+/** The stored flags, with "Show tips" seeded for the view as the lab's query string does. */
+function Tips({ show, children }: { show: boolean; children: ReactNode }) {
+  return (
+    <TipsProvider {...useTipsPreference({ show })}>{children}</TipsProvider>
+  );
+}
+
 function page(tips: boolean) {
   return render(
     <UiProvider>
-      <TipsProvider show={tips}>
+      <Tips show={tips}>
         <GuidancePage
           compact={false}
           chrome={false}
           onNote={() => undefined}
           onOpenPalette={() => undefined}
         />
-      </TipsProvider>
+      </Tips>
     </UiProvider>,
   );
 }

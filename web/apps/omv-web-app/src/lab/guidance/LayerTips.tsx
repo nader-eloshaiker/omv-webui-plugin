@@ -17,9 +17,13 @@ import {
   Icon,
   PendingBand,
   StatusIcon,
+  Tip,
+  useCurrentTip,
+  useShowTips,
 } from "@omv-webui/react-ui-components";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { endTip } from "../../hooks/useTipsPreference.ts";
 import type { SeenKey } from "../../stores/useSeenStore.ts";
 import { hasSeen, useSeenStore } from "../../stores/useSeenStore.ts";
 import {
@@ -34,9 +38,8 @@ import { SystemMap } from "../dashboard/SystemMap.tsx";
 import { LabCauses } from "../tables/FoldersTable.tsx";
 import type { TipState } from "./guidanceModel.ts";
 import { tipState } from "./guidanceModel.ts";
-import { Tip } from "./parts/Tip.tsx";
-import { endTip, useCurrentTip, useShowTips } from "./parts/tipsContext.ts";
 import { Region, Specimen } from "./Region.tsx";
+import { gotIt } from "./tipWords.ts";
 import { useContentWidth } from "./useContentWidth.ts";
 
 const STATE_WORDS: Record<TipState, string> = {
@@ -81,9 +84,9 @@ function Welcome({
       ) : null}
       <Tip
         id="tip.new-interface"
-        about="the new interface"
+        {...gotIt("the new interface")}
         icon={<Icon name="nas" size={20} motion="none" />}
-        className="g-welcome"
+        size="lead"
         actions={
           <span className="g-welcome-actions">
             <Disclosure
@@ -231,7 +234,7 @@ function FirstSave({ chrome }: { chrome: boolean }) {
             Save
           </Button>
         </div>
-        <Tip id="tip.first-save" when={saved} about="the yellow bar">
+        <Tip id="tip.first-save" when={saved} {...gotIt("the yellow bar")}>
           Saved. Your change waits in the yellow bar until you apply it.
         </Tip>
       </div>
@@ -311,7 +314,7 @@ function TraceMap({
           tip={
             // Pointing needs a pointer or a keyboard; on a narrow touch screen the tip stays away.
             layout === "narrow" ? null : (
-              <Tip id="tip.trace" about="pointing at the map">
+              <Tip id="tip.trace" {...gotIt("pointing at the map")}>
                 Point at a folder, a disk or a way in to see what belongs to it.
               </Tip>
             )

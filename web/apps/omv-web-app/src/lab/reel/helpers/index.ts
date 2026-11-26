@@ -1,19 +1,32 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The four motion helpers of rethink spec 8 row 7, bound for the library once the owner has seen the
-// motion reel. Development only until then (UI-11).
-export { drawPath } from "./drawPath.ts";
-export type { DrawPathOptions } from "./drawPath.ts";
-export { MotionScope } from "./MotionScope.tsx";
-export { animate, curveAt, durationAt, settled, timeMs } from "./tokens.ts";
-export type { CurveToken, DurationToken } from "./tokens.ts";
-export { forgetFirstTime, useFirstTime } from "./useFirstTime.ts";
-export { heldOrder, useFlip } from "./useFlip.ts";
-export type { Flip, FlipOptions } from "./useFlip.ts";
+// The motion helpers of rethink spec 8 row 7, under the names the lab has used. They now live in the
+// component library (@omv-webui/react-ui-components, components/motion); the ones that read a
+// preference store are the app's adapters in src/hooks. New code imports from those directly; this
+// file stays so lab prototypes written against it keep working.
 export {
-  MotionScopeContext,
-  REDUCED_TOKENS,
-  reducedMotionAt,
+  MotionScope,
+  ReducedMotionContext as MotionScopeContext,
+  REDUCED_MOTION_TOKENS as REDUCED_TOKENS,
+  animateElement as animate,
+  curveAt,
+  drawPath,
+  durationAt,
+  heldOrder,
+  animationSettled as settled,
   systemReducedMotion,
-  useReducedMotion,
+  timeMs,
+  useFlip,
   useSystemReducedMotion,
-} from "./useReducedMotion.ts";
+} from "@omv-webui/react-ui-components";
+export type {
+  CurveToken,
+  DrawPathOptions,
+  DurationToken,
+  Flip,
+  FlipOptions,
+} from "@omv-webui/react-ui-components";
+export { forgetFirstTime, useFirstTime } from "../../../hooks/useFirstTime.ts";
+export {
+  reducedMotionAt,
+  useReducedMotion,
+} from "../../../hooks/useMotionPreference.ts";
