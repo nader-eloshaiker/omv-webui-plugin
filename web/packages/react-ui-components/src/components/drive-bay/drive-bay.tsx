@@ -259,28 +259,35 @@ function SlotBody({
   const shown = slot.health ?? health;
   // `problems`: a healthy slot keeps its word for assistive technology only, and shows no mark.
   const silent = shown === "none" || (shown === "problems" && tone === "ok");
+  // The spaces between the parts are not drawn (the slot is a grid), but they keep the words apart
+  // in the slot's text, so a name that starts with what the slot shows contains it (WCAG 2.5.3). A
+  // word kept for assistive technology only comes after the words on screen, for the same reason;
+  // it is out of the flow, so nothing on screen moves.
+  const state = (
+    <span
+      className={cn(
+        "inline-flex flex-wrap items-center justify-center gap-1 font-medium",
+        smallClass({ variant }),
+        variant === "bare" && "whitespace-nowrap",
+        wordClass({ tone }),
+        silent && "sr-only",
+        turn,
+      )}
+    >
+      {silent ? null : <StatusIcon status={slot.status} className="size-3" />}
+      <span
+        data-slot="drive-slot-state"
+        className={healthWordClass({ health: silent ? "none" : shown })}
+      >
+        {slot.statusLabel}
+      </span>
+    </span>
+  );
   const content = (
     <>
       <Caddy kind={slot.kind} tone={tone} variant={variant} />
-      <span className={deviceClass({ variant })}>{slot.device}</span>
-      <span
-        className={cn(
-          "inline-flex flex-wrap items-center justify-center gap-1 font-medium",
-          smallClass({ variant }),
-          variant === "bare" && "whitespace-nowrap",
-          wordClass({ tone }),
-          silent && "sr-only",
-          turn,
-        )}
-      >
-        {silent ? null : <StatusIcon status={slot.status} className="size-3" />}
-        <span
-          data-slot="drive-slot-state"
-          className={healthWordClass({ health: silent ? "none" : shown })}
-        >
-          {slot.statusLabel}
-        </span>
-      </span>
+      <span className={deviceClass({ variant })}>{slot.device}</span>{" "}
+      {silent ? null : state}{" "}
       {slot.role ? (
         <span
           className={cn(
@@ -290,7 +297,7 @@ function SlotBody({
         >
           {slot.role}
         </span>
-      ) : null}
+      ) : null}{" "}
       {slot.detail ? (
         <span
           className={cn(
@@ -304,6 +311,7 @@ function SlotBody({
           {slot.detail}
         </span>
       ) : null}
+      {silent ? <> {state}</> : null}
     </>
   );
   const link = useRender({
