@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart lab as the owner meets it: each subject with its chosen chart, the meters carrying their
 // values, the live charts' text alternatives and their per-half scales, the drive pictures by kind,
-// the temperatures as a list for screen readers at 6 and 24 disks, the groups by kind with captions
-// that claim no slot, nothing of the generated look, and still=1 the same on every render. Lab
+// the temperatures grouped by array, pool and kind at 6 and 24 disks with captions that claim no
+// slot, the dashboard's disclosure that never hides a disk over the limit, every bar filled with no
+// outline, nothing of the generated look, and still=1 the same on every render. Lab
 // fixtures only; nothing here reaches the network.
+/// <reference types="node" />
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
+
 import ChartsLab from "./ChartsLab.tsx";
+
+/** The lab's stylesheet as text: Vitest hands a CSS import over empty, so it is read from disk. */
+const chartsCss = readFileSync(`${import.meta.dirname}/charts.css`, "utf8");
 
 function open(query: string) {
   window.history.replaceState(null, "", `/ui/lab?screen=charts&${query}`);
@@ -55,15 +62,14 @@ describe("the chart lab", () => {
       "The waffle",
       "Two charts, four series",
       "Drive pictures",
-      "Along one scale, stacked",
-      "By kind, each with its level",
+      "By kind, with each array and pool as a group",
     ]);
     for (const article of candidates) {
       const caption = article.querySelector(".ch-caption")?.textContent ?? "";
       expect(caption).toMatch(/^[A-Z].+\.$/u);
     }
     const notChosen = screen.getByRole("region", { name: "Not chosen" });
-    expect(within(notChosen).getAllByRole("definition")).toHaveLength(6);
+    expect(within(notChosen).getAllByRole("definition")).toHaveLength(7);
     for (const line of within(notChosen).getAllByRole("definition")) {
       expect(line.textContent).toMatch(/^[A-Z].+\.$/u);
     }
@@ -133,33 +139,44 @@ describe("the chart lab", () => {
     ).toBeInTheDocument();
   });
 
-  it("lists the six disks' temperatures for screen readers, coolest first", () => {
+  it("groups the six disks as the dashboard has them, and says which is asleep", () => {
     open("still=1");
-    const lists = screen.getAllByRole("list", {
-      name: "Disk temperatures read at 10:31",
+    const byKind = screen.getByRole("article", {
+      name: "By kind, with each array and pool as a group",
     });
-    // The stacked chart, as a candidate and in place on the dashboard; the groups by kind are lists
-    // of their own.
-    expect(lists).toHaveLength(2);
-    const items = within(lists[0] as HTMLElement)
-      .getAllByRole("listitem")
-      .map((li) => li.textContent);
-    // The pictures are decorative, so each disk's kind is said in the words.
-    expect(items).toEqual(
-      [
-        "31 °C: the SSD sde.",
-        "34 °C: the NVMe SSD nvme0n1.",
-        "35 °C: the hard disk sdb.",
-        "36 °C: the hard disk sda.",
-        "37 °C: the hard disk sdc.",
-      ].map(nb),
-    );
+    expect(
+      within(byKind)
+        .getAllByRole("heading", { level: 4 })
+        .map((h) => h.textContent),
+    ).toEqual([
+      "Backup, Mirror (RAID 1)",
+      "tank, ZFS pool (single disk)",
+      "Hard disks",
+      "SSDs",
+      "NVMe SSDs, on the mainboard",
+    ]);
+    const backup = within(byKind).getByRole("list", {
+      name: "Backup, Mirror (RAID 1), read at 10:31",
+    });
+    expect(
+      within(backup)
+        .getAllByRole("listitem")
+        .map((t) => t.textContent),
+    ).toEqual(["sdb: 35 °C", "sdc: 37 °C"].map(nb));
+    const tank = within(byKind).getByRole("list", {
+      name: "tank, ZFS pool (single disk), read at 10:31",
+    });
+    expect(within(tank).getByRole("listitem").textContent).toBe("sdd: Asleep");
+    // A sleeping disk has no level, and its bar has no track (charts.css, data-unread).
+    expect(tank.querySelector(".ch-kt-level")).toBeNull();
+    expect(tank.querySelector(".ch-kt[data-unread]")).not.toBeNull();
+    // The candidate, the dashboard and the Disks page say it once each.
     expect(
       screen.getAllByText(/sdd is asleep, so its temperature was not read/u),
-    ).toHaveLength(4);
+    ).toHaveLength(3);
   });
 
-  it("draws each disk as its kind, decoratively, and names the kinds in the key and the sheet", () => {
+  it("draws each disk as its kind, decoratively, and names the kinds in the sheet", () => {
     const { container } = open("still=1");
     const temps = tempsSubject();
     const sheet = within(temps).getByRole("article", {
@@ -186,108 +203,177 @@ describe("the chart lab", () => {
         expect(part.getAttribute("class")).toMatch(/^dp-[a-z]+$/u);
       }
     }
-    // The stacked chart draws one marker picture per disk read: five, as a candidate and in place.
-    const markers = container.querySelectorAll(
-      ".ch-st-svg .ch-dp[data-size='marker']",
-    );
-    expect(markers).toHaveLength(10);
-    const stacked = within(temps).getByRole("article", {
-      name: "Along one scale, stacked",
-    });
-    const key = stacked.querySelector(".ch-st-key");
-    expect(key?.textContent).toContain("Hard disk");
-    expect(key?.textContent).toContain("NVMe SSD");
-    expect(key?.querySelectorAll("svg.ch-dp")).toHaveLength(3);
   });
 
-  it("groups the disks by kind on one scale, says which is asleep, and claims no slot", () => {
+  it("groups the 24 disks by array, pool and kind on one scale, and claims no slot", () => {
     const { container } = open("still=1&disks=24");
     const byKind = screen.getByRole("article", {
-      name: "By kind, each with its level",
+      name: "By kind, with each array and pool as a group",
     });
     expect(
       within(byKind)
         .getAllByRole("heading", { level: 4 })
         .map((h) => h.textContent),
-    ).toEqual(["Hard disks", "SSDs", "NVMe SSDs, on the mainboard"]);
-    const hdd = within(byKind).getByRole("list", {
-      name: "Hard disks, read at 10:31",
+    ).toEqual([
+      "Backup, Mirror (RAID 1)",
+      "Apps, Mirror (RAID 1)",
+      "Archive, Double parity (RAID 6)",
+      "tank, ZFS pool (mirror)",
+      "Hard disks",
+      "SSDs",
+    ]);
+    // Every disk once.
+    const tiles = within(byKind).getAllByRole("listitem");
+    expect(tiles).toHaveLength(24);
+    const devices = tiles.map((t) => t.textContent.split(":")[0]);
+    expect(new Set(devices).size).toBe(24);
+    // The NVMe sticks stay in their array, drawn lying down.
+    const apps = within(byKind).getByRole("list", {
+      name: "Apps, Mirror (RAID 1), read at 10:31",
     });
-    const tiles = within(hdd).getAllByRole("listitem");
-    expect(tiles).toHaveLength(20);
-    expect(tiles[0]?.textContent).toBe(nb("sda: 34 °C"));
     expect(
-      tiles.find((t) => t.textContent.startsWith("sdi"))?.textContent,
-    ).toBe("sdi: Asleep");
-    // A sleeping disk has no level.
-    expect(hdd.querySelector(".ch-kt[data-asleep] .ch-kt-level")).toBeNull();
-    expect(
-      tiles.find((t) => t.textContent.startsWith("sdt"))?.textContent,
-    ).toBe(nb("sdt: 46 °C, at or over the alert limit"));
-    const sticks = within(byKind).getByRole("list", {
-      name: "NVMe SSDs, on the mainboard, read at 10:31",
-    });
-    expect(
-      within(sticks)
+      within(apps)
         .getAllByRole("listitem")
         .map((t) => t.textContent),
     ).toEqual(["nvme0n1: 41 °C", "nvme1n1: 43 °C"].map(nb));
+    expect(apps.querySelectorAll(".ch-kt[data-kind='nvme']")).toHaveLength(2);
+    expect(
+      within(byKind).queryByText(/NVMe SSDs, on the mainboard/u),
+    ).toBeNull();
+    // The rebuilding array says so in words, with its status icon.
+    const archive = within(byKind)
+      .getByRole("heading", { name: "Archive, Double parity (RAID 6)" })
+      .closest("section");
+    expect(
+      archive?.querySelector("[data-slot='status-pill'][data-status='warning']")
+        ?.textContent,
+    ).toBe("Rebuilding");
+    const hdd = within(byKind).getByRole("list", {
+      name: "Hard disks, read at 10:31",
+    });
+    const hddTiles = within(hdd).getAllByRole("listitem");
+    expect(hddTiles.map((t) => t.textContent.split(":")[0])).toEqual([
+      "sda",
+      "sdi",
+      "sdo",
+      "sdp",
+      "sdr",
+      "sds",
+      "sdt",
+      "sdu",
+    ]);
+    expect(hddTiles[1]?.textContent).toBe("sdi: Asleep");
+    expect(hddTiles[6]?.textContent).toBe(
+      nb("sdt: 46 °C, at or over the alert limit"),
+    );
     // One scale and one limit for every group: each tile's limit is at the same height.
     const limits = [...byKind.querySelectorAll<HTMLElement>(".ch-kt-limit")];
     expect(limits).toHaveLength(24);
     expect(new Set(limits.map((l) => l.style.getPropertyValue("--y")))).toEqual(
       new Set(["0.8"]),
     );
-    // The words say what is true: device order within a kind, and no slot reported.
+    // The words say what is true: device order within a group, and no slot reported.
     const caption = byKind.querySelector(".ch-caption")?.textContent ?? "";
     expect(caption).toContain("device order");
     expect(caption).toContain(
       "the NAS does not report which slot of the case a disk is in",
     );
-    expect(byKind.textContent).toContain(
-      "the NAS does not report which slot of the case a disk is in",
-    );
     expect(container.textContent).not.toMatch(/bay order|where it sits/iu);
   });
 
-  it("stacks the 24 disks' ties, counts a tall column and names it on focus", async () => {
+  it("on the dashboard, shows the 24 disks' group over the limit and opens the rest on request", async () => {
+    const user = userEvent.setup();
     open("still=1&disks=24");
-    const temps = tempsSubject();
-    const list = within(temps).getAllByRole("list", {
-      name: "Disk temperatures read at 10:31",
-    })[0] as HTMLElement;
-    expect(within(list).getAllByRole("listitem")).toHaveLength(11);
-    expect(
-      within(list).getByText(
-        "35 °C: the hard disks sdb, sdc, sde, sdk and sdo.",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      within(list).getByText(
-        "46 °C: the hard disk sdt, at or over the alert limit.",
-      ),
-    ).toBeInTheDocument();
-    const five = within(temps).getByRole("button", {
-      name: /^5 disks at 35\s°C$/u,
+    const inPlace = screen.getByRole("region", { name: "In place" });
+    const dash = within(inPlace).getByRole("region", {
+      name: "Disk temperatures",
     });
-    act(() => {
-      five.focus();
+    // The group with sdt, over the limit, is shown whole; sdt is never behind the disclosure.
+    const hdd = within(dash).getByRole("list", {
+      name: "Hard disks, read at 10:31",
     });
+    const sdt = within(hdd)
+      .getAllByRole("listitem")
+      .find((t) => t.textContent.startsWith("sdt"));
+    expect(sdt).toBeVisible();
+    expect(within(dash).getAllByRole("listitem")).toHaveLength(8);
     expect(
-      await screen.findByText(
-        "35 °C: sdb, sdc, sde, sdk and sdo",
-        {},
-        { timeout: 2000 },
+      within(dash).getByText(
+        "The other 16 disks are between 31 °C and 43 °C, under the alert limit of 45 °C.",
       ),
     ).toBeInTheDocument();
     expect(
-      within(temps).getAllByText(
-        "sdt is at 46 °C, at or over the alert limit of 45 °C.",
-      ).length,
-    ).toBeGreaterThan(0);
+      within(dash).queryByRole("list", {
+        name: "Backup, Mirror (RAID 1), read at 10:31",
+      }),
+    ).toBeNull();
+    const more = within(dash).getByRole("button", {
+      name: "Show the other 16 disks",
+    });
+    expect(more).toHaveAttribute("aria-expanded", "false");
+    await user.click(more);
+    expect(more).toHaveAttribute("aria-expanded", "true");
     expect(
-      within(temps).getAllByText(/sdi and sdu are asleep/u).length,
-    ).toBeGreaterThan(0);
+      within(dash).getByRole("list", {
+        name: "Backup, Mirror (RAID 1), read at 10:31",
+      }),
+    ).toBeInTheDocument();
+    expect(within(dash).getAllByRole("listitem")).toHaveLength(24);
+    // The Disks page shows every disk, with no disclosure.
+    const page = within(inPlace).getByRole("region", { name: "Temperatures" });
+    expect(within(page).getAllByRole("listitem")).toHaveLength(24);
+    expect(within(page).queryByRole("button")).toBeNull();
+  });
+
+  it("on the dashboard, shows all six disks with no disclosure", () => {
+    open("still=1");
+    const inPlace = screen.getByRole("region", { name: "In place" });
+    const dash = within(inPlace).getByRole("region", {
+      name: "Disk temperatures",
+    });
+    expect(within(dash).getAllByRole("listitem")).toHaveLength(6);
+    expect(within(dash).queryByRole("button")).toBeNull();
+  });
+
+  it("draws every bar and the waffle filled, with no outline", () => {
+    const { container } = open("still=1&disks=24");
+    // The stylesheet: the track, the level and the squares are fills, and none has a border, an
+    // outline, a shadow or a stroke; the empty part is the one --ch-empty.
+    const rules = [...chartsCss.matchAll(/([^{}]+)\{([^}]*)\}/gu)];
+    const amounts = rules.filter(([, selector]) =>
+      /\.ch-kt-bar|\.ch-kt-level|\.ch-wf-empty|\.ch-wf-used/u.test(
+        selector ?? "",
+      ),
+    );
+    expect(amounts.length).toBeGreaterThan(4);
+    for (const [, selector, body] of amounts) {
+      expect(selector).not.toMatch(/::?(after|before)/u);
+      // No property that draws round it (a token's name may say "stroke"; a property may not).
+      expect(body).not.toMatch(
+        /(^|[;{\s])(border(?!-radius)[\w-]*|outline[\w-]*|box-shadow|stroke[\w-]*)\s*:/u,
+      );
+    }
+    expect(chartsCss).toMatch(
+      /\.ch-kt-bar \{[^}]*background: var\(--ch-empty\)/u,
+    );
+    expect(chartsCss).toMatch(/\.ch-wf-empty \{[^}]*fill: var\(--ch-empty\)/u);
+    expect(chartsCss).toMatch(/--ch-empty: #b9c6d2;/u);
+    expect(chartsCss).toMatch(
+      /\.dark \.omv-lab-charts \{\s*--ch-empty: #3b495b;/u,
+    );
+    expect(chartsCss).not.toMatch(/dashed var\(--theme-usage-track-edge\)/u);
+    // The markup: no stroke on a square, no element drawn round a bar.
+    for (const rect of container.querySelectorAll(".ch-wf-svg rect")) {
+      expect(rect.getAttribute("stroke")).toBeNull();
+    }
+    for (const bar of container.querySelectorAll(".ch-kt-bar")) {
+      expect(
+        [...bar.children].every((c) => c.classList.contains("ch-kt-level")),
+      ).toBe(true);
+    }
+    // The waffle's empty squares have no switch any more.
+    expect(container.querySelector("[data-empty]")).toBeNull();
+    expect(screen.queryByText("Empty squares")).toBeNull();
   });
 
   it("switches between 6 and 24 disks from the lab and says so in the query", async () => {
@@ -296,7 +382,9 @@ describe("the chart lab", () => {
     await user.click(screen.getByRole("button", { name: "24 disks" }));
     expect(window.location.search).toContain("disks=24");
     expect(
-      screen.getAllByRole("button", { name: /^5 disks at 35\s°C$/u }).length,
+      screen.getAllByRole("heading", {
+        name: "Archive, Double parity (RAID 6)",
+      }).length,
     ).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", { name: "6 disks" }));
     expect(window.location.search).not.toContain("disks=");

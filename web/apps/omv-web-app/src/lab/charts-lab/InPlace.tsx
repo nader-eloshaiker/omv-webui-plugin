@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chosen charts at the size they would have, where the owner judges them: a copy of one row of
 // the NAS map (the dashboard lab's markup and stylesheet) with the waffle in its storage cell, a copy
-// of the "Right now" strip with the two live charts, and the temperatures along one scale under
-// them; then the Disks page's temperatures, by kind with a level each (the lead's suggestion: the
-// spread on the dashboard, each disk's own level on the Disks page). Both draw the disks' pictures.
-// Development only (UI-11).
+// of the "Right now" strip with the two live charts, and the temperatures by kind with each array and
+// pool as a group under them; then the same on the Disks page (owner, round four: by kind on both).
+// The dashboard keeps it short past eight disks: the groups with a disk over its limit, and the rest
+// behind a disclosure (model.ts, dashboardSplit). Development only (UI-11).
 import type { IconName } from "@omv-webui/react-ui-components";
 import { Icon, StatusIcon } from "@omv-webui/react-ui-components";
 import type { ItemProps } from "../dashboard/Bay.tsx";
@@ -12,10 +12,10 @@ import { SlotTile } from "../dashboard/Bay.tsx";
 import type { Layout, MapDisk } from "../dashboard/model.ts";
 import type { Series } from "./feed.ts";
 import { PairedStrip } from "./LiveCharts.tsx";
-import type { DiskTemp, Space } from "./model.ts";
+import type { DiskGroup, Space } from "./model.ts";
 import { spanWords } from "./model.ts";
 import { Waffle } from "./SpaceCharts.tsx";
-import { TempByKind, TempStacks } from "./TempCharts.tsx";
+import { TempByKind } from "./TempCharts.tsx";
 
 const noop = () => undefined;
 
@@ -60,14 +60,14 @@ export function InPlace({
   space,
   series,
   paused,
-  disks,
+  groups,
   readAt,
   layout,
   onNote,
 }: {
   space: Space;
   series: Series;
-  disks: readonly DiskTemp[];
+  groups: readonly DiskGroup[];
   readAt: string;
   paused: boolean;
   layout: Layout;
@@ -208,7 +208,7 @@ export function InPlace({
           </h3>
           <p className="dm-region-note">Read at {readAt}</p>
         </header>
-        <TempStacks disks={disks} readAt={readAt} />
+        <TempByKind groups={groups} readAt={readAt} place="dashboard" />
       </section>
       <p className="ch-size-title">On the Disks page</p>
       <section
@@ -218,11 +218,11 @@ export function InPlace({
       >
         <header className="dm-region-head">
           <h3 id="ch-kind-title" className="dm-region-title">
-            Temperatures by kind
+            Temperatures
           </h3>
           <p className="dm-region-note">Read at {readAt}</p>
         </header>
-        <TempByKind disks={disks} readAt={readAt} />
+        <TempByKind groups={groups} readAt={readAt} place="page" />
       </section>
     </div>
   );

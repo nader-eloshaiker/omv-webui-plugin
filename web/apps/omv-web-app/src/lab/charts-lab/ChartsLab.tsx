@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart prototype, in the lab: development only (UI-11). Round two (owner, 2026-11-26): the
-// waffle for space, "Two charts, four series" for the live readouts, and two ways to draw the
-// temperatures (along one scale, stacked; by kind, each with its level). Round three: the drive
-// pictures, a sheet of their own at the top of the temperatures. Each subject shows its chart with
-// one sentence on what it shows and why, the page ends with them in place at the size they would
-// have, and the round-one candidates the owner did not pick are listed under "Not chosen", one line
-// each.
+// waffle for space, "Two charts, four series" for the live readouts. Round three: the drive
+// pictures, a sheet of their own at the top of the temperatures. Round four: the temperatures by
+// kind, with each RAID array and ZFS pool as a group, on the dashboard and on the Disks page; every
+// bar and the waffle filled, with no outline. Each subject shows its chart with one sentence on what
+// it shows and why, the page ends with them in place at the size they would have, and the candidates
+// the owner did not pick are listed under "Not chosen", one line each.
 //
 // The query string selects what is shown and never acts (UI-4): screen=charts, theme=dark|light,
 // density=comfortable|compact, width=full|900|390 (frames the page), motion=full|reduced, still=1 (a
 // fixed set of 40 readings, paused, for screenshots), copy=1 (the Data drive read after a 1 TiB
-// copy), disks=24 (24 disks instead of six), empty=edge (the waffle's empty squares in the outline colour),
-// chrome=0 hides the lab's controls.
+// copy), disks=24 (24 disks instead of six), chrome=0 hides the lab's controls.
 import { Button, UiProvider } from "@omv-webui/react-ui-components";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +35,7 @@ import { SpanLine } from "./LiveCharts.tsx";
 import type { Space } from "./model.ts";
 import {
   clock,
+  diskGroups,
   DISKS,
   DISKS_24,
   FILE_SYSTEMS,
@@ -43,16 +43,13 @@ import {
   SMART_SETTINGS,
   spaceOf,
   tempOf,
+  VOLUMES,
+  VOLUMES_24,
   withCopy,
 } from "./model.ts";
 import type { SpaceSize } from "./SpaceCharts.tsx";
 import { OverWord } from "./SpaceCharts.tsx";
-import type {
-  ChartsDisks,
-  ChartsEmpty,
-  ChartsView,
-  ChartsWidth,
-} from "./states.ts";
+import type { ChartsDisks, ChartsView, ChartsWidth } from "./states.ts";
 import { chartsQuery, readChartsView } from "./states.ts";
 
 type Chart = (props: { space: Space; size: SpaceSize }) => ReactNode;
@@ -135,7 +132,6 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
   const [copy, setCopy] = useState(initial.copy);
   const [chrome, setChrome] = useState(initial.chrome);
   const [diskSet, setDiskSet] = useState<ChartsDisks>(initial.disks);
-  const [empty, setEmpty] = useState<ChartsEmpty>(initial.empty);
   const [paused, setPaused] = useState(initial.still);
   const [note, setNote] = useState<{ id: number; text: string } | null>(null);
   const { readings, take } = useReadings(initial.still, paused);
@@ -156,6 +152,7 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
   const disks = (diskSet === "24" ? DISKS_24 : DISKS).map((d) =>
     tempOf(d, SMART_SETTINGS),
   );
+  const groups = diskGroups(disks, diskSet === "24" ? VOLUMES_24 : VOLUMES);
 
   useEffect(() => {
     const q = chartsQuery({
@@ -167,20 +164,9 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
       copy,
       chrome,
       disks: diskSet,
-      empty,
     });
     window.history.replaceState(null, "", `${window.location.pathname}?${q}`);
-  }, [
-    theme,
-    density,
-    motion,
-    width,
-    copy,
-    chrome,
-    diskSet,
-    empty,
-    initial.still,
-  ]);
+  }, [theme, density, motion, width, copy, chrome, diskSet, initial.still]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -215,19 +201,14 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
   return (
     <div className="omv-lab-dash omv-lab-charts" data-motion={motion}>
       <MotionScope reduced={motion === "reduced"}>
-        <div
-          ref={frameRef}
-          className="ch-frame"
-          data-width={width}
-          data-empty={empty}
-        >
+        <div ref={frameRef} className="ch-frame" data-width={width}>
           <header className="ch-head">
             <h1>Charts</h1>
             <p>
-              The charts chosen for the space a file system uses and the live
-              readouts, two ways to draw the disks&apos; temperatures, then all
-              of them in place. Every figure comes from a read the contract
-              names, and the live charts draw only the readings this page took.
+              The charts chosen for the space a file system uses, the live
+              readouts and the disks&apos; temperatures, then all of them in
+              place. Every figure comes from a read the contract names, and the
+              live charts draw only the readings this page took.
             </p>
           </header>
 
@@ -329,10 +310,11 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                   opened; it never wakes a sleeping disk. The alert limit is the
                   one set in the disk health settings, 45{NBSP}°C here, and is
                   drawn only when one is set. A disk&apos;s kind comes from its
-                  device name and its health information.{" "}
+                  device name and its health information, and its group from the
+                  RAID and ZFS lists.{" "}
                   {diskSet === "24"
-                    ? "These are 24 disks: five share 35\u00a0°C, four 36\u00a0°C, and three each 34\u00a0°C and 37\u00a0°C."
-                    : "These are the dashboard's six disks."}
+                    ? "These are 24 disks in three arrays and a pool, and ten in none. The Archive array is shown rebuilding, on purpose, so its group says so."
+                    : "These are the dashboard's six disks: sdb and sdc make the Backup mirror, and sdd the pool tank."}
                 </p>
               </div>
               <div className="ch-tools" role="group" aria-label="Disks">
@@ -387,7 +369,7 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                   <p className="ch-caption">{c.caption}</p>
                 </div>
                 <div className="ch-body">
-                  <c.Chart disks={disks} readAt={readAt} />
+                  <c.Chart groups={groups} readAt={readAt} place="page" />
                 </div>
               </article>
             ))}
@@ -399,10 +381,11 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 <h2 id="ch-inplace-title">In place</h2>
                 <p className="ch-intro">
                   On the dashboard, the waffle in a row of the NAS map, the two
-                  live charts as the Right now strip, and the temperatures
-                  stacked along one scale, where the spread across all the disks
-                  matters. On the Disks page, the temperatures by kind, where
-                  each disk&apos;s own level matters. Both at the size they
+                  live charts as the Right now strip, and the temperatures by
+                  kind with each array and pool as a group. Past eight disks the
+                  dashboard shows only the groups with a disk over the alert
+                  limit and sums up the rest in a sentence, with a way to open
+                  them; the Disks page shows every disk. Both at the size they
                   would have.
                 </p>
               </div>
@@ -412,7 +395,7 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 space={dataDrive}
                 series={series}
                 paused={paused}
-                disks={disks}
+                groups={groups}
                 readAt={readAt}
                 layout={layout}
                 onNote={onNote}
@@ -425,8 +408,7 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               <div>
                 <h2 id="ch-not-title">Not chosen</h2>
                 <p className="ch-intro">
-                  The round-one candidates the owner did not pick, one line
-                  each.
+                  The candidates the owner did not pick, one line each.
                 </p>
               </div>
             </div>
@@ -477,16 +459,6 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               ["compact", "Compact"],
             ]}
             onChange={setDensity}
-          />
-          <Toggle
-            label="Empty squares"
-            value={empty}
-            options={[
-              ["divider", "Divider"],
-              ["edge", "Edge"],
-              ["slate", "Slate"],
-            ]}
-            onChange={setEmpty}
           />
           <Toggle
             label="Animations"
