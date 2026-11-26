@@ -989,3 +989,19 @@ The owner saw the rebuilt dashboard and approved its parts: the partly filled li
 The welcome did not pass. The one-line welcome of rethink P.2 ("Welcome to the new interface…" with "Got it") is boring and hardly excites a person using the interface for the first time. The owner: this interface is a big change from an amateurish one and is professionally built, so it must read and look that way.
 
 The top of the dashboard on a first visit is therefore designed again, with candidates side by side in the lab before the page changes, as the charts were. The candidates cover both kinds of first visit (P.2: a new NAS, and the new interface on an existing NAS) and the everyday answer under them, including "No problems found so far" before disk health is checked. The rules still hold: style guide 10, no modal tour or anything that stands between a pro and a control (P.1 R1), every figure from a read, and "Show tips" turns the welcome off.
+
+## 2026-11-27 — Today's decisions, with the life of the first direction; dark by default (owner)
+
+The owner compared the rebuilt dashboard with the oldest lab screen, the "Instrument" direction of 2026-11-23 (`/ui/lab?dir=instrument&screen=dashboard`). The rebuilt page is boring and Instrument is exciting. The owner keeps the design decisions of the rebuilt page and wants the view to have Instrument's life, worked out with good UI and UX practice, exciting and usable. Style guide 10 still holds.
+
+What Instrument does that the rebuilt page lost:
+
+- a visible structure of grounds: regions on their own surfaces against a darker page;
+- large monospaced live figures over filled charts;
+- a composed grid that puts the answer, what needs you and live activity above the fold;
+- a scan line of every area's status under the headline;
+- colour that carries meaning throughout.
+
+These come back within the rules. A surface must group what the person reads as one, never be a card by habit. The scan line is status icons and words, not pills. No uppercase labels, separators or arrows.
+
+**The interface opens dark by default.** A first visit with no stored choice is dark whatever the system setting is, as "dark first" (2026-11-23) said. Light stays one choice away in the account menu.
