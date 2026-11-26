@@ -45,6 +45,7 @@ import {
   usesFsMock,
   type FsMockState,
 } from "./fsScenarios.ts";
+import { withLiveCounters, withLiveSystem } from "./liveFigures.ts";
 import {
   behindConnection,
   isNetworkScenario,
@@ -1308,26 +1309,31 @@ export function scenarioAnswers(
     },
     systemGetInformation: () => {
       beforePendingRead();
+      // The processor and memory move from reply to reply (liveFigures.ts), so the live chart draws.
+      const live = (answer: FixedAnswer) => withLiveSystem(answer, Date.now());
       return name === "servicePending" && session.dirty
-        ? guarded<never>(sambaPending())()
+        ? guarded<never>(live(sambaPending()))()
         : guarded<never>(
-            withHost(
-              withSmartDirty(
-                information(
-                  user
-                    ? "user"
-                    : session.dirty
-                      ? "adminPendingChanges"
-                      : name === "checklistHidden" ||
-                          DASHBOARD_WELCOME_DISMISSED.has(name) ||
-                          session.welcomeDismissed
-                        ? "adminWelcomeDismissed"
-                        : "admin",
-                  {
-                    now: name !== "attention" && !DASHBOARD_ATTENTION.has(name),
-                    rebootRequired:
-                      name === "attention" || DASHBOARD_ATTENTION.has(name),
-                  },
+            live(
+              withHost(
+                withSmartDirty(
+                  information(
+                    user
+                      ? "user"
+                      : session.dirty
+                        ? "adminPendingChanges"
+                        : name === "checklistHidden" ||
+                            DASHBOARD_WELCOME_DISMISSED.has(name) ||
+                            session.welcomeDismissed
+                          ? "adminWelcomeDismissed"
+                          : "admin",
+                    {
+                      now:
+                        name !== "attention" && !DASHBOARD_ATTENTION.has(name),
+                      rebootRequired:
+                        name === "attention" || DASHBOARD_ATTENTION.has(name),
+                    },
+                  ),
                 ),
               ),
             ),
@@ -1538,9 +1544,22 @@ export function scenarioAnswers(
         : diskRead("fileSystemMgmtGetList"),
     smartGetListBg: guarded("smartDevices"),
     servicesGetStatus: guarded(SERVICE_SCENARIOS[name] ?? "sshOnly"),
-    networkEnumerateDevicesList: guarded(
-      DASHBOARD_NETWORK[name] ?? "ethernetAndLoopback",
-    ),
+    // The byte counters move from reply to reply (liveFigures.ts), so the network chart draws.
+    networkEnumerateDevicesList: () => {
+      const reply = DASHBOARD_NETWORK[name] ?? "ethernetAndLoopback";
+      return guarded<never>(
+        withLiveCounters(
+          typeof reply === "string"
+            ? {
+                status: 200,
+                value:
+                  CONTRACT_EXAMPLES.networkEnumerateDevicesList[reply].value,
+              }
+            : reply,
+          Date.now(),
+        ),
+      )();
+    },
     logFileGetList: ({ params }) => {
       const log = logFor(params);
       if (log === "syslog" && name === "logsLarge") {
