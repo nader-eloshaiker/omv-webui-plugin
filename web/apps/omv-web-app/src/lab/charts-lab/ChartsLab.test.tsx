@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart lab as the owner meets it: each subject with its chosen chart, the meters carrying their
-// values, the live charts' text alternatives and their per-half scales, the temperatures as a list
-// for screen readers at 6 and 24 disks, nothing of the generated look, and still=1 the same on
-// every render. Lab fixtures only; nothing here reaches the network.
+// values, the live charts' text alternatives and their per-half scales, the drive pictures by kind,
+// the temperatures as a list for screen readers at 6 and 24 disks, the groups by kind with captions
+// that claim no slot, nothing of the generated look, and still=1 the same on every render. Lab
+// fixtures only; nothing here reaches the network.
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
@@ -25,6 +26,17 @@ afterEach(() => {
 const nb = (words: string) =>
   words.replace(/(\d) (?=[%A-Za-z°])/gu, "$1\u00a0");
 
+/** The temperatures subject; the dashboard in place has a region of the same name. */
+function tempsSubject(): HTMLElement {
+  const section = screen
+    .getByRole("heading", { level: 2, name: "Disk temperatures" })
+    .closest("section");
+  if (!section) {
+    throw new Error("no temperatures subject");
+  }
+  return section;
+}
+
 describe("the chart lab", () => {
   it("shows each subject with its chart and its sentence, then in place, then what was not chosen", () => {
     open("still=1");
@@ -34,7 +46,7 @@ describe("the chart lab", () => {
     expect(subjects).toEqual([
       "Space used on a file system",
       "Live readouts",
-      "Disk temperatures across the bay",
+      "Disk temperatures",
       "In place",
       "Not chosen",
     ]);
@@ -42,8 +54,9 @@ describe("the chart lab", () => {
     expect(candidates.map((a) => a.querySelector("h3")?.textContent)).toEqual([
       "The waffle",
       "Two charts, four series",
+      "Drive pictures",
       "Along one scale, stacked",
-      "In bay order, as caddies",
+      "By kind, each with its level",
     ]);
     for (const article of candidates) {
       const caption = article.querySelector(".ch-caption")?.textContent ?? "";
@@ -125,18 +138,20 @@ describe("the chart lab", () => {
     const lists = screen.getAllByRole("list", {
       name: "Disk temperatures read at 10:31",
     });
-    // Both candidates, and both in place (the dashboard and the Disks page).
-    expect(lists).toHaveLength(4);
+    // The stacked chart, as a candidate and in place on the dashboard; the groups by kind are lists
+    // of their own.
+    expect(lists).toHaveLength(2);
     const items = within(lists[0] as HTMLElement)
       .getAllByRole("listitem")
       .map((li) => li.textContent);
+    // The pictures are decorative, so each disk's kind is said in the words.
     expect(items).toEqual(
       [
-        "31 °C: sde.",
-        "34 °C: nvme0n1.",
-        "35 °C: sdb.",
-        "36 °C: sda.",
-        "37 °C: sdc.",
+        "31 °C: the SSD sde.",
+        "34 °C: the NVMe SSD nvme0n1.",
+        "35 °C: the hard disk sdb.",
+        "36 °C: the hard disk sda.",
+        "37 °C: the hard disk sdc.",
       ].map(nb),
     );
     expect(
@@ -144,20 +159,113 @@ describe("the chart lab", () => {
     ).toHaveLength(4);
   });
 
+  it("draws each disk as its kind, decoratively, and names the kinds in the key and the sheet", () => {
+    const { container } = open("still=1");
+    const temps = tempsSubject();
+    const sheet = within(temps).getByRole("article", {
+      name: "Drive pictures",
+    });
+    for (const name of ["Hard disk", "SSD", "NVMe SSD"]) {
+      expect(within(sheet).getByText(name)).toBeInTheDocument();
+    }
+    const sheetPictures = sheet.querySelectorAll("svg.ch-dp");
+    expect(sheetPictures).toHaveLength(9);
+    for (const kind of ["hdd", "ssd", "nvme"]) {
+      for (const size of ["marker", "tile", "large"]) {
+        expect(
+          sheet.querySelector(`svg[data-kind="${kind}"][data-size="${size}"]`),
+        ).not.toBeNull();
+      }
+    }
+    // Every picture is decorative, and its inks come from the stylesheet's neutral classes alone:
+    // no colour is written into the drawing.
+    for (const svg of container.querySelectorAll("svg.ch-dp")) {
+      expect(svg.closest("[aria-hidden='true']")).not.toBeNull();
+      expect(svg.querySelectorAll("[fill], [stroke], [style]")).toHaveLength(0);
+      for (const part of svg.querySelectorAll("[class]")) {
+        expect(part.getAttribute("class")).toMatch(/^dp-[a-z]+$/u);
+      }
+    }
+    // The stacked chart draws one marker picture per disk read: five, as a candidate and in place.
+    const markers = container.querySelectorAll(
+      ".ch-st-svg .ch-dp[data-size='marker']",
+    );
+    expect(markers).toHaveLength(10);
+    const stacked = within(temps).getByRole("article", {
+      name: "Along one scale, stacked",
+    });
+    const key = stacked.querySelector(".ch-st-key");
+    expect(key?.textContent).toContain("Hard disk");
+    expect(key?.textContent).toContain("NVMe SSD");
+    expect(key?.querySelectorAll("svg.ch-dp")).toHaveLength(3);
+  });
+
+  it("groups the disks by kind on one scale, says which is asleep, and claims no slot", () => {
+    const { container } = open("still=1&disks=24");
+    const byKind = screen.getByRole("article", {
+      name: "By kind, each with its level",
+    });
+    expect(
+      within(byKind)
+        .getAllByRole("heading", { level: 4 })
+        .map((h) => h.textContent),
+    ).toEqual(["Hard disks", "SSDs", "NVMe SSDs, on the mainboard"]);
+    const hdd = within(byKind).getByRole("list", {
+      name: "Hard disks, read at 10:31",
+    });
+    const tiles = within(hdd).getAllByRole("listitem");
+    expect(tiles).toHaveLength(20);
+    expect(tiles[0]?.textContent).toBe(nb("sda: 34 °C"));
+    expect(
+      tiles.find((t) => t.textContent.startsWith("sdi"))?.textContent,
+    ).toBe("sdi: Asleep");
+    // A sleeping disk has no level.
+    expect(hdd.querySelector(".ch-kt[data-asleep] .ch-kt-level")).toBeNull();
+    expect(
+      tiles.find((t) => t.textContent.startsWith("sdt"))?.textContent,
+    ).toBe(nb("sdt: 46 °C, at or over the alert limit"));
+    const sticks = within(byKind).getByRole("list", {
+      name: "NVMe SSDs, on the mainboard, read at 10:31",
+    });
+    expect(
+      within(sticks)
+        .getAllByRole("listitem")
+        .map((t) => t.textContent),
+    ).toEqual(["nvme0n1: 41 °C", "nvme1n1: 43 °C"].map(nb));
+    // One scale and one limit for every group: each tile's limit is at the same height.
+    const limits = [...byKind.querySelectorAll<HTMLElement>(".ch-kt-limit")];
+    expect(limits).toHaveLength(24);
+    expect(new Set(limits.map((l) => l.style.getPropertyValue("--y")))).toEqual(
+      new Set(["0.8"]),
+    );
+    // The words say what is true: device order within a kind, and no slot reported.
+    const caption = byKind.querySelector(".ch-caption")?.textContent ?? "";
+    expect(caption).toContain("device order");
+    expect(caption).toContain(
+      "the NAS does not report which slot of the case a disk is in",
+    );
+    expect(byKind.textContent).toContain(
+      "the NAS does not report which slot of the case a disk is in",
+    );
+    expect(container.textContent).not.toMatch(/bay order|where it sits/iu);
+  });
+
   it("stacks the 24 disks' ties, counts a tall column and names it on focus", async () => {
     open("still=1&disks=24");
-    const temps = screen.getByRole("region", {
-      name: "Disk temperatures across the bay",
-    });
+    const temps = tempsSubject();
     const list = within(temps).getAllByRole("list", {
       name: "Disk temperatures read at 10:31",
     })[0] as HTMLElement;
     expect(within(list).getAllByRole("listitem")).toHaveLength(11);
     expect(
-      within(list).getByText("35 °C: sdb, sdc, sde, sdk and sdo."),
+      within(list).getByText(
+        "35 °C: the hard disks sdb, sdc, sde, sdk and sdo.",
+      ),
     ).toBeInTheDocument();
     expect(
-      within(list).getByText("46 °C: sdt, at or over the alert limit."),
+      within(list).getByText(
+        "46 °C: the hard disk sdt, at or over the alert limit.",
+      ),
     ).toBeInTheDocument();
     const five = within(temps).getByRole("button", {
       name: /^5 disks at 35\s°C$/u,

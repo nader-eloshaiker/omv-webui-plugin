@@ -33,7 +33,7 @@ export interface ChartsView {
   /** `copy=1`: the Data drive read again after 1 TiB was copied to it. */
   copy: boolean;
   chrome: boolean;
-  /** `disks=24`: the 24-disk bay with its ties, instead of the dashboard lab's six. */
+  /** `disks=24`: the 24 disks with their ties, instead of the dashboard lab's six. */
   disks: ChartsDisks;
   empty: ChartsEmpty;
 }

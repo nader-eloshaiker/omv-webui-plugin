@@ -626,10 +626,16 @@ export type DiskRead = Pick<
   "devicename" | "temperature" | "powermode"
 >;
 
+/** A disk's kind, for its picture and its group only. */
+export type DriveKind = "hdd" | "ssd" | "nvme";
+
 export interface TempFixture {
   read: DiskRead;
-  /** For the marker's shape only: from DiskMgmt.getList `devicename` and Smart's device details. */
-  kind: "hdd" | "ssd" | "nvme";
+  /**
+   * For the picture and the group only: an NVMe SSD from DiskMgmt.getList `devicename`, an SSD or
+   * a hard disk from Smart.getInformation `rotationrate` ("Solid State Device" or a speed in rpm).
+   */
+  kind: DriveKind;
   /** Smart.getDeviceSettings `tempmax`; 0 uses the setting for every disk. */
   tempmax: number;
 }
@@ -708,12 +714,49 @@ export function overLimit(d: DiskTemp): boolean {
 // ─── Along one scale, stacked ─────────────────────────────────────────────────────────────────
 //
 // SMART reports whole degrees, so several disks often share one. Disks at the same degree stack
-// upward into a column, one marker each, so the spread reads like a histogram and no marker hides
-// another. A column of up to three names its disks above it; a taller one says how many and names
-// them on pointer or focus. The hottest column always names its disks. Everything here is in
-// pixels, with y measured up from the axis.
+// upward into a column, one marker each (the disk's picture at marker size), so the spread reads
+// like a histogram and no marker hides another. A column of up to three names its disks above it; a
+// taller one says how many and names them on pointer or focus. The hottest column always names its
+// disks. Everything here is in pixels, with y measured up from the axis.
 
-/** The disks read at one whole degree, in bay order. */
+/**
+ * Each kind's marker, in pixels: a 3.5" hard disk upright, a smaller 2.5" SSD upright, and an M.2
+ * stick lying down. None is wider than MARKER_W or taller than the pitch leaves room for.
+ */
+export const MARKER_BOX: Record<DriveKind, { w: number; h: number }> = {
+  hdd: { w: 12, h: 15 },
+  ssd: { w: 10, h: 13 },
+  nvme: { w: 16, h: 6 },
+};
+export const MARKER_W = 16;
+/** The step between two markers in a column: 3px clear above the tallest. */
+export const MARKER_PITCH = 18;
+
+/** The drive pictures' sizes (DrivePicture.tsx): on the scale, on the Disks page, in a key. */
+export type DriveSize = "marker" | "tile" | "large";
+
+/**
+ * Each picture's size in pixels. The hard disk and the SSD keep the 3.5" to 2.5" proportion; the
+ * tile hard disk's height and the tile stick's length are the by-kind view's scale (56px).
+ */
+export const DRIVE_BOX: Record<
+  DriveSize,
+  Record<DriveKind, { w: number; h: number }>
+> = {
+  marker: MARKER_BOX,
+  tile: {
+    hdd: { w: 40, h: 56 },
+    ssd: { w: 29, h: 40 },
+    nvme: { w: 56, h: 16 },
+  },
+  large: {
+    hdd: { w: 52, h: 72 },
+    ssd: { w: 37, h: 52 },
+    nvme: { w: 88, h: 24 },
+  },
+};
+
+/** The disks read at one whole degree, in device order. */
 export interface Stack {
   c: number;
   disks: DiskTemp[];
@@ -787,9 +830,13 @@ export interface StackLayout {
   width: number;
   /** The height above the axis that the columns and their labels need. */
   height: number;
-  /** The marker's size and the step between two markers in a column. */
+  /**
+   * The widest marker, the step between two markers in a column, and the markers' scale: 1, the
+   * size they are drawn for, unless the degrees are closer than a marker is wide.
+   */
   m: number;
   pitch: number;
+  k: number;
   stacks: PlacedStack[];
   /** The degrees written under the axis: every column's, unless two would touch. */
   axis: { c: number; x: number }[];
@@ -821,13 +868,18 @@ export function stackLayout(
   { width, lo, hi }: { width: number; lo: number; hi: number },
 ): StackLayout {
   const perDegree = (width - 2 * STACK_PAD) / Math.max(1, hi - lo);
-  const m = Math.min(12, Math.max(7, perDegree - 3));
-  const pitch = m + 2;
+  // A pixel clear between the widest markers of two neighbouring degrees.
+  const k = Math.min(1, Math.max(0.3, (perDegree - 1) / MARKER_W));
+  const m = MARKER_W * k;
+  const pitch = MARKER_PITCH * k;
   const xOf = (c: number) => STACK_PAD + (c - lo) * perDegree;
   const hottest = stacks.at(-1)?.c ?? null;
   const columns = stacks.map((s) => {
     const x = xOf(s.c);
-    const markers = s.disks.map((_, i) => ({ x, y: 2 + m / 2 + i * pitch }));
+    const markers = s.disks.map((_, i) => ({
+      x,
+      y: 2 + pitch / 2 + i * pitch,
+    }));
     return { ...s, x, markers, top: 2 + s.disks.length * pitch };
   });
   // Every column's markers are in the way of every label.
@@ -839,6 +891,7 @@ export function stackLayout(
   }));
   const placed: Box[] = [];
   const labels = new Map<number, StackLabel>();
+  const done = new Set<number>();
   // The hottest first, so it sits on its column, then left to right.
   const order = [...columns].sort((a, b) =>
     a.c === hottest ? -1 : b.c === hottest ? 1 : a.x - b.x,
@@ -851,32 +904,60 @@ export function stackLayout(
         ? s.disks.map((d) => d.device)
         : [diskCount(s.disks.length)];
     const { w, h } = labelSize(lines, kind);
-    const x1 = Math.min(Math.max(0, s.x - w / 2), Math.max(0, width - w));
+    const inside = (x: number) =>
+      Math.min(Math.max(0, x), Math.max(0, width - w));
+    // Centred on its column, or slid to one side while it still covers its column, so a wide
+    // count can stay clear of a neighbour's column.
+    const xs = [
+      inside(s.x - w / 2),
+      inside(s.x - w + 6),
+      inside(s.x - 6),
+    ].filter((x, i, all) => all.indexOf(x) === i);
     const base = s.top + 4;
-    const candidates = [
+    const ys = [
       base,
       ...obstacles.map((o) => o.y2 + 4),
       ...placed.map((p) => p.y1 - h - 4),
     ]
       .filter((y) => y >= base)
       .sort((a, b) => a - b);
-    const fits = (y: number) => {
-      const box = { x1, y1: y, x2: x1 + w, y2: y + h };
+    // The space above a column whose label is still to come, where its leader may need to run.
+    const open = columns
+      .filter((o) => o.c !== s.c && !done.has(o.c))
+      .map((o) => ({ x1: o.x - 1, y1: o.top, x2: o.x + 1, y2: Infinity }));
+    const fits = (x: number, y: number, keepOpen: boolean) => {
+      const box = { x1: x, y1: y, x2: x + w, y2: y + h };
       if (obstacles.some((o) => overlaps(o, box))) {
+        return false;
+      }
+      if (keepOpen && open.some((o) => overlaps(o, box))) {
         return false;
       }
       const leader = { x1: s.x - 0.5, y1: s.top, x2: s.x + 0.5, y2: y };
       return y <= base || !placed.some((p) => overlaps(p, leader));
     };
-    const y =
-      candidates.find(fits) ?? Math.max(...obstacles.map((o) => o.y2)) + 4;
-    const box = { x1, y1: y, x2: x1 + w, y2: y + h };
+    const find = (keepOpen: boolean) => {
+      for (const y of ys) {
+        const x = xs.find((xx) => fits(xx, y, keepOpen));
+        if (x !== undefined) {
+          return { x, y };
+        }
+      }
+      return undefined;
+    };
+    const spot = (s.c === hottest ? undefined : find(true)) ??
+      find(false) ?? {
+        x: xs[0] ?? 0,
+        y: Math.max(...obstacles.map((o) => o.y2)) + 4,
+      };
+    const box = { x1: spot.x, y1: spot.y, x2: spot.x + w, y2: spot.y + h };
     placed.push(box);
     obstacles.push(box);
-    if (y > base) {
-      obstacles.push({ x1: s.x - 1, y1: s.top, x2: s.x + 1, y2: y });
+    if (spot.y > base) {
+      obstacles.push({ x1: s.x - 1, y1: s.top, x2: s.x + 1, y2: spot.y });
     }
-    labels.set(s.c, { kind, lines, box, leader: y > base });
+    done.add(s.c);
+    labels.set(s.c, { kind, lines, box, leader: spot.y > base });
   }
   const placedStacks = columns.map((s) => {
     const label = labels.get(s.c);
@@ -902,6 +983,7 @@ export function stackLayout(
     height: height + 4,
     m,
     pitch,
+    k,
     stacks: placedStacks,
     axis,
     x0: STACK_PAD - lo * perDegree,
@@ -909,39 +991,78 @@ export function stackLayout(
   };
 }
 
-// ─── In bay order, as caddies ─────────────────────────────────────────────────────────────────
+// ─── By kind ──────────────────────────────────────────────────────────────────────────────────
+//
+// DiskMgmt.getList does not say which physical slot a disk is in, and an NVMe SSD normally sits on
+// the mainboard rather than in a drive bay. So the Disks page groups the disks by kind and keeps
+// device order within a group, and claims nothing about where a disk sits in the case.
 
-/**
- * How many caddies go in one row of the bay: all of them when they fit in `width` (pixels, each
- * slot `slot` wide with `gap` between), otherwise the largest of 12, 8, 6, 4, 3 or 2 that fits, as
- * the rows of a real chassis are.
- */
-export function bayPerRow(
-  n: number,
-  width: number,
-  slot: number,
-  gap: number,
-): number {
-  const fit = Math.max(1, Math.floor((width + gap) / (slot + gap)));
-  if (n <= fit) {
-    return Math.max(1, n);
-  }
-  return [12, 8, 6, 4, 3, 2].find((k) => k <= fit) ?? 1;
+/** The kind's name, as the key and the page write it. */
+export const KIND_NAME: Record<DriveKind, string> = {
+  hdd: "Hard disk",
+  ssd: "SSD",
+  nvme: "NVMe SSD",
+};
+
+const KIND_PLURAL: Record<DriveKind, string> = {
+  hdd: "hard disks",
+  ssd: "SSDs",
+  nvme: "NVMe SSDs",
+};
+
+const KIND_ORDER: readonly DriveKind[] = ["hdd", "ssd", "nvme"];
+
+export interface KindGroup {
+  kind: DriveKind;
+  title: string;
+  disks: DiskTemp[];
 }
 
-/** The disks in rows of `perRow`, keeping the bay's order. */
-export function bayRows<T>(disks: readonly T[], perRow: number): T[][] {
-  const rows: T[][] = [];
-  for (let i = 0; i < disks.length; i += perRow) {
-    rows.push(disks.slice(i, i + perRow));
+const byDevice = new Intl.Collator("en", { numeric: true });
+
+/** The disks by kind, hard disks first, each group in device order; a kind with no disk is left out. */
+export function kindGroups(disks: readonly DiskTemp[]): KindGroup[] {
+  const titles: Record<DriveKind, string> = {
+    hdd: "Hard disks",
+    ssd: "SSDs",
+    nvme: "NVMe SSDs, on the mainboard",
+  };
+  return KIND_ORDER.flatMap((kind) => {
+    const list = disks
+      .filter((d) => d.kind === kind)
+      .sort((a, b) => byDevice.compare(a.device, b.device));
+    return list.length === 0
+      ? []
+      : [{ kind, title: titles[kind], disks: list }];
+  });
+}
+
+/**
+ * The disks with their kind in words, for the text that stands in for the pictures: "the hard
+ * disks sda and sdh, and the SSD sdq". Kinds in the order of the groups, devices in the given order.
+ */
+export function diskWords(disks: readonly DiskTemp[]): string {
+  const parts = KIND_ORDER.flatMap((kind) => {
+    const names = disks.filter((d) => d.kind === kind).map((d) => d.device);
+    if (names.length === 0) {
+      return [];
+    }
+    const word =
+      names.length === 1
+        ? KIND_NAME[kind].replace(/^Hard/u, "hard")
+        : KIND_PLURAL[kind];
+    return [`the ${word} ${listWords(names)}`];
+  });
+  if (parts.length <= 1) {
+    return parts.join("");
   }
-  return rows;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1) ?? ""}`;
 }
 
 /** The lab's Smart.getSettings: the admin asked to hear when a disk reaches 45 °C. */
 export const SMART_SETTINGS: Pick<SmartSettings, "tempmax"> = { tempmax: 45 };
 
-/** The lab's DiskMgmt.getList, the dashboard lab's bay; sdd is asleep, so it has no reading. */
+/** The lab's DiskMgmt.getList, the dashboard lab's six disks; sdd is asleep, so it has no reading. */
 export const DISKS: readonly TempFixture[] = [
   {
     read: { devicename: "nvme0n1", temperature: "34", powermode: "UNKNOWN" },
@@ -975,7 +1096,7 @@ export const DISKS: readonly TempFixture[] = [
   },
 ];
 
-function bayDisk(
+function listDisk(
   devicename: string,
   temperature: string,
   kind: TempFixture["kind"] = "hdd",
@@ -997,35 +1118,35 @@ function bayDisk(
 }
 
 /**
- * A 24-disk DiskMgmt.getList, in bay order: two NVMe sticks and 22 drives, two of them SSDs. SMART
+ * A 24-disk DiskMgmt.getList, in device order: two NVMe sticks and 22 drives, two of them SSDs. SMART
  * reports whole degrees, so ties are common: five disks at 35 °C, four at 36 °C, three each at 34 °C
- * and 37 °C. sdi and sdu are asleep, and sdt, in the warm middle of the bay, is past the 45 °C limit.
+ * and 37 °C. sdi and sdu are asleep, and sdt is past the 45 °C limit.
  */
 export const DISKS_24: readonly TempFixture[] = [
-  bayDisk("nvme0n1", "41", "nvme"),
-  bayDisk("nvme1n1", "43", "nvme"),
-  bayDisk("sda", "34"),
-  bayDisk("sdb", "35"),
-  bayDisk("sdc", "35"),
-  bayDisk("sdd", "36"),
-  bayDisk("sde", "35"),
-  bayDisk("sdf", "37"),
-  bayDisk("sdg", "36"),
-  bayDisk("sdh", "34"),
-  bayDisk("sdi", ""),
-  bayDisk("sdj", "38"),
-  bayDisk("sdk", "35"),
-  bayDisk("sdl", "36"),
-  bayDisk("sdm", "37"),
-  bayDisk("sdn", "39"),
-  bayDisk("sdo", "35"),
-  bayDisk("sdp", "36"),
-  bayDisk("sdq", "33", "ssd"),
-  bayDisk("sdr", "34"),
-  bayDisk("sds", "37"),
-  bayDisk("sdt", "46"),
-  bayDisk("sdu", ""),
-  bayDisk("sdv", "31", "ssd"),
+  listDisk("nvme0n1", "41", "nvme"),
+  listDisk("nvme1n1", "43", "nvme"),
+  listDisk("sda", "34"),
+  listDisk("sdb", "35"),
+  listDisk("sdc", "35"),
+  listDisk("sdd", "36"),
+  listDisk("sde", "35"),
+  listDisk("sdf", "37"),
+  listDisk("sdg", "36"),
+  listDisk("sdh", "34"),
+  listDisk("sdi", ""),
+  listDisk("sdj", "38"),
+  listDisk("sdk", "35"),
+  listDisk("sdl", "36"),
+  listDisk("sdm", "37"),
+  listDisk("sdn", "39"),
+  listDisk("sdo", "35"),
+  listDisk("sdp", "36"),
+  listDisk("sdq", "33", "ssd"),
+  listDisk("sdr", "34"),
+  listDisk("sds", "37"),
+  listDisk("sdt", "46"),
+  listDisk("sdu", ""),
+  listDisk("sdv", "31", "ssd"),
 ];
 
 /** A temperature with its unit: "36 °C". */

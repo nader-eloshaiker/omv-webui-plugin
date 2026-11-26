@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart prototype, in the lab: development only (UI-11). Round two (owner, 2026-11-26): the
 // waffle for space, "Two charts, four series" for the live readouts, and two ways to draw the
-// temperatures (along one scale, stacked; in bay order, as caddies). Each subject shows its chart
-// with one sentence on what it shows and why, the page ends with them in place at the size they would have, and
-// the round-one candidates the owner did not pick are listed under "Not chosen", one line each.
+// temperatures (along one scale, stacked; by kind, each with its level). Round three: the drive
+// pictures, a sheet of their own at the top of the temperatures. Each subject shows its chart with
+// one sentence on what it shows and why, the page ends with them in place at the size they would
+// have, and the round-one candidates the owner did not pick are listed under "Not chosen", one line
+// each.
 //
 // The query string selects what is shown and never acts (UI-4): screen=charts, theme=dark|light,
 // density=comfortable|compact, width=full|900|390 (frames the page), motion=full|reduced, still=1 (a
 // fixed set of 40 readings, paused, for screenshots), copy=1 (the Data drive read after a 1 TiB
-// copy), disks=24 (the 24-disk bay), empty=edge (the waffle's empty squares in the outline colour),
+// copy), disks=24 (24 disks instead of six), empty=edge (the waffle's empty squares in the outline colour),
 // chrome=0 hides the lab's controls.
 import { Button, UiProvider } from "@omv-webui/react-ui-components";
 import type { ReactNode } from "react";
@@ -27,6 +29,7 @@ import {
   TEMP_CANDIDATES,
 } from "./candidates.ts";
 import "./charts.css";
+import { DriveSheet } from "./DriveSheet.tsx";
 import { seriesOf, STILL_COUNT, STILL_START, useReadings } from "./feed.ts";
 import { InPlace } from "./InPlace.tsx";
 import { SpanLine } from "./LiveCharts.tsx";
@@ -320,15 +323,16 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
           <section className="ch-subject" aria-labelledby="ch-temp-title">
             <div className="ch-subject-head">
               <div>
-                <h2 id="ch-temp-title">Disk temperatures across the bay</h2>
+                <h2 id="ch-temp-title">Disk temperatures</h2>
                 <p className="ch-intro">
                   From the disk list, read once at {readAt} when the page
                   opened; it never wakes a sleeping disk. The alert limit is the
                   one set in the disk health settings, 45{NBSP}°C here, and is
-                  drawn only when one is set.{" "}
+                  drawn only when one is set. A disk&apos;s kind comes from its
+                  device name and its health information.{" "}
                   {diskSet === "24"
-                    ? "This is a bay of 24 disks: five share 35\u00a0°C, four 36\u00a0°C, and three each 34\u00a0°C and 37\u00a0°C."
-                    : "This is the dashboard's bay of six disks."}
+                    ? "These are 24 disks: five share 35\u00a0°C, four 36\u00a0°C, and three each 34\u00a0°C and 37\u00a0°C."
+                    : "These are the dashboard's six disks."}
                 </p>
               </div>
               <div className="ch-tools" role="group" aria-label="Disks">
@@ -354,6 +358,24 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 </Button>
               </div>
             </div>
+            <article
+              className="ch-candidate"
+              aria-labelledby="ch-temp-pictures"
+            >
+              <div>
+                <h3 id="ch-temp-pictures">Drive pictures</h3>
+                <p className="ch-caption">
+                  Each kind of disk drawn as what it is: a hard disk with its
+                  platter and head arm, an SSD as a slab of chips with its
+                  connector, and an NVMe SSD as a long stick with its contacts
+                  at one end. Each size is drawn for itself, in the text and
+                  divider inks, so the shape alone tells the kinds apart.
+                </p>
+              </div>
+              <div className="ch-body">
+                <DriveSheet />
+              </div>
+            </article>
             {TEMP_CANDIDATES.map((c) => (
               <article
                 key={c.id}
@@ -378,10 +400,10 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
                 <p className="ch-intro">
                   On the dashboard, the waffle in a row of the NAS map, the two
                   live charts as the Right now strip, and the temperatures
-                  stacked along one scale, where the spread across the bay
-                  matters. On the Disks page, the temperatures in bay order,
-                  where finding the hot disk in the case matters. Both at the
-                  size they would have.
+                  stacked along one scale, where the spread across all the disks
+                  matters. On the Disks page, the temperatures by kind, where
+                  each disk&apos;s own level matters. Both at the size they
+                  would have.
                 </p>
               </div>
             </div>

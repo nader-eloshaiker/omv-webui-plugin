@@ -3,12 +3,13 @@
  * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
  * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
  * densities follow. No colour literal. Geometry from data reaches the CSS as custom properties
- * through the CSSOM (--w, --x, --y, --h, --left, --top, --lw, --per-row); nothing is a style
- * attribute in markup (UI-1).
+ * through the CSSOM (--w, --x, --y, --h, --k, --left, --top, --lw); nothing is a style attribute
+ * in markup (UI-1).
  *
  * Colour: the usage blue for how full and how warm (one hue), the series teal and violet for the
- * lines of the two live charts, warning only past an admin's mark or limit with its words, and the
- * text inks for every word and figure. No accent, no glow, no pulse, no card.
+ * lines of the two live charts, warning only past an admin's mark or limit with its words, the text
+ * inks for every word and figure, and the text and divider inks for the drive pictures, whose shape
+ * says the kind. No accent, no glow, no pulse, no card, no light on a drive.
  */
 
 .omv-lab-charts {
@@ -498,10 +499,14 @@
   fill: var(--theme-foreground);
   font-variant-numeric: tabular-nums;
 }
-.ch-st-mark {
-  fill: var(--theme-usage);
+/* A disk at or past its limit: its marker in the warning ink, with its sentence under the chart. */
+.ch-st-mark[data-over] .ch-dp .dp-body,
+.ch-st-mark[data-over] .ch-dp .dp-platter,
+.ch-st-mark[data-over] .ch-dp .dp-arm {
+  stroke: var(--theme-warning-stroke);
 }
-.ch-st-mark[data-over] {
+.ch-st-mark[data-over] .ch-dp .dp-ink,
+.ch-st-mark[data-over] .ch-dp .dp-chip {
   fill: var(--theme-warning-stroke);
 }
 .ch-st-leader {
@@ -570,103 +575,226 @@
 .ch-st-key {
   margin-block-start: 10px;
 }
-.ch-st-key-mark {
-  width: 12px;
-  height: 12px;
-  fill: var(--theme-usage);
-}
 .ch-over-note {
   margin-block-start: 8px;
 }
 
-/* ─── Temperatures: in bay order, as caddies ──────────────────────────────────────────────────── */
-.ch-bay-wrap {
-  min-width: 0;
+/* ─── Drive pictures (DrivePicture.tsx) ───────────────────────────────────────────────────────── */
+/* The text and divider inks only: the body in the muted fill with a secondary-text outline, the
+   platter in the divider fill with a body-ink edge, the chips solid. No light, no series colour. */
+.ch-dp {
+  display: block;
+  flex: none;
+  overflow: visible;
 }
-/* The chassis, as the library's DriveBay draws it: a flat fill and a hairline, no light. */
-.ch-bay {
+.ch-dp .dp-body {
+  fill: var(--theme-muted);
+  stroke: var(--theme-muted-foreground);
+}
+.ch-dp[data-size="marker"] .dp-body {
+  stroke: var(--theme-foreground);
+}
+.ch-dp .dp-platter {
+  fill: var(--theme-border);
+  stroke: var(--theme-foreground);
+}
+.ch-dp .dp-ring {
+  fill: none;
+  stroke: var(--theme-muted);
+}
+.ch-dp .dp-hub {
+  fill: var(--theme-muted);
+  stroke: var(--theme-foreground);
+}
+.ch-dp .dp-arm {
+  fill: none;
+  stroke: var(--theme-foreground);
+}
+.ch-dp .dp-ink {
+  fill: var(--theme-foreground);
+}
+.ch-dp .dp-chip {
+  fill: var(--theme-muted-foreground);
+}
+.ch-dp .dp-faint {
+  fill: var(--theme-border);
+}
+.ch-dp .dp-pin {
+  fill: none;
+  stroke: var(--theme-muted-foreground);
+}
+.ch-dp .dp-conn {
+  fill: var(--theme-border);
+  stroke: var(--theme-muted-foreground);
+}
+
+/* The sheet: each kind at its three sizes, bottom-aligned, named. */
+.ch-dp-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr));
+  gap: 28px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ch-dp-kind {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 12px 14px 14px;
-  border-radius: var(--radius-lg);
-  background: var(--theme-art-chassis-top);
-  box-shadow: inset 0 0 0 1px var(--theme-border);
-  --cw: 44px;
 }
-:root[data-density="compact"] .ch-bay {
-  --cw: 36px;
+.ch-dp-name {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: var(--font-weight-semibold);
 }
-.ch-bay-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--per-row), 48px);
+.ch-dp-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 22px;
+}
+.ch-dp-size {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
-:root[data-density="compact"] .ch-bay-row {
-  grid-template-columns: repeat(var(--per-row), 44px);
+.ch-dp-frame {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 72px;
 }
-.ch-bay-slot {
+.ch-dp-size-name {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+}
+
+/* ─── Temperatures: by kind, each with its level ──────────────────────────────────────────────── */
+/* --lv is the scale's length in every group: the height of an upright level and of the tile hard
+   disk, and the length of a lying level and of the tile stick, so a degree is the same distance
+   everywhere and the limit sits at one height. */
+.ch-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  --lv: 56px;
+}
+.ch-kind-title {
+  margin: 0 0 10px;
+  font-size: var(--text-sm);
+  line-height: 20px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-foreground);
+}
+.ch-kind-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 52px);
+  gap: 16px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ch-kind-tiles[data-kind="nvme"] {
+  grid-template-columns: repeat(auto-fill, 72px);
+  gap: 16px 12px;
+}
+.ch-kt {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   min-width: 0;
 }
-.ch-bay-caddy {
-  display: block;
-  width: var(--cw);
-  height: calc(var(--cw) * 120 / 56);
-  margin-block-end: 4px;
-  stroke-linejoin: round;
+/* Upright: the picture, and the level beside it, both standing on one baseline. */
+.ch-kt-art {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: var(--lv);
+  margin-block-end: 6px;
 }
-.ch-bay-body {
-  fill: var(--theme-surface);
-  stroke: var(--theme-art-line);
-  stroke-width: 1.5;
+.ch-kt-bar {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--theme-usage-track);
+  overflow: hidden;
 }
-.ch-bay-slot[data-over] .ch-bay-body {
-  stroke: var(--theme-warning-stroke);
-  stroke-width: 2.5;
+.ch-kt-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--theme-usage-track-edge);
 }
-.ch-bay-window {
-  fill: var(--theme-usage-track);
+.ch-kt[data-asleep] .ch-kt-bar {
+  background: none;
 }
-.ch-bay-window-edge {
-  fill: none;
-  stroke: var(--theme-usage-track-edge);
-  stroke-width: 1;
+.ch-kt[data-asleep] .ch-kt-bar::after {
+  box-shadow: none;
+  border: 1px dashed var(--theme-usage-track-edge);
 }
-.ch-bay-slot[data-asleep] .ch-bay-window-edge {
-  stroke-dasharray: 3 2.5;
+.ch-kt-level {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: calc(var(--k) * 100%);
+  background: var(--theme-usage);
 }
-.ch-bay-level {
-  fill: var(--theme-usage);
+.ch-kt[data-over] .ch-kt-level {
+  background: var(--theme-warning-stroke);
 }
-.ch-bay-slot[data-over] .ch-bay-level {
-  fill: var(--theme-warning-stroke);
+/* The alert limit: one dashed line at its height, through the tile and half the gap either side, so
+   the tiles of a row join it into one straight line. */
+.ch-kt-limit {
+  position: absolute;
+  inset-inline: -5px;
+  inset-block-start: calc(var(--lv) * (1 - var(--y)));
+  border-block-start: 1.5px dashed var(--theme-foreground);
+  pointer-events: none;
 }
-.ch-bay-handle {
-  fill: var(--theme-muted-strong);
-  stroke: var(--theme-art-line);
-  stroke-width: 1.5;
+/* Lying down: the stick, and under it the level running along it from left to right. */
+.ch-kt[data-kind="nvme"] .ch-kt-art {
+  flex-direction: column;
+  align-self: center;
+  align-items: stretch;
+  width: var(--lv);
+  height: auto;
 }
-.ch-bay-faint {
-  fill: none;
-  stroke: var(--theme-art-faint);
-  stroke-width: 2;
-  stroke-linecap: round;
+.ch-kt[data-kind="nvme"] .ch-kt-bar {
+  width: 100%;
+  height: 8px;
 }
-.ch-bay-device {
+.ch-kt[data-kind="nvme"] .ch-kt-level {
+  inset-block: 0;
+  inset-inline: 0 auto;
+  width: calc(var(--k) * 100%);
+  height: auto;
+}
+.ch-kt[data-kind="nvme"] .ch-kt-limit {
+  inset-inline: calc(var(--y) * 100%) auto;
+  inset-block: auto -4px;
+  height: 16px;
+  translate: -1px 0;
+  border-block-start: none;
+  border-inline-start: 2px solid var(--theme-foreground);
+}
+.ch-kt-device {
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 16px;
   font-weight: var(--font-weight-semibold);
   color: var(--theme-foreground);
 }
-.ch-bay-value {
+.ch-kt-value {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -676,21 +804,13 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.ch-bay-slot[data-over] .ch-bay-value {
+.ch-kt[data-over] .ch-kt-value {
   color: var(--theme-warning-label);
   font-weight: var(--font-weight-semibold);
 }
-.ch-bay-value svg {
+.ch-kt-value svg {
   width: 12px;
   height: 12px;
-}
-/* The alert limit: one dashed line straight across every caddy of the row, at its height. */
-.ch-bay-limit {
-  position: absolute;
-  inset-inline: -6px;
-  inset-block-start: calc(var(--cw) * (10 + 72 * (1 - var(--y))) / 56);
-  border-block-start: 1.5px dashed var(--theme-foreground);
-  pointer-events: none;
 }
 
 /* ─── In place ────────────────────────────────────────────────────────────────────────────────── */

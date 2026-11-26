@@ -3,7 +3,7 @@
 // and the ones not chosen, one line each. Development only (UI-11).
 import { PairedStrip } from "./LiveCharts.tsx";
 import { Waffle } from "./SpaceCharts.tsx";
-import { TempCaddies, TempStacks } from "./TempCharts.tsx";
+import { TempByKind, TempStacks } from "./TempCharts.tsx";
 
 export const SPACE_CANDIDATES = [
   {
@@ -30,15 +30,15 @@ export const TEMP_CANDIDATES = [
     id: "stacked",
     title: "Along one scale, stacked",
     caption:
-      "Disks at the same whole degree stack upward into a column, one marker each with its shape saying its kind, so the spread across the bay reads like a histogram and no marker hides another.",
+      "Disks at the same whole degree stack upward into a column, each drawn as a small picture of its kind, so the spread across all the disks reads like a histogram and no picture hides another.",
     Chart: TempStacks,
   },
   {
-    id: "caddies",
-    title: "In bay order, as caddies",
+    id: "by-kind",
+    title: "By kind, each with its level",
     caption:
-      "Each disk keeps its slot in the bay, drawn as its caddy with the temperature as a level on one shared scale and the alert limit as one line straight across them, so a hot disk is found where it sits.",
-    Chart: TempCaddies,
+      "Hard disks, SSDs and NVMe SSDs in groups of their own, each disk drawn as its kind with its temperature as a level on one scale shared by every group, and the alert limit at the same height through every tile. The order within a group is the device order, because the NAS does not report which slot of the case a disk is in.",
+    Chart: TempByKind,
   },
 ] as const;
 
@@ -71,7 +71,7 @@ export const NOT_CHOSEN = [
   },
   {
     subject: "Temperatures",
-    title: "In bay order, as thermometers",
-    line: "A thermometer tube per slot on a shared scale; the owner found it easier to read but not outstanding.",
+    title: "One thermometer for each disk",
+    line: "A thermometer tube per disk on a shared scale, in device order; the owner found it easier to read but not outstanding.",
   },
 ] as const;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chart lab's pure rules: what a meter reads from a file system row, the waffle's squares and
 // its gap at the mark, the live window and its honest span, the chart geometry's gaps, each network
-// half's own scale, and the temperatures' limit, stacks, labels and bay rows.
+// half's own scale, and the temperatures' limit, stacks, marker pictures, labels and kind groups.
 import { describe, expect, it } from "vitest";
 import {
   NO_READINGS,
@@ -14,14 +14,17 @@ import {
 } from "./feed.ts";
 import type { Box, DiskTemp, StackLayout } from "./model.ts";
 import {
-  bayPerRow,
-  bayRows,
   DISKS,
   DISKS_24,
+  diskWords,
+  DRIVE_BOX,
   EVERY_MS,
   FILE_SYSTEMS,
+  kindGroups,
   linePath,
   liveAlt,
+  MARKER_BOX,
+  MARKER_PITCH,
   MIN_RATE_SCALE,
   niceMax,
   overlaps,
@@ -272,7 +275,7 @@ describe("temperatures along one scale, stacked", () => {
     });
   }
 
-  it("stacks the 24 disks by whole degree, coolest first, in bay order within a degree", () => {
+  it("stacks the 24 disks by whole degree, coolest first, in device order within a degree", () => {
     const stacks = stacksOf(bay);
     expect(stacks.map((s) => [s.c, s.disks.length])).toEqual([
       [31, 1],
@@ -298,20 +301,54 @@ describe("temperatures along one scale, stacked", () => {
     expect(stacks.reduce((n, s) => n + s.disks.length, 0)).toBe(22);
   });
 
-  it("never lets one marker overlap another, ties included", () => {
+  it("draws every marker picture at its own size, within the widest and with room in the pitch", () => {
+    for (const box of Object.values(MARKER_BOX)) {
+      expect(box.w).toBeLessThanOrEqual(16);
+      expect(box.h).toBeLessThanOrEqual(MARKER_PITCH - 3);
+    }
+    // The three outlines differ: the hard disk upright, the SSD a smaller slab, the stick long.
+    expect(MARKER_BOX.hdd.h).toBeGreaterThan(MARKER_BOX.ssd.h);
+    expect(MARKER_BOX.nvme.w / MARKER_BOX.nvme.h).toBeGreaterThan(2);
+    expect(DRIVE_BOX.marker).toBe(MARKER_BOX);
+    // The by-kind view's one scale: the tile hard disk's height is the tile stick's length.
+    expect(DRIVE_BOX.tile.hdd.h).toBe(DRIVE_BOX.tile.nvme.w);
+  });
+
+  it("never lets one marker picture overlap another, ties included", () => {
     for (const list of [six, bay]) {
       for (const width of WIDTHS) {
         const layout = layoutAt(list, width);
-        const marks = layout.stacks.flatMap((s) => s.markers);
-        expect(marks).toHaveLength(list.filter((d) => d.c !== null).length);
-        marks.forEach((a, i) => {
-          marks.slice(i + 1).forEach((b) => {
-            const apart = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-            expect(apart).toBeGreaterThanOrEqual(layout.m);
+        // At these widths the degrees are far enough apart for the pictures at their drawn size.
+        expect(layout.k).toBe(1);
+        expect(layout.pitch).toBe(MARKER_PITCH);
+        const boxes: Box[] = layout.stacks.flatMap((s) =>
+          s.disks.map((d, i) => {
+            const p = s.markers[i] ?? { x: 0, y: 0 };
+            const { w, h } = MARKER_BOX[d.kind];
+            return {
+              x1: p.x - w / 2,
+              y1: p.y - h / 2,
+              x2: p.x + w / 2,
+              y2: p.y + h / 2,
+            };
+          }),
+        );
+        expect(boxes).toHaveLength(list.filter((d) => d.c !== null).length);
+        boxes.forEach((a, i) => {
+          expect(a.y1).toBeGreaterThanOrEqual(0);
+          boxes.slice(i + 1).forEach((b) => {
+            expect(overlaps(a, b)).toBe(false);
           });
         });
       }
     }
+  });
+
+  it("shrinks the markers only when the degrees are closer than a marker is wide", () => {
+    const stacks = stacksOf(bay);
+    const narrow = stackLayout(stacks, { width: 326, lo: 20, hi: 60 });
+    expect(narrow.k).toBeLessThan(1);
+    expect(narrow.m).toBeLessThan(narrow.perDegree);
   });
 
   it("keeps every label inside the chart and clear of the other labels and every column", () => {
@@ -341,6 +378,33 @@ describe("temperatures along one scale, stacked", () => {
     }
   });
 
+  it("never runs a leader through another column's label", () => {
+    // At 390 the six disks' nvme0n1 label is wide enough to reach over sdb's column: sdb's leader
+    // must not cross it.
+    const crossings: string[] = [];
+    for (const list of [six, bay]) {
+      for (const width of WIDTHS) {
+        const layout = layoutAt(list, width);
+        for (const s of layout.stacks.filter((t) => t.label.leader)) {
+          const leader: Box = {
+            x1: s.x - 0.5,
+            y1: s.top,
+            x2: s.x + 0.5,
+            y2: s.label.box.y1,
+          };
+          for (const other of layout.stacks) {
+            if (other.c !== s.c && overlaps(leader, other.label.box)) {
+              crossings.push(
+                `${String(list.length)} disks at ${String(width)}px: ${String(s.c)} crosses ${String(other.c)}`,
+              );
+            }
+          }
+        }
+      }
+    }
+    expect(crossings).toEqual([]);
+  });
+
   it("names a column of up to three, counts a taller one, and always names the hottest", () => {
     const layout = layoutAt(bay, 640);
     const at = (c: number) => layout.stacks.find((s) => s.c === c)?.label;
@@ -356,14 +420,54 @@ describe("temperatures along one scale, stacked", () => {
   });
 });
 
-describe("temperatures in bay order", () => {
-  it("fills a row when the disks fit, and otherwise uses rows of 12, 8 or 6 as a chassis does", () => {
-    expect(bayPerRow(6, 330, 48, 8)).toBe(6);
-    expect(bayPerRow(24, 330, 48, 8)).toBe(6);
-    expect(bayPerRow(24, 700, 48, 8)).toBe(12);
-    expect(bayPerRow(24, 500, 48, 8)).toBe(8);
-    const rows = bayRows(DISKS_24, 6);
-    expect(rows.map((r) => r.length)).toEqual([6, 6, 6, 6]);
-    expect(rows[3]?.at(-1)?.read.devicename).toBe("sdv");
+describe("temperatures by kind", () => {
+  const six = DISKS.map((d) => tempOf(d, SMART_SETTINGS));
+  const bay = DISKS_24.map((d) => tempOf(d, SMART_SETTINGS));
+
+  it("groups hard disks, SSDs and NVMe SSDs, each in device order, and says the sticks are on the mainboard", () => {
+    const groups = kindGroups(bay);
+    expect(groups.map((g) => [g.title, g.disks.length])).toEqual([
+      ["Hard disks", 20],
+      ["SSDs", 2],
+      ["NVMe SSDs, on the mainboard", 2],
+    ]);
+    const hdd = groups[0]?.disks.map((d) => d.device) ?? [];
+    expect(hdd.slice(0, 3)).toEqual(["sda", "sdb", "sdc"]);
+    expect(hdd.at(-1)).toBe("sdu");
+    expect(groups[1]?.disks.map((d) => d.device)).toEqual(["sdq", "sdv"]);
+    // Device order counts numerically: nvme2n1 before nvme10n1.
+    const sticks = kindGroups(
+      ["nvme10n1", "nvme2n1"].map((device) => ({
+        device,
+        kind: "nvme" as const,
+        c: 40,
+        asleep: false,
+        limit: null,
+      })),
+    );
+    expect(sticks[0]?.disks.map((d) => d.device)).toEqual([
+      "nvme2n1",
+      "nvme10n1",
+    ]);
+  });
+
+  it("leaves out a kind with no disk", () => {
+    const hddOnly = six.filter((d) => d.kind === "hdd");
+    expect(kindGroups(hddOnly).map((g) => g.kind)).toEqual(["hdd"]);
+    expect(kindGroups([])).toEqual([]);
+  });
+
+  it("says each disk's kind in words, for the text that stands in for the pictures", () => {
+    const pick = (...names: string[]) =>
+      bay.filter((d) => names.includes(d.device));
+    expect(diskWords(pick("sdq"))).toBe("the SSD sdq");
+    expect(diskWords(pick("sda"))).toBe("the hard disk sda");
+    expect(diskWords(pick("nvme0n1"))).toBe("the NVMe SSD nvme0n1");
+    expect(diskWords(pick("sda", "sdh", "sdr"))).toBe(
+      "the hard disks sda, sdh and sdr",
+    );
+    expect(diskWords(pick("sda", "sdh", "sdq", "nvme0n1"))).toBe(
+      "the hard disks sda and sdh, the SSD sdq, and the NVMe SSD nvme0n1",
+    );
   });
 });

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Two ways to draw the disks' temperatures across the bay (owner, round two): DiskMgmt.getList
+// Two ways to draw the disks' temperatures (owner, rounds two and three): DiskMgmt.getList
 // `temperature` and `powermode` (a read that never wakes a sleeping disk, so a disk in standby has
 // no figure), and the alert limit from Smart.getSettings `tempmax` (Smart.getDeviceSettings
 // `tempmax` for one disk), drawn only when the admin set one. One reading, when the page opened: no
 // history. Development only (UI-11).
 //
-// The marks are the usage blue, one hue for "how warm"; a disk at or past its alert limit takes the
+// Each disk is drawn as its kind (DrivePicture.tsx), in the neutral inks: the shape says the kind.
+// The levels are the usage blue, one hue for "how warm"; a disk at or past its alert limit takes the
 // warning colour only together with the sentence that says so.
 import {
   StatusIcon,
@@ -13,14 +14,16 @@ import {
   Tooltip,
 } from "@omv-webui/react-ui-components";
 import type { CSSProperties } from "react";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { useWidth } from "../reel/stages/useWidth.ts";
-import type { DiskTemp } from "./model.ts";
+import { DriveMarker, DrivePicture } from "./DrivePicture.tsx";
+import type { DiskTemp, DriveKind } from "./model.ts";
 import {
-  bayPerRow,
-  bayRows,
   celsius,
   diskCount,
+  diskWords,
+  KIND_NAME,
+  kindGroups,
   listWords,
   overLimit,
   sharedLimit,
@@ -35,31 +38,6 @@ const v = (name: string, value: number) =>
 
 function asleepOf(disks: readonly DiskTemp[]): string[] {
   return disks.filter((d) => d.asleep).map((d) => d.device);
-}
-
-/** The marker's shape says the kind of disk, so the chart does not lean on colour. */
-function Marker({ kind, m }: { kind: DiskTemp["kind"]; m: number }) {
-  const h = m / 2;
-  if (kind === "ssd") {
-    const s = h * 0.86;
-    return (
-      <rect
-        x={-s}
-        y={-s}
-        width={2 * s}
-        height={2 * s}
-        rx={Math.max(1, s / 3)}
-      />
-    );
-  }
-  if (kind === "nvme") {
-    return (
-      <path
-        d={`M0 ${String(-h)}L${String(h)} 0L0 ${String(h)}L${String(-h)} 0Z`}
-      />
-    );
-  }
-  return <circle r={h * 0.88} />;
 }
 
 function AsleepNote({ disks }: { disks: readonly DiskTemp[] }) {
@@ -95,7 +73,10 @@ function OverNote({ disks }: { disks: readonly DiskTemp[] }) {
   );
 }
 
-/** What a screen reader reads instead of the drawing: each degree with its disks, coolest first. */
+/**
+ * What a screen reader reads instead of the drawing: each degree with its disks and their kind,
+ * coolest first.
+ */
 function TextList({
   disks,
   readAt,
@@ -107,10 +88,26 @@ function TextList({
     <ul className="ch-sr" aria-label={`Disk temperatures read at ${readAt}`}>
       {stacksOf(disks).map((s) => (
         <li key={s.c}>
-          {`${celsius(s.c)}: ${listWords(s.disks.map((d) => d.device))}${s.disks.some(overLimit) ? ", at or over the alert limit" : ""}.`}
+          {`${celsius(s.c)}: ${diskWords(s.disks)}${s.disks.some(overLimit) ? ", at or over the alert limit" : ""}.`}
         </li>
       ))}
     </ul>
+  );
+}
+
+const KINDS: readonly DriveKind[] = ["hdd", "ssd", "nvme"];
+
+/** The key: each kind's picture at the size it has on the chart, with its name. */
+function KindKey() {
+  return (
+    <>
+      {KINDS.map((kind) => (
+        <span key={kind} className="ch-key-item">
+          <DrivePicture kind={kind} size="marker" />
+          {KIND_NAME[kind]}
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -121,10 +118,11 @@ const AXIS_PX = 20;
 const LIMIT_ROW_PX = 20;
 
 /**
- * Every disk as a marker on one temperature scale; disks at the same whole degree stack upward into
- * a column, so the spread reads like a histogram and no marker hides another. A column of up to
- * three names its disks; a taller one says how many and names them on pointer or focus. The hottest
- * column always names its disks. The alert limit is a dashed line with its value under the axis.
+ * Every disk as its marker picture on one temperature scale; disks at the same whole degree stack
+ * upward into a column, so the spread reads like a histogram and no marker hides another. A column
+ * of up to three names its disks; a taller one says how many and names them on pointer or focus.
+ * The hottest column always names its disks. The alert limit is a dashed line with its value under
+ * the axis.
  */
 export function TempStacks({
   disks,
@@ -198,7 +196,7 @@ export function TempStacks({
                   data-over={overLimit(d) || undefined}
                   transform={`translate(${p.x.toFixed(1)} ${(plotH - p.y).toFixed(1)})`}
                 >
-                  <Marker kind={d.kind} m={layout.m} />
+                  <DriveMarker kind={d.kind} k={layout.k} />
                 </g>
               );
             }),
@@ -266,37 +264,8 @@ export function TempStacks({
         )}
       </div>
       <p className="ch-key ch-st-key">
-        <span>Each marker is one disk at its whole degree Celsius:</span>
-        <span className="ch-key-item">
-          <svg
-            viewBox="-7 -7 14 14"
-            className="ch-st-key-mark"
-            aria-hidden="true"
-          >
-            <Marker kind="hdd" m={12} />
-          </svg>
-          hard disk
-        </span>
-        <span className="ch-key-item">
-          <svg
-            viewBox="-7 -7 14 14"
-            className="ch-st-key-mark"
-            aria-hidden="true"
-          >
-            <Marker kind="ssd" m={12} />
-          </svg>
-          SSD
-        </span>
-        <span className="ch-key-item">
-          <svg
-            viewBox="-7 -7 14 14"
-            className="ch-st-key-mark"
-            aria-hidden="true"
-          >
-            <Marker kind="nvme" m={12} />
-          </svg>
-          NVMe
-        </span>
+        <span>Each picture is one disk at its whole degree Celsius:</span>
+        <KindKey />
       </p>
       <OverNote disks={disks} />
       <AsleepNote disks={disks} />
@@ -304,144 +273,118 @@ export function TempStacks({
   );
 }
 
-// ─── B. In bay order, as caddies ──────────────────────────────────────────────────────────────
+// ─── B. By kind, each disk with its level ─────────────────────────────────────────────────────
 
-/** A slot's width and the gap between two, in pixels (the caddy is 44px wide, 36px compact). */
-const SLOT_PX = 48;
-const SLOT_GAP = 8;
-/** The chassis's padding either side. */
-const CHASSIS_PAD = 14;
-
-/** The caddy's level window in its 56 × 120 drawing, above the handle. */
-const WIN = { x: 10, y: 10, w: 36, h: 72 };
+/** One disk: its picture, and beside it (along it, for a stick) its level on the shared scale. */
+function KindTile({
+  d,
+  k,
+  limitAt,
+}: {
+  d: DiskTemp;
+  /** Where the reading sits on the scale, 0 to 1. */
+  k: number;
+  limitAt: number | null;
+}) {
+  const over = overLimit(d);
+  return (
+    <li
+      className="ch-kt"
+      data-kind={d.kind}
+      data-asleep={d.asleep || undefined}
+      data-over={over || undefined}
+    >
+      <span className="ch-kt-art" aria-hidden="true">
+        <DrivePicture kind={d.kind} size="tile" />
+        <span className="ch-kt-bar">
+          {d.c === null ? null : (
+            <span className="ch-kt-level" style={v("--k", k)} />
+          )}
+        </span>
+        {limitAt === null ? null : (
+          <span className="ch-kt-limit" style={v("--y", limitAt)} />
+        )}
+      </span>
+      <span className="ch-kt-device">{d.device}</span>
+      <span className="ch-sr">: </span>
+      <span className="ch-kt-value">
+        {d.c === null ? (
+          d.asleep ? (
+            "Asleep"
+          ) : (
+            "Not read"
+          )
+        ) : over ? (
+          <>
+            <StatusIcon status="warning" />
+            {celsius(d.c)}
+            <span className="ch-sr">, at or over the alert limit</span>
+          </>
+        ) : (
+          celsius(d.c)
+        )}
+      </span>
+    </li>
+  );
+}
 
 /**
- * Each disk in its place in the bay, drawn as its caddy, with its temperature as a level in the
- * caddy's window on one shared scale. The alert limit is one dashed line straight across every slot
- * of a row. A sleeping disk shows "Asleep" and no level.
+ * The disks in three groups by kind, each in device order, since the disk list does not say which
+ * slot of the case a disk is in, and an NVMe SSD sits on the mainboard rather than in a bay. Each
+ * tile is the disk's picture with its temperature as a level beside it, on one scale shared by
+ * every group: the alert limit is one dashed line at the same height through every upright tile,
+ * and a mark at the same temperature on each stick. A sleeping disk shows "Asleep" and no level.
  */
-export function TempCaddies({
+export function TempByKind({
   disks,
   readAt,
 }: {
   disks: readonly DiskTemp[];
   readAt: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const measured = useWidth(ref);
-  const width = measured > 0 ? measured : 640;
+  const id = useId();
   const limit = sharedLimit(disks);
   const { lo, hi } = tempScale(disks, limit);
   const at = (c: number) => Math.min(1, Math.max(0, (c - lo) / (hi - lo)));
-  const perRow = bayPerRow(
-    disks.length,
-    width - 2 * CHASSIS_PAD,
-    SLOT_PX,
-    SLOT_GAP,
-  );
-  const rows = bayRows(disks, perRow);
+  const limitAt = limit === null ? null : at(limit);
+  const groups = kindGroups(disks);
+  const hasStick = groups.some((g) => g.kind === "nvme");
   return (
-    <div className="ch-bay-wrap" ref={ref}>
-      <TextList disks={disks} readAt={readAt} />
-      <div className="ch-bay" aria-hidden="true">
-        {rows.map((row) => (
-          <div
-            key={row[0]?.device ?? "row"}
-            className="ch-bay-row"
-            style={v("--per-row", row.length)}
+    <div className="ch-kinds">
+      {groups.map((g) => (
+        <section
+          key={g.kind}
+          className="ch-kind"
+          aria-labelledby={`${id}-${g.kind}`}
+        >
+          <h4 id={`${id}-${g.kind}`} className="ch-kind-title">
+            {g.title}
+          </h4>
+          <ul
+            className="ch-kind-tiles"
+            data-kind={g.kind}
+            aria-label={`${g.title}, read at ${readAt}`}
           >
-            {row.map((d) => {
-              const k = d.c === null ? 0 : at(d.c);
-              return (
-                <div
-                  key={d.device}
-                  className="ch-bay-slot"
-                  data-asleep={d.asleep || undefined}
-                  data-over={overLimit(d) || undefined}
-                >
-                  <svg
-                    viewBox="0 0 56 120"
-                    className="ch-bay-caddy"
-                    focusable="false"
-                  >
-                    <rect
-                      x="2"
-                      y="2"
-                      width="52"
-                      height="116"
-                      rx="6"
-                      className="ch-bay-body"
-                    />
-                    <rect
-                      x={WIN.x}
-                      y={WIN.y}
-                      width={WIN.w}
-                      height={WIN.h}
-                      rx="3"
-                      className="ch-bay-window"
-                    />
-                    {d.c === null ? null : (
-                      <rect
-                        x={WIN.x}
-                        y={WIN.y + WIN.h * (1 - k)}
-                        width={WIN.w}
-                        height={WIN.h * k}
-                        rx="3"
-                        className="ch-bay-level"
-                      />
-                    )}
-                    <rect
-                      x={WIN.x}
-                      y={WIN.y}
-                      width={WIN.w}
-                      height={WIN.h}
-                      rx="3"
-                      className="ch-bay-window-edge"
-                    />
-                    <rect
-                      x="10"
-                      y="90"
-                      width="36"
-                      height="18"
-                      rx="4"
-                      className="ch-bay-handle"
-                    />
-                    {d.kind === "hdd" ? null : (
-                      <path d="M18 99h20" className="ch-bay-faint" />
-                    )}
-                  </svg>
-                  <span className="ch-bay-device">{d.device}</span>
-                  <span className="ch-bay-value">
-                    {d.c === null ? (
-                      d.asleep ? (
-                        "Asleep"
-                      ) : (
-                        "Not read"
-                      )
-                    ) : overLimit(d) ? (
-                      <>
-                        <StatusIcon status="warning" />
-                        {celsius(d.c)}
-                      </>
-                    ) : (
-                      celsius(d.c)
-                    )}
-                  </span>
-                </div>
-              );
-            })}
-            {limit === null ? null : (
-              <span className="ch-bay-limit" style={v("--y", at(limit))} />
-            )}
-          </div>
-        ))}
-      </div>
+            {g.disks.map((d) => (
+              <KindTile
+                key={d.device}
+                d={d}
+                k={d.c === null ? 0 : at(d.c)}
+                limitAt={limitAt}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
       <p className="ch-note">
-        Each caddy fills from {celsius(lo)} at the bottom of its window to{" "}
-        {celsius(hi)} at the top
+        Every level is on the same scale, from {celsius(lo)} to {celsius(hi)}:
+        from the bottom up beside each upright disk
+        {hasStick ? ", and from left to right under each NVMe stick" : ""}.
         {limit === null
-          ? "."
-          : `, and the dashed line across the caddies is the alert limit, ${celsius(limit)}.`}
+          ? ""
+          : ` The dashed line through the tiles${hasStick ? ", and the mark on each stick," : ""} is the alert limit, ${celsius(limit)}.`}{" "}
+        Within a kind the disks are in device order: the NAS does not report
+        which slot of the case a disk is in.
       </p>
       <OverNote disks={disks} />
       <AsleepNote disks={disks} />
