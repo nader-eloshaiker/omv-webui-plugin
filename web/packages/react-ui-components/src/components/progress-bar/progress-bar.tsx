@@ -60,13 +60,12 @@ const labelClass = cva("font-medium text-foreground", {
   defaultVariants: { size: "default" },
 });
 
-const trackClass = cva(
-  "w-full overflow-hidden rounded-full border border-usage-track-edge bg-usage-track",
-  {
-    variants: { size: { default: "h-2", compact: "h-1.5" } },
-    defaultVariants: { size: "default" },
-  },
-);
+// Filled, never outlined (style guide 5.6): the rest is the `usage-empty` slate, which clears 3:1
+// against the amount, and there is no edge round it.
+const trackClass = cva("w-full overflow-hidden rounded-full bg-usage-empty", {
+  variants: { size: { default: "h-2", compact: "h-1.5" } },
+  defaultVariants: { size: "default" },
+});
 
 const valueTextClass = cva(
   "min-w-0 text-muted-foreground tabular-nums [overflow-wrap:anywhere]",
@@ -78,7 +77,8 @@ const valueTextClass = cva(
 
 /**
  * How far a task has got (style guide 5.7), on Base UI's Progress (`role="progressbar"` with its
- * values). The bar is the usage blue on the usage track, as the capacity meter's. With `value: null`
+ * values). Filled, never outlined, as the capacity meter: the done part in the usage blue, the rest in
+ * the `usage-empty` slate. With `value: null`
  * the bar is indeterminate: a third-width bar that stands still (nothing pulses, style guide 10),
  * with the words saying the work goes on. The figures are always visible as text.
  */

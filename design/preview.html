@@ -16,8 +16,8 @@
   --brand-50:#edf7fe; --brand-100:#daeefe; --brand-200:#b4defc; --brand-300:#87c6f2; --brand-400:#5dacdf;
   --brand-500:#3991cb; --brand-600:#1272ab; --brand-700:#095a8a; --brand-800:#074469; --brand-900:#052e49; --brand-950:#021d30;
   --cobalt-400:#65a3ff; --cobalt-500:#2c84ff; --cobalt-600:#0065da; --cobalt-700:#004faf;
-  --slate-50:#f5f8fb; --slate-100:#eef3f8; --slate-200:#e8eef4; --slate-300:#dbe3eb; --slate-400:#a9b6c4; --slate-500:#8593a1;
-  --slate-550:#7d8b9b; --slate-600:#6b7885; --slate-650:#566373; --slate-700:#485667; --slate-800:#233042; --slate-850:#1d2939;
+  --slate-50:#f5f8fb; --slate-100:#eef3f8; --slate-200:#e8eef4; --slate-300:#dbe3eb; --slate-350:#c2cfdb; --slate-400:#a9b6c4; --slate-500:#8593a1;
+  --slate-550:#7d8b9b; --slate-600:#6b7885; --slate-650:#566373; --slate-700:#485667; --slate-750:#3b495b; --slate-800:#233042; --slate-850:#1d2939;
   --slate-900:#16212f; --slate-925:#111a27; --slate-950:#0a111c;
   --status-ok:#74e791; --status-warning:#f78f00; --status-critical:#d01d21; --status-unknown:#b6bfc7;
   --pending-fill:#ffcd47; --pending-ink:var(--brand-950);
@@ -38,7 +38,7 @@
   --unknown:var(--status-unknown); --unknown-stroke:#6b7782; --unknown-label:#4d5964; --unknown-wash:color-mix(in srgb, var(--status-unknown) 10%, transparent);
   --destructive:#b7191c; --destructive-foreground:#ffffff;
   --series-1:#563e98; --series-2:#009a9a; --series-3:#983c75; --series-4:#6f7d1a;
-  --usage:var(--brand-600); --usage-track:var(--slate-200); --usage-track-edge:var(--slate-600);
+  --usage:var(--brand-600); --usage-empty:var(--slate-350); --usage-track:var(--slate-200); --usage-track-edge:var(--slate-600);
   --terminal:#131619; --terminal-foreground:var(--slate-200); --terminal-muted:var(--slate-500);
   --shadow-control:0 1px 2px rgb(17 26 39 / 0.07);
   --shadow-raised:0 0 0 1px rgb(17 26 39 / 0.05), 0 1px 2px rgb(17 26 39 / 0.05), 0 10px 28px rgb(17 26 39 / 0.06);
@@ -71,7 +71,7 @@
   --unknown-stroke:var(--status-unknown); --unknown-label:#b3bcc3;
   --destructive:#f66d67; --destructive-foreground:var(--brand-950);
   --series-1:#a58de6; --series-2:#70f1da; --series-3:#c06099; --series-4:#b3c65f;
-  --usage:var(--brand-400); --usage-track:var(--slate-850); --usage-track-edge:var(--slate-550);
+  --usage:var(--brand-400); --usage-empty:var(--slate-750); --usage-track:var(--slate-850); --usage-track-edge:var(--slate-550);
   --terminal:#0b0e11;
   --shadow-control:inset 0 1px 0 rgb(255 255 255 / 0.06);
   --shadow-raised:inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.045), 0 10px 30px rgb(0 0 0 / 0.28);
@@ -157,9 +157,10 @@ tbody tr.selected { background:var(--selected); }
 input[type=checkbox] { accent-color:var(--selected-mark); width:16px; height:16px; }
 
 .figure { font-size:var(--text-figure); font-family:var(--font-readout); font-weight:600; line-height:1.15; letter-spacing:-0.02em; }
-.meter { height:8px; border-radius:9999px; background:var(--usage-track); outline:1px solid var(--usage-track-edge); overflow:hidden; margin:10px 0 6px; }
+/* Progress is filled, never outlined: the amount in --usage, the rest in --usage-empty. */
+.meter { height:8px; border-radius:9999px; background:var(--usage-empty); overflow:hidden; margin:10px 0 6px; }
 .meter i { display:block; height:100%; background:var(--usage); border-radius:9999px; }
-.meter.crit i { background:var(--critical); }
+.meter.crit i { background:var(--critical-stroke); }
 .svc { display:flex; align-items:center; gap:8px; height:28px; }
 .svc span:last-child { margin-left:auto; }
 

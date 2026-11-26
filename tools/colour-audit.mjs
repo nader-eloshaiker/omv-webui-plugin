@@ -252,8 +252,10 @@ const PAIRS = [
   // Where the accent meets a state: the next step on the pending wash (the job runner).
   ["theme-action-label", on("theme-surface", "theme-pending-wash"), "text", "accent words on the pending wash"],
   ["theme-action-stroke", on("theme-surface", "theme-pending-wash"), "ui", "the primary's edge on the pending wash"],
-  // The first-steps progress (A4): the arc on its track.
-  ["theme-action-stroke", "theme-usage-track", "ui", "the first-steps progress arc on its track"],
+  // The first-steps progress (A4): the accent arc on the empty part. The stroke does not clear 3:1 on
+  // the empty part in dark, so the arc takes the label step, which does in both themes.
+  ["theme-action-label", "theme-usage-empty", "ui", "the first-steps progress arc on the empty part"],
+  ["theme-action-stroke", "theme-usage-empty", "deco", "the accent stroke on the empty part (not used: under 3:1 in dark)"],
   // Interaction: Sky, "you can interact with this": links, selection, checked controls, focus.
   ...onGrounds("theme-link", "text", "a link"),
   ["theme-link", on("theme-surface", "theme-pending-wash"), "text", "a link on the pending wash"],
@@ -313,11 +315,21 @@ const PAIRS = [
   ...onGrounds("theme-destructive", "ui", "destructive button edge"),
   // Charts.
   ...[1, 2, 3, 4].flatMap((n) => onGrounds(`theme-series-${n}`, "ui", "chart mark", GROUNDS.slice(0, 3))),
-  ["theme-usage", "theme-usage-track", "ui", "capacity meter fill on its track"],
+  // Progress and amounts of a whole (owner, 2026-11-26): filled, never outlined. The amount is read
+  // against the rest, so that pair carries the value (1.4.11); there is no edge round the track. Past
+  // a threshold the amount takes the status stroke: the status fills are reported beside it, since
+  // in one theme each falls under 3:1 on the empty part.
+  ["theme-usage", "theme-usage-empty", "ui", "the amount against the rest: meter, waffle, progress, ring"],
+  ["theme-warning-stroke", "theme-usage-empty", "ui", "the amount past a warning threshold, against the rest"],
+  ["theme-critical-stroke", "theme-usage-empty", "ui", "the amount past a critical threshold, against the rest"],
+  ["theme-warning", "theme-usage-empty", "deco", "the warning fill on the rest (not used: under 3:1 in light)"],
+  ["theme-critical", "theme-usage-empty", "deco", "the critical fill on the rest (not used: under 3:1 in dark)"],
+  ...onGrounds("theme-usage-empty", "deco", "the rest of a meter or waffle on its ground (the amount is read against the rest)"),
   // A bar of a bar chart (react-ui-components/charts) stands on the card or an inset, not a track.
   ...onGrounds("theme-usage", "ui", "a bar in a bar chart", GROUNDS.slice(1, 3)),
-  ["theme-usage-track-edge", "theme-surface", "ui", "capacity meter track outline"],
-  ["theme-usage-track-edge", "theme-muted", "ui", "capacity meter track outline, in an inset"],
+  // Deprecated: the old outlined track. Reported while the lab's prototypes still read it.
+  ["theme-usage", "theme-usage-track", "deco", "deprecated: the amount on the old track"],
+  ["theme-usage-track-edge", "theme-surface", "deco", "deprecated: the old track's outline"],
   // Drawings and maps.
   ...DRAWING_GROUNDS.map((g) => ["theme-art-line", g, "ui", "drawing outline"]),
   ...DRAWING_GROUNDS.map((g) => ["theme-art-path", g, "ui", "the traced lineage on a map"]),
@@ -380,6 +392,14 @@ const DISTINCT = [
   ["theme-series-4", "theme-ok"],
   ["theme-series-2", "theme-ok"],
   ["theme-series-3", "theme-critical"],
+  // The rest of a meter against the amount and what may stand in for it, and against the Unknown
+  // grey: a meter with no reading is a dashed ring or bar with the Unknown icon, never an empty one.
+  ["theme-usage", "theme-usage-empty"],
+  ["theme-warning-stroke", "theme-usage-empty"],
+  ["theme-critical-stroke", "theme-usage-empty"],
+  ["theme-action-label", "theme-usage-empty"],
+  ["theme-unknown", "theme-usage-empty"],
+  ["theme-unknown-stroke", "theme-usage-empty"],
 ];
 const neutralSteps = (names) =>
   names

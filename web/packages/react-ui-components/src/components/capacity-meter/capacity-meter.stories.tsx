@@ -59,6 +59,40 @@ export const Loading: Story = {
   args: { value: null, loading: true, valueText: "Loading…" },
 };
 
+const GROUNDS = [
+  { name: "On the page", className: "bg-page" },
+  { name: "On a card", className: "bg-surface ring-1 ring-border" },
+  { name: "In an inset", className: "bg-muted" },
+] as const;
+
+/**
+ * Filled, never outlined (style guide 5.6): the amount in the usage blue, the rest in the empty
+ * slate, on each ground a meter lands on. Past the threshold the amount takes the warning stroke, with
+ * its word.
+ */
+export const OnEachGround: Story = {
+  render: (args) => (
+    <div className="flex flex-col gap-3">
+      {GROUNDS.map((ground) => (
+        <div
+          key={ground.name}
+          className={`flex flex-col gap-3 rounded-control p-3 ${ground.className}`}
+        >
+          <p className="text-caption text-tertiary-foreground">{ground.name}</p>
+          <CapacityMeter {...args} />
+          <CapacityMeter
+            {...args}
+            label="File system: photos"
+            value={3.1}
+            valueText="3.1 TiB of 3.6 TiB (86%)"
+            threshold={{ status: "warning", label: "Almost full" }}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /** The compact form sits in a table cell of a 36px row: the bar and the figure on one line. */
 function UsageCell({ children }: { children: React.ReactNode }) {
   return (

@@ -110,7 +110,7 @@ them: to show what is in front, what is live and what changed.
 ### 3.1 Grounds with depth
 
 Dark is the first theme. Sky's grounds step up in lightness in the slate family, a night sky: OKLCH
-hue 248 to 259 with chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong
+hue 246 to 259 with chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong
 together. Every ground, line and text tier is one step of the `--color-slate-*` ramp. Light is
 re-derived, not inverted: a cool page and white cards.
 
@@ -136,7 +136,8 @@ re-derived, not inverted: a cool page and white cards.
 captions are read. Dark `tertiary-foreground` sits at APCA Lc 40 to 43, so it is for 12px-and-up
 captions at medium weight and never for running text. Three lab values were merged into the ramp's
 nearest step, with no visible difference: dark `ink` `#eaf0f6` is `#e8eef4`, light `ink` `#0f1a26`
-is `#111a27`, and the meter track takes `muted-strong` in both themes.
+is `#111a27`, and the meter track takes `muted-strong` in both themes. Since 2026-11-26 the rest of
+a meter is its own slate step, `usage-empty`, filled with no outline (style guide 5.6).
 
 ### 3.2 How the brand is expressed
 
@@ -233,7 +234,7 @@ it at the top of its primitives.
 
 | Place | Hue | Who sits there |
 | --- | --- | --- |
-| The base | 240 | Sky blue: brand, links, selection, checked controls, the focus ring, the live trace, usage and the map path. The slate neutrals lean toward it (248 to 259) |
+| The base | 240 | Sky blue: brand, links, selection, checked controls, the focus ring, the live trace, usage and the map path. The slate neutrals lean toward it (246 to 259) |
 | The accent | 258 | Cobalt `#0065da`: "do this", the one action expected here (owner, 2026-11-25; below) |
 | The complement | 62 | Warning, OMV's orange `#f78f00` |
 | The split complements | 27 and 87 | Critical `#d01d21`, and pending gold `#ffcd47` |
@@ -314,8 +315,8 @@ to take here**. Sky keeps "you can interact with this".
   | `action` | cobalt-600 `#0065da` | cobalt-600 | The fill: the primary button, the same button in both themes |
   | `action-hover` | cobalt-700 `#004faf` | cobalt-700 | A tonal step, not alpha |
   | `action-foreground` | white | white | Words and icons on the fill |
-  | `action-label` | cobalt-700 | cobalt-400 `#65a3ff` | Accent words on a ground: the outlined next step |
-  | `action-stroke` | cobalt-600 | cobalt-500 `#2c84ff` | The edge that clears 3:1: the primary's, the outlined next step's, the first-steps arc |
+  | `action-label` | cobalt-700 | cobalt-400 `#65a3ff` | Accent words on a ground: the outlined next step; the first-steps arc |
+  | `action-stroke` | cobalt-600 | cobalt-500 `#2c84ff` | The edge that clears 3:1: the primary's, the outlined next step's |
   | `action-wash` | cobalt-600 at 8% | cobalt-500 at 18% | The outlined next step's hover ground |
 
 - **What takes it** (rethink 1.2): the primary button of a view, dialog or flow (`Button`, one per
@@ -342,7 +343,8 @@ to take here**. Sky keeps "you can interact with this".
 - `action-label` on the four grounds: 6.56 to 7.67:1 / 5.77 to 7.42:1. In dark its APCA is Lc 46 to
   52, so accent words are set at medium weight or above (they are button labels).
 - On the accent wash: the words 6.15 to 6.83:1 / 5.01 to 5.96:1, the edge 4.83 / 3.85:1. The
-  first-steps arc on its track: 4.64 / 4.10:1.
+  first-steps arc, in `action-label`, on the rest of the ring (`usage-empty`): 4.84 / 3.60:1;
+  `action-stroke` there would be 2.56:1 in dark.
 - Apart from every state (normal / deuteranopia / protanopia / tritanopia, the weakest of the
   five fills and the pending gold): 23.7 or more in every view, in both themes. Accent words
   against the status words fall to 4.4 (OK) and 6.0 (Unknown) under tritanopia in light; accent
@@ -521,9 +523,10 @@ words.
   session is allowed and says so.
 - **Sparkline**: one series, brand trace with its area fill, fixed scale for percentages, a rounded
   "nice" maximum for throughput, a text alternative with now and peak.
-- **Capacity meter**: blue until an administrator's threshold; then the warning fill *with* a status
+- **Capacity meter**: filled, never outlined: the amount in `usage`, the rest in `usage-empty`
+  (style guide 5.6). Blue until an administrator's threshold; then the warning stroke *with* a status
   label ("Almost full"). Instrument segments it (24 or 40 cells) so the amount can be counted; numbers
-  always beside it.
+  always beside it. Every other picture of progress or of an amount of a whole is drawn the same way.
 - **Ring**: for a few capacities side by side (Sky) and for roll-ups (the health ring: one segment
   per area in its status fill, Unknown dashed). Always with the figure inside and the words beside.
 - **Disk**: drawn as a slot in a NAS front panel (section 9). Temperature as a number; no light of

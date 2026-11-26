@@ -44,7 +44,7 @@ describe("CapacityMeter cells (compact density)", () => {
         threshold={{ status: "warning", label: "Almost full" }}
       />,
     );
-    expect(filled(container, "warning")).toBeGreaterThan(0);
+    expect(filled(container, "warning-stroke")).toBeGreaterThan(0);
     expect(filled(container, "usage")).toBe(0);
   });
 

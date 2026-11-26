@@ -246,10 +246,10 @@ Every chromatic family has members with different jobs, and each job has its own
 
 | Member | Job | Bar | Example |
 | --- | --- | --- | --- |
-| fill (`x`) | Meter segments and fills, solid buttons | 3:1 only if it carries meaning alone; status fills never do (they are ringed by the stroke) | `bg-ok`, `bg-action` |
+| fill (`x`) | Solid buttons, the health ring's segments | 3:1 only if it carries meaning alone; status fills never do (they are ringed by the stroke) | `bg-ok`, `bg-action` |
 | `x-foreground` | Words on the solid fill | 4.5:1 against the fill | `text-action-foreground` |
 | `x-label` | Words in that hue on a ground or on the family's tint | 4.5:1 on every ground it lands on | `text-warning-label` |
-| `x-stroke` | Outlines, rings and small icons | 3:1 on every ground | `text-critical-stroke` |
+| `x-stroke` | Outlines, rings and small icons; the amount of a meter past a threshold (5.6) | 3:1 on every ground, and on `usage-empty` | `text-critical-stroke` |
 | `x-wash` | A panel waiting on a decision (the job runner on `pending-wash`), never a tinted card, row or status capsule (10) | The label must clear 4.5:1 on the wash | `bg-pending-wash` |
 
 **Fills draw; labels are read.** The stock UI's commonest colour defect is a fill used as a word:
@@ -298,7 +298,7 @@ labels and strokes flip.
 **Superseded** for the ramp's values, the grounds and the tiers by [visual
 foundation](visual-foundation.md), section 3.1. The rules below stand, with the new numbers.
 
-- **One hue, low chroma.** The slate ramp, now Sky's night sky, sits at OKLCH hue 248 to 259
+- **One hue, low chroma.** The slate ramp, now Sky's night sky, sits at OKLCH hue 246 to 259
   (median 252, no step more than 7.4 degrees off) with chroma 0.005 to 0.037. It is kept cool and
   tinted toward the brand so greys and blues belong together.
 - **Four grounds** (`page`, `surface`, `muted`, `muted-strong`) and **three reading tiers** plus one
@@ -343,6 +343,10 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
   give each series its own dash pattern or marker shape. The legend is never the only link.
 - **Sequential (how full, how much): one hue by lightness**, Sky's usage blue. Darker is more in
   light; lighter is more in dark.
+- **Progress and amounts of a whole are filled, never outlined** (owner, 2026-11-26): the amount in
+  `usage`, the rest in `usage-empty`, and no stroke round the track or the cells. This holds for
+  every chart that shows how much of something is done or used; the anatomy and the numbers are
+  in 5.6. Line charts are not amounts and keep their own rules.
 - **Grey for context, colour for the series being discussed.**
 - **Thresholds are status, with words.** A capacity meter is blue; when it crosses a threshold the
   admin configured, the *label* gains a Warning or Critical status label. The bar may take the
@@ -605,13 +609,36 @@ One anatomy per status, used everywhere:
 - A roll-up shows the worst state of its children and says how many ("1 of 4 disks: Critical").
 - Unknown is never rendered as OK, and "no data yet" is never green.
 
-### 5.6 Capacity meters
+### 5.6 Capacity meters and everything that shows progress
 
-- A full-radius track (`usage-track` with a `usage-track-edge` outline, 4.52:1 light, 5.03:1 dark
-  on a card) and a `usage` fill (4.47:1 against the track in light, 5.90:1 in dark).
+**Filled, never outlined** (owner, 2026-11-26). Anything that shows progress or an amount of a
+whole is drawn in two fills and nothing else:
+
+- **The amount is `usage`**, the blue.
+- **The rest is `usage-empty`**, a slate: `#c2cfdb` light (OKLCH 0.848 0.022 246), `#3b495b` dark
+  (0.401 0.035 255).
+- **No stroke** round the track, the ring or the cells. The amount is read against the rest, so that
+  pair carries the value (WCAG 1.4.11): 3.29:1 light, 3.68:1 dark.
+- The rest only has to show on its ground, not to pass a bar: 1.42 to 1.59:1 on the light grounds
+  (page 1.42, card 1.59), 1.60 to 2.06:1 on the dark ones (page 2.06, card 1.91).
+
+It covers capacity meters, waffles, progress bars, task and job progress, the first-steps progress,
+a password-strength line, and a level drawn against a fixed range, such as a temperature gauge. A
+level with no whole (a temperature column on a chart) is a filled bar with no track.
+
 - **Always paired with numbers**: "3.1 TiB of 3.6 TiB (86%)", tabular.
 - The bar is blue. Crossing an admin-configured threshold adds a Warning or Critical status label
-  beside the figure; only then may the fill take the status colour.
+  beside the figure; only then may the amount take the status colour, and never without its word.
+  It takes the status **stroke**, not the fill, because it must clear 3:1 on the rest:
+  `warning-stroke` 3.07:1 light, 3.88:1 dark; `critical-stroke` 3.70:1 light, 3.19:1 dark. The fills
+  do not (the warning fill is 1.49:1 on the rest in light, the critical fill 1.69:1 in dark).
+- **The first-steps progress** keeps the accent (rethink A4), at its `action-label` step: 4.84:1
+  light, 3.60:1 dark on the rest. `action-stroke` would be 2.56:1 in dark.
+- **No reading** is not empty: a dashed outline in `unknown-stroke` with the Unknown icon, never an
+  empty track. **Loading** is the still `muted-strong` skeleton step. The Unknown grey fill is close
+  to the rest (4.9 apart), so it never stands for one.
+- In compact density the bar is counted out in cells: used cells in the amount's colour, empty
+  cells in `usage-empty`, with gaps between them and no edge.
 - It is exposed as a `meter` (or `progressbar`) with `aria-valuenow`, `aria-valuemin`,
   `aria-valuemax` and a text alternative.
 

@@ -24,7 +24,9 @@ describe("CapacityRing", () => {
     const meter = screen.getByRole("meter", { name: "photos" });
     expect(meter).toHaveAttribute("aria-valuetext", "3.1 TiB of 3.6 TiB used");
     expect(within(meter).getByText("Almost full")).toBeInTheDocument();
-    expect(container.querySelector("circle.stroke-warning")).not.toBeNull();
+    expect(
+      container.querySelector("circle.stroke-warning-stroke"),
+    ).not.toBeNull();
   });
 
   it("stays blue under the threshold", () => {
@@ -146,7 +148,7 @@ describe("ProgressRing", () => {
     expect(meter).toHaveAttribute("aria-valuetext", "1 of 2 done");
     expect(meter).toHaveAttribute("aria-valuenow", "1");
     expect(meter).toHaveAttribute("data-slot", "progress-ring");
-    expect(meter.querySelector("circle.stroke-action-stroke")).not.toBeNull();
+    expect(meter.querySelector("circle.stroke-action-label")).not.toBeNull();
   });
 
   it("draws no arc at nothing done", () => {
@@ -159,7 +161,7 @@ describe("ProgressRing", () => {
         figure="0/2"
       />,
     );
-    expect(container.querySelector("circle.stroke-action-stroke")).toBeNull();
+    expect(container.querySelector("circle.stroke-action-label")).toBeNull();
   });
 });
 
