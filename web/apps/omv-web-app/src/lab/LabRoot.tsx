@@ -7,7 +7,8 @@
 // screen=folders-table and screen=disks-table the table prototypes (src/lab/tables/TablesLab.tsx);
 // screen=nas-map the dashboard prototype, the NAS map (src/lab/dashboard/NasMapLab.tsx);
 // screen=motion the motion reel (src/lab/reel/MotionLab.tsx); screen=guidance the guidance
-// prototype (src/lab/guidance/GuidanceLab.tsx).
+// prototype (src/lab/guidance/GuidanceLab.tsx); screen=charts the chart candidates
+// (src/lab/charts-lab/ChartsLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -17,6 +18,8 @@ import {
   useState,
 } from "react";
 import type { Metric } from "./chartModel.ts";
+import ChartsLab from "./charts-lab/ChartsLab.tsx";
+import { CHARTS_SCREENS } from "./charts-lab/states.ts";
 import NasMapLab from "./dashboard/NasMapLab.tsx";
 import { DASH_SCREENS } from "./dashboard/states.ts";
 import type { Scenario } from "./data.ts";
@@ -92,6 +95,9 @@ export default function LabRoot() {
   }
   if (GUIDANCE_SCREENS.some((s) => s === screen)) {
     return <GuidanceLab />;
+  }
+  if (CHARTS_SCREENS.some((s) => s === screen)) {
+    return <ChartsLab />;
   }
   return FORM_SCREENS.some((s) => s === screen) ? (
     <FormsLab />
