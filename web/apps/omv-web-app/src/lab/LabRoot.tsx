@@ -8,7 +8,8 @@
 // screen=nas-map the dashboard prototype, the NAS map (src/lab/dashboard/NasMapLab.tsx);
 // screen=motion the motion reel (src/lab/reel/MotionLab.tsx); screen=guidance the guidance
 // prototype (src/lab/guidance/GuidanceLab.tsx); screen=charts the chart candidates
-// (src/lab/charts-lab/ChartsLab.tsx).
+// (src/lab/charts-lab/ChartsLab.tsx); screen=welcome the first visit's welcome candidates
+// (src/lab/welcome/WelcomeLab.tsx).
 import {
   useCallback,
   useEffect,
@@ -38,6 +39,8 @@ import type { ApplyPhase, Dir, Lab, Screen, Theme, Toast } from "./state.ts";
 import { LabContext, SCREENS } from "./state.ts";
 import { TABLE_SCREENS } from "./tables/states.ts";
 import TablesLab from "./tables/TablesLab.tsx";
+import { WELCOME_SCREENS } from "./welcome/states.ts";
+import WelcomeLab from "./welcome/WelcomeLab.tsx";
 
 const DIRS: { id: Dir; name: string }[] = [
   { id: "instrument", name: "Instrument" },
@@ -98,6 +101,9 @@ export default function LabRoot() {
   }
   if (CHARTS_SCREENS.some((s) => s === screen)) {
     return <ChartsLab />;
+  }
+  if (WELCOME_SCREENS.some((s) => s === screen)) {
+    return <WelcomeLab />;
   }
   return FORM_SCREENS.some((s) => s === screen) ? (
     <FormsLab />
