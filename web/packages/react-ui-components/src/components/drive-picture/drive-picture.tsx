@@ -13,6 +13,7 @@
 // kind, so no kind takes a colour, and no drive has a light (style guide 10, rule 10). JSX from
 // props, never an SVG string (UI-2). Decorative: the kind is always said in text beside it.
 import type * as React from "react";
+import { Fragment } from "react";
 import { cn } from "../../utils";
 import {
   DRIVE_PICTURE_BOX,
@@ -180,30 +181,36 @@ function Ssd({ size }: { size: DrivePictureSize }) {
           strokeWidth={sw}
         />
         <rect
-          x={2.4}
-          y={2.4}
-          width={5.2}
-          height={3.4}
+          x={2.5}
+          y={2.5}
+          width={7}
+          height={4.5}
           rx={0.5}
           {...part("ink")}
         />
-        <rect
-          x={2.4}
-          y={6.7}
-          width={5.2}
-          height={3.1}
-          rx={0.5}
-          {...part("chip")}
-        />
-        <rect x={2.4} y={10.9} width={5.2} height={2.1} {...part("chip")} />
+        <rect x={2.5} y={8} width={7} height={3.5} rx={0.5} {...part("chip")} />
+        <rect x={2.5} y={12.5} width={7} height={2.5} {...part("chip")} />
       </>
     );
   }
   const large = size === "large";
-  // The connector: the short data part and the long power part, with the key gap between them.
-  const conn = large
-    ? { y: h - 7, data: [5, 12.5], power: [14.5, 32] }
-    : { y: h - 5.5, data: [4, 10], power: [12, 25] };
+  // Laid out from the box, so the slab fills the hard disk's footprint: the controller and a cache
+  // chip on top, two rows of two memory chips, and the connector at the foot, its short data part
+  // and long power part either side of the key gap.
+  const pad = large ? 6 : 4.5;
+  const gap = large ? 2.5 : 2;
+  const col = (w - 2 * pad - gap) / 2;
+  const ink = col - 2;
+  const connH = large ? 7 : 5.5;
+  const conn = {
+    y: h - connH,
+    data: [w * 0.14, w * 0.345].map((n) => Math.round(n * 2) / 2),
+    power: [w * 0.414, w * 0.862].map((n) => Math.round(n * 2) / 2),
+  };
+  const rowTop = pad + ink + 3;
+  const rowH = (conn.y - 3 - rowTop - gap) / 2;
+  const right = pad + col + gap;
+  const faint = (col - 2) / 2;
   const pins = (from: number, to: number) => {
     const d: string[] = [];
     for (let x = from + 1.6; x < to - 0.8; x += 1.6) {
@@ -220,106 +227,55 @@ function Ssd({ size }: { size: DrivePictureSize }) {
         y={i}
         width={w - sw}
         height={h - sw}
-        rx={large ? 3 : 2.5}
+        rx={large ? 3.5 : 3}
         {...part("body")}
         strokeWidth={sw}
       />
-      {large ? (
-        <>
+      <rect x={pad} y={pad} width={ink} height={ink} rx={1} {...part("ink")} />
+      <rect
+        x={right}
+        y={pad}
+        width={col}
+        height={ink / 2}
+        rx={0.75}
+        {...part("chip")}
+      />
+      <rect
+        x={right}
+        y={pad + ink / 2 + 2}
+        width={faint}
+        height={ink / 2 - 2}
+        rx={0.5}
+        {...part("faint")}
+      />
+      <rect
+        x={right + faint + 2}
+        y={pad + ink / 2 + 2}
+        width={faint}
+        height={ink / 2 - 2}
+        rx={0.5}
+        {...part("faint")}
+      />
+      {[rowTop, rowTop + rowH + gap].map((y) => (
+        <Fragment key={y}>
           <rect
-            x={5.5}
-            y={5.5}
-            width={11}
-            height={11}
-            rx={1}
-            {...part("ink")}
-          />
-          <rect
-            x={19.5}
-            y={5.5}
-            width={12}
-            height={6}
+            x={pad}
+            y={y}
+            width={col}
+            height={rowH}
             rx={0.75}
             {...part("chip")}
           />
           <rect
-            x={19.5}
-            y={13}
-            width={5}
-            height={3.5}
-            rx={0.5}
-            {...part("faint")}
-          />
-          <rect
-            x={26.5}
-            y={13}
-            width={5}
-            height={3.5}
-            rx={0.5}
-            {...part("faint")}
-          />
-          <rect
-            x={5.5}
-            y={19.5}
-            width={12}
-            height={10}
+            x={right}
+            y={y}
+            width={col}
+            height={rowH}
             rx={0.75}
             {...part("chip")}
           />
-          <rect
-            x={19.5}
-            y={19.5}
-            width={12}
-            height={10}
-            rx={0.75}
-            {...part("chip")}
-          />
-          <rect
-            x={5.5}
-            y={31.5}
-            width={12}
-            height={10}
-            rx={0.75}
-            {...part("chip")}
-          />
-          <rect
-            x={19.5}
-            y={31.5}
-            width={12}
-            height={10}
-            rx={0.75}
-            {...part("chip")}
-          />
-        </>
-      ) : (
-        <>
-          <rect x={4.5} y={4.5} width={9} height={9} rx={1} {...part("ink")} />
-          <rect
-            x={15.5}
-            y={4.5}
-            width={9}
-            height={5.5}
-            rx={0.75}
-            {...part("chip")}
-          />
-          <rect
-            x={4.5}
-            y={16}
-            width={9}
-            height={13.5}
-            rx={0.75}
-            {...part("chip")}
-          />
-          <rect
-            x={15.5}
-            y={16}
-            width={9}
-            height={13.5}
-            rx={0.75}
-            {...part("chip")}
-          />
-        </>
-      )}
+        </Fragment>
+      ))}
       <rect
         x={conn.data[0]}
         y={conn.y}
@@ -396,9 +352,9 @@ function NvmeStick({ size }: { size: DrivePictureSize }) {
   }
   const large = size === "large";
   const notch = large
-    ? { y: 5, h: 2.2, depth: 6 }
+    ? { y: 4, h: 2, depth: 5.5 }
     : { y: 3.3, h: 1.6, depth: 4.2 };
-  const fingers = large ? 6.5 : 4.5;
+  const fingers = large ? 6 : 4.5;
   const pitch = large ? 2 : 1.8;
   const lines: string[] = [];
   for (let y = sw + 1; y < h - sw - 0.5; y += pitch) {
@@ -412,7 +368,7 @@ function NvmeStick({ size }: { size: DrivePictureSize }) {
   return (
     <>
       <path
-        d={stickPath(w, h, sw, notch, large ? 3.6 : 2.4)}
+        d={stickPath(w, h, sw, notch, large ? 3 : 2.4)}
         {...part("body")}
         strokeWidth={sw}
       />
@@ -424,23 +380,23 @@ function NvmeStick({ size }: { size: DrivePictureSize }) {
       />
       {large ? (
         <>
-          <rect x={13} y={5} width={14} height={14} rx={1} {...part("ink")} />
-          <rect x={30} y={5} width={8} height={7} rx={0.6} {...part("chip")} />
-          <rect x={30} y={14} width={3.2} height={2.4} {...part("faint")} />
-          <rect x={34.8} y={14} width={3.2} height={2.4} {...part("faint")} />
+          <rect x={11} y={4} width={12} height={12} rx={1} {...part("ink")} />
+          <rect x={25} y={4} width={8} height={6} rx={0.6} {...part("chip")} />
+          <rect x={25} y={12} width={3.4} height={2.4} {...part("faint")} />
+          <rect x={29.6} y={12} width={3.4} height={2.4} {...part("faint")} />
           <rect
-            x={41}
-            y={4}
-            width={16}
-            height={16}
+            x={36}
+            y={3.5}
+            width={14}
+            height={13}
             rx={0.9}
             {...part("chip")}
           />
           <rect
-            x={60}
-            y={4}
-            width={16}
-            height={16}
+            x={52}
+            y={3.5}
+            width={14}
+            height={13}
             rx={0.9}
             {...part("chip")}
           />

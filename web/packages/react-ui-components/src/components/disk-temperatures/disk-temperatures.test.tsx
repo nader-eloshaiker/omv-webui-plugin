@@ -52,11 +52,10 @@ describe("DiskTemperatures", () => {
       name: "tank, ZFS pool (single disk), read at 10:31",
     });
     expect(within(tank).getByRole("listitem").textContent).toBe("sdd: Asleep");
-    // A sleeping disk has no level, and its bar has no track.
+    // A sleeping disk has no level, and no segments: nothing to fill.
     expect(tank.querySelector("[data-part=level]")).toBeNull();
-    expect(tank.querySelector("[data-part=track]")?.className).toContain(
-      "bg-transparent",
-    );
+    expect(tank.querySelector("[data-part=segment]")).toBeNull();
+    expect(tank.querySelector("[data-part=track]")).not.toBeNull();
     expect(
       screen.getByText(/^sdd is asleep, so its temperature was not read/u),
     ).toBeInTheDocument();
@@ -123,10 +122,15 @@ describe("DiskTemperatures", () => {
     expect(picture).toHaveAttribute("data-orientation", "upright");
     expect(picture).toHaveAttribute("height", "56");
     expect(picture).toHaveAttribute("width", "16");
-    // The level grows upwards and the limit is a line at its height, not a rule turned on its side.
-    expect(
-      nvme.querySelector<HTMLElement>("[data-part=level]")?.style.height,
-    ).not.toBe("");
+    // The level grows upwards in the same segments, and the limit is a line at its height, not a
+    // rule turned on its side.
+    const ys = (tile: Element) =>
+      [...tile.querySelectorAll("[data-part=segment]")].map((r) =>
+        r.getAttribute("y"),
+      );
+    expect(ys(nvme).length).toBeGreaterThan(2);
+    expect(ys(nvme)).toEqual(ys(hdd));
+    expect(nvme.querySelector("[data-part=level]")).not.toBeNull();
     const limit = nvme.querySelector<HTMLElement>("[data-part=limit]");
     expect(limit?.style.top).toBe(
       hdd.querySelector<HTMLElement>("[data-part=limit]")?.style.top,
@@ -149,7 +153,13 @@ describe("DiskTemperatures", () => {
     expect(over[0]?.textContent).toBe(
       nb("sda: 47 °C, at or over the alert limit"),
     );
-    expect(container.querySelectorAll(".bg-warning-stroke")).toHaveLength(1);
+    // Only the level past the limit, and only on the disk over it, takes the warning stroke.
+    const warned = [...container.querySelectorAll(".fill-warning-stroke")];
+    expect(warned.length).toBeGreaterThan(0);
+    expect(warned.every((r) => over[0]?.contains(r))).toBe(true);
+    expect(
+      over[0]?.querySelectorAll("[data-part=level].fill-usage").length,
+    ).toBeGreaterThan(0);
     expect(
       screen.getByText("sda is at 47 °C, at or over the alert limit of 45 °C."),
     ).toBeInTheDocument();
@@ -272,29 +282,28 @@ describe("DiskTemperatures", () => {
       />,
     );
     const parts = container.querySelectorAll(
-      "[data-part=track], [data-part=level]",
+      "[data-part=segment], [data-part=level]",
     );
     expect(parts.length).toBeGreaterThan(40);
     for (const part of parts) {
-      for (const utility of part.className.split(/\s+/u)) {
+      const utilities = (part.getAttribute("class") ?? "").split(/\s+/u);
+      for (const utility of utilities) {
         expect(utility).not.toMatch(/^(border|outline|ring|shadow|stroke)/u);
       }
-      expect(part.className).not.toMatch(/(before|after):/u);
+      expect(part.hasAttribute("stroke")).toBe(false);
     }
-    for (const track of container.querySelectorAll("[data-part=track]")) {
-      expect(
-        [...track.children].every(
-          (c) => c.getAttribute("data-part") === "level",
-        ),
-      ).toBe(true);
+    // The empty part is the one usage-empty slate, the level the usage blue: one segment per 5 °C.
+    const segments = container.querySelectorAll("[data-part=segment]");
+    expect(
+      [...segments].every(
+        (r) => r.getAttribute("class") === "fill-usage-empty",
+      ),
+    ).toBe(true);
+    const tiles = container.querySelectorAll("li[data-state=read]");
+    expect(tiles.length).toBe(20);
+    for (const tile of tiles) {
+      expect(tile.querySelector("[data-part=level].fill-usage")).not.toBeNull();
     }
-    // The empty part is the one usage-empty slate, the level the usage blue.
-    expect(
-      container.querySelectorAll("[data-part=track].bg-usage-empty").length,
-    ).toBeGreaterThan(20);
-    expect(
-      container.querySelectorAll("[data-part=level].bg-usage"),
-    ).toHaveLength(20);
   });
 
   it("gives a hint on pointing at a disk, a fact also in the list", async () => {

@@ -63,14 +63,20 @@ describe("DrivePicture", () => {
     }
   });
 
-  it("keeps the hard disk to SSD proportion, and the tile's length is the temperature scale's", () => {
-    for (const size of SIZES) {
-      const { hdd, ssd } = DRIVE_PICTURE_BOX[size];
-      expect(ssd.h / hdd.h).toBeGreaterThan(0.7);
-      expect(ssd.h / hdd.h).toBeLessThan(0.9);
+  it("makes every drive as tall as the others at its size, as wide as its device's proportion", () => {
+    for (const size of ["tile", "large"] as const) {
+      const { hdd, ssd, disk } = DRIVE_PICTURE_BOX[size];
+      const stick = drivePictureBox("nvme", size, "upright");
+      for (const box of [ssd, disk, stick]) {
+        expect(box.h).toBe(hdd.h);
+      }
+      // 3.5" 101.6 x 147mm and 2.5" 69.85 x 100mm: one proportion; M.2 2280: 22 x 80mm.
+      expect(ssd.w).toBe(hdd.w);
+      expect(stick.w / stick.h).toBeGreaterThan(0.25);
+      expect(stick.w / stick.h).toBeLessThan(0.3);
     }
+    expect(DRIVE_PICTURE_BOX.marker.ssd).toEqual(DRIVE_PICTURE_BOX.marker.hdd);
     expect(DRIVE_PICTURE_BOX.tile.hdd.h).toBe(56);
-    expect(DRIVE_PICTURE_BOX.tile.nvme.w).toBe(56);
   });
 
   it("stands the NVMe stick upright on request, its lying box turned on its side, and leaves the others as they are", () => {

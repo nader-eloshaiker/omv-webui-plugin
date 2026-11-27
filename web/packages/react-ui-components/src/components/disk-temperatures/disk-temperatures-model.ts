@@ -423,3 +423,83 @@ export function restSummary(
     all,
   };
 }
+
+/** One piece of a temperature gauge, from the top of the drawing; a segment the limit splits is two. */
+export interface GaugePiece {
+  y: number;
+  h: number;
+  /** How much of it, from its foot, is at or under the reading: 0 to 1. */
+  fill: number;
+  /** It lies past the alert limit. */
+  past: boolean;
+}
+
+/**
+ * Where a temperature sits on a segmented gauge, in pixels from its top: inside its 5 °C segment, so
+ * the limit's line through the tiles passes through the gap the limit opens.
+ */
+export function gaugeY(
+  c: number,
+  scale: TemperatureScale,
+  box: { h: number; gap: number },
+): number {
+  const n = Math.max(1, Math.round((scale.hi - scale.lo) / 5));
+  const pitch = (box.h + box.gap) / n;
+  const seg = pitch - box.gap;
+  const at = temperatureShare(c, scale) * n;
+  const k = Math.min(n - 1, Math.floor(at));
+  if (k > 0 && Math.abs(at - k) < 1e-9) {
+    // On a step: the middle of the gap between two segments.
+    return box.h - k * pitch + box.gap / 2;
+  }
+  return box.h - (k * pitch + (at - k) * seg);
+}
+
+/**
+ * The level as one column of segments, each one 5 °C step of the shared scale (owner, 2026-11-27:
+ * the gauge segmented like space used), filled from the foot, the last used segment in part. A
+ * limit inside a segment splits it at the limit with a gap, so the rest past it can be counted; a
+ * piece is never thinner than `min`, so a split near a boundary does not read as a second gap.
+ */
+export function gaugePieces(
+  c: number | null,
+  limit: number | null,
+  scale: TemperatureScale,
+  box: { h: number; gap: number; min: number },
+): GaugePiece[] {
+  const n = Math.max(1, Math.round((scale.hi - scale.lo) / 5));
+  const pitch = (box.h + box.gap) / n;
+  const seg = pitch - box.gap;
+  const used = c === null ? 0 : temperatureShare(c, scale) * n;
+  const at = limit === null ? null : temperatureShare(limit, scale) * n;
+  const pieces: GaugePiece[] = [];
+  const push = (k: number, from: number, to: number, past?: boolean) => {
+    // `from` and `to` are fractions of segment k, from its foot.
+    const foot = box.h - k * pitch;
+    const lo = k + from;
+    const hi = k + to;
+    pieces.push({
+      y: foot - to * seg,
+      h: (to - from) * seg,
+      fill: Math.min(1, Math.max(0, (used - lo) / (hi - lo))),
+      past: past ?? (at !== null && lo >= at - 1e-9),
+    });
+  };
+  for (let k = 0; k < n; k++) {
+    const split = at === null ? null : at - k;
+    if (split !== null && split > 1e-9 && split < 1 - 1e-9) {
+      // The gap opens at the limit, each piece keeping at least `min`.
+      const half = box.gap / 2 / seg;
+      const least = box.min / seg;
+      const below = Math.min(
+        1 - 2 * half - least,
+        Math.max(least, split - half),
+      );
+      push(k, 0, below, false);
+      push(k, below + 2 * half, 1, true);
+    } else {
+      push(k, 0, 1);
+    }
+  }
+  return pieces;
+}

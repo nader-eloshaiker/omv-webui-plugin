@@ -22,6 +22,8 @@ import {
   diskGroups,
   diskOverLimit,
   diskTemperatureOf,
+  gaugePieces,
+  gaugeY,
   memberOnDisk,
   poolLayoutOf,
   poolStateOf,
@@ -436,5 +438,70 @@ describe("a disk whose kind was not read (owner, 2026-11-27)", () => {
     );
     expect(cool.rest.map((g) => g.id)).toContain("kind:unknown");
     expect(cool.shown.map((g) => g.id)).toEqual(["kind:hdd"]);
+  });
+});
+
+describe("gaugePieces", () => {
+  const box = { h: 56, gap: 2, min: 1.5 };
+  const scale = { lo: 25, hi: 50, ticks: [25, 30, 35, 40, 45, 50] };
+
+  it("draws one segment per 5 °C step, filled from the foot, the last used one in part", () => {
+    const pieces = gaugePieces(37.5, null, scale, box);
+    expect(pieces).toHaveLength(5);
+    expect(pieces.map((p) => p.fill)).toEqual([1, 1, 0.5, 0, 0]);
+    // From the foot up: each segment above the one before, one gap apart.
+    for (let k = 1; k < pieces.length; k++) {
+      const below = pieces[k - 1];
+      const piece = pieces[k];
+      expect(below && piece && below.y - (piece.y + piece.h)).toBeCloseTo(2);
+    }
+    expect(pieces[0] && pieces[0].y + pieces[0].h).toBeCloseTo(56);
+    expect(pieces[4]?.y).toBeCloseTo(0);
+  });
+
+  it("puts a limit on a step between two segments, and marks the ones past it", () => {
+    const pieces = gaugePieces(47, 45, scale, box);
+    expect(pieces).toHaveLength(5);
+    expect(pieces.map((p) => p.past)).toEqual([
+      false,
+      false,
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it("splits the segment a limit falls inside, at the limit, with a gap", () => {
+    const pieces = gaugePieces(44, 42, scale, box);
+    expect(pieces).toHaveLength(6);
+    const [below, above] = pieces.slice(3, 5);
+    expect(below?.past).toBe(false);
+    expect(above?.past).toBe(true);
+    expect(below && above && below.y - (above.y + above.h)).toBeCloseTo(2);
+    // The gap is centred where the gauge puts 42 °C, which is where the limit's line is drawn.
+    expect(below && above && (below.y + above.y + above.h) / 2).toBeCloseTo(
+      gaugeY(42, scale, box),
+    );
+  });
+
+  it("keeps a sliver of a split segment at least the least width", () => {
+    const pieces = gaugePieces(30, 40.1, scale, box);
+    for (const p of pieces) {
+      expect(p.h).toBeGreaterThanOrEqual(1.5 - 1e-9);
+    }
+  });
+
+  it("puts a limit on a step in the middle of the gap", () => {
+    const pieces = gaugePieces(30, 45, scale, box);
+    const [below, above] = pieces.slice(3, 5);
+    expect(below && above && (below.y + above.y + above.h) / 2).toBeCloseTo(
+      gaugeY(45, scale, box),
+    );
+  });
+
+  it("fills nothing without a reading", () => {
+    expect(gaugePieces(null, 45, scale, box).every((p) => p.fill === 0)).toBe(
+      true,
+    );
   });
 });

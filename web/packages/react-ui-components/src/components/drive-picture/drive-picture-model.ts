@@ -15,30 +15,32 @@ export type DrivePictureShape = DrivePictureKind | "disk";
 export type DrivePictureSize = "marker" | "tile" | "large";
 
 /**
- * Each picture's size in pixels, the stick lying flat. The hard disk and the SSD keep the 3.5" to
- * 2.5" proportion; the tile hard disk's height and the tile stick's length are the temperature
- * scale's length (56px), so the stick standing upright is as tall as the scale. The plain `disk` has
- * the hard disk's box, so it stands as tall as the scale.
+ * Each picture's size in pixels, the stick lying flat. Every kind is as tall as the others at its size
+ * and as wide as its own device's proportions (owner, 2026-11-27): a 3.5" hard disk is 101.6 by 147mm
+ * and a 2.5" SSD 69.85 by 100mm, the same proportion to a hundredth, so they share one box; an M.2
+ * 2280 stick is 22 by 80mm, so standing upright it is as tall as they are and about a quarter as wide.
+ * The plain `disk` has the hard disk's box. At `marker` the stick keeps a box of its own, as it is only
+ * ever drawn lying, beside a word.
  */
 export const DRIVE_PICTURE_BOX: Readonly<
   Record<DrivePictureSize, Record<DrivePictureShape, { w: number; h: number }>>
 > = {
   marker: {
     hdd: { w: 12, h: 15 },
-    ssd: { w: 10, h: 13 },
+    ssd: { w: 12, h: 15 },
     nvme: { w: 16, h: 6 },
     disk: { w: 12, h: 15 },
   },
   tile: {
     hdd: { w: 40, h: 56 },
-    ssd: { w: 29, h: 40 },
+    ssd: { w: 40, h: 56 },
     nvme: { w: 56, h: 16 },
     disk: { w: 40, h: 56 },
   },
   large: {
     hdd: { w: 52, h: 72 },
-    ssd: { w: 37, h: 52 },
-    nvme: { w: 88, h: 24 },
+    ssd: { w: 52, h: 72 },
+    nvme: { w: 72, h: 20 },
     disk: { w: 52, h: 72 },
   },
 };

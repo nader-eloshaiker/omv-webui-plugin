@@ -8,12 +8,15 @@ import {
   DisclosureTrigger,
 } from "../disclosure/disclosure";
 import { DrivePicture } from "../drive-picture/drive-picture";
+import { useGlide } from "../motion/motion";
 import { StatusIcon, StatusLabel } from "../status/status";
 import { Tooltip } from "../tooltip/tooltip";
 import {
   DASHBOARD_ALL,
   dashboardSplit,
   diskOverLimit,
+  gaugePieces,
+  gaugeY,
   restSummary,
   sharedLimit,
   temperatureScale,
@@ -116,27 +119,78 @@ const tileClass = "flex w-13 flex-none flex-col items-center gap-0.5";
 const artClass =
   "relative mb-1.5 flex h-14 items-end justify-center gap-1 self-stretch";
 
-// Filled, never outlined (style guide 5.6): the rest in the `usage-empty` slate, the level in the
-// usage blue, and at or past the limit in the warning stroke, with its words. A disk with no reading
-// has no track at all, only its word: nothing to fill. The slot keeps its width, so the picture
-// stays where every other tile has it.
-const barClass = cva(
-  "relative h-full w-2 flex-none overflow-hidden rounded-[2px]",
-  {
-    variants: {
-      read: { true: "bg-usage-empty", false: "bg-transparent" },
-    },
-  },
-);
+// Filled, never outlined (style guide 5.6), and segmented like space used (owner, 2026-11-27): one
+// segment per 5 °C step of the shared scale, the rest in the `usage-empty` slate, the level in the
+// usage blue, and past the limit, only when the reading is at or over it, in the warning stroke with
+// its words. A disk with no reading has no segments at all, only its word: nothing to fill. The slot
+// keeps its width, so the picture stays where every other tile has it.
+const GAUGE = { w: 8, h: 56, gap: 2, min: 1.5, radius: 1.5 } as const;
 
-const levelClass = cva(
-  "absolute inset-x-0 bottom-0 transition-[height] duration-glide ease-standard",
-  {
-    variants: {
-      over: { true: "bg-warning-stroke", false: "bg-usage" },
-    },
+const levelClass = cva("", {
+  variants: {
+    over: { true: "fill-warning-stroke", false: "fill-usage" },
   },
-);
+});
+
+/** The level as a column of segments on the shared scale. */
+function Gauge({
+  c,
+  limit,
+  scale,
+  over,
+}: {
+  c: number;
+  limit: number | null;
+  scale: TemperatureScale;
+  over: boolean;
+}) {
+  const shown = useGlide(c) ?? c;
+  const pieces = gaugePieces(shown, limit, scale, GAUGE);
+  // Over a limit of its own that the row's line does not show: the whole level says so.
+  const pastUsed = pieces.some((p) => p.past && p.fill > 0);
+  const f = (n: number) => Math.round(n * 100) / 100;
+  return (
+    <svg
+      width={GAUGE.w}
+      height={GAUGE.h}
+      viewBox={`0 0 ${String(GAUGE.w)} ${String(GAUGE.h)}`}
+      className="block"
+    >
+      {pieces.map((p) => {
+        const r = Math.min(GAUGE.radius, p.h / 2);
+        const used = p.fill * p.h;
+        return (
+          <React.Fragment key={p.y}>
+            <rect
+              data-part="segment"
+              x={0}
+              y={f(p.y)}
+              width={GAUGE.w}
+              height={f(p.h)}
+              rx={r}
+              className="fill-usage-empty"
+            />
+            {used > 0 ? (
+              <rect
+                data-part="level"
+                x={0}
+                y={f(p.y + p.h - used)}
+                width={GAUGE.w}
+                height={f(used)}
+                rx={Math.min(r, used / 2)}
+                className={levelClass({
+                  over: over && (p.past || !pastUsed),
+                })}
+              />
+            ) : null}
+          </React.Fragment>
+        );
+      })}
+    </svg>
+  );
+}
+
+const trackClass = "relative h-full w-2 flex-none";
 
 // The alert limit: one dashed rule at its height through the tile and half the gap either side, so
 // the tiles of a row join it into one line. A mark on the scale, not an outline, and never an edge
@@ -174,8 +228,10 @@ function Tile({
   labels: DiskTemperaturesLabels;
 }) {
   const over = diskOverLimit(d);
-  const k = d.c === null ? 0 : temperatureShare(d.c, scale);
   const limitAt = limit === null ? null : temperatureShare(limit, scale);
+  // The line's middle on the gauge's own height for the limit, through the gap it opens.
+  const limitTop =
+    limit === null ? null : (gaugeY(limit, scale, GAUGE) / GAUGE.h) * 100;
   // A disk whose kind was not read is drawn as the plain drive, claiming none.
   const shape = d.kind ?? "disk";
   const state = d.c === null ? "unread" : over ? "over" : "read";
@@ -189,13 +245,9 @@ function Tile({
     >
       <span aria-hidden="true" className={artClass}>
         <DrivePicture kind={shape} size="tile" orientation="upright" />
-        <span data-part="track" className={barClass({ read: d.c !== null })}>
+        <span data-part="track" className={trackClass}>
           {d.c === null ? null : (
-            <span
-              data-part="level"
-              className={levelClass({ over })}
-              style={{ height: `${String(k * 100)}%` }}
-            />
+            <Gauge c={d.c} limit={limit} scale={scale} over={over} />
           )}
         </span>
         {limitAt === null ? null : (
@@ -203,7 +255,7 @@ function Tile({
             data-part="limit"
             data-at={limitAt}
             className={limitClass}
-            style={{ top: `${String((1 - limitAt) * 100)}%` }}
+            style={{ top: `calc(${String(limitTop)}% - 0.75px)` }}
           />
         )}
       </span>
