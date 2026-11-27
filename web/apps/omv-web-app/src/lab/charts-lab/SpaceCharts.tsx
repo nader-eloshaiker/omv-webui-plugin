@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The waffle (owner, round two): the space used on a file system (FileSystemMgmt.getList
-// `percentage`, `available`, `size` and `usagewarnthreshold`) at the three sizes it is needed: a
-// map row, a table cell in a 36 to 44px row, and the file system's own page. Development only
-// (UI-11).
+// Space used (owner: the waffle in round two, one row of segments since 2026-11-27): the space used
+// on a file system (FileSystemMgmt.getList `percentage`, `available`, `size` and
+// `usagewarnthreshold`) at the three sizes it is needed: a map row, a table cell in a 36 to 44px
+// row, and the file system's own page. Development only (UI-11).
 //
-// The drawing is the component library's `Waffle`; this file only hands it the lab's reading and the
-// lab's words, as a page will. The meter is a `meter` with its value, range and name, and its figures
-// are written beside it. Only past the admin's mark, and only with "Almost full" beside it, do the
-// used squares past the mark take the warning colour.
+// The drawing is the component library's `SegmentBar`; this file only hands it the lab's reading
+// and the lab's words, as a page will. The meter is a `meter` with its value, range and name, and
+// its figures are written beside it. Only past the admin's mark, and only with "Almost full" beside
+// it, do the used segments past the mark take the warning colour.
 import {
-  Waffle as LibraryWaffle,
+  SegmentBar as LibrarySegmentBar,
+  SEGMENT_SHARE,
   StatusLabel,
 } from "@omv-webui/react-ui-components";
 import { useState } from "react";
@@ -40,15 +41,14 @@ export function OverWord({
   );
 }
 
-/** The lab's sizes by the library's names: a row of the NAS map is the waffle's `row`. */
+/** The lab's sizes by the library's names: a row of the NAS map is the segment bar's `row`. */
 const SIZE = { map: "row", cell: "cell", page: "page" } as const;
 
-/** The waffle at one of the lab's sizes, with the lab's words. */
-export function Waffle({ space, size }: { space: Space; size: SpaceSize }) {
-  const squares = size === "cell" ? 40 : 100;
-  const share = String(100 / squares);
+/** The segment bar at one of the lab's sizes, with the lab's words. */
+export function SegmentBar({ space, size }: { space: Space; size: SpaceSize }) {
+  const share = String(SEGMENT_SHARE);
   return (
-    <LibraryWaffle
+    <LibrarySegmentBar
       aria-label={space.label}
       size={SIZE[size]}
       value={space.used}
@@ -80,8 +80,8 @@ export function Waffle({ space, size }: { space: Space; size: SpaceSize }) {
       }
       note={
         space.mark === null
-          ? `Each square is ${share}${NBSP}% of the drive, and no warning mark is set.`
-          : `Each square is ${share}${NBSP}% of the drive, and the gap is the warning mark at ${pct(space.mark)}.`
+          ? `Each segment is ${share}${NBSP}% of the drive, and no warning mark is set.`
+          : `Each segment is ${share}${NBSP}% of the drive, and the rule is the warning mark at ${pct(space.mark)}.`
       }
     />
   );

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The chosen charts at the size they would have, where the owner judges them: a copy of one row of
-// the NAS map (the dashboard lab's markup and stylesheet) with the waffle in its storage cell, a copy
-// of the "Right now" strip with the two live charts, and the temperatures by kind with each array and
-// pool as a group under them; then the same on the Disks page (owner, round four: by kind on both).
+// the NAS map (the dashboard lab's markup and stylesheet) with the segment bar in its storage cell,
+// a copy of the "Right now" strip with the two live charts, and the temperatures by kind with each
+// array and pool as a group under them; then the same on the Disks page (owner, round four: by kind on both).
 // The dashboard keeps it short past eight disks: the groups with a disk over its limit, and the rest
 // behind a disclosure (model.ts, dashboardSplit). Development only (UI-11).
 import type { IconName } from "@omv-webui/react-ui-components";
@@ -14,7 +14,7 @@ import type { Series } from "./feed.ts";
 import { PairedStrip } from "./LiveCharts.tsx";
 import type { DiskGroup, Space } from "./model.ts";
 import { spanWords } from "./model.ts";
-import { Waffle } from "./SpaceCharts.tsx";
+import { SegmentBar } from "./SpaceCharts.tsx";
 import { TempByKind } from "./TempCharts.tsx";
 
 const noop = () => undefined;
@@ -142,7 +142,7 @@ export function InPlace({
                       </span>
                     </button>
                     <span className="ch-inplace-meter">
-                      <Waffle space={space} size="map" />
+                      <SegmentBar space={space} size="map" />
                     </span>
                   </span>
                 </span>

@@ -24,7 +24,7 @@ import {
   NasMap,
   nasMapActions,
   nasMapView,
-  Waffle,
+  SegmentBar,
 } from "@omv-webui/react-ui-components";
 import { Play } from "lucide-react";
 import type { ReactNode, Ref } from "react";
@@ -61,7 +61,7 @@ function Meter({ storage }: { storage: LabStorage }) {
     words.push(t("dashboard.map.spaceOver"));
   }
   return (
-    <Waffle
+    <SegmentBar
       aria-label={t("dashboard.map.space", { name: storage.name })}
       size="row"
       value={storage.percent}

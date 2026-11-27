@@ -123,8 +123,8 @@ export function pct(n: number): string {
   return `${String(Math.round(n))}${NBSP}%`;
 }
 
-// The waffle's geometry is the component library's (`waffleOf`, `waffleDrawing`): the lab's
-// SpaceCharts.tsx hands its `Waffle` the reading below.
+// The segment bar's geometry is the component library's (`segmentBarOf`, `segmentBarDrawing`): the
+// lab's SpaceCharts.tsx hands its `SegmentBar` the reading below.
 
 function fs(
   id: string,

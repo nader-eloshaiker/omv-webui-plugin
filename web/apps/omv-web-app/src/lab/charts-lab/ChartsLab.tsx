@@ -380,10 +380,10 @@ function ChartsScreen({ initial }: { initial: ChartsView }) {
               <div>
                 <h2 id="ch-inplace-title">In place</h2>
                 <p className="ch-intro">
-                  On the dashboard, the waffle in a row of the NAS map, the two
-                  live charts as the Right now strip, and the temperatures by
-                  kind with each array and pool as a group. Past eight disks the
-                  dashboard shows only the groups with a disk over the alert
+                  On the dashboard, the segment bar in a row of the NAS map, the
+                  two live charts as the Right now strip, and the temperatures
+                  by kind with each array and pool as a group. Past eight disks
+                  the dashboard shows only the groups with a disk over the alert
                   limit and sums up the rest in a sentence, with a way to open
                   them; the Disks page shows every disk. Both at the size they
                   would have.

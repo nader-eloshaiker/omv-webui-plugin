@@ -9,22 +9,22 @@ import { describe, expect, it } from "vitest";
 import { DiskTemperatures } from "./components/disk-temperatures/disk-temperatures";
 import { DrivePicture } from "./components/drive-picture/drive-picture";
 import { LivePair } from "./components/live-pair/live-pair";
-import { Waffle } from "./components/waffle/waffle";
+import { SegmentBar } from "./components/segment-bar/segment-bar";
 import {
   DISKS_24,
   FILE_SYSTEMS,
   livePairArgs,
   liveReadings,
   REST_LABELS,
+  segmentBarArgs,
   temperatureGroups,
   temperatureLabels,
   VOLUMES_24,
-  waffleArgs,
 } from "./fixtures/chart-fixtures";
 
 const SOURCES = [
-  "components/waffle/waffle.tsx",
-  "components/waffle/waffle-model.ts",
+  "components/segment-bar/segment-bar.tsx",
+  "components/segment-bar/segment-bar-model.ts",
   "components/drive-picture/drive-picture.tsx",
   "components/drive-picture/drive-picture-model.ts",
   "components/live-pair/live-pair.tsx",
@@ -37,7 +37,7 @@ function renderAll() {
   return render(
     <>
       {(["row", "cell", "page"] as const).map((size) => (
-        <Waffle key={size} {...waffleArgs(FILE_SYSTEMS.media, size)} />
+        <SegmentBar key={size} {...segmentBarArgs(FILE_SYSTEMS.media, size)} />
       ))}
       <DrivePicture kind="nvme" size="large" />
       <LivePair

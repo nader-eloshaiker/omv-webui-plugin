@@ -5,16 +5,17 @@
  * densities follow. Geometry from data reaches the CSS as custom properties
  * through the CSSOM (--y, --k); nothing is a style attribute in markup (UI-1).
  *
- * The waffle, the two live charts and the drive pictures are the component library's (Waffle,
- * LivePercentChart, LiveMirrorChart, DrivePicture), styled there; this file lays out the page round
- * them and still draws the temperatures by kind, which the library also has as DiskTemperatures.
+ * The segment bar, the two live charts and the drive pictures are the component library's
+ * (SegmentBar, LivePercentChart, LiveMirrorChart, DrivePicture), styled there; this file lays out
+ * the page round them and still draws the temperatures by kind, which the library also has as
+ * DiskTemperatures.
  *
  * Colour: the usage blue for how warm (one hue) on the slate of what is empty, every amount filled
  * and none outlined, warning only past a limit with its words, and the text inks for every word and
  * figure. No accent, no glow, no pulse, no card, no light on a drive.
  */
 
-/* The empty part of every amount: the waffle's empty squares and the temperature bars' tracks
+/* The empty part of every amount: the segment bar's empty segments and the temperature bars' tracks
    (owner, round four: "all filled and no outline"), in the system's usage-empty slate. */
 .omv-lab-charts {
   --ch-empty: var(--theme-usage-empty);
@@ -224,9 +225,9 @@
   padding-inline-end: 0;
 }
 
-/* ─── The waffle ──────────────────────────────────────────────────────────────────────────────── */
-/* Drawn by the component library's Waffle (react-ui-components, waffle): Tailwind classes there,
-   tokens only, every square filled and none outlined. */
+/* ─── The segment bar ─────────────────────────────────────────────────────────────────────────── */
+/* Drawn by the component library's SegmentBar (react-ui-components, segment-bar): Tailwind classes
+   there, tokens only, every segment filled and none outlined. */
 
 /* ─── Live: the two charts ────────────────────────────────────────────────────────────────────── */
 .ch-strip {

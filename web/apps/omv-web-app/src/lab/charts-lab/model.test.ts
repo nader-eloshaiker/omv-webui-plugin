@@ -2,7 +2,7 @@
 // The chart lab's pure rules: what a meter reads from a file system row, the live window and its
 // honest span, each network half's own scale over the lab's readings (the scale itself is the
 // component library's), and the temperatures' limit, their groups by array, pool and kind, and what
-// the dashboard shows past eight disks. The waffle's geometry, the live charts' geometry and the
+// the dashboard shows past eight disks. The segment bar's geometry, the live charts' geometry and the
 // drive pictures' boxes are tested with the library (react-ui-components).
 import { MIN_RATE_SCALE, rateScale } from "@omv-webui/react-ui-components";
 import { describe, expect, it } from "vitest";

@@ -2,16 +2,18 @@
 // The candidates the lab shows for each subject, each with its one sentence: what it shows and why,
 // and the ones not chosen, one line each. Development only (UI-11).
 import { PairedStrip } from "./LiveCharts.tsx";
-import { Waffle } from "./SpaceCharts.tsx";
+import { SegmentBar } from "./SpaceCharts.tsx";
 import { TempByKind } from "./TempCharts.tsx";
 
 export const SPACE_CANDIDATES = [
   {
-    id: "waffle",
-    title: "The waffle",
+    // The owner chose the waffle in round two and replaced it with one row of segments on
+    // 2026-11-27.
+    id: "segment-bar",
+    title: "One row of segments",
     caption:
-      "Each square is a fixed share of the drive, used squares in the usage blue and empty ones in a solid slate, and the warning mark is a gap with a rule in it, so the room left before the warning can be counted at a glance.",
-    Chart: Waffle,
+      "Each of the twenty segments is 5 % of the drive, used segments in the usage blue and empty ones in a solid slate, and the warning mark is a straight rule at its value in a wider gap, so the room left before the warning can be counted at a glance.",
+    Chart: SegmentBar,
   },
 ] as const;
 

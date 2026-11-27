@@ -7,7 +7,7 @@ import { Phone } from "../../fixtures/story-frames";
  * The dashboard composed from the library's pieces, as the page will compose it (rethink 6, 6.8):
  * the welcome, the answer (`NasAnswer`), what needs you (`AttentionList`), the map (`NasMap`), then
  * `FirstSteps` or `Shortcuts` beside `NasFacts`. Every state the dashboard lab showed. The meter in
- * each storage row is the library's `CapacityMeter`, standing in for the waffle.
+ * each storage row is the library's `CapacityMeter`, standing in for the segment bar.
  */
 const meta = {
   title: "Patterns/Dashboard",

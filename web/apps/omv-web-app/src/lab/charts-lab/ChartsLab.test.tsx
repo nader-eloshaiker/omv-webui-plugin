@@ -59,7 +59,7 @@ describe("the chart lab", () => {
     ]);
     const candidates = screen.getAllByRole("article");
     expect(candidates.map((a) => a.querySelector("h3")?.textContent)).toEqual([
-      "The waffle",
+      "One row of segments",
       "Two charts, four series",
       "Drive pictures",
       "By kind, with each array and pool as a group",
@@ -75,7 +75,7 @@ describe("the chart lab", () => {
     }
   });
 
-  it("exposes every waffle as a meter with its value, range and name", () => {
+  it("exposes every segment bar as a meter with its value, range and name", () => {
     open("still=1");
     const data = screen.getAllByRole("meter", {
       name: "Data drive: space used",
@@ -96,17 +96,18 @@ describe("the chart lab", () => {
       expect(meter).toHaveAttribute("aria-valuenow", "91");
     }
     expect(screen.getAllByText("Almost full").length).toBeGreaterThan(0);
-    // The page writes the mark's value at its gap.
+    // The page writes the mark's value above its rule.
     expect(screen.getByText("Warning at 85 %")).toBeInTheDocument();
   });
 
-  it("gives the used squares past the mark the warning fill only where the drive is almost full", () => {
+  it("gives the used segments past the mark the warning fill only where the drive is almost full", () => {
     const { container } = open("still=1");
-    const overSquares = container.querySelectorAll(
-      "[data-slot=waffle] [data-over] [data-part=used]",
+    const overSegments = container.querySelectorAll(
+      "[data-slot=segment-bar] [data-over] [data-part=used]",
     );
-    // Media is past its mark in the map row (six 1 % squares) and the table (three 2.5 % squares).
-    expect(overSquares).toHaveLength(9);
+    // Media is at 91 % past its mark of 85 % in the map row and in the table: in each, the 18th
+    // segment and a fifth of the 19th.
+    expect(overSegments).toHaveLength(4);
     const data = screen.getAllByRole("meter", {
       name: "Data drive: space used",
     })[0];
@@ -339,11 +340,11 @@ describe("the chart lab", () => {
     expect(within(dash).queryByRole("button")).toBeNull();
   });
 
-  it("draws every bar and the waffle filled, with no outline", () => {
+  it("draws every bar and the segment bar filled, with no outline", () => {
     const { container } = open("still=1&disks=24");
     // The stylesheet: the temperature track and level are fills, and none has a border, an
-    // outline, a shadow or a stroke; the empty part is the one --ch-empty. The waffle is the
-    // library's, tested there (waffle.test.tsx) and below in the markup.
+    // outline, a shadow or a stroke; the empty part is the one --ch-empty. The segment bar is the
+    // library's, tested there (segment-bar.test.tsx) and below in the markup.
     const rules = [...chartsCss.matchAll(/([^{}]+)\{([^}]*)\}/gu)];
     const amounts = rules.filter(([, selector]) =>
       /\.ch-kt-bar|\.ch-kt-level/u.test(selector ?? ""),
@@ -362,14 +363,16 @@ describe("the chart lab", () => {
     // The empty part is the system's slate token, in both themes.
     expect(chartsCss).toMatch(/--ch-empty: var\(--theme-usage-empty\);/u);
     expect(chartsCss).not.toMatch(/dashed var\(--theme-usage-track-edge\)/u);
-    // The markup: no stroke on a square, no element drawn round a bar.
-    const squares = container.querySelectorAll("[data-slot=waffle] rect");
-    expect(squares.length).toBeGreaterThan(100);
-    for (const rect of squares) {
-      expect(rect.getAttribute("stroke")).toBeNull();
+    // The markup: no stroke on a segment, no element drawn round a bar.
+    const segments = container.querySelectorAll(
+      "[data-slot=segment-bar] [data-part=empty], [data-slot=segment-bar] [data-part=used]",
+    );
+    expect(segments.length).toBeGreaterThan(100);
+    for (const segment of segments) {
+      expect(segment.getAttribute("stroke")).toBeNull();
     }
     for (const empty of container.querySelectorAll(
-      "[data-slot=waffle] [data-part=empty]",
+      "[data-slot=segment-bar] [data-part=empty]",
     )) {
       expect(empty.getAttribute("class")).toBe("fill-usage-empty");
     }
@@ -378,7 +381,7 @@ describe("the chart lab", () => {
         [...bar.children].every((c) => c.classList.contains("ch-kt-level")),
       ).toBe(true);
     }
-    // The waffle's empty squares have no switch any more.
+    // The empty segments have no switch.
     expect(container.querySelector("[data-empty]")).toBeNull();
     expect(screen.queryByText("Empty squares")).toBeNull();
   });
