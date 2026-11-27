@@ -3,8 +3,13 @@
 // the "Used for" words from them, failing closed when what the disks hold cannot be checked, the RAID
 // plugin's absence as no failure, the health line read only on request, rescan and Refresh, sorting,
 // every state, backend text rendered as text, and a normal user kept off the page without a call.
+import {
+  getDiskMgmtGetListQueryKey,
+  type DiskDeviceList,
+} from "@omv-webui/react-api-omv/generated";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { ALL_DISKS } from "../../hooks/useDiskReads.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
@@ -18,7 +23,17 @@ const WAKING = [
   "Smart.enumerateDevices",
   "Smart.enumerateMonitoredDevices",
 ];
-const waking = () => callNames().filter((c) => WAKING.includes(c));
+/**
+ * The waking reads other than each awake disk's kind, which the temperatures read once per visit on
+ * the dashboard's terms (journal 2026-11-28); those have their own test.
+ */
+const waking = () =>
+  callNames().filter((c) => WAKING.includes(c) && c !== "Smart.getInformation");
+/** The device files whose kind was read. */
+const kindReads = () =>
+  seenCalls
+    .filter((c) => c.call === "Smart.getInformation")
+    .map((c) => (c.params as { devicefile: string }).devicefile);
 
 async function disks(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({
@@ -50,6 +65,38 @@ const rowOf = async (device: string) => {
 };
 
 describe("Storage > Disks", () => {
+  it("reads each awake disk's kind once for the temperatures, never a sleeping disk's, and not again", async () => {
+    const { app, user } = await disks({ scenario: "disksAsleep" });
+    await rows();
+    await settled(app);
+    const list =
+      app.queryClient.getQueryData<DiskDeviceList>(
+        getDiskMgmtGetListQueryKey(ALL_DISKS),
+      )?.data ?? [];
+    const asleep = list
+      .filter((d) => d.powermode === "STANDBY" || d.powermode === "SLEEP")
+      .map((d) => d.devicefile);
+    const awake = list
+      .filter(
+        (d) =>
+          !asleep.includes(d.devicefile) && !d.devicename.startsWith("nvme"),
+      )
+      .map((d) => d.devicefile);
+    expect(asleep.length).toBeGreaterThan(0);
+    const read = kindReads();
+    expect([...read].sort()).toEqual([...awake].sort());
+    for (const file of asleep) {
+      expect(read).not.toContain(file);
+    }
+    expect(
+      screen.getByRole("region", { name: "Disk temperatures" }),
+    ).toBeInTheDocument();
+    // Refresh reads the lists again, never a kind.
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+    await settled(app);
+    expect(kindReads()).toHaveLength(read.length);
+  });
+
   it("reads the four lists on opening, never a waking read, and names the page", async () => {
     const { app } = await disks();
     await rows();

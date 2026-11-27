@@ -20,6 +20,7 @@ import {
   getZfsListCompressionTypesQueryOptions,
   getZfsListPoolsQueryOptions,
   type GetListRequest,
+  type ZfsPoolDevice,
 } from "@omv-webui/react-api-omv/generated";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -297,4 +298,33 @@ export function useZfsPoolDisks(admin = true): ZfsDisksRead {
     value.push({ pool: pool.name, devices: list.map((d) => d.devicefile) });
   }
   return { value, failed: false, error: undefined, fetching, refetch };
+}
+
+/**
+ * Each pool's disks (Zfs.getPoolDevices), once per visit, never polled, and only with the plugin
+ * installed (zfs design 10.1): by pool name, or "failed" when its read failed or its name cannot be
+ * sent. A pool not in the map has not been read yet. The dashboard and the Disks page share it.
+ */
+export function usePoolDevices(
+  names: readonly string[],
+  enabled: boolean,
+): Map<string, readonly ZfsPoolDevice[] | "failed"> {
+  const devices = useQueries({
+    queries: names.map((name) => ({
+      ...getZfsGetPoolDevicesQueryOptions({ name }),
+      ...ON_OPEN,
+      retry: false,
+      enabled: enabled && isPoolAddress(name),
+    })),
+  });
+  const byPool = new Map<string, readonly ZfsPoolDevice[] | "failed">();
+  names.forEach((name, i) => {
+    const read = devices[i];
+    if (read?.data !== undefined) {
+      byPool.set(name, read.data);
+    } else if (read?.isError === true || !isPoolAddress(name)) {
+      byPool.set(name, "failed");
+    }
+  });
+  return byPool;
 }

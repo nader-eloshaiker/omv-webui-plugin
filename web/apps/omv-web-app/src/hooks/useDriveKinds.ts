@@ -8,9 +8,14 @@
 // never been read: `enabled` is false from the moment it holds a reply or a failure, so nothing
 // starts it again (not focus, reconnect, a finished task's refresh of every query, or coming back).
 // It is never retried and kept for the session (gcTime Infinity; emptied at sign-out), because a
-// kind never changes. The same rule as the waking reads of useDiskReads.ts.
+// kind never changes. The same rule as the waking reads of useDiskReads.ts. Once asked it is never
+// cancelled: the disk is awake by then whatever happens, so a page that unmounts mid-read (leaving
+// it, or React's development double mount) keeps the answer instead of asking the disk again.
 import type { DiskDevice } from "@omv-webui/react-api-omv/generated";
-import { getSmartGetInformationQueryOptions } from "@omv-webui/react-api-omv/generated";
+import {
+  getSmartGetInformationQueryKey,
+  smartGetInformation,
+} from "@omv-webui/react-api-omv/generated";
 import {
   driveKindOf,
   type DrivePictureKind,
@@ -43,7 +48,9 @@ export function useDriveKinds(
   const asked = list.filter((d) => !byName(d) && isAwake(d));
   const reads = useQueries({
     queries: asked.map((disk) => ({
-      ...getSmartGetInformationQueryOptions({ devicefile: disk.devicefile }),
+      queryKey: getSmartGetInformationQueryKey({ devicefile: disk.devicefile }),
+      // No abort signal: an unmount does not cancel it (see above).
+      queryFn: () => smartGetInformation({ devicefile: disk.devicefile }),
       ...ONCE,
       // Only while the entry has never answered: once it holds a reply or a failure, never again.
       enabled: (query: { state: { status: string } }) =>

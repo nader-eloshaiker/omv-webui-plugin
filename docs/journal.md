@@ -1066,3 +1066,17 @@ What changes on the page beside the look:
 4. **The scan line** reads from the map's own input, so the two never disagree. An area whose read failed or has not arrived says "Not read" or "Reading…", never OK.
 5. **What still holds** ("You could also put sde to use, or let computers open a4share.") stands under the answer on a later visit while tips are on. Each phrase is a link to its page.
 6. **Every region takes the whole row**, on its own ground. The order is: the welcome, the answer and the scan line, then what needs you or a new NAS's first steps, "Right now", the map, the temperatures, then the Shortcuts and This NAS. This NAS takes the whole row when the first steps are at the top.
+
+## 2026-11-28 — The Disks page shows the temperatures by kind, on the dashboard's terms (owner)
+
+The Disks page shows every disk's temperature by kind (`DiskTemperatures` in `mode="all"`). Each RAID array and ZFS pool is a group of its own, and the rest are grouped as hard disks, SSDs and NVMe SSDs.
+
+Drawing a disk as its kind needs `Smart.getInformation`, which can wake a sleeping disk. The owner decided that the Disks page reads it on the dashboard's terms (2026-11-27, item 1):
+
+- once per visit;
+- only for the disks `DiskMgmt.getList` reports awake, so a sleeping disk is drawn asleep with no kind;
+- never again on Refresh, window focus, reconnecting, a finished task, or coming back.
+
+The alert limit (`Smart.getSettings`) and, with the ZFS plugin, each pool's disks are read once per visit as on the dashboard. The arrays, the pools' status and the configured file systems are the entries the page already reads.
+
+A kind read, once asked, is no longer cancelled when its page unmounts (leaving it, or React's development double mount). The disk is awake by then, so the answer is kept instead of asking the disk a second time.

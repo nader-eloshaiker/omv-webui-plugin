@@ -23,12 +23,26 @@ const WAKING = [
   "Smart.enumerateMonitoredDevices",
 ];
 const waking = () => callNames().filter((c) => WAKING.includes(c));
+/**
+ * The waking reads other than the kinds the Disks list reads once per visit for its temperatures
+ * (journal 2026-11-28): one Smart.getInformation per awake disk there, never on this page by itself.
+ */
+const wakingButKinds = () =>
+  waking().filter((c) => c !== "Smart.getInformation");
 const DETAILS = [
   "Smart.getInformation",
   "Smart.getAttributes",
   "Smart.getSelfTestLogs",
 ];
 const count = (call: string) => seenCalls.filter((c) => c.call === call).length;
+/** Calls of one method for one disk. */
+const countFor = (call: string, devicefile: string) =>
+  seenCalls.filter(
+    (c) =>
+      c.call === call &&
+      (c.params as { devicefile?: string } | undefined)?.devicefile ===
+        devicefile,
+  ).length;
 
 const SDA = "/dev/disk/by-id/ata-Example_HDD_4TB_EXAMPLE-SERIAL-0101";
 
@@ -99,7 +113,14 @@ describe("a disk's health details", () => {
     );
     await screen.findByRole("region", { name: "Health details" });
     await waitFor(() => expect(app.queryClient.isFetching()).toBe(0));
-    expect(waking()).toEqual([]);
+    // Only the Disks list's kind reads, at most one per disk; never this disk's details.
+    expect(wakingButKinds()).toEqual([]);
+    const kinds = seenCalls
+      .filter((c) => c.call === "Smart.getInformation")
+      .map((c) => (c.params as { devicefile: string }).devicefile);
+    expect(new Set(kinds).size).toBe(kinds.length);
+    expect(count("Smart.getAttributes")).toBe(0);
+    expect(count("Smart.getSelfTestLogs")).toBe(0);
   });
 
   it("reads the three parts of this disk only, once, on the press, and keeps them for the session", async () => {
@@ -155,15 +176,16 @@ describe("a disk's health details", () => {
       within(again).getByText("Example NAS HDD family"),
     ).toBeInTheDocument();
     await waitFor(() => expect(app.queryClient.isFetching()).toBe(0));
+    // The Disks list read the other disks' kinds once; this disk's details were kept, not read again.
     for (const call of DETAILS) {
-      expect(count(call)).toBe(1);
+      expect(countFor(call, SDA)).toBe(1);
     }
 
     // Read again reads again.
     await user.click(within(again).getByRole("button", { name: "Read again" }));
-    await waitFor(() => expect(count("Smart.getAttributes")).toBe(2));
-    expect(count("Smart.getInformation")).toBe(2);
-    expect(count("Smart.getSelfTestLogs")).toBe(2);
+    await waitFor(() => expect(countFor("Smart.getAttributes", SDA)).toBe(2));
+    expect(countFor("Smart.getInformation", SDA)).toBe(2);
+    expect(countFor("Smart.getSelfTestLogs", SDA)).toBe(2);
   });
 
   it("shows a healthy hard disk in plain words", async () => {

@@ -2,7 +2,9 @@
 // Storage > Disks (phase 5 disks design 1), for administrators: which disks the NAS has, what each one
 // holds, and whether any is in trouble. The four reads (the disks, the configured and the detected
 // file systems, the RAID plugin's arrays) are made when the page opens, on Refresh, and after "Look
-// for new disks"; nothing polls (D3) and none of them wakes a disk. Health comes only from the
+// for new disks"; nothing polls (D3) and none of them wakes a disk. The temperatures by kind read, on
+// the dashboard's terms (journal 2026-11-28), each awake disk's kind once per visit: a disk the list
+// reports asleep is never asked. Health comes only from the
 // session's disk-health check, which the reader starts. If what the disks hold cannot be checked, the
 // page says so and no disk can be wiped (fail closed). A normal user gets the "only administrators"
 // page, and nothing is called first (UI-4).
@@ -29,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { newDisks } from "../../disks/disksList.ts";
 import { useFormat } from "../../format/useFormat.ts";
 import { ALL_DISKS, useDiskInventory } from "../../hooks/useDiskReads.ts";
+import { useDiskTemperatureGroups } from "../../hooks/useDiskTemperatures.ts";
 import {
   ALL_CONFIGURED,
   useForegroundRead,
@@ -36,6 +39,7 @@ import {
 import { CLASSIC } from "../../navigation/navigation.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { PageTitle } from "../atoms/PageTitle.tsx";
+import { DashboardTemperatures } from "../organisms/DashboardTemperatures.tsx";
 import { DiskHealthLine } from "../organisms/DiskHealthLine.tsx";
 import { DisksTable } from "../organisms/DisksTable.tsx";
 import { AdminOnlyPage } from "./AdminOnlyPage.tsx";
@@ -84,6 +88,7 @@ function Disks() {
   const [refreshing, setRefreshing] = useState(false);
   const [rescanState, setRescanState] = useState<Rescan>({ state: "idle" });
   const list = inventory.diskList;
+  const temperatures = useDiskTemperatureGroups(inventory.disks);
 
   const refresh = async () => {
     if (refreshing) {
@@ -200,6 +205,19 @@ function Disks() {
             </Button>
           </p>
         </InlineAlert>
+      ) : null}
+
+      {/* Once the list is read: while it loads or after it failed, the table says so, once. */}
+      {hasRows && !list.isError ? (
+        <DashboardTemperatures
+          mode="all"
+          groups={temperatures}
+          state="ok"
+          error={null}
+          readAt={list.dataUpdatedAt}
+          retrying={refreshing}
+          onRetry={() => void refresh()}
+        />
       ) : null}
 
       <DisksTable

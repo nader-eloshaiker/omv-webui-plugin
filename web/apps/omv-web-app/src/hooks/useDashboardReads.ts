@@ -22,20 +22,11 @@ import {
   getServicesGetStatusQueryOptions,
   getShareMgmtGetListQueryOptions,
   getSmbGetShareListQueryOptions,
-  getZfsGetPoolDevicesQueryOptions,
   getZfsGetPoolStatusQueryOptions,
-  type ZfsPoolDevice,
 } from "@omv-webui/react-api-omv/generated";
 import type { NasLane } from "@omv-webui/react-ui-components";
-import { useQueries } from "@tanstack/react-query";
-import { isPoolAddress } from "../zfs/zfsModel.ts";
 import { useDiskCheck } from "./useDiskCheck.ts";
-import {
-  ALL_DISKS,
-  ON_OPEN,
-  useDiskList,
-  useSmartSettings,
-} from "./useDiskReads.ts";
+import { ALL_DISKS, useDiskList, useSmartSettings } from "./useDiskReads.ts";
 import { useDriveKinds } from "./useDriveKinds.ts";
 import {
   ALL_CONFIGURED,
@@ -54,7 +45,11 @@ import {
   useSmbShares,
 } from "./useSharesReads.ts";
 import { useSystemInformation } from "./useSystemInformation.ts";
-import { useZfsPlugin, useZfsPoolHealth } from "./useZfsReads.ts";
+import {
+  usePoolDevices,
+  useZfsPlugin,
+  useZfsPoolHealth,
+} from "./useZfsReads.ts";
 
 export function useDashboardReads() {
   const info = useSystemInformation();
@@ -72,24 +67,10 @@ export function useDashboardReads() {
   const check = useDiskCheck();
   const kinds = useDriveKinds(diskList.data?.data, true);
 
-  const poolNames = (pools.data ?? []).map((p) => p.name);
-  const devices = useQueries({
-    queries: poolNames.map((name) => ({
-      ...getZfsGetPoolDevicesQueryOptions({ name }),
-      ...ON_OPEN,
-      retry: false,
-      enabled: zfsPlugin === "installed" && isPoolAddress(name),
-    })),
-  });
-  const poolDevices = new Map<string, readonly ZfsPoolDevice[] | "failed">();
-  poolNames.forEach((name, i) => {
-    const read = devices[i];
-    if (read?.data !== undefined) {
-      poolDevices.set(name, read.data);
-    } else if (read?.isError === true || !isPoolAddress(name)) {
-      poolDevices.set(name, "failed");
-    }
-  });
+  const poolDevices = usePoolDevices(
+    (pools.data ?? []).map((p) => p.name),
+    zfsPlugin === "installed",
+  );
 
   const read = useForegroundRead();
   const retry: Record<NasLane, () => void> = {
