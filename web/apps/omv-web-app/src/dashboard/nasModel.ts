@@ -18,6 +18,7 @@
 import type {
   ConfiguredFilesystem,
   DiskDevice,
+  MdArray,
   MountedFilesystem,
   NetworkDevice,
   NfsShareRow,
@@ -633,6 +634,11 @@ export function temperatureGroups(
   pools: readonly ZfsPoolStatus[] | null | undefined,
   poolDevices: ReadonlyMap<string, readonly ZfsPoolDevice[] | "failed">,
   labels: readonly { devicename: string; label: string | null }[],
+  /**
+   * MdMgmt.enumerateDevices, where the page reads it (the Disks page). The dashboard never does
+   * (journal 2026-11-27), so its RAID members are grouped by kind.
+   */
+  arrays: readonly MdArray[] = [],
 ): DiskGroup[] {
   const readings = disks.map((disk) =>
     diskTemperatureOf(
@@ -641,7 +647,7 @@ export function temperatureGroups(
     ),
   );
   return diskGroups(readings, {
-    arrays: [],
+    arrays,
     pools: (pools ?? []).flatMap((p) => {
       const devices = poolDevices.get(p.name);
       return Array.isArray(devices)

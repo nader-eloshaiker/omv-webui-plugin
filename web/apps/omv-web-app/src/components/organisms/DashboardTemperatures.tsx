@@ -37,6 +37,7 @@ export function DashboardTemperatures({
   onRetry,
   id,
   className,
+  mode = "dashboard",
 }: {
   groups: readonly DiskGroup[];
   /** DiskMgmt.getList, as the page has it. */
@@ -50,6 +51,11 @@ export function DashboardTemperatures({
   id?: string;
   /** The ground it stands on, from the page (`panelClass`). */
   className?: string;
+  /**
+   * `dashboard`: past eight disks, the groups with a disk over its limit and a sentence for the rest.
+   * `all`: every disk, as the Disks page shows them.
+   */
+  mode?: "dashboard" | "all";
 }) {
   const { t } = useTranslation();
   const words = useNasWords();
@@ -95,14 +101,21 @@ export function DashboardTemperatures({
       </p>
     );
   } else {
-    body = (
-      <DiskTemperatures
-        mode="dashboard"
-        groups={groups}
-        labels={words.temperatures(time)}
-        restLabels={words.rest}
-      />
-    );
+    body =
+      mode === "all" ? (
+        <DiskTemperatures
+          mode="all"
+          groups={groups}
+          labels={words.temperatures(time)}
+        />
+      ) : (
+        <DiskTemperatures
+          mode="dashboard"
+          groups={groups}
+          labels={words.temperatures(time)}
+          restLabels={words.rest}
+        />
+      );
   }
 
   return (
@@ -116,7 +129,8 @@ export function DashboardTemperatures({
         <h2 id={titleId} className="text-section text-foreground">
           {t("dashboard.temps.title")}
         </h2>
-        {state === "ok" && groups.length > 0 ? (
+        {/* On the Disks page the toolbar already says when the list was read. */}
+        {state === "ok" && groups.length > 0 && mode === "dashboard" ? (
           <p className="text-sm text-muted-foreground tabular-nums">
             {t("dashboard.temps.readAt", { time })}
           </p>

@@ -1074,3 +1074,17 @@ The file systems table and a file system's own page draw space used as the segme
 - **In the table**, the bar is the cell size, so every row's bar is one width and the warning marks line up down the column. The figures sit beside it ("92%, 294.9 GiB free"). A cell has no room for the status word, so a row past its mark says "Warning" under the bar, beside the reason.
 - **On the file system's page**, the bar is the page size, under the headline "92% used" with "294.9 GiB free of 3.6 TiB", and the mark is written "Warning at 85%".
 - **A warning level of 0** (OMV's "never warn") draws no mark.
+
+## 2026-11-28 — The Disks page shows the temperatures by kind, on the dashboard's terms (owner)
+
+The Disks page shows every disk's temperature by kind (`DiskTemperatures` in `mode="all"`). Each RAID array and ZFS pool is a group of its own, and the rest are grouped as hard disks, SSDs and NVMe SSDs.
+
+Drawing a disk as its kind needs `Smart.getInformation`, which can wake a sleeping disk. The owner decided that the Disks page reads it on the dashboard's terms (2026-11-27, item 1):
+
+- once per visit;
+- only for the disks `DiskMgmt.getList` reports awake, so a sleeping disk is drawn asleep with no kind;
+- never again on Refresh, window focus, reconnecting, a finished task, or coming back.
+
+The alert limit (`Smart.getSettings`) and, with the ZFS plugin, each pool's disks are read once per visit as on the dashboard. The arrays, the pools' status and the configured file systems are the entries the page already reads.
+
+A kind read, once asked, is no longer cancelled when its page unmounts (leaving it, or React's development double mount). The disk is awake by then, so the answer is kept instead of asking the disk a second time.
