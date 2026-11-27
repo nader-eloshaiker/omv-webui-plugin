@@ -1021,3 +1021,11 @@ What Instrument does that the rebuilt page lost:
 These come back within the rules. A surface must group what the person reads as one, never be a card by habit. The scan line is status icons and words, not pills. No uppercase labels, separators or arrows.
 
 **The interface opens dark by default.** A first visit with no stored choice is dark whatever the system setting is, as "dark first" (2026-11-23) said. Light stays one choice away in the account menu.
+
+## 2026-11-27 — Space used is one row of segments; the NVMe stands upright; "Right now" takes the full row (owner)
+
+The owner reviewed the dashboard design in the lab (`/ui/lab?screen=welcome`):
+
+1. **Space used is a single row of segments, not a waffle.** It is not plainly obvious what a waffle stands for, beside a single row of segments. The row size had five rows and the cell two, and a mark inside a column stepped round it, so the warning mark sat in a different place from one waffle to the next. The bar has 20 segments of 5 % at every size, so OMV's default warning mark of 85 % falls between two segments. At each size the bar has one fixed width, so the same value sits at the same place on every row of a list or table. The warning mark is a straight rule at its exact value in a wider gap; a mark inside a segment splits that segment. The rest of the 2026-11-26 decision stands: filled, never outlined (style guide 5.6), the last used segment filled in part, the figures always written, and the status colour only past a crossed mark.
+2. **The NVMe stands upright in the disk temperatures**, like the other drives, at their height, on their baseline, with its level bar beside it as theirs are. Lying flat it was the odd one out and was not aligned to the bottom of the row.
+3. **"Right now" spans the whole row.** It no longer shares a row with what needs you, the first steps, the shortcuts or This NAS.
