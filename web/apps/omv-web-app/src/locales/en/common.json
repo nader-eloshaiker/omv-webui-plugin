@@ -431,15 +431,7 @@
       "unknown": "Unknown"
     },
     "welcome": {
-      "line": "Welcome to the new interface.",
-      "detail": "Your settings and files are the same; only the way you see them is new.",
       "dismiss": "Got it",
-      "dismissName": "Got it, hide the welcome to the new interface",
-      "more": "What is different",
-      "item1": "The menu groups are the ones you know.",
-      "item2": "Press / to go anywhere, or to run an action by name.",
-      "item3": "The map below has a row for each storage: its disks, then its shared folders and how computers reach them.",
-      "item4": "Saved changes still wait in the yellow bar until you apply them.",
       "classic": "Open the classic interface",
       "title": "Welcome to {{host}}.",
       "existingLead": "Its {{disks}}, {{drives}} and {{folders}} are on this page, drawn as they are right now.",
