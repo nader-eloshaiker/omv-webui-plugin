@@ -3,7 +3,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ExternalLink } from "lucide-react";
 import * as React from "react";
 import { NAS_ANSWER_WORDS } from "../../fixtures/nas-words";
+import { Phone } from "../../fixtures/story-frames";
 import { Button } from "../button/button";
+import { DrivePicture } from "../drive-picture/drive-picture";
+import { Icon } from "../icon/icon";
 import { TipsProvider } from "../tip/tips-provider";
 import { NasAnswer } from "./nas-answer";
 import {
@@ -180,4 +183,137 @@ export const WelcomeToTheNewInterface: Story = {
       </TipsProvider>
     );
   },
+};
+
+/**
+ * A small drawing of the NAS for the stories: its five bays, each disk's outline dashed until its
+ * health is read. The page draws its own; the answer only places it.
+ */
+function SmallNas({ checked }: { checked: boolean }) {
+  return (
+    <figure
+      role="img"
+      aria-label={
+        checked
+          ? "nas, five disks, their health read at 10:31."
+          : "nas, five disks, their health not read yet."
+      }
+      className="m-0 flex flex-col gap-1.5 rounded-control border-[1.5px] border-art-line bg-art-chassis-top px-2.5 pt-6 pb-2.5"
+    >
+      <span className="flex gap-1.5">
+        {(
+          [
+            ["sda", "hdd"],
+            ["sdb", "hdd"],
+            ["sdc", "hdd"],
+            ["sdd", "ssd"],
+            ["sde", "ssd"],
+          ] as const
+        ).map(([device, kind]) => (
+          <span
+            key={device}
+            className={
+              checked
+                ? "rounded-sm border-[1.5px] border-art-line bg-art-surface p-1"
+                : "rounded-sm border-[1.5px] border-dashed border-unknown-stroke bg-art-surface p-1"
+            }
+          >
+            <DrivePicture kind={kind} size="marker" className="size-6" />
+          </span>
+        ))}
+      </span>
+    </figure>
+  );
+}
+
+const CHECK = (
+  <Button variant="primary" size="sm">
+    <Icon name="check-health" size={16} />
+    Check disk health
+  </Button>
+);
+
+/**
+ * The everyday dashboard's headline: the hero size, the check the answer waits for as its action
+ * (the screen's one filled accent, since nothing else is the next step), what still holds after it,
+ * and the small drawing of the NAS at the row's far end. Under 48rem the drawing moves under the
+ * words.
+ */
+export const Hero: Story = {
+  args: {
+    size: "hero",
+    status: "unknown",
+    title: "No problems found so far.",
+    reason:
+      "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you.",
+    action: CHECK,
+    after: "You could also put sde to use, or let computers open a4share.",
+    aside: <SmallNas checked={false} />,
+  },
+};
+
+/** After the check: "Everything is working.", no action, the drawing's outlines joined up. */
+export const HeroChecked: Story = {
+  args: {
+    size: "hero",
+    status: "ok",
+    title: "Everything is working.",
+    reason:
+      "The disks reported no problem at 10:31. All four drives have space.",
+    aside: <SmallNas checked />,
+  },
+};
+
+/** Something else holds the accent (what needs you): the check is a neutral button. */
+export const HeroNeedsYou: Story = {
+  args: {
+    size: "hero",
+    status: "warning",
+    title: "One thing needs you.",
+    reason: "Data drive is 92 % full, past its warning mark of 85 %.",
+    action: (
+      <Button variant="neutral" size="sm">
+        <Icon name="check-health" size={16} />
+        Check disk health
+      </Button>
+    ),
+    aside: <SmallNas checked={false} />,
+  },
+};
+
+/** The hero answer while the first read is in flight: no action, no sentence after it. */
+export const HeroLoading: Story = {
+  args: {
+    size: "hero",
+    status: "unknown",
+    title: "Reading the NAS…",
+    loading: true,
+    action: CHECK,
+    after: "You could also put sde to use.",
+    aside: <SmallNas checked={false} />,
+  },
+};
+
+/** Under a welcome that holds the page's headline: the title size, an `h2`, and no drawing. */
+export const UnderAWelcome: Story = {
+  args: {
+    size: "title",
+    headingLevel: 2,
+    status: "unknown",
+    title: "No problems found so far.",
+    reason:
+      "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you.",
+    action: (
+      <Button variant="neutral" size="sm">
+        <Icon name="check-health" size={16} />
+        Check disk health
+      </Button>
+    ),
+  },
+};
+
+/** The hero at a phone's width: the drawing under the words, the headline wrapping in balance. */
+export const HeroAtPhoneWidth: Story = {
+  args: Hero.args,
+  decorators: [(Story) => <Phone>{Story()}</Phone>],
 };

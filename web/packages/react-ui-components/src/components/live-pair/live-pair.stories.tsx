@@ -9,6 +9,7 @@ import {
 import { Phone } from "../../fixtures/story-frames";
 import { Button } from "../button/button";
 import { MotionScope } from "../motion/motion-scope";
+import { Panel } from "../panel/panel";
 import { LivePair } from "./live-pair";
 
 /** The still set: a computer copies files to the NAS in readings 6 to 17 and again from 26 on. */
@@ -119,6 +120,84 @@ export const At390px: Story = {
   render: (args) => (
     <Phone>
       <LivePair {...args} />
+    </Phone>
+  ),
+};
+
+/**
+ * Large, the dashboard's instrument: each chart headed by its figures, large and in mono, each with
+ * its line's stroke as its key; the plots taller, the area under each line filled (under the
+ * processor's line only on the percent chart, so the two fills never stack), each line named at its
+ * end. The same model and text alternatives as the strip's charts.
+ */
+export const Large: Story = {
+  args: { size: "large" },
+};
+
+/** Large on its raised panel, as the dashboard sets "Right now": the caption beside the title. */
+export const LargeOnAPanel: Story = {
+  render: (args) => (
+    <Panel title="Right now" note={args.caption}>
+      <LivePair {...args} caption={undefined} size="large" />
+    </Panel>
+  ),
+};
+
+/** Large and near idle: a trickle each way, each half filled from its line to the baseline. */
+export const LargeIdle: Story = {
+  args: {
+    ...livePairArgs(liveReadings(40, idlePlan, { seed: 3 })),
+    size: "large",
+  },
+};
+
+/** Large after a pause: the lines and their areas break where no reading was taken. */
+export const LargeGapAfterAPause: Story = {
+  args: {
+    ...livePairArgs(
+      liveReadings(40, busyPlan, {
+        skip: Array.from({ length: 10 }, (_, i) => 18 + i),
+      }),
+    ),
+    size: "large",
+  },
+};
+
+/** Large before the first reply: the figures say there is no reading, and no line is drawn. */
+export const LargeNoReadingYet: Story = {
+  args: { ...livePairArgs(liveReadings(0, idlePlan)), size: "large" },
+};
+
+/** Large, taking readings: the figures glide to each new value as the plots shift left. */
+export const LargeNewReading: Story = {
+  render: function LargeReadings() {
+    const [count, setCount] = React.useState(30);
+    return (
+      <div className="flex flex-col items-start gap-4">
+        <Button
+          variant="neutral"
+          size="sm"
+          onClick={() => {
+            setCount((c) => c + 1);
+          }}
+        >
+          Take a reading
+        </Button>
+        <LivePair
+          className="self-stretch"
+          size="large"
+          {...livePairArgs(liveReadings(count, busyPlan))}
+        />
+      </div>
+    );
+  },
+};
+
+/** Large at 390px: the charts stack, each figure row wrapping under its title. */
+export const LargeAt390px: Story = {
+  render: (args) => (
+    <Phone>
+      <LivePair {...args} size="large" />
     </Phone>
   ),
 };

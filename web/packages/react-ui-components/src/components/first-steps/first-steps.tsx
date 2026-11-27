@@ -36,7 +36,22 @@ interface FirstStepsProps extends Omit<
   accent?: "filled" | "outline";
   /** The heading's level: 2 by default. */
   headingLevel?: 2 | 3;
+  /**
+   * `list`, the default: one step per row, its button at the row's end. `across`: a new NAS's first
+   * steps laid across the full row as four stations of one path, each with its words over its button,
+   * from 60rem of the list's own width; under that, the list. For a region that spans the page.
+   */
+  layout?: "list" | "across";
 }
+
+/** The steps across: one column per step from 60rem of the section's width, the buttons on one line. */
+const acrossList =
+  "@min-[60rem]/first-steps:grid-flow-col @min-[60rem]/first-steps:grid-cols-none @min-[60rem]/first-steps:auto-cols-fr @min-[60rem]/first-steps:gap-x-gutter @min-[60rem]/first-steps:gap-y-0";
+const acrossItem =
+  "@min-[60rem]/first-steps:col-span-1 @min-[60rem]/first-steps:grid-cols-[1.375rem_minmax(0,1fr)] @min-[60rem]/first-steps:grid-rows-[auto_1fr] " +
+  "@min-[60rem]/first-steps:items-start @min-[60rem]/first-steps:gap-x-3 @min-[60rem]/first-steps:gap-y-2.5 " +
+  "@min-[60rem]/first-steps:border-t-0 @min-[60rem]/first-steps:pt-3.5 @min-[60rem]/first-steps:pb-1 " +
+  "@min-[60rem]/first-steps:[&>:last-child]:col-start-2 @min-[60rem]/first-steps:[&>:last-child]:self-end @min-[60rem]/first-steps:[&>:last-child]:justify-start";
 
 /**
  * The first steps (rethink 6.2 E, P.3 G1, style guide 10 rule 9): a checklist, a tick when done and
@@ -52,6 +67,7 @@ function FirstSteps({
   stateLabels,
   accent = "filled",
   headingLevel = 2,
+  layout = "list",
   className,
   ...props
 }: FirstStepsProps) {
@@ -62,8 +78,13 @@ function FirstSteps({
   return (
     <section
       data-slot="first-steps"
+      data-layout={layout}
       aria-labelledby={titleId}
-      className={cn("flex min-w-0 flex-col", className)}
+      className={cn(
+        "flex min-w-0 flex-col",
+        layout === "across" && "@container/first-steps",
+        className,
+      )}
       {...props}
     >
       <header className="mb-1.5 flex flex-wrap items-baseline gap-x-3.5 gap-y-0.5">
@@ -74,7 +95,10 @@ function FirstSteps({
           {progress(done, steps.length)}
         </p>
       </header>
-      <Checklist variant="steps">
+      <Checklist
+        variant="steps"
+        className={layout === "across" ? acrossList : undefined}
+      >
         {steps.map((step) => {
           const isCurrent = step.id === current;
           return (
@@ -84,6 +108,7 @@ function FirstSteps({
               stateLabel={step.done ? stateLabels.done : stateLabels.notDone}
               title={step.title}
               aria-current={isCurrent ? "step" : undefined}
+              className={layout === "across" ? acrossItem : undefined}
               action={
                 step.done ? undefined : (
                   <Button

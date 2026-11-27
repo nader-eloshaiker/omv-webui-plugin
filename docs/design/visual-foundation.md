@@ -378,6 +378,7 @@ the weight-only build's 48 KB.
 
 | Step | Token | Size | Weight, tracking, leading | Use |
 | --- | --- | --- | --- | --- |
+| Hero | `text-hero` | 32 to 52px, `clamp(2rem, 1.1rem + 2.6vw, 3.25rem)` (the display step in compact) | 650, -0.03em, 1.04 | The dashboard's one headline: the welcome, and the answer on a later visit (`NasAnswer size="hero"`) |
 | Display | `text-display` | 28 to 40px, `clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem)` | 650, -0.03em, 1.1 | The one headline answer on a top page |
 | Figure | `text-figure` | 30px (26px compact, in mono) | 600, -0.02em, 1.15 | Live values and capacity figures |
 | Page title | `text-title` | 28px | 650, -0.02em, 1.2 | One per page |

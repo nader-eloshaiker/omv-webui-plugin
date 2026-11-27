@@ -390,7 +390,7 @@ washes); all are labels, captions, secondary text or deliberately subdued metada
 ### 4.1 Typography
 
 **Superseded** for the scale by [visual foundation](visual-foundation.md), section 4 (Sky's 15px
-body, the six named steps, compact density). The faces, numerals, units and zoom rules below stand.
+body, the seven named steps, compact density). The faces, numerals, units and zoom rules below stand.
 
 - **Inter** for the interface, **Roboto Mono** for anything a user might copy or compare character
   by character: device paths (`/dev/sda1`), UUIDs, mount points, IP addresses, SSH keys, log and

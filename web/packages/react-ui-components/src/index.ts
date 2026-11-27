@@ -151,6 +151,7 @@ export {
   LIVE_INTERVAL_MS,
   LIVE_WINDOW_MS,
   MIN_RATE_SCALE,
+  figureParts,
   liveRange,
   liveSpan,
   liveSummary,
@@ -158,6 +159,7 @@ export {
   rateScale,
 } from "./components/live-pair/live-pair-model";
 export type {
+  FigureParts,
   LivePoint,
   LiveRange,
   LiveSpan,
@@ -174,7 +176,12 @@ export * from "./components/nas-answer/nas-answer";
 export * from "./components/nas-answer/nas-answer-model";
 export * from "./components/nas-answer/welcome-line";
 export * from "./components/nas-facts/nas-facts";
+export * from "./components/nas-front/nas-front";
+export * from "./components/nas-front/nas-front-model";
 export * from "./components/nas-map/nas-map";
 export * from "./components/nas-map/nas-map-model";
 export type * from "./components/nas-map/nas-map-words";
+export * from "./components/panel/panel";
+export { panelClass } from "./components/panel/panel-class";
+export * from "./components/scan-line/scan-line";
 export * from "./components/shortcuts/shortcuts";

@@ -22,6 +22,8 @@
 @import "./src/icons.css";
 /* The NAS map's assembly, a problem arriving and a ghost becoming real (rethink 6.8, 7.2, 7.6). */
 @import "./src/nas-map.css";
+/* The drawing of the NAS's front: its first-visit assembly and a check's result arriving. */
+@import "./src/nas-front.css";
 
 /* Inter and Roboto Mono, bundled (UI-7). Each subset is a separate file with a unicode-range, so a
    page downloads only the scripts it shows. The family names are in --font-sans and --font-mono.

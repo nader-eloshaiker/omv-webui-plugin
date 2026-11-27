@@ -89,6 +89,31 @@ export interface LineGeometry {
   intervalMs?: number;
 }
 
+/** Each run's points in plot units. A reading on its own is one interval wide, never a dot. */
+function runPoints(
+  points: readonly LivePoint[],
+  {
+    last,
+    max,
+    half = "full",
+    windowMs = LIVE_WINDOW_MS,
+    intervalMs = LIVE_INTERVAL_MS,
+  }: LineGeometry,
+): [number, number][][] {
+  return runsOf(points, intervalMs * 2.5).map((run) => {
+    const first = run[0];
+    if (run.length === 1 && first !== undefined) {
+      const x = xAt(first.t, last, windowMs);
+      const y = yAt(first.v, max, half);
+      return [
+        [x - (intervalMs / windowMs) * PLOT_W, y],
+        [x, y],
+      ];
+    }
+    return run.map((p) => [xAt(p.t, last, windowMs), yAt(p.v, max, half)]);
+  });
+}
+
 /** The line through the points, one subpath per run. A reading on its own is one interval wide. */
 export function linePath(
   points: readonly LivePoint[],
@@ -117,6 +142,31 @@ export function linePath(
             `${i === 0 ? "M" : "L"}${round1(xAt(p.t, last, windowMs))} ${round1(yAt(p.v, max, half))}`,
         )
         .join("");
+    })
+    .join("");
+}
+
+/**
+ * The area between the line and its base (the bottom of a full plot, the middle of a mirrored one),
+ * one closed subpath per run, so a gap stays empty. The fill under a live line is the one gradient
+ * style guide 10 keeps: it shows how much, not decoration.
+ */
+export function areaPath(
+  points: readonly LivePoint[],
+  geometry: LineGeometry,
+): string {
+  const base = (geometry.half ?? "full") === "full" ? PLOT_H - PAD : PLOT_H / 2;
+  return runPoints(points, geometry)
+    .map((run) => {
+      const first = run[0];
+      const end = run.at(-1);
+      if (first === undefined || end === undefined) {
+        return "";
+      }
+      const along = run
+        .map(([x, y], i) => `${i === 0 ? "M" : "L"}${round1(x)} ${round1(y)}`)
+        .join("");
+      return `${along}L${round1(end[0])} ${round1(base)}L${round1(first[0])} ${round1(base)}Z`;
     })
     .join("");
 }
@@ -245,4 +295,22 @@ export function newestOf(
     }
   }
   return last;
+}
+
+/** A figure as the large charts set it: the number, and its unit smaller beside it. */
+export interface FigureParts {
+  value: string;
+  unit: string;
+}
+
+/**
+ * A formatted reading split at its last space (an ordinary, no-break or narrow no-break space) into
+ * the number and its unit: "38.6 MiB/s" into "38.6" and "MiB/s". A reading with no space (a locale
+ * that writes "%12") stays whole, with no unit.
+ */
+export function figureParts(text: string): FigureParts {
+  const match = /^(.*\S)[\s\u00a0\u202f]+(\S+)$/su.exec(text);
+  return match?.[1] !== undefined && match[2] !== undefined
+    ? { value: match[1], unit: match[2] }
+    : { value: text, unit: "" };
 }

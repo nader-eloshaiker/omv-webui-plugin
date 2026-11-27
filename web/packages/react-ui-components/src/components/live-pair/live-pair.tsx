@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { cva } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "../../utils";
 import { useGlide } from "../motion/motion";
 import { animateElement, curveAt, durationAt } from "../motion/motion-tokens";
 import { useReducedMotion } from "../motion/reduced-motion";
 import {
+  areaPath,
   endShare,
+  figureParts,
   linePath,
   LIVE_INTERVAL_MS,
   LIVE_WINDOW_MS,
@@ -17,9 +20,18 @@ import {
   rateScale,
   spread,
   yAt,
+  type FigureParts,
   type LivePoint,
   type LiveSummary,
 } from "./live-pair-model";
+
+/**
+ * `default`: the strip's charts, each line named at its end with its value now, a key under each.
+ * `large`: the dashboard's instrument (owner, 2026-11-27): each chart headed by its figures, large and
+ * in mono, each with a key repeating its line's stroke; the plot taller (180px, 140px compact) with
+ * the area under each line filled; the lines named at their ends.
+ */
+type LiveChartSize = "default" | "large";
 
 /** One line of a chart: its name and the readings this page took, oldest first. */
 interface LiveSeries {
@@ -55,6 +67,13 @@ interface LiveChartBaseProps extends Omit<
    * 41 % since 10:31." The summary carries the name, the range seen and how far back it goes.
    */
   describe: (summary: LiveSummary) => string;
+  /** `large`: figures over the chart and the areas filled. The default is the strip's chart. */
+  size?: LiveChartSize;
+  /**
+   * The large figure's number and its unit, apart: `{ value: "38.6", unit: "MiB/s" }`. The default
+   * splits `format`'s words at their last space.
+   */
+  formatFigure?: (value: number) => FigureParts;
 }
 
 interface LivePercentChartProps extends LiveChartBaseProps {
@@ -146,7 +165,10 @@ function Rule({ y, kind }: { y: number; kind: "grid" | "base" }) {
   );
 }
 
-/** A scale's value at the plot's edge, on the page ground so the rule under it does not cross it. */
+/**
+ * A scale's value at the plot's edge, on the ground the chart sits on so the rule under it does not
+ * cross it: the page, or the ground a `Panel` names in `--ground`.
+ */
 function ScaleMark({
   at,
   children,
@@ -157,7 +179,7 @@ function ScaleMark({
   return (
     <span
       className={cn(
-        "absolute start-0 bg-page pe-1 text-xs leading-3 text-tertiary-foreground tabular-nums",
+        "absolute start-0 bg-[var(--ground,var(--theme-page))] pe-1 text-xs leading-3 text-tertiary-foreground tabular-nums",
         at === "top" && "-top-px",
         at === "middle" && "top-[calc(50%-6px)]",
         at === "bottom" && "-bottom-px",
@@ -196,6 +218,135 @@ function EndLabel({
         {value === null || shown === null ? missing : format(shown)}
       </span>
     </span>
+  );
+}
+
+/**
+ * Sets `top` on an element through the CSSOM from a share of its parent's height, so geometry from
+ * data never becomes a style attribute in markup (UI-1).
+ */
+function useTopShare<T extends HTMLElement>(share: number) {
+  const ref = React.useRef<T>(null);
+  React.useLayoutEffect(() => {
+    ref.current?.style.setProperty("top", `${String(share * 100)}%`);
+  }, [share]);
+  return ref;
+}
+
+/** A line's name beside its end, at its height (the large chart: the value is in the figure). */
+function EndName({ share, children }: { share: number; children: string }) {
+  const ref = useTopShare<HTMLSpanElement>(share);
+  return (
+    <span
+      ref={ref}
+      data-slot="live-end-label"
+      className="absolute start-0 -translate-y-1/2 whitespace-nowrap text-xs text-muted-foreground transition-[top] duration-glide ease-standard"
+    >
+      <span>{children}</span>
+    </span>
+  );
+}
+
+/** A line's stroke, drawn small: the key beside a series' name. */
+function StrokeKey({
+  stroke,
+  className,
+}: {
+  stroke: "solid" | "dashed";
+  className: string;
+}) {
+  return (
+    <svg viewBox="0 0 24 8" aria-hidden="true" className={className}>
+      <path d="M1 4H23" className={lineClass[stroke]} />
+    </svg>
+  );
+}
+
+/**
+ * A large figure over its chart: the series' name after its line's stroke, and its value now, large
+ * and in mono with the unit smaller beside it, gliding to a new value.
+ */
+function Figure({
+  name,
+  stroke,
+  value,
+  format,
+  formatFigure,
+  missing,
+}: {
+  name: string;
+  stroke: "solid" | "dashed";
+  value: number | null;
+  format: (n: number) => string;
+  formatFigure?: (n: number) => FigureParts;
+  missing: React.ReactNode;
+}) {
+  const shown = useGlide(value);
+  const parts =
+    value === null || shown === null
+      ? null
+      : formatFigure
+        ? formatFigure(shown)
+        : figureParts(format(shown));
+  return (
+    <span data-slot="live-figure" className="flex min-w-0 flex-col gap-0.5">
+      <span className="inline-flex items-center gap-1.5 text-caption text-muted-foreground">
+        <StrokeKey stroke={stroke} className="h-2 w-5" />
+        {name}
+      </span>
+      <span className="font-mono text-figure leading-[1.1] font-medium text-foreground tabular-nums">
+        {parts === null ? (
+          missing
+        ) : (
+          <>
+            {parts.value}
+            {parts.unit === "" ? null : (
+              <span className="ms-1.5 text-section font-normal text-muted-foreground">
+                {parts.unit}
+              </span>
+            )}
+          </>
+        )}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The area under a line, filled with its series' colour from strong at the line to faint at the
+ * base: the one gradient style guide 10 keeps, because it shows how much.
+ */
+function Area({
+  d,
+  stroke,
+  toward,
+}: {
+  d: string;
+  stroke: "solid" | "dashed";
+  /** Where the line is: up from the base (a full plot, the upper half) or down from it. */
+  toward: "up" | "down";
+}) {
+  const id = `livearea${React.useId().replace(/[^a-zA-Z0-9]/gu, "")}`;
+  const colour =
+    stroke === "solid"
+      ? "[stop-color:var(--theme-series-2)]"
+      : "[stop-color:var(--theme-series-1)]";
+  return (
+    <>
+      <defs>
+        <linearGradient
+          id={id}
+          x1="0"
+          x2="0"
+          y1={toward === "down" ? "1" : "0"}
+          y2={toward === "down" ? "0" : "1"}
+        >
+          <stop offset="0" className={cn(colour, "[stop-opacity:0.42]")} />
+          <stop offset="1" className={cn(colour, "[stop-opacity:0.02]")} />
+        </linearGradient>
+      </defs>
+      <path data-part="area" d={d} fill={`url(#${id})`} stroke="none" />
+    </>
   );
 }
 
@@ -242,19 +393,42 @@ function ChartHead({
   );
 }
 
-const chartClass = "flex min-w-0 flex-[1_1_300px] flex-col gap-1.5";
-const plotClass = "grid grid-cols-[minmax(0,1fr)_6.5rem] gap-2";
-const areaClass = "relative h-28 compact:h-22";
+const chartClass = cva("flex min-w-0 flex-[1_1_300px] flex-col", {
+  variants: { size: { default: "gap-1.5", large: "gap-2.5" } },
+  defaultVariants: { size: "default" },
+});
+const plotClass = cva("grid gap-2", {
+  variants: {
+    size: {
+      default: "grid-cols-[minmax(0,1fr)_6.5rem]",
+      large: "grid-cols-[minmax(0,1fr)_3.5rem]",
+    },
+  },
+  defaultVariants: { size: "default" },
+});
+const areaClass = cva("relative", {
+  variants: {
+    size: { default: "h-28 compact:h-22", large: "h-45 compact:h-35" },
+  },
+  defaultVariants: { size: "default" },
+});
 
-/** Two end labels stay this share of the plot apart: enough on the compact plot's 88px. */
-const LABEL_GAP = 0.4;
-const MIRROR_LABEL_GAP = 0.22;
+/** The large chart's figures over its plot, of different widths in one row. */
+const figuresClass = "flex flex-wrap gap-x-7 gap-y-1.5";
+
+/**
+ * Two end labels stay this share of the plot apart: a name and a value on the compact plot's 88px,
+ * or a name alone on the large plot's 140px.
+ */
+const LABEL_GAP = { default: 0.4, large: 0.12 } as const;
+const MIRROR_LABEL_GAP = { default: 0.22, large: 0.06 } as const;
 
 /**
  * Two series on one 0 to 100 scale (processor and memory), the first teal and solid, the second
- * violet and dashed, each named at its end with its value now (style guide 3.9). The plot is an
- * image with a text alternative: each series' value now and the range this page saw. The title and
- * the aside over it are text, read before it.
+ * violet and dashed, each named at its end (style guide 3.9). The plot is an image with a text
+ * alternative: each series' value now and the range this page saw. The title and the aside over it
+ * are text, read before it. `size="large"` heads the plot with both figures and fills the area under
+ * the first line; the second, dashed, stays a line so the two never stack their fills.
  */
 function LivePercentChart({
   series,
@@ -266,12 +440,15 @@ function LivePercentChart({
   intervalMs = LIVE_INTERVAL_MS,
   format,
   formatScale = format,
+  formatFigure,
   missing,
   describe,
+  size = "default",
   className,
   ...props
 }: LivePercentChartProps) {
   const [first, second] = series;
+  const large = size === "large";
   const last = now === undefined ? newestOf(first.points, second.points) : now;
   const shift = useShift(last, windowMs);
   const a = first.points.at(-1)?.v ?? null;
@@ -279,7 +456,7 @@ function LivePercentChart({
   const [aY, bY] = spread(
     a === null ? 0 : endShare(a, 100),
     b === null ? 0 : endShare(b, 100),
-    LABEL_GAP,
+    LABEL_GAP[size],
   );
   const alt = [first, second]
     .map((s) => describe(liveSummary(s.label ?? s.name, s.points, dropped)))
@@ -288,57 +465,96 @@ function LivePercentChart({
   return (
     <div
       data-slot="live-percent-chart"
-      className={cn(chartClass, className)}
+      data-size={size}
+      className={cn(chartClass({ size }), className)}
       {...props}
     >
       <ChartHead title={title} aside={aside} />
       {/* The plot is the image: its name, aside and note stay text a screen reader reads. */}
-      <span role="img" aria-label={alt} className={plotClass}>
-        <span className={areaClass}>
-          <Plot>
-            <Rule y={yAt(50, 100, "full")} kind="grid" />
-            <Rule y={yAt(100, 100, "full")} kind="grid" />
-            <Rule y={yAt(0, 100, "full")} kind="base" />
-            {last === null ? null : (
-              <g ref={shift}>
-                <path
-                  data-part="line"
-                  d={linePath(second.points, { ...geometry, last })}
-                  className={lineClass.dashed}
+      <span
+        role="img"
+        aria-label={alt}
+        className={cn(large && "flex flex-col gap-2.5")}
+      >
+        {large ? (
+          <span className={figuresClass}>
+            <Figure
+              name={first.name}
+              stroke="solid"
+              value={a}
+              format={format}
+              formatFigure={formatFigure}
+              missing={missing}
+            />
+            <Figure
+              name={second.name}
+              stroke="dashed"
+              value={b}
+              format={format}
+              formatFigure={formatFigure}
+              missing={missing}
+            />
+          </span>
+        ) : null}
+        <span className={plotClass({ size })}>
+          <span className={areaClass({ size })}>
+            <Plot>
+              <Rule y={yAt(50, 100, "full")} kind="grid" />
+              <Rule y={yAt(100, 100, "full")} kind="grid" />
+              <Rule y={yAt(0, 100, "full")} kind="base" />
+              {last === null ? null : (
+                <g ref={shift}>
+                  {large ? (
+                    <Area
+                      d={areaPath(first.points, { ...geometry, last })}
+                      stroke="solid"
+                      toward="up"
+                    />
+                  ) : null}
+                  <path
+                    data-part="line"
+                    d={linePath(second.points, { ...geometry, last })}
+                    className={lineClass.dashed}
+                  />
+                  <path
+                    data-part="line"
+                    d={linePath(first.points, { ...geometry, last })}
+                    className={lineClass.solid}
+                  />
+                </g>
+              )}
+            </Plot>
+            <ScaleMark at="top">{formatScale(100)}</ScaleMark>
+            <ScaleMark at="middle">{formatScale(50)}</ScaleMark>
+          </span>
+          <span className="relative">
+            {last === null ? null : large ? (
+              <>
+                <EndName share={aY}>{first.name}</EndName>
+                <EndName share={bY}>{second.name}</EndName>
+              </>
+            ) : (
+              <>
+                <EndLabel
+                  share={aY}
+                  value={a}
+                  format={format}
+                  name={first.name}
+                  missing={missing}
                 />
-                <path
-                  data-part="line"
-                  d={linePath(first.points, { ...geometry, last })}
-                  className={lineClass.solid}
+                <EndLabel
+                  share={bY}
+                  value={b}
+                  format={format}
+                  name={second.name}
+                  missing={missing}
                 />
-              </g>
+              </>
             )}
-          </Plot>
-          <ScaleMark at="top">{formatScale(100)}</ScaleMark>
-          <ScaleMark at="middle">{formatScale(50)}</ScaleMark>
-        </span>
-        <span className="relative">
-          {last === null ? null : (
-            <>
-              <EndLabel
-                share={aY}
-                value={a}
-                format={format}
-                name={first.name}
-                missing={missing}
-              />
-              <EndLabel
-                share={bY}
-                value={b}
-                format={format}
-                name={second.name}
-                missing={missing}
-              />
-            </>
-          )}
+          </span>
         </span>
       </span>
-      <Key solid={first.name} dashed={second.name} />
+      {large ? null : <Key solid={first.name} dashed={second.name} />}
     </div>
   );
 }
@@ -348,6 +564,7 @@ function LivePercentChart({
  * written at its edge, so a copy in at 90 MiB/s does not flatten the 1 MiB/s going out. Each scale is
  * the smallest of 1, 2 or 5 times a power of ten over the readings this page holds, never under
  * `floor`, and glides to a new scale when a bigger reading arrives or an old one is let go.
+ * `size="large"` heads the plot with both figures and fills each half from its line to the baseline.
  */
 function LiveMirrorChart({
   above,
@@ -361,13 +578,16 @@ function LiveMirrorChart({
   floor = MIN_RATE_SCALE,
   format,
   formatScale,
+  formatFigure,
   missing,
   describe,
   describeScales,
   note,
+  size = "default",
   className,
   ...props
 }: LiveMirrorChartProps) {
+  const large = size === "large";
   const last = now === undefined ? newestOf(above.points, below.points) : now;
   const shift = useShift(last, windowMs);
   const aboveMax = rateScale(above.points, floor);
@@ -378,11 +598,11 @@ function LiveMirrorChart({
   const b = below.points.at(-1)?.v ?? null;
   // Each label stays on its own side, far enough from the baseline that the two never touch.
   const aY = Math.min(
-    0.5 - MIRROR_LABEL_GAP,
+    0.5 - MIRROR_LABEL_GAP[size],
     a === null ? 0.3 : endShare(a, aboveShown, "up"),
   );
   const bY = Math.max(
-    0.5 + MIRROR_LABEL_GAP,
+    0.5 + MIRROR_LABEL_GAP[size],
     b === null ? 0.7 : endShare(b, belowShown, "down"),
   );
   const alt = [
@@ -392,70 +612,108 @@ function LiveMirrorChart({
     describeScales(aboveMax, belowMax),
   ].join(" ");
   const geometry = { windowMs, intervalMs };
+  const upper = { ...geometry, max: aboveShown, half: "up" as const };
+  const lower = { ...geometry, max: belowShown, half: "down" as const };
   return (
     <div
       data-slot="live-mirror-chart"
-      className={cn(chartClass, className)}
+      data-size={size}
+      className={cn(chartClass({ size }), className)}
       {...props}
     >
       <ChartHead title={title} aside={aside} />
       {/* The plot is the image: its name, aside and note stay text a screen reader reads. */}
-      <span role="img" aria-label={alt} className={plotClass}>
-        <span className={areaClass}>
-          <Plot>
-            <Rule y={yAt(1, 1, "up")} kind="grid" />
-            <Rule y={yAt(1, 1, "down")} kind="grid" />
-            <Rule y={PLOT_H / 2} kind="base" />
-            {last === null ? null : (
-              <g ref={shift}>
-                <path
-                  data-part="line"
-                  d={linePath(above.points, {
-                    ...geometry,
-                    last,
-                    max: aboveShown,
-                    half: "up",
-                  })}
-                  className={lineClass.solid}
+      <span
+        role="img"
+        aria-label={alt}
+        className={cn(large && "flex flex-col gap-2.5")}
+      >
+        {large ? (
+          <span className={figuresClass}>
+            <Figure
+              name={above.name}
+              stroke="solid"
+              value={a}
+              format={format}
+              formatFigure={formatFigure}
+              missing={missing}
+            />
+            <Figure
+              name={below.name}
+              stroke="dashed"
+              value={b}
+              format={format}
+              formatFigure={formatFigure}
+              missing={missing}
+            />
+          </span>
+        ) : null}
+        <span className={plotClass({ size })}>
+          <span className={areaClass({ size })}>
+            <Plot>
+              <Rule y={yAt(1, 1, "up")} kind="grid" />
+              <Rule y={yAt(1, 1, "down")} kind="grid" />
+              <Rule y={PLOT_H / 2} kind="base" />
+              {last === null ? null : (
+                <g ref={shift}>
+                  {large ? (
+                    <>
+                      <Area
+                        d={areaPath(above.points, { ...upper, last })}
+                        stroke="solid"
+                        toward="up"
+                      />
+                      <Area
+                        d={areaPath(below.points, { ...lower, last })}
+                        stroke="dashed"
+                        toward="down"
+                      />
+                    </>
+                  ) : null}
+                  <path
+                    data-part="line"
+                    d={linePath(above.points, { ...upper, last })}
+                    className={lineClass.solid}
+                  />
+                  <path
+                    data-part="line"
+                    d={linePath(below.points, { ...lower, last })}
+                    className={lineClass.dashed}
+                  />
+                </g>
+              )}
+            </Plot>
+            <ScaleMark at="top">{formatScale(aboveMax)}</ScaleMark>
+            <ScaleMark at="bottom">{formatScale(belowMax)}</ScaleMark>
+          </span>
+          <span className="relative">
+            {last === null ? null : large ? (
+              <>
+                <EndName share={aY}>{above.name}</EndName>
+                <EndName share={bY}>{below.name}</EndName>
+              </>
+            ) : (
+              <>
+                <EndLabel
+                  share={aY}
+                  value={a}
+                  format={format}
+                  name={above.name}
+                  missing={missing}
                 />
-                <path
-                  data-part="line"
-                  d={linePath(below.points, {
-                    ...geometry,
-                    last,
-                    max: belowShown,
-                    half: "down",
-                  })}
-                  className={lineClass.dashed}
+                <EndLabel
+                  share={bY}
+                  value={b}
+                  format={format}
+                  name={below.name}
+                  missing={missing}
                 />
-              </g>
+              </>
             )}
-          </Plot>
-          <ScaleMark at="top">{formatScale(aboveMax)}</ScaleMark>
-          <ScaleMark at="bottom">{formatScale(belowMax)}</ScaleMark>
-        </span>
-        <span className="relative">
-          {last === null ? null : (
-            <>
-              <EndLabel
-                share={aY}
-                value={a}
-                format={format}
-                name={above.name}
-                missing={missing}
-              />
-              <EndLabel
-                share={bY}
-                value={b}
-                format={format}
-                name={below.name}
-                missing={missing}
-              />
-            </>
-          )}
+          </span>
         </span>
       </span>
-      <Key solid={above.name} dashed={below.name} />
+      {large ? null : <Key solid={above.name} dashed={below.name} />}
       {note === undefined ? null : (
         <span className="text-xs text-tertiary-foreground">{note}</span>
       )}
@@ -473,6 +731,11 @@ interface LivePairProps extends Omit<React.ComponentProps<"div">, "children"> {
    * reading every 2 seconds." Built by the caller from `liveSpan`.
    */
   caption?: React.ReactNode;
+  /**
+   * `large`: the dashboard's instrument, each chart headed by its figures large and in mono, the plots
+   * taller and the areas under the lines filled. A chart's own `size` wins over this.
+   */
+  size?: LiveChartSize;
 }
 
 /**
@@ -482,12 +745,15 @@ interface LivePairProps extends Omit<React.ComponentProps<"div">, "children"> {
  * Both charts share one right edge, the newest reading of any series. It draws only the readings it
  * is given and never fetches; a new reading shifts both charts left over the glide duration, the end
  * labels and the scales glide to their values, and under reduced motion all of it lands in place.
- * Nothing pulses, and no dot rides the head of a line.
+ * Nothing pulses, and no dot rides the head of a line. `size="large"` is the same model and the same
+ * text alternatives, drawn as the dashboard's instrument: figures over each plot, the plots taller,
+ * the areas filled, and each line named at its end with its value in the figure.
  */
 function LivePair({
   percent,
   mirror,
   caption,
+  size = "default",
   className,
   ...props
 }: LivePairProps) {
@@ -500,12 +766,13 @@ function LivePair({
   return (
     <div
       data-slot="live-pair"
+      data-size={size}
       className={cn("flex min-w-0 flex-col gap-3.5", className)}
       {...props}
     >
       <div className="flex flex-wrap items-start gap-x-9 gap-y-6">
-        <LivePercentChart now={now} {...percent} />
-        <LiveMirrorChart now={now} {...mirror} />
+        <LivePercentChart now={now} {...percent} size={percent.size ?? size} />
+        <LiveMirrorChart now={now} {...mirror} size={mirror.size ?? size} />
       </div>
       {caption === undefined ? null : (
         <p className="m-0 text-caption text-muted-foreground">{caption}</p>
@@ -516,6 +783,7 @@ function LivePair({
 
 export { LiveMirrorChart, LivePair, LivePercentChart };
 export type {
+  LiveChartSize,
   LiveMirrorChartProps,
   LivePairProps,
   LivePercentChartProps,

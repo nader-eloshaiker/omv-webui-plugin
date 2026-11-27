@@ -119,4 +119,37 @@ describe("Shortcuts and NasFacts", () => {
       "col-span-full",
     );
   });
+
+  it("lays the steps across the row only when asked, keeping the list's reading order", () => {
+    const { container, rerender } = render(
+      <FirstSteps
+        title="First steps"
+        progress={(done, total) => `${String(done)} of ${String(total)} done`}
+        stateLabels={{ done: "done", notDone: "not done" }}
+        steps={STEPS}
+      />,
+    );
+    const region = () => screen.getByRole("region", { name: "First steps" });
+    expect(region()).toHaveAttribute("data-layout", "list");
+    expect(region().className).not.toMatch(/@container/u);
+    rerender(
+      <FirstSteps
+        title="First steps"
+        progress={(done, total) => `${String(done)} of ${String(total)} done`}
+        stateLabels={{ done: "done", notDone: "not done" }}
+        steps={STEPS}
+        layout="across"
+      />,
+    );
+    expect(region()).toHaveAttribute("data-layout", "across");
+    expect(region().className).toMatch(/@container\/first-steps/u);
+    expect(container.querySelector("[data-slot=checklist]")?.className).toMatch(
+      /@min-\[60rem\]\/first-steps:auto-cols-fr/u,
+    );
+    // The same steps, buttons and accent: only the layout changes.
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: "Change" }).className).toMatch(
+      /bg-primary/,
+    );
+  });
 });

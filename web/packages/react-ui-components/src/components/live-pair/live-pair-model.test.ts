@@ -5,7 +5,9 @@
 import { describe, expect, it } from "vitest";
 import { LIVE_START, liveReadings } from "../../fixtures/chart-fixtures";
 import {
+  areaPath,
   endShare,
+  figureParts,
   linePath,
   LIVE_INTERVAL_MS,
   LIVE_WINDOW_MS,
@@ -122,5 +124,40 @@ describe("the live pair's model", () => {
     expect(short.dropped).toBe(false);
     // A rate needs two counter readings.
     expect(short.received).toHaveLength(4);
+  });
+
+  it("fills the area from each run's line to its base, and leaves a gap empty", () => {
+    const points = [
+      { t: 0, v: 50 },
+      { t: 2000, v: 100 },
+      { t: 4000, v: null },
+      { t: 6000, v: 0 },
+    ];
+    const full = areaPath(points, { last: 6000, max: 100 });
+    // Two runs, two closed subpaths, each down to the plot's floor.
+    expect(full.match(/M/gu)).toHaveLength(2);
+    expect(full.match(/Z/gu)).toHaveLength(2);
+    expect(full).toContain(`L${String(xAt(2000, 6000))} ${String(PLOT_H - 3)}`);
+    // The halves of a mirrored chart close on the baseline.
+    const up = areaPath(at([1, 2]), {
+      last: LIVE_START + 2000,
+      max: 2,
+      half: "up",
+    });
+    expect(up.endsWith(`${String(PLOT_H / 2)}Z`)).toBe(true);
+    expect(areaPath([], { last: 0, max: 1 })).toBe("");
+  });
+
+  it("splits a figure at its last space into the number and its unit", () => {
+    expect(figureParts("38.6\u00a0MiB/s")).toEqual({
+      value: "38.6",
+      unit: "MiB/s",
+    });
+    expect(figureParts("12 %")).toEqual({ value: "12", unit: "%" });
+    expect(figureParts("1\u202f024\u00a0KiB/s")).toEqual({
+      value: "1\u202f024",
+      unit: "KiB/s",
+    });
+    expect(figureParts("%12")).toEqual({ value: "%12", unit: "" });
   });
 });

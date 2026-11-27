@@ -159,8 +159,9 @@ describe("the token system", () => {
     assert.match(css, /--text-base: 0\.9375rem/);
   });
 
-  it("gives the six named type steps their whole style (foundation 4)", () => {
+  it("gives the seven named type steps their whole style (foundation 4)", () => {
     const css = build([
+      "text-hero",
       "text-display",
       "text-figure",
       "text-title",
@@ -168,7 +169,7 @@ describe("the token system", () => {
       "text-body",
       "text-caption",
     ]);
-    for (const step of ["display", "figure", "title", "section"]) {
+    for (const step of ["hero", "display", "figure", "title", "section"]) {
       const body = rule(css, `text-${step}`);
       assert.match(body, new RegExp(`font-size: var\\(--text-${step}\\)`));
       assert.match(body, new RegExp(`--text-${step}--line-height`));
@@ -177,6 +178,7 @@ describe("the token system", () => {
     }
     assert.match(rule(css, "text-body"), /font-size: var\(--text-body\)/);
     assert.match(css, /--text-display: clamp\(1\.75rem/);
+    assert.match(css, /--text-hero: clamp\(2rem/);
   });
 
   it("applies the dark theme from the class or the OS preference, with no script", () => {

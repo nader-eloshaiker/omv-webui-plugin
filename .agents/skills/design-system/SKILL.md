@@ -77,7 +77,7 @@ Rules:
 - **Radii**: `rounded-control` (12px, 16px squircle) and `rounded-card` (20px, 30px squircle);
   `rounded-sm` (6px) for checkboxes and inner marks; meters, rings, count badges and removable
   filter tokens `rounded-full`. A status is never a pill.
-- **Type**: the six named steps `text-display`, `text-figure`, `text-title`, `text-section`,
+- **Type**: the seven named steps `text-hero`, `text-display`, `text-figure`, `text-title`, `text-section`,
   `text-body`, `text-caption`, each carrying its weight, tracking and leading; the plain steps stay
   for older code (`text-base` is the 15px body). `font-readout` for live figures. No `uppercase`,
   no `tracking-wide`, no `italic`: table headers, group labels, chart and map labels are sentence

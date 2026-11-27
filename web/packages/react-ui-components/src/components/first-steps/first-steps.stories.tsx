@@ -11,6 +11,7 @@ import {
 } from "../fact-list/fact-list";
 import { Icon } from "../icon/icon";
 import { NasFacts } from "../nas-facts/nas-facts";
+import { Panel } from "../panel/panel";
 import { Shortcuts, ShortcutsItem } from "../shortcuts/shortcuts";
 import { FirstSteps, type FirstStep } from "./first-steps";
 
@@ -185,5 +186,78 @@ export const Footer: Story = {
         <Facts />
       </div>
     </div>
+  ),
+};
+
+/** A new NAS's four first steps, none done yet. */
+const NEW_NAS_STEPS: FirstStep[] = [
+  {
+    id: "storage",
+    title: "Add storage",
+    detail: "Storage is a disk made ready to keep files.",
+    actionLabel: "Add storage",
+    done: false,
+  },
+  {
+    id: "folder",
+    title: "Add a shared folder",
+    detail: "Your computers open it like any folder, for example Photos.",
+    actionLabel: "Add a shared folder",
+    done: false,
+  },
+  {
+    id: "https",
+    title: "Turn on secure sign-in",
+    detail:
+      "Then your password never crosses the network in the clear (HTTPS).",
+    actionLabel: "Turn on",
+    done: false,
+  },
+  {
+    id: "alerts",
+    title: "Get alerts by email",
+    detail:
+      "The NAS writes to you when a disk starts to fail, before files are lost.",
+    actionLabel: "Set up",
+    done: false,
+  },
+];
+
+/**
+ * Across, on a new NAS: the four steps laid across the full row on a raised panel, each with its
+ * words over its button, the buttons on one line. It takes 60rem of the list's own width, so this
+ * story follows the toolbar for theme and density instead of drawing four panels side by side.
+ */
+export const Across: Story = {
+  parameters: { matrix: false },
+  args: { layout: "across", steps: NEW_NAS_STEPS },
+  render: (args) => (
+    <Panel>
+      <FirstSteps {...args} />
+    </Panel>
+  ),
+};
+
+/** Across with the first step done: its tick, and the next step's button takes the accent. */
+export const AcrossOneDone: Story = {
+  parameters: { matrix: false },
+  args: {
+    layout: "across",
+    steps: NEW_NAS_STEPS.map((s, i) => ({ ...s, done: i === 0 })),
+  },
+  render: (args) => (
+    <Panel>
+      <FirstSteps {...args} />
+    </Panel>
+  ),
+};
+
+/** Across in a narrower region (each of the four panels here, or a phone): the list as usual. */
+export const AcrossWhenNarrow: Story = {
+  args: { layout: "across", steps: NEW_NAS_STEPS },
+  render: (args) => (
+    <Panel className="max-w-2xl">
+      <FirstSteps {...args} />
+    </Panel>
   ),
 };

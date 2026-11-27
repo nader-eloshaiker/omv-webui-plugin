@@ -139,8 +139,12 @@
     "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
   --font-readout: var(--font-sans); /* live readouts and figures; Roboto Mono in compact density */
 
-  /* The six named steps. Each carries its line height, tracking and weight, so `text-title` is the
-     whole style. Body, caption and figure change in compact density (below). */
+  /* The seven named steps. Each carries its line height, tracking and weight, so `text-title` is the
+     whole style. Hero, body, caption and figure change in compact density (below). */
+  --text-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem); /* 32-52px  the dashboard's one headline */
+  --text-hero--line-height: 1.04;
+  --text-hero--letter-spacing: -0.03em;
+  --text-hero--font-weight: 650;
   --text-display: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); /* 28-40px  the one headline answer */
   --text-display--line-height: 1.1;
   --text-display--letter-spacing: -0.03em;
@@ -294,6 +298,7 @@
   --text-caption: 0.75rem; /* 12px */
   --text-sm: 0.75rem;
   --text-figure: 1.625rem; /* 26px, in Roboto Mono */
+  --text-hero: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); /* 28-40px, the display step */
   --font-readout: var(--font-mono);
 }
 
@@ -683,6 +688,7 @@
   --text-caption: 0.8125rem;
   --text-sm: 0.8125rem;
   --text-figure: 1.875rem;
+  --text-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem);
   --font-readout: var(--font-sans);
 }
 
