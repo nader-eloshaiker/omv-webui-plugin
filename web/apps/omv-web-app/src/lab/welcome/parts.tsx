@@ -541,6 +541,7 @@ export function NasFront({
                     <DrivePicture
                       kind="nvme"
                       size={size === "large" ? "large" : "tile"}
+                      orientation="upright"
                     />
                   </span>
                   {size === "large" ? (

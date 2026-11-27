@@ -233,22 +233,20 @@
   border-radius: calc(var(--radius-md) - 4px);
   background: var(--theme-art-surface);
 }
-/* Drawn to scale against the hard disk (owner, 2026-11-27): a 3.5" hard disk is 147mm tall, a 2.5"
-   SSD 100mm, so the SSD is 0.68 of it and sits in its caddy as a 2.5" drive sits in a 3.5" tray; an
-   M.2 2280 stick is 80mm long, 0.54 of the hard disk's height. `--wl-hdd` is the hard disk's drawn
-   width where a fixed width is set, so the stick on the board can be sized from it. */
+/* Every drive as tall as the hard disk, as wide as its own device's proportion (owner, 2026-11-27,
+   after trying true scale): the 2.5" SSD has the 3.5" hard disk's proportion, so it fills its caddy
+   alike; the M.2 2280 stick stands upright on the board, as tall and about a quarter as wide.
+   `--wl-hdd` is the hard disk's drawn width where a fixed width is set, so the stick, outside the
+   bays, can be sized from it. */
 .wl-front {
   --wl-hdd: 62px;
 }
-.wl-bay[data-kind="ssd"] {
-  --wl-k: 0.68;
-}
-.wl-bay[data-kind="ssd"] .wl-caddy svg {
+.wl-caddy svg {
   margin-block: auto;
 }
 .wl-caddy svg {
   display: block;
-  width: calc(min(var(--wl-hdd), 80%) * var(--wl-k, 1));
+  width: min(var(--wl-hdd), 80%);
   height: auto;
 }
 .wl-handle {
@@ -264,7 +262,7 @@
   background: none;
 }
 .wl-stick .wl-caddy svg {
-  width: calc(var(--wl-hdd) * 72 / 52 * 80 / 147);
+  width: calc(var(--wl-hdd) * 20 / 52);
 }
 .wl-labels {
   display: grid;
@@ -376,7 +374,7 @@
   --wl-hdd: 46px;
 }
 :root[data-density="compact"] .wl-front[data-size="large"] .wl-bay svg {
-  width: calc(min(var(--wl-hdd), 70%) * var(--wl-k, 1));
+  width: min(var(--wl-hdd), 70%);
 }
 :root[data-density="compact"] .wl-chassis {
   padding: 32px 18px 14px;
@@ -444,7 +442,11 @@
   --wl-hdd: 20px;
 }
 .wl-front[data-size="small"] .wl-bay .wl-caddy svg {
-  width: calc(70% * var(--wl-k, 1));
+  width: 70%;
+}
+/* The small drawing has the tile-size pictures: the hard disk 40 wide, the stick 16. */
+.wl-front[data-size="small"] .wl-stick .wl-caddy svg {
+  width: calc(var(--wl-hdd) * 16 / 40);
 }
 .wl-front[data-size="small"] .wl-handle {
   height: 4px;
