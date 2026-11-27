@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The palette and the one colour scheme it follows (foundation 3.6): the hue wheel that shows where
 // each family sits, then every family as fill, stroke, word and wash on every ground, the inks on
-// solid fills, action and selection, the chart series with the live trace, usage, the terminal and the
+// solid fills, the accent and Sky's interaction roles, the chart series with the live trace, usage, the terminal and the
 // drawings. Every colour is the shipped token; the hex values beside them are read back from the page.
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type * as React from "react";
@@ -84,8 +84,12 @@ function Scheme() {
   return (
     <ul className="flex list-disc flex-col gap-1 ps-5 text-sm text-muted-foreground marker:text-tertiary-foreground">
       <li>
-        The base is Sky blue, about 240: brand, action, selection, the live
-        trace and usage.
+        The base is Sky blue, about 240: brand, links, selection, the live trace
+        and usage.
+      </li>
+      <li>
+        The accent, Cobalt, is the base turned toward the screen&apos;s own blue
+        (258) at twice its chroma: the one thing to press.
       </li>
       <li>
         What asks for attention sits opposite: warning on the complement,
@@ -146,7 +150,7 @@ function FamilyRow({ family }: { family: (typeof FAMILIES)[number] }) {
             </span>
             <span
               className={cn(
-                "inline-flex self-start rounded-full border px-2 py-0.5 text-xs font-semibold",
+                "inline-flex self-start rounded-control px-2.5 py-1 text-sm font-medium",
                 family.stroke,
                 family.wash,
                 family.label,
@@ -187,17 +191,20 @@ function Inks() {
   );
 }
 
+/**
+ * The accent and Sky side by side: Cobalt says "do this" (the primary, the outlined next step); Sky
+ * says "you can interact with this" (a link, an action in place, the selected row, the checked mark, the
+ * focus ring).
+ */
 function ActionAndSelection() {
   return (
     <div className="flex flex-col gap-2 rounded-card bg-surface p-4 shadow-raised">
       <div className="flex flex-wrap items-center gap-3">
         <Button>Apply</Button>
+        <Button variant="primaryOutline">See what to do</Button>
         <Button variant="neutral">Cancel</Button>
         <Button variant="ghost">Show details</Button>
-        <a
-          href="#palette"
-          className="text-action-label underline underline-offset-3"
-        >
+        <a href="#palette" className="text-link underline underline-offset-3">
           Open the SMB settings
         </a>
         <span className="rounded-control px-2 py-1 outline-2 outline-offset-2 outline-focus-ring">
@@ -212,7 +219,7 @@ function ActionAndSelection() {
           </span>
         </div>
         <div className="flex justify-between gap-3 rounded-control bg-selected px-3 py-2">
-          <span className="font-medium text-action-label">
+          <span className="font-medium text-selected-label">
             photos (selected)
           </span>
           <span className="text-muted-foreground">
@@ -222,7 +229,13 @@ function ActionAndSelection() {
       </div>
       <div className="flex flex-wrap gap-3">
         <Hex bg="bg-action" />
+        <Hex bg="bg-action-stroke" />
         <Hex bg="bg-action-label" />
+        <Hex bg="bg-action-wash" />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <Hex bg="bg-link" />
+        <Hex bg="bg-selected-mark" />
         <Hex bg="bg-focus-ring" />
         <Hex bg="bg-selected" />
       </div>
@@ -319,19 +332,22 @@ function UsageTerminalDrawing() {
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="flex flex-col gap-2 rounded-control bg-surface p-3 ring-1 ring-border">
         <span className="text-xs text-tertiary-foreground">
-          Usage on its track
+          Used and empty, filled with no outline
         </span>
-        <span className="h-2.5 overflow-hidden rounded-full border border-usage-track-edge bg-usage-track">
+        <span className="h-2.5 overflow-hidden rounded-full bg-usage-empty">
           <span className="block h-full w-3/5 rounded-full bg-usage" />
         </span>
-        <Hex bg="bg-usage" />
+        <span className="flex flex-wrap gap-x-3 gap-y-1">
+          <Hex bg="bg-usage" />
+          <Hex bg="bg-usage-empty" />
+        </span>
       </div>
       <div className="flex flex-col gap-1 rounded-control bg-terminal p-3 font-mono text-xs">
         <span className="text-terminal-muted">12:04:21</span>
         <span className="text-terminal-foreground">Setting up libssl3 ...</span>
         <Hex bg="bg-terminal-foreground" />
       </div>
-      <div className="flex flex-col gap-2 rounded-control bg-linear-to-b from-art-chassis-top to-art-chassis-bottom p-3 ring-1 ring-art-line">
+      <div className="flex flex-col gap-2 rounded-control bg-art-chassis-top p-3 ring-1 ring-art-line">
         <span className="text-xs text-tertiary-foreground">Drawing</span>
         <svg viewBox="0 0 120 30" className="w-full" aria-hidden="true">
           <rect
@@ -370,7 +386,7 @@ function Sheet({ theme }: { theme: "dark" | "light" }) {
       ))}
       <SectionTitle>Inks on solid fills</SectionTitle>
       <Inks />
-      <SectionTitle>Action and selection</SectionTitle>
+      <SectionTitle>The accent, and Sky's interaction roles</SectionTitle>
       <ActionAndSelection />
       <SectionTitle>Chart series and the live trace</SectionTitle>
       <SeriesAndTrace />

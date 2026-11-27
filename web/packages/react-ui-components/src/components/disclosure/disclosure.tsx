@@ -36,8 +36,8 @@ const triggerClass = cva(
         // it hovers with the neutral step, not a colour (style guide 2.1).
         section:
           "-mx-2 min-h-control rounded-control px-2 font-medium text-foreground transition-colors duration-fast hover:bg-muted-strong",
-        // A toggle inside running content: "Show full key", "Show all". The action blue, like a link.
-        inline: "min-h-6 text-sm text-action-label hover:underline",
+        // A toggle inside running content: "Show full key", "Show all". Sky, like a link.
+        inline: "min-h-6 text-sm text-link hover:underline",
       },
     },
     defaultVariants: { variant: "section" },

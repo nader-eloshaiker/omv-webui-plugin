@@ -23,11 +23,12 @@ interface TopBarProps extends Omit<React.ComponentProps<"header">, "children"> {
 }
 
 /**
- * The top bar (foundation 10): on the page ground, never painted sky blue (3.2). It sticks to the
- * top of the window and blurs the page scrolling under it, the one blur the foundation allows, so it
- * stays legible over any content. Sky blue is only its accent: the mark and the focus ring. Its
- * controls are `variant="quiet"`: ink with no fill, the ordinary focus ring. It is named for the
- * page-change view transition, so it stays still while the page changes.
+ * The top bar (foundation 10): on the solid page ground with a hairline under it, never painted sky
+ * blue (3.2) and never frosted or blurred (style guide 10). It sticks to the top of the window, and
+ * the solid ground keeps it legible over any content scrolling under it. Sky blue is only its
+ * accent: the mark and the focus ring. Its controls are `variant="plain"`: ink with no fill, the
+ * ordinary focus ring. It is named for the page-change view transition, so it stays still while the
+ * page changes.
  */
 function TopBar({
   brand,
@@ -44,7 +45,7 @@ function TopBar({
     <header
       data-slot="top-bar"
       className={cn(
-        "sticky top-0 z-40 flex h-15 items-center gap-2 bg-page/72 px-2 text-foreground backdrop-blur-md backdrop-saturate-150 sm:gap-3 sm:px-4 lg:px-5 compact:h-13",
+        "sticky top-0 z-40 flex h-15 items-center gap-2 border-b border-border bg-page px-2 text-foreground sm:gap-3 sm:px-4 lg:px-5 compact:h-13",
         "[view-transition-name:shell-top]",
         className,
       )}
@@ -79,13 +80,14 @@ interface TopBarBrandProps
   extends useRender.ComponentProps<"a">, VariantProps<typeof brandNameClass> {
   /** The product name, as text. */
   productName: React.ReactNode;
-  /** The NAS's host name, from the backend, in the mono face. Hidden under 768px; truncates first. */
+  /** The NAS's host name, from the backend, in the mono face and the secondary ink. Hidden under
+   * 768px; truncates first. Plain text beside the name, not a chip. */
   hostName?: string;
 }
 
 /**
  * The product mark, name and host. Renders an `<a>` (to the dashboard); pass `render` to use the
- * router's link. The mark is a drawing of two drive caddies with their lights, in the brand blue on
+ * router's link. The mark is a drawing of two drive caddies with their handles, in the brand blue on
  * its tint: generic, not the project's logo artwork (this is an unofficial community plugin).
  */
 function TopBarBrand({
@@ -110,7 +112,7 @@ function TopBarBrand({
             <ProductMark />
             <span className={brandNameClass({ layout })}>{productName}</span>
             {hostName ? (
-              <span className="hidden min-w-0 truncate rounded-full bg-muted-strong px-2 py-px font-mono text-xs text-muted-foreground md:inline">
+              <span className="hidden min-w-0 truncate font-mono text-sm text-muted-foreground md:inline">
                 {hostName}
               </span>
             ) : null}
@@ -129,7 +131,7 @@ function ProductMark({ className }: { className?: string }) {
       aria-hidden="true"
       data-slot="product-mark"
       className={cn(
-        "grid size-8 shrink-0 place-items-center rounded-control bg-selected text-action-label shadow-control",
+        "grid size-8 shrink-0 place-items-center rounded-control bg-selected text-brand shadow-control",
         className,
       )}
     >
@@ -145,8 +147,7 @@ function ProductMark({ className }: { className?: string }) {
       >
         <rect x="2" y="3" width="16" height="5" rx="1.6" />
         <rect x="2" y="12" width="16" height="5" rx="1.6" />
-        <circle cx="5.5" cy="5.5" r="1" fill="currentColor" stroke="none" />
-        <circle cx="5.5" cy="14.5" r="1" fill="currentColor" stroke="none" />
+        <path d="M5.5 5.5h3M5.5 14.5h3" />
       </svg>
     </span>
   );

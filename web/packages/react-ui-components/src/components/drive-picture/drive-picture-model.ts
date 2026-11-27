@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The drive pictures' kinds and sizes, and how a disk's kind is read from the contract's rows, apart
+// from the drawing so the temperatures can lay out a tile without drawing one.
+
+/** What a disk is, for its picture and its group only: never a colour and never a figure. */
+export type DrivePictureKind = "hdd" | "ssd" | "nvme";
+
+/**
+ * What a picture draws: a kind, or `disk`, a plain drive that claims no kind (never guess), for a disk
+ * whose kind was not read, as the drive bay's and the NAS map's `disk`.
+ */
+export type DrivePictureShape = DrivePictureKind | "disk";
+
+/** `marker` for a key or a line of text, `tile` in the temperatures, `large` on a disk's own page. */
+export type DrivePictureSize = "marker" | "tile" | "large";
+
+/**
+ * Each picture's size in pixels, the stick lying flat. Every kind is as tall as the others at its size
+ * and as wide as its own device's proportions (owner, 2026-11-27): a 3.5" hard disk is 101.6 by 147mm
+ * and a 2.5" SSD 69.85 by 100mm, the same proportion to a hundredth, so they share one box; an M.2
+ * 2280 stick is 22 by 80mm, so standing upright it is as tall as they are and about a quarter as wide.
+ * The plain `disk` has the hard disk's box. At `marker` the stick keeps a box of its own, as it is only
+ * ever drawn lying, beside a word.
+ */
+export const DRIVE_PICTURE_BOX: Readonly<
+  Record<DrivePictureSize, Record<DrivePictureShape, { w: number; h: number }>>
+> = {
+  marker: {
+    hdd: { w: 12, h: 15 },
+    ssd: { w: 12, h: 15 },
+    nvme: { w: 16, h: 6 },
+    disk: { w: 12, h: 15 },
+  },
+  tile: {
+    hdd: { w: 40, h: 56 },
+    ssd: { w: 40, h: 56 },
+    nvme: { w: 56, h: 16 },
+    disk: { w: 40, h: 56 },
+  },
+  large: {
+    hdd: { w: 52, h: 72 },
+    ssd: { w: 52, h: 72 },
+    nvme: { w: 72, h: 20 },
+    disk: { w: 52, h: 72 },
+  },
+};
+
+/**
+ * How the NVMe stick is drawn: `lying` flat, as it sits on the mainboard (the NAS map's drive bay and
+ * the drawing of the NAS), or `upright`, its contact fingers at the foot, standing at the height of
+ * the other drives (the temperatures). The other kinds are always drawn upright and ignore it.
+ */
+export type DrivePictureOrientation = "lying" | "upright";
+
+/** A picture's box in pixels: the stick standing upright has its lying box turned on its side. */
+export function drivePictureBox(
+  kind: DrivePictureShape,
+  size: DrivePictureSize,
+  orientation: DrivePictureOrientation = "lying",
+): { w: number; h: number } {
+  const box = DRIVE_PICTURE_BOX[size][kind];
+  return kind === "nvme" && orientation === "upright"
+    ? { w: box.h, h: box.w }
+    : box;
+}
+
+/**
+ * A disk's kind from what the contract gives: an NVMe SSD by its kernel name (DiskMgmt.getList or
+ * Smart.getList `devicename`, "nvme0n1"); otherwise Smart.getInformation's `rotationrate`, "Solid
+ * State Device" for an SSD or a speed such as "7200 rpm" for a hard disk. Null when neither says,
+ * so the caller decides rather than the picture guessing.
+ */
+export function driveKindOf(
+  disk: { devicename: string },
+  information?: { rotationrate?: unknown } | null,
+): DrivePictureKind | null {
+  if (/^nvme\d/u.test(disk.devicename)) {
+    return "nvme";
+  }
+  const rate = information?.rotationrate;
+  if (typeof rate === "string") {
+    if (/solid state/iu.test(rate)) {
+      return "ssd";
+    }
+    if (/\d\s*rpm/iu.test(rate)) {
+      return "hdd";
+    }
+  }
+  if (typeof rate === "number") {
+    return rate === 0 ? "ssd" : "hdd";
+  }
+  return null;
+}

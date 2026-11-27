@@ -2,7 +2,6 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva } from "class-variance-authority";
-import { ChevronRight } from "lucide-react";
 import * as React from "react";
 import { cn } from "../../utils";
 import { useElementSize } from "../chart-model/use-element-width";
@@ -21,7 +20,7 @@ interface ConnectionMapNode {
   id: string;
   /** Its name, as text: "sdb", "data", "Photos", "Windows and Mac". */
   label: string;
-  /** One line under the name: "3.6 TiB · 41 °C", "62% full · ext4". */
+  /** One line under the name: "3.6 TiB, 41 °C", "62% full, ext4". */
   detail?: React.ReactNode;
   /** Its state. A node that is not OK shows its icon and word, and its lines take the status colour. */
   status?: HealthStatus;
@@ -33,7 +32,8 @@ interface ConnectionMapNode {
   off?: boolean;
   /**
    * The node acts: it opens the thing. Only a node with `onSelect`, `href` or `render` looks
-   * clickable, with a chevron and a hover state; every other node is plain (it can still be focused
+   * clickable, with a resting depth and a hover state (no chevron, style guide 10); every other
+   * node is plain (it can still be focused
    * to trace it).
    */
   onSelect?: () => void;
@@ -107,13 +107,14 @@ const nodeClass = cva(
   {
     variants: {
       tone: {
+        // The state is the leading icon and the word, never a tinted box (style guide 10).
         ok: "border-border bg-surface",
-        warning: "border-warning-stroke bg-warning-wash",
-        critical: "border-critical-stroke bg-critical-wash",
-        unknown: "border-unknown-stroke bg-unknown-wash",
+        warning: "border-border bg-surface",
+        critical: "border-border bg-surface",
+        unknown: "border-border bg-surface",
       },
       acting: {
-        // Something that opens looks it at rest: a resting shadow and a chevron; its hover answers.
+        // Something that opens looks it at rest: a resting shadow; its hover answers.
         true: "cursor-pointer shadow-control hover:border-border-control hover:bg-muted-strong",
         false: "cursor-default",
       },
@@ -173,14 +174,7 @@ function MapNodeItem({
       >
         {node.label}
       </span>
-      {acting ? (
-        <ChevronRight
-          aria-hidden="true"
-          className="size-4 text-tertiary-foreground rtl:-scale-x-100"
-        />
-      ) : (
-        <span />
-      )}
+      <span />
       <span className="col-start-2 col-end-4 flex min-w-0 flex-wrap gap-x-1.5 text-caption text-tertiary-foreground">
         {node.statusLabel ? (
           <span className={cn(tone === "ok" && "sr-only", wordClass({ tone }))}>
@@ -412,10 +406,7 @@ function ConnectionMap({
           const titleId = `${hintId}-${column.id}`;
           return (
             <div key={column.id} className="flex min-w-0 flex-col gap-2">
-              <p
-                id={titleId}
-                className="text-caption font-semibold text-tertiary-foreground"
-              >
+              <p id={titleId} className="text-sm text-muted-foreground">
                 {column.title}
               </p>
               <ul

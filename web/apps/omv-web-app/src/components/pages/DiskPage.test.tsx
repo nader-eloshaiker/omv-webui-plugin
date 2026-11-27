@@ -67,9 +67,8 @@ describe("a disk's page", () => {
       "href",
       "/ui/storage/disks",
     );
-    const current = within(crumbs).getByText("/dev/sdb");
-    expect(current).toHaveAttribute("aria-current", "page");
-    expect(current.closest("a")).toBeNull();
+    // Only the parent page: the title says where you are.
+    expect(crumbs).toHaveTextContent(/^Disks$/);
     expect(
       screen.getByText(
         (_, element) =>
@@ -310,11 +309,30 @@ describe("the summary card", () => {
       scenario: "disksNas",
       path: "/",
     });
-    const card = await screen.findByRole("region", { name: "Disk health" });
-    await user.click(
-      within(card).getByRole("button", { name: "Check disk health" }),
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
     );
-    await within(card).findByText("Check again", {}, { timeout: 5000 });
+    // The check sits in the dashboard's answer, once the map has been read.
+    expect(map).toBeInTheDocument();
+    await user.click(
+      await screen.findByRole("button", { name: "Check disk health" }),
+    );
+    await waitFor(
+      () =>
+        expect(
+          within(map).queryByRole("button", { name: /Checking disk health/ }),
+        ).not.toBeInTheDocument(),
+      { timeout: 5000 },
+    );
+    await waitFor(() =>
+      expect(seenCalls.some((c) => c.call === "Exec.getOutput")).toBe(true),
+    );
+    // The dashboard reads the kind of the disks awake (journal 2026-11-27); the disk pages add none.
+    const kinds = seenCalls.filter(
+      (c) => c.call === "Smart.getInformation",
+    ).length;
     await act(() =>
       app.router.navigate({
         to: "/storage/disks/$disk",
@@ -337,7 +355,9 @@ describe("the summary card", () => {
     expect(seenCalls.filter((c) => c.call === "Smart.getListBg")).toHaveLength(
       1,
     );
-    expect(callNames()).not.toContain("Smart.getInformation");
+    expect(
+      seenCalls.filter((c) => c.call === "Smart.getInformation"),
+    ).toHaveLength(kinds);
   });
 
   it("names the vendor when it is a maker's name, and says when the disk is a hardware RAID set", async () => {

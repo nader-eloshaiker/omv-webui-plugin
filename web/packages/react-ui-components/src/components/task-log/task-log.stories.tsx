@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import { TaskLog, type TaskLogLine } from "./task-log";
 
 const labels = {
@@ -49,7 +49,7 @@ export const Ended: Story = {
     lines: [...APT, { time: "12:04:30", text: "Done." }],
     endMessage: (
       <span className="flex flex-wrap items-center gap-2">
-        <StatusPill status="succeeded">Succeeded</StatusPill>3 packages were
+        <StatusLabel status="succeeded">Succeeded</StatusLabel>3 packages were
         upgraded.
       </span>
     ),
@@ -335,7 +335,7 @@ export const Stopped: Story = {
     cap: copyCap,
     endMessage: (
       <span className="flex flex-wrap items-center gap-2">
-        <StatusPill status="cancelled">Cancelled</StatusPill>Photos to Backup
+        <StatusLabel status="cancelled">Cancelled</StatusLabel>Photos to Backup
         was stopped. Files copied so far stay.
       </span>
     ),
@@ -351,9 +351,9 @@ export const FailedWithNoOutput: Story = {
     emptyLabel: "No output.",
     endMessage: (
       <span className="flex flex-wrap items-center gap-2">
-        <StatusPill status="failed">Failed</StatusPill>Photos to Backup ended at
-        once without saying why. It may already be running on its schedule. Wait
-        for it to end and try again.
+        <StatusLabel status="failed">Failed</StatusLabel>Photos to Backup ended
+        at once without saying why. It may already be running on its schedule.
+        Wait for it to end and try again.
       </span>
     ),
   },

@@ -25,7 +25,7 @@ export const Disks: Story = {
         statusLabel="Critical"
         name="/dev/sda"
         nameVariant="identifier"
-        detail="Example HDD 4TB, 3.6 TiB · 41 °C"
+        detail="Example HDD 4TB, 3.6 TiB, 41 °C"
         reason="Many damaged areas (bad sectors). It may fail soon. Copy your data off it and replace it."
       />
       <HealthListItem
@@ -51,7 +51,7 @@ export const Disks: Story = {
         statusLabel="OK"
         name="/dev/nvme0n1"
         nameVariant="identifier"
-        detail="VMware Virtual NVMe Disk, 20.0 GiB · 30 °C"
+        detail="VMware Virtual NVMe Disk, 20.0 GiB, 30 °C"
       />
     </HealthList>
   ),

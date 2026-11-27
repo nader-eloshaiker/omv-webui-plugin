@@ -6,7 +6,7 @@ import { Button, IconButton } from "../button/button";
 import { Checkbox } from "../checkbox/checkbox";
 import { EmptyState } from "../empty-state/empty-state";
 import { Input } from "../field/field";
-import { StatusIcon, StatusPill } from "../status/status";
+import { StatusIcon, StatusLabel } from "../status/status";
 import type { HealthStatus } from "../status/status-kinds";
 import { Identifier } from "../text/identifier";
 import { Tooltip } from "../tooltip/tooltip";
@@ -236,9 +236,9 @@ function DisksTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    <StatusPill status={disk.status}>
+                    <StatusLabel status={disk.status}>
                       {WORDS[disk.status]}
-                    </StatusPill>
+                    </StatusLabel>
                   </TableCell>
                 </TableRow>
               ))
@@ -396,7 +396,7 @@ const GROUPS: DiskGroup[] = [
 
 function RoleCell({ disk }: { disk: PoolDisk }) {
   return disk.status ? (
-    <StatusPill status={disk.status}>{disk.role}</StatusPill>
+    <StatusLabel status={disk.status}>{disk.role}</StatusLabel>
   ) : (
     disk.role
   );

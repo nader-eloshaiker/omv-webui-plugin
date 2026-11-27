@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Clock } from "lucide-react";
 import * as React from "react";
 import { Button } from "../button/button";
 import { CapacityMeter } from "../capacity-meter/capacity-meter";
@@ -11,12 +12,12 @@ import {
   FactListSkeleton,
   FactListValue,
 } from "../fact-list/fact-list";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import {
   Card,
-  CardChevron,
   CardContent,
   CardDescription,
+  CardExternalMark,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -26,10 +27,11 @@ const meta = {
   title: "Components/Card",
   component: Card,
   decorators: [(Story) => <div className="max-w-xl">{Story()}</div>],
-} satisfies Meta<typeof Card>;
+} satisfies Meta;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+// Card's props are a union (`opens`), which Storybook's args cannot infer; every story renders.
+type Story = StoryObj;
 
 export const Default: Story = {
   render: function DefaultStory() {
@@ -87,7 +89,7 @@ export const WithDescriptionAndFooter: Story = {
   },
 };
 
-export const WithQuietFooterLink: Story = {
+export const WithFooterLink: Story = {
   render: () => (
     <Card>
       <CardHeader>
@@ -143,7 +145,7 @@ export const AttentionRow: Story = {
     <ul aria-label="Needs attention" className="flex flex-col gap-2">
       <Card render={<li />}>
         <CardContent className="flex-row flex-wrap items-start gap-3">
-          <StatusPill status="warning">Warning</StatusPill>
+          <StatusLabel status="warning">Warning</StatusLabel>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <p>
               A restart is needed to finish installing updates. Restarting is in
@@ -178,8 +180,8 @@ export const LongContent: Story = {
 };
 
 /**
- * Cards that act (foundation 13): the whole card is the link, with a chevron at rest and a hover
- * state, so it is plainly something to press before the pointer reaches it.
+ * Cards that act (foundation 13): the whole card is the link. Its title says where it goes, the
+ * hover and the press say that it acts; no arrow or chevron (style guide 10).
  */
 export const ActionCards: Story = {
   render: () => (
@@ -190,10 +192,9 @@ export const ActionCards: Story = {
             <div className="flex min-w-0 flex-col gap-0.5">
               <CardTitle level={3}>Disks</CardTitle>
               <p className="text-caption text-tertiary-foreground tabular-nums">
-                4 disks · 14.6&nbsp;TiB
+                4 disks, 14.6&nbsp;TiB in all
               </p>
             </div>
-            <CardChevron />
           </CardHeader>
         </Card>
       </li>
@@ -206,7 +207,6 @@ export const ActionCards: Story = {
                 6 folders, 3 shared with Windows
               </p>
             </div>
-            <CardChevron />
           </CardHeader>
         </Card>
       </li>
@@ -215,16 +215,17 @@ export const ActionCards: Story = {
 };
 
 /**
- * The one card that carries a non-OK state, lit in its state: a wash in its top end corner fading
- * to the card, always with the state's pill and words (foundation 3.3, 3.4).
+ * A card about a thing in a non-OK state: its title leads with the state's icon, and its words say
+ * what is wrong. The card itself is not lit, tinted or edged in the state (style guide 10).
  */
-export const LitInItsState: Story = {
+export const StateOnTheTitle: Story = {
   render: () => (
     <div className="flex flex-col gap-gutter">
-      <Card tone="warning">
+      <Card>
         <CardHeader>
-          <CardTitle level={3}>Disk sdb is running warm</CardTitle>
-          <StatusPill status="warning">Warning</StatusPill>
+          <CardTitle level={3} tone="warning">
+            Disk sdb is running warm
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -236,10 +237,11 @@ export const LitInItsState: Story = {
           </Button>
         </CardContent>
       </Card>
-      <Card tone="critical">
+      <Card>
         <CardHeader>
-          <CardTitle level={3}>RAID md0 is degraded</CardTitle>
-          <StatusPill status="critical">Critical</StatusPill>
+          <CardTitle level={3} tone="critical">
+            RAID md0 is degraded
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -267,5 +269,115 @@ export const Inset: Story = {
         </Card>
       </CardContent>
     </Card>
+  ),
+};
+
+/** One attention card of the dashboard: its header, title, body and next step, named by the step. */
+function AttentionCard({
+  tone,
+  title,
+  body,
+  step,
+  href,
+  external,
+}: {
+  tone: "warning" | "critical" | "none";
+  title: React.ReactNode;
+  body: React.ReactNode;
+  step: string;
+  href: string;
+  external?: boolean;
+}) {
+  const stepId = React.useId();
+  const aboutId = React.useId();
+  const head =
+    tone === "none" ? (
+      <Clock aria-hidden="true" className="size-4 text-muted-foreground" />
+    ) : (
+      <StatusLabel status={tone}>
+        {tone === "critical" ? "Critical" : "Warning"}
+      </StatusLabel>
+    );
+  const inner = (
+    <>
+      <CardHeader className="flex-nowrap items-center">
+        {head}
+        {external ? <CardExternalMark /> : null}
+      </CardHeader>
+      <CardContent id={aboutId} className="gap-1">
+        <CardTitle level={3}>{title}</CardTitle>
+        <p className="text-muted-foreground">{body}</p>
+      </CardContent>
+      <CardFooter className="border-t-0 pt-0 pb-card">
+        <span id={stepId} className="font-medium text-action-label">
+          {step}
+        </span>
+      </CardFooter>
+    </>
+  );
+  return (
+    <li className="flex">
+      {external ? (
+        <Card
+          variant="action"
+          opens="new-tab"
+          newTabLabel="(opens in a new tab)"
+          aria-labelledby={stepId}
+          aria-describedby={aboutId}
+          render={<a href={href} />}
+          className="flex-1"
+        >
+          {inner}
+        </Card>
+      ) : (
+        <Card
+          variant="action"
+          aria-labelledby={stepId}
+          aria-describedby={aboutId}
+          render={<a href={href} />}
+          className="flex-1"
+        >
+          {inner}
+        </Card>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Action cards that lead out of this interface to the classic one: the external mark at the end of
+ * the header, `target="_blank"` and `rel="noopener noreferrer"` set by the card, and "(opens in a new
+ * tab)" added to the name. Beside one that stays here, for comparison.
+ */
+export const LeavesTheInterface: Story = {
+  render: () => (
+    <ul
+      aria-label="Needs attention"
+      className="grid grid-cols-[repeat(auto-fill,minmax(17rem,1fr))] gap-gutter"
+    >
+      <AttentionCard
+        tone="warning"
+        title="The NAS needs a restart"
+        body="Updates finish installing when it restarts. Restarting is in the classic interface, in the power menu at the top right."
+        step="Restart from the classic interface"
+        href="/"
+        external
+      />
+      <AttentionCard
+        tone="none"
+        title="The clocks differ by 4 minutes"
+        body="If the NAS clock is wrong, schedules and logs will be too."
+        step="Check Date and time in the classic interface"
+        href="/"
+        external
+      />
+      <AttentionCard
+        tone="critical"
+        title="Disk sdb may fail soon"
+        body="Many damaged areas (bad sectors). It may fail soon. Copy your data off it and replace it."
+        step="Open disk sdb"
+        href="#/storage/disks/sdb"
+      />
+    </ul>
   ),
 };

@@ -32,7 +32,9 @@ function chart(
       formatValue={pct}
       formatAgo={(sec) => (sec === 0 ? "now" : `${sec} s`)}
       formatTime={(t) => `T+${(t - T0) / 1000}`}
-      caption={({ sampledMs }) => `Live · every 2 s · last ${s(sampledMs)}`}
+      caption={({ sampledMs }) =>
+        `Updated every 2 s, showing the last ${s(sampledMs)}`
+      }
       describe={({ sampledMs, series }) =>
         `Processor over the last ${s(sampledMs)}: now ${series[0]?.now ?? "none"}, highest ${series[0]?.high ?? "none"}, lowest ${series[0]?.low ?? "none"}.`
       }
@@ -71,7 +73,9 @@ describe("LiveChart", () => {
   it("says the span it really sampled, not the window it has room for", () => {
     render(chart(samples([12, 30, 25])));
     expect(
-      screen.getByText("Live · every 2 s · last 4 s").closest("figcaption"),
+      screen
+        .getByText("Updated every 2 s, showing the last 4 s")
+        .closest("figcaption"),
     ).not.toBeNull();
   });
 

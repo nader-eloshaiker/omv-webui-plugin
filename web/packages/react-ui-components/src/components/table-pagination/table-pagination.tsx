@@ -78,7 +78,9 @@ function StepButton({
             direction === "next" && "flex-row-reverse",
           )}
         >
-          <Icon aria-hidden="true" className="rtl:-scale-x-100" />
+          {/* Icon-only under 640px, where the words do not fit; from 640px the words alone, with no
+              arrow beside them (style guide 10). */}
+          <Icon aria-hidden="true" className="sm:hidden rtl:-scale-x-100" />
           {/* The name in both layouts: visible from 640px, for assistive technology only below. */}
           <span className="max-sm:sr-only">{step.label}</span>
         </Button>

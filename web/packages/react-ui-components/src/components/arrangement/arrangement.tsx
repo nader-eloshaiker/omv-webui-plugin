@@ -137,7 +137,7 @@ function Arrangement({
               data-current={option.current ? "" : undefined}
               className={cn(
                 "flex flex-wrap gap-3.5 rounded-control bg-muted p-3.5 ring-1 ring-border ring-inset",
-                option.current && "ring-2 ring-action",
+                option.current && "ring-2 ring-selected-mark",
               )}
             >
               <svg
@@ -218,7 +218,7 @@ function Arrangement({
                 <p className="flex flex-wrap items-center gap-1.5 text-base font-semibold text-foreground">
                   {option.title}
                   {option.current && currentLabel ? (
-                    <span className="rounded-full bg-selected px-2 text-xs font-semibold text-action-label">
+                    <span className="text-sm font-normal text-selected-label">
                       {currentLabel}
                     </span>
                   ) : null}

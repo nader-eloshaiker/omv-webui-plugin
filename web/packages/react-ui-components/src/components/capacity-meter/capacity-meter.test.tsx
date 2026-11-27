@@ -34,14 +34,14 @@ describe("CapacityMeter", () => {
 });
 
 describe("CapacityMeter compact", () => {
-  it("is still named by its hidden label, with the figure and the pill on screen", () => {
+  it("is still named by its hidden label, with the figure and the status on screen", () => {
     const { container } = render(
       <CapacityMeter
         variant="compact"
         label="Usage of backup"
         value={3.6}
         max={3.6}
-        valueText="100% full · 0 B free of 3.6 TiB"
+        valueText="100% full, 0 B free of 3.6 TiB"
         threshold={{ status: "critical", label: "Critical" }}
       />,
     );
@@ -49,25 +49,25 @@ describe("CapacityMeter compact", () => {
     expect(meter).toHaveAttribute("data-variant", "compact");
     expect(meter).toHaveAttribute(
       "aria-valuetext",
-      "100% full · 0 B free of 3.6 TiB",
+      "100% full, 0 B free of 3.6 TiB",
     );
     expect(screen.getByText("Usage of backup")).toHaveClass("sr-only");
-    const figure = screen.getByText("100% full · 0 B free of 3.6 TiB");
-    // The pill sits beside the figure, not beside the hidden label.
+    const figure = screen.getByText("100% full, 0 B free of 3.6 TiB");
+    // The status sits beside the figure, not beside the hidden label.
     expect(figure.parentElement).toContainElement(
       container.querySelector("[data-slot=status-pill]") as HTMLElement,
     );
     expect(screen.getByText("Critical")).toBeInTheDocument();
   });
 
-  it("has no pill below the threshold", () => {
+  it("has no status below the threshold", () => {
     const { container } = render(
       <CapacityMeter
         variant="compact"
         label="Usage of data"
         value={2.2}
         max={3.6}
-        valueText="62% full · 1.4 TiB free of 3.6 TiB"
+        valueText="62% full, 1.4 TiB free of 3.6 TiB"
       />,
     );
     expect(screen.getByRole("meter", { name: "Usage of data" })).toBeVisible();
@@ -115,7 +115,7 @@ describe("CapacityMeter text", () => {
     ["default", ["File system: data", "Warning", "2.2 TiB of 3.6 TiB (62%)"]],
     ["compact", ["File system: data", "2.2 TiB of 3.6 TiB (62%)", "Warning"]],
   ] as const)(
-    "holds no text but its label, figure and pill (%s)",
+    "holds no text but its label, figure and status (%s)",
     (variant, parts) => {
       render(
         <CapacityMeter

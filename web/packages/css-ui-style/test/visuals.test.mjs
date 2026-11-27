@@ -68,11 +68,47 @@ describe("the visual motions", () => {
     assert.match(css, /\.grow-box \{\s*transform-box: fill-box;/);
   });
 
-  it("never loops: the travelling dash runs twice and the arrival rings twice", () => {
+  it("never loops: the travelling dash runs twice and the arrival rings once", () => {
     assert.match(css, /\.travel-dash \{[^}]*travel[^}]* 2 both/);
     assert.doesNotMatch(
       css,
       /\.(travel-dash|line-draw|animate-arrive)[^{]*\{[^}]*infinite/,
+    );
+    // One run, no iteration count: the ring appears once.
+    assert.match(
+      css,
+      /\.animate-arrive \{\s*animation: arrive 1\.5s var\(--ease-standard\) 300ms both;/,
+    );
+  });
+
+  it("rings the arrival once: in, held still, faded out, never flashing", () => {
+    const block = css.match(/@keyframes arrive \{([\s\S]*?)\n\}/);
+    assert.ok(block, "the arrive keyframes are present");
+    const frames = [
+      ...block[1].matchAll(/([\d%,\s]+)\{\s*box-shadow: ([^;]+);/g),
+    ].map(([, at, shadow]) => [at.replace(/\s+/g, ""), shadow.trim()]);
+    assert.deepEqual(frames, [
+      ["0%", "0 0 0 3px transparent"],
+      ["8%,73%", "0 0 0 3px var(--color-focus-ring)"],
+      ["100%", "0 0 0 3px transparent"],
+    ]);
+  });
+
+  it("shows the arrival still for a second under reduced motion, then removes it without a fade", () => {
+    const reduced = css.match(
+      /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.animate-arrive \{([^}]*)\}/,
+    );
+    assert.ok(
+      reduced,
+      "the reduced-motion exception for the arrival is present",
+    );
+    assert.match(
+      reduced[1],
+      /animation: arrive-still 1s step-end both !important/,
+    );
+    assert.match(
+      css,
+      /@keyframes arrive-still \{\s*from \{\s*box-shadow: 0 0 0 3px var\(--color-focus-ring\);\s*\}\s*to \{\s*box-shadow: 0 0 0 3px transparent;/,
     );
   });
 

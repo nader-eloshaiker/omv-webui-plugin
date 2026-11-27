@@ -21,7 +21,8 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      preference: "system",
+      // Dark until the person chooses otherwise (owner, 2026-11-27); index.html opens dark too.
+      preference: "dark",
       setPreference: (preference) => set({ preference }),
     }),
     {

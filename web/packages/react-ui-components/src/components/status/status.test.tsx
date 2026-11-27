@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { StatusDot, StatusPill } from "./status";
+import { StatusDot, StatusLabel, StatusPill } from "./status";
 import { rollUp, type Status } from "./status-kinds";
 
 const cases: [Status, string, string][] = [
@@ -19,12 +19,12 @@ const cases: [Status, string, string][] = [
   ["pending", "Pending", "clock"],
 ];
 
-describe("StatusPill", () => {
+describe("StatusLabel", () => {
   it.each(cases)(
     "%s shows its word and its own icon shape",
     (status, word, icon) => {
       const { container } = render(
-        <StatusPill status={status}>{word}</StatusPill>,
+        <StatusLabel status={status}>{word}</StatusLabel>,
       );
       expect(screen.getByText(word)).toBeInTheDocument();
       const mark = container.querySelector("[data-icon]");
@@ -37,7 +37,7 @@ describe("StatusPill", () => {
     const shapes = new Set(
       (["ok", "warning", "critical", "unknown"] as const).map((status) => {
         const { container, unmount } = render(
-          <StatusPill status={status}>x</StatusPill>,
+          <StatusLabel status={status}>x</StatusLabel>,
         );
         const shape = container
           .querySelector("[data-icon]")
@@ -48,10 +48,23 @@ describe("StatusPill", () => {
     );
     expect(shapes.size).toBe(4);
   });
+
+  it("is an icon and a coloured word, never a capsule (style guide 10)", () => {
+    const { container } = render(
+      <StatusLabel status="warning">Warning</StatusLabel>,
+    );
+    const label = container.querySelector("[data-slot=status-pill]");
+    expect(label?.className).toContain("text-warning-label");
+    expect(label?.className).not.toMatch(/rounded-full|border|bg-/);
+  });
+
+  it("keeps the old name as the same component", () => {
+    expect(StatusPill).toBe(StatusLabel);
+  });
 });
 
 describe("StatusDot", () => {
-  it("draws the Unknown family hollow, names every dot, and is not a tab stop", () => {
+  it("draws the status's icon, not a disc, names every mark, and is not a tab stop", () => {
     const { container } = render(
       <>
         <StatusDot status="ok" label="OK" />
@@ -60,8 +73,14 @@ describe("StatusDot", () => {
     );
     expect(screen.getByText("OK")).toHaveClass("sr-only");
     expect(screen.getByText("Unknown")).toHaveClass("sr-only");
-    const unknown = container.querySelector("[data-status=unknown]");
-    expect(unknown?.className).toContain("bg-transparent");
+    const unknown = container.querySelector(
+      "[data-slot=status-dot][data-status=unknown]",
+    );
+    expect(unknown?.querySelector("[data-icon]")).toHaveAttribute(
+      "data-icon",
+      "dashed",
+    );
+    expect(unknown?.className).not.toMatch(/rounded-full|bg-/);
     expect(container.querySelectorAll("[tabindex]")).toHaveLength(0);
   });
 });

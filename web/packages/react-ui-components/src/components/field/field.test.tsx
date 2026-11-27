@@ -8,6 +8,8 @@ import {
   FieldHint,
   FieldLabel,
   FieldRequired,
+  FormColumn,
+  Input,
 } from "./field";
 
 describe("Field", () => {
@@ -32,5 +34,53 @@ describe("Field", () => {
     expect(error).not.toBeNull();
     expect(describedBy).toContain(error?.id);
     expect(input).toHaveAttribute("aria-invalid", "true");
+  });
+});
+
+describe("field widths", () => {
+  it("sizes a control by what it holds, never past its column, full by default", () => {
+    render(
+      <FormColumn data-testid="column">
+        <Field>
+          <FieldLabel>Name</FieldLabel>
+          <FieldControl width="name" />
+        </Field>
+        <Field>
+          <FieldLabel>Fixed address</FieldLabel>
+          <FieldControl width="address" />
+        </Field>
+        <Field>
+          <FieldLabel>Description</FieldLabel>
+          <FieldControl />
+        </Field>
+        <Input aria-label="Search" width="wide" />
+      </FormColumn>,
+    );
+    const name = screen.getByRole("textbox", { name: "Name" });
+    expect(name).toHaveAttribute("data-width", "name");
+    expect(name).toHaveClass("w-[calc(24ch+1.625rem)]", "max-w-full");
+    expect(name).not.toHaveClass("w-full");
+    expect(screen.getByRole("textbox", { name: "Fixed address" })).toHaveClass(
+      "w-[calc(16ch+1.625rem)]",
+    );
+    const description = screen.getByRole("textbox", { name: "Description" });
+    expect(description).toHaveAttribute("data-width", "full");
+    expect(description).toHaveClass("w-full");
+    expect(screen.getByRole("textbox", { name: "Search" })).toHaveClass(
+      "w-[calc(40ch+1.625rem)]",
+    );
+    expect(screen.getByTestId("column")).toHaveClass("max-w-160");
+  });
+
+  it("lets a caller's class win over the width step", () => {
+    render(
+      <Field>
+        <FieldLabel>Port</FieldLabel>
+        <FieldControl width="number" className="w-32" />
+      </Field>,
+    );
+    const port = screen.getByRole("textbox", { name: "Port" });
+    expect(port).toHaveClass("w-32");
+    expect(port).not.toHaveClass("w-[calc(8ch+1.625rem)]");
   });
 });

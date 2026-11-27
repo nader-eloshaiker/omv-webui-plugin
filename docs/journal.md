@@ -882,3 +882,187 @@ The owner rejected the pending pair kept from stock OMV, lemon `#f8d400` with co
 Three pending treatments were compared in Storybook in both themes: gold and navy in a solid band, a slate night band with gold accents, and the lemon kept with navy ink. The owner chose **gold `#ffcd47` with Sky's navy `#021d30`** and **all of the palette-wide changes**: navy as the one ink on every light fill, the status labels at one weight, the series re-spaced into the gaps between the scheme's hues at one chroma, and the terminal's words in slate. The pending pill takes its edge in `pending-stroke` so it clears 3:1 on the light page, and the band's buttons, unavailable while applying, become dashed outlines rather than fading into an unaudited khaki.
 
 The scheme is now the rule for any colour added later ([visual foundation 3.6](design/visual-foundation.md)). The colour audit simulates tritanopia as well as deuteranopia and protanopia, and checks 436 pairs with no failure.
+
+## 2026-11-25 — The reskin was not enough: accent, patterns and the NAS map (owner)
+
+The owner reviewed the dashboard re-composed in the new system and rejected the direction of the whole interface: it reads as one colour, with nothing that draws the eye to what needs attention or to the main thing to click. The forms and tables are the old interactions under new CSS ("a pig with lipstick"): no thought about how someone fills a form, or reads and digests a table. The interface needs many more custom icons and diagrams that show the action, its intention and its purpose. New users must feel welcomed and find it obvious how to use, without anything getting in a pro's way. Animations should be clever and fun, but subtle and never annoying. The dashboard had empty spaces in awkward places and must not look as if an AI laid it out. Input fields must not be far longer than the short text they hold.
+
+The owner chose:
+
+1. **An accent: Cobalt** (hue 258, `#0065da`), from three candidates (Iris, Cobalt, Glacier) compared in Storybook. It means one thing, *do this*: the one primary button in a view, the next step of the worst problem, the current step of a flow, first-steps progress, and the create button of an empty page. At most one filled accent per region. Sky blue keeps links, selection, checked controls and the focus ring. Status, pending, destructive buttons and charts never take the accent.
+2. **The dashboard becomes a map of the NAS**: the answer in words with area chips; a short list of what needs you; the map in lanes (disks, storage, shared folders, ways in, network) with status in place and each lane ending in its action; a live strip; first steps beside the NAS's facts. Every region spans the full width or a fixed split, so none can leave a hole.
+3. **Two preferences**: "Show tips" (newcomer tips, which also fade by themselves) and "Animations: Full / Reduced" (on top of the system's reduced-motion setting).
+4. **Create flows say what they do.** "Add a shared folder" and "Add a person" already create and apply in one go; the button names the outcome ("Create Photos") and the summary says it takes effect at once.
+5. **Fields are sized to their content.** A short value gets a short field; only free text, paths and lists take the full width.
+6. **The dashboard surfaces content from plugins too, natively.** OMV's classic dashboard builds plugin widgets from YAML that OMV compiles into one static file (`omv-mkworkbench dashboard`); each widget names any RPC method and renders template text with HTML. Rendering them that way would break UI-2, UI-4 and UI-10, so the owner chose: plugins this interface knows (ZFS and RAID now, others such as NUT when they join the contract) get native tiles and appear in their lane of the NAS map; any other installed plugin gets a tile with its name and "Open in the classic interface". The security rules are unchanged.
+
+New form and table patterns, an icon set and a motion catalogue are prototyped in the dev-only lab, and the owner sees screenshots before they move into the library and the pages.
+
+## 2026-11-25 — The NAS map reads by rows, and the welcome can be replayed (owner)
+
+The owner saw the first NAS map prototype: five columns (disks, storage, shared folders, ways in, network) joined by curved lines. They found the direction interesting but the connecting lines very hard to follow. The lines fanned out of shared trunks, crossed and ran close together, and the short right-hand columns left the map half empty. The map is redrawn so that position does the connecting: one row per storage, with its disks on the left and its shared folders on the right, each folder showing the ways it is reached by. Lines join only neighbours on the same row, so none can cross. A problem colours its own row. The ways in and the network become one small band under the rows. Pointing at a folder, a disk or a way in highlights what belongs to it, instead of asking the eye to follow a line.
+
+The owner also decided:
+
+1. **The welcome is remembered per browser** (a preference in browser storage, allowed by UI-13), so the NAS assembles once and later visits simply fade in. It can be seen again: "Show me around" replays it with the newcomer captions.
+2. **Compact density hides the explanations under each first step**, leaving the title and its button.
+
+## 2026-11-25 — Twenty habits of generated design are out (owner)
+
+The owner found the map by rows much improved but still marked as machine-made, and named twenty habits of generated design: arrows on every button, little dots between words, overused eyebrow labels, cream backgrounds, one italic word in the headline, sparkle icons, everything in a card, the word "quiet", numbered sections, pulsing green dots, blurry glows behind the headline, a display serif, coloured left borders, three icon cards in a row, pills around the headline, the word "real", made-up figures, two-word sentences, sections fading in on scroll, and dithering. Several were in the new designs and in the design system: separator dots, uppercase labels, tone bars on the left of rows and cards, the area pills under the dashboard's answer, the ambient glow behind the page header, the pulsing live dot, and numbered first steps.
+
+None of the twenty is used anywhere. The style guide lists each one with what replaces it. Regions sit on the page ground instead of in cards. A status is its icon and a coloured word. Labels are in sentence case. Values are written with commas or given their own labels. Copy is either a label or a whole sentence. Every figure comes from a backend read. The NAS assembling on the first visit stays, because it answers the person's first visit and "Show me around", not a scroll.
+
+The owner then left three questions to the recommendation:
+
+1. **Breadcrumbs** show only the parent page, as one link above the title ("Shared folders"). That needs no separator, so there is no chevron and no slash.
+2. **Table filters** are text tabs with their counts, the chosen one underlined, instead of pill-shaped buttons.
+3. **The jump highlight** (the ring round the thing a link or search jumped to) appears once, holds still briefly and fades, instead of flashing twice.
+
+## 2026-11-26 — Motion and guidance are right; the charts are not (owner)
+
+The owner saw the motion reel and the guidance prototype in the lab. Both look right and can move into the library and the pages.
+
+The charts look boring and generic. The owner saw two kinds:
+
+- the thin, flat blue usage bars in the NAS map, in the empty shared-folders example and in the tables;
+- the live readouts, which were figures with nothing drawn.
+
+A charts prototype in the lab (`?screen=charts`) puts several candidates side by side for each kind, and the owner chooses before the dashboard is re-composed. The rules do not change:
+
+- every figure comes from a contract read;
+- a live history shows only the readings the page itself took;
+- sequential colour is one hue by lightness;
+- series are labelled directly;
+- nothing pulses.
+
+## 2026-11-26 — Sort arrows stay in table headers (owner)
+
+Rule 1 of the generated look ("arrows on every button") is about call-to-action buttons. A sortable table header keeps its arrow: one arrow on the sorted column shows its direction, and a faint up-and-down pair marks the other sortable columns. This is the usual way to show sort order. The arrow turns when the direction changes, as in the motion reel.
+
+## 2026-11-26 — The waffle and the paired live charts (owner)
+
+The owner chose from the chart prototype (`/ui/lab?screen=charts`):
+
+1. **Space used is a waffle.** Each square is a fixed share of the drive, and the warning mark is a gap with a rule between columns. Empty squares are solid in a new slate:
+   - light: about `#b9c6d2`, 3.00:1 from the used blue;
+   - dark: about `#3b495b`, 3.68:1 from the used blue.
+
+   Both existing candidates failed in light. The divider colour faded into the page, and the track's outline colour was 1.16:1 from the used squares. The slate goes through the colour audit before it becomes a token.
+2. **Live readouts are two charts with four series.** Processor and memory share one percent scale. The network is mirrored, in above the line and out below, and each half has its own scale with a minimum of 1 MiB/s, so a small out stays visible. The two hues are teal (solid) and violet (dashed), the series on either side of the Sky base, replacing magenta and moss, which the owner found did not harmonise. Each line is named at its end.
+3. **Temperatures** have two candidates, both built for ties and a 24-disk bay:
+   - stacked along one scale, where disks at the same degree form a column;
+   - in bay order, as drive caddies.
+
+   The recommendation is stacked on the dashboard and bay order on the Disks page. That waits for the owner.
+
+## 2026-11-26 — Progress is filled, never outlined (owner)
+
+The owner approved the slate for the waffle's empty squares and asked that the bars follow the waffle: all filled, with no outline, and the same for every picture of progress. The used part is the usage blue and the rest is a new slate, `usage-empty`, with no edge round the track, the ring or the cells. This covers capacity meters, waffles, progress bars, task and job progress, the first-steps progress, a password-strength line and levels such as temperature. The light slate was made a little lighter than the one shown in the lab, `#c2cfdb`, so the used blue stands 3.29:1 from it instead of exactly 3:1; dark stays `#3b495b` at 3.68:1. Past a threshold the used part takes the status stroke colour, always with its word, because the warning fill does not stand out from the slate in light and the critical fill does not in dark.
+
+## 2026-11-26 — The charts are settled (owner)
+
+The owner settled the chart prototype:
+
+- Space used is the waffle on the slate.
+- The live readouts are two charts with four series: processor and memory together, and the network mirrored with in above and out below.
+- Disk temperatures are "by kind":
+  - Each RAID array and ZFS pool is a group of its own; the disks in neither are grouped as hard disks, SSDs and NVMe SSDs on the mainboard.
+  - Each disk is drawn as a picture of its kind, with a filled level on one shared scale.
+  - The alert limit is the same dashed line on every kind.
+  - The dashboard shows every disk up to eight. Past that it shows the groups with a disk over the limit and sums up the rest in a sentence with a way to open them; a disk over the limit is never hidden.
+
+These move into the component library, and the dashboard is rebuilt from them.
+
+## 2026-11-27 — What the dashboard may read for the map and the temperatures (owner)
+
+The rebuilt dashboard draws the NAS map and the disk temperatures by kind, grouped by RAID array and ZFS pool. Three of the reads that needs met the rule that a background read must not wake a disk. The owner decided:
+
+1. **A disk's kind** comes from `Smart.getInformation`, which can wake a sleeping disk. The dashboard reads it once per visit, and only for the disks that `DiskMgmt.getList` reports awake. A sleeping disk has no temperature to show, so it is drawn as asleep with no kind. NVMe disks are known by their name. A disk can fall asleep between the two reads; that small risk is accepted.
+2. **RAID arrays stay off the dashboard.** The 2026-11-22 decision stands: `MdMgmt.enumerateDevices` reads a member disk's superblock and is never read from the dashboard. An array's file system is still a storage row, from `FileSystemMgmt.getList`, but its member disks are not attached to it. A disk that `DiskMgmt.getList` marks as a RAID member is never called unused. In the temperatures, the member disks are grouped by kind. The Disks page reads the arrays and groups them by array.
+3. **ZFS pools' disks** may be read on the dashboard: `Zfs.getPoolDevices`, once per pool per visit, never polled, and only when the ZFS plugin is installed, on the same terms as `getPoolStatus` (zfs design 10.1). On the test VM neither call touched a member disk; real hardware is still open (zfs design 15.3).
+
+## 2026-11-27 — The accessibility check uses axe in Playwright (owner)
+
+The accessibility pass on the dashboard's library pieces runs axe with the WCAG 2.2 AA rules over their Storybook stories. The owner agreed to add `@axe-core/playwright` as a development dependency of the app, beside `@playwright/test`. It has no install script. It is pinned to 4.14.0, which had been public for more than a week, as the catalog does for Recharts.
+
+## 2026-11-27 — Follow-ups to the accessibility pass (owner)
+
+The owner took the recommendations after the accessibility pass on the dashboard's library pieces:
+
+1. **axe stays as a test**, opt-in like the lab's browser test and outside `pnpm test`, over the dashboard's stories in Storybook. It is added in a pull request of its own.
+2. **The band reads each heading just before its own list.** The network's heading moves after the ways in in the markup; nothing moves on screen.
+3. **A way in's name is "Windows and Mac, SMB: running, over enp2s0".** A control's name starts with the words it shows (WCAG 2.5.3), and brackets that are not on screen fail that check. "Computers connected" leaves the spec: no read the dashboard makes gives that count (style guide 10, rule 17).
+4. **Every picture of progress in the lab takes `usage-empty`** for the rest, as style guide 5.6 says. `usage-track` stays the health ring's ground.
+5. **`usage-track-edge` is removed** from the tokens and the colour audit, now that nothing reads it.
+6. **The design documents keep their record of the first lab screens**, with a note that the files were removed.
+7. **The disk temperatures' groups are labelled groups, not landmarks**, so a dashboard with many arrays and kinds does not crowd a screen reader's landmark list.
+
+## 2026-11-27 — The first visit must welcome, and read as professionally made (owner)
+
+The owner saw the rebuilt dashboard and approved its parts: the partly filled live charts, the network scale following a burst, the temperatures on the map and the new NAS's map rows stay as they are.
+
+The welcome did not pass. The one-line welcome of rethink P.2 ("Welcome to the new interface…" with "Got it") is boring and hardly excites a person using the interface for the first time. The owner: this interface is a big change from an amateurish one and is professionally built, so it must read and look that way.
+
+The top of the dashboard on a first visit is therefore designed again, with candidates side by side in the lab before the page changes, as the charts were. The candidates cover both kinds of first visit (P.2: a new NAS, and the new interface on an existing NAS) and the everyday answer under them, including "No problems found so far" before disk health is checked. The rules still hold: style guide 10, no modal tour or anything that stands between a pro and a control (P.1 R1), every figure from a read, and "Show tips" turns the welcome off.
+
+## 2026-11-27 — Today's decisions, with the life of the first direction; dark by default (owner)
+
+The owner compared the rebuilt dashboard with the oldest lab screen, the "Instrument" direction of 2026-11-23 (`/ui/lab?dir=instrument&screen=dashboard`). The rebuilt page is boring and Instrument is exciting. The owner keeps the design decisions of the rebuilt page and wants the view to have Instrument's life, worked out with good UI and UX practice, exciting and usable. Style guide 10 still holds.
+
+What Instrument does that the rebuilt page lost:
+
+- a visible structure of grounds: regions on their own surfaces against a darker page;
+- large monospaced live figures over filled charts;
+- a composed grid that puts the answer, what needs you and live activity above the fold;
+- a scan line of every area's status under the headline;
+- colour that carries meaning throughout.
+
+These come back within the rules. A surface must group what the person reads as one, never be a card by habit. The scan line is status icons and words, not pills. No uppercase labels, separators or arrows.
+
+**The interface opens dark by default.** A first visit with no stored choice is dark whatever the system setting is, as "dark first" (2026-11-23) said. Light stays one choice away in the account menu.
+
+## 2026-11-27 — Space used is one row of segments; the NVMe stands upright; "Right now" takes the full row (owner)
+
+The owner reviewed the dashboard design in the lab (`/ui/lab?screen=welcome`):
+
+1. **Space used is a single row of segments, not a waffle.** It is not plainly obvious what a waffle stands for, beside a single row of segments. The row size had five rows and the cell two, and a mark inside a column stepped round it, so the warning mark sat in a different place from one waffle to the next. The bar has 20 segments of 5 % at every size, so OMV's default warning mark of 85 % falls between two segments. At each size the bar has one fixed width, so the same value sits at the same place on every row of a list or table. The warning mark is a straight rule at its exact value in a wider gap; a mark inside a segment splits that segment. The rest of the 2026-11-26 decision stands: filled, never outlined (style guide 5.6), the last used segment filled in part, the figures always written, and the status colour only past a crossed mark.
+2. **The NVMe stands upright in the disk temperatures**, like the other drives, at their height, on their baseline, with its level bar beside it as theirs are. Lying flat it was the odd one out and was not aligned to the bottom of the row.
+3. **"Right now" spans the whole row.** It no longer shares a row with what needs you, the first steps, the shortcuts or This NAS.
+
+## 2026-11-27 — Drives at one height in the temperatures, to scale in the NAS; the temperature gauge in segments (owner)
+
+The owner found the drive sizes inconsistent: in the temperatures the hard disks, the SSD and the NVMe stick were each a different height. Either all are the same height or all are to scale against the hard disk; the owner leaned to one height.
+
+1. **In the disk temperatures every drive is the same height**, and as wide as its own device's proportions, so the levels beside them share one scale and one baseline. A 3.5" hard disk (101.6 by 147 mm) and a 2.5" SSD (69.85 by 100 mm) have the same proportion, so they share one box; an M.2 2280 stick (22 by 80 mm) stands as tall and about a quarter as wide. The same holds at every size of `DrivePicture`.
+2. **In the drawing of the NAS the drives are to scale against the hard disk**, because that is a picture of the box (owner: "the disks in the NAS should be drawn to correct scale relative to HDD"). The SSD is 0.68 of the hard disk and sits in its caddy as a 2.5" drive sits in a 3.5" tray; the stick on the mainboard is 0.54 of the hard disk's height long.
+3. **The temperature gauge is segmented like space used** (owner asked whether it should be; it should, so that every level against a limit reads the same way). One segment per 5 °C step of the shared scale, filled from the foot, the last in part. The alert limit stays one dashed line through the row of drives, drawn through the gap the limit opens; a limit inside a step splits that segment. Past the limit, and only on a disk at or over it, the level takes the warning stroke, with its words.
+
+## 2026-11-27 — The drawing of the NAS drops true scale: one height for every drive (owner)
+
+Drawn to scale against the hard disk, the NVMe stick on the mainboard did not look in proportion, though it measured true (0.56 of the hard disk's height against 0.54). The owner dropped scale: in the drawing of the NAS too, every drive is as tall as the hard disk and as wide as its own device's proportion, the same rule as the disk temperatures. The SSD fills its caddy like the hard disks; the stick stands upright on the board, as tall as they are and about a quarter as wide. This replaces item 2 of the entry before.
+
+## 2026-11-27 — The NVMe stick gets a mount, drawn as the bays are (owner)
+
+Standing on the board by itself, the stick was not noticed. The owner asked for a mount the way the disks have caddies, so it reads as familiar and in place. The board row now keeps the bays' columns. The stick sits in an M.2 slot exactly a bay wide and tall, on a stretch of mainboard drawn as a caddy is. The M.2 socket at its foot takes the stick's contacts, and the standoff screw at its head holds the notched end, as on a real board. On the first visit the stick goes down into its socket rather than sliding in from the side. The small drawing beside a later answer has the same mount at its size.
+
+## 2026-11-28 — The dashboard is built from the lab design (owner)
+
+The owner approved the design in the lab, and the real dashboard (`/ui/`) is now made from it. The pieces are in the library:
+
+- NasFront: the drawing of the NAS, with the M.2 slot.
+- ScanLine: one status per area under the answer.
+- Panel: the raised and plate grounds.
+- LivePair's large size: mono figures over filled charts.
+- NasAnswer's hero size, with its action, after and aside slots.
+- FirstSteps across the row.
+- The `--text-hero` type step.
+
+What changes on the page beside the look:
+
+1. **The welcome is the NAS greeted by name**, drawn large beside the greeting, on a new NAS and on an existing one alike. It replaces the one-line WelcomeLine. Only "Hide the welcome" ends it: using the page no longer does, which changes rethink P.2 as the lab's notes said. "Show tips" off keeps it away, and "Show me around" brings it back whatever "Show tips" says. While it is on screen the greeting is the page's h1 and the answer is an h2.
+2. **"Check disk health" sits in the answer** on an existing NAS, after the sentence that says why the check waits for the person. It takes the filled accent only when nothing else is the next step. On a new NAS it stays in the map's footer. The reasons are now the lab's: "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you."
+3. **The small drawing beside the answer** shows the disks' outlines dashed until health is read. When the check's result arrives on the page, the dashed line wipes away off the solid one, disk by disk. With no motion at all, the line lands solid at once.
+4. **The scan line** reads from the map's own input, so the two never disagree. An area whose read failed or has not arrived says "Not read" or "Reading…", never OK.
+5. **What still holds** ("You could also put sde to use, or let computers open a4share.") stands under the answer on a later visit while tips are on. Each phrase is a link to its page.
+6. **Every region takes the whole row**, on its own ground. The order is: the welcome, the answer and the scan line, then what needs you or a new NAS's first steps, "Right now", the map, the temperatures, then the Shortcuts and This NAS. This NAS takes the whole row when the first steps are at the top.

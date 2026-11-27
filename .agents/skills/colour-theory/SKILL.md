@@ -1,6 +1,6 @@
 ---
 name: colour-theory
-description: Colour theory applied to the openmediavault web interface - colour as a signal channel, the colour budget (which hue may do which job), the one colour scheme every hue takes a place in (Sky blue base, attention on its complementary arc, OK a quarter turn round, series in the gaps, navy ink), the brand sky blue versus the action blue, light and the four kinds of gradient, pending gold, warning orange, status fill/label/stroke families, the slate neutral ramp, dark-theme derivation, chart palettes, tints and gradients, contrast (WCAG 2.2 bar, APCA advisory), colour-vision deficiency, and the scripted colour audit. Triggers on choosing or changing a colour, a token, a status or pending colour, a hover/selected/focus colour, a chart series, a tint, dark-mode colour, contrast, colour blindness, and colour reviews.
+description: Colour theory applied to the openmediavault web interface - colour as a signal channel, the colour budget (which hue may do which job), the one colour scheme every hue takes a place in (Sky blue base, attention on its complementary arc, OK a quarter turn round, series in the gaps, navy ink), the brand sky blue, Sky's interaction roles and the Cobalt accent, light and the four kinds of gradient, pending gold, warning orange, status fill/label/stroke families, the slate neutral ramp, dark-theme derivation, chart palettes, tints and gradients, contrast (WCAG 2.2 bar, APCA advisory), colour-vision deficiency, and the scripted colour audit. Triggers on choosing or changing a colour, a token, a status or pending colour, a hover/selected/focus colour, a chart series, a tint, dark-mode colour, contrast, colour blindness, and colour reviews.
 ---
 
 # Colour theory for the openmediavault web interface
@@ -50,8 +50,13 @@ Every colour sits in one scheme built on Sky's blue (owner, 2026-11-24; the valu
 in foundation 3.6, and `tokens.css` states it at the top of its primitives). Measure hue in OKLCH
 (`node tools/colour-audit.mjs measure '#hex' '#fff'` prints it):
 
-- **The base, about 240**: Sky blue in lightness steps does brand, action, selection, the trace,
-  usage, the map path and the ambient light. The slate neutrals lean toward it.
+- **The base, about 240**: Sky blue in lightness steps does brand, links, selection, checked
+  controls, the focus ring, the trace, usage and the map path. The slate neutrals
+  lean toward it.
+- **The accent, 258**: Cobalt, the base turned toward the screen's own blue at nearly twice its
+  chroma, says "do this" and nothing else (owner, 2026-11-25). Analogous, so it belongs; louder by
+  chroma, not by temperature, because the warm arc means status and pending and a warm accent
+  would read as a state.
 - **The attention arc, opposite**: warning on the complement (62), critical and pending on the split
   complements (27 and 87). Lightness falls with hue, gold lightest, red darkest; keep that order, it
   is what separates them under colour-vision deficiency.
@@ -67,23 +72,33 @@ of step with its siblings, is a defect even when it passes contrast.
 
 ### The budget: every hue with one job
 
-Colour now also expresses identity and depth (the ambient light, the live trace, raised surfaces;
+Colour now also expresses identity and depth (the live trace, raised surfaces;
 foundation 3), but each hue still has one job, listed in style guide 2.1, and status stays honest.
 The checks that follow from it:
 
-- **One interaction hue.** Action blue means "you can act here". In-place hover is the neutral
-  `muted` step; selected is a blue tint; focus is the blue ring.
-- **One filled primary per view or dialog.**
+- **One interaction hue, one accent.** Sky means "you can interact with this" (links, selection,
+  checked controls, the focus ring: `link`, `selected*`, `focus-ring`). Cobalt (`action*`, shadcn
+  `primary`) means "this is the one to press": the primary button, the next step on an item that
+  needs the person, the current step, the first-steps progress, an empty state's create. In-place
+  hover is the neutral `muted` step; selected is a Sky tint; focus is the Sky ring, so tabbing
+  through a form never paints the accent.
+- **The accent is scarce.** One filled per region, at most three accent elements in a viewport,
+  about 2% of it by area. Never a status, pending, a link, selection, a hover, a heading, a chart
+  series or decoration; it never pulses.
 - **Count the hues on a screen.** Neutrals, blue, the status hues present, chart series. Any other
   hue names its job from the table or goes.
-- **There is no "info" colour.** Blue is taken.
+- **There is no "info" colour.** Both blues are taken.
 
 The four project-specific splits, and why (style guide 3.3 and 3.4):
 
-- **Sky blue `#5dacdf` is the brand accent, never a surface**: the mark, the live dot, the health
-  ring, the trace of live data, the traced path on a map, the focus ring and the ambient light. There
-  is no sky-blue bar. White on it fails, so in light a deeper blue of the same hue does actions; in
-  dark it is the action colour itself.
+- **Sky blue `#5dacdf` is the brand, never a surface and never the primary action**: the mark, the
+  health ring, the trace of live data, the traced path on a map and the focus ring. There is no
+  sky-blue bar, no glow and no "live" dot (style guide 10). White on it fails, so in light a deeper step of the
+  same hue does links and checked marks; in dark it is the checked mark itself.
+- **Cobalt is the accent, a family of its own** (foundation 3.6): fill, hover, foreground, label,
+  stroke (the edge that clears 3:1; in dark the fill alone does not) and wash. In light it shares
+  Sky's lightness, so the two are told apart by form (a button with a verb against a link, a mark
+  or a tint), never by a bare accent dot or line beside a Sky one.
 - **Gold means pending configuration and nothing else.** It is OMV's signature banner, warmed from
   the stock lemon to the gold of the scheme and inked in navy; it is never warning, accent,
   highlight or hover.
@@ -100,7 +115,7 @@ Every chromatic family has members with different jobs and different bars (style
 
 | Member          | Job                                     | Bar                                   |
 | --------------- | --------------------------------------- | ------------------------------------- |
-| fill (`x`)      | dots, meter fill, pill wash, solid button | 3:1 only if it carries meaning alone |
+| fill (`x`)      | meter fill, solid button                  | 3:1 only if it carries meaning alone |
 | `x-foreground`  | words on the solid fill                 | 4.5:1 against the fill                |
 | `x-label`       | words in that hue on a ground or tint   | 4.5:1 on every ground it lands on     |
 | `x-stroke`      | outlines, rings, small icons            | 3:1 on every ground                   |
@@ -116,7 +131,7 @@ stock interface, and the new fills are no better as words. A word always takes `
 - The slate ramp is cool and leans toward the brand hue so greys and blues belong together.
 - Three text tiers that read as tiers: `foreground`, `muted-foreground`, `subtle-foreground`
   (placeholders and disabled only).
-- Two borders: `border` is a quiet divider and exempt from 3:1; `border-control` marks something you
+- Two borders: `border` is a faint, decorative divider and exempt from 3:1; `border-control` marks something you
   can operate and clears 3:1 on every ground.
 
 ## 5. Dark theme: re-derive, never invert
@@ -134,7 +149,9 @@ stock interface, and the new fills are no better as words. A word always takes `
 
 - **Never colour alone** (WCAG 1.4.1): the status word or a distinct icon shape travels with every
   status colour.
-- **Same meaning, same treatment, everywhere**: one pill, one dot, one icon per status.
+- **Same meaning, same treatment, everywhere**: one status label (its icon and its word in the
+  `-label` ink, no capsule) per status; where the word does not fit, the same icon with the word in
+  its name. No coloured disc, no tinted card, no coloured left edge (style guide 10).
 - **Lightness must separate what hue cannot.** Under red-green deficiency some pairs collapse in hue;
   the style guide keeps OK light and Critical dark, and carries the remaining close pairs by form
   (pending is a banner or a labelled chip, never a bare dot; Unknown is a hollow ring).
@@ -146,26 +163,25 @@ stock interface, and the new fills are no better as words. A word always takes `
   The series take the gaps between the scheme's hues, never blue, the pending gold or a status hue.
 - Label lines directly and give each series its own dash or marker; the legend is never the only
   link.
-- Sequential (how full, how much): one hue by lightness, the action blue.
+- Sequential (how full, how much): one hue by lightness, Sky's usage blue.
 - Grey for context, colour for the series being discussed.
 - Thresholds are status with words: a meter is blue until an admin-configured threshold adds a
-  Warning or Critical pill.
+  Warning or Critical status label.
 
 ## 8. Tints, alpha and gradients
 
 - Alpha is safe on one known ground and unpredictable over variable ones, so translucent colours are
   tokens written as `color-mix(in srgb, <colour> N%, transparent)` (the washes, `selected`,
-  `trace-area`, the ambient light), and every ground they sit on is a pair in `PAIRS`, composited the
+  `trace-area`), and every ground they sit on is a pair in `PAIRS`, composited the
   way the browser paints it with `on(ground, layer...)`. An `x/NN` class a token does not name is a
   new pair first.
 - State layers use the neutral steps (`muted`, `muted-strong`). Pick tonal step or overlay per
   component; do not mix.
-- **Gradients and light: only the four kinds** (foundation 3.4), each with a meaning: the ambient
-  light (identity, brand hues only), the area under a live line (series or trace colour only), the
-  material light of a drawing (grounds only), and the status wash (one element per non-OK state,
-  with its word). A gradient is audited at every stop with `gradient(name, stop...)`; the worst stop
-  decides. A glow's token is the brightest point it actually paints, so the audit measures what is on
-  screen. Never gradient text, gradient borders, glow around text or multi-hue decoration.
+- **One gradient** (foundation 3.4): the area under a live line (series or trace colour only). The
+  ambient light, the material light of the chassis and the card lit in its state are gone (owner,
+  2026-11-25; style guide 10). A gradient is audited at every stop with `gradient(name, stop...)`;
+  the worst stop decides. Never a glow, a radial wash, a gradient on a surface or a button, gradient
+  text or borders, dithering, noise, blur or multi-hue decoration. A wash is never a status ground.
 
 ## 9. Contrast: the bar and the advisory
 
@@ -173,7 +189,7 @@ stock interface, and the new fills are no better as words. A word always takes `
   content, for the edge of a control (1.4.11), and for the focus indicator.
 - **APCA is advisory**: body text Lc 75, secondary Lc 60, large or bold Lc 45.
 - Measure on the real grounds: `page`, `surface`, `muted`, `muted-strong`, the wash a label sits on,
-  and the light it sits in (the ambient light, a card lit in its state).
+  and the line or fill it sits over (the trace's own area fill).
 
 ## 10. Auditing colour
 
@@ -202,7 +218,8 @@ themes, greyscale and deuteranopia; update the style guide's numbers.
 ## 12. Checklist
 
 - [ ] Every chromatic element names one of the five jobs; decoration is neutral.
-- [ ] Blue is the only interaction hue; hover neutral; one filled primary per view.
+- [ ] Sky is the only interaction hue and Cobalt only says "do this"; hover neutral; one filled
+      accent per region.
 - [ ] Every colour has its place in the scheme; inks on light fills are navy; no muddy in-between
       hue, and chroma and lightness in step with the family's siblings.
 - [ ] The pending gold only for pending configuration.

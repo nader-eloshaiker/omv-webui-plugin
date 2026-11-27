@@ -127,7 +127,7 @@ interface LiveChartProps<Row extends Timed>
   formatAgo: (seconds: number) => string;
   /** The moment of a sample, for the tooltip and the table: "14:02:31". */
   formatTime: (t: number) => string;
-  /** The words under the chart, with the real span: "Live · every 2 s · last 58 s". */
+  /** The words under the chart, with the span it shows: "Updated every 2 s, showing the last 58 s". */
   caption: (summary: LiveChartSummary) => React.ReactNode;
   /** The text alternative a screen reader hears: what, over how long, now, highest and lowest. */
   describe: (summary: LiveChartSummary) => string;
@@ -464,7 +464,7 @@ function LiveChart<Row extends Timed>({
                 label={{
                   value: large ? alert.label : (alert.short ?? alert.label),
                   position: large ? "insideTopLeft" : "insideTopRight",
-                  className: "text-xs font-semibold text-muted-foreground",
+                  className: "text-xs text-muted-foreground",
                   fill: "currentColor",
                 }}
               />
@@ -532,8 +532,7 @@ function LiveChart<Row extends Timed>({
                           value: s.label,
                           position: "right",
                           dy: nudge(i),
-                          className:
-                            "text-xs font-semibold text-muted-foreground",
+                          className: "text-xs text-muted-foreground",
                           fill: "currentColor",
                         }
                       : undefined

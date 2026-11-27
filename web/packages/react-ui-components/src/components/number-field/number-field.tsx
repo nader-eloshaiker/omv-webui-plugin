@@ -75,7 +75,8 @@ function NumberField({
           aria-labelledby={unit ? `${labelId} ${unitId}` : undefined}
           onValueChange={(next) => onValueChange(next)}
           onBlur={onBlur}
-          className={cn("w-[8ch] min-w-20 tabular-nums", inputClassName)}
+          width="number"
+          className={cn("tabular-nums", inputClassName)}
         />
         {unit ? (
           <span id={unitId} className="text-base text-foreground">

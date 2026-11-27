@@ -68,7 +68,7 @@ interface AccessGridRow<V extends string = string> {
   /** The name as a link to the row's own page (a shared folder's, a person's). */
   nameLink?: AccessGridNameLink;
   /**
-   * What the row is, in words: "Group", "User", "Windows and Mac", or a `StatusPill` with its word
+   * What the row is, in words: "Group", "User", "Windows and Mac", or a `StatusLabel` with its word
    * for a folder that is not OK. It wraps inside its column, at 320px too.
    */
   kind: React.ReactNode;
@@ -192,9 +192,9 @@ const PAGE_SIZES = [25, 50, 100] as const;
 const tableClass =
   "grid grid-cols-1 @2xl:grid-cols-[minmax(0,1fr)_auto_max-content]";
 const rowGroupClass = "grid @2xl:col-span-3 @2xl:grid-cols-subgrid";
-// The name as a link: the action ink, underlined so it is not colour alone (style guide 6).
+// The name as a link: Sky's link ink, underlined so it is not colour alone (style guide 6).
 const nameLinkClass =
-  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline";
+  "rounded-sm text-link underline underline-offset-2 hover:no-underline";
 const rowClass =
   "relative grid grid-cols-[minmax(0,1fr)_auto] @2xl:col-span-3 @2xl:grid-cols-subgrid";
 
@@ -326,7 +326,7 @@ function GridRow<V extends string>({
       </th>
       <TableCell
         role="cell"
-        // Status words and a pill wrap inside the cell, which never takes more than its share of a
+        // Status words and a status label wrap inside the cell, which never takes more than its share of a
         // narrow row from the name beside it.
         className="flex h-auto max-w-40 min-w-0 flex-wrap content-start items-start gap-x-2 gap-y-1 py-2 [overflow-wrap:anywhere] text-foreground @2xl:max-w-56 @2xl:content-center @2xl:items-center"
       >

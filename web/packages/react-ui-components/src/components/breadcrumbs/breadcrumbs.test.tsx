@@ -4,32 +4,42 @@ import { describe, expect, it } from "vitest";
 import { BreadcrumbItem, Breadcrumbs } from "./breadcrumbs";
 
 describe("Breadcrumbs", () => {
-  it("is a named navigation of links to the pages above, the current page last as text", () => {
+  it("is a named navigation holding one link to the parent page, with no separator", () => {
     const { container } = render(
       <Breadcrumbs aria-label="Breadcrumb">
-        <BreadcrumbItem href="/disks">Disks</BreadcrumbItem>
+        <BreadcrumbItem href="/storage/shared-folders">
+          Shared folders
+        </BreadcrumbItem>
+      </Breadcrumbs>,
+    );
+    const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(
+      within(nav).getByRole("link", { name: "Shared folders" }),
+    ).toHaveAttribute("href", "/storage/shared-folders");
+    expect(within(nav).getAllByRole("link")).toHaveLength(1);
+    expect(within(nav).queryByRole("list")).toBeNull();
+    expect(nav).toHaveTextContent(/^Shared folders$/);
+    expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("shows only the nearest ancestor of a full trail, and never the current page", () => {
+    render(
+      <Breadcrumbs aria-label="Breadcrumb">
+        <BreadcrumbItem href="/storage">Storage</BreadcrumbItem>
+        <BreadcrumbItem href="/storage/smart">Disk health</BreadcrumbItem>
         <BreadcrumbItem current>
           <code>/dev/sdb</code>
         </BreadcrumbItem>
       </Breadcrumbs>,
     );
     const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
-    expect(within(nav).getAllByRole("listitem")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "Disks" })).toHaveAttribute(
-      "href",
-      "/disks",
-    );
-    expect(screen.getAllByRole("link")).toHaveLength(1);
-    const current = screen.getByText("/dev/sdb").parentElement;
-    expect(current).toHaveAttribute("aria-current", "page");
-    expect(current?.tagName).toBe("SPAN");
-    // The separators are decoration only.
-    const separators = container.querySelectorAll(
-      '[data-slot="breadcrumb-separator"]',
-    );
-    expect(separators).toHaveLength(1);
-    expect(separators[0]).toHaveAttribute("aria-hidden", "true");
-    expect(nav).toHaveTextContent(/^Disks\/dev\/sdb$/);
+    expect(within(nav).getAllByRole("link")).toHaveLength(1);
+    expect(
+      within(nav).getByRole("link", { name: "Disk health" }),
+    ).toHaveAttribute("href", "/storage/smart");
+    expect(screen.queryByText("Storage")).toBeNull();
+    expect(screen.queryByText("/dev/sdb")).toBeNull();
+    expect(nav.querySelector("[aria-current]")).toBeNull();
   });
 
   it("renders through the caller's link element", () => {
@@ -38,7 +48,6 @@ describe("Breadcrumbs", () => {
         <BreadcrumbItem render={<a href="/routed" data-router="yes" />}>
           Disk health
         </BreadcrumbItem>
-        <BreadcrumbItem render={<a href="/second" />}>Second</BreadcrumbItem>
         <BreadcrumbItem current>Set up monitoring</BreadcrumbItem>
       </Breadcrumbs>,
     );
@@ -46,6 +55,14 @@ describe("Breadcrumbs", () => {
       "data-router",
       "yes",
     );
-    expect(screen.getAllByRole("link")).toHaveLength(2);
+  });
+
+  it("renders nothing when there is no page above to link to", () => {
+    const { container } = render(
+      <Breadcrumbs aria-label="Breadcrumb">
+        <BreadcrumbItem current>Disks</BreadcrumbItem>
+      </Breadcrumbs>,
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 });

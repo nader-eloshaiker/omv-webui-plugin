@@ -56,7 +56,7 @@ function Table({
   );
 }
 
-/** Header on `muted`, short labels in 12px capitals in the caption tier (5.2, foundation 4). */
+/** Header on `muted`, short labels in sentence case, regular weight, secondary ink (5.2, style guide 10). */
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
@@ -139,7 +139,7 @@ function TableHead({
       scope="col"
       aria-sort={sortable ? sort : undefined}
       className={cn(
-        "px-cell-x py-cell-y text-start align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-tertiary-foreground uppercase",
+        "px-cell-x py-cell-y text-start align-middle text-sm font-normal whitespace-nowrap text-muted-foreground",
         numeric && "text-end",
         className,
       )}
@@ -150,7 +150,7 @@ function TableHead({
           type="button"
           onClick={onSort}
           className={cn(
-            "-mx-1 inline-flex min-h-6 items-center gap-1 rounded-sm px-1 uppercase transition-colors duration-fast hover:text-foreground",
+            "-mx-1 inline-flex min-h-6 items-center gap-1 rounded-sm px-1 transition-colors duration-fast hover:text-foreground",
             numeric && "flex-row-reverse",
           )}
         >
@@ -292,7 +292,7 @@ function TableSkeletonRows({
             >
               <div
                 className={cn(
-                  "h-[1lh] rounded-sm bg-muted-strong bg-clip-content py-[calc((1lh-0.75rem)/2)] motion-safe:animate-breathe",
+                  "h-[1lh] rounded-sm bg-muted-strong bg-clip-content py-[calc((1lh-0.75rem)/2)]",
                   column === 0 ? "w-2/3" : "w-1/2",
                 )}
               />

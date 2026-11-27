@@ -9,27 +9,45 @@ import { cva } from "class-variance-authority";
 // Pressable looks pressable at rest (foundation 13): filled or outlined, with the resting depth of
 // `shadow-control`. Pressing sinks it by a pixel in `duration-press`; under reduced motion every
 // duration is 0, so the state changes without travel.
-/** The button look, also for Base UI parts that render their own button (a toast action). */
+const PLAIN =
+  "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
+  "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent";
+
+/**
+ * The button look, also for Base UI parts that render their own button (a toast action). A button
+ * carries no arrow or chevron (style guide 10): its words say where it goes. A disclosure keeps its
+ * chevron, a link that opens a new tab its external mark.
+ */
 export const buttonClass = cva(
   "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border text-start font-medium select-none " +
     "transition-[color,background-color,border-color,box-shadow,translate,scale,background-size] duration-fast ease-standard " +
     "active:not-data-disabled:translate-y-px active:not-data-disabled:scale-[0.985] active:duration-press " +
-    "data-disabled:cursor-not-allowed data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+    "data-disabled:cursor-not-allowed data-disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 " +
+    // A lucide glyph is 16px in a button; an icon of the set keeps the size it was given (16 or 20).
+    "[&_svg:not([data-slot=icon])]:size-4",
   {
     variants: {
       variant: {
-        // The one filled blue per view (style guide 2.1).
+        // The accent, Cobalt: the one action this person is expected to take here (rethink 1.2, A1).
+        // One filled per region. Edged in `action-stroke`, which is the fill itself in light and a
+        // lighter rim in dark, where the fill alone does not clear 3:1 against the ground.
         primary:
-          "border-transparent bg-primary text-primary-foreground shadow-control hover:bg-action-hover " +
-          "data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
+          "border-action-stroke bg-primary text-primary-foreground shadow-control hover:bg-action-hover " +
+          "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
+        // The accent, outlined: a next step that is not the region's one filled primary (A2: the
+        // other rows that need the person). Accent words and edge; the accent wash on hover.
+        primaryOutline:
+          "border-action-stroke bg-transparent text-action-label hover:bg-action-wash data-popup-open:bg-action-wash " +
+          "data-disabled:border-input data-disabled:bg-transparent data-disabled:text-subtle-foreground",
         // A neutral control: the edge is the control token, so it clears 3:1 on every ground.
         neutral:
           "border-input bg-surface text-foreground shadow-control hover:bg-muted-strong " +
           "data-popup-open:bg-muted-strong " +
           "data-disabled:border-transparent data-disabled:bg-muted-strong data-disabled:text-subtle-foreground",
-        // An action in place: blue words, a neutral hover.
+        // An action in place: Sky words, like a link ("you can interact with this"), a neutral hover.
+        // Never the accent: an action in place is not the one to press.
         ghost:
-          "border-transparent bg-transparent text-action-label hover:bg-muted-strong data-popup-open:bg-muted-strong " +
+          "border-transparent bg-transparent text-link hover:bg-muted-strong data-popup-open:bg-muted-strong " +
           "data-disabled:bg-transparent data-disabled:text-subtle-foreground",
         // Only the confirm button of an irreversible act (style guide 3.6), with a verb. The red is a
         // fill painted as a background image, so the moment the act becomes possible (a typed name
@@ -46,13 +64,13 @@ export const buttonClass = cva(
         onPending:
           "border-pending-foreground bg-transparent text-pending-foreground hover:bg-pending-foreground hover:text-pending " +
           "focus-visible:outline-pending-foreground data-disabled:border-dashed data-disabled:hover:bg-transparent data-disabled:hover:text-pending-foreground",
-        // A control in ink with no fill: the top bar's indicators and menus, and other places where
-        // a row of controls must stay quiet. Secondary ink at rest, a neutral ground on hover and
-        // while its menu is open. It replaces the identity bar's variant (the bar is gone,
-        // foundation 3.2).
-        quiet:
-          "border-transparent bg-transparent text-muted-foreground hover:bg-muted-strong hover:text-foreground " +
-          "data-popup-open:bg-muted-strong data-popup-open:text-foreground data-disabled:opacity-60 data-disabled:hover:bg-transparent",
+        // A plain control in ink with no fill: the top bar's indicators and menus, and other places
+        // where a row of controls must not compete with the content. Secondary ink at rest, a
+        // neutral ground on hover and while its menu is open. It replaces the identity bar's
+        // variant (the bar is gone, foundation 3.2).
+        plain: PLAIN,
+        /** @deprecated Use `plain`; the same look under its old name (style guide 10). */
+        quiet: PLAIN,
       },
       size: {
         sm: "min-h-control-sm px-2.5 py-0.5 text-sm",

@@ -48,7 +48,7 @@ function Space({ data }: { data: FileSystem[] }) {
       total={(f) => f.sizeTiB}
       formatTick={(v) => `${v}\u00a0TiB`}
       barLabel={(f) =>
-        pct(f) >= f.threshold ? `${pct(f)}% · Almost full` : `${pct(f)}%`
+        pct(f) >= f.threshold ? `${pct(f)}%, almost full` : `${pct(f)}%`
       }
       missingLabel="No reading"
       tooltip={(f) => ({
@@ -57,11 +57,11 @@ function Space({ data }: { data: FileSystem[] }) {
         body: (
           <>
             <p className="tabular-nums">
-              {tib(f.usedTiB)} of {tib(f.sizeTiB)} used · {pct(f)}%
+              {tib(f.usedTiB)} of {tib(f.sizeTiB)} used ({pct(f)}%)
             </p>
             <p className="text-tertiary-foreground">
               {tib(f.sizeTiB - f.usedTiB)} free
-              {pct(f) >= f.threshold ? " · Almost full" : ""}
+              {pct(f) >= f.threshold ? ", almost full" : ""}
             </p>
           </>
         ),

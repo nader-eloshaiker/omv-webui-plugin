@@ -106,14 +106,14 @@ function SideNavGroup({
         className={cn(
           "flex min-h-9 w-full items-center gap-2.5 rounded-control px-2.5 py-1.5 text-start font-semibold text-foreground compact:min-h-8 compact:py-1",
           "transition-colors hover:bg-muted-strong",
-          "group-data-current/nav-group:text-action-label",
+          "group-data-current/nav-group:text-selected-label",
           "[&_svg]:size-4 [&_svg]:shrink-0",
         )}
       >
         {icon ? (
           <span
             aria-hidden="true"
-            className="flex text-muted-foreground group-data-current/nav-group:text-action-label"
+            className="flex text-muted-foreground group-data-current/nav-group:text-selected-label"
           >
             {icon}
           </span>
@@ -143,12 +143,12 @@ function SideNavGroup({
 
 interface SideNavItemProps extends useRender.ComponentProps<"a"> {
   /**
-   * This item's page is the one shown: the selected blue tint, `action-label`, a leading bar in the
-   * action blue and a heavier weight: four cues besides colour (style guide 3.10).
+   * This item's page is the one shown: Sky's selected tint, `selected-label` and a heavier weight,
+   * besides `aria-current` (style guide 3.10). No leading bar (style guide 10).
    */
   current?: boolean;
   /**
-   * The page exists only in the classic interface for now: quieter, with a short word ("Classic")
+   * The page exists only in the classic interface for now: in the secondary ink, with a short word ("Classic")
    * and the external mark, so the reader knows before following it that it leaves this interface.
    */
   classicOnly?: { label: string };
@@ -159,9 +159,7 @@ interface SideNavItemProps extends useRender.ComponentProps<"a"> {
 const itemClass =
   "relative flex min-h-8 items-center gap-2 rounded-control px-2.5 py-1 font-medium text-muted-foreground no-underline compact:min-h-7 compact:py-0.5 " +
   "transition-colors hover:bg-muted-strong hover:text-foreground " +
-  "aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-action-label " +
-  "aria-[current=page]:before:absolute aria-[current=page]:before:inset-y-1.5 aria-[current=page]:before:start-0 " +
-  "aria-[current=page]:before:w-0.75 aria-[current=page]:before:rounded-full aria-[current=page]:before:bg-action aria-[current=page]:before:content-[''] " +
+  "aria-[current=page]:bg-selected aria-[current=page]:font-semibold aria-[current=page]:text-selected-label " +
   "[&_svg]:size-4 [&_svg]:shrink-0";
 
 /**
@@ -268,7 +266,7 @@ function SideNavDrawer({
             {brand ?? <span />}
             <Dialog.Close
               render={
-                <IconButton label={closeLabel} icon={<X />} variant="quiet" />
+                <IconButton label={closeLabel} icon={<X />} variant="plain" />
               }
             />
           </div>

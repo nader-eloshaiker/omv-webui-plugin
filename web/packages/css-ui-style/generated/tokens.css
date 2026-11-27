@@ -42,8 +42,8 @@
 @theme {
   /* One colour scheme (foundation 3.6), in OKLCH hue. Every colour below has its place in it, and a
      new colour takes a place in it or does not come in:
-       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage, the
-         map path and the ambient light are this one hue in lightness steps, and the slate neutrals
+       - the base is Sky blue, about 240: the brand, action, selection, the live trace, usage and the
+         map path are this one hue in lightness steps, and the slate neutrals
          lean toward it (248 to 259);
        - the colours that ask for attention sit opposite, on the base's complementary arc: warning
          on the complement (62), critical and pending on the split complements (27 and 87). Their
@@ -53,12 +53,17 @@
        - the four chart series take the gaps between those hues (118, 195, 292, 345), so a series
          never looks like a state;
        - ink on a light fill is Sky's own navy, brand-950, never a new hue.
+       - the accent, Cobalt, is the base turned 18 degrees toward the screen's own blue (258), at
+         nearly twice the brand's chroma: analogous, so it belongs, and the most saturated colour on
+         a healthy screen, so the one thing to press is what the eye finds. It is "do this" and
+         nothing else (owner, 2026-11-25); Sky keeps "you can interact with this".
      A word in a hue darkens toward red and lightens toward yellow (warning's label sits at its
      fill's hue, pending's light words are navy), so no label goes olive or brown. */
 
   /* OMV sky blue. 400 is the stock OMV "corporate" blue, unchanged; the rest of the ramp is the
-     same hue (OKLCH ~240) stepped in lightness. It is the brand accent: the mark, the primary and
-     selected colour in dark, the focus ring, the live trace and the health ring. */
+     same hue (OKLCH ~240) stepped in lightness. It is the brand and the interaction hue: the mark,
+     links, selection and checked controls, the focus ring, the live trace and the health ring. It
+     is never the primary action: that is Cobalt's, below. */
   --color-brand-50: #edf7fe;
   --color-brand-100: #daeefe;
   --color-brand-200: #b4defc;
@@ -71,7 +76,23 @@
   --color-brand-900: #052e49;
   --color-brand-950: #021d30;
 
-  /* Slate: the one neutral family, a night sky. OKLCH hue 248 (the light steps) to 259 (the
+  /* Cobalt, the accent: OKLCH hue 258 on the brand ramp's eleven lightness steps (0.971 to 0.222),
+     where sRGB holds the most chroma a blue can have at these lightnesses (0.20 at 500 and 600
+     against the brand's 0.12). The owner's choice of three candidates, 2026-11-25 (foundation
+     3.6). It does one job: the action this person is expected to take here. */
+  --color-cobalt-50: #f0f6fe; /* 0.971 0.012 258 */
+  --color-cobalt-100: #dfecff; /* 0.939 0.029 258 */
+  --color-cobalt-200: #c1daff; /* 0.881 0.058 258 */
+  --color-cobalt-300: #95c0ff; /* 0.800 0.101 258 */
+  --color-cobalt-400: #65a3ff; /* 0.715 0.150 258 */
+  --color-cobalt-500: #2c84ff; /* 0.630 0.201 258 */
+  --color-cobalt-600: #0065da; /* 0.530 0.196 258 */
+  --color-cobalt-700: #004faf; /* 0.449 0.167 258 */
+  --color-cobalt-800: #003b87; /* 0.371 0.139 258 */
+  --color-cobalt-900: #002860; /* 0.290 0.109 258 */
+  --color-cobalt-950: #001842; /* 0.222 0.086 258 */
+
+  /* Slate: the one neutral family, a night sky. OKLCH hue 246 (the light steps) to 259 (the
      darkest), chroma 0.005 to 0.037, leaning toward the brand so greys and blues belong together.
      Every ground, line and text tier of both themes is one step; the numbers that are skipped are
      steps nothing uses. */
@@ -79,12 +100,14 @@
   --color-slate-100: #eef3f8;
   --color-slate-200: #e8eef4;
   --color-slate-300: #dbe3eb;
+  --color-slate-350: #c2cfdb; /* 0.848 0.022 246: the empty part of a meter, light */
   --color-slate-400: #a9b6c4;
   --color-slate-500: #8593a1;
   --color-slate-550: #7d8b9b;
   --color-slate-600: #6b7885;
   --color-slate-650: #566373;
   --color-slate-700: #485667;
+  --color-slate-750: #3b495b; /* 0.401 0.035 255: the empty part of a meter, dark */
   --color-slate-800: #233042;
   --color-slate-850: #1d2939;
   --color-slate-900: #16212f;
@@ -116,8 +139,12 @@
     "Roboto Mono Variable", "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
   --font-readout: var(--font-sans); /* live readouts and figures; Roboto Mono in compact density */
 
-  /* The six named steps. Each carries its line height, tracking and weight, so `text-title` is the
-     whole style. Body, caption and figure change in compact density (below). */
+  /* The seven named steps. Each carries its line height, tracking and weight, so `text-title` is the
+     whole style. Hero, body, caption and figure change in compact density (below). */
+  --text-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem); /* 32-52px  the dashboard's one headline */
+  --text-hero--line-height: 1.04;
+  --text-hero--letter-spacing: -0.03em;
+  --text-hero--font-weight: 650;
   --text-display: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); /* 28-40px  the one headline answer */
   --text-display--line-height: 1.1;
   --text-display--letter-spacing: -0.03em;
@@ -271,6 +298,7 @@
   --text-caption: 0.75rem; /* 12px */
   --text-sm: 0.75rem;
   --text-figure: 1.625rem; /* 26px, in Roboto Mono */
+  --text-hero: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem); /* 28-40px, the display step */
   --font-readout: var(--font-mono);
 }
 
@@ -294,29 +322,48 @@
   --theme-border: var(--color-slate-300); /* dividers: decorative */
   --theme-border-control: var(--color-slate-600); /* the edge of an input, checkbox, track: 3:1 on every ground */
 
-  /* Action: the one interaction hue. */
-  --theme-action: var(--color-brand-600);
-  --theme-action-hover: var(--color-brand-700);
+  /* Action: Cobalt, the accent, which says "do this" and nothing else (rethink 1.2; owner,
+     2026-11-25): the primary button of a view, the next step on an item that needs the person, the
+     current step of a flow, the first-steps progress and an empty state's create button. Never a
+     status, pending, selection, a link, the focus ring, a hover, a heading or decoration; one filled
+     per region. shadcn's `primary` maps here; shadcn's `accent` stays neutral.
+       action             the fill (the primary button)
+       action-hover       a tonal step, not alpha
+       action-foreground  words and icons on the fill
+       action-label       accent words on a ground (an outlined next step)
+       action-stroke      what clears 3:1 against the ground: the edge of the primary and of the
+                          outlined next step, the progress arc. In light it is the fill itself
+       action-wash        the hover ground of the outlined next step, a tint behind accent words */
+  --theme-action: var(--color-cobalt-600);
+  --theme-action-hover: var(--color-cobalt-700);
   --theme-action-foreground: #ffffff;
-  --theme-action-label: var(--color-brand-700); /* links and blue words on a ground */
-  --theme-focus-ring: var(--color-brand-600);
-  /* The selected tint: a selected row, the current navigation item, a chosen option. */
+  --theme-action-label: var(--color-cobalt-700);
+  --theme-action-stroke: var(--color-cobalt-600);
+  --theme-action-wash: color-mix(in srgb, var(--color-cobalt-600) 8%, transparent);
+
+  /* Interaction: Sky, which says "you can interact with this" (style guide 2.1). Links and Sky
+     words; selection (a selected row, the current navigation item and tab, a chosen segment or
+     option); checked controls; the focus ring. A state of a control, never a call to act.
+       link                     links in running text, breadcrumbs, plain in-place actions
+       selected                 the selected tint, behind a selected row or the current item
+       selected-label           the words of the selected or current item
+       selected-mark            a checked box, a radio dot's ring, a switch that is on, the current
+                                tab's underline: 3:1 on every ground
+       selected-mark-foreground the check, the dot and the thumb on the mark */
+  --theme-link: var(--color-brand-700);
   --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
+  --theme-selected-label: var(--color-brand-700);
+  --theme-selected-mark: var(--color-brand-600);
+  --theme-selected-mark-foreground: #ffffff;
+  --theme-focus-ring: var(--color-brand-600);
   /* Text selection: opaque, so selected words keep their contrast. */
   --theme-selection: var(--color-brand-200);
 
-  /* Brand: the mark, the live dot and the health ring. Identity, never a state and never a control.
+  /* Brand: the mark and the health ring. Identity, never a state and never a control.
      The live trace and its area fill are the brand's light on data (foundation 3.2 and 3.4). */
   --theme-brand: var(--color-brand-600);
   --theme-trace: var(--color-brand-600);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
-
-  /* Ambient light: the glow from above the page (foundation 3.4), drawn by css-ui-style's
-     `ambient-light` utility in brand hues only, never a status hue; no colour utility is made for
-     these. Each value is the brightest point the glow actually paints, at the page's top edge (the
-     ellipses are centred above the page), so the audit measures what is on screen. */
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
 
   /* Pending configuration changes: the gold, inked in navy. In light, pending words are the navy on
      the gold wash (a dark gold word would read olive or brown) and the stroke is a deep gold that
@@ -362,18 +409,29 @@
   --theme-series-3: #983c75; /* magenta 0.50 0.14 345 */
   --theme-series-4: #6f7d1a; /* moss    0.56 0.12 118 */
 
-  /* Capacity: one hue by lightness. */
+  /* Progress and amounts of a whole (owner, 2026-11-26): filled, never outlined. The amount is
+     --theme-usage, one hue by lightness; the rest is --theme-usage-empty, a slate that clears 3:1
+     against the amount (WCAG 1.4.11), so the amount reads without an edge. Past a threshold the
+     amount takes the status stroke (warning-stroke, critical-stroke), which clears 3:1 on the empty
+     part where the status fill does not.
+     --theme-usage-track: the health ring's ground between its segments (not an amount). */
   --theme-usage: var(--color-brand-600);
+  --theme-usage-empty: var(--color-slate-350);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: var(--color-slate-600);
 
   /* Drawings and maps (foundation 9): ink from currentColor, fills and lines from these. */
   --theme-art-surface: var(--color-slate-50); /* the body of a part: a disk, a node */
   --theme-art-line: var(--color-slate-600); /* outlines that must read: 3:1 */
   --theme-art-faint: var(--color-slate-300); /* secondary structure, dimmed lines (decorative) */
   --theme-art-path: var(--color-brand-600); /* the lineage being traced on a map */
-  --theme-art-chassis-top: var(--color-slate-50); /* material light: lit from above, one step */
+  /* The drive-bay chassis: a flat fill (`art-chassis-top`). The bottom step is kept for the lab's
+     drawings until they are flat too; the library paints no gradient with it. */
+  --theme-art-chassis-top: var(--color-slate-50);
   --theme-art-chassis-bottom: var(--color-slate-200);
+  /* The one inner plane of a two-tone icon (rethink 5.2): a tinted step of the base blue behind the
+     outline, which stays in currentColor. Translucent, so it sits on any ground and on the
+     primary button. */
+  --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
 
   /* Task and log output: a piece of the night theme in both themes, a dark slate ground with the
      slate text tiers (no green tint: green is OK's hue). */
@@ -408,21 +466,28 @@
   --theme-border: var(--color-slate-800);
   --theme-border-control: var(--color-slate-550);
 
-  /* In dark, the stock OMV sky blue IS the action colour, with dark ink on it. */
-  --theme-action: var(--color-brand-400);
-  --theme-action-hover: var(--color-brand-300);
-  --theme-action-foreground: var(--color-brand-950);
-  --theme-action-label: var(--color-brand-300);
-  --theme-focus-ring: var(--color-brand-300);
+  /* Cobalt keeps its light fill in dark, the same button in both themes with white words, edged in
+     the 500 step, which clears 3:1 on every dark ground where the fill alone does not and reads as
+     the dark theme's light from above. Its words take the 400 step. */
+  --theme-action: var(--color-cobalt-600);
+  --theme-action-hover: var(--color-cobalt-700);
+  --theme-action-foreground: #ffffff;
+  --theme-action-label: var(--color-cobalt-400);
+  --theme-action-stroke: var(--color-cobalt-500);
+  --theme-action-wash: color-mix(in srgb, var(--color-cobalt-500) 18%, transparent);
+
+  /* In dark, the stock OMV sky blue is the checked mark, with the navy on it. */
+  --theme-link: var(--color-brand-300);
   --theme-selected: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
+  --theme-selected-label: var(--color-brand-300);
+  --theme-selected-mark: var(--color-brand-400);
+  --theme-selected-mark-foreground: var(--color-brand-950);
+  --theme-focus-ring: var(--color-brand-300);
   --theme-selection: var(--color-brand-800);
 
   --theme-brand: var(--color-brand-400);
   --theme-trace: var(--color-brand-300);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
-
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
 
   --theme-pending-label: #f4d660;
   --theme-pending-stroke: var(--color-pending-fill);
@@ -445,8 +510,8 @@
   --theme-series-4: #b3c65f; /* moss    0.79 0.13 118 */
 
   --theme-usage: var(--color-brand-400);
+  --theme-usage-empty: var(--color-slate-750);
   --theme-usage-track: var(--color-slate-850);
-  --theme-usage-track-edge: var(--color-slate-550);
 
   --theme-art-surface: var(--color-slate-900);
   --theme-art-line: var(--color-slate-550);
@@ -454,6 +519,7 @@
   --theme-art-path: var(--color-brand-300);
   --theme-art-chassis-top: var(--color-slate-850);
   --theme-art-chassis-bottom: var(--color-slate-900);
+  --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 18%, transparent);
 
   --theme-terminal: #0b0e11;
 
@@ -496,18 +562,22 @@
     --theme-subtle-foreground: var(--color-slate-600);
     --theme-border: var(--color-slate-800);
     --theme-border-control: var(--color-slate-550);
-    --theme-action: var(--color-brand-400);
-    --theme-action-hover: var(--color-brand-300);
-    --theme-action-foreground: var(--color-brand-950);
-    --theme-action-label: var(--color-brand-300);
-    --theme-focus-ring: var(--color-brand-300);
+    --theme-action: var(--color-cobalt-600);
+    --theme-action-hover: var(--color-cobalt-700);
+    --theme-action-foreground: #ffffff;
+    --theme-action-label: var(--color-cobalt-400);
+    --theme-action-stroke: var(--color-cobalt-500);
+    --theme-action-wash: color-mix(in srgb, var(--color-cobalt-500) 18%, transparent);
+    --theme-link: var(--color-brand-300);
     --theme-selected: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
+    --theme-selected-label: var(--color-brand-300);
+    --theme-selected-mark: var(--color-brand-400);
+    --theme-selected-mark-foreground: var(--color-brand-950);
+    --theme-focus-ring: var(--color-brand-300);
     --theme-selection: var(--color-brand-800);
     --theme-brand: var(--color-brand-400);
     --theme-trace: var(--color-brand-300);
     --theme-trace-area: color-mix(in srgb, var(--color-brand-300) 32%, transparent);
-    --theme-ambient: color-mix(in srgb, var(--color-brand-400) 10%, transparent);
-    --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 3%, transparent);
     --theme-pending-label: #f4d660;
     --theme-pending-stroke: var(--color-pending-fill);
     --theme-ok-stroke: var(--color-status-ok);
@@ -525,14 +595,15 @@
     --theme-series-3: #c06099;
     --theme-series-4: #b3c65f;
     --theme-usage: var(--color-brand-400);
+    --theme-usage-empty: var(--color-slate-750);
     --theme-usage-track: var(--color-slate-850);
-    --theme-usage-track-edge: var(--color-slate-550);
     --theme-art-surface: var(--color-slate-900);
     --theme-art-line: var(--color-slate-550);
     --theme-art-faint: var(--color-slate-800);
     --theme-art-path: var(--color-brand-300);
     --theme-art-chassis-top: var(--color-slate-850);
     --theme-art-chassis-bottom: var(--color-slate-900);
+    --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 18%, transparent);
     --theme-terminal: #0b0e11;
     --theme-shadow-control: inset 0 1px 0 rgb(255 255 255 / 0.06);
     --theme-shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.045), 0 10px 30px rgb(0 0 0 / 0.28);
@@ -553,18 +624,22 @@
   --theme-subtle-foreground: var(--color-slate-550);
   --theme-border: var(--color-slate-300);
   --theme-border-control: var(--color-slate-600);
-  --theme-action: var(--color-brand-600);
-  --theme-action-hover: var(--color-brand-700);
+  --theme-action: var(--color-cobalt-600);
+  --theme-action-hover: var(--color-cobalt-700);
   --theme-action-foreground: #ffffff;
-  --theme-action-label: var(--color-brand-700);
-  --theme-focus-ring: var(--color-brand-600);
+  --theme-action-label: var(--color-cobalt-700);
+  --theme-action-stroke: var(--color-cobalt-600);
+  --theme-action-wash: color-mix(in srgb, var(--color-cobalt-600) 8%, transparent);
+  --theme-link: var(--color-brand-700);
   --theme-selected: color-mix(in srgb, var(--color-brand-600) 9%, transparent);
+  --theme-selected-label: var(--color-brand-700);
+  --theme-selected-mark: var(--color-brand-600);
+  --theme-selected-mark-foreground: #ffffff;
+  --theme-focus-ring: var(--color-brand-600);
   --theme-selection: var(--color-brand-200);
   --theme-brand: var(--color-brand-600);
   --theme-trace: var(--color-brand-600);
   --theme-trace-area: color-mix(in srgb, var(--color-brand-600) 32%, transparent);
-  --theme-ambient: color-mix(in srgb, var(--color-brand-400) 12%, transparent);
-  --theme-ambient-soft: color-mix(in srgb, var(--color-brand-300) 7%, transparent);
   --theme-pending-label: var(--color-brand-950);
   --theme-pending-stroke: #9e7b0b;
   --theme-ok-stroke: #1d8545;
@@ -582,14 +657,15 @@
   --theme-series-3: #983c75;
   --theme-series-4: #6f7d1a;
   --theme-usage: var(--color-brand-600);
+  --theme-usage-empty: var(--color-slate-350);
   --theme-usage-track: var(--color-slate-200);
-  --theme-usage-track-edge: var(--color-slate-600);
   --theme-art-surface: var(--color-slate-50);
   --theme-art-line: var(--color-slate-600);
   --theme-art-faint: var(--color-slate-300);
   --theme-art-path: var(--color-brand-600);
   --theme-art-chassis-top: var(--color-slate-50);
   --theme-art-chassis-bottom: var(--color-slate-200);
+  --theme-art-plane: color-mix(in srgb, var(--color-brand-400) 14%, transparent);
   --theme-terminal: #131619;
   --theme-shadow-control: 0 1px 2px rgb(17 26 39 / 0.07);
   --theme-shadow-raised: 0 0 0 1px rgb(17 26 39 / 0.05), 0 1px 2px rgb(17 26 39 / 0.05), 0 10px 28px rgb(17 26 39 / 0.06);
@@ -612,6 +688,7 @@
   --text-caption: 0.8125rem;
   --text-sm: 0.8125rem;
   --text-figure: 1.875rem;
+  --text-hero: clamp(2rem, 1.1rem + 2.6vw, 3.25rem);
   --font-readout: var(--font-sans);
 }
 
@@ -631,8 +708,14 @@
   --color-action-hover: var(--theme-action-hover);
   --color-action-foreground: var(--theme-action-foreground);
   --color-action-label: var(--theme-action-label);
-  --color-focus-ring: var(--theme-focus-ring);
+  --color-action-stroke: var(--theme-action-stroke);
+  --color-action-wash: var(--theme-action-wash);
+  --color-link: var(--theme-link);
   --color-selected: var(--theme-selected);
+  --color-selected-label: var(--theme-selected-label);
+  --color-selected-mark: var(--theme-selected-mark);
+  --color-selected-mark-foreground: var(--theme-selected-mark-foreground);
+  --color-focus-ring: var(--theme-focus-ring);
   --color-selection: var(--theme-selection);
   --color-brand: var(--theme-brand);
   --color-trace: var(--theme-trace);
@@ -666,14 +749,15 @@
   --color-series-3: var(--theme-series-3);
   --color-series-4: var(--theme-series-4);
   --color-usage: var(--theme-usage);
+  --color-usage-empty: var(--theme-usage-empty);
   --color-usage-track: var(--theme-usage-track);
-  --color-usage-track-edge: var(--theme-usage-track-edge);
   --color-art-surface: var(--theme-art-surface);
   --color-art-line: var(--theme-art-line);
   --color-art-faint: var(--theme-art-faint);
   --color-art-path: var(--theme-art-path);
   --color-art-chassis-top: var(--theme-art-chassis-top);
   --color-art-chassis-bottom: var(--theme-art-chassis-bottom);
+  --color-art-plane: var(--theme-art-plane);
   --color-terminal: var(--theme-terminal);
   --color-terminal-foreground: var(--theme-terminal-foreground);
   --color-terminal-muted: var(--theme-terminal-muted);

@@ -1,0 +1,1824 @@
+/* The dashboard prototype's stylesheet, the NAS map: development only, never in the production
+ * bundle (UI-11).
+ *
+ * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
+ * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
+ * densities follow. No colour literal. These rules are not in a cascade layer, so where one sets the
+ * same property as a library utility, this one wins. Geometry from data reaches the CSS as custom
+ * properties through the CSSOM (--i, --r, --rows); nothing is a style attribute in markup (UI-1).
+ *
+ * None of the generated look (the owner's twenty habits): every region sits on the page ground,
+ * parted from the next by space and its sentence-case heading, never a card; nothing on the map is
+ * boxed; no coloured left edge, no pill, no small capitals, no gradient, no glow, no pulse, and no
+ * entrance but the first visit's assembly. The Cobalt accent appears only as the library's primary
+ * buttons. Reduced motion: the duration tokens are 0ms, so each keyframe lands at once.
+ */
+
+/* ─── Frame and page ──────────────────────────────────────────────────────────────────────────── */
+.dm-width {
+  min-width: 0;
+}
+.dm-width[data-width="900"] {
+  max-width: 836px;
+}
+.dm-width[data-width="390"] {
+  max-width: 358px;
+}
+.dm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  min-width: 0;
+  padding-block-end: 48px;
+}
+:root[data-density="compact"] .dm-page {
+  gap: 24px;
+}
+.dm-page[data-layout="narrow"] {
+  gap: 36px;
+}
+.dm-page .lt-causes {
+  margin-block-end: -24px;
+}
+.dm-region-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 14px;
+  margin-block-end: 12px;
+}
+:root[data-density="compact"] .dm-region-head {
+  margin-block-end: 6px;
+}
+.dm-region-title {
+  margin: 0;
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+  letter-spacing: var(--text-section--letter-spacing);
+  font-weight: var(--text-section--font-weight);
+}
+.dm-region-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.dm-mono {
+  font-family: var(--font-mono);
+  font-size: 0.94em;
+}
+.dm-num {
+  font-variant-numeric: tabular-nums;
+}
+.dm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--theme-link);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.dm-link svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-link:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* The library's status pill, where a library component still draws one (CapacityMeter's threshold):
+ * the icon and the coloured word, with no capsule. The library will match (the other half of this
+ * change); until then the lab draws the replacement. */
+.dm-page [data-slot="status-pill"] {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 12px;
+}
+
+/* ─── The welcome line (P.2) ──────────────────────────────────────────────────────────────────── */
+.dm-welcome {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.dm-welcome[data-leaving] {
+  animation: leave var(--duration-base) var(--ease-exit) both;
+}
+.dm-welcome-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  min-height: 0;
+  overflow: hidden;
+  padding-block: 0 12px;
+  border-block-end: 1px solid var(--theme-border);
+}
+.dm-welcome-words {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 360px;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+.dm-welcome-words svg {
+  flex: none;
+  color: var(--theme-muted-foreground);
+}
+.dm-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.dm-welcome-more {
+  gap: 4px;
+}
+.dm-welcome-list {
+  margin: 4px 0 0;
+  padding-inline-start: 18px;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+
+/* ─── A. The answer ───────────────────────────────────────────────────────────────────────────── */
+.dm-answer {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 14px;
+}
+/* The answer's mark: the state's own shape at the size of the sentence's first line. */
+.dm-answer-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-block-start: 2px;
+  color: var(--theme-muted-foreground);
+}
+.dm-answer-mark > svg {
+  width: 30px;
+  height: 30px;
+}
+.dm-answer-mark-loading {
+  border-radius: var(--radius-full);
+}
+.dm-answer-words {
+  min-width: 0;
+}
+.dm-answer-title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.012em;
+}
+.dm-answer-reason {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--theme-muted-foreground);
+}
+:root[data-density="compact"] .dm-answer-title {
+  font-size: 22px;
+  line-height: 28px;
+}
+:root[data-density="compact"] .dm-answer-mark,
+:root[data-density="compact"] .dm-answer-mark > svg {
+  width: 24px;
+  height: 24px;
+}
+:root[data-density="compact"] .dm-answer {
+  grid-template-columns: 24px minmax(0, 1fr);
+}
+:root[data-density="compact"] .dm-answer-reason {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+/* ─── B. Needs you: rows on the ground, parted by hairlines, the status icon at each start ─────── */
+.dm-needs {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* Under the answer it heads: closer to it than the regions are to each other. */
+  margin-block-start: -24px;
+}
+:root[data-density="compact"] .dm-needs {
+  margin-block-start: -12px;
+}
+.dm-needs-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--theme-border);
+}
+.dm-needs-list > li + li {
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-need {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 14px;
+  min-height: 58px;
+  padding-block: 8px;
+}
+.dm-need[data-new] {
+  animation: rise var(--duration-slow) var(--ease-enter) both;
+}
+.dm-need-icon {
+  display: inline-flex;
+  justify-content: center;
+}
+.dm-need-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.dm-need[data-health="warning"] .dm-need-icon {
+  color: var(--theme-warning-label);
+}
+.dm-need[data-health="critical"] .dm-need-icon {
+  color: var(--theme-critical-label);
+}
+.dm-need[data-health="unknown"] .dm-need-icon {
+  color: var(--theme-unknown-label);
+}
+.dm-need-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  min-width: 0;
+}
+.dm-need-title {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+}
+.dm-need-line {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+:root[data-density="compact"] .dm-need {
+  min-height: 38px;
+  padding-block: 3px;
+}
+.dm-page[data-layout="narrow"] .dm-need {
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: start;
+  padding-block: 12px;
+}
+.dm-page[data-layout="narrow"] .dm-need-icon {
+  padding-block-start: 2px;
+}
+.dm-page[data-layout="narrow"] .dm-need-action {
+  grid-column: 2;
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+}
+.dm-needs-more {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-block-start: 6px;
+  margin-inline-start: -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-link);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.dm-needs-more:hover {
+  background: var(--theme-muted-strong);
+}
+.dm-needs-more svg {
+  width: 16px;
+  height: 16px;
+  transition: rotate var(--duration-base) var(--ease-settle);
+}
+.dm-needs-more[aria-expanded="true"] svg {
+  rotate: 180deg;
+}
+
+/* ─── A disk, as its drawing ──────────────────────────────────────────────────────────────────── */
+.dm-caddy {
+  width: 30px;
+  height: auto;
+  margin-block-end: 2px;
+}
+.dm-caddy-body {
+  fill: var(--theme-page);
+  stroke: var(--theme-art-line);
+  stroke-width: 1.25;
+  transition: stroke var(--duration-base) var(--ease-standard);
+}
+.dm-slot[data-health="warning"] .dm-caddy-body {
+  stroke: var(--theme-warning-stroke);
+  stroke-width: 2;
+}
+.dm-slot[data-health="critical"] .dm-caddy-body {
+  stroke: var(--theme-critical-stroke);
+  stroke-width: 2;
+}
+.dm-caddy-part {
+  fill: var(--theme-muted-strong);
+  stroke: var(--theme-art-line);
+  stroke-width: 1;
+}
+.dm-caddy-faint {
+  fill: none;
+  stroke: var(--theme-art-faint);
+  stroke-width: 1.5;
+}
+/* The platter arc: it turns a quarter and slows to a stop as the disk goes to sleep (7.6). */
+.dm-arc {
+  fill: none;
+  stroke: var(--theme-art-path);
+  stroke-width: 1.75;
+  transform-box: view-box;
+  transform-origin: 16px 25px;
+}
+.dm-slot[data-power="asleep"] .dm-arc {
+  rotate: 90deg;
+  stroke: var(--theme-art-faint);
+}
+.dm-slot[data-power-changed][data-power="asleep"] .dm-arc {
+  animation: dm-arc-sleep var(--duration-glide) var(--ease-exit) both;
+}
+.dm-slot[data-power-changed][data-power="awake"] .dm-arc {
+  animation: dm-arc-wake var(--duration-slow) var(--ease-enter) both;
+}
+@keyframes dm-arc-sleep {
+  from {
+    rotate: 0deg;
+    stroke: var(--theme-art-path);
+  }
+}
+@keyframes dm-arc-wake {
+  from {
+    rotate: 90deg;
+    stroke: var(--theme-art-faint);
+  }
+}
+.dm-moon {
+  width: 10px;
+  height: 10px;
+  fill: var(--theme-muted-foreground);
+}
+.dm-slot[data-power-changed] .dm-moon {
+  animation: fade-in var(--duration-glide) var(--ease-exit) 160ms both;
+}
+.dm-slot-device {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+}
+.dm-slot-state {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 3px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+}
+.dm-slot-state svg {
+  width: 12px;
+  height: 12px;
+}
+.dm-slot-state[data-health="warning"] {
+  color: var(--theme-warning-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-slot-state[data-health="critical"] {
+  color: var(--theme-critical-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-slot-state[data-health="unknown"] {
+  color: var(--theme-unknown-label);
+}
+/* "Not checked" says it in words, so its ring can go. */
+.dm-slot-state[data-health="unknown"] [data-icon] {
+  display: none;
+}
+
+/* The strip for the healthy disks beyond six: a tick each, with its shape (6.4). */
+.dm-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 200px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.dm-strip:hover .dm-strip-words {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-strip:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-ticks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+/* A tick is a tiny disk drawing in outline: healthy things carry no status colour (6.1). */
+.dm-tick {
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1.25px var(--theme-art-line);
+}
+.dm-tick[data-kind="nvme"],
+.dm-tick[data-kind="ssd"] {
+  width: 12px;
+  height: 8px;
+}
+.dm-tick[data-health="unknown"] {
+  box-shadow: none;
+  outline: 1px dashed var(--theme-unknown-stroke);
+  outline-offset: -1px;
+}
+.dm-strip-words {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--theme-muted-foreground);
+}
+.dm-strip-words svg {
+  width: 12px;
+  height: 12px;
+  color: var(--theme-ok-label);
+}
+
+/* ─── C. The map, by rows (6.8), on the page ground ───────────────────────────────────────────── */
+.dm-map {
+  position: relative;
+}
+.dm-map-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  margin-block-end: 14px;
+}
+:root[data-density="compact"] .dm-map-head {
+  margin-block-end: 6px;
+}
+.dm-map-head .lf-tip {
+  flex-basis: 100%;
+  margin: 0;
+}
+.dm-map > .dm-lane-error {
+  margin-block-end: 12px;
+}
+
+/* The rows share their column tracks, so the headers read and the eye scans down a column: the
+ * row's status icon, the disks, the storage at a fixed width, and the shared folders taking the rest. */
+.dm-grid {
+  display: grid;
+  grid-template-columns:
+    [edge] 28px
+    [disks] minmax(0, max-content)
+    [storage] minmax(200px, 240px)
+    [folders] minmax(0, 1fr);
+}
+.dm-map[data-layout="mid"] .dm-grid {
+  grid-template-columns:
+    [edge] 24px
+    [disks] minmax(0, max-content)
+    [storage] minmax(180px, 204px)
+    [folders] minmax(0, 1fr);
+}
+.dm-cols,
+.dm-rows,
+.dm-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+}
+.dm-cols {
+  align-items: end;
+  padding-block-end: 8px;
+}
+.dm-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-inline-end: 12px;
+}
+/* The folders' header starts where the folders do: past the connector and its end. */
+.dm-col[data-col="folders"] {
+  padding-inline-start: 38px;
+}
+/* Column headers in sentence case, regular weight, secondary colour. */
+.dm-col-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 18px;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-muted-foreground);
+}
+.dm-caption {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block-end: 1px solid var(--theme-border);
+  outline: none;
+}
+.dm-row {
+  position: relative;
+  align-items: center;
+  min-height: 72px;
+  padding-block: 10px;
+  border-block-start: 1px solid var(--theme-border);
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+:root[data-density="compact"] .dm-row {
+  min-height: 0;
+  padding-block: 4px;
+}
+/* A problem row starts with its status icon (the connectors carry the tone along it). */
+.dm-edge {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+}
+.dm-edge svg {
+  width: 18px;
+  height: 18px;
+}
+.dm-row[data-tone="warning"] > .dm-edge {
+  color: var(--theme-warning-label);
+}
+.dm-row[data-tone="critical"] > .dm-edge {
+  color: var(--theme-critical-label);
+}
+.dm-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.dm-cell-folders {
+  align-self: stretch;
+}
+
+/* Connectors: a short straight line between neighbours on one row, in the row's tone. */
+.dm-wire {
+  flex: 1 0 22px;
+  align-self: center;
+  height: 0;
+  margin-inline: 6px;
+  border-block-start: 2px solid var(--theme-art-line);
+  transform-origin: left center;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard);
+}
+.dm-cell-folders > .dm-wire {
+  flex: 0 0 22px;
+  margin-inline: 4px 12px;
+}
+.dm-wire[data-tone="warning"] {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-wire[data-tone="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-wire[data-dashed] {
+  border-block-start-style: dashed;
+  border-color: var(--theme-art-faint);
+}
+
+/* The disks of a row: their drawings side by side, nothing around them. */
+.dm-bay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  max-width: 240px;
+}
+.dm-bay-unread,
+.dm-bay-none {
+  gap: 5px;
+  font-size: 12px;
+  color: var(--theme-unknown-label);
+}
+.dm-bay-none {
+  color: var(--theme-tertiary-foreground);
+}
+.dm-bay-unread svg {
+  width: 13px;
+  height: 13px;
+}
+.dm-slot-wrap {
+  display: block;
+}
+/* A state the row's disks share, said once under them instead of under each. */
+.dm-bay-said {
+  display: inline-flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 4px;
+  margin-block-start: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-muted-foreground);
+  text-wrap: balance;
+}
+.dm-bay-said[data-health="unknown"] {
+  color: var(--theme-unknown-label);
+}
+.dm-bay-said[data-health="warning"] {
+  color: var(--theme-warning-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-bay-said[data-health="critical"] {
+  color: var(--theme-critical-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-bay-said svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.dm-slot {
+  display: grid;
+  justify-items: center;
+  gap: 0;
+  min-width: 52px;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+.dm-slot:hover .dm-slot-device {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-slot:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-slot .dm-caddy {
+  width: 22px;
+  margin-block-end: 2px;
+}
+:root[data-density="compact"] .dm-slot .dm-caddy {
+  width: 16px;
+}
+.dm-slot-link {
+  width: 11px;
+  height: 11px;
+  margin-inline-start: 2px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  vertical-align: -1px;
+}
+.dm-slot-ghost {
+  color: var(--theme-tertiary-foreground);
+  cursor: default;
+}
+.dm-slot-ghost svg {
+  opacity: 0.6;
+}
+.dm-slot-skeleton {
+  display: block;
+  width: 40px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--theme-muted);
+}
+
+/* The storage: its icon, name, usage bar and figures; no box. */
+.dm-store {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+.dm-store-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.dm-store-main:hover .dm-store-name,
+.dm-more-rows:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-store-main:focus-visible,
+.dm-more-rows:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 4px;
+}
+.dm-store-main > svg {
+  color: var(--theme-muted-foreground);
+}
+.dm-store-words {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  min-width: 0;
+}
+.dm-store-name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-store-tech {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* The meter stacks under the name: the bar, then the figures and any state word. */
+.dm-store [data-slot="capacity-meter"] {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding-inline-start: 28px;
+}
+.dm-store [data-slot="capacity-meter"] p {
+  font-size: 12px;
+}
+.dm-store-ghost .dm-store-main {
+  cursor: default;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-ghost-bar {
+  display: block;
+  height: 6px;
+  margin-inline-start: 28px;
+  border: 1px dashed var(--theme-art-faint);
+  border-radius: var(--radius-full);
+}
+.dm-store-skeleton {
+  width: 100%;
+  height: 44px;
+}
+
+/* A state in words beside a name: its icon and the word in its colour. */
+.dm-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.dm-state svg {
+  width: 13px;
+  height: 13px;
+}
+.dm-state[data-health="warning"] {
+  color: var(--theme-warning-label);
+}
+.dm-state[data-health="critical"] {
+  color: var(--theme-critical-label);
+}
+
+/* The shared folders of a row: icon and name, the ways in as small icons, wrapping after the row's
+ * connector. */
+.dm-folders {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: center;
+  gap: 4px 22px;
+  min-width: 0;
+  padding-block: 2px;
+}
+.dm-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-standard);
+}
+.dm-folder:hover .dm-folder-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-folder:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-folder > svg,
+.dm-folder > [data-icon] svg {
+  flex: none;
+  color: var(--theme-muted-foreground);
+}
+.dm-folder-name {
+  overflow: hidden;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-folder-via {
+  display: inline-flex;
+  gap: 3px;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-folder-way {
+  display: inline-flex;
+}
+.dm-folder-none {
+  font-size: 12px;
+  color: var(--theme-tertiary-foreground);
+  white-space: nowrap;
+}
+.dm-folder-more {
+  color: var(--theme-link);
+}
+.dm-folder-ghost {
+  color: var(--theme-tertiary-foreground);
+  cursor: default;
+}
+.dm-folder-skeleton {
+  width: 96px;
+  height: 20px;
+}
+.dm-example-tag {
+  font-size: 12px;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-row-example .dm-wire {
+  border-color: var(--theme-art-faint);
+}
+.dm-secondary-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+/* Without a connector, the words start where the folders and the column's header do. */
+.dm-cell-folders > .dm-secondary-line {
+  padding-inline-start: 40px;
+}
+.dm-secondary-line svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* The unused disks' row: a dashed connector to where new storage will go. */
+.dm-ghost-store {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+.dm-ghost-line {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.dm-row[data-kind="unused"] .dm-slot-state {
+  color: var(--theme-unknown-label);
+}
+
+/* "3 more, all OK": the storage rows beyond six. */
+.dm-more-rows {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-link);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.dm-more-rows [data-icon] svg {
+  color: var(--theme-ok-label);
+}
+
+/* ─── Tracing by highlighting (6.8 item 5) ────────────────────────────────────────────────────── */
+/* Lit: the row takes the selected ground and its plain connectors the selected mark. The rest:
+ * reduced emphasis, text never below 3:1 (tertiary text keeps over 5:1); only lines and drawings go
+ * fainter. */
+.dm-row[data-trace="lit"] {
+  background: var(--theme-selected);
+}
+.dm-row[data-trace="lit"] .dm-wire:not([data-tone]) {
+  border-color: var(--theme-selected-mark);
+}
+.dm-row[data-trace="dim"] .dm-wire,
+.dm-row[data-trace="dim"] > .dm-edge {
+  opacity: 0.4;
+}
+.dm-slot[data-trace="lit"] .dm-slot-device,
+.dm-folder[data-trace="lit"] .dm-folder-name,
+.dm-store:has([data-trace="lit"]) .dm-store-name,
+.dm-wt[data-trace="lit"] .dm-wt-name {
+  color: var(--theme-selected-label);
+}
+.dm-folder[data-trace="lit"],
+.dm-wt[data-trace="lit"] {
+  background: var(--theme-selected);
+}
+.dm-slot[data-trace="dim"],
+.dm-strip[data-trace="dim"],
+.dm-folder[data-trace="dim"],
+.dm-store[data-trace="dim"],
+.dm-more-rows[data-trace="dim"],
+.dm-wt[data-trace="dim"],
+.dm-way[data-trace="dim"] .dm-wt {
+  color: var(--theme-tertiary-foreground);
+}
+.dm-slot[data-trace="dim"] svg,
+.dm-folder[data-trace="dim"] svg,
+.dm-store[data-trace="dim"] svg,
+.dm-store[data-trace="dim"] [data-slot="capacity-meter"] [role="meter"],
+.dm-wt[data-trace="dim"] svg,
+.dm-ghost-store[data-trace="dim"] {
+  opacity: 0.45;
+}
+.dm-slot[data-trace="dim"] .dm-slot-state,
+.dm-store[data-trace="dim"] .dm-store-tech,
+.dm-store[data-trace="dim"] p,
+.dm-wt[data-trace="dim"] .dm-wt-state,
+.dm-wt[data-trace="dim"] .dm-wt-tech {
+  color: var(--theme-tertiary-foreground);
+}
+
+/* ─── The band: ways in into the network (6.8 item 4) ─────────────────────────────────────────── */
+/* One fan-in, drawn so it reads at a glance: each way in that is on has a short stub to one bus, the
+ * bus has one stub to each interface, and each interface one to your network. Items of one height,
+ * so the bus's middle is the band's middle and every line is straight. */
+.dm-band {
+  --bus: 44px;
+  --gap: 4px;
+  display: grid;
+  grid-template-columns:
+    [ways] minmax(0, max-content)
+    [bus-in] var(--bus)
+    [net] minmax(0, max-content)
+    [bus-out] var(--bus)
+    [world] minmax(0, max-content)
+    [rest] minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  row-gap: 8px;
+  margin-block-start: 22px;
+}
+.dm-band-head {
+  grid-row: 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dm-band-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+}
+.dm-band-note {
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+}
+.dm-band-head[data-part="ways"] {
+  grid-column: ways;
+}
+.dm-band-head[data-part="net"] {
+  grid-column: net / -1;
+}
+.dm-band-part {
+  grid-row: 2;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+.dm-band-part[data-part="ways"] {
+  grid-column: ways;
+}
+.dm-band-part[data-part="net"] {
+  grid-column: net;
+}
+.dm-band > .dm-off {
+  grid-column: ways / -1;
+  grid-row: 3;
+  margin: 0;
+}
+.dm-off {
+  font-size: 12px;
+  color: var(--theme-muted-foreground);
+}
+.dm-bus {
+  grid-row: 2;
+}
+.dm-bus[data-part="in"] {
+  grid-column: bus-in;
+}
+.dm-bus[data-part="out"] {
+  grid-column: bus-out;
+}
+.dm-ways,
+.dm-ifaces {
+  display: grid;
+  grid-template-columns: max-content max-content max-content;
+  row-gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Each item spans the list's three tracks, so names and states line up down the list. */
+.dm-way,
+.dm-iface {
+  position: relative;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.dm-way > .dm-wt,
+.dm-iface > .dm-wt {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+/* Stubs and the bus, as borders on the items' own boxes, so they move with them. */
+.dm-way::after,
+.dm-iface::after,
+.dm-iface::before,
+.dm-world::before {
+  content: "";
+  position: absolute;
+  inset-block-start: calc(50% - 1px);
+  width: calc(var(--bus) / 2);
+  border-block-start: 2px solid var(--theme-art-line);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard);
+}
+.dm-way::after,
+.dm-iface::after {
+  inset-inline-start: 100%;
+}
+.dm-iface::before,
+.dm-world::before {
+  inset-inline-end: 100%;
+}
+/* The bus: from each item's middle to the next one's, so the segments join into one line. */
+.dm-way:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  height: calc(100% + var(--gap));
+  border-inline-start: 2px solid var(--theme-art-line);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+.dm-way:not(:last-child) > .dm-wt::after,
+.dm-iface:not(:last-child) > .dm-wt::after {
+  inset-inline-start: calc(100% + var(--bus) / 2 - 1px);
+}
+.dm-iface:not(:last-child) > .dm-wt::before {
+  inset-inline-end: calc(100% + var(--bus) / 2 - 1px);
+}
+.dm-band[data-lit] .dm-iface::before,
+.dm-band[data-lit] .dm-iface::after,
+.dm-band[data-lit] .dm-world::before,
+.dm-band[data-lit] .dm-wt::after,
+.dm-band[data-lit] .dm-iface > .dm-wt::before,
+.dm-way[data-trace="lit"]::after {
+  border-color: var(--theme-selected-mark);
+}
+.dm-band[data-tracing] .dm-way[data-trace="dim"]::after {
+  opacity: 0.4;
+}
+/* A way in or an interface: its icon, its name and its state on one line, as a list item. */
+.dm-wt {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--theme-foreground);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+.dm-wt:hover .dm-wt-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-wt:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+.dm-wt > svg {
+  color: var(--theme-muted-foreground);
+}
+.dm-wt-name {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-wt-tech {
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-tertiary-foreground);
+}
+.dm-wt-state {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  overflow: hidden;
+  padding-inline-start: 8px;
+  font-size: 12.5px;
+  line-height: 17px;
+  color: var(--theme-muted-foreground);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dm-wt-state[data-health="warning"] {
+  color: var(--theme-warning-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-wt-state[data-health="critical"] {
+  color: var(--theme-critical-label);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-wt-state svg {
+  width: 13px;
+  height: 13px;
+}
+.dm-world {
+  position: relative;
+  grid-row: 2;
+  grid-column: world;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 10px;
+  min-height: 38px;
+  padding-inline: 10px;
+  color: var(--theme-foreground);
+}
+.dm-world > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--theme-muted-foreground);
+}
+.dm-world[data-trace="lit"] .dm-wt-name {
+  color: var(--theme-selected-label);
+}
+:root[data-density="compact"] .dm-wt,
+:root[data-density="compact"] .dm-world {
+  min-height: 30px;
+  padding-block: 2px;
+}
+
+/* The map's actions: one line under the band, in reading order. */
+.dm-map-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-block-start: 16px;
+  margin-inline-start: -10px;
+}
+.dm-map-action {
+  color: var(--theme-link);
+}
+
+.dm-lane-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding-block: 8px;
+}
+.dm-lane-error-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-unknown-label);
+}
+.dm-lane-error-message {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--theme-muted-foreground);
+  overflow-wrap: anywhere;
+}
+
+#dm-rows:focus-visible,
+.dm-band-part:focus-visible,
+.dm-facts:focus-visible {
+  box-shadow: 0 0 0 2px var(--theme-focus-ring);
+}
+
+/* ─── The first visit: the NAS assembles row by row (6.8, 7.2, owner Q2) ───────────────────────── */
+/* The one entrance on the page, and only on a first visit or "Show me around". Each row in turn,
+ * top to bottom: its disks slide into place, the connector draws, the storage settles and its bar
+ * fills, the folders come in; then the band's items settle and its lines draw. About 900ms in all,
+ * every part usable as it lands.
+ *
+ * Seen at once (the motion reel's check): the fades are separate from the movement and tight, so
+ * every part is fully opaque within 400ms of the cause (each fades over 160ms, the last starting at
+ * 160ms, so there is room for a late frame), while the movement, the drawing and the bar fill carry on at full opacity to about 900ms.
+ * --t is a part's movement delay, --f its fade delay. */
+.dm-map[data-assemble="full"] .dm-row {
+  --t: calc(min(var(--r, 0), 6) * 85ms);
+  --f: calc(min(var(--r, 0), 6) * 16ms);
+}
+.dm-map[data-assemble="full"] .dm-slot-wrap {
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard)
+      calc(var(--f) + min(var(--i, 0), 5) * 6ms) both,
+    dm-caddy-in var(--duration-slow) var(--ease-settle)
+      calc(var(--t) + min(var(--i, 0), 5) * 30ms) both;
+}
+.dm-map[data-assemble="full"] .dm-row .dm-wire {
+  animation: grow-x var(--duration-base) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 110ms);
+}
+.dm-map[data-assemble="full"] .dm-row .dm-cell-folders > .dm-wire {
+  animation-delay: calc(var(--t) + 230ms);
+}
+.dm-map[data-assemble="full"] .dm-store,
+.dm-map[data-assemble="full"] .dm-ghost-store,
+.dm-map[data-assemble="full"] .dm-more-rows {
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard) calc(var(--f) + 12ms)
+      both,
+    dm-rise-in var(--duration-slow) var(--ease-settle) calc(var(--t) + 150ms)
+      both;
+}
+.dm-map[data-assemble="full"] .dm-store [role="meter"] > :first-child {
+  animation: dm-bar-fill var(--duration-glide) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 220ms);
+}
+.dm-map[data-assemble="full"] .dm-folder {
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard)
+      calc(var(--f) + 24ms + min(var(--i, 0), 6) * 6ms) both,
+    dm-rise-in var(--duration-slow) var(--ease-settle)
+      calc(var(--t) + 290ms + min(var(--i, 0), 6) * 35ms) both;
+}
+.dm-map[data-assemble="full"] .dm-band {
+  --t: calc(min(var(--rows, 4), 6) * 85ms + 260ms);
+  --f: 120ms;
+}
+.dm-map[data-assemble="full"] .dm-band-part,
+.dm-map[data-assemble="full"] .dm-band > .dm-off,
+.dm-map[data-assemble="full"] .dm-world,
+.dm-map[data-assemble="full"] .dm-band-head {
+  animation:
+    dm-fade-in var(--duration-fast) var(--ease-standard) var(--f) both,
+    dm-rise-in var(--duration-slow) var(--ease-settle) var(--t) both;
+}
+.dm-map[data-assemble="full"] .dm-band-part[data-part="net"] {
+  animation-delay: calc(var(--f) + 20ms), calc(var(--t) + 90ms);
+}
+.dm-map[data-assemble="full"] .dm-world {
+  animation-delay: calc(var(--f) + 40ms), calc(var(--t) + 180ms);
+}
+.dm-map[data-assemble="full"] .dm-band .dm-way::after,
+.dm-map[data-assemble="full"] .dm-band .dm-iface::before,
+.dm-map[data-assemble="full"] .dm-band .dm-iface::after,
+.dm-map[data-assemble="full"] .dm-band .dm-world::before {
+  transform-origin: left center;
+  animation: grow-x var(--duration-base) var(--ease-standard) both;
+  animation-delay: calc(var(--t) + 120ms);
+}
+.dm-map[data-assemble="full"] .dm-band .dm-iface::after,
+.dm-map[data-assemble="full"] .dm-band .dm-world::before {
+  animation-delay: calc(var(--t) + 210ms);
+}
+@keyframes dm-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dm-rise-in {
+  from {
+    translate: 0 var(--motion-rise);
+  }
+}
+@keyframes dm-caddy-in {
+  from {
+    translate: 0 -10px;
+  }
+}
+@keyframes dm-bar-fill {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+/* A problem arrives (7.6), a change of state: its row's connectors draw again in its tone. */
+.dm-row[data-arrival] .dm-wire {
+  animation: grow-x var(--duration-glide) var(--ease-standard) both;
+}
+.dm-row[data-arrival] .dm-cell-folders > .dm-wire {
+  animation-delay: 220ms;
+}
+/* Storage was added (7.2), a change of state: the new row's bar fills. */
+.dm-row[data-arrived] .dm-store [role="meter"] > :first-child {
+  animation: dm-bar-fill var(--duration-glide) var(--ease-standard) both;
+}
+
+/* ─── Compact density ─────────────────────────────────────────────────────────────────────────── */
+/* Tighter, not different: the same pieces in the same places, with less air. */
+:root[data-density="compact"] .dm-store {
+  gap: 3px;
+}
+:root[data-density="compact"] .dm-store-tech {
+  display: none;
+}
+:root[data-density="compact"] .dm-folder {
+  min-height: 26px;
+}
+
+/* ─── 390: each row stacks, its connectors vertical (6.8 item 11) ─────────────────────────────── */
+.dm-map[data-layout="narrow"] .dm-grid {
+  display: block;
+}
+.dm-map[data-layout="narrow"] .dm-cols {
+  display: none;
+}
+.dm-map[data-layout="narrow"] .dm-cols[data-captions] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-block-end: 10px;
+}
+.dm-map[data-layout="narrow"] .dm-cols > .dm-edge {
+  display: none;
+}
+.dm-map[data-layout="narrow"] .dm-col {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  padding: 0;
+}
+.dm-map[data-layout="narrow"] .dm-rows {
+  display: flex;
+  flex-direction: column;
+}
+.dm-map[data-layout="narrow"] .dm-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-block: 14px;
+}
+/* The status icon at the row's start, in its own gutter beside the disks. */
+.dm-map[data-layout="narrow"] .dm-row {
+  padding-inline-start: 28px;
+}
+.dm-map[data-layout="narrow"] .dm-row > .dm-edge {
+  position: absolute;
+  inset-block-start: 22px;
+  inset-inline-start: 0;
+}
+.dm-map[data-layout="narrow"] .dm-ways,
+.dm-map[data-layout="narrow"] .dm-ifaces {
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+}
+.dm-map[data-layout="narrow"] .dm-cell {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.dm-map[data-layout="narrow"] .dm-cell-folders {
+  align-items: stretch;
+}
+/* The connectors run down the row's left, under the first disk's middle. */
+.dm-map[data-layout="narrow"] .dm-wire,
+.dm-map[data-layout="narrow"] .dm-cell-folders > .dm-wire {
+  flex: none;
+  align-self: flex-start;
+  width: 0;
+  height: 12px;
+  margin: 2px 0 4px 26px;
+  border-block-start: 0;
+  border-inline-start: 2px solid var(--theme-art-line);
+  transform-origin: center top;
+}
+.dm-map[data-layout="narrow"] .dm-wire[data-tone="warning"] {
+  border-color: var(--theme-warning-stroke);
+}
+.dm-map[data-layout="narrow"] .dm-wire[data-tone="critical"] {
+  border-color: var(--theme-critical-stroke);
+}
+.dm-map[data-layout="narrow"] .dm-wire[data-dashed] {
+  border-inline-start-style: dashed;
+  border-color: var(--theme-art-faint);
+}
+.dm-map[data-layout="narrow"] .dm-bay {
+  max-width: none;
+}
+.dm-map[data-layout="narrow"] .dm-store [data-slot="capacity-meter"],
+.dm-map[data-layout="narrow"] .dm-ghost-bar {
+  padding-inline-start: 0;
+  margin-inline-start: 0;
+}
+.dm-map[data-layout="narrow"] .dm-folders {
+  align-self: stretch;
+  gap: 2px 16px;
+}
+.dm-map[data-layout="narrow"] .dm-secondary-line {
+  padding: 4px 0 0;
+}
+.dm-map[data-layout="narrow"][data-assemble="full"] .dm-row .dm-wire {
+  animation-name: grow-y;
+}
+/* The band stacks: the ways in as a list, a short connector down to the network, another down to
+ * your network; the connectors run on the same line as the rows' own. */
+.dm-map[data-layout="narrow"] .dm-band {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  row-gap: 0;
+}
+.dm-map[data-layout="narrow"] .dm-band > * {
+  grid-row: auto;
+  grid-column: 1;
+}
+.dm-map[data-layout="narrow"] .dm-band-head[data-part="ways"] {
+  margin-block-end: 8px;
+}
+.dm-map[data-layout="narrow"] .dm-band-head[data-part="net"] {
+  display: none;
+}
+/* "Off:" after the stack, so the connector runs straight from the ways in to the network. */
+.dm-map[data-layout="narrow"] .dm-band > .dm-off {
+  order: 10;
+  margin-block-start: 6px;
+}
+.dm-map[data-layout="narrow"] .dm-band .dm-way::after,
+.dm-map[data-layout="narrow"] .dm-band .dm-iface::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-iface::after,
+.dm-map[data-layout="narrow"] .dm-band .dm-world::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-wt::before,
+.dm-map[data-layout="narrow"] .dm-band .dm-wt::after {
+  display: none;
+}
+.dm-map[data-layout="narrow"] .dm-bus {
+  justify-self: start;
+  width: 0;
+  height: 14px;
+  margin-inline-start: 17px;
+  border-inline-start: 2px solid var(--theme-art-line);
+}
+.dm-map[data-layout="narrow"] .dm-band[data-lit] .dm-bus {
+  border-color: var(--theme-selected-mark);
+}
+.dm-map[data-layout="narrow"] .dm-world {
+  justify-self: start;
+  margin-block-end: 6px;
+  padding-inline: 8px;
+}
+.dm-map[data-layout="narrow"] .dm-map-foot {
+  margin-inline-start: -10px;
+}
+
+/* ─── D. Right now: one line of figures of different widths ───────────────────────────────────── */
+.dm-readouts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 40px;
+  margin: 0;
+}
+.dm-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.dm-readout dt {
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+.dm-readout dd {
+  margin: 0;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.dm-readout-aside {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-muted-foreground);
+}
+:root[data-density="compact"] .dm-readout dd {
+  font-size: var(--text-base);
+  line-height: 22px;
+}
+.dm-live[data-layout="narrow"] .dm-readouts {
+  gap: 6px 24px;
+}
+
+/* ─── E. First steps or Shortcuts, and This NAS ───────────────────────────────────────────────── */
+.dm-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  align-items: start;
+  gap: 36px 56px;
+}
+.dm-foot[data-layout="mid"],
+.dm-foot[data-layout="narrow"],
+.dm-foot[data-single] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dm-steps,
+.dm-facts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  outline: none;
+}
+.dm-steps .dm-region-head,
+.dm-facts .dm-region-head {
+  margin-block-end: 6px;
+}
+/* The checklist: a tick when done, an empty circle when not; the next step's button in the accent. */
+.dm-checklist {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dm-checklist > li + li {
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-check {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 14px;
+  min-height: 56px;
+  padding-block: 8px;
+}
+:root[data-density="compact"] .dm-check {
+  min-height: 36px;
+  padding-block: 3px;
+}
+.dm-check-mark {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dm-check-mark circle {
+  stroke: var(--theme-border-control);
+  stroke-width: 1.5;
+}
+.dm-check[data-done] .dm-check-mark circle {
+  stroke: var(--theme-ok-stroke);
+  fill: var(--theme-ok-wash);
+}
+.dm-check-mark path {
+  stroke: var(--theme-ok-label);
+  stroke-width: 2;
+}
+.dm-check[data-landed] .dm-check-mark path {
+  stroke-dasharray: 1;
+  animation: draw var(--duration-base) var(--ease-standard) 120ms both;
+}
+.dm-check-words {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dm-check-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.dm-check[data-done] .dm-check-title {
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-muted-foreground);
+}
+.dm-check-line {
+  font-size: 13px;
+  color: var(--theme-muted-foreground);
+}
+.dm-page[data-layout="narrow"] .dm-check {
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+}
+.dm-page[data-layout="narrow"] .dm-check-action {
+  grid-column: 2;
+  justify-self: start;
+}
+/* Shortcuts: a short list of text buttons, parted by hairlines. */
+.dm-shortcut-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dm-shortcut-list > li + li {
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--theme-link);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: start;
+  cursor: pointer;
+}
+.dm-shortcut:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dm-shortcut:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 0;
+  border-radius: var(--radius-sm);
+}
+.dm-shortcut-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  color: var(--theme-muted-foreground);
+}
+.dm-shortcut-icon > svg {
+  width: 18px;
+  height: 18px;
+}
+:root[data-density="compact"] .dm-shortcut {
+  min-height: 34px;
+}
+
+/* This NAS: facts in two columns, label over value, parted by hairlines. */
+.dm-facts .dm-region-head {
+  justify-content: space-between;
+  align-items: center;
+}
+.dm-show-around svg {
+  width: 14px;
+  height: 14px;
+}
+.dm-factgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 20px;
+  margin: 0;
+}
+.dm-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding-block: 8px;
+  border-block-start: 1px solid var(--theme-border);
+}
+.dm-fact-wide {
+  grid-column: 1 / -1;
+}
+.dm-fact dt {
+  font-size: 12.5px;
+  color: var(--theme-muted-foreground);
+}
+.dm-fact dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+.dm-fact dd .dm-link {
+  display: inline;
+  font-weight: var(--font-weight-regular);
+}
+.dm-fact dd .dm-link svg {
+  display: inline;
+  margin-inline-start: 4px;
+  vertical-align: -2px;
+}
+:root[data-density="compact"] .dm-fact {
+  padding-block: 4px;
+}
+/* Alone (the steps moved up under A on a new NAS): the facts in one line. */
+.dm-foot[data-single] .dm-factgrid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.dm-foot[data-single] .dm-fact-wide {
+  grid-column: auto;
+}
+
+/* The library's Skeleton breathes; nothing on this page pulses (habit 10). The placeholder stands
+ * still until the library matches. */
+.dm-page [data-slot="skeleton"] {
+  animation: none;
+}
+
+/* The library's shell paints ambient light behind the page's top and frosts the sticky top bar
+ * (habit 11). On this page the ground is plain and the bar is a solid ground with a hairline, until
+ * the library matches. */
+[data-slot="shell"]:has(.dm-page) .ambient-light {
+  display: none;
+}
+[data-slot="shell"]:has(.dm-page) [data-slot="top-bar"] {
+  background: var(--theme-page);
+  backdrop-filter: none;
+  border-block-end: 1px solid var(--theme-border);
+}

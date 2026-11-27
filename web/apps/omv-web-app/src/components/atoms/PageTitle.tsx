@@ -10,15 +10,34 @@ import { usePageFocus } from "../../shell/pageFocus.ts";
  * A heading that is not plain text (a device set in code type: "Disk /dev/sdb") names the tab through
  * `documentTitle`, which is then required.
  */
-type PageTitleProps =
+type PageTitleProps = (
   | {
       children: string;
       /** The tab's name when it differs from the heading: "SMB/CIFS – Services". */
       documentTitle?: string;
     }
-  | { children: ReactNode; documentTitle: string };
+  | { children: ReactNode; documentTitle: string }
+) & {
+  /**
+   * `eyebrow`: a small title above a page's answer (dashboard spec 4.1), at the section step in the
+   * secondary ink. It stays the page's one `h1`, the focus target and the tab's name.
+   */
+  variant?: "page" | "eyebrow";
+  /** For a region the title names (`aria-labelledby`). */
+  id?: string;
+};
 
-export function PageTitle({ children, documentTitle }: PageTitleProps) {
+const TITLE_CLASS = {
+  page: "text-2xl leading-tight font-semibold outline-hidden",
+  eyebrow: "text-section text-muted-foreground outline-hidden",
+} as const;
+
+export function PageTitle({
+  children,
+  documentTitle,
+  variant = "page",
+  id,
+}: PageTitleProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLHeadingElement>(null);
   const focus = usePageFocus();
@@ -36,11 +55,7 @@ export function PageTitle({ children, documentTitle }: PageTitleProps) {
   }, [pathname, focus]);
 
   return (
-    <h1
-      ref={ref}
-      tabIndex={-1}
-      className="text-2xl leading-tight font-semibold outline-hidden"
-    >
+    <h1 ref={ref} id={id} tabIndex={-1} className={TITLE_CLASS[variant]}>
       {children}
     </h1>
   );

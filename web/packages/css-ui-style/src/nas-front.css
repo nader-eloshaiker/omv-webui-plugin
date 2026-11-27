@@ -1,0 +1,93 @@
+/* The drawing of the NAS's front: its two motions (journal 2026-11-27), in the stylesheet so nothing
+ * is inserted at run time (UI-1). The drawing is react-ui-components' `NasFront`; its parts are named
+ * with `data-slot` and `data-part`, and the only geometry from data is a bay's and a bracket's place
+ * in the assembly, `--i`, set through React's `style`. Its look is Tailwind in the component.
+ *
+ * Two motions, each answering a cause and running once:
+ *   - the first visit (or "Show me around"): the disks rise into their bays left to right, the stick
+ *     goes down into its socket, the brackets draw under the drives they make. Every fade runs on
+ *     --duration-fast and is done by about 240ms; the movement carries on at full opacity to about
+ *     880ms (rethink 7.10).
+ *   - a disk health check's result arriving on the page: on the small drawing each caddy's solid
+ *     outline wipes over its dashed one, disk by disk.
+ *
+ * Durations and curves are the motion tokens. Under reduced motion every part lands at once with the
+ * short fade: the system setting through the base rule in index.css, the "Animations: Reduced"
+ * preference or a `MotionScope reduced` (`data-motion="reduced"`) through the last rule here, since
+ * the reduced tokens do not zero the fixed offsets between the parts.
+ */
+@layer components {
+  /* ─── The first visit ───────────────────────────────────────────────────────────────────────── */
+  [data-slot="nas-front"][data-assemble="full"]
+    [data-part="bay"]
+    [data-part="caddy"] {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard) calc(var(--i, 0) * 20ms)
+        both,
+      nas-front-into-bay var(--duration-slow) var(--ease-settle)
+        calc(100ms + var(--i, 0) * 70ms) both;
+  }
+  [data-slot="nas-front"][data-assemble="full"] [data-part="stick-picture"] {
+    animation:
+      fade-in var(--duration-fast) var(--ease-standard) 60ms both,
+      nas-front-onto-board var(--duration-slow) var(--ease-settle) 380ms both;
+  }
+  [data-slot="nas-front"][data-assemble="full"] [data-part="bracket"] {
+    animation: grow-x var(--duration-base) var(--ease-standard)
+      calc(400ms + var(--i, 0) * 60ms) both;
+  }
+  [data-slot="nas-front"][data-assemble="full"]
+    :is(
+      [data-part="device"],
+      [data-part="fact"],
+      [data-part="group-name"],
+      [data-part="group-tech"]
+    ) {
+    animation: fade-in var(--duration-fast) var(--ease-standard) 120ms both;
+  }
+
+  /* ─── A check's result arrives ──────────────────────────────────────────────────────────────── */
+  /* The dashed line over the solid one is drawn by the component (the caddy's ::after); here it
+     wipes away along the line, one disk a stagger step after the one before, and stays gone. */
+  [data-slot="nas-front"][data-landed] [data-part="caddy"]::after {
+    /* At rest it is wiped away, so with no motion at all the line lands solid at once. */
+    clip-path: inset(0 0 0 100%);
+    animation: nas-front-wipe var(--duration-slow) var(--ease-standard)
+      calc(var(--i, 0) * var(--motion-stagger)) both;
+  }
+  /* Right to left, it wipes away towards the left. */
+  [dir="rtl"] [data-slot="nas-front"][data-landed] [data-part="caddy"]::after {
+    clip-path: inset(0 100% 0 0);
+    animation-name: nas-front-wipe-rtl;
+  }
+
+  /* ─── Reduced ───────────────────────────────────────────────────────────────────────────────── */
+  [data-motion="reduced"] [data-slot="nas-front"] *,
+  [data-motion="reduced"] [data-slot="nas-front"] ::after {
+    animation-delay: 0ms !important;
+  }
+}
+
+/* A disk rises into its bay from below, at full opacity (its fade is separate). */
+@keyframes nas-front-into-bay {
+  from {
+    translate: 0 calc(var(--motion-rise) * 3);
+  }
+}
+/* The stick goes down into its socket from above. */
+@keyframes nas-front-onto-board {
+  from {
+    translate: 0 calc(var(--motion-rise) * -3);
+  }
+}
+/* The dashed outline wiped away from the start of the line, uncovering the solid one under it. */
+@keyframes nas-front-wipe {
+  from {
+    clip-path: inset(0);
+  }
+}
+@keyframes nas-front-wipe-rtl {
+  from {
+    clip-path: inset(0);
+  }
+}

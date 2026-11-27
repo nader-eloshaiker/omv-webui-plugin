@@ -136,10 +136,7 @@ describe("Set up disk monitoring", () => {
     expect(
       within(crumbs).getByRole("link", { name: "Disk health" }),
     ).toHaveAttribute("href", "/ui/storage/smart/overview");
-    expect(within(crumbs).getByText("Set up monitoring")).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(crumbs).toHaveTextContent(/^Disk health$/);
     expect(
       screen.getByRole("heading", { level: 2, name: "Set up disk monitoring" }),
     ).toBeInTheDocument();

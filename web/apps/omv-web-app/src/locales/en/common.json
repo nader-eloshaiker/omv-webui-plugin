@@ -126,8 +126,45 @@
     "signedInRole": "You are signed in with {{role}} rights.",
     "loading": "Loading the system information…",
     "loadFailed": "Could not read the system information.",
-    "fresh": "Updated every 20 seconds. Last update {{time}}.",
     "stale": "Could not update since {{time}}. The figures may be out of date.",
+    "hero": {
+      "updated": "Updated at {{time}}",
+      "ringLabel": "Health of this NAS",
+      "toFix": "to fix",
+      "checked": "checked",
+      "ok": "OK",
+      "readFailedList": "Could not read: {{list}}.",
+      "disksNotChecked": "Disk health has not been checked since you signed in.",
+      "noStorage": "There is no file system yet, so the NAS has nowhere to keep files.",
+      "readingList": "Still reading: {{list}}.",
+      "unknownList": "Not everything could be checked: {{list}}.",
+      "allChecked": "Disk health was checked at {{time}}. The rest is read while this page is open.",
+      "worst": "Worst first: <title></title>."
+    },
+    "headline": {
+      "many_one": "{{count}} thing needs you",
+      "many_other": "{{count}} things need you",
+      "look": "Look at {{list}}",
+      "noProblems": "No problems found",
+      "ok": "Everything is OK",
+      "readFailed": "Part of the NAS could not be read"
+    },
+    "area": {
+      "storage": "Storage",
+      "disks": "Disks",
+      "services": "Services",
+      "system": "System",
+      "nothingFull": "Nothing full",
+      "notChecked": "Not checked",
+      "checking": "Checking…",
+      "noReading": "No reading",
+      "allRunning": "All running",
+      "noneOn": "None on",
+      "noneYet": "None yet",
+      "restartNeeded": "Restart needed",
+      "readFailed": "Could not read",
+      "reading": "Reading…"
+    },
     "system": {
       "title": "System",
       "name": "Name",
@@ -144,39 +181,27 @@
       "updatesAvailable_other": "{{count}} available",
       "updatesNone": "None found at the last check",
       "updatesLink": "Review updates in the classic interface",
-      "moreLink": "More system details in the classic interface"
-    },
-    "usage": {
-      "title": "Usage",
-      "cpu": "Processor",
-      "cpuValue": "{{percent}} in use",
-      "memory": "Memory",
-      "memoryValue": "{{used}} of {{total}} in use ({{percent}})",
-      "load": "Average load",
-      "loadValue": "1 min {{one}} · 5 min {{five}} · 15 min {{fifteen}}",
-      "loadHint": "How many tasks wait for the processor on average. Below {{cores}}, the number of processor cores, the NAS keeps up.",
-      "loadHintNoCores": "Lower means less busy."
+      "moreLink": "More system details in the classic interface",
+      "technical": "Technical details"
     },
     "attention": {
       "label": "Needs attention",
       "warning": "Warning",
-      "restart": "A restart is needed to finish installing updates. Restarting is in the classic interface, in the power menu at the top right.",
-      "restartLink": "Open the classic interface",
-      "clock": "The NAS clock and this computer's clock differ by {{duration}}. If the NAS clock is wrong, schedules and logs will be too.",
+      "restart": "Updates finish installing when it restarts. Restarting is in the classic interface, in the power menu at the top right.",
+      "restartLink": "Restart from the classic interface",
+      "clock": "If the NAS clock is wrong, schedules and logs will be too.",
       "clockLink": "Check Date and time in the classic interface",
       "critical": "Critical",
-      "fsFull": "{{name}} is full. Nothing more can be saved on it until you delete or move some files.",
-      "fsMissing": "{{name}} is missing. Its disk may be disconnected or have failed. Shared folders on it cannot be reached.",
-      "fsWarning": "{{name}} is {{percent}} full, at or above its warning level of {{threshold}}.",
-      "diskCritical": "Disk <device></device> ({{model}}) may fail soon: {{reason}}",
-      "diskCriticalNoModel": "Disk <device></device> may fail soon: {{reason}}",
-      "diskWarning": "Disk <device></device> ({{model}}): {{reason}}",
-      "diskWarningNoModel": "Disk <device></device>: {{reason}}",
+      "fsFull": "Nothing more can be saved on it until you delete or move some files.",
+      "fsMissing": "Its disk may be disconnected or have failed. Shared folders on it cannot be reached.",
+      "fsWarning": "It is {{percent}} full, at or above its warning level of {{threshold}}.",
       "diskUnmonitored": "Monitoring is off for this disk, so the NAS will not email you about it.",
       "diskReadAt": "Read at {{time}}.",
       "diskLink": "Open disk <device></device>",
-      "serviceDown_one": "{{title}} is on, but not running. Computers cannot use it until it starts.",
-      "serviceDown_other": "{{count}} services are on, but not running: {{list}}. Computers cannot use them until they start.",
+      "disksHot": "Check that nothing blocks the NAS's air vents and that its fans are running.",
+      "disksHotLink": "Open Disks",
+      "serviceDown_one": "It is turned on, but it has stopped. Computers cannot use it until it starts.",
+      "serviceDown_other": "{{list}} are turned on, but have stopped. Computers cannot use them until they start.",
       "serviceLink": {
         "samba": "Open SMB/CIFS settings in the classic interface",
         "nfs": "Open Linux and Unix sharing",
@@ -184,15 +209,41 @@
         "ssh": "Open SSH settings"
       },
       "serviceLogs": "Look for the reason in the system logs",
-      "zfsDegraded": "ZFS pool <pool></pool>: a disk is missing or has failed.",
-      "zfsUnusable": "ZFS pool <pool></pool> cannot be used.",
-      "zfsDamaged": "ZFS pool <pool></pool> has damaged files.",
-      "zfsLink": "Open pool {{pool}}"
+      "zfsDegraded": "A disk in it is missing or has failed. Open the pool to see which one.",
+      "zfsUnusable": "None of its file systems can be reached.",
+      "zfsDamaged": "Open the pool to see which files.",
+      "zfsLink": "Open pool {{pool}}",
+      "diskBody": "{{reason}} ({{model}})",
+      "more_one": "Show {{count}} more",
+      "more_other": "Show {{count}} more",
+      "fewer": "Show fewer",
+      "added_one": "{{count}} new item needs attention.",
+      "added_other": "{{count}} new items need attention.",
+      "title": {
+        "fsFull": "<name></name> is full",
+        "fsMissing": "<name></name> is missing",
+        "fsWarning": "<name></name> is almost full",
+        "zfsDegraded": "ZFS pool <pool></pool> is missing a disk",
+        "zfsUnusable": "ZFS pool <pool></pool> cannot be used",
+        "zfsDamaged": "ZFS pool <pool></pool> has damaged files",
+        "diskCritical": "Disk <device></device> may fail soon",
+        "diskWarning": "Disk <device></device> reported a problem",
+        "disksHot_one": "Disk <device></device> is running hot",
+        "disksHot_other": "{{count}} disks are running hot",
+        "serviceDown_one": "{{title}} is not running",
+        "serviceDown_other": "{{count}} services are not running",
+        "restart": "The NAS needs a restart",
+        "clock": "The clocks differ by {{duration}}"
+      },
+      "systemDrive": "The system drive",
+      "quoted": "“<name></name>”"
     },
     "user": {
       "title": "This NAS",
-      "account": "To change your password or your details, go to your account.",
-      "accountLink": "Your account"
+      "headline": "Hello, {{username}}",
+      "headlineNoName": "Hello",
+      "accountTitle": "Your account",
+      "accountBody": "Change your password or your details."
     },
     "cardStale": "Could not update since {{time}}.",
     "storage": {
@@ -215,10 +266,13 @@
       "zfsPool": "ZFS pool {{pool}}",
       "zfsShare_one": "{{count}} file system shares this space",
       "zfsShare_other": "{{count}} file systems share this space",
-      "openPool": "Open pool {{pool}}"
+      "openPool": "Open pool {{pool}}",
+      "count_one": "{{count}} file system",
+      "count_other": "{{count}} file systems",
+      "missingValue": "Not found. Its disk may be disconnected or have failed."
     },
     "disks": {
-      "title": "Disk health",
+      "title": "Disks",
       "intro": "Disk health is read only when you ask. Reading it wakes any disk that has gone to sleep to save power; the disk spins up, which takes a few seconds.",
       "checkedAt": "Checked at {{time}}. The readings do not update by themselves.",
       "empty": "No disk reported its health. Some USB enclosures and virtual disks do not pass health readings through.",
@@ -230,7 +284,16 @@
       "monitorOffSome": "Monitoring is off for {{count}} of {{total}} disks.",
       "monitorOffSomeLink": "Set up disk monitoring",
       "link": "Open Disk health",
-      "openDisk": "Open disk {{device}}"
+      "openDisk": "Open disk {{device}}",
+      "notCheckedMeta_one": "{{count}} disk · health not checked yet",
+      "notCheckedMeta_other": "{{count}} disks · health not checked yet",
+      "bayLabel": "The disks in this NAS",
+      "why": "Why do I have to ask?",
+      "details": "Disk details",
+      "asleep": "Asleep",
+      "more_one": "And {{count}} more disk",
+      "more_other": "And {{count}} more disks",
+      "openDisks": "Open Disks"
     },
     "services": {
       "title": "Services",
@@ -272,18 +335,470 @@
       "link": "Network interfaces"
     },
     "chart": {
-      "title": "Last 10 minutes",
-      "cpu": "Processor",
-      "memory": "Memory",
-      "now": "Now",
-      "notEnough": "Not enough readings yet. The chart fills in while you are signed in, one reading every 20 seconds.",
-      "label": "Processor and memory over the last {{duration}}",
-      "seriesSummary": "{{series}} now {{now}}, highest {{max}}, lowest {{min}}.",
       "showReadings": "Show the readings",
       "hideReadings": "Hide the readings",
-      "readingsLabel": "Readings of the last 10 minutes, newest first",
       "colTime": "Time",
       "gap": "No readings"
+    },
+    "bay": {
+      "role": {
+        "system": "System",
+        "raid": "RAID {{name}}",
+        "zfs": "Pool {{pool}}",
+        "swap": "Swap",
+        "none": "Empty",
+        "creating": "Being set up",
+        "wiping": "Being wiped",
+        "notMounted": "{{name}}, not mounted"
+      }
+    },
+    "live": {
+      "title": "Right now",
+      "caption": "Live, read every 2 seconds. Showing the last {{span}}.",
+      "stale": "Could not read since {{time}}.",
+      "seconds": "{{count}} s",
+      "now": "now",
+      "cpu": "Processor",
+      "memory": "Memory",
+      "network": "Network",
+      "inUse": "In use",
+      "in": "In",
+      "out": "Out",
+      "percent": "%",
+      "unit": {
+        "kib": "KiB/s",
+        "mib": "MiB/s",
+        "gib": "GiB/s"
+      },
+      "noReading": "No reading",
+      "waiting": "Waiting for the first reading…",
+      "waitingRate": "Waiting for a second reading",
+      "noInterface": "No connected network port to show.",
+      "memoryValue": "{{used}} of {{total}} in use",
+      "load": "Average load",
+      "loadValue": "1 min {{one}} · 5 min {{five}} · 15 min {{fifteen}}",
+      "loadWhat": "What is average load?",
+      "loadHint": "How many tasks wait for the processor on average. Below {{cores}}, the number of processor cores, the NAS keeps up.",
+      "loadHintNoCores": "Lower means less busy.",
+      "describeOne": "{{series}} over the last {{span}}: now {{now}}, highest {{high}}, lowest {{low}}.",
+      "describeNetwork": "Network on {{name}} over the last {{span}}: in now {{inNow}}, highest {{inHigh}}; out now {{outNow}}, highest {{outHigh}}.",
+      "describeEmpty": "{{series}}: no reading yet.",
+      "tableLabel": "Readings shown above, newest first",
+      "chartFailed": "The chart could not be loaded."
+    },
+    "answer": {
+      "needs_one": "One thing needs you.",
+      "needs_other": "{{word}} things need you.",
+      "numbers": {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+        "5": "Five",
+        "6": "Six",
+        "7": "Seven",
+        "8": "Eight",
+        "9": "Nine",
+        "10": "Ten"
+      },
+      "unreadTitle": "Part of the NAS could not be read.",
+      "unreadReason": "The {{list}} could not be read, so this page cannot say everything is working.",
+      "welcomeTitle": "Welcome to your NAS.",
+      "welcomeReason": "It is running. Here is what is in it, and what to set up first.",
+      "reading": "Reading the NAS…",
+      "notCheckedTitle": "No problems found so far.",
+      "notCheckedReason": "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you.",
+      "checkingReason": "Every disk is being asked for its health. A disk that was asleep wakes up for it.",
+      "okTitle": "Everything is working.",
+      "okDisks": "The disks reported no problem at {{time}}.",
+      "okSpace_one": "The one drive has space.",
+      "okSpace_other": "All {{count}} drives have space.",
+      "okSpaceSome": "{{some}} of {{count}} drives have space.",
+      "read": {
+        "disks": "disks",
+        "health": "disks' health",
+        "storage": "storage",
+        "folders": "shared folders",
+        "ways": "ways in",
+        "network": "network",
+        "system": "system information"
+      }
+    },
+    "needs": {
+      "label": "What needs you",
+      "more_one": "{{count}} more",
+      "more_other": "{{count}} more",
+      "fewer": "Show fewer",
+      "unknown": "Unknown"
+    },
+    "welcome": {
+      "dismiss": "Got it",
+      "classic": "Open the classic interface",
+      "title": "Welcome to {{host}}.",
+      "existingLead": "Its {{disks}}, {{drives}} and {{folders}} are on this page, drawn as they are right now.",
+      "existingMore": "Point at any of them to see what it holds, or press / to go anywhere. It all runs on the settings {{host}} already has.",
+      "newLead_zero": "It found {{disks}}. One holds the system.",
+      "newLead_one": "It found {{disks}}. One holds the system, and the other one is ready to keep your files.",
+      "newLead_other": "It found {{disks}}. One holds the system, and the other {{free}} are ready to keep your files.",
+      "newMore": "Make one of them into storage, put a shared folder on it, and every computer at home can open it. The first steps take you there.",
+      "hide": "Hide the welcome",
+      "hideName": "Hide the welcome to the new interface",
+      "disks_one": "one disk",
+      "disks_other": "{{word}} disks",
+      "drives_one": "one drive",
+      "drives_other": "{{word}} drives",
+      "folders_one": "one shared folder",
+      "folders_other": "{{word}} shared folders",
+      "folders_zero": "no shared folders"
+    },
+    "map": {
+      "title": "Your NAS",
+      "lanes": {
+        "disks": {
+          "title": "Disks",
+          "caption": "The drives the NAS found inside it."
+        },
+        "storage": {
+          "title": "Storage",
+          "caption": "A disk made ready to keep files."
+        },
+        "folders": {
+          "title": "Shared folders",
+          "caption": "What your computers open, like Photos."
+        },
+        "ways": {
+          "title": "Ways in",
+          "caption": "How computers reach your shared folders."
+        },
+        "network": {
+          "title": "Network",
+          "caption": "How the NAS is connected to your network."
+        }
+      },
+      "rowsLabel": "Your storage, a row each",
+      "keyboardHint": "Use the arrow keys to move along a row and between rows.",
+      "disksUnread": "Disks: not read",
+      "disksNone": "Disks: none",
+      "sharedDiskState": "{{label}}: {{list}}",
+      "stripAllOk": "{{lead}}, all OK",
+      "stripNotChecked": "{{lead}}, not checked",
+      "stripMixed": "{{lead}}: {{ok}} OK, {{unchecked}} not checked",
+      "stripMore": "{{count}} more",
+      "disks_one": "{{count}} disk",
+      "disks_other": "{{count}} disks",
+      "alsoIn": "Also in {{list}}",
+      "alsoInLower": "also in {{list}}",
+      "atRisk": "At risk",
+      "foldersUnread": "Shared folders: not read",
+      "foldersNone": "Shared folders: none",
+      "systemNoFolders": "This drive holds the system itself, so it keeps no shared folders.",
+      "noWayIn": "Ways in: none",
+      "wayShort": {
+        "smb": "Windows and Mac",
+        "nfs": "Linux",
+        "rsync": "rsync",
+        "ssh": "SSH"
+      },
+      "folderReachedBy": "reached by {{list}}",
+      "folderNoWay": "ways in: none",
+      "moreFolders": "{{count}} more",
+      "moreFoldersOk": "{{count}} more, all OK",
+      "rowOn_one": ", on disk {{list}}",
+      "rowOn_other": ", on disks {{list}}",
+      "rowUsed": "{{percent}} percent used",
+      "rowNoReading": "space not read",
+      "rowSick": ", disk {{device}} {{state}}",
+      "rowFolders": "Shared folders: {{list}}.",
+      "rowFoldersAtRisk": "Shared folders: {{list}}, at risk.",
+      "rowSystem": "It holds the system, so it keeps no shared folders.",
+      "rowNoFolders": "It has no shared folders yet.",
+      "raidMembers_one": "Disk {{list}} is part of a RAID array, shown on the RAID page.",
+      "raidMembers_other": "Disks {{list}} are part of a RAID array, shown on the RAID page.",
+      "raidMembersLabel_one": "In a RAID array: disk {{list}}{{sick}}. The RAID page shows the array.",
+      "raidMembersLabel_other": "In a RAID array: disks {{list}}{{sick}}. The RAID page shows the array.",
+      "unused_one": "Disk {{list}} is not in use yet.",
+      "unused_other": "Disks {{list}} are not in use yet.",
+      "unusedLabel_one": "Not in use: disk {{list}}. Add storage to keep files on it.",
+      "unusedLabel_other": "Not in use: disks {{list}}. Add storage to keep files on them.",
+      "unusedFolders": "Shared folders live on storage.",
+      "moreRowsLink": "{{count}} more",
+      "moreRowsLinkOk": "{{count}} more, all OK",
+      "moreRowsFolders_one": "{{list}} hold {{count}} shared folder.",
+      "moreRowsFolders_other": "{{list}} hold {{count}} shared folders.",
+      "example": {
+        "device": "disk",
+        "storage": "Data drive",
+        "tech": "EXT4",
+        "folder": "Photos",
+        "tag": "Example"
+      },
+      "waysAllRunning": "All running",
+      "waysRunning": "{{running}} of {{total}} running",
+      "running": "Running",
+      "notRunning": "Not running",
+      "noWayOn": "No way in is on yet.",
+      "off": "Off: {{list}}",
+      "wayRunning": "{{name}}, {{tech}}: running{{over}}",
+      "wayStopped": "{{name}}, {{tech}}: not running{{over}}",
+      "wayOver": ", over {{list}}",
+      "notConnected": "Not connected",
+      "world": "Your network",
+      "laneError": {
+        "disks": "Could not read the disks",
+        "storage": "Could not read the storage",
+        "folders": "Could not read the shared folders",
+        "ways": "Could not read the ways in",
+        "network": "Could not read the network"
+      },
+      "retrying": "Reading…",
+      "ways": {
+        "smb": {
+          "name": "Windows and Mac",
+          "tech": "SMB"
+        },
+        "nfs": {
+          "name": "Linux and Unix",
+          "tech": "NFS"
+        },
+        "rsync": {
+          "name": "Copies to other NAS",
+          "tech": "rsync"
+        },
+        "ssh": {
+          "name": "Remote sign-in",
+          "tech": "SSH"
+        }
+      },
+      "zfsPool": "ZFS pool",
+      "raidDisksNote": "Its disks are listed on the RAID page.",
+      "poolDisksUnread": "Which disks it is on could not be read.",
+      "storageState": {
+        "critical": "Full",
+        "warning": "Almost full",
+        "unknown": "No reading",
+        "missing": "Missing"
+      },
+      "poolState": {
+        "degraded": "A disk is missing",
+        "unusable": "Cannot be used",
+        "damaged": "Damaged files"
+      },
+      "folderStatus": "Cannot be reached",
+      "notChecked": "Not checked yet",
+      "noReading": "No reading",
+      "asleep": "Asleep",
+      "diskSummary": "{{kind}}, {{size}}",
+      "space": "{{name}}: space used",
+      "spaceText": "{{percent}} used, {{free}} free of {{size}}",
+      "spaceMark": "the warning mark is at {{mark}}",
+      "spaceOver": "almost full",
+      "spaceFigures": "{{percent}} used",
+      "spaceFree": ", {{free}} free",
+      "spaceReading": "Reading the space used",
+      "spaceNone": "No reading of the space used",
+      "actions": {
+        "checkHealth": "Check disk health",
+        "checking": "Checking disk health…",
+        "addStorage": "Add storage",
+        "addFolder": "Add a shared folder",
+        "sharing": "Sharing settings",
+        "interfaces": "Interfaces"
+      },
+      "traceTip": "Point at a folder, a disk or a way in to see what belongs to it.",
+      "traceTipName": "Got it, hide the tip about pointing at the map"
+    },
+    "kind": {
+      "hdd": "Hard disk",
+      "ssd": "SSD",
+      "nvme": "NVMe SSD",
+      "usb": "USB disk",
+      "disk": "Disk",
+      "unknown": "Kind not known"
+    },
+    "now": {
+      "title": "Right now",
+      "percentTitle": "Processor and memory",
+      "memoryAside": "Memory: {{used}} of {{total}}",
+      "processor": "Processor",
+      "memory": "Memory",
+      "mirrorTitle": "Network, in above the line and out below",
+      "in": "In",
+      "out": "Out",
+      "inLabel": "Network in",
+      "outLabel": "Network out",
+      "noReading": "No reading",
+      "note": "The two halves are scaled separately.",
+      "scales": "In is drawn on a scale to {{in}} and out on a scale to {{out}}.",
+      "rate": "{{value}} MiB/s",
+      "percent": "{{value}} %",
+      "spanNone": "No reading yet",
+      "spanOne": "One reading, at {{time}}",
+      "spanSince": "Since {{time}}",
+      "spanWindow": "Last 2 minutes",
+      "caption": "{{span}}, a reading every 2 seconds.",
+      "describeNone": "{{name}}: no reading yet.",
+      "describeOne": "{{name}}: {{now}}, one reading so far.",
+      "describeSince": "{{name}}: {{now}}, between {{min}} and {{max}} since {{time}}.",
+      "describeWindow": "{{name}}: {{now}}, between {{min}} and {{max}} in the last 2 minutes.",
+      "describeNow": "{{value}} now",
+      "describeNoValue": "no value in the last reading",
+      "stale": "Could not read since {{time}}. The charts keep what they drew."
+    },
+    "temps": {
+      "title": "Disk temperatures",
+      "readAt": "Read at {{time}}.",
+      "loading": "Reading the disks…",
+      "none": "The NAS reports no disk.",
+      "kindTitle": {
+        "hdd": "Hard disks",
+        "ssd": "SSDs",
+        "nvme": "NVMe SSDs, on the mainboard",
+        "unknown": "Disks whose kind is not known"
+      },
+      "poolTitle": "{{name}}, ZFS pool ({{layout}})",
+      "arrayTitle": "{{name}}, RAID",
+      "layout": {
+        "single": "single disk",
+        "stripe": "stripe",
+        "mirror": "mirror",
+        "raidz1": "RAID-Z1",
+        "raidz2": "RAID-Z2",
+        "raidz3": "RAID-Z3",
+        "draid": "dRAID",
+        "groups": "{{kinds}}, {{count}} groups"
+      },
+      "state": {
+        "rebuilding": "Rebuilding",
+        "degraded": "A disk is missing or has failed",
+        "unavailable": "Cannot be used now"
+      },
+      "listName": "{{title}}, read at {{time}}",
+      "celsius": "{{value}} °C",
+      "asleep": "Asleep",
+      "notRead": "Not read",
+      "overLimit": ", at or over the alert limit",
+      "overOne": "{{device}} is at {{c}}",
+      "overNote": "{{list}}, at or over the alert limit of {{limit}}.",
+      "asleepNote_one": "{{list}} is asleep, so its temperature was not read: the disk list never wakes a disk to read it.",
+      "asleepNote_other": "{{list}} are asleep, so their temperatures were not read: the disk list never wakes a disk to read it.",
+      "hint": "{{kind}}, alert limit {{limit}}",
+      "restAll_one": "The one disk is {{range}}{{under}}.",
+      "restAll_other": "All {{count}} disks are {{range}}{{under}}.",
+      "restOther_one": "The other disk is {{range}}{{under}}.",
+      "restOther_other": "The other {{count}} disks are {{range}}{{under}}.",
+      "restSomeAll_one": "{{count}} of the {{total}} disks is {{range}}{{under}}.",
+      "restSomeAll_other": "{{count}} of the {{total}} disks are {{range}}{{under}}.",
+      "restSomeOther_one": "{{count}} of the other {{total}} disks is {{range}}{{under}}.",
+      "restSomeOther_other": "{{count}} of the other {{total}} disks are {{range}}{{under}}.",
+      "restNoneAll": "None of the {{count}} disks has a temperature reading.",
+      "restNoneOther": "None of the other {{count}} disks has a temperature reading.",
+      "rangeAt": "at {{c}}",
+      "rangeBetween": "between {{lo}} and {{hi}}",
+      "under": ", under the alert limit of {{limit}}",
+      "showAll_one": "Show the disk",
+      "showAll_other": "Show all {{count}} disks",
+      "showOther_one": "Show the other disk",
+      "showOther_other": "Show the other {{count}} disks",
+      "loadFailed": "Could not read the disks."
+    },
+    "steps": {
+      "title": "First steps",
+      "progress": "{{done}} of {{total}} done",
+      "done": "done",
+      "notDone": "not done",
+      "checking": "Checking whether this is done…",
+      "storage": {
+        "title": "Add storage",
+        "detail": "Storage is a disk made ready to keep files.",
+        "action": "Add storage"
+      },
+      "folder": {
+        "title": "Add a shared folder",
+        "detail": "Your computers open it like any folder, for example Photos.",
+        "action": "Add a shared folder"
+      },
+      "password": {
+        "title": "Change the factory password",
+        "detail": "The factory password may still work, and the NAS cannot tell whether it was changed.",
+        "action": "Change"
+      },
+      "https": {
+        "title": "Turn on secure sign-in",
+        "detail": "Then your password never crosses the network in the clear (HTTPS).",
+        "action": "Turn on",
+        "onButNotUsed": "HTTPS is on, but this page was opened without it. Open it with an address that starts with https://."
+      },
+      "alerts": {
+        "title": "Get alerts by email",
+        "detail": "The NAS writes to you when a disk starts to fail, before files are lost.",
+        "incomplete": "Alerts are on, but some details are missing, so none can be sent.",
+        "action": "Set up"
+      }
+    },
+    "shortcuts": {
+      "title": "Shortcuts",
+      "addPerson": "Add a person",
+      "addGroup": "Add a group",
+      "classic": "Open the classic interface"
+    },
+    "facts": {
+      "title": "This NAS",
+      "name": "Name",
+      "version": "Version",
+      "uptime": "Running for",
+      "time": "Time on the NAS",
+      "updates": "Updates",
+      "updatesNone": "None found at the last check",
+      "updatesCount_one": "{{count}} to install",
+      "updatesCount_other": "{{count}} to install",
+      "loadFailed": "Could not read the system information.",
+      "showAround": "Show me around"
+    },
+    "drawn": {
+      "picture": "The disks in {{host}} and the drives they make",
+      "board": "On the mainboard",
+      "raid": "RAID array",
+      "unused": "Not in use",
+      "ready": "Ready for storage",
+      "mini": "The disks in {{host}}: {{state}}",
+      "miniBefore": "not checked since you signed in",
+      "miniAfter": "all reported no problem"
+    },
+    "scan": {
+      "label": "The NAS at a glance",
+      "disks": "Disks",
+      "storage": "Storage",
+      "sharing": "Sharing",
+      "network": "Network",
+      "notChecked": "Not checked",
+      "diskCount_one": "{{count}} disk",
+      "diskCount_other": "{{count}} disks",
+      "disksAsleep": "{{disks}}, {{asleep}} asleep",
+      "drivesAll_one": "{{count}} drive, with space",
+      "drivesAll_other": "{{count}} drives, all with space",
+      "drivesSome": "{{name}}, {{percent}} used",
+      "notSetUp": "Not set up",
+      "drivesNone": "Only the system drive",
+      "folderCount_one": "{{count}} folder",
+      "folderCount_other": "{{count}} folders",
+      "waysOn_one": "{{folders}}, {{count}} way in on",
+      "waysOn_other": "{{folders}}, {{count}} ways in on",
+      "sharingNone": "No shared folders yet",
+      "networkUp": "{{name}} at {{speed}}",
+      "goTo": "Go to {{part}}",
+      "parts": {
+        "disks": "the disk temperatures",
+        "storage": "the map of your NAS",
+        "sharing": "the ways in",
+        "network": "the network"
+      },
+      "unread": "Not read",
+      "reading": "Reading…"
+    },
+    "also": {
+      "sentence": "You could also {{list}}.",
+      "unused": "put {{device}} to use",
+      "unreached": "let computers open {{folder}}",
+      "or": ", or "
     }
   },
   "nav": {
@@ -533,19 +1048,20 @@
     "dark": "Dark"
   },
   "checklist": {
-    "title": "Set up your NAS",
-    "intro": "A few things to check after installing. Each item is read from the NAS's current settings.",
+    "title": "First steps",
     "state": {
       "done": "Done",
       "notDone": "Not done",
       "notChecked": "Not checked",
-      "checking": "Checking…"
+      "checking": "Checking…",
+      "cannotCheck": "The NAS cannot check this"
     },
     "password": {
       "title": "Change the factory password",
       "body": "openmediavault is installed with a password that anyone can look up. If it has not been changed yet, change it now. This page cannot check whether it has been.",
       "bodyOtherAdmin": "openmediavault is installed with a password for the admin account that anyone can look up. This page cannot check whether it has been changed. To change it, sign in as admin and open Your account.",
-      "link": "Change your password"
+      "link": "Change your password",
+      "short": "The NAS cannot tell whether it has been changed."
     },
     "https": {
       "title": "Use a secure connection (HTTPS)",
@@ -553,46 +1069,55 @@
       "doneOnHttp": "HTTPS is on, but this page was opened without it.",
       "secureNoLink": "Open this page with an address that starts with https://.",
       "securePort": "The secure connection uses port <port></port>.",
-      "notDone": "HTTPS is off. The notice at the top of the page says why that matters. Turning it on needs a certificate, which the classic interface can create.",
       "link": "Open Web interface settings in the classic interface",
-      "readFailed": "Could not read the web interface settings."
+      "readFailed": "Could not read the web interface settings.",
+      "notDoneShort": "HTTPS is off.",
+      "notDoneWhy": "The notice at the top of the page says why that matters. Turning it on needs a certificate, which the classic interface can create."
     },
     "email": {
       "title": "Get email alerts",
       "done": "Alerts go to {{address}}.",
-      "off": "Alerts are off. Turn them on to hear about failing disks, full file systems and available updates. You need the details of an email account the NAS can send from.",
       "incomplete": "Alerts are on, but some details are missing, so none can be sent.",
       "applyHint": "After saving there, apply the changes, then send a test email.",
       "link": "Open Notifications in the classic interface",
-      "readFailed": "Could not read the email alert settings."
+      "readFailed": "Could not read the email alert settings.",
+      "offShort": "Alerts are off.",
+      "offWhy": "Turn them on to hear about failing disks, full file systems and available updates. You need the details of an email account the NAS can send from."
     },
     "updates": {
       "title": "Install updates",
       "available_one": "{{count}} update is available.",
       "available_other": "{{count}} updates are available.",
-      "none": "No updates were found the last time the NAS looked. This page cannot tell when that was, so check for updates once to be sure.",
-      "link": "Open Updates in the classic interface"
+      "link": "Open Updates in the classic interface",
+      "noneShort": "No updates were found the last time the NAS looked.",
+      "noneWhy": "This page cannot tell when that was, so check for updates once to be sure."
     },
     "name": {
       "title": "Name of your NAS",
-      "body": "Your NAS is called <name></name>. Other computers on your network find it by this name.",
-      "link": "Change the name"
+      "body": "Your NAS is called <name></name>.",
+      "link": "Change the name",
+      "why": "Other computers on your network find it by this name."
     },
     "timezone": {
       "title": "Time zone",
-      "body": "Time zone: <zone></zone>. Schedules, logs and the clock use it.",
+      "body": "Time zone: <zone></zone>.",
       "ntpOn": "The clock is set automatically from the internet.",
       "ntpOff": "The clock is not set automatically.",
       "link": "Change it in the classic interface",
-      "readFailed": "Could not read the date and time settings."
+      "readFailed": "Could not read the date and time settings.",
+      "why": "Schedules, logs and the clock use it."
     },
-    "hide": "Hide the checklist",
-    "hideHint": "Hides it for every administrator, and hides the classic interface's welcome panel too.",
-    "hideTitle": "Hide the set-up checklist?",
-    "hideBody": "It is hidden for every administrator, on every computer, and the classic interface's welcome panel goes too. This interface cannot show it again.",
+    "hide": "Hide first steps",
+    "hideHint": "Hides them for every administrator, and hides the classic interface's welcome panel too.",
+    "hideTitle": "Hide first steps?",
+    "hideBody": "They are hidden for every administrator, on every computer, and the classic interface's welcome panel goes too. This interface cannot show them again.",
     "hideCancel": "Cancel",
-    "hideFailed": "The checklist was not hidden.",
-    "hidden": "Set-up checklist hidden."
+    "hideFailed": "First steps were not hidden.",
+    "hidden": "First steps hidden.",
+    "progress": "{{done}} of {{total}} done",
+    "progressFigure": "{{done}}/{{total}}",
+    "details": "Details",
+    "detailsFor": "Details: {{title}}"
   },
   "ssh": {
     "title": "SSH",

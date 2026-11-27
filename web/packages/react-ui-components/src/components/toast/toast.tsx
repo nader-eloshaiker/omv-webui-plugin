@@ -3,7 +3,7 @@ import { Toast } from "@base-ui/react/toast";
 import { Info, X } from "lucide-react";
 import { cn } from "../../utils";
 import { buttonClass } from "../button/button-class";
-import { StatusPill } from "../status/status";
+import { StatusLabel } from "../status/status";
 import type { ToastData, ToastTone } from "./use-toast";
 
 interface ToasterProps {
@@ -16,7 +16,7 @@ interface ToasterProps {
 
 /**
  * Renders the toasts queued with `useToast`, on Base UI's Toast. Mount once, inside `UiProvider`.
- * A neutral surface; a status toast leads with its status pill (icon and word), never a filled status
+ * A neutral surface; a status toast leads with its status (its icon and word), never a filled status
  * ground. Hover or focus pauses the timer; F6 reaches the region from the keyboard.
  *
  * Under 640px the stack sits at the top, under the 48px top bar, where it covers headings rather than
@@ -54,9 +54,9 @@ function Toaster({ closeLabel, regionLabel, className }: ToasterProps) {
             >
               <Toast.Content className="flex items-start gap-3 p-4">
                 {tone !== "neutral" && statusLabel ? (
-                  <StatusPill status={tone} className="mt-0.5 shrink-0">
+                  <StatusLabel status={tone} className="mt-0.5 shrink-0">
                     {statusLabel}
-                  </StatusPill>
+                  </StatusLabel>
                 ) : (
                   <span aria-hidden="true" className="mt-0.5 flex">
                     <Info className="size-4 text-muted-foreground" />

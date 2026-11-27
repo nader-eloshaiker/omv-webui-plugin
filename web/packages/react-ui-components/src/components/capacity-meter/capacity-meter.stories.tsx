@@ -4,6 +4,15 @@ import type * as React from "react";
 import { BothDensities, Phone } from "../../fixtures/story-frames";
 import { CapacityMeter } from "./capacity-meter";
 
+/**
+ * The capacity meter stays beside the `SegmentBar` (journal 2026-11-26 and 2026-11-27) and should not
+ * become a segment bar variant. The segment bar is one reading only, the share of a whole in percent
+ * against the admin's warning mark, which it draws as a rule in a wider gap. This meter takes any
+ * amount out of any `max`, and it has the "no reading" and loading forms, which the segment bar
+ * lacks. Space used on a file system is the segment bar's job. When the file system pages move to
+ * it, this meter's compact cells (the `cells` prop in compact density) do the same work as
+ * `SegmentBar size="cell"`, and are the part to retire.
+ */
 const meta = {
   title: "Components/Capacity meter",
   component: CapacityMeter,
@@ -59,6 +68,40 @@ export const Loading: Story = {
   args: { value: null, loading: true, valueText: "Loading…" },
 };
 
+const GROUNDS = [
+  { name: "On the page", className: "bg-page" },
+  { name: "On a card", className: "bg-surface ring-1 ring-border" },
+  { name: "In an inset", className: "bg-muted" },
+] as const;
+
+/**
+ * Filled, never outlined (style guide 5.6): the amount in the usage blue, the rest in the empty
+ * slate, on each ground a meter lands on. Past the threshold the amount takes the warning stroke, with
+ * its word.
+ */
+export const OnEachGround: Story = {
+  render: (args) => (
+    <div className="flex flex-col gap-3">
+      {GROUNDS.map((ground) => (
+        <div
+          key={ground.name}
+          className={`flex flex-col gap-3 rounded-control p-3 ${ground.className}`}
+        >
+          <p className="text-caption text-tertiary-foreground">{ground.name}</p>
+          <CapacityMeter {...args} />
+          <CapacityMeter
+            {...args}
+            label="File system: photos"
+            value={3.1}
+            valueText="3.1 TiB of 3.6 TiB (86%)"
+            threshold={{ status: "warning", label: "Almost full" }}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 /** The compact form sits in a table cell of a 36px row: the bar and the figure on one line. */
 function UsageCell({ children }: { children: React.ReactNode }) {
   return (
@@ -82,7 +125,7 @@ export const CompactBelowLevel: Story = {
     variant: "compact",
     label: "Usage of data",
     value: 2.2,
-    valueText: "62% full · 1.4 TiB free of 3.6 TiB",
+    valueText: "62% full, 1.4 TiB free of 3.6 TiB",
   },
 };
 export const CompactWarning: Story = {
@@ -92,7 +135,7 @@ export const CompactWarning: Story = {
     variant: "compact",
     label: "Usage of photos",
     value: 3.1,
-    valueText: "86% full · 512 GiB free of 3.6 TiB",
+    valueText: "86% full, 512 GiB free of 3.6 TiB",
     threshold: { status: "warning", label: "Warning" },
   },
 };
@@ -103,7 +146,7 @@ export const CompactCriticalFull: Story = {
     variant: "compact",
     label: "Usage of backup",
     value: 3.6,
-    valueText: "100% full · 0 B free of 3.6 TiB",
+    valueText: "100% full, 0 B free of 3.6 TiB",
     threshold: { status: "critical", label: "Critical" },
   },
 };
@@ -145,7 +188,7 @@ export const CompactInAColumn: Story = {
           label="Usage of data"
           value={2.2}
           max={3.6}
-          valueText="62% full · 1.4 TiB free of 3.6 TiB"
+          valueText="62% full, 1.4 TiB free of 3.6 TiB"
         />
       </UsageCell>
       <UsageCell>
@@ -154,7 +197,7 @@ export const CompactInAColumn: Story = {
           label="Usage of photos"
           value={3.1}
           max={3.6}
-          valueText="86% full · 512 GiB free of 3.6 TiB"
+          valueText="86% full, 512 GiB free of 3.6 TiB"
           threshold={{ status: "warning", label: "Warning" }}
         />
       </UsageCell>
@@ -164,7 +207,7 @@ export const CompactInAColumn: Story = {
           label="Usage of backup"
           value={3.6}
           max={3.6}
-          valueText="100% full · 0 B free of 3.6 TiB"
+          valueText="100% full, 0 B free of 3.6 TiB"
           threshold={{ status: "critical", label: "Critical" }}
         />
       </UsageCell>
@@ -199,7 +242,7 @@ export const Densities: Story = {
           {...args}
           variant="compact"
           label="Usage of data"
-          valueText="62% full · 1.4 TiB free"
+          valueText="62% full, 1.4 TiB free"
         />
       </div>
     </BothDensities>

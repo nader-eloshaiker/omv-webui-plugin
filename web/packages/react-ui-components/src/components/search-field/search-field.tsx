@@ -24,7 +24,13 @@ const inputClass = cva(
 
 type SearchFieldProps = Omit<
   React.ComponentProps<"input">,
-  "type" | "value" | "defaultValue" | "onChange" | "size" | "className"
+  | "type"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "size"
+  | "className"
+  | "width"
 > &
   VariantProps<typeof inputClass> & {
     /** The visible label, never only a placeholder: "Search shared folders". */

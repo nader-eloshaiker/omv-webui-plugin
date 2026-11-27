@@ -33,7 +33,7 @@ export function RouteErrorPage({ error, reset }: ErrorComponentProps) {
         >
           {t("routeError.retry")}
         </Button>
-        <Link to="/" className="text-action-label underline">
+        <Link to="/" className="text-link underline">
           {t("routeError.home")}
         </Link>
       </div>

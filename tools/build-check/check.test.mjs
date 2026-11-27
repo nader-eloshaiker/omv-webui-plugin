@@ -10,6 +10,7 @@ import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   checkDist,
+  checkFirstLoadLazy,
   checkFirstLoadStrings,
   firstLoadScripts,
 } from "./check.mjs";
@@ -475,5 +476,24 @@ test("build-check 1.6: a sentence only in a chunk loaded later fails", () => {
         `the recovery card's words are not in a script loaded first: "${RECOVERY}"`,
       ],
     ],
+  );
+});
+
+// 8.1 of the dashboard spec: the chart library loads only in a chunk loaded later.
+const RECHARTS =
+  'const w="recharts-wrapper",s="recharts-surface";export default w+s;';
+
+test("build-check 8.1: the chart library in a chunk loaded later passes", () => {
+  const lazy = bundle({ "assets/lazy-jkl.js": RECHARTS });
+  assert.deepEqual(checkFirstLoadLazy(lazy), { findings: [], scripts: 2 });
+});
+
+test("build-check 8.1: the chart library in a script loaded first fails, once per file", () => {
+  const eager = bundle({
+    "assets/chunk-def.js": `export const a=1;${RECHARTS}`,
+  });
+  assert.deepEqual(
+    checkFirstLoadLazy(eager).findings.map((f) => [f.rule, f.file]),
+    [["8.1", "assets/chunk-def.js"]],
   );
 });

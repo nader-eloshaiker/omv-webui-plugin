@@ -10,7 +10,7 @@ export function NotFoundPage() {
       <PageTitle>{t("notFound.title")}</PageTitle>
       <p>{t("notFound.body")}</p>
       <p>
-        <Link to="/" className="text-action-label underline">
+        <Link to="/" className="text-link underline">
           {t("notFound.home")}
         </Link>
       </p>

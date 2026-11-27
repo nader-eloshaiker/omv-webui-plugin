@@ -1,13 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="robots" content="noindex, nofollow" />
     <title>openmediavault</title>
-    <!-- Nothing inline (UI-1): the theme follows the OS from the stylesheet with no script, and the
-         entry module sets an explicit choice on <html> before the first render. -->
+    <!-- Nothing inline (UI-1): the page opens dark from this class, with no script (owner,
+         2026-11-27: dark by default). The entry module sets the stored choice on <html> before the
+         first render; "Match this computer" removes the class and the stylesheet follows the OS. -->
   </head>
   <body>
     <div id="root"></div>

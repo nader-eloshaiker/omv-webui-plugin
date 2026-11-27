@@ -10,12 +10,23 @@ How screens are designed and reviewed. The normative visual language is the
 decisions go through the `colour-theory` skill; implementation mechanics are in the `react` skill;
 the component system is in `design-system`.
 
+**Every design is checked against the generated look first.** [Style guide section
+10](../../../docs/design/style-guide.md#10-the-generated-look-what-we-never-do) lists twenty habits
+of generated design and what replaces each (owner, 2026-11-25), and it overrides this skill, the
+visual foundation and any spec that asks for one. A screen, a prototype or a review that uses one of
+them is not done. The ones most easily reached for: arrows and chevrons on buttons and links, `·`
+between values, eyebrow labels, everything in a card, numbered steps, pulsing or "live" dots, glows
+and frosted blur, coloured left edges, rows of icon tiles, pills around the headline or as status,
+invented figures, fragments set as sentences, and sections fading in. For each element ask what it
+tells the person that nothing else on the screen does; if nothing, it goes.
+
 ---
 
 ## 1. What the product should feel like
 
 A NAS console is opened to check that things are fine, to change one setting, or because something
-broke. The first two should be quick and quiet; the third must be unmistakable (style guide 1).
+broke. The first two should be quick and unobtrusive; the third must be unmistakable (style guide
+1, now under visual foundation 1 and 2).
 
 - **Calm**: almost everything is neutral; colour appears where the reader can act or the system
   reports something.
@@ -82,12 +93,13 @@ The users are home and small-office NAS owners, many without Linux knowledge (`A
 - **Destructive actions** follow style guide 5.4 and UI-8: a dialog naming the exact object and what
   is lost, including what depends on it; type-to-confirm for irreversible data loss; focus starts on
   Cancel; Enter does not confirm; no "don't ask again".
-- **Tasks** follow style guide 5.7: title, state pill, elapsed time, output as text on the terminal
+- **Tasks** follow style guide 5.7: title, state as a status label, elapsed time, output as text on the terminal
   pair, follow the tail, copy and download, cancel only where safe, result announced and kept until
   dismissed. A running task stays reachable from the top bar.
 - **Toasts** confirm what the user just did; never the only record of a failure; never contain a
   secret or raw server output.
-- Motion explains a change of state and nothing else; reduced motion is honoured.
+- Motion answers the person's action or a change of state and nothing else: no section fading in
+  on load or scroll, nothing that pulses, breathes or blinks; reduced motion is honoured.
 - Targets at least 24 by 24 CSS px; 44 by 44 where touch is the main input.
 
 ## 6. Security shapes the design
@@ -117,24 +129,32 @@ alternative; sign-in that allows paste and password managers.
 - Buttons are verbs with their object ("Wipe disk", "Apply 3 changes"), never "OK" or "Submit".
 - Destructive copy states exactly what will be lost, in one sentence.
 - Units always shown, binary, one decimal, a non-breaking space before the unit.
-- Sentence case. Every string comes from the i18n catalogue; layouts tolerate text 40% longer than
-  English.
+- Sentence case, never uppercase labels. Every string comes from the i18n catalogue; layouts
+  tolerate text 40% longer than English.
+- **A label or a whole sentence, never a fragment set as a sentence** ("Shared folders: none", or
+  "This drive holds the system itself, so it keeps no shared folders."; not "None yet."). A
+  headline is a full short sentence ("Everything is working.").
+- Values joined with commas or given their own labels, never `·`, `•`, `|` or `/`. No italic for
+  emphasis, no emoji, and not the words "real" ("real-time") or "quiet" (except the drive's acoustic
+  mode "Quiet, slower"). Every figure comes from a backend read.
 
 ## 9. Consistency
 
 - Check `@omv-webui/react-ui-components` before designing a control; extend the system rather than
   fork a one-off.
-- The same concept looks the same everywhere: one status pill, one meter, one confirmation, one
-  banner.
+- The same concept looks the same everywhere: one status label (its icon and word, no capsule),
+  one meter, one confirmation, one banner.
 
 ## 10. Playbook
 
 1. Name the question the screen answers and the action it leads to.
 2. Inventory the system; list what is genuinely new.
-3. Sketch hierarchy with size, weight and space; add status colour last, with words.
+3. Sketch hierarchy with size, weight and space, regions on the page ground under their headings
+   (a card only for a thing handled as one unit); add status colour last, with words.
 4. Design all four async states, every control's seven, and any destructive or pending flow.
 5. Check both themes, contrast, keyboard path, reduced motion, 320px and 200% zoom.
-6. Hand off with real copy, not placeholders.
+6. Check every element against style guide 10, the generated look.
+7. Hand off with the actual copy, not placeholders.
 
 Where a domain has destructive actions, agree the design with the owner before it is built
 ([docs/07](../../../docs/07-implementation-plan.md#phase-5--coverage-by-domain)).
@@ -150,6 +170,7 @@ Where a domain has destructive actions, agree the design with the owner before i
 7. [ ] No pattern that needs rich backend text, a supplied link or a URL that acts?
 8. [ ] Plain words; units; verbs on buttons; strings in the catalogue?
 9. [ ] Both themes, keyboard, focus, 320px, 200% zoom?
+10. [ ] None of the twenty habits of style guide 10 (the generated look), element by element?
 
 ### The adversarial pass
 

@@ -102,23 +102,18 @@ test("an administrator's dashboard: the cards and the set-up checklist, by keybo
     page.getByRole("region", { name: copy.dashboard.system.title }),
   ).toBeVisible();
   await expect(
-    page.getByRole("region", { name: copy.dashboard.usage.title }),
+    page.getByRole("region", { name: copy.dashboard.live.title }),
   ).toBeVisible();
-  await expect(
-    page
-      .getByRole("region", { name: copy.dashboard.usage.title })
-      .getByRole("meter"),
-  ).toHaveCount(2);
 
   const names = await tabThroughMain(page);
   expectInOrder(names, [
     /^Check Date and time in the classic interface/,
+    copy.checklist.hide,
     /^Open Web interface settings in the classic interface/,
     /^Open Notifications in the classic interface/,
     /^Open Updates in the classic interface/,
-    copy.checklist.hide,
     /^Review updates in the classic interface/,
-    /^More system details in the classic interface/,
+    copy.dashboard.system.technical,
   ]);
 
   // Hiding asks first, with focus on Cancel; Escape closes the dialog and nothing is sent.

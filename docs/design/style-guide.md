@@ -12,6 +12,10 @@ allowed to say, and the rules a component must follow. It is written for whoever
   distance number in this document is that script's output. When a token changes, rerun it and
   update the numbers quoted here in the same change.
 
+**The generated look is out.** Section 10 lists twenty habits of generated design and what replaces
+each (owner, 2026-11-25). It overrides every other section of this guide, the visual foundation and
+any spec that asks for one of them. Check every design against it.
+
 **Re-founded.** The owner chose the new look on 2026-11-24 (Sky as the base, Atlas's map as the
 diagram language, Instrument as the compact density). [visual-foundation.md](visual-foundation.md)
 is normative for everything its section 0 lists, and where the two disagree on those, the foundation
@@ -38,7 +42,7 @@ built from `design/tokens.css`.
 **Superseded** by [visual foundation](visual-foundation.md), sections 1 and 2.
 
 A NAS console is opened to check that things are fine, to change one setting, or because something
-broke. The first two should be quick and quiet. The third must be unmistakable.
+broke. The first two should be quick and unobtrusive. The third must be unmistakable.
 
 1. **Calm.** Almost everything on screen is neutral. Colour appears where the reader can act or
    where the system has something to report, and nowhere else.
@@ -56,7 +60,7 @@ broke. The first two should be quick and quiet. The third must be unmistakable.
 
 | OMV trait | Decision | Why |
 | --- | --- | --- |
-| Sky "corporate" blue `#5dacdf` | **Kept, exactly**, as the brand accent (the mark, the light, the live trace, the focus ring) and the action colour in dark. No longer a top bar (foundation 3.2) | It is the most recognisable thing about OMV. It cannot be the light-theme action colour: see 3.3 |
+| Sky "corporate" blue `#5dacdf` | **Kept, exactly**, as the brand (the mark, the light, the live trace, the focus ring) and the checked mark in dark. No longer a top bar (foundation 3.2), and no longer the primary action, which is Cobalt's (foundation 3.6) | It is the most recognisable thing about OMV. It cannot carry white words: see 3.3 |
 | White text on the blue bar | **Gone with the bar** (foundation 3.2) | White on `#5dacdf` is 2.49:1 |
 | Slate-gray neutrals | **Kept as a family**, rebuilt as one ramp at one hue with lower chroma | Stock slate is already cool and near the brand hue; the ramp is made even so steps read as greys |
 | Yellow `#f8d400` with coffee ink `#4d2e25` | **Kept as the idea, warmed to gold `#ffcd47` with Sky's navy ink** (foundation 3.6, owner, 2026-11-24), with exactly one job: pending configuration changes | It is OMV's signature banner. In stock OMV the same yellow is also "accent" and "warning": one hue, three jobs. The coffee ink sat on neither side of the colour wheel |
@@ -72,7 +76,8 @@ broke. The first two should be quick and quiet. The third must be unmistakable.
 
 Colour in this console may say five things, and only five:
 
-1. **Where you can act**: the primary action, the focused control, the selected item, a link.
+1. **Where you can act**: the one action expected here (the accent, Cobalt), and where you can
+   interact (Sky): the focused control, the selected item, a link.
 2. **The state of a thing the system monitors**: a disk, a file system, a service, a task. OK,
    Warning, Critical, or Unknown/Disabled.
 3. **That configuration is pending**: changes are saved but not yet applied.
@@ -91,8 +96,8 @@ status (3.6). A validation error is not a system status: see 5.3.
 ### 2.1 The colour budget
 
 **Superseded in part** by [visual foundation](visual-foundation.md), section 3: colour also
-expresses identity and depth (the ambient light, the live trace, raised surfaces). Each hue's one
-job, below, still holds.
+expresses identity and depth (the live trace, raised surfaces). Each hue's one job, below, still
+holds.
 
 Dense product interfaces run at roughly 90% neutral by area, because a signal only reads when
 nothing around it is shouting. Each hue has one job.
@@ -100,8 +105,9 @@ nothing around it is shouting. Each hue has one job.
 | Hue | Its one job | Never |
 | --- | --- | --- |
 | **Slate neutrals** | Every surface, border, divider and word that is not a signal | A second neutral temperature; a warm grey; an off-hue step |
-| **Action blue** (`action`, `action-label`, `focus-ring`) | The primary button, links, the focus ring, checked and selected states | A status; a chart series; an "info" severity; decoration |
-| **Brand sky blue** (`brand`, `trace`, `art-path`, `ambient`) | The mark, the live dot, the health ring, the live trace, the traced path on a map, the ambient light (foundation 3.2) | A surface fill or bar; a button or anything that looks pressable in light theme; a status |
+| **The accent, Cobalt** (`action`, `action-label`, `action-stroke`, `action-wash`; foundation 3.6) | "Do this": the primary button of a view, the next step on an item that needs the person, the current step of a flow, the first-steps progress, an empty state's create button | A status; pending; a link; selection; a checked control; the focus ring; a hover; a destructive confirm; a chart series; decoration; more than one filled per region |
+| **Interaction Sky** (`link`, `selected`, `selected-label`, `selected-mark`, `focus-ring`) | "You can interact with this": links, the ghost button, selection, the current navigation item and tab, checked controls, the focus ring | The primary action; a status; a chart series; an "info" severity; decoration |
+| **Brand sky blue** (`brand`, `trace`, `art-path`) | The mark, the health ring, the live trace, the traced path on a map (foundation 3.2) | A surface fill or bar; a glow; a "live" dot; a button or anything that looks pressable in light theme; a status |
 | **Pending gold** (`pending`) | Configuration saved but not applied: the banner, and a mark on the item that is pending | Warning; "accent"; highlight; a hover; a badge count; anything decorative |
 | **OK green** | A monitored thing is healthy | "Success" confetti; a positive button; decoration; a chart series |
 | **Warning orange** | A monitored thing needs attention soon (a threshold crossed, a degraded-but-working state) | Emphasis; a hover; a "new" badge; pending changes |
@@ -109,16 +115,16 @@ nothing around it is shouting. Each hue has one job.
 | **Destructive red** (`destructive`) | The confirm button of an irreversible action | A status mark; a cancel button; a link |
 | **Unknown grey** (`unknown`) | No reading, not monitored, disabled, stopped on purpose | "Fine"; plain secondary text |
 | **Chart categorical** (`series-1..4`: violet, teal, magenta, moss, in the gaps of the scheme, foundation 3.6) | Telling series apart | Blue, gold, green, orange, red; a fifth generated hue |
-| **Usage ramp** (action blue by lightness) | How full something is, on a meter or a sequential chart | A status; thresholds are the status hues with words (5.6) |
+| **Usage ramp** (Sky blue by lightness) | How full something is, on a meter or a sequential chart | A status; thresholds are the status hues with words (5.6) |
 | **Terminal pair** | Task and log output | Any other surface |
 
 Checks that follow from the table:
 
-- **One interaction hue.** Blue means "you can act here". A control that acts in place hovers with
-  a neutral step (`muted` inside a card, `muted-strong` on a control); selected is the `selected`
-  tint; focus is the blue ring.
-- **One filled primary button per view or dialog.** If two things are filled blue, one of them is
-  not primary.
+- **One interaction hue, one accent.** Sky means "you can interact with this"; Cobalt means "this
+  is the one to press". A control that acts in place hovers with a neutral step (`muted` inside a
+  card, `muted-strong` on a control); selected is the `selected` tint; focus is the Sky ring.
+- **One filled accent per region, at most three accent elements in a viewport.** If two things are
+  filled Cobalt, one of them is not primary.
 - **Count the hues on a screen.** Neutrals, blue, the status hues actually present, and chart
   series. Any other hue must name its job from the table.
 - **There is no "info" colour.** Informational messages are neutral with an icon. Blue is taken.
@@ -144,10 +150,10 @@ Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind 
 | --- | --- | --- |
 | `background` / `foreground` | `page` / `foreground` | |
 | `card`, `popover` (+ `-foreground`) | `surface` / `foreground` | |
-| `primary` / `primary-foreground` | `action` / `action-foreground` | |
+| `primary` / `primary-foreground` | `action` / `action-foreground` | The accent, Cobalt (foundation 3.6) |
 | `secondary` / `secondary-foreground` | `muted` / `foreground` | A neutral button. There is no chromatic secondary |
 | `muted` / `muted-foreground` | `muted` / `muted-foreground` | |
-| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here. Mapping it to the pending gold would paint every menu hover as "pending" |
+| `accent` / `accent-foreground` | `muted` / `foreground` | In shadcn, `accent` is the *hover ground* of a menu item, not a hue. It is neutral here, and the product's accent is `primary`. Mapping a hue here would paint every menu hover as a call to act |
 | `destructive` / `destructive-foreground` | `destructive` / `destructive-foreground` | |
 | `border` | `border` | Dividers |
 | `input` | `border-control` | The edge of a control must clear 3:1 |
@@ -156,8 +162,10 @@ Components read tier 2 or 3. A component never uses a primitive, a raw Tailwind 
 ### 3.3 Decision: the sky blue is identity; a deeper blue of the same hue acts
 
 **Superseded in part**: the identity bar is gone ([visual foundation](visual-foundation.md), section
-3.2), so the `identity` bullets below are history. The action decision stands, with the numbers
-measured on the new grounds.
+3.2), so the `identity` bullets below are history; and the primary action moved to the accent,
+Cobalt (foundation 3.6, owner, 2026-11-25). The split by job stands: the values below are now
+Sky's interaction roles, `selected-mark` (was `action`) and `link` and `selected-label` (were
+`action-label`), unchanged, with the numbers measured on the new grounds.
 
 Measured on the stock palette (`node tools/colour-audit.mjs legacy`):
 
@@ -174,13 +182,15 @@ the surrounding greys fixes that. So the hue is split by job, staying at one OKL
 
 - (History) `identity` was `#5dacdf` with deep-navy ink on the light top bar, and the container
   blue `#074469` in dark. Both went with the bar.
-- **`action` = `#1272ab`** (brand-600) for the light-theme primary button, checked controls and the
-  focus ring: white on it is 5.22:1, and it clears 3:1 as an edge on every ground (4.47 to 5.22:1).
-- **`action-label` = `#095a8a`** (brand-700) for links and blue words: 6.32 to 7.39:1 on the four
-  grounds, 6.54:1 on the selected-row tint.
-- **In dark, `#5dacdf` is the action colour itself**, with the navy ink on it (6.91:1), and
-  `#87c6f2` is the link colour (7.97 to 10.26:1). The dark theme is where OMV's blue does the most
-  work.
+- **`selected-mark` = `#1272ab`** (brand-600) for checked controls and the current item's bar, and
+  the focus ring: white on it is 5.22:1, and it clears 3:1 as an edge on every ground (4.47 to
+  5.22:1).
+- **`link` and `selected-label` = `#095a8a`** (brand-700) for links and Sky words: 6.32 to 7.39:1 on
+  the four grounds, 6.54:1 on the selected-row tint.
+- **In dark, `#5dacdf` is the checked mark itself**, with the navy ink on it (6.91:1), and `#87c6f2`
+  is the link colour (7.97 to 10.26:1).
+- **The primary button is Cobalt** in both themes, white on `#0065da` (5.42:1), edged where the
+  fill alone is under 3:1; its numbers are in foundation 3.6.
 
 ### 3.4 Decision: gold means "pending", and only that
 
@@ -198,7 +208,8 @@ In stock OMV, `$omv-color-accent`, `$omv-color-warning` and the pending-changes 
   `#f8d400` with the coffee ink `#4d2e25` (8.31:1); it is now the warmer gold `#ffcd47`, as light as
   the lemon, with navy ink (11.53:1).
 - **Warning moves to OMV's own dark orange `#f78f00`.**
-- **There is no accent colour.** shadcn's `accent` is neutral (3.2).
+- **Gold is not the accent.** The accent is Cobalt, with one job of its own, "do this" (foundation
+  3.6, owner, 2026-11-25); shadcn's `accent` stays neutral (3.2).
 
 Is orange far enough from the gold, and from red? From `node tools/colour-audit.mjs distinct` (OKLab
 distance x100; about 2 is one just-noticeable difference, and under 10 a pair needs its word or
@@ -220,9 +231,9 @@ icon):
 The suggestion holds: the gold and the orange stay apart under all three simulated deficiencies,
 mostly on lightness (the gold is the lightest chromatic colour in the system, and the attention
 colours step down in lightness from gold to orange to red). Two pairs fall under 10 and are carried
-by form instead: **pending / ok** under deuteranopia and protanopia (pending is a banner or a
-labelled chip with its own icon, never a bare dot beside status dots), and **ok / unknown** under
-deuteranopia (the reason the Unknown mark is a hollow ring and OK is a filled disc: 5.5).
+by form instead: **pending / ok** under deuteranopia and protanopia (pending is the band or a
+status label with its own clock icon, never a bare dot), and **ok / unknown** under deuteranopia
+(the reason the Unknown icon is a dashed ring and OK's a check: 5.5).
 
 The status fills were chosen for this table, not for looks. With the stock green `#4cd964` and red
 `#ff3b30` the green / red distance under deuteranopia is 11.7; a mid-lightness green tested during
@@ -235,11 +246,11 @@ Every chromatic family has members with different jobs, and each job has its own
 
 | Member | Job | Bar | Example |
 | --- | --- | --- | --- |
-| fill (`x`) | Dots, meter segments, pill washes, solid buttons | 3:1 only if it carries meaning alone; status fills never do (they are ringed by the stroke) | `bg-ok`, `bg-action` |
+| fill (`x`) | Solid buttons, the health ring's segments | 3:1 only if it carries meaning alone; status fills never do (they are ringed by the stroke) | `bg-ok`, `bg-action` |
 | `x-foreground` | Words on the solid fill | 4.5:1 against the fill | `text-action-foreground` |
 | `x-label` | Words in that hue on a ground or on the family's tint | 4.5:1 on every ground it lands on | `text-warning-label` |
-| `x-stroke` | Outlines, rings and small icons | 3:1 on every ground | `text-critical-stroke` |
-| `x-wash` | A wash behind a label, or behind the one element in a non-OK state (foundation 3.3) | The label must clear 4.5:1 on the wash | `bg-warning-wash` |
+| `x-stroke` | Outlines, rings and small icons; the amount of a meter past a threshold (5.6) | 3:1 on every ground, and on `usage-empty` | `text-critical-stroke` |
+| `x-wash` | A panel waiting on a decision (the job runner on `pending-wash`), never a tinted card, row or status capsule (10) | The label must clear 4.5:1 on the wash | `bg-pending-wash` |
 
 **Fills draw; labels are read.** The stock UI's commonest colour defect is a fill used as a word:
 
@@ -274,11 +285,12 @@ labels and strokes flip.
 
 - **Never colour alone** (WCAG 1.4.1). Every status colour travels with its word, or with an icon
   whose shape differs per status. See 5.5 for the anatomy.
-- **Same meaning, same treatment.** One pill, one dot and one icon per status, on every surface.
+- **Same meaning, same treatment.** One status label (its icon and its word) per status, on every
+  surface; where the word does not fit, the same icon with the word in its name (5.5).
 - **Destructive is a form, not a status.** `destructive` (`#b7191c` with white, 6.63:1; in dark
   `#f66d67` with Sky's navy ink, 5.98:1) is used only on the confirm button of an irreversible
-  action, with a verb ("Wipe disk"). Critical is a pill or a ring with a status word. The two never
-  share a shape.
+  action, with a verb ("Wipe disk"). Critical is a status label or a ring with its word. The two
+  never share a shape.
 - **Blue is not a severity.** There is no blue "info" tier between OK and Warning.
 
 ### 3.7 Neutrals
@@ -286,7 +298,7 @@ labels and strokes flip.
 **Superseded** for the ramp's values, the grounds and the tiers by [visual
 foundation](visual-foundation.md), section 3.1. The rules below stand, with the new numbers.
 
-- **One hue, low chroma.** The slate ramp, now Sky's night sky, sits at OKLCH hue 248 to 259
+- **One hue, low chroma.** The slate ramp, now Sky's night sky, sits at OKLCH hue 246 to 259
   (median 252, no step more than 7.4 degrees off) with chroma 0.005 to 0.037. It is kept cool and
   tinted toward the brand so greys and blues belong together.
 - **Four grounds** (`page`, `surface`, `muted`, `muted-strong`) and **three reading tiers** plus one
@@ -294,7 +306,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
   (6.41 to 7.49:1, 7.12 to 9.17:1), `tertiary-foreground` for captions and metadata (5.24 to
   6.13:1, 4.68 to 6.02:1), and `subtle-foreground` for placeholders and disabled text only (2.98 to
   4.19:1; exempt from 1.4.3 and never used for anything a reader needs).
-- **Two borders.** `border` is a decorative divider (1.10 to 1.42:1, intentionally quiet).
+- **Two borders.** `border` is a decorative divider (1.10 to 1.42:1, intentionally faint).
   `border-control` marks something you can operate and clears 3:1 on every ground (3.86 to 4.52:1
   light, 4.23 to 5.44:1 dark).
 - **No pure black and no pure white for text.** White is the light card surface only.
@@ -310,7 +322,8 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - WCAG 2 flatters dark pairs, so read the APCA column too. The dark pairs the audit lists as
   advisory are all labels, captions or button text, not body copy: `tertiary-foreground` (Lc 40 to
   43), `muted-foreground` on the darker grounds and washes (Lc 57 to 60), `critical-label` (Lc 57
-  to 59), `action-foreground` on `action` (Lc 53) and `destructive-foreground` (Lc 48). Set them at
+  to 59), `action-label` (the outlined next step's words, Lc 46 to 52) and `destructive-foreground`
+  (Lc 48). Set them at
   medium weight (500) or above; do not use them for running text.
 - The same status must look like the same status in both themes.
 
@@ -319,7 +332,7 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - **Categorical: at most four series** (`series-1..4`). A fifth folds into "Other" or the chart
   becomes small multiples. **The hues and values are [visual foundation](visual-foundation.md),
   section 3.6**: violet, teal, magenta and moss sit in the gaps between the scheme's hues, never on
-  blue (action), the pending gold or the three status hues, so a line can never be mistaken for an
+  Sky or the Cobalt accent, the pending gold or the three status hues, so a line can never be mistaken for an
   alarm.
 - Each series clears 3:1 against the plot ground (page, surface or an inset): 3.09 to 8.27:1 light,
   4.16 to 13.77:1 dark. A single-series live chart draws in `trace` with its `trace-area` fill
@@ -328,25 +341,31 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
   deficiency, but not every pair is safe on colour alone: in light, violet / magenta falls to 8.2
   under protanopia, and the trace beside a series to 9.2 at worst. So **label lines directly** and
   give each series its own dash pattern or marker shape. The legend is never the only link.
-- **Sequential (how full, how much): one hue by lightness**, the action blue. Darker is more in
+- **Sequential (how full, how much): one hue by lightness**, Sky's usage blue. Darker is more in
   light; lighter is more in dark.
+- **Progress and amounts of a whole are filled, never outlined** (owner, 2026-11-26): the amount in
+  `usage`, the rest in `usage-empty`, and no stroke round the track or the cells. This holds for
+  every chart that shows how much of something is done or used; the anatomy and the numbers are
+  in 5.6. Line charts are not amounts and keep their own rules.
 - **Grey for context, colour for the series being discussed.**
 - **Thresholds are status, with words.** A capacity meter is blue; when it crosses a threshold the
-  admin configured, the *label* gains a Warning or Critical pill. The bar may take the status fill
-  only together with that pill.
+  admin configured, the *label* gains a Warning or Critical status label. The bar may take the
+  status fill only together with that word.
 - Chart text uses the text tokens, never a series colour.
 
 ### 3.10 Tints, alpha and gradients
 
 - Alpha is safe on one known ground and unpredictable over variable ones. The audited washes are
   tokens, not `x/NN` classes: `ok-wash`, `warning-wash`, `critical-wash`, `unknown-wash` and
-  `pending-wash` over each of the four grounds, and `selected` (the action blue at 9% light, 14%
+  `pending-wash` over each of the four grounds, `action-wash` (the accent at 8% light, 18% dark),
+  and `selected` (Sky at 9% light, 14%
   dark) for a selected row on `surface` and the current side-navigation item on `page`. Any other
   combination must be added to the audit before it ships.
 - **State layers** (hover, pressed) use the neutral steps (`muted`, `muted-strong`). Pick tonal step
   or overlay per component and do not mix them.
-- **Gradients**: superseded by [visual foundation](visual-foundation.md), section 3.4 (four kinds of
-  gradient and light, each with a meaning, each audited at its stops).
+- **Gradients**: superseded by [visual foundation](visual-foundation.md), section 3.4: one kind is
+  left, the area under a live line, audited at its stops. No glow, no lit card, no gradient on a
+  surface or a button (10).
 
 ### 3.11 Contrast and colour-vision deficiency
 
@@ -359,10 +378,10 @@ foundation](visual-foundation.md), section 3.1. The rules below stand, with the 
 - About 8% of men have a red-green deficiency. The design does not depend on telling green from
   red by hue: lightness separates them, and words and shapes carry every status.
 
-Current audit result: **436 required pairs, 0 failures**, both themes (foundation 3.5).
-Forty-four text pairs pass 4.5:1 but sit under Lc 60 (the terminal timestamps at Lc 46 to 47, one
+Current audit result: **460 required pairs, 0 failures**, both themes (foundation 3.5).
+Forty-five text pairs pass 4.5:1 but sit under Lc 60 (the terminal timestamps at Lc 46 to 47, one
 light label on its wash at Lc 60, and the dark pairs listed in 3.8, among them secondary text on the
-washes); all are labels, captions, secondary text or deliberately quiet metadata.
+washes); all are labels, captions, secondary text or deliberately subdued metadata.
 
 ---
 
@@ -371,7 +390,7 @@ washes); all are labels, captions, secondary text or deliberately quiet metadata
 ### 4.1 Typography
 
 **Superseded** for the scale by [visual foundation](visual-foundation.md), section 4 (Sky's 15px
-body, the six named steps, compact density). The faces, numerals, units and zoom rules below stand.
+body, the seven named steps, compact density). The faces, numerals, units and zoom rules below stand.
 
 - **Inter** for the interface, **Roboto Mono** for anything a user might copy or compare character
   by character: device paths (`/dev/sda1`), UUIDs, mount points, IP addresses, SSH keys, log and
@@ -383,7 +402,7 @@ body, the six named steps, compact density). The faces, numerals, units and zoom
 
 | Token | Size | Use |
 | --- | --- | --- |
-| `text-xs` | 12px | Captions, table metadata, pill text |
+| `text-xs` | 12px | Captions, table metadata, count badges |
 | `text-sm` | 13px | Dense table cells, form hints |
 | `text-base` | 14px | Body, form labels, buttons |
 | `text-lg` | 16px | Section and card titles (semibold) |
@@ -392,7 +411,8 @@ body, the six named steps, compact density). The faces, numerals, units and zoom
 | `text-3xl` | 30px | The one headline figure on a tile |
 
 - Weights: 400 body, 500 labels and buttons, 600 titles. No lighter weights, no italics for
-  emphasis, no all-caps except short table-header labels at 12px with letter spacing.
+  emphasis, no all-caps and no letter-spaced labels anywhere: table headers, group labels and
+  value labels are in sentence case (10).
 - Line height 1.5 for prose and 1.25 for titles and figures. Prose lines stay under about 75
   characters.
 - Sizes are in `rem`; the layout must survive 200% zoom and a user font-size change.
@@ -420,11 +440,11 @@ A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off th
 
 **Superseded** for the radii and for elevation by [visual foundation](visual-foundation.md), section
 6: controls 12px (16px squircle), cards 20px (30px squircle), and raised and floating surfaces with
-soft shadows. The squircle rules (native CSS only, pills stay round, nothing depends on the
-difference) stand.
+soft shadows. The squircle rules (native CSS only, meters and count badges stay round, nothing
+depends on the difference) stand.
 
-- Radius: 6px for controls, 8px for cards and dialogs, full for pills, dots and meters. One radius
-  per kind of thing.
+- Radius: 6px for controls, 8px for cards and dialogs, full for meters, rings, count badges and
+  removable filter tokens. One radius per kind of thing.
 - **Squircle corners where the browser supports them.** Controls, cards, dialogs, menus and toasts
   take `corner-shape: squircle` inside `@supports (corner-shape: squircle)`. In 2026 only Chromium
   browsers support it; everywhere else the same elements keep ordinary rounded corners, and nothing
@@ -432,8 +452,8 @@ difference) stand.
   one, so the squircle radii are their own tokens, tuned by eye in `design/preview.html`. Components
   write `rounded-control` and `rounded-card`, which carry both radii; the squircle radii
   (10px and 14px) were approved by the owner on 2026-11-20.
-- **Pills, dots and meters stay round** (`corner-shape: round`). Their shape is part of the
-  status vocabulary (5.5): the Unknown mark is a hollow ring.
+- **Meters, rings and count badges stay round** (`corner-shape: round`). A status is not a pill
+  (5.5, 10).
 - **Native CSS only.** No squircle made with an SVG mask, `clip-path` or a background image: those
   cut off borders, shadows and the focus ring (4.6). Before shipping, check in a Chromium browser
   that the focus outline follows the squircle and still clears 3:1.
@@ -444,12 +464,23 @@ difference) stand.
 
 ### 4.4 Icons
 
-- **lucide**, 16px beside text and 20px standalone, stroke width 2, `currentColor`.
+- **lucide** for interface glyphs (a disclosure's chevron, copy, close, eye), 16px beside text and
+  20px standalone, stroke width 2, `currentColor`. No arrow or chevron on a button or a text link
+  (10).
+- **The custom set** (`Icon`, rethink 5.2) for domain objects and actions on them: disks by kind,
+  file systems, RAID, ZFS, shared folders, people, groups, each service, each network interface
+  kind, copy jobs, add-ons, the NAS; and create, share, mount, unmount, mirror, wipe, apply, undo,
+  check health, sleep, wake, restart. A 24 grid, a 1.75px stroke at every size (16, 20, 24, and the
+  32px `IconPlate`), outline in `currentColor` and one plane in `art-plane`; status and pending as
+  a badge cut out at the bottom right (`badge`), an object's create mark the same way (`mark`).
+  Decorative beside a word, named with `label` when alone. Action icons act out their action on the
+  hover of the button they sit in and on success (rethink 7.7), never in lists or navigation.
 - An icon-only button has an accessible name and a tooltip.
 - Status icons differ by **shape**, not only colour: check-in-circle (OK), triangle with
   exclamation mark (Warning), octagon with cross (Critical), dashed or hollow circle (Unknown),
   clock-with-arrow or similar (Pending).
-- No emoji as icons, no multicolour icons, no icon used as decoration beside a title.
+- No emoji as icons, no multicolour icons, no sparkle, wand, star or "AI" glyph, no icon used as
+  decoration beside a title. A status icon before a title is not decoration: it carries the state.
 
 ### 4.5 Motion
 
@@ -458,7 +489,8 @@ easings and the catalogue). The reduced-motion rule stands and is stricter there
 
 - Motion explains a change of state; it never entertains. Durations are 120ms (hover, focus),
   180ms (menus, toasts) and 260ms (dialogs), with one ease-out curve.
-- No looping animation except a progress indicator for work in progress.
+- No looping animation except a spinner beside words that say work is running. Nothing pulses,
+  breathes or blinks, skeletons included (10).
 - Live values (temperatures, throughput) update in place without animation.
 - Under `prefers-reduced-motion: reduce` every duration is zero (the tokens do this) and
   indeterminate progress is shown as a static label ("Working...") with a non-moving indicator.
@@ -467,8 +499,7 @@ easings and the catalogue). The reduced-motion rule stands and is stricter there
 
 - Every interactive element shows a **2px `focus-ring` outline with a 2px offset** on
   `:focus-visible`. It clears 3:1 against all four grounds (4.47 to 5.22:1 light, 7.97 to 10.26:1
-  dark) and in the ambient light (4.15:1 light, 8.41:1 dark). The top bar has no ring of its own any
-  more: it sits on the page ground.
+  dark). The top bar has no ring of its own any more: it sits on the page ground.
 - The ring is never removed, never replaced by a colour change alone, and never clipped by an
   `overflow: hidden` parent.
 - Focus order follows reading order. Opening a dialog moves focus into it; closing returns focus to
@@ -486,13 +517,14 @@ the rule written here first.
 **Superseded** for the top bar's ground and the navigation's shape by [visual
 foundation](visual-foundation.md), section 10. The stacking order and the skip link stand.
 
-- **Top bar** on the page ground (no identity bar): the product mark and name, the host name, the
-  pending-changes indicator, notifications, and the user menu. Nothing on the bar looks like a
-  filled button; its controls are the `quiet` variant.
+- **Top bar** on the solid page ground with a hairline under it (no identity bar, no frosted blur):
+  the product mark and name, the host name as plain text, the pending-changes indicator,
+  notifications, and the user menu. Nothing on the bar looks like a filled button; its controls are
+  the `plain` variant.
 - **Side navigation** on `page`, grouped as OMV groups it (System, Network, Storage, Services,
   Users, Diagnostics) so existing users find things. The current item has the `selected` tint and
-  `action-label` text (5.89:1 light, 8.28:1 dark) plus a non-colour cue (an `action` bar on the
-  leading edge, 4.16 and 6.13:1, and medium weight) and `aria-current="page"`. An item whose page
+  `selected-label` text (5.89:1 light, 8.28:1 dark) plus a non-colour cue (a heavier weight) and
+  `aria-current="page"`. No bar on its leading edge (10). An item whose page
   exists only in the classic interface says so with a short word and the external-link mark.
 - Under 1024px wide the side navigation collapses to a drawer.
 - **What stacks under the top bar**, in this order and never side by side: the top bar; the
@@ -502,19 +534,25 @@ foundation](visual-foundation.md), section 10. The stacking order and the skip l
   indicator, so nothing is lost when the bands scroll away. A skip link to the main content is the
   first focusable element on every page.
 - One page title per page, in the content area. Breadcrumbs only below the second level.
+- **Breadcrumbs show only the parent page** (owner, 2026-11-25): one plain link in the link colour,
+  underlined, above the page title ("Shared folders" over "Photos"). No separator (no chevron,
+  slash or dot) and no crumb for the current page, which the title already names. It is a `nav`
+  named "Breadcrumb". Where a page spec writes a trail ("ZFS" › the pool › "Add a file system"),
+  only its nearest ancestor is shown; `Breadcrumbs` does that for a caller that still passes the
+  whole trail, and an item marked `current` renders nothing.
 - The address bar always reflects where you are, but a URL only ever *selects a view*. See 7.
 
 ### 5.2 Data tables
 
 - The default presentation for disks, file systems, shares, users and jobs.
-- Header on `muted`, 12px medium, sortable columns marked with an arrow that states the direction
-  to assistive technology (`aria-sort`).
+- Header on `muted`, in sentence case, regular weight, in the secondary ink; sortable columns marked
+  with an arrow that shows the sort direction and states it to assistive technology (`aria-sort`).
 - Rows on `surface`, separated by `border`. No zebra striping (it fights the selected and hovered
   states).
 - **Hover** is `muted`. **Selected** is the `selected` tint plus a checked checkbox. A row is never
   selected by colour alone.
-- Numbers right-aligned with tabular numerals; identifiers in mono; status as a pill in its own
-  column.
+- Numbers right-aligned with tabular numerals; identifiers in mono; status as its icon and word in
+  its own column. A row's state is never a coloured edge.
 - Actions that apply to a selection live in a toolbar above the table and are disabled, with a
   reason in the tooltip, when they do not apply. Destructive actions sit apart from the rest.
 - Loading shows skeleton rows of the right height. Empty shows an empty state (5.9). An error shows
@@ -554,34 +592,60 @@ user or a certificate in use, resetting configuration.
   action, and the typed confirmation.
 - No "don't ask again" on a destructive confirmation.
 
-### 5.5 Status pills and health indicators
+### 5.5 Status labels and health indicators
 
 One anatomy per status, used everywhere:
 
-- **Pill**: a 14% wash of the status fill, a 1px `-stroke` border, the status icon and the status
-  word in `-label`. Pill text is 12px medium.
-- **Dot** (where a pill does not fit, such as a compact tile): an 8 to 10px disc of the fill with a
-  `-stroke` ring, and the word next to it or in an accessible name plus tooltip. **Unknown is a
-  hollow ring**, not a filled disc, because OK and Unknown are close under deuteranopia (3.4).
+- **Status label** (`StatusLabel`): the status icon and the status word, both in `-label`, 14px
+  medium. No capsule, no wash, no edge: a pill is kept for a removable filter token or a count
+  badge (10).
+- **Icon alone** (`StatusDot`, where the word does not fit, such as a compact tile): the same icon,
+  with the word next to it or in an accessible name plus tooltip. There is no coloured disc. **Unknown
+  is a dashed ring**, because OK and Unknown are close under deuteranopia (3.4).
+- **A healthy thing shows no mark beyond its word**, and often not even that: status marks appear
+  where they say something.
 - The words are fixed: **OK, Warning, Critical, Unknown**, plus **Disabled** and **Stopped**, which
   use the Unknown treatment with their own word. Do not invent synonyms per page.
 - A roll-up shows the worst state of its children and says how many ("1 of 4 disks: Critical").
 - Unknown is never rendered as OK, and "no data yet" is never green.
 
-### 5.6 Capacity meters
+### 5.6 Capacity meters and everything that shows progress
 
-- A full-radius track (`usage-track` with a `usage-track-edge` outline, 4.52:1 light, 5.03:1 dark
-  on a card) and a `usage` fill (4.47:1 against the track in light, 5.90:1 in dark).
+**Filled, never outlined** (owner, 2026-11-26). Anything that shows progress or an amount of a
+whole is drawn in two fills and nothing else:
+
+- **The amount is `usage`**, the blue.
+- **The rest is `usage-empty`**, a slate: `#c2cfdb` light (OKLCH 0.848 0.022 246), `#3b495b` dark
+  (0.401 0.035 255).
+- **No stroke** round the track, the ring or the cells. The amount is read against the rest, so that
+  pair carries the value (WCAG 1.4.11): 3.29:1 light, 3.68:1 dark.
+- The rest only has to show on its ground, not to pass a bar: 1.42 to 1.59:1 on the light grounds
+  (page 1.42, card 1.59), 1.60 to 2.06:1 on the dark ones (page 2.06, card 1.91).
+
+It covers capacity meters, segment bars, progress bars, task and job progress, the first-steps
+progress, a password-strength line, and a level drawn against a fixed range, such as a temperature
+gauge. A level with no whole (a temperature column on a chart) is a filled bar with no track.
+
 - **Always paired with numbers**: "3.1 TiB of 3.6 TiB (86%)", tabular.
-- The bar is blue. Crossing an admin-configured threshold adds a Warning or Critical pill beside
-  the figure; only then may the fill take the status colour.
+- The bar is blue. Crossing an admin-configured threshold adds a Warning or Critical status label
+  beside the figure; only then may the amount take the status colour, and never without its word.
+  It takes the status **stroke**, not the fill, because it must clear 3:1 on the rest:
+  `warning-stroke` 3.07:1 light, 3.88:1 dark; `critical-stroke` 3.70:1 light, 3.19:1 dark. The fills
+  do not (the warning fill is 1.49:1 on the rest in light, the critical fill 1.69:1 in dark).
+- **The first-steps progress** keeps the accent (rethink A4), at its `action-label` step: 4.84:1
+  light, 3.60:1 dark on the rest. `action-stroke` would be 2.56:1 in dark.
+- **No reading** is not empty: a dashed outline in `unknown-stroke` with the Unknown icon, never an
+  empty track. **Loading** is the still `muted-strong` skeleton step. The Unknown grey fill is close
+  to the rest (4.9 apart), so it never stands for one.
+- In compact density the bar is counted out in cells: used cells in the amount's colour, empty
+  cells in `usage-empty`, with gaps between them and no edge.
 - It is exposed as a `meter` (or `progressbar`) with `aria-valuenow`, `aria-valuemin`,
   `aria-valuemax` and a text alternative.
 
 ### 5.7 Long-running tasks and log output
 
 - A task (installing updates, building an array, a file-system check) has a title, a state
-  (Waiting, Running, Succeeded, Failed, Cancelled) as a pill, a progress bar where progress is known,
+  (Waiting, Running, Succeeded, Failed, Cancelled) as a status label, a progress bar where progress is known,
   elapsed time, and a cancel control where cancelling is safe. Waiting is a step in a list that has
   not started yet because an earlier step is still running ([UX audit](ux-audit.md), R5). It uses the
   Unknown treatment with its own word, as Disabled and Stopped do (5.5); it is never pending gold.
@@ -616,8 +680,8 @@ OMV's signature, and the only place the pending gold appears at size. Its colour
   current connection (network and web-server changes).
 - The item that is pending carries a small pending mark (the pending icon with `pending-stroke`,
   3.26 to 3.97:1 light) and, as text, `pending-label`.
-- The top bar's pill is the gold edged in `pending-stroke`, so it clears 3:1 on the light page
-  where the gold alone does not (1.34:1).
+- The top bar's pending count (a count badge, the one pill on the bar) is the gold edged in
+  `pending-stroke`, so it clears 3:1 on the light page where the gold alone does not (1.34:1).
 - While changes are being applied the band shows progress, both controls are unavailable, and a
   "Show progress" control opens the apply task's output. Unavailable, the controls are dashed
   outlines in the navy ink, never faded: navy at partial opacity over the gold is an unaudited
@@ -749,16 +813,19 @@ proof that a pair is safe.
 ## 9. Checklist
 
 - [ ] Every chromatic element names one of the five jobs (section 2); the rest is neutral.
-- [ ] Blue is the only interaction hue; hover is neutral; one filled primary per view.
+- [ ] Sky is the only interaction hue and Cobalt only says "do this"; hover is neutral; one filled
+      accent per region.
 - [ ] The pending gold appears only for pending configuration; nothing else is gold or yellow.
 - [ ] Every colour has its place in the scheme of foundation 3.6; ink on a light fill is navy.
 - [ ] Status hues mean only status; there is no blue "info" severity.
 - [ ] Words use `-label` (or `-foreground` on a solid fill); fills and strokes are not text colours.
-- [ ] Every status has its word or a distinct icon shape; Unknown is hollow; greyscale and
+- [ ] Every status has its word or a distinct icon shape; Unknown is a dashed ring; greyscale and
       deuteranopia views still tell the states apart.
 - [ ] `node tools/colour-audit.mjs contrast` exits 0; advisory pairs are labels, not body text.
 - [ ] No literal colours, raw palette classes or primitives in components.
-- [ ] No gradients; alpha tints only on the audited grounds.
+- [ ] No gradients but the area under a live line; alpha tints only on the audited grounds.
+- [ ] None of the twenty habits of section 10, checked element by element: is it here because this
+      screen needs it?
 - [ ] Charts: at most four series, directly labelled, each with its own dash or marker; no status
       hues, blue or the pending gold in a series.
 - [ ] Both themes checked; dark is not an inversion.
@@ -769,3 +836,70 @@ proof that a pair is safe.
 - [ ] Nothing from the server is rendered as HTML; no secret is echoed; no URL parameter drives an
       API call.
 - [ ] No openmediavault logo artwork; the product is labelled as a community plugin.
+
+---
+
+## 10. The generated look: what we never do
+
+The owner, 2026-11-25: twenty habits mark a design as generated by a machine rather than made for
+its screen. None of them is used anywhere: not in the library, the lab prototypes or a page. This
+section overrides every other section of this guide, the [visual foundation](visual-foundation.md)
+and any spec that asks for one of the habits.
+
+The test behind all twenty: **a habit is used because it is the default look, not because the
+screen needs it.** For any decoration, ask what it tells the person that nothing else on the screen
+does. If the answer is nothing, it goes.
+
+| # | Never | Instead |
+| --- | --- | --- |
+| 1 | An arrow or chevron glyph on a button or a text link | The words say where it goes ("Sharing settings"). Kept: the chevron of a disclosure (it shows open or closed), the external mark on a link that opens a new tab (it warns of the tab), and icon-only previous and next in pagination where the words do not fit |
+| 2 | Separators between words or values: `·`, `•`, `\|`, `/` | A sentence with commas ("92 % used, 290 GiB free"); separate labelled values (label over value, or a fact list); or a real gap between distinct cells. Metadata that only repeats what the screen already shows is removed, not reformatted |
+| 3 | Eyebrows: small uppercase, letter-spaced labels above headings, sections, values or columns | Sentence case at the size the job needs. A section has a real heading. A value has its label in sentence case, regular weight, secondary ink, beside or above it. Table and map column headers are in sentence case. Where the content explains itself, no label at all |
+| 4 | Cream, beige, paper or other warm off-white grounds | The cool neutrals of the Sky scheme (foundation 3.6) |
+| 5 | Italic for emphasis in a heading or in copy, the one slanted word in a headline | Emphasis comes from the words and from weight |
+| 6 | Sparkle, magic wand, stars or "AI" glyphs | The icon of the actual thing or action |
+| 7 | Everything in a card | Regions sit on the page ground, separated by space and their heading; groups inside a region by alignment and, where needed, a hairline rule. A card (a raised or outlined surface) is only for a thing the person handles as one unit: a dialog, a menu, a popover, an item whose whole surface opens it, a form being filled |
+| 8 | The word "quiet", in copy or in a design document describing a style ("a quiet button", "quiet text") | Plain, secondary, subdued, or what it is: "secondary text", "a text button", "the `plain` button". The one exception is the drive's acoustic mode, "Quiet, slower" |
+| 9 | Numbers on sections, headings or steps as decoration; a stepper rail | First steps are a checklist: a tick when done, an empty circle when not, the next one's button in the accent. Forms have no "1. 2. 3." sections. Numbers stay only where order is the content (a RAID disk order, a priority) |
+| 10 | Anything that pulses, breathes or blinks; green "live" or "online" dots | A live readout says once, in words, how often it updates, or says nothing. A healthy thing shows no dot at all; a status mark appears only where it says something. Skeletons stand still. Drawings of disks have no light. The one thing that repeats is a spinner beside words that say work is running |
+| 11 | Ambient light, radial glows, blurred colour shapes or frosted-glass blur behind headings or regions | Plain grounds. The sticky top bar is the solid page ground with a hairline under it |
+| 12 | A display serif or a fashionable display face | One sans family (Inter) and one mono (Roboto Mono). The compact density's old working name "Instrument" is never shown |
+| 13 | A coloured left edge (a border, a bar or a `::before` strip) on cards, rows, alerts, callouts or the current navigation item | A row's state is its leading status icon and its coloured state word; a card's, the status icon before its title (`CardTitle tone`). The current navigation item has the selected tint and a heavier weight |
+| 14 | Rows of same-shaped tiles: an icon, a title and a line of text, three across | Say it in the place it belongs: an add-on the map already shows is a row of the map; any other add-on is one line in the NAS's facts. Live readouts are one line of figures of different widths, not boxes |
+| 15 | Pills near the headline, and status drawn as a pill everywhere | The answer sentence and what needs the person carry it; the map shows status in place. A status is its icon and a coloured word (`StatusLabel`), no capsule. A pill is kept only for a removable filter token or a count badge |
+| 16 | The word "real" in copy ("real-time", "real data", "the real thing") | Say what it is ("live"), or nothing |
+| 17 | Made-up figures: trends, "uptime 99.9 %", invented history, counts the backend does not give | Every figure on screen comes from a backend read named in the contract. A prototype's model names the source method of each figure. Fixtures stay plausible and agree with each other |
+| 18 | Fragments set as sentences ("Holds the system." "Not in use yet." "All OK." "None yet.") | Either a label that is part of a field ("Shared folders: none") or a complete sentence that tells the person something ("This drive holds the system itself, so it keeps no shared folders."). A headline is a full short sentence ("Everything is working.", "Four things need you.") |
+| 19 | Sections fading or rising in, on scroll or on entrance | Content is there when the page is. Motion answers the person's action or a change of state. The one exception the owner approved: the NAS assembling on the first visit and on "Show me around", played once, never on scroll |
+| 20 | Dithered gradients, noise or grain | Flat grounds |
+
+Also out, for the same reason: gradient fills on surfaces and buttons, glassmorphism, oversized
+rounded corners on everything, emoji in copy, and decorative large numbers. One gradient is left:
+the area under a live line, which shows the data (foundation 3.4).
+
+### 10.1 What the system does about it
+
+- **Tokens and the stylesheet.** There is no ambient-light token or utility, no `animate-pulse`,
+  `animate-ping`, `animate-bounce` or breathing keyframe, and no blur step (`backdrop-blur-*` and
+  `blur-*` generate nothing). `animate-spin` is the one repeating motion. The tests of
+  `css-ui-style` fail if any of these comes back.
+- **Components.** `StatusLabel` is the status (its icon and word); `StatusPill` is its deprecated old
+  name, and `StatusDot` draws the icon, not a disc. `Card` no longer takes a lit or tinted state:
+  `tone` on a `Card` is deprecated and paints nothing, and `CardTitle tone` leads the title with the
+  status icon. `CardChevron` is deprecated and renders nothing. The button variant is `plain`;
+  `quiet` is its deprecated alias. Table headers, menu, select and palette group labels, chart and
+  map labels are sentence case and regular weight. Skeletons, loading tracks and an indeterminate
+  progress bar stand still. The top bar is solid with a hairline, the page has no glow, the drive
+  bay has no lights and no gradient, and a page's answer has no entrance motion. `Breadcrumbs`
+  renders the parent page's link alone, with no chevron; `BreadcrumbItem current` is deprecated and
+  renders nothing. The jump highlight (`animate-arrive`, the ring round what a link, search or the
+  command palette jumped to) appears once, holds still for about a second and fades; under reduced
+  motion it is shown still for a second and removed without the fade. It never flashes or repeats.
+
+### 10.2 How to check
+
+- Search the change for `·`, `uppercase`, `tracking-`, `letter-spacing`, `border-inline-start`,
+  `border-l`, `border-s` on a coloured edge, `before:` strips, `animate-pulse`, `animate-ping`,
+  `radial-gradient`, `blur`, `italic`, `sparkle`, `rounded-full` around a status, and for "quiet" and
+  "real" in copy.
+- Look at every screenshot and ask of each element: is it here because this screen needs it?

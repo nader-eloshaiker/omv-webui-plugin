@@ -1,0 +1,539 @@
+/* The chart prototype's stylesheet: development only, never in the production bundle (UI-11).
+ *
+ * Plain classes (src/lab is outside Tailwind's sources), written only in the system's semantic
+ * tokens (--theme-*, --duration-*, --ease-*, --text-*, --radius-*), so both themes and both
+ * densities follow. Geometry from data reaches the CSS as custom properties
+ * through the CSSOM (--y, --k); nothing is a style attribute in markup (UI-1).
+ *
+ * The segment bar, the two live charts and the drive pictures are the component library's
+ * (SegmentBar, LivePercentChart, LiveMirrorChart, DrivePicture), styled there; this file lays out
+ * the page round them and still draws the temperatures by kind, which the library also has as
+ * DiskTemperatures.
+ *
+ * Colour: the usage blue for how warm (one hue) on the slate of what is empty, every amount filled
+ * and none outlined, warning only past a limit with its words, and the text inks for every word and
+ * figure. No accent, no glow, no pulse, no card, no light on a drive.
+ */
+
+/* The empty part of every amount: the segment bar's empty segments and the temperature bars' tracks
+   (owner, round four: "all filled and no outline"), in the system's usage-empty slate. */
+.omv-lab-charts {
+  --ch-empty: var(--theme-usage-empty);
+}
+.omv-lab-charts {
+  min-height: 100dvh;
+  background: var(--theme-page);
+  color: var(--theme-foreground);
+}
+.ch-frame {
+  max-width: 1144px;
+  margin: 0 auto;
+  padding: 40px 24px 140px;
+}
+.ch-frame[data-width="900"] {
+  max-width: 900px;
+}
+.ch-frame[data-width="390"] {
+  max-width: 390px;
+  padding-inline: 16px;
+}
+:root[data-density="compact"] .ch-frame {
+  padding-block-start: 24px;
+}
+
+/* ─── The page's words ────────────────────────────────────────────────────────────────────────── */
+.ch-head {
+  max-width: 68ch;
+  margin-block-end: 48px;
+}
+.ch-head h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: var(--font-weight-semibold);
+}
+.ch-head p,
+.ch-intro {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+}
+.ch-subject {
+  padding-block: 8px 56px;
+}
+.ch-subject + .ch-subject {
+  border-block-start: 1px solid var(--theme-border);
+  padding-block-start: 40px;
+}
+:root[data-density="compact"] .ch-subject {
+  padding-block-end: 36px;
+}
+.ch-subject-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-block-end: 28px;
+}
+.ch-subject-head > div {
+  max-width: 68ch;
+}
+.ch-subject h2 {
+  margin: 0 0 6px;
+  font-size: var(--text-section);
+  line-height: var(--text-section--line-height);
+  letter-spacing: var(--text-section--letter-spacing);
+  font-weight: var(--text-section--font-weight);
+}
+.ch-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ch-candidate {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 16px 40px;
+  padding-block: 28px;
+}
+.ch-candidate + .ch-candidate {
+  border-block-start: 1px solid var(--theme-border);
+}
+.ch-frame[data-width="900"] .ch-candidate,
+.ch-frame[data-width="390"] .ch-candidate {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* A live strip takes the full width, as on the dashboard: its words go above it. */
+.ch-candidate[data-wide] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.ch-candidate[data-wide] .ch-caption {
+  max-width: 72ch;
+}
+.ch-candidate h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: var(--font-weight-semibold);
+}
+.ch-caption {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+}
+.ch-body {
+  min-width: 0;
+}
+.ch-sizes {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 28px 40px;
+}
+.ch-frame[data-width="390"] .ch-sizes {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ch-size-page {
+  grid-column: 1 / -1;
+}
+.ch-size-title {
+  margin: 0 0 10px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-muted-foreground);
+}
+.ch-specimens {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ch-specimen-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-block-end: 6px;
+}
+.ch-specimen-name b {
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+}
+.ch-specimen-name span,
+.ch-muted {
+  font-size: 12px;
+  color: var(--theme-tertiary-foreground);
+}
+.ch-strong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-foreground);
+}
+.ch-note {
+  margin: 10px 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+}
+.ch-arrive {
+  animation: ch-fade var(--duration-fast) var(--ease-standard) both;
+}
+@keyframes ch-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ─── The file systems table: rows of 40px (36 compact) ───────────────────────────────────────── */
+.ch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.ch-table th {
+  padding: 0 12px 8px 0;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-muted-foreground);
+  text-align: start;
+}
+.ch-table td {
+  height: 40px;
+  padding: 0 12px 0 0;
+  border-block-start: 1px solid var(--theme-border);
+  vertical-align: middle;
+}
+:root[data-density="compact"] .ch-table td {
+  height: 36px;
+}
+.ch-table tbody tr:last-child td {
+  border-block-end: 1px solid var(--theme-border);
+}
+.ch-table-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+}
+.ch-frame[data-width="390"] .ch-table-type {
+  display: none;
+}
+.ch-table td:last-child,
+.ch-table th:last-child {
+  padding-inline-end: 0;
+}
+
+/* ─── The segment bar ─────────────────────────────────────────────────────────────────────────── */
+/* Drawn by the component library's SegmentBar (react-ui-components, segment-bar): Tailwind classes
+   there, tokens only, every segment filled and none outlined. */
+
+/* ─── Live: the two charts ────────────────────────────────────────────────────────────────────── */
+.ch-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px 36px;
+  margin: 0;
+}
+.ch-span {
+  margin: 14px 0 0;
+  font-size: var(--text-sm);
+  color: var(--theme-muted-foreground);
+}
+/* The two charts are the component library's LivePercentChart and LiveMirrorChart. */
+
+/* A disk over its limit: its sentence under the tiles. */
+.ch-over-note {
+  margin-block-start: 8px;
+}
+
+/* ─── Drive pictures ─────────────────────────────────────────────────────────────────────────── */
+/* Drawn by the component library's DrivePicture, in the neutral inks. */
+
+/* The sheet: each kind at its three sizes, bottom-aligned, named. */
+.ch-dp-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr));
+  gap: 28px 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ch-dp-kind {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ch-dp-name {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: var(--font-weight-semibold);
+}
+.ch-dp-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 22px;
+}
+.ch-dp-size {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ch-dp-frame {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 72px;
+}
+.ch-dp-size-name {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+}
+
+/* ─── Temperatures: by kind, each array and pool a group ─────────────────────────────────────── */
+/* --lv is the scale's length in every group: the height of an upright level and of the tile hard
+   disk, and the length of a lying level and of the tile stick, so a degree is the same distance
+   everywhere and the limit sits at one height. */
+.ch-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  --lv: 56px;
+}
+.ch-kinds > .ch-note {
+  margin: 0;
+}
+/* The groups side by side, each as wide as its heading or its tiles, wrapping where they meet the
+   edge, so a NAS of 24 disks is a few rows and not one group under another. */
+.ch-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px 40px;
+}
+:root[data-density="compact"] .ch-groups {
+  gap: 18px 32px;
+}
+.ch-kind {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Every head is at least one status label tall, so a group that says "Rebuilding" starts its tiles
+   at the same height as its neighbours and the limit stays one line across a row. */
+.ch-kind-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  min-height: 24px;
+  margin: 0 0 8px;
+}
+.ch-kind-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 20px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-foreground);
+}
+.ch-kind-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:root[data-density="compact"] .ch-kind-tiles {
+  row-gap: 12px;
+}
+.ch-kt {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 52px;
+  min-width: 0;
+}
+.ch-kt[data-kind="nvme"] {
+  width: 72px;
+}
+/* Upright: the picture, and the level beside it, both standing on one baseline. */
+.ch-kt-art {
+  position: relative;
+  display: flex;
+  align-self: stretch;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: var(--lv);
+  margin-block-end: 6px;
+}
+/* The bar: a solid slate track and a solid level, no outline, no border, no shadow. */
+.ch-kt-bar {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ch-empty);
+  overflow: hidden;
+}
+/* No reading (asleep, or not read): no track at all, only the word under the disk. The slot keeps
+   its width, so the picture stays where every other tile has it. */
+.ch-kt[data-unread] .ch-kt-bar {
+  background: none;
+}
+.ch-kt-level {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: calc(var(--k) * 100%);
+  background: var(--theme-usage);
+}
+.ch-kt[data-over] .ch-kt-level {
+  background: var(--theme-warning-stroke);
+}
+/* The alert limit: one dashed line at its height, through the tile and half the gap either side, so
+   the tiles of a row join it into one straight line. A mark on the scale, not an outline. */
+.ch-kt-limit {
+  position: absolute;
+  inset-inline: -5px;
+  inset-block-start: calc(var(--lv) * (1 - var(--y)));
+  border-block-start: 1.5px dashed var(--theme-foreground);
+  pointer-events: none;
+}
+/* Lying down: the stick, and under it the level running along it from left to right. */
+.ch-kt[data-kind="nvme"] .ch-kt-art {
+  flex-direction: column;
+  align-self: center;
+  align-items: stretch;
+  width: var(--lv);
+  height: auto;
+}
+.ch-kt[data-kind="nvme"] .ch-kt-bar {
+  width: 100%;
+  height: 8px;
+}
+.ch-kt[data-kind="nvme"] .ch-kt-level {
+  inset-block: 0;
+  inset-inline: 0 auto;
+  width: calc(var(--k) * 100%);
+  height: auto;
+}
+/* Lying down, the limit is the same dashed line, standing up across the stick and its level. */
+.ch-kt[data-kind="nvme"] .ch-kt-limit {
+  inset-inline: calc(var(--y) * 100%) auto;
+  inset-block: -4px;
+  translate: -0.75px 0;
+  border-block-start: none;
+  border-inline-start: 1.5px dashed var(--theme-foreground);
+}
+.ch-kt-device {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-foreground);
+}
+.ch-kt-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--theme-tertiary-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.ch-kt[data-unread] .ch-kt-value {
+  color: var(--theme-muted-foreground);
+}
+.ch-kt[data-over] .ch-kt-value {
+  color: var(--theme-warning-label);
+  font-weight: var(--font-weight-semibold);
+}
+.ch-kt-value svg {
+  width: 12px;
+  height: 12px;
+}
+/* On the dashboard past eight disks: the rest in a sentence, and the disclosure that opens them. */
+.ch-rest {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.ch-rest-words {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.ch-rest [data-slot="disclosure"] {
+  align-self: stretch;
+}
+.ch-rest [data-slot="disclosure-panel"] .ch-groups {
+  padding-block-start: 12px;
+}
+
+/* ─── In place ────────────────────────────────────────────────────────────────────────────────── */
+.ch-inplace {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+.ch-inplace-meter {
+  padding-inline-start: 28px;
+}
+.dm-map[data-layout="narrow"] .ch-inplace-meter {
+  padding-inline-start: 0;
+}
+
+/* ─── Not chosen: one line each ───────────────────────────────────────────────────────────────── */
+.ch-not {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 18px 40px;
+  margin: 0;
+}
+.ch-not-item dt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+}
+.ch-not-subject {
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  color: var(--theme-tertiary-foreground);
+}
+.ch-not-item dd {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--theme-muted-foreground);
+}
+
+/* For screen readers only: words the pictures stand in for. */
+.ch-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

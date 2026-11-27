@@ -58,7 +58,7 @@ const TAB_ROUTE = {
 } as const;
 
 const routerLinkClass =
-  "rounded-sm text-action-label underline underline-offset-2 hover:no-underline";
+  "rounded-sm text-link underline underline-offset-2 hover:no-underline";
 
 export function ServiceDetailsPage({ tab }: { tab: ServiceTab }) {
   const { t } = useTranslation();

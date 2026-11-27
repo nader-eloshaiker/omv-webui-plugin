@@ -1,311 +1,267 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The dashboard and the set-up checklist through the whole app on MSW serving the contract's examples:
-// the System and Usage figures, the attention list, the freshness line and a failed background poll,
-// the normal user's view, each checklist item's states (and one item failing alone), hiding the
-// checklist, and nothing secret or state-changing on the way (UI-4, UI-6).
+// The dashboard through the whole app on MSW serving the contract's examples and the mock's
+// scenarios: the answer and what needs you (fail closed), This NAS, the first steps and hiding them,
+// the welcome and "Show me around", a failed background poll, the normal user's view, and nothing
+// secret or state-changing on the way (UI-4, UI-6).
 import { getSystemGetInformationQueryKey } from "@omv-webui/react-api-omv/generated";
 import type { FixedAnswer } from "@omv-webui/react-api-omv/mocks";
 import { act, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { liveDemand } from "../../live/liveDemand.ts";
+import { showAround } from "../../shell/showAround.ts";
+import { useSeenStore } from "../../stores/useSeenStore.ts";
+import { useTipsStore } from "../../stores/useTipsStore.ts";
+import { useWelcomeStore } from "../../stores/useWelcomeStore.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
-const NBSP = " ";
+const LONG = { timeout: 8000 };
+
+beforeEach(() => {
+  // A later visit by default: the welcome and the tracing tip were seen.
+  useWelcomeStore.setState({ seen: true });
+  useSeenStore.setState({ seen: ["tip.new-interface", "tip.trace"] });
+  useTipsStore.setState({ show: true });
+  showAround.reset();
+});
 
 async function dashboard(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({ signedIn: true, ...options });
-  await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+  await screen.findByRole("heading", { level: 2, name: "Your NAS" }, LONG);
   return app;
 }
 
-const card = (name: string) => screen.getByRole("region", { name });
-const checklist = () => screen.getByRole("region", { name: "Set up your NAS" });
-/** One checklist item, by its title; its text reads "{title}: {state}. {sentences}". */
-const item = (title: string) =>
-  within(checklist())
-    .getAllByRole("listitem")
-    .find((li) => li.textContent?.includes(title))!;
+const region = (name: string) => screen.getByRole("region", { name });
+/** The answer: the page's one h1. */
+const answer = () => screen.getByRole("heading", { level: 1 });
+const needs = () => screen.queryByRole("region", { name: "What needs you" });
+const steps = () => screen.queryByRole("region", { name: /^First steps/ });
 
 /** The value beside a fact's label. */
-function fact(region: HTMLElement, label: string) {
-  const term = within(region).getByText(label, { selector: "dt" });
-  return term.nextElementSibling;
+function fact(where: HTMLElement, label: string) {
+  return within(where).getByText(label, { selector: "dt" }).nextElementSibling;
 }
 
-describe("the administrator's dashboard", () => {
-  it("shows what the NAS is and how busy it is, in plain units", async () => {
-    await dashboard({ scenario: "checklistHidden" });
-    const system = card("System");
-    expect(fact(system, "Name")).toHaveTextContent("nas");
-    expect(fact(system, "openmediavault version")).toHaveTextContent(
-      "8.6.1-1 (Synchrony)",
-    );
-    // The ARM board reports neither model nor cores.
-    expect(fact(system, "Processor")).toHaveTextContent("Not reported");
-    expect(fact(system, "Running for")).toHaveTextContent("1 day, 3 hours");
-    expect(fact(system, "Time on the NAS")).toHaveTextContent(
-      "Fri Nov 20 09:48:04 2026",
-    );
-    expect(fact(system, "Kernel")).toHaveTextContent(
-      "Linux 6.12.117+deb13-arm64",
-    );
-    expect(fact(system, "Updates")).toHaveTextContent("34 available");
-    expect(
-      within(system).getByRole("link", {
-        name: "Review updates in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/system/updatemgmt/updates");
-    expect(
-      within(system).getByRole("link", {
-        name: "More system details in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/diagnostics/system-information");
-
-    const usage = card("Usage");
-    const meters = within(usage).getAllByRole("meter");
-    expect(meters[0]).toHaveAccessibleName("Processor");
-    expect(meters[0]).toHaveAttribute("aria-valuetext", "<1% in use");
-    expect(meters[1]).toHaveAccessibleName("Memory");
-    expect(meters[1]).toHaveAttribute(
-      "aria-valuetext",
-      `347.8${NBSP}MiB of 3.8${NBSP}GiB in use (9%)`,
+describe("the answer", () => {
+  it("never says everything is working before disk health was checked, and says so once it was", async () => {
+    const { user } = await dashboard({ scenario: "dashboardAllOk" });
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("No problems found so far."),
     );
     expect(
-      within(usage).getByText("1 min 0.23 · 5 min 0.09 · 15 min 0.02"),
+      screen.getByText(/Disks report their health only when asked/),
     ).toBeInTheDocument();
+    expect(needs()).not.toBeInTheDocument();
+    // Disk health is read only when the person asks.
+    expect(callNames()).not.toContain("Smart.getListBg");
+    // The check sits in the answer, after the sentence that says why it waits.
+    await user.click(screen.getByRole("button", { name: "Check disk health" }));
+    await waitFor(
+      () => expect(answer()).toHaveAccessibleName("Everything is working."),
+      LONG,
+    );
     expect(
-      within(usage).getByText("Lower means less busy."),
+      screen.getByText(
+        /The disks reported no problem at .*All 4 drives have space\./,
+      ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/^Updated every 20 seconds\. Last update/),
-    ).toBeInTheDocument();
-    // Nothing needs attention, and the clocks agree.
-    expect(
-      screen.queryByRole("region", { name: "Needs attention" }),
-    ).not.toBeInTheDocument();
-    // Pending changes are the band's business, not repeated here.
-    expect(screen.queryByText(/waiting to be applied/)).not.toBeInTheDocument();
   });
 
-  it("lists a needed restart as a Warning, and a clock difference as advice", async () => {
-    await dashboard({ scenario: "attention" });
-    const list = await screen.findByRole("region", { name: "Needs attention" });
-    const rows = within(list).getAllByRole("listitem");
-    expect(rows[0]).toHaveTextContent("Warning");
-    expect(rows[0]).toHaveTextContent(
-      "A restart is needed to finish installing updates.",
+  it("counts what needs you, worst first, and leaves the reason to the first row", async () => {
+    const { user } = await dashboard({ scenario: "dashboardNeedsYou" });
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("Three things need you."),
     );
+    const list = needs();
+    expect(list).not.toBeNull();
+    const rows = within(list!).getAllByRole("listitem");
+    expect(rows.map((r) => r.textContent)).toEqual([
+      expect.stringMatching(/^Warning:“Data drive” is almost full/),
+      expect.stringMatching(/^Warning:The NAS needs a restart/),
+      expect.stringMatching(/^Unknown:The clocks differ by/),
+    ]);
+    // The worst row's next step is the screen's one filled accent; it goes to the file system.
     expect(
       within(rows[0]!).getByRole("link", {
-        name: "Open the classic interface (opens in a new tab)",
+        name: "Open file system Data drive",
       }),
-    ).toHaveAttribute("href", "/");
-    expect(rows[1]).toHaveTextContent(
-      /The NAS clock and this computer's clock differ by \d+ (day|hour)/,
+    ).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/ui\/storage\/filesystems\//),
     );
-    expect(rows[1]).not.toHaveTextContent("Warning");
-    expect(
-      within(rows[1]!).getByRole("link", {
-        name: "Check Date and time in the classic interface (opens in a new tab)",
-      }),
-    ).toHaveAttribute("href", "/#/system/date-time");
+    const restart = within(rows[1]!).getByRole("link", {
+      name: /Restart from the classic interface/,
+    });
+    expect(restart).toHaveAttribute("target", "_blank");
+    expect(restart).toHaveAttribute("rel", "noopener noreferrer");
+    // A disk reporting a problem arrives with the check the person asks for, in the answer.
+    await user.click(screen.getByRole("button", { name: "Check disk health" }));
+    await waitFor(
+      () => expect(answer()).toHaveAccessibleName("Four things need you."),
+      LONG,
+    );
+    expect(needs()).toHaveTextContent(/Disk \/dev\/sdb reported a problem/);
   });
 
-  it("keeps the figures when a background poll fails, says so, and reads again in the foreground", async () => {
+  it("counts the disks over their temperature alert limit, in the temperatures' own sentence", async () => {
+    await dashboard({ scenario: "dashboard24Disks" });
+    await within(region("Disk temperatures")).findByText(/^Read at /, {}, LONG);
+    const sentence =
+      "sdk is at 46 °C, sdt is at 46 °C, and nvme1n1 is at 47 °C, at or over the alert limit of 45 °C.";
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("One thing needs you."),
+    );
+    const rows = within(needs()!).getAllByRole("listitem");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toHaveTextContent(/^Warning:3 disks are running hot/);
+    expect(rows[0]).toHaveTextContent(sentence);
+    expect(
+      within(rows[0]!).getByRole("link", { name: "Open Disks" }),
+    ).toHaveAttribute("href", "/ui/storage/disks");
+    // The temperatures say the same.
+    expect(
+      within(region("Disk temperatures")).getByText(sentence),
+    ).toBeInTheDocument();
+  });
+
+  it("fails closed: a read that failed says which part could not be read, with a foreground retry in place", async () => {
+    let fail = true;
+    const { user } = await dashboard({
+      scenario: "dashboardAllOk",
+      answers: {
+        servicesGetStatus: () =>
+          fail
+            ? { status: 500, message: "<b>systemctl</b> failed." }
+            : {
+                status: 200,
+                value: {
+                  total: 1,
+                  data: [
+                    { name: "ssh", title: "SSH", enabled: true, running: true },
+                  ],
+                },
+              },
+      },
+    });
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName(
+        "Part of the NAS could not be read.",
+      ),
+    );
+    expect(
+      screen.getByText(
+        /The ways in could not be read, so this page cannot say everything is working\./,
+      ),
+    ).toBeInTheDocument();
+    const map = region("Your NAS");
+    expect(map).toHaveTextContent("Could not read the ways in");
+    // The server's message is text, never markup (UI-2).
+    expect(
+      within(map)
+        .getByText(/systemctl/)
+        .querySelector("b"),
+    ).toBeNull();
+    fail = false;
+    const before = seenCalls.length;
+    await user.click(within(map).getByRole("button", { name: "Try again" }));
+    await waitFor(() =>
+      expect(answer()).not.toHaveAccessibleName(/could not be read/),
+    );
+    const retry = seenCalls
+      .slice(before)
+      .find((c) => c.call === "Services.getStatus");
+    expect(retry?.background).toBe(false);
+  });
+
+  it("keeps what it read when a background poll fails, and says the charts may be behind", async () => {
     let fail = false;
-    const { app, user } = await dashboard({
-      scenario: "checklistHidden",
+    const { app } = await dashboard({
+      scenario: "dashboardAllOk",
       answers: {
         systemGetInformation: () =>
           fail ? { status: 500, message: "Busy." } : "adminWelcomeDismissed",
       },
     });
+    await waitFor(() =>
+      expect(fact(region("This NAS"), "Name")).toHaveTextContent("nas"),
+    );
     fail = true;
     await act(() =>
-      app.queryClient.refetchQueries({
+      app.queryClient.invalidateQueries({
         queryKey: getSystemGetInformationQueryKey(),
       }),
     );
-    const stale = await screen.findByText(
-      /^Could not update since .*The figures may be out of date\.$/,
-    );
-    expect(stale).toHaveAttribute("role", "status");
-    expect(fact(card("System"), "Name")).toHaveTextContent("nas");
-    fail = false;
-    const before = seenCalls.length;
-    await user.click(screen.getByRole("button", { name: "Try again" }));
-    await screen.findByText(/^Updated every 20 seconds/);
-    const retry = seenCalls
-      .slice(before)
-      .find((c) => c.call === "System.getInformation");
-    expect(retry?.background).toBe(false);
-  });
-
-  it("says plainly when the information has never been read, with a retry", async () => {
-    let fail = false;
-    const { app, user } = await dashboard({
-      scenario: "checklistHidden",
-      answers: {
-        systemGetInformation: () =>
-          fail
-            ? { status: 500, message: "<b>No</b> data." }
-            : "adminWelcomeDismissed",
-      },
-    });
-    fail = true;
-    await act(() =>
-      app.queryClient.resetQueries({
-        queryKey: getSystemGetInformationQueryKey(),
-      }),
-    );
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("Could not read the system information.");
-    expect(alert).toHaveTextContent("<b>No</b> data.");
-    expect(alert.querySelector("b")).toBeNull();
-    fail = false;
-    await user.click(within(alert).getByRole("button", { name: "Try again" }));
     expect(
-      await screen.findByRole("region", { name: "System" }),
-    ).toBeInTheDocument();
+      await within(region("Right now")).findByText(/^Could not read since /),
+    ).toHaveAttribute("role", "status");
+    expect(fact(region("This NAS"), "Name")).toHaveTextContent("nas");
+    expect(answer()).not.toHaveAccessibleName(/could not be read/);
   });
 
-  it("sends no state-changing call on load (UI-4)", async () => {
-    await dashboard();
-    await within(checklist()).findByText("Etc/UTC");
+  it("sends no state-changing call on load, and never reads the RAID arrays (UI-4; journal 2026-11-27)", async () => {
+    await dashboard({ scenario: "dashboard24Disks" });
+    await within(region("Disk temperatures")).findByText(/^Read at /, {}, LONG);
     expect(
       callNames().filter((c) => !/\.(get|is|enumerate|list)/.test(c)),
     ).toEqual([]);
-    // Disk health is read only when the reader asks (owner).
     expect(callNames()).not.toContain("Smart.getListBg");
-  });
-});
-
-describe("a normal user's dashboard", () => {
-  it("shows the name and time of the NAS and the way to their account, and nothing else", async () => {
-    await dashboard({ scenario: "user" });
-    const nas = card("This NAS");
-    expect(fact(nas, "Name")).toHaveTextContent("nas");
-    expect(fact(nas, "Time on the NAS")).toHaveTextContent(
-      "Thu Nov 19 11:50:30 2026",
-    );
-    expect(
-      screen.getByText("You are signed in as example-user, with user rights."),
-    ).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("main")).getByRole("link", {
-        name: "Your account",
-      }),
-    ).toHaveAttribute("href", "/ui/account/settings");
-    for (const name of [
-      "Usage",
-      "System",
-      "Set up your NAS",
-      "Needs attention",
+    for (const call of [
+      "MdMgmt.enumerateDevices",
+      "MdMgmt.getDetail",
+      "MdMgmt.getSlaves",
     ]) {
-      expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
+      expect(callNames()).not.toContain(call);
     }
-    expect(screen.queryByText(/^Updated every/)).not.toBeInTheDocument();
   });
 });
 
-describe("the set-up checklist", () => {
-  it("lists the six items in their fixed order, each with its state in words", async () => {
-    await dashboard();
-    await within(checklist()).findByText("Etc/UTC");
-    const titles = within(checklist())
+describe("This NAS", () => {
+  it("says what the NAS is, from System.getInformation", async () => {
+    await dashboard({ scenario: "dashboardAllOk" });
+    const nas = region("This NAS");
+    await waitFor(() => expect(fact(nas, "Name")).toHaveTextContent("nas"));
+    expect(fact(nas, "Version")).toHaveTextContent("8.6.1-1 (Synchrony)");
+    expect(fact(nas, "Running for")).toHaveTextContent("1 day, 3 hours");
+    expect(fact(nas, "Time on the NAS")).toHaveTextContent(
+      "Fri Nov 20 09:48:04 2026",
+    );
+    expect(
+      within(nas).getByRole("link", { name: /34 to install/ }),
+    ).toHaveAttribute("href", "/#/system/updatemgmt/updates");
+  });
+});
+
+describe("the first steps", () => {
+  it("lead a new NAS with storage, offer each action once, and stand above the map", async () => {
+    await dashboard({ scenario: "dashboardNewNas" });
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("Welcome to your NAS."),
+    );
+    const list = steps();
+    expect(list).not.toBeNull();
+    expect(list).toHaveTextContent("0 of 4 done");
+    const titles = within(list!)
       .getAllByRole("listitem")
-      .map((li) => li.querySelector("p")?.textContent);
-    expect(titles).toEqual([
-      "Change the factory password: Not checked.",
-      "Use a secure connection (HTTPS): Not done.",
-      "Get email alerts: Not done.",
-      "Install updates: Not done.",
-      "Name of your NAS",
-      "Time zone",
-    ]);
-    // Signed in as another administrator: no link that would change the wrong password.
-    expect(item("Change the factory password")).toHaveTextContent(
-      /sign in as admin/,
-    );
+      .map((li) => li.textContent);
+    expect(titles[0]).toMatch(/^Add storage/);
+    expect(titles[1]).toMatch(/^Add a shared folder/);
     expect(
-      within(item("Change the factory password")).queryByRole("link"),
-    ).toBeNull();
-    expect(item("Use a secure connection (HTTPS)")).toHaveTextContent(
-      "HTTPS is off.",
-    );
+      within(list!).getByRole("link", { name: "Add storage" }),
+    ).toHaveAttribute("href", "/ui/storage/filesystems/add");
+    // The steps come before the map; the map does not offer Add storage again.
     expect(
-      within(item("Use a secure connection (HTTPS)")).getByRole("link"),
-    ).toHaveAttribute("href", "/#/system/workbench/settings");
-    expect(item("Get email alerts")).toHaveTextContent("Alerts are off.");
-    expect(item("Get email alerts")).toHaveTextContent(
-      "After saving there, apply the changes",
-    );
-    expect(within(item("Get email alerts")).getByRole("link")).toHaveAttribute(
-      "href",
-      "/#/system/notification/settings",
-    );
-    expect(item("Install updates")).toHaveTextContent(
-      "33 updates are available.",
-    );
-    expect(item("Name of your NAS")).toHaveTextContent(
-      "Your NAS is called nas.",
-    );
-    expect(within(item("Name of your NAS")).getByText("nas").tagName).toBe(
-      "CODE",
-    );
-    // The name page is built here now (phase 5 network design 13.3): a router link.
+      list!.compareDocumentPosition(region("Your NAS")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(
-      within(item("Name of your NAS")).getByRole("link", {
-        name: "Change the name",
-      }),
-    ).toHaveAttribute("href", "/ui/network/general");
-    expect(item("Time zone")).toHaveTextContent(
-      "Time zone: Etc/UTC. Schedules, logs and the clock use it.",
-    );
-    expect(item("Time zone")).toHaveTextContent(
-      "The clock is set automatically",
-    );
-    expect(within(item("Time zone")).getByRole("link")).toHaveAttribute(
-      "href",
-      "/#/system/date-time",
-    );
+      within(region("Your NAS")).queryByRole("link", { name: "Add storage" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("links the built-in admin to the password form", async () => {
-    const { user } = await dashboard({ scenario: "builtInAdmin" });
-    const link = within(item("Change the factory password")).getByRole("link", {
-      name: "Change your password",
-    });
-    expect(link).toHaveAttribute("href", "/ui/account/password");
-    await user.click(link);
-    const heading = await screen.findByRole("heading", {
-      level: 2,
-      name: "Change password",
-    });
-    await waitFor(() => expect(heading).toHaveFocus());
-  });
-
-  it("says HTTPS is on but unused, and gives the port as text, not as a link (UI-3)", async () => {
-    await dashboard({ scenario: "httpsOn" });
-    const https = await waitFor(() => {
-      const found = item("Use a secure connection (HTTPS)");
-      expect(found).toHaveTextContent("Done");
-      return found;
-    });
-    expect(https).toHaveTextContent(
-      "HTTPS is on, but this page was opened without it.",
-    );
-    expect(https).toHaveTextContent(
-      "Open this page with an address that starts with https://. The secure connection uses port 443.",
-    );
-    expect(within(https).queryByRole("link")).toBeNull();
-  });
-
-  it("is done for email alerts once they are set up, and never holds the mail password (UI-6)", async () => {
+  it("are done for email alerts once they are set up, and never hold the mail password (UI-6)", async () => {
     const { app } = await dashboard({ scenario: "alertsConfigured" });
-    await within(checklist()).findByText("Alerts go to admin@example.com.");
-    expect(item("Get email alerts")).toHaveTextContent(
-      "Get email alerts: Done.",
+    await waitFor(() =>
+      expect(steps()).toHaveTextContent("Alerts go to admin@example.com."),
     );
     const cached = JSON.stringify(
       app.queryClient
@@ -317,77 +273,77 @@ describe("the set-up checklist", () => {
     expect(document.body.textContent).not.toContain("EXAMPLE-PASSWORD");
   });
 
-  it("marks one item Not checked when its read fails, with a retry for that item only", async () => {
+  it("link the built-in admin to the password form", async () => {
+    await dashboard({ scenario: "builtInAdmin" });
+    await waitFor(() => expect(steps()).not.toBeNull());
+    expect(
+      within(steps()!).getByRole("link", { name: "Change" }),
+    ).toHaveAttribute("href", "/ui/account/password");
+  });
+
+  it("say on its step when a read failed, with a retry for that step only", async () => {
     let fail = true;
     const failure: FixedAnswer = { status: 500, message: "Cannot read." };
     const { user } = await dashboard({
       answers: { webGuiGetSettings: () => (fail ? failure : "http") },
     });
-    const https = await waitFor(() => {
-      const found = item("Use a secure connection (HTTPS)");
-      expect(found).toHaveTextContent(
+    await waitFor(() =>
+      expect(steps()).toHaveTextContent(
         "Could not read the web interface settings.",
-      );
-      return found;
-    });
-    expect(https).toHaveTextContent("Not checked");
-    // The others are unaffected.
-    await within(checklist()).findByText("Etc/UTC");
-    expect(item("Get email alerts")).toHaveTextContent("Not done");
+      ),
+    );
     expect(
-      within(checklist()).getAllByRole("button", { name: "Try again" }),
+      within(steps()!).getAllByRole("button", { name: "Try again" }),
     ).toHaveLength(1);
     fail = false;
-    await user.click(within(https).getByRole("button", { name: "Try again" }));
+    await user.click(
+      within(steps()!).getByRole("button", { name: "Try again" }),
+    );
     await waitFor(() =>
-      expect(item("Use a secure connection (HTTPS)")).toHaveTextContent(
-        "HTTPS is off.",
-      ),
+      expect(steps()).not.toHaveTextContent("Could not read"),
     );
   });
 
-  it("is not shown once hidden", async () => {
-    await dashboard({ scenario: "checklistHidden" });
-    await screen.findByRole("region", { name: "System" });
+  it("become Shortcuts with tips off, and none of the first steps' reads is made once hidden", async () => {
+    useTipsStore.setState({ show: false });
+    await dashboard();
+    const shortcuts = await screen.findByRole("region", { name: "Shortcuts" });
+    expect(steps()).not.toBeInTheDocument();
+    await within(shortcuts).findByRole("link", {
+      name: /Turn on secure sign-in/,
+    });
     expect(
-      screen.queryByRole("region", { name: "Set up your NAS" }),
-    ).not.toBeInTheDocument();
+      within(shortcuts).getByRole("link", { name: "Add a person" }),
+    ).toHaveAttribute("href", "/ui/usermgmt/users/add");
+  });
+
+  it("are not read once hidden", async () => {
+    await dashboard({ scenario: "checklistHidden" });
+    await screen.findByRole("region", { name: "Shortcuts" });
     expect(callNames()).not.toContain("WebGui.getSettings");
   });
 
-  it("asks before hiding for everyone, hides it, and moves focus to the page title", async () => {
+  it("ask before hiding for everyone, hide, and move focus to the answer", async () => {
     const { user } = await dashboard();
-    await user.click(
-      within(checklist()).getByRole("button", { name: "Hide the checklist" }),
-    );
+    await waitFor(() => expect(steps()).not.toBeNull());
+    await user.click(screen.getByRole("button", { name: "Hide first steps" }));
     const dialog = await screen.findByRole("alertdialog", {
-      name: "Hide the set-up checklist?",
+      name: "Hide first steps?",
     });
-    expect(dialog).toHaveTextContent("It is hidden for every administrator");
     expect(
       within(dialog).getByRole("button", { name: "Cancel" }),
     ).toHaveFocus();
     expect(callNames()).not.toContain("WebGui.dismissWelcomeMessage");
     await user.click(
-      within(dialog).getByRole("button", { name: "Hide the checklist" }),
+      within(dialog).getByRole("button", { name: "Hide first steps" }),
     );
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("region", { name: "Set up your NAS" }),
-      ).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(steps()).not.toBeInTheDocument());
     expect(callNames()).toContain("WebGui.dismissWelcomeMessage");
-    expect(
-      await screen.findByText("Set-up checklist hidden."),
-    ).toBeInTheDocument();
-    await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { level: 1, name: "Dashboard" }),
-      ).toHaveFocus(),
-    );
+    expect(await screen.findByText("First steps hidden.")).toBeInTheDocument();
+    await waitFor(() => expect(answer()).toHaveFocus());
   });
 
-  it("keeps the dialog open with the reason when hiding fails", async () => {
+  it("keep the dialog open with the reason when hiding fails", async () => {
     const { user } = await dashboard({
       answers: {
         webGuiDismissWelcomeMessage: {
@@ -396,19 +352,125 @@ describe("the set-up checklist", () => {
         },
       },
     });
-    await user.click(
-      within(checklist()).getByRole("button", { name: "Hide the checklist" }),
-    );
+    await waitFor(() => expect(steps()).not.toBeNull());
+    await user.click(screen.getByRole("button", { name: "Hide first steps" }));
     const dialog = await screen.findByRole("alertdialog");
     await user.click(
-      within(dialog).getByRole("button", { name: "Hide the checklist" }),
+      within(dialog).getByRole("button", { name: "Hide first steps" }),
     );
     const error = await within(dialog).findByRole("alert");
-    expect(error).toHaveTextContent("The checklist was not hidden.");
+    expect(error).toHaveTextContent("First steps were not hidden.");
     expect(error).toHaveTextContent("Read-only file system.");
-    // Behind the open dialog, the checklist is still there.
+  });
+});
+
+describe("the welcome", () => {
+  it("greets a first visit by the NAS's name, drawn, until hidden, and comes back with Show me around", async () => {
+    useWelcomeStore.setState({ seen: false });
+    useSeenStore.setState({ seen: [] });
+    const { user } = await dashboard({ scenario: "dashboardAllOk" });
+    const welcome = await screen.findByRole("heading", {
+      level: 1,
+      name: "Welcome to nas.",
+    });
+    expect(welcome).toBeInTheDocument();
+    // The NAS drawn beside the greeting, and the answer under it a level down.
     expect(
-      screen.getByRole("region", { name: "Set up your NAS", hidden: true }),
+      screen.getByRole("figure", {
+        name: "The disks in nas and the drives they make",
+      }),
     ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "No problems found so far.",
+      }),
+    ).toBeInTheDocument();
+    // The newcomer's captions under the map's columns.
+    expect(region("Your NAS")).toHaveTextContent(
+      "A disk made ready to keep files.",
+    );
+    // Using the page leaves it where it is; only Hide the welcome ends it.
+    await user.click(region("Your NAS"));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Welcome to nas." }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Hide the welcome to the new interface",
+      }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Welcome to nas." }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(useSeenStore.getState().seen).toContain("tip.new-interface");
+    await waitFor(() => expect(useWelcomeStore.getState().seen).toBe(true));
+    await user.click(screen.getByRole("button", { name: "Show me around" }));
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Welcome to nas." }),
+    ).toBeInTheDocument();
+  });
+
+  it("is not shown on a later visit, and the captions are not either", async () => {
+    await dashboard({ scenario: "dashboardAllOk" });
+    await waitFor(() =>
+      expect(answer()).toHaveAccessibleName("No problems found so far."),
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Welcome to nas." }),
+    ).not.toBeInTheDocument();
+    expect(region("Your NAS")).not.toHaveTextContent(
+      "A disk made ready to keep files.",
+    );
+  });
+});
+
+describe("a normal user's dashboard", () => {
+  it("shows the name and time of the NAS and the way to their account, and nothing else", async () => {
+    await renderApp({ signedIn: true, scenario: "user" });
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Hello, example-user",
+      }),
+    ).toBeInTheDocument();
+    const nas = region("This NAS");
+    await waitFor(() => expect(fact(nas, "Name")).toHaveTextContent("nas"));
+    expect(fact(nas, "Time on the NAS")).toHaveTextContent(
+      "Thu Nov 19 11:50:30 2026",
+    );
+    expect(
+      screen.getByText("You are signed in as example-user, with user rights."),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("main")).getByRole("link", {
+        name: /Your account/,
+      }),
+    ).toHaveAttribute("href", "/ui/account/settings");
+    for (const name of [
+      "Your NAS",
+      "Right now",
+      "Disk temperatures",
+      "What needs you",
+    ]) {
+      expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
+    }
+    for (const call of [
+      "FileSystemMgmt.enumerateMountedFilesystems",
+      "FileSystemMgmt.getList",
+      "Services.getStatus",
+      "Network.enumerateDevicesList",
+      "DiskMgmt.getList",
+      "Smart.getInformation",
+      "Smart.getListBg",
+      "ShareMgmt.getList",
+      "Zfs.getPoolStatus",
+    ]) {
+      expect(callNames()).not.toContain(call);
+    }
+    // No live chart is mounted, so nothing asks the shell to read faster.
+    expect(liveDemand.getState().charts).toBe(0);
   });
 });

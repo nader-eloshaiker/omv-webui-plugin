@@ -15,6 +15,34 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = { args: { variant: "primary" } };
+// The accent outlined (rethink A2): a next step that is not the region's one filled primary, as the
+// other rows that need the person on the dashboard. Shown beside the filled primary it defers to.
+export const PrimaryOutline: Story = {
+  render: () => (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button>See what to do</Button>
+        <span className="text-sm text-muted-foreground">
+          Disk in bay 2 reports a problem
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="primaryOutline">Free up space</Button>
+        <span className="text-sm text-muted-foreground">
+          Data drive is 91% full
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="primaryOutline" disabled>
+          Check again
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Unavailable while a check runs
+        </span>
+      </div>
+    </div>
+  ),
+};
 export const Neutral: Story = {
   args: { variant: "neutral", children: "Cancel" },
 };
@@ -24,10 +52,10 @@ export const Destructive: Story = {
 };
 
 // Ink with no fill, as on the top bar: the pending count, the tasks and account menus.
-export const Quiet: Story = {
+export const Plain: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-1 border-b border-border bg-page p-2">
-      <Button variant="quiet" size="sm" aria-label="3 pending changes">
+      <Button variant="plain" size="sm" aria-label="3 pending changes">
         <span aria-hidden="true" className="tabular-nums">
           3
         </span>
@@ -36,9 +64,9 @@ export const Quiet: Story = {
       <IconButton
         label="Tasks: 1 running"
         icon={<RefreshCw />}
-        variant="quiet"
+        variant="plain"
       />
-      <IconButton label="Account: admin" icon={<Settings />} variant="quiet" />
+      <IconButton label="Account: admin" icon={<Settings />} variant="plain" />
     </div>
   ),
 };

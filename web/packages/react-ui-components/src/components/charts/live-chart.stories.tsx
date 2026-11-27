@@ -28,8 +28,8 @@ const words = {
     "Waiting for the first reading. Charts start when you open the page.",
   caption: ({ sampledMs, samples }: { sampledMs: number; samples: number }) =>
     samples === 0
-      ? "Live · every 2 s · nothing sampled yet"
-      : `Live · every 2 s · last ${spanWords(sampledMs)} on this page`,
+      ? "Updated every 2 s. Nothing has been read yet."
+      : `Updated every 2 s, showing the last ${spanWords(sampledMs)} read on this page.`,
 };
 
 const tableWords = (what: string) => ({

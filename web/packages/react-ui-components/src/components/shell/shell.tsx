@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 interface ShellProps extends Omit<React.ComponentProps<"div">, "children"> {
   /** The skip link: the first thing Tab reaches. */
   skipLink?: React.ReactNode;
-  /** The `TopBar`: sticky, blurring the page under it. */
+  /** The `TopBar`: sticky, on the solid page ground with a hairline under it. */
   topBar: React.ReactNode;
   /** Notices for the whole visit, directly under the top bar: the unencrypted-connection notice (UI-12). */
   notices?: React.ReactNode;
@@ -22,7 +22,7 @@ interface ShellProps extends Omit<React.ComponentProps<"div">, "children"> {
 }
 
 /**
- * The application shell (foundation 10): the page ground with the ambient light from above, then in
+ * The application shell (foundation 10): the flat page ground (no glow, style guide 10), then in
  * order and never side by side the skip link, the top bar, the notices (UI-12) and the pending band,
  * then the sidebar beside the page. The top bar, sidebar and band are named for the page-change view
  * transition and stay still while the page in `main` fades and scales up from 0.985 (foundation 7.2;
@@ -49,10 +49,6 @@ function Shell({
       )}
       {...props}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem] ambient-light"
-      />
       {skipLink}
       {topBar}
       {notices}

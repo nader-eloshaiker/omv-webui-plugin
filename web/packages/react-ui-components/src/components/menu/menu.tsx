@@ -87,7 +87,7 @@ function MenuGroupLabel({
   return (
     <BaseMenu.GroupLabel
       className={cn(
-        "px-2.5 pt-1.5 pb-1 text-xs font-semibold text-tertiary-foreground",
+        "px-2.5 pt-1.5 pb-1 text-sm font-normal text-muted-foreground",
         className,
       )}
       {...props}
@@ -134,7 +134,7 @@ function MenuRadioItem({
       {...props}
     >
       <BaseMenu.RadioItemIndicator className="col-start-1 flex">
-        <Check aria-hidden="true" className="text-action-label!" />
+        <Check aria-hidden="true" className="text-selected-label!" />
       </BaseMenu.RadioItemIndicator>
       <span className="col-start-2">{children}</span>
     </BaseMenu.RadioItem>

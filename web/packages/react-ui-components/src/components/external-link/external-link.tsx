@@ -31,7 +31,7 @@ function ExternalLink({
       rel="noopener noreferrer"
       className={cn(
         // Inline, not inline-flex, so a link that wraps keeps the mark after its last word.
-        "rounded-sm text-action-label underline underline-offset-2 hover:no-underline",
+        "rounded-sm text-link underline underline-offset-2 hover:no-underline",
         className,
       )}
       {...props}

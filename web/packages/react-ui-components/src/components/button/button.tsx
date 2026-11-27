@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import { Button as BaseButton } from "@base-ui/react/button";
+import { useRender } from "@base-ui/react/use-render";
 import type { VariantProps } from "class-variance-authority";
 import { LoaderCircle } from "lucide-react";
 import type * as React from "react";
@@ -27,24 +28,64 @@ function Button({
   loading = false,
   disabled,
   focusableWhenDisabled,
+  render,
   children,
   ...props
 }: ButtonProps) {
-  return (
-    <BaseButton
-      data-slot="button"
-      disabled={disabled || loading}
-      focusableWhenDisabled={focusableWhenDisabled || loading}
-      aria-busy={loading || undefined}
-      className={cn(buttonClass({ variant, size }), className)}
-      {...props}
-    >
+  const content = (
+    <>
       {loading ? (
         <LoaderCircle aria-hidden="true" className="motion-safe:animate-spin" />
       ) : null}
       {children}
+    </>
+  );
+  const classes = cn(buttonClass({ variant, size }), className);
+  if (
+    render !== undefined &&
+    typeof render !== "function" &&
+    render.type !== "button"
+  ) {
+    // Drawn as a link (`render={<Link />}`, an `<a>`): it stays a link with the button's look, so it
+    // keeps the link's role and behaviour. Base UI's Button would either warn that it is not a
+    // native button or give it the button role.
+    const { nativeButton: _native, ...attributes } = props;
+    return (
+      <RenderedButton
+        {...(attributes as React.HTMLAttributes<HTMLElement>)}
+        render={render}
+        className={classes}
+        aria-busy={loading || undefined}
+      >
+        {content}
+      </RenderedButton>
+    );
+  }
+  return (
+    <BaseButton
+      data-slot="button"
+      render={render}
+      disabled={disabled || loading}
+      focusableWhenDisabled={focusableWhenDisabled || loading}
+      aria-busy={loading || undefined}
+      className={classes}
+      {...props}
+    >
+      {content}
     </BaseButton>
   );
+}
+
+/** A button drawn as another element: that element, with the button's classes and content. */
+function RenderedButton({
+  render,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & { render: React.ReactElement }) {
+  return useRender({
+    render,
+    defaultTagName: "a",
+    props: { ...props, "data-slot": "button" },
+  });
 }
 
 type IconButtonProps = Omit<ButtonProps, "children" | "aria-label"> & {

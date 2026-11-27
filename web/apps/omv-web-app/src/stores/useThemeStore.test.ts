@@ -14,6 +14,10 @@ afterEach(() => {
 });
 
 describe("useThemeStore", () => {
+  it("is dark until the person chooses (owner, 2026-11-27)", () => {
+    expect(useThemeStore.getInitialState().preference).toBe("dark");
+  });
+
   it("stores the preference and nothing else", () => {
     useThemeStore.getState().setPreference("dark");
     const { local, session } = storageSnapshot();

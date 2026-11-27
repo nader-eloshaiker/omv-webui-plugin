@@ -52,7 +52,7 @@ export const SetUpYourNas: Story = {
               action={
                 <a
                   href="#password"
-                  className="text-action-label underline underline-offset-2 hover:no-underline"
+                  className="text-link underline underline-offset-2 hover:no-underline"
                 >
                   Change your password
                 </a>
@@ -250,4 +250,44 @@ export const LongValue: Story = {
     ),
   },
   render: Done.render,
+};
+
+/**
+ * `variant="steps"`: first steps (style guide 10, rule 9). A tick in its circle when done, an empty
+ * circle when not, the step's button at the end of its row; the state word is read, not shown. Under
+ * 600px of the list's width the button moves under its words. `FirstSteps` builds on it.
+ */
+export const Steps: Story = {
+  args,
+  render: () => (
+    <Checklist variant="steps">
+      <ChecklistItem state="done" stateLabel="done" title="Name the NAS">
+        Your computers see it as nas on your network.
+      </ChecklistItem>
+      <ChecklistItem
+        state="notDone"
+        stateLabel="not done"
+        title="Change the factory password"
+        action={
+          <Button variant="primary" size="sm">
+            Change
+          </Button>
+        }
+      >
+        The factory password may still work.
+      </ChecklistItem>
+      <ChecklistItem
+        state="notDone"
+        stateLabel="not done"
+        title="Turn on secure sign-in"
+        action={
+          <Button variant="neutral" size="sm">
+            Turn on
+          </Button>
+        }
+      >
+        Then your password never crosses the network in the clear (HTTPS).
+      </ChecklistItem>
+    </Checklist>
+  ),
 };

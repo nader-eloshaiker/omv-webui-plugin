@@ -70,19 +70,19 @@ function NowAfterTable({
         <tr className="border-b border-border">
           <th
             scope="col"
-            className="pe-3 py-cell-y text-start text-xs font-semibold tracking-wide text-tertiary-foreground uppercase"
+            className="pe-3 py-cell-y text-start text-sm font-normal text-muted-foreground"
           >
             {labels.setting}
           </th>
           <th
             scope="col"
-            className="px-3 py-cell-y text-start text-xs font-semibold tracking-wide text-tertiary-foreground uppercase"
+            className="px-3 py-cell-y text-start text-sm font-normal text-muted-foreground"
           >
             {labels.now}
           </th>
           <th
             scope="col"
-            className="ps-3 py-cell-y text-start text-xs font-semibold tracking-wide text-tertiary-foreground uppercase"
+            className="ps-3 py-cell-y text-start text-sm font-normal text-muted-foreground"
           >
             {labels.after}
           </th>

@@ -16,6 +16,7 @@ import { installDensity } from "../../services/density/index.ts";
 import { installTheme } from "../../services/theme/index.ts";
 import { clearStorage, storageSnapshot } from "../../stores/storageSnapshot.ts";
 import { useThemeStore } from "../../stores/useThemeStore.ts";
+import { findDashboard } from "../../test/dashboard.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
@@ -45,7 +46,7 @@ const READS = new Set([
 
 async function shell(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({ signedIn: true, ...options });
-  await screen.findByRole("banner");
+  await screen.findAllByRole("banner");
   return app;
 }
 
@@ -129,7 +130,7 @@ describe("the side navigation", () => {
 describe("a page only the classic interface has", () => {
   it("links to the same page there at a fixed address, calls nothing, and takes focus to its title", async () => {
     const { user } = await shell();
-    await screen.findByRole("heading", { name: "Dashboard" });
+    await findDashboard();
     const before = seenCalls.length;
     openGroup("System");
     await user.click(
@@ -172,7 +173,7 @@ describe("not found", () => {
       expect(
         await screen.findByRole("heading", { name: "Page not found" }),
       ).toBeInTheDocument();
-      expect(screen.getByRole("banner")).toBeInTheDocument();
+      expect(screen.getAllByRole("banner")[0]).toBeInTheDocument();
     },
   );
 
@@ -349,7 +350,7 @@ describe("the pending-changes band", () => {
     );
     expect(callNames()).toContain("Config.applyChangesBg");
     // The control that had focus went with the band: focus is on the page title, not the page.
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveFocus();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
     expect(
       seenCalls
         .filter((c) => c.call === "Exec.getOutput")
@@ -403,7 +404,7 @@ describe("the pending-changes band", () => {
       { timeout: 4000 },
     );
     expect(callNames()).toContain("Config.revertChangesBg");
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toHaveFocus();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveFocus();
   });
 
   it("shows a failed apply, offers to try again, and keeps the server's account behind a control", async () => {
@@ -500,7 +501,7 @@ describe("the user menu", () => {
 describe("the command palette and the jump keys (foundation 13)", () => {
   it("opens with /, lists every page with classic pages marked, and goes with Enter", async () => {
     const { user, app } = await shell();
-    await screen.findByRole("heading", { name: "Dashboard" });
+    await findDashboard();
     await user.keyboard("/");
     const input = await screen.findByRole("combobox", {
       name: "Search pages and actions",
@@ -523,7 +524,7 @@ describe("the command palette and the jump keys (foundation 13)", () => {
 
   it("jumps with g then a letter, and not while typing", async () => {
     const { user, app } = await shell();
-    await screen.findByRole("heading", { name: "Dashboard" });
+    await findDashboard();
     await user.keyboard("gd");
     await waitFor(() =>
       expect(app.router.state.location.pathname).toBe("/storage/disks"),

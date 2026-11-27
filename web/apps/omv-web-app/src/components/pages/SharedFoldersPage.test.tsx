@@ -14,6 +14,7 @@ import {
   recordCreated,
   recordSaved,
 } from "../../sharedFolders/sharesSession.ts";
+import { findDashboard } from "../../test/dashboard.ts";
 import { openNavGroup } from "../../test/nav.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls, server } from "../../test/server.ts";
@@ -334,7 +335,7 @@ describe("the shared folders table", () => {
       release = resolve;
     });
     const { user } = await renderApp({ signedIn: true });
-    await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+    await findDashboard();
     // Added after the scenario's answers, so it runs first: it holds every ShareMgmt.getList until
     // released, and lets anything else go on to the scenario.
     server.use(
@@ -446,7 +447,7 @@ describe("the shared folders table", () => {
       name: "Main navigation",
     })[0]!;
     await user.click(within(nav).getByRole("link", { name: "Dashboard" }));
-    await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+    await findDashboard();
     openNavGroup("Storage", nav);
     await user.click(within(nav).getByRole("link", { name: "Shared folders" }));
     expect(await screen.findByRole("searchbox")).toHaveValue("a4");

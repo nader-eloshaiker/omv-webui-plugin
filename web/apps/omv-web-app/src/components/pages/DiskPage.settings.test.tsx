@@ -235,11 +235,26 @@ describe("a disk's monitoring", () => {
       scenario: "disksNas",
       path: "/",
     });
-    const card = await screen.findByRole("region", { name: "Disk health" });
-    await user.click(
-      within(card).getByRole("button", { name: "Check disk health" }),
+    const map = await screen.findByRole(
+      "region",
+      { name: "Your NAS" },
+      { timeout: 8000 },
     );
-    await within(card).findByText("Check again", {}, { timeout: 5000 });
+    // The check sits in the dashboard's answer, once the map has been read.
+    expect(map).toBeInTheDocument();
+    await user.click(
+      await screen.findByRole("button", { name: "Check disk health" }),
+    );
+    await waitFor(
+      () =>
+        expect(
+          within(map).queryByRole("button", { name: /Checking disk health/ }),
+        ).not.toBeInTheDocument(),
+      { timeout: 5000 },
+    );
+    await waitFor(() =>
+      expect(seenCalls.some((c) => c.call === "Exec.getOutput")).toBe(true),
+    );
     await act(() =>
       app.router.navigate({
         to: "/storage/disks/$disk",

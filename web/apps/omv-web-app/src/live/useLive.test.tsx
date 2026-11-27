@@ -57,9 +57,14 @@ afterEach(() => {
   setVisibility("visible");
 });
 
+/** An administrator on a page with no chart of its own (the dashboard has one: "Right now"). */
 async function admin(options: Parameters<typeof renderApp>[0] = {}) {
-  const app = await renderApp({ signedIn: true, ...options });
-  await screen.findByRole("banner");
+  const app = await renderApp({
+    signedIn: true,
+    path: "/account/settings",
+    ...options,
+  });
+  await screen.findAllByRole("banner");
   await settle();
   return app;
 }
@@ -152,7 +157,7 @@ describe("the combined read's cadence", () => {
 
   it("does not poll for a normal user, and never reads the counters (an administrator's method)", async () => {
     await renderApp({ signedIn: true, scenario: "user" });
-    await screen.findByRole("banner");
+    await screen.findAllByRole("banner");
     await settle();
     const info = count(INFO);
     showChart();

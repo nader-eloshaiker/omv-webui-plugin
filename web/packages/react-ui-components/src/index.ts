@@ -25,6 +25,7 @@ export * from "./components/connection-map/connection-map";
 export * from "./components/connection-map/connection-map-model";
 export * from "./components/copy-button/copy-button";
 export * from "./components/copy-direction/copy-direction";
+export * from "./components/crossfade/crossfade";
 export * from "./components/delete-picture/delete-picture";
 export * from "./components/density-toggle/density-toggle";
 export * from "./components/dialog/dialog";
@@ -44,17 +45,48 @@ export {
   whenLanded,
 } from "./components/flight/flight";
 export * from "./components/health-list/health-list";
+export * from "./components/help/help";
+export * from "./components/icon/icon";
 export * from "./components/impact-line/impact-line";
 export * from "./components/inline-alert/inline-alert";
 export * from "./components/job-runner/job-runner";
+export * from "./components/leaving-item/leaving-item";
+export * from "./components/leaving-item/use-leaving-items";
 export * from "./components/line-chart/line-chart";
 export * from "./components/live-figure/live-figure";
+export * from "./components/live-tile/live-tile";
 export * from "./components/member-picker/member-picker";
 export * from "./components/menu/menu";
+export * from "./components/motion/draw-path";
 export * from "./components/motion/motion";
+export * from "./components/motion/motion-scope";
+export {
+  animateElement,
+  animationSettled,
+  curveAt,
+  durationAt,
+  timeMs,
+} from "./components/motion/motion-tokens";
+export type {
+  CurveToken,
+  DurationToken,
+} from "./components/motion/motion-tokens";
+export {
+  REDUCED_MOTION_TOKENS,
+  ReducedMotionContext,
+  applyReducedMotion,
+  reducedMotionAt,
+  systemReducedMotion,
+  useReducedMotion,
+  useSystemReducedMotion,
+} from "./components/motion/reduced-motion";
+export * from "./components/motion/use-draw-path";
+export * from "./components/motion/use-first-time";
+export * from "./components/motion/use-flip";
 export * from "./components/new-password-fields/new-password-fields";
 export * from "./components/now-after-table/now-after-table";
 export * from "./components/number-field/number-field";
+export * from "./components/page-answer/page-answer";
 export * from "./components/page-tabs/page-tabs";
 export * from "./components/pending-band/pending-band";
 export * from "./components/pending-pill/pending-pill";
@@ -89,6 +121,18 @@ export * from "./components/text/identifier";
 export * from "./components/text/isolated-identifier";
 export * from "./components/text/server-message";
 export * from "./components/textarea-field/textarea-field";
+export * from "./components/tip/show-tips-switch";
+export * from "./components/tip/tip";
+export * from "./components/tip/tips-command";
+export {
+  useCurrentTip,
+  useShowTips,
+  useTipTurn,
+  useTips,
+} from "./components/tip/tips-context";
+export type { TipsContextValue } from "./components/tip/tips-context";
+export * from "./components/tip/tips-provider";
+export * from "./components/tip/use-hide-tips-offer";
 export * from "./components/toast/toast";
 export * from "./components/toast/use-toast";
 export * from "./components/tooltip/tooltip";
@@ -97,4 +141,47 @@ export * from "./components/type-to-confirm/type-to-confirm-field";
 export { typedMatches } from "./components/type-to-confirm/typed-matches";
 export * from "./components/ui-provider/ui-provider";
 export * from "./components/used-by/used-by-panel";
+// The hand-drawn charts the owner chose (journal 2026-11-26, "The charts are settled"): no Recharts.
+export * from "./components/disk-temperatures/disk-temperatures";
+export * from "./components/disk-temperatures/disk-temperatures-model";
+export * from "./components/drive-picture/drive-picture";
+export * from "./components/drive-picture/drive-picture-model";
+export * from "./components/live-pair/live-pair";
+export {
+  LIVE_INTERVAL_MS,
+  LIVE_WINDOW_MS,
+  MIN_RATE_SCALE,
+  figureParts,
+  liveRange,
+  liveSpan,
+  liveSummary,
+  newestOf,
+  rateScale,
+} from "./components/live-pair/live-pair-model";
+export type {
+  FigureParts,
+  LivePoint,
+  LiveRange,
+  LiveSpan,
+  LiveSummary,
+} from "./components/live-pair/live-pair-model";
+export * from "./components/segment-bar/segment-bar";
+export * from "./components/segment-bar/segment-bar-model";
 export { cn } from "./utils";
+
+// The dashboard: the answer, what needs you, the NAS map and the footer (rethink 6, 6.8).
+export * from "./components/attention-list/attention-list";
+export * from "./components/first-steps/first-steps";
+export * from "./components/nas-answer/nas-answer";
+export * from "./components/nas-answer/nas-answer-model";
+export * from "./components/nas-answer/welcome-line";
+export * from "./components/nas-facts/nas-facts";
+export * from "./components/nas-front/nas-front";
+export * from "./components/nas-front/nas-front-model";
+export * from "./components/nas-map/nas-map";
+export * from "./components/nas-map/nas-map-model";
+export type * from "./components/nas-map/nas-map-words";
+export * from "./components/panel/panel";
+export { panelClass } from "./components/panel/panel-class";
+export * from "./components/scan-line/scan-line";
+export * from "./components/shortcuts/shortcuts";

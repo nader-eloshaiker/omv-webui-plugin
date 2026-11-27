@@ -209,11 +209,10 @@ describe("hostile names (UI-2)", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: shown }),
     ).toBeVisible();
+    // The breadcrumb is only the parent page, so the name is not repeated there.
     expect(
-      within(screen.getByRole("navigation", { name: /breadcrumb/i })).getByText(
-        shown,
-      ),
-    ).toBeVisible();
+      screen.getByRole("navigation", { name: /breadcrumb/i }),
+    ).toHaveTextContent(/^Shared folders$/);
     expect(document.title).toBe(`${shown} – Shared folders – openmediavault`);
     // A person's description holding an override, in the access grid.
     expect(await screen.findByText("סם \uFFFDevil", {}, LONG)).toBeVisible();

@@ -15,7 +15,6 @@ const source = (
 :root {
   --theme-page: var(--color-slate-100);
   --theme-shadow-raised: 0 1px 2px rgb(0 0 0 / 0.1);
-  --theme-ambient: color-mix(in srgb, #5dacdf 12%, transparent);
 }
 [data-density="compact"] { ${compact} }
 .dark { ${dark} }
@@ -49,10 +48,6 @@ describe("tokens.mjs", () => {
       () => generate(source(undefined, "", "--density-new: 1px;")),
       /no default/,
     );
-  });
-
-  it("makes no utility for the ambient light's stops", () => {
-    assert.doesNotMatch(generate(source()), /--color-ambient/);
   });
 
   it("refuses a dark value with no light value", () => {

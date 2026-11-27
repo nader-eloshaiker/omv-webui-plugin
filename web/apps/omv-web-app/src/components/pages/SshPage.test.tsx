@@ -4,6 +4,7 @@
 // prompt, and a normal user kept off the page without a call (UI-4).
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { findDashboard } from "../../test/dashboard.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
 
@@ -253,7 +254,7 @@ describe("the SSH page", () => {
         name: "Leave without saving",
       }),
     );
-    await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+    await findDashboard();
     expect(window.location.pathname).toBe("/ui/");
   });
 

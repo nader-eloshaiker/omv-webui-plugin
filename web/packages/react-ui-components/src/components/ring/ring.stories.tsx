@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import * as React from "react";
 import { BothDensities, Phone, StoryCard } from "../../fixtures/story-frames";
-import { CapacityRing, HealthRing, type HealthArea } from "./ring";
+import {
+  CapacityRing,
+  CapacityRingSkeleton,
+  HealthRing,
+  HealthRingSkeleton,
+  ProgressRing,
+  type HealthArea,
+} from "./ring";
 
 const HEALTHY: HealthArea[] = [
   { id: "disks", label: "Disks", status: "ok", statusLabel: "4 OK" },
@@ -36,7 +44,7 @@ function Capacities() {
         figure="62%"
         valueText="2.2 TiB of 3.6 TiB used"
       >
-        ext4 · mirror of sda and sdb
+        ext4, a mirror of sda and sdb
       </CapacityRing>
       <CapacityRing
         label="photos"
@@ -46,7 +54,7 @@ function Capacities() {
         valueText="3.1 TiB of 3.6 TiB used"
         threshold={{ status: "warning", label: "Almost full" }}
       >
-        Btrfs · sdc
+        Btrfs on sdc
       </CapacityRing>
       <CapacityRing
         label="archive"
@@ -55,7 +63,7 @@ function Capacities() {
         figure=""
         valueText="No reading: not mounted"
       >
-        XFS · USB disk
+        XFS on a USB disk
       </CapacityRing>
     </div>
   );
@@ -68,7 +76,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A few capacities side by side: blue until the threshold, then the warning fill with its pill. */
+/** A few capacities side by side: blue until the threshold, then the warning fill with its status label. */
 export const CapacityRings: Story = {
   render: () => (
     <StoryCard title="Storage" className="max-w-4xl">
@@ -179,5 +187,159 @@ export const AtPhoneWidth: Story = {
         <Capacities />
       </StoryCard>
     </Phone>
+  ),
+};
+
+/**
+ * A missing file system is Critical without a reading: the dashed ring in the critical stroke with
+ * its icon, and the status label. Beside it, a reading that failed (Unknown, no status label) for comparison.
+ */
+export const KnownBadWithoutReading: Story = {
+  render: () => (
+    <StoryCard title="Storage" className="max-w-4xl">
+      <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
+        <CapacityRing
+          label="Backups"
+          value={null}
+          max={100}
+          figure=""
+          valueText="Not found. Its disk may be disconnected or have failed."
+          threshold={{ status: "critical", label: "Critical" }}
+        >
+          Warns at 90%
+        </CapacityRing>
+        <CapacityRing
+          label="Media"
+          value={null}
+          max={100}
+          figure=""
+          valueText="Could not read how full it is"
+        >
+          No warning level set
+        </CapacityRing>
+      </div>
+    </StoryCard>
+  ),
+};
+
+/**
+ * Each ring opens its file system: the whole tile is the target, with the neutral hover, the focus
+ * ring round the tile, and no chevron. The system drive has no page here, so it is not a link.
+ */
+export const LinkTiles: Story = {
+  render: () => (
+    <StoryCard title="Storage" className="max-w-4xl">
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-x-6 gap-y-3">
+        <li>
+          <CapacityRing
+            label="Data"
+            value={87}
+            max={100}
+            figure="87%"
+            valueText="87% full, 120 GiB free of 916 GiB"
+            threshold={{ status: "warning", label: "Warning" }}
+            link={<a href="#/storage/filesystems/data" />}
+            linkLabel="Open file system Data"
+          >
+            Warns at 85%
+          </CapacityRing>
+        </li>
+        <li>
+          <CapacityRing
+            label="Backups"
+            value={null}
+            max={100}
+            figure=""
+            valueText="Not found. Its disk may be disconnected or have failed."
+            threshold={{ status: "critical", label: "Critical" }}
+            link={<a href="#/storage/filesystems/backups" />}
+            linkLabel="Open file system Backups"
+          >
+            Warns at 90%
+          </CapacityRing>
+        </li>
+        <li>
+          <CapacityRing
+            label="Photos and home videos of the family, 2009 to now"
+            value={41}
+            max={100}
+            figure="41%"
+            valueText="41% full, 2.1 TiB free of 3.6 TiB"
+            link={<a href="#/storage/filesystems/photos" />}
+            linkLabel="Open file system Photos and home videos of the family, 2009 to now"
+          >
+            No warning level set
+          </CapacityRing>
+        </li>
+        <li>
+          <CapacityRing
+            label="System drive"
+            value={23}
+            max={100}
+            figure="23%"
+            valueText="23% full, 45 GiB free of 58 GiB"
+          >
+            Where openmediavault is installed
+          </CapacityRing>
+        </li>
+      </ul>
+    </StoryCard>
+  ),
+};
+
+/** The first steps' progress: a ring and its figure only, named by the card title beside it. */
+export const Progress: Story = {
+  render: function ProgressStory() {
+    const titleId = React.useId();
+    return (
+      <StoryCard className="max-w-xl">
+        <div className="flex items-center gap-3">
+          <ProgressRing
+            aria-labelledby={titleId}
+            value={1}
+            max={2}
+            valueText="1 of 2 done"
+            figure="1/2"
+          />
+          <h3 id={titleId} className="text-section text-foreground">
+            First steps
+          </h3>
+        </div>
+        <div className="flex flex-wrap items-center gap-6">
+          {(["xs", "sm", "md"] as const).map((size, i) => (
+            <ProgressRing
+              key={size}
+              size={size}
+              aria-label={`First steps (${size})`}
+              value={i}
+              max={2}
+              valueText={`${String(i)} of 2 done`}
+              figure={`${String(i)}/2`}
+            />
+          ))}
+        </div>
+      </StoryCard>
+    );
+  },
+};
+
+/** While the first reads are in flight: the tracks stand still, with bars where the words go. */
+export const Loading: Story = {
+  render: () => (
+    <StoryCard title="Storage" className="max-w-4xl">
+      <HealthRingSkeleton size="lg" areas={4} />
+      <div
+        aria-busy="true"
+        className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-6"
+      >
+        <CapacityRingSkeleton />
+        <CapacityRingSkeleton />
+        <CapacityRingSkeleton />
+        <CapacityRingSkeleton size="sm" />
+      </div>
+      <p role="status" className="sr-only">
+        Loading the file systems…
+      </p>
+    </StoryCard>
   ),
 };

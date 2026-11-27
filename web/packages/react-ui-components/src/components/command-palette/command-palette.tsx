@@ -18,7 +18,7 @@ interface CommandItem {
   label: string;
   /** The heading it is listed under: "Do", "Go to". Items keep their order inside a heading. */
   group: string;
-  /** Where it lives, quieter: "Storage", "System · classic interface". Searched too. */
+  /** Where it lives, in the secondary ink: "Storage", "System, in the classic interface". Searched too. */
   hint?: string;
   /** More words that find it: the group's name, an older name. */
   keywords?: readonly string[];
@@ -48,7 +48,7 @@ interface CommandPaletteProps {
   emptyMessage: (query: string) => React.ReactNode;
   /** The name of the visually hidden close control: "Close". */
   closeLabel: string;
-  /** Spoken after the field's name, and shown at the foot: "↑ ↓ to move · Enter to go · …". */
+  /** Spoken after the field's name, and shown at the foot: "Up and down arrows to move, Enter to go, …". */
   keysHint: React.ReactNode;
   /** Said beside an `external` item to assistive technology: "classic interface". */
   externalLabel: string;
@@ -191,7 +191,7 @@ function CommandPalette({
                     items={group.items}
                     className="flex flex-col"
                   >
-                    <Autocomplete.GroupLabel className="px-3 pt-1 pb-1 text-xs font-semibold tracking-wide text-tertiary-foreground uppercase">
+                    <Autocomplete.GroupLabel className="px-3 pt-1 pb-1 text-sm font-normal text-muted-foreground">
                       {group.label}
                     </Autocomplete.GroupLabel>
                     <Autocomplete.Collection>
@@ -238,7 +238,7 @@ function CommandPalette({
                           ) : null}
                           <CornerDownLeft
                             aria-hidden="true"
-                            className="size-3.5 shrink-0 text-action-label opacity-0 group-data-highlighted/command:opacity-100"
+                            className="size-3.5 shrink-0 text-selected-label opacity-0 group-data-highlighted/command:opacity-100"
                           />
                         </Autocomplete.Item>
                       )}

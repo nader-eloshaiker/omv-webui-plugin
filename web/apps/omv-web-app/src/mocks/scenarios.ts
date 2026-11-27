@@ -13,6 +13,15 @@ import type {
   OperationId,
 } from "@omv-webui/react-api-omv/mocks";
 import {
+  DASHBOARD_ATTENTION,
+  DASHBOARD_SCENARIO_LABELS,
+  DASHBOARD_SCENARIOS,
+  DASHBOARD_WELCOME_DISMISSED,
+  dashboardAnswers,
+  dashboardCheckOutput,
+  isDashboardScenario,
+} from "./dashboardScenarios.ts";
+import {
   DISK_SCENARIO_LABELS,
   DISK_SCENARIOS,
   diskAnswers,
@@ -36,6 +45,7 @@ import {
   usesFsMock,
   type FsMockState,
 } from "./fsScenarios.ts";
+import { withLiveCounters, withLiveSystem } from "./liveFigures.ts";
 import {
   behindConnection,
   isNetworkScenario,
@@ -161,6 +171,7 @@ export const SCENARIOS = [
   ...USERS_SCENARIOS,
   ...SERVICES_SCENARIOS,
   ...NETWORK_SCENARIOS,
+  ...DASHBOARD_SCENARIOS,
 ] as const;
 export type ScenarioName = (typeof SCENARIOS)[number];
 
@@ -176,6 +187,7 @@ const FAMILIES = new Set<string>([
   ...USERS_SCENARIOS,
   ...SERVICES_SCENARIOS,
   ...NETWORK_SCENARIOS,
+  ...DASHBOARD_SCENARIOS,
 ]);
 /** The scenarios in the picker's groups. Development words, not the interface's. */
 export const SCENARIO_GROUPS: readonly {
@@ -194,6 +206,7 @@ export const SCENARIO_GROUPS: readonly {
   { label: "Users and groups", names: USERS_SCENARIOS },
   { label: "NFS, rsync and SMB extras", names: SERVICES_SCENARIOS },
   { label: "Network, firewall and proxy", names: NETWORK_SCENARIOS },
+  { label: "Dashboard states", names: DASHBOARD_SCENARIOS },
 ];
 
 /** What each scenario shows, for the picker. Development words, not the interface's. */
@@ -251,6 +264,7 @@ export const SCENARIO_LABELS: Record<ScenarioName, string> = {
   ...USERS_SCENARIO_LABELS,
   ...SERVICES_SCENARIO_LABELS,
   ...NETWORK_SCENARIO_LABELS,
+  ...DASHBOARD_SCENARIO_LABELS,
 };
 
 /** The scenarios signed in as a normal user. */
@@ -1295,23 +1309,31 @@ export function scenarioAnswers(
     },
     systemGetInformation: () => {
       beforePendingRead();
+      // The processor and memory move from reply to reply (liveFigures.ts), so the live chart draws.
+      const live = (answer: FixedAnswer) => withLiveSystem(answer, Date.now());
       return name === "servicePending" && session.dirty
-        ? guarded<never>(sambaPending())()
+        ? guarded<never>(live(sambaPending()))()
         : guarded<never>(
-            withHost(
-              withSmartDirty(
-                information(
-                  user
-                    ? "user"
-                    : session.dirty
-                      ? "adminPendingChanges"
-                      : name === "checklistHidden" || session.welcomeDismissed
-                        ? "adminWelcomeDismissed"
-                        : "admin",
-                  {
-                    now: name !== "attention",
-                    rebootRequired: name === "attention",
-                  },
+            live(
+              withHost(
+                withSmartDirty(
+                  information(
+                    user
+                      ? "user"
+                      : session.dirty
+                        ? "adminPendingChanges"
+                        : name === "checklistHidden" ||
+                            DASHBOARD_WELCOME_DISMISSED.has(name) ||
+                            session.welcomeDismissed
+                          ? "adminWelcomeDismissed"
+                          : "admin",
+                    {
+                      now:
+                        name !== "attention" && !DASHBOARD_ATTENTION.has(name),
+                      rebootRequired:
+                        name === "attention" || DASHBOARD_ATTENTION.has(name),
+                    },
+                  ),
                 ),
               ),
             ),
@@ -1372,6 +1394,7 @@ export function scenarioAnswers(
       if (filename === SMART_HANDLE) {
         return guarded<ExampleName<"execGetOutput">>(
           diskCheckOutput(name) ??
+            dashboardCheckOutput(name) ??
             SMART_SCENARIOS[name] ??
             "smartDevicesFinished",
         )();
@@ -1521,9 +1544,22 @@ export function scenarioAnswers(
         : diskRead("fileSystemMgmtGetList"),
     smartGetListBg: guarded("smartDevices"),
     servicesGetStatus: guarded(SERVICE_SCENARIOS[name] ?? "sshOnly"),
-    networkEnumerateDevicesList: guarded(
-      DASHBOARD_NETWORK[name] ?? "ethernetAndLoopback",
-    ),
+    // The byte counters move from reply to reply (liveFigures.ts), so the network chart draws.
+    networkEnumerateDevicesList: () => {
+      const reply = DASHBOARD_NETWORK[name] ?? "ethernetAndLoopback";
+      return guarded<never>(
+        withLiveCounters(
+          typeof reply === "string"
+            ? {
+                status: 200,
+                value:
+                  CONTRACT_EXAMPLES.networkEnumerateDevicesList[reply].value,
+              }
+            : reply,
+          Date.now(),
+        ),
+      )();
+    },
     logFileGetList: ({ params }) => {
       const log = logFor(params);
       if (log === "syslog" && name === "logsLarge") {
@@ -1871,6 +1907,19 @@ export function scenarioAnswers(
           ]),
         )),
   };
+  if (isDashboardScenario(name)) {
+    // The dashboard's states: its reads answer the scenario's NAS, behind the sign-in guard.
+    for (const [operationId, reply] of Object.entries(dashboardAnswers(name))) {
+      (answers as Record<string, unknown>)[operationId] = ({
+        params,
+      }: {
+        params: unknown;
+      }) =>
+        guarded<never>(
+          typeof reply === "function" ? reply({ params }) : reply,
+        )();
+    }
+  }
   if (networkState === undefined) {
     return answers;
   }

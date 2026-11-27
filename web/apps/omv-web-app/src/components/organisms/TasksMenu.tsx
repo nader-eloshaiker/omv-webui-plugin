@@ -46,7 +46,7 @@ export function TasksMenu() {
     <Menu>
       <MenuTrigger
         render={
-          <IconButton label={label} icon={<ListChecks />} variant="quiet" />
+          <IconButton label={label} icon={<ListChecks />} variant="plain" />
         }
       />
       <MenuContent align="end" className="w-[min(24rem,calc(100vw-1rem))]">

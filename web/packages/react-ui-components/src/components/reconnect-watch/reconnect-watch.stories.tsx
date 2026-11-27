@@ -238,7 +238,7 @@ export const OneAfterAnother: StoryObj = {
       <div className="flex flex-col gap-4">
         <button
           type="button"
-          className="self-start text-sm text-action-label underline"
+          className="self-start text-sm text-link underline"
           onClick={() => setStep((n) => n + 1)}
         >
           Next outcome (story control)
