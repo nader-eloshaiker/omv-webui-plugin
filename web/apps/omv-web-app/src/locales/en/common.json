@@ -2947,7 +2947,11 @@
     "usage": {
       "full": "Full. Nothing more can be written to it.",
       "overLevel": "At or above its warning level of {{level}}",
-      "unread": "Could not read how full it is"
+      "unread": "Could not read how full it is",
+      "markAt": "Warning at {{level}}",
+      "headline": "{{percent}} used",
+      "freeOf": "{{free}} free of {{size}}",
+      "cell": "{{percent}}, {{free}} free"
     },
     "breadcrumb": "File systems",
     "title": "File system {{name}}",

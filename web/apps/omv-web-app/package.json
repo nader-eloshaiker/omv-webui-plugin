@@ -16,6 +16,7 @@
     "test:browser": "playwright test --config e2e/playwright.config.ts",
     "test:browser:install": "playwright install chromium",
     "test:browser:lab": "playwright test --config e2e/lab/playwright.config.ts",
+    "test:browser:stories": "playwright test --config e2e/stories/playwright.config.ts",
     "test:browser:vm": "playwright test --config e2e/vm/playwright.config.ts"
   },
   "dependencies": {

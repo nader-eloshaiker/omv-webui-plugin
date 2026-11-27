@@ -67,6 +67,20 @@ node tools/colour-audit.mjs                     # contrast + distinct + neutrals
 A new colour family adds its pairs to `PAIRS` in the script in the same change, and the numbers the
 style guide quotes are updated from the script's output. See the `colour-theory` skill.
 
+## Accessibility - the dashboard's library pieces
+
+After changing the map, the answer, what needs you, the first steps, the segment bar, the live
+charts, the temperatures, the drive pictures, the bay, the drawing of the NAS, the scan line or the
+panel in `react-ui-components`, or their stories:
+
+```
+pnpm test:browser:stories       # in web/: builds Storybook, then axe (WCAG 2.2 AA) over their stories
+```
+
+Each story in both themes, both densities, at 1440 and 390 wide, with no console error. About six
+minutes on two workers; not part of `pnpm test`. A control's accessible name starts with the words
+it shows (WCAG 2.5.3); the test fails when it does not.
+
 ## Built output - the security rules are checked on the bundle, not the source
 
 Several `UI-*` rules can only be proven on what ships. After `pnpm build`, check `web/apps/omv-web-app/dist/`:
