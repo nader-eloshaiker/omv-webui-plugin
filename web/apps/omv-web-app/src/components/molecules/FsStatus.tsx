@@ -3,9 +3,15 @@
 // words. OK means mounted and reachable. A pending mount is the pending mark with its words, not a
 // health pill; one being created is the task pill "Running", not pending gold. How full is the
 // dashboard's rule: a Warning or Critical pill beside the figure when the level is crossed or it is
-// full, Unknown when it could not be read, and no pill otherwise.
+// full, Unknown when it could not be read, and no pill otherwise. The meter is the segment bar
+// (journal 2026-11-27): twenty segments of 5 %, the warning mark a rule at its exact value, filled
+// and never outlined, the status stroke only past the crossed mark.
 import type { ConfiguredFilesystem } from "@omv-webui/react-api-omv/generated";
-import { CapacityMeter, StatusPill } from "@omv-webui/react-ui-components";
+import {
+  SegmentBar,
+  StatusLabel,
+  StatusPill,
+} from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
 import type { FsMountState, FsUsage } from "../../filesystems/fsModel.ts";
 import { formatBytes, parseByteCount } from "../../format/format.ts";
@@ -86,33 +92,67 @@ export function FsUsageView({
     );
   }
   const level = row.usagewarnthreshold ?? 0;
+  // OMV's 0 means "never warn": no mark is drawn.
+  const mark = level > 0 ? level : null;
   const threshold =
     usage === "critical"
       ? { status: "critical" as const, label: t("health.critical") }
       : usage === "warning"
         ? { status: "warning" as const, label: t("health.warning") }
         : undefined;
+  const percent = format.percent(row.percentage);
+  const page = variant === "default";
+  const over =
+    usage === "critical"
+      ? t("filesystem.usage.full")
+      : usage === "warning"
+        ? t("filesystem.usage.overLevel", { level: `${String(level)}%` })
+        : null;
   return (
     <span className="flex min-w-0 flex-col gap-1">
-      <CapacityMeter
-        variant={variant}
-        label={label}
+      <SegmentBar
+        aria-label={label}
+        size={page ? "page" : "cell"}
         value={row.percentage}
-        max={100}
+        mark={mark}
+        markLabel={
+          mark === null
+            ? undefined
+            : page
+              ? t("filesystem.usage.markAt", { level: format.percent(mark) })
+              : format.percent(mark)
+        }
         threshold={threshold}
         valueText={t("dashboard.storage.value", {
-          percent: format.percent(row.percentage),
+          percent,
           free: formatBytes(free),
           size: formatBytes(size),
         })}
+        headline={
+          page ? t("filesystem.usage.headline", { percent }) : undefined
+        }
+        figures={
+          page
+            ? t("filesystem.usage.freeOf", {
+                free: formatBytes(free),
+                size: formatBytes(size),
+              })
+            : t("filesystem.usage.cell", { percent, free: formatBytes(free) })
+        }
       />
-      {usage === "critical" ? (
-        <span className="text-sm">{t("filesystem.usage.full")}</span>
-      ) : usage === "warning" ? (
-        <span className="text-sm">
-          {t("filesystem.usage.overLevel", { level: `${String(level)}%` })}
+      {over === null ? null : page ? (
+        <span className="text-sm">{over}</span>
+      ) : (
+        // A cell has no room for the status word: it goes here, with the reason.
+        <span className="flex flex-wrap items-baseline gap-x-1.5 text-sm">
+          {threshold ? (
+            <StatusLabel status={threshold.status}>
+              {threshold.label}
+            </StatusLabel>
+          ) : null}
+          <span>{over}</span>
         </span>
-      ) : null}
+      )}
     </span>
   );
 }

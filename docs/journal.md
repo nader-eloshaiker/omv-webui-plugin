@@ -1066,3 +1066,11 @@ What changes on the page beside the look:
 4. **The scan line** reads from the map's own input, so the two never disagree. An area whose read failed or has not arrived says "Not read" or "Reading…", never OK.
 5. **What still holds** ("You could also put sde to use, or let computers open a4share.") stands under the answer on a later visit while tips are on. Each phrase is a link to its page.
 6. **Every region takes the whole row**, on its own ground. The order is: the welcome, the answer and the scan line, then what needs you or a new NAS's first steps, "Right now", the map, the temperatures, then the Shortcuts and This NAS. This NAS takes the whole row when the first steps are at the top.
+
+## 2026-11-28 — File systems show space used as one row of segments
+
+The file systems table and a file system's own page draw space used as the segment bar, as the dashboard's map does (2026-11-27).
+
+- **In the table**, the bar is the cell size, so every row's bar is one width and the warning marks line up down the column. The figures sit beside it ("92%, 294.9 GiB free"). A cell has no room for the status word, so a row past its mark says "Warning" under the bar, beside the reason.
+- **On the file system's page**, the bar is the page size, under the headline "92% used" with "294.9 GiB free of 3.6 TiB", and the mark is written "Warning at 85%".
+- **A warning level of 0** (OMV's "never warn") draws no mark.
