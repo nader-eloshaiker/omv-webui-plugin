@@ -314,8 +314,10 @@ describe("the summary card", () => {
       { name: "Your NAS" },
       { timeout: 8000 },
     );
+    // The check sits in the dashboard's answer, once the map has been read.
+    expect(map).toBeInTheDocument();
     await user.click(
-      within(map).getByRole("button", { name: "Check disk health" }),
+      await screen.findByRole("button", { name: "Check disk health" }),
     );
     await waitFor(
       () =>

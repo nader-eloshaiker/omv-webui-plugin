@@ -1045,3 +1045,24 @@ Drawn to scale against the hard disk, the NVMe stick on the mainboard did not lo
 ## 2026-11-27 — The NVMe stick gets a mount, drawn as the bays are (owner)
 
 Standing on the board by itself, the stick was not noticed. The owner asked for a mount the way the disks have caddies, so it reads as familiar and in place. The board row now keeps the bays' columns. The stick sits in an M.2 slot exactly a bay wide and tall, on a stretch of mainboard drawn as a caddy is. The M.2 socket at its foot takes the stick's contacts, and the standoff screw at its head holds the notched end, as on a real board. On the first visit the stick goes down into its socket rather than sliding in from the side. The small drawing beside a later answer has the same mount at its size.
+
+## 2026-11-28 — The dashboard is built from the lab design (owner)
+
+The owner approved the design in the lab, and the real dashboard (`/ui/`) is now made from it. The pieces are in the library:
+
+- NasFront: the drawing of the NAS, with the M.2 slot.
+- ScanLine: one status per area under the answer.
+- Panel: the raised and plate grounds.
+- LivePair's large size: mono figures over filled charts.
+- NasAnswer's hero size, with its action, after and aside slots.
+- FirstSteps across the row.
+- The `--text-hero` type step.
+
+What changes on the page beside the look:
+
+1. **The welcome is the NAS greeted by name**, drawn large beside the greeting, on a new NAS and on an existing one alike. It replaces the one-line WelcomeLine. Only "Hide the welcome" ends it: using the page no longer does, which changes rethink P.2 as the lab's notes said. "Show tips" off keeps it away, and "Show me around" brings it back whatever "Show tips" says. While it is on screen the greeting is the page's h1 and the answer is an h2.
+2. **"Check disk health" sits in the answer** on an existing NAS, after the sentence that says why the check waits for the person. It takes the filled accent only when nothing else is the next step. On a new NAS it stays in the map's footer. The reasons are now the lab's: "Disks report their health only when asked, and asking wakes any that are asleep, so the check waits for you."
+3. **The small drawing beside the answer** shows the disks' outlines dashed until health is read. When the check's result arrives on the page, the dashed line wipes away off the solid one, disk by disk. With no motion at all, the line lands solid at once.
+4. **The scan line** reads from the map's own input, so the two never disagree. An area whose read failed or has not arrived says "Not read" or "Reading…", never OK.
+5. **What still holds** ("You could also put sde to use, or let computers open a4share.") stands under the answer on a later visit while tips are on. Each phrase is a link to its page.
+6. **Every region takes the whole row**, on its own ground. The order is: the welcome, the answer and the scan line, then what needs you or a new NAS's first steps, "Right now", the map, the temperatures, then the Shortcuts and This NAS. This NAS takes the whole row when the first steps are at the top.

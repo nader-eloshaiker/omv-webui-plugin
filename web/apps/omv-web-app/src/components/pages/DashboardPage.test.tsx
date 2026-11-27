@@ -49,16 +49,13 @@ describe("the answer", () => {
       expect(answer()).toHaveAccessibleName("No problems found so far."),
     );
     expect(
-      screen.getByText(/Disk health has not been checked since you signed in/),
+      screen.getByText(/Disks report their health only when asked/),
     ).toBeInTheDocument();
     expect(needs()).not.toBeInTheDocument();
     // Disk health is read only when the person asks.
     expect(callNames()).not.toContain("Smart.getListBg");
-    await user.click(
-      within(region("Your NAS")).getByRole("button", {
-        name: "Check disk health",
-      }),
-    );
+    // The check sits in the answer, after the sentence that says why it waits.
+    await user.click(screen.getByRole("button", { name: "Check disk health" }));
     await waitFor(
       () => expect(answer()).toHaveAccessibleName("Everything is working."),
       LONG,
@@ -97,12 +94,8 @@ describe("the answer", () => {
     });
     expect(restart).toHaveAttribute("target", "_blank");
     expect(restart).toHaveAttribute("rel", "noopener noreferrer");
-    // A disk reporting a problem arrives with the check the person asks for.
-    await user.click(
-      within(region("Your NAS")).getByRole("button", {
-        name: "Check disk health",
-      }),
-    );
+    // A disk reporting a problem arrives with the check the person asks for, in the answer.
+    await user.click(screen.getByRole("button", { name: "Check disk health" }));
     await waitFor(
       () => expect(answer()).toHaveAccessibleName("Four things need you."),
       LONG,
@@ -372,32 +365,51 @@ describe("the first steps", () => {
 });
 
 describe("the welcome", () => {
-  it("greets a first visit to the new interface, is remembered, and comes back with Show me around", async () => {
+  it("greets a first visit by the NAS's name, drawn, until hidden, and comes back with Show me around", async () => {
     useWelcomeStore.setState({ seen: false });
     useSeenStore.setState({ seen: [] });
     const { user } = await dashboard({ scenario: "dashboardAllOk" });
+    const welcome = await screen.findByRole("heading", {
+      level: 1,
+      name: "Welcome to nas.",
+    });
+    expect(welcome).toBeInTheDocument();
+    // The NAS drawn beside the greeting, and the answer under it a level down.
     expect(
-      await screen.findByText("Welcome to the new interface."),
+      screen.getByRole("figure", {
+        name: "The disks in nas and the drives they make",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        level: 2,
+        name: "No problems found so far.",
+      }),
     ).toBeInTheDocument();
     // The newcomer's captions under the map's columns.
     expect(region("Your NAS")).toHaveTextContent(
       "A disk made ready to keep files.",
     );
+    // Using the page leaves it where it is; only Hide the welcome ends it.
+    await user.click(region("Your NAS"));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Welcome to nas." }),
+    ).toBeInTheDocument();
     await user.click(
       screen.getByRole("button", {
-        name: "Got it, hide the welcome to the new interface",
+        name: "Hide the welcome to the new interface",
       }),
     );
     await waitFor(() =>
       expect(
-        screen.queryByText("Welcome to the new interface."),
+        screen.queryByRole("heading", { name: "Welcome to nas." }),
       ).not.toBeInTheDocument(),
     );
     expect(useSeenStore.getState().seen).toContain("tip.new-interface");
     await waitFor(() => expect(useWelcomeStore.getState().seen).toBe(true));
     await user.click(screen.getByRole("button", { name: "Show me around" }));
     expect(
-      await screen.findByText("Welcome to the new interface."),
+      await screen.findByRole("heading", { level: 1, name: "Welcome to nas." }),
     ).toBeInTheDocument();
   });
 
@@ -407,7 +419,7 @@ describe("the welcome", () => {
       expect(answer()).toHaveAccessibleName("No problems found so far."),
     );
     expect(
-      screen.queryByText("Welcome to the new interface."),
+      screen.queryByRole("heading", { name: "Welcome to nas." }),
     ).not.toBeInTheDocument();
     expect(region("Your NAS")).not.toHaveTextContent(
       "A disk made ready to keep files.",

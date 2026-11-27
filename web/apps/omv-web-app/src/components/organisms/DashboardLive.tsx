@@ -9,6 +9,7 @@
 // The charts never fill history backwards and never fetch; a failed poll leaves what they drew.
 import type { NetworkDevice } from "@omv-webui/react-api-omv/generated";
 import {
+  cn,
   LIVE_WINDOW_MS,
   LivePair,
   liveSpan,
@@ -38,12 +39,18 @@ export function DashboardLive({
   devices,
   stale,
   updatedAt,
+  size = "default",
+  className,
 }: {
   /** Network.enumerateDevicesList, once read. */
   devices: readonly NetworkDevice[] | undefined;
   /** The shell's last poll failed: the charts keep what they drew, and say since when. */
   stale: boolean;
   updatedAt: number;
+  /** The dashboard's instrument panel: large mono figures over filled charts. */
+  size?: "default" | "large";
+  /** The ground it stands on, from the page (`panelClass`). */
+  className?: string;
 }) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -106,11 +113,15 @@ export function DashboardLive({
   const missing = t("dashboard.now.noReading");
 
   return (
-    <section aria-labelledby={titleId} className="flex min-w-0 flex-col gap-3">
+    <section
+      aria-labelledby={titleId}
+      className={cn("flex min-w-0 flex-col gap-3", className)}
+    >
       <h2 id={titleId} className="text-section text-foreground">
         {t("dashboard.now.title")}
       </h2>
       <LivePair
+        size={size}
         percent={{
           title: t("dashboard.now.percentTitle"),
           aside:

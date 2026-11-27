@@ -11,6 +11,7 @@
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
+  cn,
   DiskTemperatures,
   EmptyState,
   Skeleton,
@@ -34,6 +35,8 @@ export function DashboardTemperatures({
   readAt,
   retrying,
   onRetry,
+  id,
+  className,
 }: {
   groups: readonly DiskGroup[];
   /** DiskMgmt.getList, as the page has it. */
@@ -43,6 +46,10 @@ export function DashboardTemperatures({
   readAt: number;
   retrying: boolean;
   onRetry: () => void;
+  /** Where the scan line's Disks lands: the section takes focus there. */
+  id?: string;
+  /** The ground it stands on, from the page (`panelClass`). */
+  className?: string;
 }) {
   const { t } = useTranslation();
   const words = useNasWords();
@@ -99,7 +106,12 @@ export function DashboardTemperatures({
   }
 
   return (
-    <section aria-labelledby={titleId} className="flex min-w-0 flex-col gap-3">
+    <section
+      id={id}
+      tabIndex={id === undefined ? undefined : -1}
+      aria-labelledby={titleId}
+      className={cn("flex min-w-0 flex-col gap-3", className)}
+    >
       <header className="flex flex-wrap items-baseline gap-x-3.5 gap-y-0.5">
         <h2 id={titleId} className="text-section text-foreground">
           {t("dashboard.temps.title")}

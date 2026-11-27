@@ -47,14 +47,17 @@
   }
 
   /* ─── A check's result arrives ──────────────────────────────────────────────────────────────── */
-  /* The solid line over the dashed one is drawn by the component (the caddy's ::after); here it
-     wipes in along the line, one disk a stagger step after the one before. */
+  /* The dashed line over the solid one is drawn by the component (the caddy's ::after); here it
+     wipes away along the line, one disk a stagger step after the one before, and stays gone. */
   [data-slot="nas-front"][data-landed] [data-part="caddy"]::after {
+    /* At rest it is wiped away, so with no motion at all the line lands solid at once. */
+    clip-path: inset(0 0 0 100%);
     animation: nas-front-wipe var(--duration-slow) var(--ease-standard)
       calc(var(--i, 0) * var(--motion-stagger)) both;
   }
-  /* Right to left, the line is drawn in from the right. */
+  /* Right to left, it wipes away towards the left. */
   [dir="rtl"] [data-slot="nas-front"][data-landed] [data-part="caddy"]::after {
+    clip-path: inset(0 100% 0 0);
     animation-name: nas-front-wipe-rtl;
   }
 
@@ -77,14 +80,14 @@
     translate: 0 calc(var(--motion-rise) * -3);
   }
 }
-/* The solid outline drawn in from the start of the line. */
+/* The dashed outline wiped away from the start of the line, uncovering the solid one under it. */
 @keyframes nas-front-wipe {
   from {
-    clip-path: inset(0 100% 0 0);
+    clip-path: inset(0);
   }
 }
 @keyframes nas-front-wipe-rtl {
   from {
-    clip-path: inset(0 0 0 100%);
+    clip-path: inset(0);
   }
 }

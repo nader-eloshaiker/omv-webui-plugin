@@ -124,13 +124,15 @@ const caddyVariants = cva(
         small: "px-0.5 pt-[7px] pb-[5px]",
       },
       // Whether the disk's health was read: the drawing's own line, or dashed in the Unknown stroke
-      // before the check. `landing`: the result arrived on the page, and the solid line wipes over the
-      // dashed one (its motion is in css-ui-style).
+      // before the check. `landing`: the result arrived on the page. The caddy's own line is already
+      // solid, and the dashed one lies over it and wipes away along the line (its motion is in
+      // css-ui-style), so once the motion ends nothing is left over the line: an overlay that stayed
+      // would sit half a pixel off it where a 1.5px border rounds to whole pixels.
       outline: {
         solid: "border-art-line",
         unknown: "border-dashed border-unknown-stroke",
         landing:
-          "border-dashed border-unknown-stroke after:absolute after:-inset-[1.5px] after:rounded-[inherit] after:border-[1.5px] after:border-art-line",
+          "border-art-line after:pointer-events-none after:absolute after:-inset-[1.5px] after:rounded-[inherit] after:border-[1.5px] after:border-dashed after:border-unknown-stroke",
       },
     },
   },

@@ -51,16 +51,19 @@ import {
   nasAnswerTone,
   nasAnswerWords,
   NasFacts,
+  NasFront,
   NasMap,
   nasMapActions,
   nasMapView,
   orderAttention,
+  Panel,
+  panelClass,
+  ScanLine,
   SegmentBar,
   Shortcuts,
   ShortcutsItem,
   Tip,
   useTips,
-  WelcomeLine,
   type NasLane,
   type NasMapAction,
   type NasMapItem,
@@ -70,21 +73,18 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ExternalLink as ExternalIcon, Play } from "lucide-react";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   attentionRows,
   missingFileSystems,
   storageItems,
 } from "../../dashboard/dashboard.ts";
+import {
+  DASHBOARD_TARGETS,
+  nasFrontParts,
+  scanAreas,
+} from "../../dashboard/nasFront.ts";
 import {
   nasModel,
   readStateOf,
@@ -103,6 +103,7 @@ import {
   type DashboardStep,
 } from "../../hooks/useFirstSteps.tsx";
 import { useDashboardFirstVisit } from "../../hooks/useFirstTime.ts";
+import { useNasFrontWords } from "../../hooks/useNasFront.tsx";
 import { useNasWords } from "../../hooks/useNasWords.ts";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
 import { CLASSIC, CLASSIC_HOME } from "../../navigation/navigation.ts";
@@ -280,6 +281,7 @@ function AdminDashboard({ username }: { username: string | null }) {
   const words = useNasWords();
   const tips = useTips();
   const titleRef = useAnswerTitle();
+  const welcomeId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const r = useDashboardReads();
   const readAgain = useReadAgain();
@@ -605,24 +607,97 @@ function AdminDashboard({ username }: { username: string | null }) {
     }
   };
 
-  // Anything done on the page ends the welcome (P.2), "Got it" included; "Show me around" brings it
-  // back, so pressing it does not count.
-  const onPageAction = (event: PointerEvent | KeyboardEvent) => {
-    const target = event.target as HTMLElement;
-    if (
-      !tips.isSeen("tip.new-interface") &&
-      target.closest("[data-welcome], [data-show-around]") === null
-    ) {
-      tips.endTip("tip.new-interface");
-    }
+  // The welcome (journal 2026-11-27, the dashboard design): on the first visit in this browser, or
+  // after "Show me around", the NAS greeted by name with its own figures, drawn large beside the
+  // greeting. It ends only with "Hide the welcome" (a change to rethink P.2: pointing at or using
+  // the page leaves it), and "Show tips" off keeps it away unless "Show me around" asked for it.
+  const host = info?.hostname;
+  const welcome =
+    newcomer &&
+    !loading &&
+    host !== undefined &&
+    (showTips || replay) &&
+    !tips.isSeen("tip.new-interface");
+  const hideWelcome = () => {
+    tips.endTip("tip.new-interface");
   };
+  const fw = useNasFrontWords();
+  const front = nasFrontParts(input, newNas, fw.front);
+  // The small drawing beside the answer joins its outlines up when the check's result arrives on
+  // this page, never for a result that came with it.
+  const [resultAtStart] = useState(result !== undefined);
+  const landed = result !== undefined && !resultAtStart;
 
   const showMeAround = () => {
     askShowAround();
     rootRef.current?.scrollIntoView?.({ block: "start" });
   };
 
-  const firstSteps = (
+  // "Check disk health" sits in the answer, right after the sentence that says why it waits, on an
+  // existing NAS; it takes the filled accent only when nothing else is the next step. A new NAS
+  // keeps it in the map's footer.
+  const checkButton =
+    newNas || result !== undefined || loading ? undefined : (
+      <Button
+        variant={accent === "none" ? "primary" : "neutral"}
+        size="sm"
+        loading={check.checking}
+        onClick={check.start}
+      >
+        <Icon name="check-health" size={16} />
+        {check.checking
+          ? t("dashboard.map.actions.checking")
+          : t("dashboard.map.actions.checkHealth")}
+      </Button>
+    );
+  const mapActions = newNas
+    ? footer
+    : footer.filter((a) => a !== "check-health");
+
+  // What still holds on a later visit, under the answer, while tips are on: each phrase opens its
+  // page, and the sentence goes when nothing is left.
+  const unusedDisk = input.disks.find(
+    (d) =>
+      d.storage.length === 0 && d.raidMember !== true && reads.storage === "ok",
+  );
+  const unreached = input.folders.find(
+    (f) => f.ways.length === 0 && reads.ways === "ok",
+  );
+  const also =
+    showTips && !welcome && !newNas && (unusedDisk || unreached) ? (
+      <p className="mt-3 text-body text-muted-foreground">
+        {
+          t("dashboard.also.sentence", { list: "{{list}}" }).split(
+            "{{list}}",
+          )[0]
+        }
+        {unusedDisk ? (
+          <Link
+            to="/storage/filesystems/add"
+            className="text-link underline underline-offset-3"
+          >
+            {t("dashboard.also.unused", { device: unusedDisk.device })}
+          </Link>
+        ) : null}
+        {unusedDisk && unreached ? t("dashboard.also.or") : null}
+        {unreached ? (
+          <Link
+            to="/storage/shared-folders/$folder"
+            params={{ folder: unreached.id }}
+            className="text-link underline underline-offset-3"
+          >
+            {t("dashboard.also.unreached", { folder: unreached.name })}
+          </Link>
+        ) : null}
+        {
+          t("dashboard.also.sentence", { list: "{{list}}" }).split(
+            "{{list}}",
+          )[1]
+        }
+      </p>
+    ) : undefined;
+
+  const firstSteps = (layout: "list" | "across") => (
     <div className="flex min-w-0 flex-col gap-2">
       <FirstSteps
         title={t("dashboard.steps.title")}
@@ -635,6 +710,7 @@ function AdminDashboard({ username }: { username: string | null }) {
         }}
         steps={first.steps}
         accent={accent === "step" ? "filled" : "outline"}
+        layout={layout}
       />
       {first.hideable ? (
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -661,110 +737,192 @@ function AdminDashboard({ username }: { username: string | null }) {
     </ShortcutsItem>
   );
 
+  // Every region takes the whole row, on its own ground (the journal's dashboard design): what the
+  // person acts on, then what they watch, then what they look up. The welcome and the answer stand
+  // on the page ground; "Right now", the temperatures and the lists at the foot on raised panels;
+  // the map on its plate.
   return (
     <div
       ref={rootRef}
-      className="@container/page flex min-w-0 flex-col gap-11 compact:gap-6"
-      onPointerDown={onPageAction}
-      onKeyDown={onPageAction}
+      className="@container/page flex min-w-0 flex-col gap-(--density-gutter)"
     >
-      <div className="flex flex-col gap-6 compact:gap-3">
-        {!newNas && newcomer && !loading ? (
-          <div data-welcome="">
-            <WelcomeLine
-              id="tip.new-interface"
-              dismissLabel={t("dashboard.welcome.dismiss")}
-              dismissName={t("dashboard.welcome.dismissName")}
-              detail={t("dashboard.welcome.detail")}
-              more={{
-                label: t("dashboard.welcome.more"),
-                items: [
-                  t("dashboard.welcome.item1"),
-                  t("dashboard.welcome.item2"),
-                  t("dashboard.welcome.item3"),
-                  t("dashboard.welcome.item4"),
-                ],
-              }}
-              actions={
-                <ExternalLink href={CLASSIC_HOME} newTabLabel={t("app.newTab")}>
-                  {t("dashboard.welcome.classic")}
-                </ExternalLink>
-              }
+      {welcome ? (
+        <section
+          data-welcome=""
+          aria-labelledby={welcomeId}
+          className="grid items-center gap-8 pb-4 @min-[60rem]/page:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] @min-[60rem]/page:gap-x-14"
+        >
+          <div className="min-w-0">
+            <h1
+              id={welcomeId}
+              ref={titleRef}
+              tabIndex={-1}
+              className="text-hero text-balance text-foreground outline-none"
             >
-              {t("dashboard.welcome.line")}
-            </WelcomeLine>
+              {fw.welcome.title(host)}
+            </h1>
+            <p className="mt-4.5 max-w-[34rem] text-xl text-pretty text-foreground compact:mt-2 compact:text-section">
+              {newNas
+                ? fw.welcome.newLead(
+                    input.disks.length,
+                    front.groups
+                      .filter((g) => g.dashed === true)
+                      .reduce((n, g) => n + g.span, 0),
+                  )
+                : fw.welcome.existingLead(
+                    input.disks.length,
+                    input.storage.length,
+                    input.folders.length,
+                  )}
+            </p>
+            <p className="mt-3 max-w-[34rem] text-body text-pretty text-muted-foreground compact:hidden">
+              {newNas ? fw.welcome.newMore : fw.welcome.existingMore(host)}
+            </p>
+            <p className="mt-5.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 compact:mt-3">
+              <ExternalLink href={CLASSIC_HOME} newTabLabel={t("app.newTab")}>
+                {t("dashboard.welcome.classic")}
+              </ExternalLink>
+              <Button
+                variant="plain"
+                size="sm"
+                className="-ms-2.5"
+                aria-label={t("dashboard.welcome.hideName")}
+                onClick={hideWelcome}
+              >
+                {t("dashboard.welcome.hide")}
+              </Button>
+            </p>
           </div>
-        ) : null}
-        <NasAnswer
-          titleRef={titleRef}
-          status={nasAnswerTone(answer)}
-          variant={answer.kind === "welcome" ? "welcome" : "status"}
-          title={loading ? t("dashboard.answer.reading") : said.title}
-          reason={ordered.length > 0 ? undefined : said.reason}
-          loading={loading}
-        />
+          <NasFront
+            key={replays}
+            host={host}
+            bays={front.bays}
+            board={front.board}
+            groups={front.groups}
+            size="large"
+            label={fw.welcome.picture(host)}
+            assemble
+          />
+        </section>
+      ) : null}
+
+      <div className="flex min-w-0 flex-col gap-(--density-gutter)">
+        {newNas && welcome ? null : (
+          <NasAnswer
+            titleRef={welcome ? undefined : titleRef}
+            headingLevel={welcome ? 2 : 1}
+            size={welcome ? "title" : "hero"}
+            status={nasAnswerTone(answer)}
+            variant={answer.kind === "welcome" ? "welcome" : "status"}
+            title={loading ? t("dashboard.answer.reading") : said.title}
+            reason={ordered.length > 0 ? undefined : said.reason}
+            loading={loading}
+            action={checkButton}
+            after={also}
+            aside={
+              welcome || newNas || loading || host === undefined ? undefined : (
+                <NasFront
+                  host={host}
+                  bays={front.bays}
+                  board={front.board}
+                  size="small"
+                  label={fw.welcome.mini(host, result !== undefined)}
+                  checked={result !== undefined}
+                  landed={landed}
+                />
+              )
+            }
+          />
+        )}
         {loading ? null : (
+          <ScanLine
+            label={t("dashboard.scan.label")}
+            areas={scanAreas(input, fw.scan)}
+          />
+        )}
+      </div>
+
+      {loading ? null : ordered.length > 0 ? (
+        // One region, named by the list itself; the heading is its visible name.
+        <Panel>
+          <h2 className="mb-4 text-section text-foreground compact:mb-2.5">
+            {t("dashboard.needs.label")}
+          </h2>
           <AttentionList
             label={t("dashboard.needs.label")}
             items={needs}
             moreLabel={(count) => t("dashboard.needs.more", { count })}
             fewerLabel={t("dashboard.needs.fewer")}
           />
-        )}
-      </div>
-      {stepsOnTop ? firstSteps : null}
-      <NasMap
-        key={replays}
-        view={view}
-        words={words.map}
-        meter={(s) => (
-          <StorageMeter
-            storage={s}
-            facts={facts.get(s.id)}
-            loading={reads.storage !== "ok"}
-          />
-        )}
-        onOpen={open}
-        captions={captions}
-        example={(showTips || replay) && newNas}
-        seen={!firstVisit.first}
-        onSeen={firstVisit.done}
-        replay={replay}
-        errors={laneErrors}
-        onRetry={(lane) => r.retry[lane]()}
-        retrying={retrying}
-        onTraced={() => tips.endTip("tip.trace")}
-        tip={
-          loading ? null : (
-            <Tip
-              id="tip.trace"
-              dismissLabel={t("dashboard.welcome.dismiss")}
-              dismissName={t("dashboard.map.traceTipName")}
-            >
-              {t("dashboard.map.traceTip")}
-            </Tip>
-          )
-        }
-        addStorage={
-          ghostAdds ? (
-            <Button
-              variant={accent === "add-storage" ? "primary" : "neutral"}
-              size="sm"
-              render={<Link to="/storage/filesystems/add" />}
-            >
-              <Icon name="file-system" mark="create" size={16} />
-              {t("dashboard.map.actions.addStorage")}
-            </Button>
-          ) : null
-        }
-        actions={footer.map(action)}
-      />
+        </Panel>
+      ) : stepsOnTop ? (
+        <Panel>{firstSteps("across")}</Panel>
+      ) : null}
+
       <DashboardLive
+        size="large"
+        className={panelClass()}
         devices={r.network.data?.data}
         stale={r.info.isRefetchError}
         updatedAt={r.info.dataUpdatedAt}
       />
+
+      <div
+        id={DASHBOARD_TARGETS.map}
+        tabIndex={-1}
+        className={panelClass({ ground: "plate", className: "outline-none" })}
+      >
+        <NasMap
+          key={replays}
+          view={view}
+          words={words.map}
+          meter={(s) => (
+            <StorageMeter
+              storage={s}
+              facts={facts.get(s.id)}
+              loading={reads.storage !== "ok"}
+            />
+          )}
+          onOpen={open}
+          captions={captions}
+          example={(showTips || replay) && newNas}
+          seen={!firstVisit.first}
+          onSeen={firstVisit.done}
+          replay={replay}
+          errors={laneErrors}
+          onRetry={(lane) => r.retry[lane]()}
+          retrying={retrying}
+          onTraced={() => tips.endTip("tip.trace")}
+          tip={
+            loading ? null : (
+              <Tip
+                id="tip.trace"
+                dismissLabel={t("dashboard.welcome.dismiss")}
+                dismissName={t("dashboard.map.traceTipName")}
+              >
+                {t("dashboard.map.traceTip")}
+              </Tip>
+            )
+          }
+          addStorage={
+            ghostAdds ? (
+              <Button
+                variant={accent === "add-storage" ? "primary" : "neutral"}
+                size="sm"
+                render={<Link to="/storage/filesystems/add" />}
+              >
+                <Icon name="file-system" mark="create" size={16} />
+                {t("dashboard.map.actions.addStorage")}
+              </Button>
+            ) : null
+          }
+          actions={mapActions.map(action)}
+        />
+      </div>
+
       <DashboardTemperatures
+        id={DASHBOARD_TARGETS.temps}
+        className={panelClass({ className: "outline-none" })}
         groups={temperatures}
         state={readStateOf(r.diskList)}
         error={r.diskList.error}
@@ -772,17 +930,15 @@ function AdminDashboard({ username }: { username: string | null }) {
         retrying={r.diskList.isFetching}
         onRetry={r.retry.disks}
       />
-      <div
-        className={
-          stepsOnTop
-            ? "flex flex-col"
-            : "grid grid-cols-1 gap-x-14 gap-y-9 @min-[60rem]/page:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]"
-        }
-      >
+
+      <div className="grid grid-cols-1 items-stretch gap-(--density-gutter) @min-[60rem]/page:grid-cols-2">
         {stepsOnTop ? null : stepsShown ? (
-          firstSteps
+          <Panel>{firstSteps("list")}</Panel>
         ) : (
-          <Shortcuts title={t("dashboard.shortcuts.title")}>
+          <Shortcuts
+            title={t("dashboard.shortcuts.title")}
+            className={panelClass()}
+          >
             {first.eligible && !showTips && !loading
               ? first.steps.filter((s) => !s.done && !s.offers).map(shortcut)
               : null}
@@ -814,6 +970,10 @@ function AdminDashboard({ username }: { username: string | null }) {
           </Shortcuts>
         )}
         <ThisNas
+          className={panelClass({
+            // Alone at the foot when the first steps are at the top: the whole row.
+            className: stepsOnTop ? "@min-[60rem]/page:col-span-2" : undefined,
+          })}
           info={info}
           failed={info === undefined && r.info.isError}
           error={r.info.error}
@@ -859,7 +1019,9 @@ function ThisNas({
   onRetry,
   layout,
   onShowAround,
+  className,
 }: {
+  className?: string;
   info: SystemInformation | undefined;
   failed: boolean;
   error: unknown;
@@ -949,6 +1111,7 @@ function ThisNas({
   }
   return (
     <NasFacts
+      className={className}
       title={t("dashboard.facts.title")}
       layout={layout}
       action={

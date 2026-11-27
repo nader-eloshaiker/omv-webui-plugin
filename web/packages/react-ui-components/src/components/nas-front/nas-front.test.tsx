@@ -256,7 +256,7 @@ describe("NasFront, small", () => {
     }
   });
 
-  it("wipes the solid line over the dashed one when the result lands on the page", () => {
+  it("wipes the dashed line away off the solid one when the result lands on the page", () => {
     const { container } = small({ checked: true, landed: true });
     const figure = container.querySelector('[data-slot="nas-front"]');
     expect(figure).toHaveAttribute("data-landed", "true");
@@ -264,8 +264,9 @@ describe("NasFront, small", () => {
       ...container.querySelectorAll<HTMLElement>('[data-part="caddy"]'),
     ];
     for (const caddy of caddies) {
-      expect(caddy.className).toMatch(/border-dashed/u);
-      expect(caddy.className).toMatch(/after:border-art-line/u);
+      // The caddy's own line is solid already; the dashed one lies over it only while it wipes.
+      expect(caddy.className).toMatch(/(^| )border-art-line( |$)/u);
+      expect(caddy.className).toMatch(/after:border-dashed/u);
     }
     // Disk by disk: each bay carries its place for the stagger.
     expect(
