@@ -104,10 +104,13 @@ export function useNasWords() {
     },
     diskLabel: (d) =>
       [
+        // What the slot shows first, in its order (WCAG 2.5.3): the state's word only when it is on
+        // screen, otherwise after the detail.
         d.device,
-        d.summary,
-        d.healthLabel,
+        d.healthShown ? d.healthLabel : undefined,
         d.detail,
+        d.healthShown ? undefined : d.healthLabel,
+        d.summary,
         d.alsoIn.length > 0
           ? t("dashboard.map.alsoInLower", { list: list(d.alsoIn) })
           : undefined,
@@ -126,13 +129,18 @@ export function useNasWords() {
       rsync: t("dashboard.map.wayShort.rsync"),
       ssh: t("dashboard.map.wayShort.ssh"),
     },
-    folderLabel: ({ name, ways, state }) => {
-      const base =
+    // What the chip shows first, in its order (WCAG 2.5.3): the name, "ways in: none", its state.
+    folderLabel: ({ name, ways, state }) =>
+      [
+        name,
+        ways.length > 0 ? undefined : t("dashboard.map.folderNoWay"),
+        state?.toLowerCase(),
         ways.length > 0
-          ? t("dashboard.map.folderReached", { name, list: list(ways) })
-          : t("dashboard.map.folderUnreached", { name });
-      return state ? `${base}, ${state.toLowerCase()}` : base;
-    },
+          ? t("dashboard.map.folderReachedBy", { list: list(ways) })
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(", "),
     moreFolders: (count, ok) =>
       ok
         ? t("dashboard.map.moreFoldersOk", { count })

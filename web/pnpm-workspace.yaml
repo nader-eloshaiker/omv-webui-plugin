@@ -65,6 +65,9 @@ catalogs:
     # The browser test (pnpm test:browser): the production build under the nginx snippet's headers.
     # Not part of `pnpm test`; the browser comes from `playwright install`, never an install script.
     "@playwright/test": ^1.63.0
+    # Accessibility rules (WCAG 2.2 AA) run inside the Playwright browser over the component stories.
+    # No install script. Pinned to a release that had been public for a week when it was added.
+    "@axe-core/playwright": 4.14.0
 
   # Development only: the component review surface. Nothing from it reaches the product bundle.
   storybook:

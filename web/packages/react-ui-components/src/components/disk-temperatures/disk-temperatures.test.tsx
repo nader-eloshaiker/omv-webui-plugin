@@ -81,7 +81,7 @@ describe("DiskTemperatures", () => {
     );
     const archive = screen
       .getByRole("heading", { name: "Archive, Double parity (RAID 6)" })
-      .closest("section");
+      .closest("[data-slot=disk-group]");
     expect(
       archive?.querySelector("[data-slot='status-pill'][data-status='warning']")
         ?.textContent,
@@ -206,6 +206,17 @@ describe("DiskTemperatures", () => {
     expect(
       screen.getByRole("button", { name: "Show all 24 disks" }),
     ).toBeInTheDocument();
+  });
+
+  it("labels each group without making it a landmark", () => {
+    render(
+      <DiskTemperatures
+        groups={temperatureGroups(DISKS_6, VOLUMES_6)}
+        labels={labels}
+      />,
+    );
+    expect(screen.queryAllByRole("region")).toHaveLength(0);
+    expect(screen.getByRole("group", { name: "Hard disks" })).toBeVisible();
   });
 
   it("fills every level and track, and outlines none", () => {

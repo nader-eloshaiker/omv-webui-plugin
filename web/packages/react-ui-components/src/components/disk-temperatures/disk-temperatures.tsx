@@ -293,7 +293,10 @@ function Group({
   const id = React.useId();
   const title = labels.groupTitle(g);
   return (
-    <section
+    // A labelled group, not a landmark: with many arrays and kinds, landmarks would crowd out the
+    // page's own when a screen reader moves between them.
+    <div
+      role="group"
       data-slot="disk-group"
       data-from={g.from}
       aria-labelledby={id}
@@ -328,7 +331,7 @@ function Group({
           />
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 

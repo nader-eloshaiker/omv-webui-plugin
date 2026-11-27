@@ -501,7 +501,7 @@
 .rl-bar {
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--theme-usage-track);
+  background: var(--theme-usage-empty);
   overflow: hidden;
 }
 .rl-bar-fill {
@@ -913,7 +913,7 @@
 .rl-strength {
   height: 4px;
   border-radius: var(--radius-full);
-  background: var(--theme-usage-track);
+  background: var(--theme-usage-empty);
   overflow: hidden;
 }
 .rl-strength-line {
@@ -1413,7 +1413,7 @@
   width: 90px;
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--theme-usage-track);
+  background: var(--theme-usage-empty);
   overflow: hidden;
 }
 .rl-usage-fill {
@@ -1654,7 +1654,7 @@
   position: relative;
   height: 8px;
   border-radius: var(--radius-full);
-  background: var(--theme-usage-track);
+  background: var(--theme-usage-empty);
 }
 .rl-spacebar-fill {
   position: absolute;

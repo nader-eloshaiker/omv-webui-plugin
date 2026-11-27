@@ -79,16 +79,16 @@ describe("NasMap", () => {
     ).toHaveLength(1);
     expect(
       screen.getByRole("button", {
-        name: /^sda, Hard disk 3\.6.TiB, Failing, 36.°C$/,
+        name: /^sda, Failing, 36.°C, Hard disk 3\.6.TiB$/,
       }),
     ).toBeVisible();
   });
 
   it("names each disk with its state in words and opens it", () => {
     const { onOpen } = renderMap(baseNas());
-    const sdb = screen.getByRole("button", { name: /^sdb, Hard disk/ });
+    const sdb = screen.getByRole("button", { name: /^sdb, .*Hard disk/ });
     expect(sdb).toHaveAccessibleName(
-      `sdb, Hard disk 3.6\u00a0TiB, OK, 35\u00a0°C`,
+      `sdb, 35\u00a0°C, OK, Hard disk 3.6\u00a0TiB`,
     );
     fireEvent.click(sdb);
     expect(onOpen).toHaveBeenCalledWith({
@@ -114,17 +114,55 @@ describe("NasMap", () => {
     expect(screen.getByRole("button", { name: /^Backup/ })).toHaveFocus();
   });
 
+  it("names each control with the words it shows first, in their order (WCAG 2.5.3)", () => {
+    // What a person sees and what voice control matches: commas and colons do not count.
+    const words = (s: string) =>
+      s.toLowerCase().replace(/[,:]/g, " ").replace(/\s+/g, " ").trim();
+    for (const input of [baseNas(), diskCriticalNas(), dashboardReadsNas()]) {
+      const { unmount, container } = renderMap(input);
+      const named = [
+        ...container.querySelectorAll<HTMLElement>("button[aria-label]"),
+      ];
+      expect(named.length).toBeGreaterThan(5);
+      for (const el of named) {
+        const shown = words(el.textContent);
+        expect(words(el.getAttribute("aria-label") ?? "")).toContain(shown);
+      }
+      unmount();
+    }
+  });
+
+  it("reads each heading of the band just before its own list", () => {
+    renderMap(baseNas());
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const waysHead = screen.getByRole("heading", { name: "Ways in" });
+    const ways = screen.getByRole("list", { name: "Ways in" });
+    const netHead = screen.getByRole("heading", { name: "Network" });
+    const net = screen.getByRole("list", { name: "Network" });
+    expect(before(waysHead, ways)).toBe(true);
+    expect(before(ways, netHead)).toBe(true);
+    expect(before(netHead, net)).toBe(true);
+  });
+
+  it("keeps an interface's name apart from its speed and address", () => {
+    renderMap(baseNas());
+    expect(
+      screen.getByRole("button", { name: /^enp2s0 1\sGbit\/s, / }),
+    ).toBeInTheDocument();
+  });
+
   it("lights a folder's row and the ways in it reaches, and dims the rest", () => {
     const onTraced = vi.fn();
     renderMap(baseNas(), { onTraced });
-    const music = screen.getByRole("button", { name: /^Music:/ });
+    const music = screen.getByRole("button", { name: /^Music,/ });
     fireEvent.pointerEnter(music);
     expect(onTraced).toHaveBeenCalled();
     expect(music).toHaveAttribute("data-trace", "lit");
     expect(rows()[0]).toHaveAttribute("data-trace", "lit");
     expect(rows()[1]).toHaveAttribute("data-trace", "dim");
     expect(
-      screen.getByRole("button", { name: /^Linux and Unix \(NFS\)/ }),
+      screen.getByRole("button", { name: /^Linux and Unix, NFS/ }),
     ).toHaveAttribute("data-trace", "lit");
     expect(
       screen.getByRole("button", { name: /^Remote sign-in/ }),
@@ -138,11 +176,11 @@ describe("NasMap", () => {
     act(() => {
       screen.getByRole("button", { name: /^Linux and Unix/ }).focus();
     });
-    expect(screen.getByRole("button", { name: /^Archive:/ })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /^Archive,/ })).toHaveAttribute(
       "data-trace",
       "lit",
     );
-    expect(screen.getByRole("button", { name: /^Photos:/ })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /^Photos,/ })).toHaveAttribute(
       "data-trace",
       "dim",
     );
@@ -155,7 +193,7 @@ describe("NasMap", () => {
     expect(screen.getByText("Off: Copies to other NAS")).toBeVisible();
     expect(
       screen.getByRole("button", {
-        name: "Windows and Mac (SMB): running, over enp2s0",
+        name: "Windows and Mac, SMB: running, over enp2s0",
       }),
     ).toBeVisible();
   });
@@ -318,7 +356,7 @@ describe("NasMap", () => {
     expect(raid).toHaveAccessibleName(
       "In a RAID array: disks sdb and sdc, disk sdb warning. The RAID page shows the array.",
     );
-    const sdb = within(raid).getByRole("button", { name: /^sdb, Hard disk/ });
+    const sdb = within(raid).getByRole("button", { name: /^sdb, .*Hard disk/ });
     expect(within(raid).getByText("Warning")).toBeVisible();
     fireEvent.click(sdb);
     expect(onOpen).toHaveBeenCalledWith({
@@ -336,7 +374,7 @@ describe("NasMap", () => {
     });
     fireEvent.keyDown(system, { key: "ArrowDown" });
     expect(
-      screen.getByRole("button", { name: /^sdb, Hard disk/ }),
+      screen.getByRole("button", { name: /^sdb, .*Hard disk/ }),
     ).toHaveFocus();
   });
 

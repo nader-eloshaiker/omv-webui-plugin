@@ -763,7 +763,7 @@
   height: 6px;
   overflow: hidden;
   border-radius: var(--radius-full);
-  background: var(--theme-usage-track);
+  background: var(--theme-usage-empty);
 }
 .lt-ghost-bar > span > span {
   display: block;

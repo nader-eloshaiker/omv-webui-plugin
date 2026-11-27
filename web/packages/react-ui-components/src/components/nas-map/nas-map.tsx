@@ -229,9 +229,15 @@ function NasMapWire({ tone, place, className, ...props }: NasMapWireProps) {
 function Slot({
   rowId,
   disk,
+  healthShown,
   className,
   ...props
-}: { rowId: string; disk: NasRowDisk } & React.ComponentProps<"button">) {
+}: {
+  rowId: string;
+  disk: NasRowDisk;
+  /** The slot shows its state's word (a disk in trouble that says its own problem). */
+  healthShown: boolean;
+} & React.ComponentProps<"button">) {
   const item = useItem(diskKey(rowId, disk.id), rowId);
   const { words } = useMap();
   return (
@@ -239,7 +245,7 @@ function Slot({
       {...props}
       {...item}
       type="button"
-      aria-label={words.diskLabel(disk)}
+      aria-label={words.diskLabel({ ...disk, healthShown })}
       title={disk.alsoIn.length > 0 ? words.alsoIn(disk.alsoIn) : undefined}
       className={cn(
         className,
@@ -346,7 +352,15 @@ function DiskCell({
     // problem shows that in place of its detail.
     detail: d.health === "ok" || shared?.ids.has(d.id) ? d.detail : undefined,
     health: shared?.ids.has(d.id) ? "none" : undefined,
-    link: <Slot rowId={row.id} disk={d} />,
+    link: (
+      <Slot
+        rowId={row.id}
+        disk={d}
+        // As the bay's `problems` display draws it: a healthy disk's word, or one the row says once,
+        // is for assistive technology only.
+        healthShown={d.health !== "ok" && !shared?.ids.has(d.id)}
+      />
+    ),
   }));
   return (
     <span
@@ -596,6 +610,8 @@ function NasMapFolderChip({
   className,
   ...props
 }: NasMapFolderChipProps) {
+  // The spaces are not drawn (the chip is a flex row); they keep the name and the words after it
+  // apart in the chip's text, so its accessible name can contain what it shows (WCAG 2.5.3).
   const children = (
     <>
       <Icon
@@ -606,7 +622,7 @@ function NasMapFolderChip({
       />
       <bdi data-part="folder-name" className="truncate font-medium">
         {name}
-      </bdi>
+      </bdi>{" "}
       {ways.length === 0 ? (
         noWays ? (
           <span className="text-xs whitespace-nowrap text-tertiary-foreground">
@@ -621,7 +637,7 @@ function NasMapFolderChip({
             </span>
           ))}
         </span>
-      )}
+      )}{" "}
       {state ? (
         <span
           className={cn(
@@ -1195,7 +1211,7 @@ function WayItem({
           <span className="text-xs font-normal text-tertiary-foreground">
             {way.tech}
           </span>
-        </span>
+        </span>{" "}
         {/* A running way says nothing when the band says it once for all; a problem, its icon and word. */}
         {way.running && said ? null : (
           <span
@@ -1246,7 +1262,7 @@ function InterfaceItem({ iface }: { iface: NasInterface }) {
           className="truncate font-mono text-sm font-semibold"
         >
           {iface.name}
-        </span>
+        </span>{" "}
         {iface.up ? (
           <span className="justify-self-start ps-2 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
             {[iface.speed, iface.address].filter(Boolean).length > 0 ? (
@@ -1358,22 +1374,6 @@ function Band({
         ) : null}
       </div>
       <div
-        data-part="band-head"
-        className="col-start-3 col-end-7 row-start-1 flex flex-col gap-0.5 self-end @max-[37.5rem]/nasmap:hidden"
-      >
-        <h3
-          id={`${id}-net`}
-          className="text-sm leading-4.5 font-normal text-muted-foreground"
-        >
-          {words.lanes.network.title}
-        </h3>
-        {captions.includes("network") ? (
-          <p className="text-xs text-tertiary-foreground compact:hidden">
-            {words.lanes.network.caption}
-          </p>
-        ) : null}
-      </div>
-      <div
         data-part="band-ways"
         className={cn("col-start-1 row-start-2 min-w-0", narrowPlace)}
       >
@@ -1407,6 +1407,24 @@ function Band({
           {words.off(view.ways.off.map((w) => w.name))}
         </p>
       ) : null}
+      {/* The network's heading comes after the ways in and their "Off" line in the markup, so a screen
+          reader hears each heading just before its own list; the grid places it over its column. */}
+      <div
+        data-part="band-head"
+        className="col-start-3 col-end-7 row-start-1 flex flex-col gap-0.5 self-end @max-[37.5rem]/nasmap:hidden"
+      >
+        <h3
+          id={`${id}-net`}
+          className="text-sm leading-4.5 font-normal text-muted-foreground"
+        >
+          {words.lanes.network.title}
+        </h3>
+        {captions.includes("network") ? (
+          <p className="text-xs text-tertiary-foreground compact:hidden">
+            {words.lanes.network.caption}
+          </p>
+        ) : null}
+      </div>
       <Bus column="col-start-2" count={view.ways.on.length} />
       <div
         data-part="band-net"

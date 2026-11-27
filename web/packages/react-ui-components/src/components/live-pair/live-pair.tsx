@@ -252,8 +252,9 @@ const MIRROR_LABEL_GAP = 0.22;
 
 /**
  * Two series on one 0 to 100 scale (processor and memory), the first teal and solid, the second
- * violet and dashed, each named at its end with its value now (style guide 3.9). An image with a text
- * alternative: each series' value now and the range this page saw.
+ * violet and dashed, each named at its end with its value now (style guide 3.9). The plot is an
+ * image with a text alternative: each series' value now and the range this page saw. The title and
+ * the aside over it are text, read before it.
  */
 function LivePercentChart({
   series,
@@ -287,13 +288,12 @@ function LivePercentChart({
   return (
     <div
       data-slot="live-percent-chart"
-      role="img"
-      aria-label={alt}
       className={cn(chartClass, className)}
       {...props}
     >
       <ChartHead title={title} aside={aside} />
-      <span className={plotClass}>
+      {/* The plot is the image: its name, aside and note stay text a screen reader reads. */}
+      <span role="img" aria-label={alt} className={plotClass}>
         <span className={areaClass}>
           <Plot>
             <Rule y={yAt(50, 100, "full")} kind="grid" />
@@ -395,13 +395,12 @@ function LiveMirrorChart({
   return (
     <div
       data-slot="live-mirror-chart"
-      role="img"
-      aria-label={alt}
       className={cn(chartClass, className)}
       {...props}
     >
       <ChartHead title={title} aside={aside} />
-      <span className={plotClass}>
+      {/* The plot is the image: its name, aside and note stay text a screen reader reads. */}
+      <span role="img" aria-label={alt} className={plotClass}>
         <span className={areaClass}>
           <Plot>
             <Rule y={yAt(1, 1, "up")} kind="grid" />

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The design lab's browser test: the lab's test-only build (dist-lab/, `pnpm build:lab`) served with
 // the plugin snippet's headers, Trusted Types enforced, in Chromium. It proves that what the lab
-// draws (Recharts among it) runs under the real policy with no violation.
+// draws runs under the policy with no violation.
 //
 //   pnpm test:browser:lab        (in web/) builds the lab, then runs this
 //

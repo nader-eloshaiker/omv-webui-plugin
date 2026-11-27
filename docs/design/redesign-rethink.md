@@ -1499,7 +1499,7 @@ ever drawn between neighbours on the same row, straight, short, and never crossi
    step). A newcomer sees exactly where a new disk goes.
 4. **Ways in and network become one band under the rows**, a small left-to-right diagram with a
    single fan-in that is easy to read: the ways in that are on, as tiles (name, technical term,
-   running, computers connected) → one connector each into the network tile (interface, speed,
+   running) → one connector each into the network tile (interface, speed,
    address, live in/out) → "Your network". Off ways are one line in secondary text ("Off: Copies to other NAS").
    With more than one interface, the band shows each, and each way's connector goes to the
    interface it listens on (all, in practice: then one bracket, not N lines).
@@ -1533,7 +1533,10 @@ ever drawn between neighbours on the same row, straight, short, and never crossi
    band shows the ways in as Off with the caption "How computers reach your shared folders".
 13. **Screen readers**: each row is a list item named "Data drive, on disk sda: 92 percent used,
    almost full. Shared folders: Photos, Music, Documents, at risk." The band is a list of ways in,
-   each "Windows and Mac (SMB): on, 2 computers connected, over enp2s0".
+   each "Windows and Mac, SMB: running, over enp2s0". A control's name starts with the words it
+   shows, in their order, and only then adds what it does not show (WCAG 2.5.3): "sda, 36 °C, OK,
+   Hard disk 3.6 TiB", "Archive, ways in: none". No count of connected computers: no read the
+   dashboard makes gives one (owner, 2026-11-27).
 
 **The first visit (owner Q2):** the NAS assembles row by row, top to bottom: each row's disks slide
 into their slots, its connector draws, the bar fills, the folder chips rise; then the band's tiles

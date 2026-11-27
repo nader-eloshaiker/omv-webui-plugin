@@ -14,7 +14,7 @@ composition, the order, the pictures and where the prose lives.
 Sources: `docs/redesign-plan.md`, `docs/design/visual-foundation.md` (normative; 3.6, 7, 8, 9, 11, 12,
 13), `docs/design/style-guide.md` 5.4 to 5.10 (still normative), `docs/design/phase-5-monitoring.md`
 (the rules for each card's data), `docs/05-security.md`, the lab's Sky dashboard
-(`src/lab/screens/Dashboard.tsx`, reference only).
+(`src/lab/screens/Dashboard.tsx`, reference only; removed from the lab on 2026-11-27).
 
 ---
 

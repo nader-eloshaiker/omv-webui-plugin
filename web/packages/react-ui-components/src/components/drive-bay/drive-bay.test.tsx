@@ -208,6 +208,37 @@ describe("DriveBay health icon", () => {
     expect(button.className).toMatch(/justify-items-center/);
   });
 
+  it("keeps the slot's words apart in its text, so a name can start with them", () => {
+    render(<DriveBay aria-label="Disks" slots={SLOTS} />);
+    const link = screen.getByRole("link");
+    expect(link.textContent.replace(/\s+/g, " ").trim()).toBe(
+      "sda Not checked System 34 °C",
+    );
+  });
+
+  it("puts a word kept for assistive technology after the words on screen", () => {
+    render(
+      <DriveBay
+        aria-label="Disks"
+        health="problems"
+        slots={[
+          {
+            id: "sda",
+            device: "sda",
+            kind: "hdd",
+            status: "ok",
+            statusLabel: "OK",
+            detail: "36 °C",
+            link: <a href="#/storage/disks/sda" />,
+          },
+        ]}
+      />,
+    );
+    const link = screen.getByRole("link");
+    expect(link.textContent.replace(/\s+/g, " ").trim()).toBe("sda 36 °C OK");
+    expect(link.lastElementChild).toHaveClass("sr-only");
+  });
+
   it("shows the word by default", () => {
     const { container } = render(<DriveBay aria-label="Disks" slots={SLOTS} />);
     const word = container.querySelector("[data-slot=drive-slot-state]");

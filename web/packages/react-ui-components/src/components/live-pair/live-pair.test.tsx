@@ -42,6 +42,20 @@ describe("LivePair", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps each chart's name, aside and note as text outside its image", () => {
+    render(<LivePair {...livePairArgs(liveReadings(40, busyPlan))} />);
+    const images = screen.getAllByRole("img");
+    expect(images).toHaveLength(2);
+    for (const text of [
+      "Processor and memory",
+      "enp2s0",
+      "The two halves are scaled separately.",
+    ]) {
+      const el = screen.getByText(text);
+      expect(images.some((img) => img.contains(el))).toBe(false);
+    }
+  });
+
   it("names each line at its end and in the key, in the text inks", () => {
     const { container } = render(
       <LivePair {...livePairArgs(liveReadings(40, busyPlan))} />,
