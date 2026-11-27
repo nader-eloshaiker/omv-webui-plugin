@@ -392,8 +392,14 @@ describe("NasMap", () => {
   it("writes no style attribute but its own custom properties", () => {
     const { container } = renderMap(baseNas());
     for (const el of container.querySelectorAll("[style]")) {
-      const style = el.getAttribute("style") ?? "";
-      expect(style).toMatch(/^(\s*--[a-z-]+:\s*[^;]+;?)+\s*$/);
+      const declarations = (el.getAttribute("style") ?? "")
+        .split(";")
+        .map((d) => d.trim())
+        .filter((d) => d !== "");
+      expect(declarations.length).toBeGreaterThan(0);
+      for (const declaration of declarations) {
+        expect(declaration).toMatch(/^--[a-z-]+:/u);
+      }
     }
   });
 });

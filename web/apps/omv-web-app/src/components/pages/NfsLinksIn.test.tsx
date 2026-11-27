@@ -35,7 +35,7 @@ describe("the dashboard (12.2)", () => {
     await user.click(
       await within(map).findByRole(
         "button",
-        { name: /^Linux and Unix \(NFS\): running/ },
+        { name: /^Linux and Unix, NFS: running/ },
         LONG,
       ),
     );

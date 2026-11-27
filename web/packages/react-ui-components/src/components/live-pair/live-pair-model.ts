@@ -309,8 +309,23 @@ export interface FigureParts {
  * that writes "%12") stays whole, with no unit.
  */
 export function figureParts(text: string): FigureParts {
-  const match = /^(.*\S)[\s\u00a0\u202f]+(\S+)$/su.exec(text);
-  return match?.[1] !== undefined && match[2] !== undefined
-    ? { value: match[1], unit: match[2] }
-    : { value: text, unit: "" };
+  // A plain scan rather than a regular expression, so no input can make it backtrack.
+  const space = (c: string | undefined) =>
+    c !== undefined && (/\s/u.test(c) || c === "\u00a0" || c === "\u202f");
+  let end = text.length;
+  while (end > 0 && space(text[end - 1])) {
+    end -= 1;
+  }
+  let gap = end;
+  while (gap > 0 && !space(text[gap - 1])) {
+    gap -= 1;
+  }
+  let start = gap;
+  while (start > 0 && space(text[start - 1])) {
+    start -= 1;
+  }
+  if (gap === 0 || start === 0 || end !== text.length) {
+    return { value: text, unit: "" };
+  }
+  return { value: text.slice(0, start), unit: text.slice(gap, end) };
 }
