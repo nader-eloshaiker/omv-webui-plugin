@@ -69,8 +69,9 @@ style guide quotes are updated from the script's output. See the `colour-theory`
 
 ## Accessibility - the dashboard's library pieces
 
-After changing the map, the answer, what needs you, the first steps, the waffle, the live charts,
-the temperatures, the drive pictures or the bay in `react-ui-components`, or their stories:
+After changing the map, the answer, what needs you, the first steps, the segment bar, the live
+charts, the temperatures, the drive pictures, the bay, the drawing of the NAS, the scan line or the
+panel in `react-ui-components`, or their stories:
 
 ```
 pnpm test:browser:stories       # in web/: builds Storybook, then axe (WCAG 2.2 AA) over their stories

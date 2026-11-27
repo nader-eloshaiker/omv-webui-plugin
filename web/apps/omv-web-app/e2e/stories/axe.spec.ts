@@ -17,11 +17,14 @@ const FOLDERS = [
   "nas-answer",
   "attention-list",
   "first-steps",
-  "waffle",
+  "segment-bar",
   "live-pair",
   "disk-temperatures",
   "drive-picture",
   "drive-bay",
+  "nas-front",
+  "scan-line",
+  "panel",
 ] as const;
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
