@@ -1041,3 +1041,7 @@ The owner found the drive sizes inconsistent: in the temperatures the hard disks
 ## 2026-11-27 — The drawing of the NAS drops true scale: one height for every drive (owner)
 
 Drawn to scale against the hard disk, the NVMe stick on the mainboard did not look in proportion, though it measured true (0.56 of the hard disk's height against 0.54). The owner dropped scale: in the drawing of the NAS too, every drive is as tall as the hard disk and as wide as its own device's proportion, the same rule as the disk temperatures. The SSD fills its caddy like the hard disks; the stick stands upright on the board, as tall as they are and about a quarter as wide. This replaces item 2 of the entry before.
+
+## 2026-11-27 — The NVMe stick gets a mount, drawn as the bays are (owner)
+
+Standing on the board by itself, the stick was not noticed. The owner asked for a mount the way the disks have caddies, so it reads as familiar and in place. The board row now keeps the bays' columns. The stick sits in an M.2 slot exactly a bay wide and tall, on a stretch of mainboard drawn as a caddy is. The M.2 socket at its foot takes the stick's contacts, and the standoff screw at its head holds the notched end, as on a real board. On the first visit the stick goes down into its socket rather than sliding in from the side. The small drawing beside a later answer has the same mount at its size.

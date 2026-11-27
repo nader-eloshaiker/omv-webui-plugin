@@ -215,7 +215,7 @@
   position: relative;
   display: grid;
   width: 100%;
-  height: 148px;
+  height: var(--wl-slot-h);
   padding: 5px;
   overflow: hidden;
   border: 1px solid var(--theme-border);
@@ -240,6 +240,7 @@
    bays, can be sized from it. */
 .wl-front {
   --wl-hdd: 62px;
+  --wl-slot-h: 148px;
 }
 .wl-caddy svg {
   margin-block: auto;
@@ -255,6 +256,61 @@
   height: 6px;
   border: 1.5px solid var(--theme-art-line);
   border-radius: var(--radius-full);
+}
+/* The stick's mount, drawn as the bays are (owner, 2026-11-27: on its own the stick was not noticed):
+   the board row keeps the bays' columns, so the M.2 slot is an opening exactly a bay wide and tall;
+   in it the stretch of mainboard the stick sits on, drawn as a caddy is, with the M.2 socket at its
+   foot that the stick's contacts go into and the standoff screw at its head holding the notched end. */
+.wl-m2 {
+  display: grid;
+  height: var(--wl-slot-h);
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-md);
+  background: var(--theme-page);
+}
+.wl-m2-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  border: 1.5px solid var(--theme-art-line);
+  border-radius: calc(var(--radius-md) - 4px);
+  background: var(--theme-art-surface);
+}
+.wl-m2-screw {
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin-block-end: -6px;
+  border: 1.5px solid var(--theme-art-line);
+  border-radius: var(--radius-full);
+  background: var(--theme-art-surface);
+}
+.wl-m2-screw::after {
+  content: "";
+  position: absolute;
+  inset: 50% 1.5px auto;
+  height: 1.5px;
+  translate: 0 -50%;
+  background: var(--theme-art-line);
+}
+.wl-m2-socket {
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: none;
+  width: calc(var(--wl-hdd) * 20 / 52 + 8px);
+  height: 9px;
+  margin-block-start: -5px;
+  border: 1.5px solid var(--theme-art-line);
+  border-radius: 2px;
+  background: var(--theme-art-surface);
 }
 .wl-stick .wl-caddy {
   padding: 0;
@@ -296,19 +352,23 @@
   color: var(--theme-foreground);
 }
 .wl-board {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 12px;
   margin-block-start: 16px;
   padding-block-start: 14px;
   overflow: hidden;
   border-block-start: 1px dashed var(--theme-art-faint);
 }
 .wl-stick {
-  display: flex;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 14px;
   min-width: 0;
+}
+.wl-stick-words {
+  grid-column: 2 / -1;
 }
 .wl-stick-words {
   display: flex;
@@ -364,8 +424,8 @@
 :root[data-density="compact"] .wl-front[data-size="large"] .wl-fact-kind {
   display: none;
 }
-:root[data-density="compact"] .wl-front[data-size="large"] .wl-slot {
-  height: 112px;
+:root[data-density="compact"] .wl-front[data-size="large"] {
+  --wl-slot-h: 112px;
 }
 :root[data-density="compact"] .wl-front[data-size="large"] .wl-bay .wl-caddy {
   padding-block: 10px 8px;
@@ -387,6 +447,7 @@
     padding: 36px 12px 14px;
   }
   .wl-bays,
+  .wl-board,
   .wl-groups,
   .wl-labels {
     gap: 6px;
@@ -395,8 +456,10 @@
   .wl-labels {
     padding: 0 13.5px;
   }
+  .wl-front {
+    --wl-slot-h: 112px;
+  }
   .wl-slot {
-    height: 112px;
     padding: 3px;
   }
   .wl-caddy {
@@ -423,14 +486,16 @@
   inset-inline-start: 12px;
   font-size: var(--text-xs);
 }
-.wl-front[data-size="small"] :is(.wl-bays, .wl-labels) {
+.wl-front[data-size="small"] :is(.wl-bays, .wl-board, .wl-labels) {
   gap: 6px;
 }
 .wl-front[data-size="small"] .wl-labels {
   padding: 0 11.5px;
 }
+.wl-front[data-size="small"] {
+  --wl-slot-h: 72px;
+}
 .wl-front[data-size="small"] .wl-slot {
-  height: 72px;
   padding: 2px;
   overflow: visible;
 }
@@ -455,6 +520,30 @@
   font-size: var(--text-xs);
   font-weight: 500;
 }
+.wl-front[data-size="small"] .wl-m2 {
+  padding: 2px;
+}
+.wl-front[data-size="small"] .wl-stick .wl-caddy {
+  padding: 0;
+}
+.wl-front[data-size="small"] .wl-m2-socket {
+  width: calc(var(--wl-hdd) * 16 / 40 + 5px);
+}
+.wl-front[data-size="small"] .wl-m2-screw {
+  width: 7px;
+  height: 7px;
+  margin-block-end: -4px;
+  border-width: 1px;
+}
+.wl-front[data-size="small"] .wl-m2-screw::after {
+  inset-inline: 1px;
+  height: 1px;
+}
+.wl-front[data-size="small"] .wl-m2-socket {
+  height: 6px;
+  margin-block-start: -3px;
+  border-width: 1px;
+}
 .wl-front[data-size="small"] .wl-board {
   margin-block-start: 8px;
   padding-block-start: 6px;
@@ -478,7 +567,7 @@
     calc(var(--i, 0) * var(--motion-stagger)) both;
 }
 
-/* The first visit: the disks rise into their bays left to right, the stick slides onto the board,
+/* The first visit: the disks rise into their bays left to right, the stick goes down into its socket,
    the brackets draw under the drives they make. Fades done by about 240ms; movement to about 880ms. */
 .wl-front[data-assemble="full"] .wl-bay .wl-caddy {
   animation:
@@ -906,7 +995,7 @@
 }
 @keyframes wl-onto-board {
   from {
-    translate: calc(var(--motion-rise) * -3) 0;
+    translate: 0 calc(var(--motion-rise) * -3);
   }
 }
 @keyframes wl-wipe {

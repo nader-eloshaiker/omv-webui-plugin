@@ -478,7 +478,8 @@ function GroupItem({ group, index }: { group: Group; index: number }) {
 /**
  * The NAS's front, drawn from DiskMgmt.getList: one bay per disk on a SATA port, in device order (the
  * dashboard reads no bay positions, so none is claimed), each disk drawn as its kind with its name,
- * kind and size and its temperature or "Asleep"; the NVMe stick on the mainboard under them; and
+ * kind and size and its temperature or "Asleep"; the NVMe stick in its M.2 slot on the mainboard
+ * under them, held by its socket and standoff screw as a disk is by its caddy; and
  * under the chassis, a bracket per drive spanning the disks it is made of. Decorative for assistive
  * technology except its name and words: the bays are a list, the drives a list.
  */
@@ -537,12 +538,18 @@ export function NasFront({
               const holds = nas.storage.find((s) => d.storage.includes(s.id));
               return (
                 <span key={d.id} className="wl-stick">
-                  <span className="wl-caddy">
-                    <DrivePicture
-                      kind="nvme"
-                      size={size === "large" ? "large" : "tile"}
-                      orientation="upright"
-                    />
+                  <span className="wl-m2">
+                    <span className="wl-m2-board">
+                      <span className="wl-m2-screw" />
+                      <span className="wl-caddy">
+                        <DrivePicture
+                          kind="nvme"
+                          size={size === "large" ? "large" : "tile"}
+                          orientation="upright"
+                        />
+                      </span>
+                      <span className="wl-m2-socket" />
+                    </span>
                   </span>
                   {size === "large" ? (
                     <span className="wl-stick-words">
