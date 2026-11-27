@@ -4,6 +4,8 @@
 // connector; an M.2 NVMe stick with its contact fingers and key notch at one end and the half-round
 // mounting cut-out at the other. They follow the icon set's disk-hdd, disk-ssd and disk-nvme. A disk
 // whose kind was not read is drawn as a plain drive with a blank label, claiming none (2026-11-27).
+// The stick lies flat where it sits on the mainboard, and stands upright beside the other drives in
+// the temperatures (owner, 2026-11-27), its fingers at the foot.
 //
 // Each comes in three sizes, each drawn for its size on a pixel grid (the viewBox is the size), not
 // scaled from one drawing: the marker for a key or a line of text, the tile in the temperatures and
@@ -14,6 +16,8 @@ import type * as React from "react";
 import { cn } from "../../utils";
 import {
   DRIVE_PICTURE_BOX,
+  drivePictureBox,
+  type DrivePictureOrientation,
   type DrivePictureShape,
   type DrivePictureSize,
 } from "./drive-picture-model";
@@ -550,9 +554,15 @@ interface DrivePictureProps extends Omit<
   kind: DrivePictureShape;
   /**
    * `marker`: beside a word or in a key, 12 to 16px. `tile`: in the temperatures, the scale's length
-   * (56px) tall, or long for a stick. `large`: a disk's own page.
+   * (56px) tall, or long for a stick lying flat. `large`: a disk's own page.
    */
   size?: DrivePictureSize;
+  /**
+   * The NVMe stick only: `lying` flat as it sits on the mainboard (the default), or `upright`, its
+   * contact fingers at the foot, as tall as the other drives at its size. The other kinds always
+   * stand upright and ignore it.
+   */
+  orientation?: DrivePictureOrientation;
 }
 
 /**
@@ -562,10 +572,14 @@ interface DrivePictureProps extends Omit<
 function DrivePicture({
   kind,
   size = "tile",
+  orientation = "lying",
   className,
   ...props
 }: DrivePictureProps) {
-  const { w, h } = DRIVE_PICTURE_BOX[size][kind];
+  const { w, h } = drivePictureBox(kind, size, orientation);
+  // The stick standing up is the same drawing turned a quarter round, its fingers at the foot: a
+  // transform in the drawing's own coordinates, not a style.
+  const upright = kind === "nvme" && orientation === "upright";
   return (
     <svg
       aria-hidden="true"
@@ -573,6 +587,7 @@ function DrivePicture({
       data-slot="drive-picture"
       data-kind={kind}
       data-size={size}
+      data-orientation={kind === "nvme" ? orientation : undefined}
       width={w}
       height={h}
       viewBox={`0 0 ${String(w)} ${String(h)}`}
@@ -586,7 +601,13 @@ function DrivePicture({
       )}
       {...props}
     >
-      <Drawing kind={kind} size={size} />
+      {upright ? (
+        <g transform={`translate(0 ${String(h)}) rotate(-90)`}>
+          <Drawing kind={kind} size={size} />
+        </g>
+      ) : (
+        <Drawing kind={kind} size={size} />
+      )}
     </svg>
   );
 }

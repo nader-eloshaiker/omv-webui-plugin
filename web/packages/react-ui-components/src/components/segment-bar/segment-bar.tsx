@@ -7,14 +7,13 @@ import type { CapacityThreshold } from "../capacity-meter/capacity-meter";
 import { useGlide } from "../motion/motion";
 import { StatusLabel } from "../status/status";
 import {
-  WAFFLE_SHAPES,
-  WAFFLE_SIZES,
-  waffleDrawing,
-  waffleOf,
-  type WaffleSizeName,
-} from "./waffle-model";
+  SEGMENT_BAR_SIZES,
+  segmentBarDrawing,
+  segmentBarOf,
+  type SegmentBarSizeName,
+} from "./segment-bar-model";
 
-interface WaffleProps extends Omit<
+interface SegmentBarProps extends Omit<
   React.ComponentProps<"div">,
   "children" | "aria-label"
 > {
@@ -23,8 +22,9 @@ interface WaffleProps extends Omit<
   /** How much of the whole is used, in percent (FileSystemMgmt.getList `percentage`). Clamped to 0 to 100. */
   value: number;
   /**
-   * The warning mark, in percent (FileSystemMgmt.getList `usagewarnthreshold`), drawn as a wider gap
-   * with a rule in it. Leave it out (or pass null) when none is set; OMV's 0 means "never warn".
+   * The warning mark, in percent (FileSystemMgmt.getList `usagewarnthreshold`), drawn as a straight
+   * rule at its exact value in a wider gap. Leave it out (or pass null) when none is set; OMV's 0
+   * means "never warn".
    */
   mark?: number | null;
   /**
@@ -33,35 +33,36 @@ interface WaffleProps extends Omit<
    */
   markLabel?: React.ReactNode;
   /**
-   * Set when the mark is crossed: the status label beside the figures and, only then, the used squares
-   * past the mark (every used square when no mark is set) in the status stroke (style guide 5.6). A
+   * Set when the mark is crossed: the status label beside the figures and, only then, the used part
+   * past the mark (the whole used part when no mark is set) in the status stroke (style guide 5.6). A
    * cell has no room for the label: the table row it sits in shows it, beside the row's name.
    */
   threshold?: CapacityThreshold;
   /** The meter's text alternative, the whole reading in words: "62 % used, 1.4 TiB free of 3.6 TiB." */
   valueText: string;
   /**
-   * The figures, formatted by the caller, always shown (style guide 5.6). Beside the squares in a
-   * cell and under them in a row: "62 %, 1.4 TiB free"; a `<strong>` inside is set in the body ink.
-   * Beside the headline on a page: "1.4 TiB free of 3.6 TiB".
+   * The figures, formatted by the caller, always shown (style guide 5.6). Beside the bar in a cell
+   * and under it in a row: "62 %, 1.4 TiB free"; a `<strong>` inside is set in the body ink. Beside
+   * the headline on a page: "1.4 TiB free of 3.6 TiB".
    */
   figures: React.ReactNode;
-  /** The page size's headline above the squares: "62 % used". Ignored at the other sizes. */
+  /** The page size's headline above the bar: "62 % used". Ignored at the other sizes. */
   headline?: React.ReactNode;
-  /** The page size's line under the squares: what a square stands for and where the mark is. */
+  /** The page size's line under the bar: what a segment stands for and where the mark is. */
   note?: React.ReactNode;
   /**
-   * `row`: a row of a map or a list, 1 % squares 7px wide, the figures under them.
-   * `cell`: a table cell in a 36 to 44px row, 2.5 % squares two high, the figures beside them.
-   * `page`: the file system's own page, 1 % squares 18px wide under a headline.
+   * Twenty segments of 5 % at every size, each size one fixed width.
+   * `row`: a row of a map or a list, 198px wide, the figures under it.
+   * `cell`: a table cell in a 36 to 44px row, 148.5px wide, the figures beside it.
+   * `page`: the file system's own page, 636px wide under a headline.
    */
-  size?: WaffleSizeName;
+  size?: SegmentBarSizeName;
 }
 
 const rootClass = cva("flex min-w-0", {
   variants: {
     size: {
-      row: "flex-col items-start gap-2",
+      row: "flex-col items-start gap-1.5",
       cell: "flex-row items-center gap-2.5",
       page: "flex-col items-start gap-2",
     },
@@ -69,8 +70,8 @@ const rootClass = cva("flex min-w-0", {
   defaultVariants: { size: "row" },
 });
 
-// Room above the squares for the mark's value, when it is written.
-const gridClass = cva("relative block max-w-full flex-none", {
+// Room above the bar for the mark's value, when it is written.
+const barClass = cva("relative block max-w-full flex-none", {
   variants: {
     size: { row: "", cell: "", page: "" },
     marked: { true: "", false: "" },
@@ -107,8 +108,8 @@ const figuresClass = cva(
   },
 );
 
-// Filled, never outlined (style guide 5.6): the empty squares in the `usage-empty` slate, the used
-// ones in the usage blue, and past the crossed mark in the status stroke. No stroke on any square.
+// Filled, never outlined (style guide 5.6): the empty segments in the `usage-empty` slate, the used
+// part in the usage blue, and past the crossed mark in the status stroke. No stroke on any segment.
 const usedClass = cva("", {
   variants: {
     tone: {
@@ -119,6 +120,47 @@ const usedClass = cva("", {
   },
   defaultVariants: { tone: "usage" },
 });
+
+const ruleClass = cva("fill-none stroke-foreground", {
+  variants: {
+    size: {
+      row: "stroke-[1.5]",
+      cell: "stroke-[1.25]",
+      page: "stroke-2",
+    },
+  },
+});
+
+const f2 = (n: number) => (Math.round(n * 100) / 100).toString();
+
+/**
+ * The used part of a piece: its corners rounded as the piece's at the left, and at the right only
+ * when the piece is full, so a piece filled in part ends square inside its slate.
+ */
+function usedPath(
+  x: number,
+  y: number,
+  filled: number,
+  w: number,
+  h: number,
+  r: number,
+): string {
+  const left = Math.min(r, w / 2, filled);
+  const right = filled >= w - 0.01 ? left : 0;
+  const end = x + filled;
+  return (
+    `M${f2(x + left)} ${f2(y)}H${f2(end - right)}` +
+    (right > 0
+      ? `A${f2(right)} ${f2(right)} 0 0 1 ${f2(end)} ${f2(y + right)}`
+      : "") +
+    `V${f2(y + h - right)}` +
+    (right > 0
+      ? `A${f2(right)} ${f2(right)} 0 0 1 ${f2(end - right)} ${f2(y + h)}`
+      : "") +
+    `H${f2(x + left)}A${f2(left)} ${f2(left)} 0 0 1 ${f2(x)} ${f2(y + h - left)}` +
+    `V${f2(y + left)}A${f2(left)} ${f2(left)} 0 0 1 ${f2(x + left)} ${f2(y)}Z`
+  );
+}
 
 /**
  * The status label. It fades in over the base duration only when a new reading brings it; when the
@@ -133,7 +175,7 @@ function ThresholdWord({
 }) {
   return (
     <span
-      data-slot="waffle-threshold"
+      data-slot="segment-bar-threshold"
       className={cn("inline-flex", arrived && "animate-fade-in")}
     >
       <StatusLabel status={threshold.status}>{threshold.label}</StatusLabel>
@@ -142,15 +184,16 @@ function ThresholdWord({
 }
 
 /**
- * Space used as a waffle (owner, 2026-11-26): squares that each stand for a fixed share of the whole,
- * filled a column at a time from the left, with the warning mark as a wider gap and a rule between
- * the squares before it and the squares past it, so the room left before the warning can be counted.
- * A `meter` with its value, range, name and text alternative, on Base UI's Meter; the figures are
- * always written beside it. Only with a status word do the used squares past the mark take the
- * status colour. A new reading glides the fill over the glide duration; under reduced motion it is
- * drawn at its value at once. Nothing moves on load.
+ * Space used as one row of segments (owner, 2026-11-27): twenty segments of 5 % each, filled from
+ * the left, the last used one in part, with the warning mark as a straight rule at its exact value in
+ * a wider gap, so the room left before the warning can be counted. Each size has one fixed width, so
+ * the same value and the same mark sit at the same place on every row of a list or table. A `meter`
+ * with its value, range, name and text alternative, on Base UI's Meter; the figures are always
+ * written beside it. Only with a status word does the used part past the mark take the status
+ * colour. A new reading glides the fill over the glide duration; under reduced motion it is drawn at
+ * its value at once. Nothing moves on load.
  */
-function Waffle({
+function SegmentBar({
   value,
   mark = null,
   markLabel,
@@ -163,13 +206,12 @@ function Waffle({
   className,
   "aria-label": ariaLabel,
   ...props
-}: WaffleProps) {
+}: SegmentBarProps) {
   const used = Math.min(100, Math.max(0, value));
   const shown = useGlide(used) ?? used;
-  const shape = WAFFLE_SHAPES[size];
-  const box = WAFFLE_SIZES[size];
-  const model = waffleOf(shown, mark, shape);
-  const drawing = waffleDrawing(model, shape, box);
+  const box = SEGMENT_BAR_SIZES[size];
+  const model = segmentBarOf(shown, mark);
+  const drawing = segmentBarDrawing(model, box);
   const showMark =
     markLabel !== undefined && size !== "cell" && drawing.ruleX !== null;
   const tone = threshold?.status ?? "usage";
@@ -181,8 +223,9 @@ function Waffle({
     />
   ) : null;
   const r = box.radius;
+  const y = box.ext;
 
-  const grid = (
+  const bar = (
     <Meter.Root
       value={used}
       min={0}
@@ -194,15 +237,15 @@ function Waffle({
       render={(meterProps) => (
         <span
           {...meterProps}
-          data-slot="waffle-grid"
-          className={gridClass({ size, marked: showMark })}
+          data-slot="segment-bar-segments"
+          className={barClass({ size, marked: showMark })}
           // The drawing at its own pixel size, scaled down only where the column is narrower.
           style={{ width: `${String(drawing.width)}px` }}
         >
           {showMark && drawing.ruleX !== null ? (
             <span
               aria-hidden="true"
-              data-slot="waffle-mark"
+              data-slot="segment-bar-mark"
               className={markClass({ size })}
               style={{
                 left: `${String((drawing.ruleX / drawing.width) * 100)}%`,
@@ -217,48 +260,46 @@ function Waffle({
             className="block h-auto w-full"
             viewBox={`0 0 ${String(drawing.width)} ${String(drawing.height)}`}
           >
-            {model.squares.map((s, i) => {
-              const p = drawing.at[i] ?? { x: 0, y: 0 };
+            {model.pieces.map((p, i) => {
+              const at = drawing.at[i] ?? { x: 0, w: 0, filled: 0 };
+              if (at.w <= 0) {
+                return null;
+              }
               const crossed =
-                threshold !== undefined && (mark === null || s.past);
+                threshold !== undefined && (mark === null || p.past);
               return (
                 <g
-                  key={`${String(s.col)}:${String(s.row)}`}
-                  data-past={s.past || undefined}
-                  data-over={(crossed && s.fill > 0) || undefined}
+                  key={`${String(p.segment)}:${String(p.from)}`}
+                  data-segment={p.segment}
+                  data-past={p.past || undefined}
+                  data-over={(crossed && at.filled > 0) || undefined}
                 >
                   <rect
                     data-part="empty"
                     className="fill-usage-empty"
-                    x={p.x}
-                    y={p.y}
-                    width={box.sq}
-                    height={box.sq}
-                    rx={r}
+                    x={at.x}
+                    y={y}
+                    width={at.w}
+                    height={box.height}
+                    rx={Math.min(r, at.w / 2)}
                   />
-                  {s.fill > 0 ? (
-                    <rect
+                  {at.filled > 0 ? (
+                    <path
                       data-part="used"
                       className={usedClass({ tone: crossed ? tone : "usage" })}
-                      x={p.x}
-                      y={p.y + box.sq * (1 - s.fill)}
-                      width={box.sq}
-                      height={box.sq * s.fill}
-                      rx={Math.min(r, (box.sq * s.fill) / 2)}
+                      d={usedPath(at.x, y, at.filled, at.w, box.height, r)}
                     />
                   ) : null}
                 </g>
               );
             })}
             {drawing.rule === null ? null : (
-              // The mark: a rule in the body ink down the gap. A mark on the scale, not an outline.
+              // The mark: a straight rule in the body ink down the wider gap. A mark on the scale,
+              // not an outline.
               <path
                 data-part="mark"
                 d={drawing.rule}
-                className={cn(
-                  "fill-none stroke-foreground [stroke-linejoin:round]",
-                  size === "cell" ? "stroke-[1.25]" : "stroke-[1.5]",
-                )}
+                className={ruleClass({ size })}
               />
             )}
           </svg>
@@ -270,7 +311,7 @@ function Waffle({
   if (size === "page") {
     return (
       <div
-        data-slot="waffle"
+        data-slot="segment-bar"
         data-size={size}
         className={cn(rootClass({ size }), className)}
         {...props}
@@ -284,7 +325,7 @@ function Waffle({
           <span className={figuresClass({ size })}>{figures}</span>
           {statusWord}
         </p>
-        {grid}
+        {bar}
         {note === undefined ? null : (
           <p className="m-0 text-caption text-muted-foreground">{note}</p>
         )}
@@ -293,17 +334,17 @@ function Waffle({
   }
   return (
     <div
-      data-slot="waffle"
+      data-slot="segment-bar"
       data-size={size}
       className={cn(rootClass({ size }), className)}
       {...props}
     >
-      {grid}
+      {bar}
       <span className={figuresClass({ size })}>{figures}</span>
       {size === "row" ? statusWord : null}
     </div>
   );
 }
 
-export { Waffle };
-export type { WaffleProps };
+export { SegmentBar };
+export type { SegmentBarProps };

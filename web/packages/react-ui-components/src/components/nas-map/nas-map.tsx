@@ -432,7 +432,7 @@ interface NasMapStorageCellProps extends Omit<
    * ("Almost full") belongs to the meter.
    */
   state?: { tone: NasRowTone; label: React.ReactNode };
-  /** The space used: the meter (or the waffle) the page draws, under the name. */
+  /** The space used: the meter (or the segment bar) the page draws, under the name. */
   meter?: React.ReactNode;
   /** The name as a button, or a link (`render`), that opens the storage. Without it, plain text. */
   action?: useRender.ComponentProps<"button">;
@@ -1525,7 +1525,7 @@ interface NasMapProps extends Omit<
   view: NasMapView;
   /** Everything the map says, from the app's catalogue. */
   words: NasMapWords;
-  /** Each storage's space used, drawn by the page (a meter or the waffle), in its row's slot. */
+  /** Each storage's space used, drawn by the page (a meter or the segment bar), in its row's slot. */
   meter: (storage: NasStorage) => React.ReactNode;
   /** Pressing a thing on the map: open its page. */
   onOpen: (item: NasMapItem) => void;

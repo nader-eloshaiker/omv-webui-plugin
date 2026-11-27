@@ -3,47 +3,95 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import {
   FILE_SYSTEMS,
-  waffleArgs,
+  segmentBarArgs,
   type FileSystemRow,
 } from "../../fixtures/chart-fixtures";
 import { Phone } from "../../fixtures/story-frames";
 import { Button } from "../button/button";
 import { MotionScope } from "../motion/motion-scope";
 import { StatusLabel } from "../status/status";
-import { Waffle } from "./waffle";
+import { SegmentBar } from "./segment-bar";
 
 const meta = {
-  title: "Components/Waffle",
-  component: Waffle,
-  args: waffleArgs(FILE_SYSTEMS.data, "row"),
-} satisfies Meta<typeof Waffle>;
+  title: "Components/Segment bar",
+  component: SegmentBar,
+  args: segmentBarArgs(FILE_SYSTEMS.data, "row"),
+} satisfies Meta<typeof SegmentBar>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The Data drive in a row of the NAS map: 62 % used, OMV's default mark of 85 % between two columns. */
+/** The Data drive in a row of the NAS map: 62 % used, OMV's default mark of 85 % between two segments. */
 export const Normal: Story = {};
 
-/** Media, past its mark: only the used squares past the gap take the warning stroke, with the word. */
+/** Media, past its mark: only the used part past the rule takes the warning stroke, with the word. */
 export const PastTheMark: Story = {
-  args: waffleArgs(FILE_SYSTEMS.media, "row"),
+  args: segmentBarArgs(FILE_SYSTEMS.media, "row"),
 };
 
-/** tank, whose admin set the mark to 0 (never warn): no gap and no rule. */
+/** tank, whose admin set the mark to 0 (never warn): no wide gap and no rule. */
 export const NoMark: Story = {
-  args: waffleArgs(FILE_SYSTEMS.tank, "row"),
+  args: segmentBarArgs(FILE_SYSTEMS.tank, "row"),
 };
 
-/** Backup, whose admin moved the mark to 88 %: it falls inside a column, so the gap steps. */
-export const MarkInsideAColumn: Story = {
-  args: waffleArgs(FILE_SYSTEMS.backup, "row"),
+/** Backup, whose admin moved the mark to 88 %: it falls inside the 18th segment, which it splits. */
+export const MarkInsideASegment: Story = {
+  args: segmentBarArgs(FILE_SYSTEMS.backup, "row"),
+};
+
+/** The ends: a drive just made (0 %), and a full one past its mark. */
+export const EmptyAndFull: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <SegmentBar
+        {...segmentBarArgs(
+          {
+            ...FILE_SYSTEMS.data,
+            label: "Photos",
+            available: FILE_SYSTEMS.data.size,
+            percentage: 0,
+          },
+          "row",
+        )}
+      />
+      <SegmentBar
+        {...segmentBarArgs(
+          {
+            ...FILE_SYSTEMS.media,
+            label: "Scratch",
+            available: "0",
+            percentage: 100,
+          },
+          "row",
+        )}
+      />
+    </div>
+  ),
 };
 
 const ROWS: readonly FileSystemRow[] = [
   FILE_SYSTEMS.data,
   FILE_SYSTEMS.backup,
+  FILE_SYSTEMS.tank,
   FILE_SYSTEMS.media,
 ];
+
+/**
+ * Rows of a list, one bar under another: each size has one fixed width, so the same value and the
+ * same mark sit at the same place on every row, and the 85 % rules of Data and Media line up.
+ */
+export const RowsLineUp: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      {ROWS.map((row) => (
+        <div key={row.devicename} className="flex flex-col gap-1">
+          <span className="font-semibold text-foreground">{row.label}</span>
+          <SegmentBar {...segmentBarArgs(row, "row")} />
+        </div>
+      ))}
+    </div>
+  ),
+};
 
 /** The three sizes: a row of a map or a list, a table cell, and the file system's own page. */
 export const Sizes: Story = {
@@ -51,14 +99,7 @@ export const Sizes: Story = {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <h3 className="text-sm text-muted-foreground">Row</h3>
-        <div className="flex flex-col gap-4">
-          {ROWS.map((row) => (
-            <div key={row.devicename} className="flex flex-col gap-1">
-              <span className="font-semibold text-foreground">{row.label}</span>
-              <Waffle {...waffleArgs(row, "row")} />
-            </div>
-          ))}
-        </div>
+        <SegmentBar {...segmentBarArgs(FILE_SYSTEMS.data, "row")} />
       </div>
       <div className="flex flex-col gap-2">
         <h3 className="text-sm text-muted-foreground">Table cell</h3>
@@ -66,7 +107,7 @@ export const Sizes: Story = {
       </div>
       <div className="flex flex-col gap-2">
         <h3 className="text-sm text-muted-foreground">Page</h3>
-        <Waffle {...waffleArgs(FILE_SYSTEMS.data, "page")} />
+        <SegmentBar {...segmentBarArgs(FILE_SYSTEMS.data, "page")} />
       </div>
     </div>
   ),
@@ -77,12 +118,6 @@ export const Sizes: Story = {
  * so the row shows it beside the file system's name.
  */
 function FileSystemTable() {
-  const rows = [
-    FILE_SYSTEMS.data,
-    FILE_SYSTEMS.backup,
-    FILE_SYSTEMS.tank,
-    FILE_SYSTEMS.media,
-  ];
   return (
     <table className="w-full border-collapse text-sm">
       <thead>
@@ -102,8 +137,8 @@ function FileSystemTable() {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => {
-          const args = waffleArgs(row, "cell");
+        {ROWS.map((row) => {
+          const args = segmentBarArgs(row, "cell");
           return (
             <tr key={row.devicename} className="border-t border-border">
               <td className="h-10 pe-3 compact:h-9">
@@ -119,7 +154,7 @@ function FileSystemTable() {
                 </span>
               </td>
               <td className="h-10 compact:h-9">
-                <Waffle {...args} />
+                <SegmentBar {...args} />
               </td>
             </tr>
           );
@@ -135,12 +170,17 @@ export const TableCell: Story = {
 
 /** The page size past its mark: the headline, the free space, the status word and the legend. */
 export const PagePastTheMark: Story = {
-  args: waffleArgs(FILE_SYSTEMS.media, "page"),
+  args: segmentBarArgs(FILE_SYSTEMS.media, "page"),
+};
+
+/** The page size with the mark inside a segment. */
+export const PageMarkInsideASegment: Story = {
+  args: segmentBarArgs(FILE_SYSTEMS.backup, "page"),
 };
 
 /** The page size with no mark. */
 export const PageNoMark: Story = {
-  args: waffleArgs(FILE_SYSTEMS.tank, "page"),
+  args: segmentBarArgs(FILE_SYSTEMS.tank, "page"),
 };
 
 const TiB = 1024 ** 4;
@@ -171,7 +211,7 @@ function CopyDemo({ size }: { size: "row" | "page" }) {
       >
         {copied ? "Delete the 1 TiB copy" : "Copy 1 TiB to the Data drive"}
       </Button>
-      <Waffle {...waffleArgs(row, size)} />
+      <SegmentBar {...segmentBarArgs(row, size)} />
     </div>
   );
 }
@@ -194,8 +234,8 @@ export const At390px: Story = {
   render: () => (
     <Phone>
       <div className="flex flex-col gap-6">
-        <Waffle {...waffleArgs(FILE_SYSTEMS.media, "row")} />
-        <Waffle {...waffleArgs(FILE_SYSTEMS.data, "page")} />
+        <SegmentBar {...segmentBarArgs(FILE_SYSTEMS.media, "row")} />
+        <SegmentBar {...segmentBarArgs(FILE_SYSTEMS.data, "page")} />
       </div>
     </Phone>
   ),
@@ -211,7 +251,7 @@ export const MarkupLookingName: Story = {
     return (
       <div className="flex flex-col gap-1">
         <span className="font-semibold text-foreground">{row.label}</span>
-        <Waffle {...waffleArgs(row, "row")} />
+        <SegmentBar {...segmentBarArgs(row, "row")} />
       </div>
     );
   },

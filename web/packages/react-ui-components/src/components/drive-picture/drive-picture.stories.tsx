@@ -62,6 +62,33 @@ export const HardDisk: Story = { args: { kind: "hdd", size: "large" } };
 export const Ssd: Story = { args: { kind: "ssd", size: "large" } };
 export const NvmeStick: Story = { args: { kind: "nvme", size: "large" } };
 
+/** The stick standing upright, its contact fingers at the foot, as the temperatures draw it. */
+export const NvmeStickUpright: Story = {
+  args: { kind: "nvme", size: "large", orientation: "upright" },
+};
+
+/**
+ * The tiles side by side on one baseline, as the temperatures stand them: the NVMe stick upright at
+ * the hard disk's height, then lying flat as it sits on the mainboard in the drive bay.
+ */
+export const UprightOnOneBaseline: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+      <span className="flex items-end gap-3">
+        {KINDS.map((kind) => (
+          <DrivePicture
+            key={kind}
+            kind={kind}
+            size="tile"
+            orientation="upright"
+          />
+        ))}
+      </span>
+      <DrivePicture kind="nvme" size="tile" />
+    </div>
+  ),
+};
+
 /**
  * A disk whose kind was not read (asleep when the dashboard read the disks, or its Smart.getInformation
  * read failed): a plain body with a blank label, claiming no kind, in the hard disk's box.

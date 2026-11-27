@@ -107,74 +107,42 @@ type DiskTemperaturesProps = DiskTemperaturesBaseProps &
       }
   );
 
-const tileClass = cva("flex flex-none flex-col items-center gap-0.5", {
-  variants: {
-    kind: { hdd: "w-13", ssd: "w-13", nvme: "w-18", disk: "w-13" },
-  },
-});
+// Every kind stands upright in the same tile (owner, 2026-11-27: the NVMe stick too): the picture
+// and its level beside it on one baseline, 56px tall, so the levels share one scale and the alert
+// line runs straight through every tile of a row. A disk of no known kind (`disk`, the plain drive)
+// stands in the hard disk's footprint.
+const tileClass = "flex w-13 flex-none flex-col items-center gap-0.5";
 
-// Upright: the picture and the level beside it on one baseline. Lying (a stick): the level under it.
-// A disk of no known kind (`disk`, the plain drive) is upright, in the hard disk's footprint, so its
-// level and the alert line sit where every upright tile has them.
-const artClass = cva("relative mb-1.5 flex", {
-  variants: {
-    kind: {
-      disk: "h-14 items-end justify-center gap-1 self-stretch",
-      hdd: "h-14 items-end justify-center gap-1 self-stretch",
-      ssd: "h-14 items-end justify-center gap-1 self-stretch",
-      nvme: "w-14 flex-col items-stretch gap-1 self-center",
-    },
-  },
-});
+const artClass =
+  "relative mb-1.5 flex h-14 items-end justify-center gap-1 self-stretch";
 
 // Filled, never outlined (style guide 5.6): the rest in the `usage-empty` slate, the level in the
 // usage blue, and at or past the limit in the warning stroke, with its words. A disk with no reading
 // has no track at all, only its word: nothing to fill. The slot keeps its width, so the picture
 // stays where every other tile has it.
-const barClass = cva("relative flex-none overflow-hidden rounded-[2px]", {
-  variants: {
-    kind: {
-      hdd: "h-full w-2",
-      ssd: "h-full w-2",
-      nvme: "h-2 w-full",
-      disk: "h-full w-2",
-    },
-    read: { true: "bg-usage-empty", false: "bg-transparent" },
-  },
-});
-
-const levelClass = cva(
-  "absolute transition-[height,width] duration-glide ease-standard",
+const barClass = cva(
+  "relative h-full w-2 flex-none overflow-hidden rounded-[2px]",
   {
     variants: {
-      kind: {
-        hdd: "inset-x-0 bottom-0",
-        disk: "inset-x-0 bottom-0",
-        ssd: "inset-x-0 bottom-0",
-        nvme: "inset-y-0 start-0",
-      },
+      read: { true: "bg-usage-empty", false: "bg-transparent" },
+    },
+  },
+);
+
+const levelClass = cva(
+  "absolute inset-x-0 bottom-0 transition-[height] duration-glide ease-standard",
+  {
+    variants: {
       over: { true: "bg-warning-stroke", false: "bg-usage" },
     },
   },
 );
 
 // The alert limit: one dashed rule at its height through the tile and half the gap either side, so
-// the tiles of a row join it into one line; across a stick, the same rule turned upright about its
-// middle (the stick and its level, 28px, and 4px either side). A mark on the scale, not an outline,
-// and never an edge down one side of anything.
-const limitClass = cva(
-  "pointer-events-none absolute border-t-[1.5px] border-dashed border-foreground",
-  {
-    variants: {
-      kind: {
-        hdd: "-inset-x-[5px]",
-        disk: "-inset-x-[5px]",
-        ssd: "-inset-x-[5px]",
-        nvme: "top-1/2 w-9 -translate-x-1/2 -translate-y-1/2 rotate-90 rtl:translate-x-1/2",
-      },
-    },
-  },
-);
+// the tiles of a row join it into one line. A mark on the scale, not an outline, and never an edge
+// down one side of anything.
+const limitClass =
+  "pointer-events-none absolute -inset-x-[5px] border-t-[1.5px] border-dashed border-foreground";
 
 const valueClass = cva(
   "inline-flex items-center gap-0.5 text-xs leading-4 whitespace-nowrap tabular-nums [&_svg]:size-3",
@@ -193,7 +161,7 @@ const noteClass = "m-0 text-caption text-muted-foreground";
 const groupsClass =
   "flex flex-wrap items-start gap-x-10 gap-y-6 compact:gap-x-8 compact:gap-y-4";
 
-/** One disk: its picture, and beside it (under it, for a stick) its level on the shared scale. */
+/** One disk: its picture, and beside it its level on the shared scale. */
 function Tile({
   d,
   scale,
@@ -210,7 +178,6 @@ function Tile({
   const limitAt = limit === null ? null : temperatureShare(limit, scale);
   // A disk whose kind was not read is drawn as the plain drive, claiming none.
   const shape = d.kind ?? "disk";
-  const upright = shape !== "nvme";
   const state = d.c === null ? "unread" : over ? "over" : "read";
   const hint = labels.hint?.(d);
   const tile = (
@@ -218,23 +185,16 @@ function Tile({
       data-slot="disk-temperature"
       data-kind={d.kind ?? "unknown"}
       data-state={state}
-      className={tileClass({ kind: shape })}
+      className={tileClass}
     >
-      <span aria-hidden="true" className={artClass({ kind: shape })}>
-        <DrivePicture kind={shape} size="tile" />
-        <span
-          data-part="track"
-          className={barClass({ kind: shape, read: d.c !== null })}
-        >
+      <span aria-hidden="true" className={artClass}>
+        <DrivePicture kind={shape} size="tile" orientation="upright" />
+        <span data-part="track" className={barClass({ read: d.c !== null })}>
           {d.c === null ? null : (
             <span
               data-part="level"
-              className={levelClass({ kind: shape, over })}
-              style={
-                upright
-                  ? { height: `${String(k * 100)}%` }
-                  : { width: `${String(k * 100)}%` }
-              }
+              className={levelClass({ over })}
+              style={{ height: `${String(k * 100)}%` }}
             />
           )}
         </span>
@@ -242,12 +202,8 @@ function Tile({
           <span
             data-part="limit"
             data-at={limitAt}
-            className={limitClass({ kind: shape })}
-            style={
-              upright
-                ? { top: `${String((1 - limitAt) * 100)}%` }
-                : { insetInlineStart: `${String(limitAt * 100)}%` }
-            }
+            className={limitClass}
+            style={{ top: `${String((1 - limitAt) * 100)}%` }}
           />
         )}
       </span>
@@ -338,10 +294,10 @@ function Group({
 /**
  * The disks' temperatures by kind (owner, 2026-11-26): each RAID array and ZFS pool is a group of its
  * own, then the disks in neither by kind, those of no known kind last. Each disk is drawn as its kind
- * (a plain drive claiming none when its kind was not read) with its temperature as a
- * filled level beside it, on one scale shared by every group, so the alert limit is one dashed line at
- * the same height through every upright tile and a mark at the same temperature on each stick. A
- * sleeping disk shows its word and no bar. The warning colour appears only on a disk at or past its
+ * (a plain drive claiming none when its kind was not read), every kind standing upright on one
+ * baseline, the NVMe stick too, with its temperature as a filled level beside it, on one scale
+ * shared by every group, so the alert limit is one dashed line at the same height through every
+ * tile. A sleeping disk shows its word and no bar. The warning colour appears only on a disk at or past its
  * limit, together with the sentence that says so. Within a group the disks are in device order: the
  * NAS does not report which slot of the case a disk is in.
  *

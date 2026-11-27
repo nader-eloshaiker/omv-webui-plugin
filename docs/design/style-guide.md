@@ -622,9 +622,9 @@ whole is drawn in two fills and nothing else:
 - The rest only has to show on its ground, not to pass a bar: 1.42 to 1.59:1 on the light grounds
   (page 1.42, card 1.59), 1.60 to 2.06:1 on the dark ones (page 2.06, card 1.91).
 
-It covers capacity meters, waffles, progress bars, task and job progress, the first-steps progress,
-a password-strength line, and a level drawn against a fixed range, such as a temperature gauge. A
-level with no whole (a temperature column on a chart) is a filled bar with no track.
+It covers capacity meters, segment bars, progress bars, task and job progress, the first-steps
+progress, a password-strength line, and a level drawn against a fixed range, such as a temperature
+gauge. A level with no whole (a temperature column on a chart) is a filled bar with no track.
 
 - **Always paired with numbers**: "3.1 TiB of 3.6 TiB (86%)", tabular.
 - The bar is blue. Crossing an admin-configured threshold adds a Warning or Critical status label

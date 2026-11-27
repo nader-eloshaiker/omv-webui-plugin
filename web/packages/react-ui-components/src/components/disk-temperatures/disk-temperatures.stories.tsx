@@ -37,8 +37,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The dashboard's six disks on the Disks page: the Backup mirror of sdb and sdc, the pool tank on sdd
- * (asleep, so no bar), then the rest by kind. The dashed alert limit at 45 °C is one line at the same
- * height through every upright tile, and a mark at 45 °C on the stick.
+ * (asleep, so no bar), then the rest by kind. Every drive stands upright on one baseline, the NVMe
+ * stick too, and the dashed alert limit at 45 °C is one line at the same height through every tile.
  */
 export const SixDisks: Story = {};
 

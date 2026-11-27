@@ -270,7 +270,7 @@ const ACTION_WORDS: Record<
   interfaces: { label: "Interfaces" },
 };
 
-/** The page's meter for a storage: the library's capacity meter, until the waffle replaces it. */
+/** The page's meter for a storage: the library's capacity meter, until the segment bar replaces it. */
 export function StoryMeter({ storage }: { storage: NasStorage }) {
   const space = SPACE[storage.id];
   const percent =

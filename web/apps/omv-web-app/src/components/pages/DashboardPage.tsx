@@ -55,11 +55,11 @@ import {
   nasMapActions,
   nasMapView,
   orderAttention,
+  SegmentBar,
   Shortcuts,
   ShortcutsItem,
   Tip,
   useTips,
-  Waffle,
   WelcomeLine,
   type NasLane,
   type NasMapAction,
@@ -191,7 +191,7 @@ const ALL_LANES: readonly NasLane[] = NAS_LANES;
 const errorText = (error: unknown): string | undefined =>
   isRpcError(error) ? error.message : undefined;
 
-/** The storage's meter: the waffle with a reading, the capacity meter while there is none. */
+/** The storage's meter: the segment bar with a reading, the capacity meter while there is none. */
 function StorageMeter({
   storage,
   facts,
@@ -244,7 +244,7 @@ function StorageMeter({
     words.push(t("dashboard.map.spaceOver"));
   }
   return (
-    <Waffle
+    <SegmentBar
       aria-label={name}
       size="row"
       value={used}

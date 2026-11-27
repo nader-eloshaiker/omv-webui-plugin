@@ -163,8 +163,8 @@ export type {
   LiveSpan,
   LiveSummary,
 } from "./components/live-pair/live-pair-model";
-export * from "./components/waffle/waffle";
-export * from "./components/waffle/waffle-model";
+export * from "./components/segment-bar/segment-bar";
+export * from "./components/segment-bar/segment-bar-model";
 export { cn } from "./utils";
 
 // The dashboard: the answer, what needs you, the NAS map and the footer (rethink 6, 6.8).

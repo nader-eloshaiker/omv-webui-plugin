@@ -3,8 +3,8 @@
 // the mock's dashboard scenarios: every poll a background call (UI-14); a disk's kind read once, only
 // for the disks awake, and never again by itself; RAID arrays never read, their file systems shown
 // without disks and their members never unused; ZFS pool disks read once per pool and only with the
-// plugin; the waffle fed by the file system's own figures; the temperatures by kind; Right now from
-// this tab's samples.
+// plugin; the segment bar fed by the file system's own figures; the temperatures by kind; Right now
+// from this tab's samples.
 import { focusManager, onlineManager } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -186,7 +186,7 @@ describe("the map", () => {
     expect(rows().some((r) => r.startsWith("Not in use"))).toBe(false);
   });
 
-  it("feeds the waffle the file system's percentage and warning level, and says when it is past it", async () => {
+  it("feeds the segment bar the file system's percentage and warning level, and says when it is past it", async () => {
     await dashboard({ scenario: "dashboardNeedsYou" });
     const meter = await within(region("Your NAS")).findByRole("meter", {
       name: "Data drive: space used",

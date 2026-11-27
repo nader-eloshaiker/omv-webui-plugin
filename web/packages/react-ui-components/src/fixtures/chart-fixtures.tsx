@@ -32,8 +32,8 @@ import {
   type LiveSpan,
   type LiveSummary,
 } from "../components/live-pair/live-pair-model";
-import type { WaffleProps } from "../components/waffle/waffle";
-import { WAFFLE_SHAPES } from "../components/waffle/waffle-model";
+import type { SegmentBarProps } from "../components/segment-bar/segment-bar";
+import { SEGMENT_SHARE } from "../components/segment-bar/segment-bar-model";
 
 export const NBSP = " ";
 
@@ -72,7 +72,7 @@ export function clock(t: number): string {
 
 // ─── Space: FileSystemMgmt.getList ───────────────────────────────────────────────────────────────
 
-/** The fields of a FileSystemMgmt.getList row a waffle reads. */
+/** The fields of a FileSystemMgmt.getList row a segment bar reads. */
 export interface FileSystemRow {
   devicename: string;
   label: string | null;
@@ -84,7 +84,7 @@ export interface FileSystemRow {
 
 /**
  * The stories' file systems: the dashboard's drives, one past its mark, one with the mark moved
- * inside a column, and one whose admin turned the mark off (0, never warn), as OMV allows.
+ * inside a segment, and one whose admin turned the mark off (0, never warn), as OMV allows.
  */
 export const FILE_SYSTEMS = {
   data: {
@@ -121,11 +121,11 @@ export const FILE_SYSTEMS = {
   },
 } as const satisfies Record<string, FileSystemRow>;
 
-/** The waffle's props for one row at one size, with the words a page would pass in. */
-export function waffleArgs(
+/** The segment bar's props for one row at one size, with the words a page would pass in. */
+export function segmentBarArgs(
   row: FileSystemRow,
-  size: NonNullable<WaffleProps["size"]>,
-): WaffleProps {
+  size: NonNullable<SegmentBarProps["size"]>,
+): SegmentBarProps {
   const used = Math.min(100, Math.max(0, row.percentage));
   const threshold = row.usagewarnthreshold ?? 0;
   const mark = threshold > 0 ? threshold : null;
@@ -141,7 +141,7 @@ export function waffleArgs(
   if (over) {
     words.push("almost full");
   }
-  const share = 100 / (WAFFLE_SHAPES[size].cols * WAFFLE_SHAPES[size].rows);
+  const share = String(SEGMENT_SHARE);
   return {
     "aria-label": `${name}: space used`,
     value: used,
@@ -161,8 +161,8 @@ export function waffleArgs(
           figures: `${free} free of ${total}`,
           note:
             mark === null
-              ? `Each square is ${String(share)}${NBSP}% of the drive, and no warning mark is set.`
-              : `Each square is ${String(share)}${NBSP}% of the drive, and the gap is the warning mark at ${pct(mark)}.`,
+              ? `Each segment is ${share}${NBSP}% of the drive, and no warning mark is set.`
+              : `Each segment is ${share}${NBSP}% of the drive, and the rule is the warning mark at ${pct(mark)}.`,
         }
       : {
           figures: (
