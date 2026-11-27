@@ -175,22 +175,33 @@ Sources: [Code with Ania Kubów (YouTube)](https://www.youtube.com/channel/UC5DN
 
 ## Status
 
-| Step                                      | State                                             |
-| ----------------------------------------- | ------------------------------------------------- |
-| 1. Network slice finished and merged      | done: #20, `1a7181a`                              |
-| 2. Visual foundation and three directions | done: `f58cedd`                                   |
-| 3. Lab prototypes                         | done: `/ui/lab`, `f58cedd`                        |
-| 4. Design system rewrite                  | done: #28, `08eeaa8`                              |
-| 5. Re-compose built pages                 | in progress: the dashboard first                  |
-| 6. Process change                         | in force from now                                 |
-| 7. Remaining domains                      | waiting on 5                                      |
+| Step                                      | State                                            |
+| ----------------------------------------- | ------------------------------------------------ |
+| 1. Network slice finished and merged      | done: #20, `1a7181a`                             |
+| 2. Visual foundation and three directions | done: `f58cedd`                                  |
+| 3. Lab prototypes                         | done: `/ui/lab`, `f58cedd`                       |
+| 4. Design system rewrite                  | done: #28, `08eeaa8`                             |
+| 5. Re-compose built pages                 | in progress: dashboard, file systems, disks done |
+| 6. Process change                         | in force from now                                |
+| 7. Remaining domains                      | waiting on 5                                     |
 
-Step 5 so far (2026-11-26, branch `redesign-dashboard`): after the owner rejected the first reskin,
-the dashboard, the forms and the tables were redesigned in
-[design/redesign-rethink.md](design/redesign-rethink.md) and prototyped in the dev-only lab, and
-the owner approved the prototypes. The first dashboard spec is kept, superseded, as
-[design/redesign-dashboard-first-pass.md](design/redesign-dashboard-first-pass.md). The library
-already carries the accent, `StatusLabel`, parent-only breadcrumbs and the single jump highlight,
-and [style guide section 10](design/style-guide.md#10-the-generated-look-what-we-never-do) bans the
-twenty habits of generated design. Next: the motion and guidance prototypes, then the agreed lab
-pieces move into the library, then the pages are re-composed, the dashboard first.
+Step 5 so far (2026-11-28): after the owner rejected the first reskin, the dashboard, the forms and
+the tables were redesigned in [design/redesign-rethink.md](design/redesign-rethink.md) and
+prototyped in the dev-only lab, and the owner approved the prototypes. The first dashboard spec is
+kept, superseded, as [design/redesign-dashboard-first-pass.md](design/redesign-dashboard-first-pass.md).
+[Style guide section 10](design/style-guide.md#10-the-generated-look-what-we-never-do) bans the
+twenty habits of generated design. Done on `main`:
+
+- **The dashboard** (#30, `85f6054`), designed whole in the lab with the owner and built from
+  library pieces (`NasFront`, `ScanLine`, `Panel`, `SegmentBar`, `DiskTemperatures`,
+  `DrivePicture`, and `LivePair`, `NasAnswer` and `FirstSteps` extended).
+- **The accessibility check** (#32, `c18c692`): `pnpm test:browser:stories` runs axe, WCAG 2.2 AA,
+  over the dashboard pieces' stories, outside `pnpm test`.
+- **File systems** (#33, `3687372`): space used as `SegmentBar`, in the table and on a file system's
+  page.
+- **Disks** (#34, `ac92a8d`): every awake disk's temperature by kind (`DiskTemperatures mode="all"`).
+
+Next: the owner's feedback of 2026-11-28 (the notification bar, and line spacing and hierarchy app
+wide), then the remaining pages in the order of step 5: a disk's page and disk health, the rest of
+file systems and Add storage, RAID, ZFS, shared folders, users and groups, services, network, logs
+and processes, and the account pages.
