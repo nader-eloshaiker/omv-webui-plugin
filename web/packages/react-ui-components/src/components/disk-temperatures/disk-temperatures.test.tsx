@@ -92,6 +92,48 @@ describe("DiskTemperatures", () => {
     expect(apps.querySelectorAll("li[data-kind=nvme]")).toHaveLength(2);
   });
 
+  it("stands the NVMe stick upright like the other drives, its level beside it and the limit across it", () => {
+    const { container } = render(
+      <DiskTemperatures
+        groups={temperatureGroups(DISKS_6, VOLUMES_6)}
+        labels={labels}
+      />,
+    );
+    const nvme = container.querySelector("li[data-kind=nvme]");
+    const hdd = container.querySelector("li[data-kind=hdd]");
+    if (nvme === null || hdd === null) {
+      throw new Error("no NVMe or hard disk tile");
+    }
+    // The same tile, art box (56px tall, items on its foot), track, level and limit as a hard disk's.
+    expect(nvme.className).toBe(hdd.className);
+    for (const part of [
+      ":scope > span",
+      "[data-part=track]",
+      "[data-part=limit]",
+    ]) {
+      expect(nvme.querySelector(part)?.className).toBe(
+        hdd.querySelector(part)?.className,
+      );
+    }
+    expect(nvme.querySelector(":scope > span")?.className).toContain("h-14");
+    expect(nvme.querySelector(":scope > span")?.className).toContain(
+      "items-end",
+    );
+    const picture = nvme.querySelector("svg[data-slot=drive-picture]");
+    expect(picture).toHaveAttribute("data-orientation", "upright");
+    expect(picture).toHaveAttribute("height", "56");
+    expect(picture).toHaveAttribute("width", "16");
+    // The level grows upwards and the limit is a line at its height, not a rule turned on its side.
+    expect(
+      nvme.querySelector<HTMLElement>("[data-part=level]")?.style.height,
+    ).not.toBe("");
+    const limit = nvme.querySelector<HTMLElement>("[data-part=limit]");
+    expect(limit?.style.top).toBe(
+      hdd.querySelector<HTMLElement>("[data-part=limit]")?.style.top,
+    );
+    expect(limit?.className).not.toMatch(/rotate/u);
+  });
+
   it("gives only a disk over the limit the warning, with its words", () => {
     const { container } = render(
       <DiskTemperatures

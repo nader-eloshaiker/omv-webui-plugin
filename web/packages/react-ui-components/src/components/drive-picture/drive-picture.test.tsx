@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The drive pictures: every kind at every size, decorative, drawn in the neutral inks from classes
-// alone (no colour written into the drawing), at the pixel size of their box; and the kind read from
-// the contract's rows, never guessed.
+// alone (no colour written into the drawing), at the pixel size of their box; the NVMe stick lying
+// flat or standing upright; and the kind read from the contract's rows, never guessed.
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DrivePicture } from "./drive-picture";
-import { DRIVE_PICTURE_BOX, driveKindOf } from "./drive-picture-model";
+import {
+  DRIVE_PICTURE_BOX,
+  driveKindOf,
+  drivePictureBox,
+} from "./drive-picture-model";
 
 const KINDS = ["hdd", "ssd", "nvme", "disk"] as const;
 const SIZES = ["marker", "tile", "large"] as const;
@@ -67,6 +71,56 @@ describe("DrivePicture", () => {
     }
     expect(DRIVE_PICTURE_BOX.tile.hdd.h).toBe(56);
     expect(DRIVE_PICTURE_BOX.tile.nvme.w).toBe(56);
+  });
+
+  it("stands the NVMe stick upright on request, its lying box turned on its side, and leaves the others as they are", () => {
+    const { container } = render(
+      <>
+        {KINDS.flatMap((kind) =>
+          SIZES.map((size) => (
+            <DrivePicture
+              key={`${kind}-${size}`}
+              kind={kind}
+              size={size}
+              orientation="upright"
+            />
+          )),
+        )}
+      </>,
+    );
+    for (const size of SIZES) {
+      const lying = DRIVE_PICTURE_BOX[size].nvme;
+      expect(drivePictureBox("nvme", size, "upright")).toEqual({
+        w: lying.h,
+        h: lying.w,
+      });
+      expect(drivePictureBox("nvme", size)).toEqual(lying);
+      const svg = container.querySelector(
+        `svg[data-kind="nvme"][data-size="${size}"]`,
+      );
+      expect(svg).toHaveAttribute("data-orientation", "upright");
+      expect(svg).toHaveAttribute("width", String(lying.h));
+      expect(svg).toHaveAttribute("height", String(lying.w));
+      // The same drawing, turned a quarter round in its own coordinates: no style, no colour.
+      const turn = svg?.querySelector(":scope > g");
+      expect(turn?.getAttribute("transform")).toBe(
+        `translate(0 ${String(lying.w)}) rotate(-90)`,
+      );
+      expect(turn?.getAttribute("class")).toBeNull();
+      expect(turn?.getAttribute("style")).toBeNull();
+      for (const kind of ["hdd", "ssd", "disk"] as const) {
+        const other = container.querySelector(
+          `svg[data-kind="${kind}"][data-size="${size}"]`,
+        );
+        expect(other).not.toHaveAttribute("data-orientation");
+        expect(other?.querySelector(":scope > g")).toBeNull();
+        expect(drivePictureBox(kind, size, "upright")).toEqual(
+          DRIVE_PICTURE_BOX[size][kind],
+        );
+      }
+    }
+    // The tile stick standing up is the temperature scale's length tall.
+    expect(drivePictureBox("nvme", "tile", "upright").h).toBe(56);
   });
 
   it("draws a disk of no known kind as a plain drive that claims none, in the hard disk's box", () => {

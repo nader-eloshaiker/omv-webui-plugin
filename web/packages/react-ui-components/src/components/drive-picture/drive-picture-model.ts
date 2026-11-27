@@ -15,9 +15,10 @@ export type DrivePictureShape = DrivePictureKind | "disk";
 export type DrivePictureSize = "marker" | "tile" | "large";
 
 /**
- * Each picture's size in pixels. The hard disk and the SSD keep the 3.5" to 2.5" proportion; the
- * tile hard disk's height and the tile stick's length are the temperature scale's length (56px).
- * The plain `disk` has the hard disk's box, so it stands as tall as the scale.
+ * Each picture's size in pixels, the stick lying flat. The hard disk and the SSD keep the 3.5" to
+ * 2.5" proportion; the tile hard disk's height and the tile stick's length are the temperature
+ * scale's length (56px), so the stick standing upright is as tall as the scale. The plain `disk` has
+ * the hard disk's box, so it stands as tall as the scale.
  */
 export const DRIVE_PICTURE_BOX: Readonly<
   Record<DrivePictureSize, Record<DrivePictureShape, { w: number; h: number }>>
@@ -41,6 +42,25 @@ export const DRIVE_PICTURE_BOX: Readonly<
     disk: { w: 52, h: 72 },
   },
 };
+
+/**
+ * How the NVMe stick is drawn: `lying` flat, as it sits on the mainboard (the NAS map's drive bay and
+ * the drawing of the NAS), or `upright`, its contact fingers at the foot, standing at the height of
+ * the other drives (the temperatures). The other kinds are always drawn upright and ignore it.
+ */
+export type DrivePictureOrientation = "lying" | "upright";
+
+/** A picture's box in pixels: the stick standing upright has its lying box turned on its side. */
+export function drivePictureBox(
+  kind: DrivePictureShape,
+  size: DrivePictureSize,
+  orientation: DrivePictureOrientation = "lying",
+): { w: number; h: number } {
+  const box = DRIVE_PICTURE_BOX[size][kind];
+  return kind === "nvme" && orientation === "upright"
+    ? { w: box.h, h: box.w }
+    : box;
+}
 
 /**
  * A disk's kind from what the contract gives: an NVMe SSD by its kernel name (DiskMgmt.getList or
