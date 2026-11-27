@@ -83,40 +83,37 @@ describe("the dashboard design", () => {
     ).toHaveTextContent("Data drive is almost full");
   });
 
-  it("places the side parts so the grid's columns end together", () => {
+  it("lays the regions across the row in the order the person uses them", () => {
     // The first of a name: the list of what needs you carries its own hidden heading as well.
     const heading = (name: string) =>
       screen.getAllByRole("heading", { name })[0] as HTMLElement;
-    const follows = (a: HTMLElement, b: HTMLElement) =>
-      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const inOrder = (...names: string[]) =>
+      names
+        .map(heading)
+        .every(
+          (h, i, all) =>
+            i === 0 ||
+            Boolean(
+              (all[i - 1] as HTMLElement).compareDocumentPosition(h) &
+              Node.DOCUMENT_POSITION_FOLLOWING,
+            ),
+        );
+    const foot = ["Disk temperatures", "This NAS", "Shortcuts"];
 
-    // Something needs you: the list and the Shortcuts beside "Right now", This NAS at the foot.
+    // Something needs you: the list first, then "Right now", the map's regions, and the foot.
     let view = open("case=later&nas=needs");
-    const temps = heading("Disk temperatures");
-    expect(follows(heading("What needs you"), heading("Shortcuts"))).toBe(true);
-    expect(follows(heading("Shortcuts"), temps)).toBe(true);
-    expect(follows(temps, heading("This NAS"))).toBe(true);
+    expect(inOrder("What needs you", "Right now", ...foot)).toBe(true);
     view.unmount();
 
-    // Otherwise This NAS and the Shortcuts sit beside "Right now", before the map.
     view = open("case=later");
-    expect(follows(heading("This NAS"), heading("Disk temperatures"))).toBe(
-      true,
-    );
+    expect(inOrder("Right now", ...foot)).toBe(true);
     view.unmount();
 
-    // A new NAS: This NAS under "Right now" when comfortable, at the foot when compact.
+    // A new NAS: the first steps before "Right now".
     view = open("case=new");
-    expect(follows(heading("This NAS"), heading("Disk temperatures"))).toBe(
-      true,
-    );
+    expect(inOrder("First steps", "Right now", ...foot)).toBe(true);
     view.unmount();
-    open("case=new&density=compact");
-    expect(follows(heading("Disk temperatures"), heading("This NAS"))).toBe(
-      true,
-    );
   });
-
   it("shows the live figures large, with the charts' text alternatives", () => {
     open("case=later");
     const now = screen.getByRole("region", { name: "Right now" });

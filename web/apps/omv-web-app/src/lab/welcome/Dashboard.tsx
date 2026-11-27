@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // The dashboard, designed whole (owner, 2026-11-27: "I like the design decisions on /ui but the view
 // in the Instrument lab"). Development only (UI-11). Every part the owner settled on /ui is here
-// (the answer, what needs you, the NAS map by rows with tracing, the waffle, the paired live charts,
+// (the answer, what needs you, the NAS map by rows with tracing, the segment bars, the paired live charts,
 // the temperatures by kind, the first steps, the Shortcuts and This NAS), set in a grid on a
 // deliberate structure of grounds, dark first:
 //
-//   page ground   the welcome, the answer and the side column's text: what is said, not handled;
+//   page ground   the welcome and the answer: what is said, not handled;
 //   strip         the NAS at a glance, one status per area, read as one line;
 //   raised panel  "Right now" and the disk temperatures: instruments, read and moving as one;
 //   plate         the map, a drawing on its own sunken ground, so its rows and lines sit on one sheet;
-//   side panel    what needs you, the first steps or This NAS: the one list or fact sheet beside the
-//                 instruments, which the person works through as one.
+//   panel         what needs you, the first steps and This NAS: a list or fact sheet the person
+//                 works through as one.
 //
-// At 1440 the answer, the strip, "Right now" with what needs you, and the top of the map are above
-// the fold on a later visit. Under 60rem of its own width the page reads top to bottom, what needs
-// you before the instruments.
+// Every region takes the whole row. At 1440 the answer, the strip, what needs you and "Right now"
+// are above the fold on a later visit.
 import type { AttentionItem } from "@omv-webui/react-ui-components";
 import {
   AttentionList,
@@ -179,7 +178,10 @@ function ThisNas({
 function LabShortcuts({ onNote }: { onNote: (text: string) => void }) {
   const { t } = useTranslation();
   return (
-    <Shortcuts title={t("dashboard.shortcuts.title")} className="wl-shortcuts">
+    <Shortcuts
+      title={t("dashboard.shortcuts.title")}
+      className="wl-panel wl-shortcuts"
+    >
       <ShortcutsItem
         icon={<Icon name="person" mark="create" size={20} />}
         onClick={() => {
@@ -254,52 +256,33 @@ export function Dashboard(p: DashProps) {
   // The one filled accent: what needs you first, then the first step, then the check.
   const checkAccent = items.length === 0 && !p.newNas;
 
-  // The grid's two columns end together. "Right now" takes the height its row is given, and its
-  // plots take the extra, so the side column sets the row. What goes beside it is chosen per state
-  // and density so that the side column is never shorter than the panel:
-  //   needs you   the list, then the Shortcuts; This NAS as one line at the foot of the page;
-  //   new NAS     the first steps; This NAS as one line under "Right now" when comfortable, and at
-  //               the foot when compact, where the steps are no taller than the panel alone;
-  //   otherwise   This NAS, then the Shortcuts.
-  // The temperatures always take the whole width, so nothing beside them ends early.
+  // Every region takes the whole row (owner, 2026-11-27: "Right now" spans the row), so no column
+  // has to be balanced against another and nothing leaves a hole. The order is what the person acts
+  // on, then what they watch, then what they look up:
+  //   what needs you, or a new NAS's first steps, laid across the row;
+  //   "Right now";
+  //   the map, then the temperatures;
+  //   This NAS beside the Shortcuts, at the foot.
   const needsYou = items.length > 0;
-  const factsUnderNow = p.newNas && !p.compact;
-  const factsAtFoot = needsYou || (p.newNas && p.compact);
-  const factsLine = (
-    <ThisNas
-      nas={p.nas}
-      info={reads.info}
-      onShowAround={p.onShowAround}
-      layout="row"
-    />
-  );
 
-  const side: ReactNode = needsYou ? (
-    <>
-      <div className="wl-panel wl-side">
-        <div className="wl-panel-head">
-          <h2 className="wl-panel-title">{NEEDS.label}</h2>
-        </div>
-        <AttentionList
-          className="wl-needs"
-          label={NEEDS.label}
-          items={items}
-          moreLabel={(n) => t("dashboard.needs.more", { count: n })}
-          fewerLabel={t("dashboard.needs.fewer")}
-        />
+  const act: ReactNode = needsYou ? (
+    <div className="wl-panel">
+      <div className="wl-panel-head">
+        <h2 className="wl-panel-title">{NEEDS.label}</h2>
       </div>
-      <LabShortcuts onNote={p.onNote} />
-    </>
+      <AttentionList
+        className="wl-needs"
+        label={NEEDS.label}
+        items={items}
+        moreLabel={(n) => t("dashboard.needs.more", { count: n })}
+        fewerLabel={t("dashboard.needs.fewer")}
+      />
+    </div>
   ) : p.newNas ? (
-    <div className="wl-panel wl-side">
+    <div className="wl-panel wl-steps">
       <Steps accent="filled" onNote={p.onNote} />
     </div>
-  ) : (
-    <>
-      <ThisNas nas={p.nas} info={reads.info} onShowAround={p.onShowAround} />
-      <LabShortcuts onNote={p.onNote} />
-    </>
-  );
+  ) : null;
 
   return (
     <div className="wl-page" data-welcome={p.welcome || undefined}>
@@ -362,16 +345,9 @@ export function Dashboard(p: DashProps) {
         <ScanLine nas={p.nas} check={p.check} />
       </div>
 
-      <div
-        className="wl-grid"
-        data-side-first={needsYou || p.newNas || undefined}
-      >
-        <div className="wl-main">
-          <RightNow live={live} />
-          {factsUnderNow ? factsLine : null}
-        </div>
-        <div className="wl-aside">{side}</div>
-      </div>
+      {act}
+
+      <RightNow live={live} />
 
       <div id="wl-map" tabIndex={-1} className="wl-plate">
         <LabMap
@@ -399,7 +375,10 @@ export function Dashboard(p: DashProps) {
         />
       </div>
 
-      {factsAtFoot ? factsLine : null}
+      <div className="wl-foot-row">
+        <ThisNas nas={p.nas} info={reads.info} onShowAround={p.onShowAround} />
+        <LabShortcuts onNote={p.onNote} />
+      </div>
     </div>
   );
 }

@@ -536,45 +536,47 @@
   min-width: 0;
 }
 
-/* The grid: a primary column of instruments and a secondary column of the lists beside them. */
-.wl-grid {
+/* The foot: This NAS beside the Shortcuts, two panels of one height; one column under 60rem. */
+.wl-foot-row {
   display: grid;
   gap: var(--density-gutter);
-  align-items: start;
+  align-items: stretch;
   min-width: 0;
 }
-.wl-main,
-.wl-aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--density-gutter);
-  min-width: 0;
-}
-/* As one column, what needs you or the first steps come before the instruments, and the Shortcuts
-   after them: the side column's parts join the grid so that each can take its own place. */
-@container wlpage (width < 60rem) {
-  .wl-grid[data-side-first] .wl-aside {
-    display: contents;
-  }
-  .wl-grid[data-side-first] .wl-aside > :first-child {
-    order: -1;
-  }
-}
-/* As two columns, both end together: "Right now" takes the row's height and its plots the extra. */
 @container wlpage (min-width: 60rem) {
-  .wl-grid {
-    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
-    align-items: stretch;
-  }
-  .wl-main > .wl-now {
-    flex: 1 1 auto;
+  .wl-foot-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 .wl-side {
   min-width: 0;
 }
+/* A new NAS's first steps laid across the row as four stations of one path, each with its words over
+   its button, at 60rem and wider. Under that they are the library's list. (If the owner keeps it, this
+   becomes a layout of the library's FirstSteps.) */
+@container wlpage (min-width: 60rem) {
+  .wl-steps [data-slot="checklist"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0 var(--density-gutter);
+  }
+  .wl-steps [data-slot="checklist-item"] {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: 1.375rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: 10px 12px;
+    padding-block: 14px 4px;
+    border-block-start: 0;
+  }
+  .wl-steps [data-slot="checklist-item"] > :last-child {
+    grid-column: 2;
+    align-self: end;
+    justify-content: flex-start;
+  }
+}
 .wl-shortcuts {
-  padding-inline: 4px;
+  min-width: 0;
 }
 
 /* ─── The NAS at a glance ────────────────────────────────────────────────────────────────────── */
@@ -744,15 +746,15 @@
   font-weight: 400;
   color: var(--theme-muted-foreground);
 }
-/* At least 140px (120px compact), and taller when the panel is stretched beside a longer column. The
-   drawing is laid over the box, so the box's height comes from the panel and never from the drawing. */
+/* 180px (140px compact) across the whole row. The drawing is laid over the box, so the box's height
+   is set here and never comes from the drawing. */
 .wl-plot {
   position: relative;
-  flex: 1 0 140px;
+  flex: 0 0 180px;
   margin-inline-end: 64px;
 }
 :root[data-density="compact"] .wl-plot {
-  flex-basis: 120px;
+  flex-basis: 140px;
 }
 .wl-plot > svg {
   position: absolute;
