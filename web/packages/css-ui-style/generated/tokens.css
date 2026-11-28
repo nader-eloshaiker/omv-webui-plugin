@@ -271,12 +271,24 @@
 :root {
   --density-card: 1.5rem; /* 24px  card padding */
   --density-gutter: 1.25rem; /* 20px  gap between cards */
-  --density-cell-y: 0.625rem; /* 10px  table cell, block */
+  --density-cell-y: 0.875rem; /* 14px  table cell, block (spacing rule, 2026-11-28) */
+  --density-head-y: 0.625rem; /* 10px  table header cell, block */
   --density-cell-x: 0.75rem; /* 12px  table cell, inline */
   --density-row: 0.75rem; /* 12px  list and settings rows, block */
   --density-control-sm: 1.75rem; /* 28px  table toolbars */
   --density-control: 2rem; /* 32px  the default control */
   --density-control-lg: 2.5rem; /* 40px  the sign-in form */
+  /* The spacing rule (style guide 4.7): one step per level of the hierarchy, so what belongs
+     together sits close and what does not sits apart. Smallest to largest:
+     line     lines of one thing (a disk's model over its serial; a cell's second line);
+     pair     a heading or label and its own text (a title and its subtitle, a section heading and
+              its lead);
+     group    things inside one section (paragraph to paragraph, a toolbar to its table, an alert);
+     section  sections of a page, and the page's header to its first section. */
+  --space-line: 0.25rem; /* 4px */
+  --space-pair: 0.5rem; /* 8px */
+  --space-group: 1rem; /* 16px */
+  --space-section: 3.5rem; /* 56px */
   --font-features: "cv11", "tnum"; /* single-storey a; tabular figures for every number */
   --motion-stagger: 45ms; /* list entrance, per item, capped at about 10 items */
   --motion-rise: 12px; /* how far an entering card rises */
@@ -287,7 +299,12 @@
 [data-density="compact"] {
   --density-card: 1rem; /* 16px */
   --density-gutter: 0.75rem; /* 12px */
-  --density-cell-y: 0.3125rem; /* 5px */
+  --density-cell-y: 0.5rem; /* 8px */
+  --density-head-y: 0.375rem; /* 6px */
+  --space-line: 0.125rem; /* 2px */
+  --space-pair: 0.375rem; /* 6px */
+  --space-group: 0.75rem; /* 12px */
+  --space-section: 2.25rem; /* 36px */
   --density-cell-x: 0.625rem; /* 10px */
   --density-row: 0.5rem; /* 8px */
   --density-control-sm: 1.5rem; /* 24px, the WCAG 2.5.8 minimum */
@@ -677,7 +694,12 @@
 [data-density="comfortable"] {
   --density-card: 1.5rem;
   --density-gutter: 1.25rem;
-  --density-cell-y: 0.625rem;
+  --density-cell-y: 0.875rem;
+  --density-head-y: 0.625rem;
+  --space-line: 0.25rem;
+  --space-pair: 0.5rem;
+  --space-group: 1rem;
+  --space-section: 3.5rem;
   --density-cell-x: 0.75rem;
   --density-row: 0.75rem;
   --density-control-sm: 1.75rem;

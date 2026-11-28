@@ -365,7 +365,7 @@ export function ZfsSnapshots({
               const running = isDeleting(deleteRunOf(snap.path));
               return (
                 <TableRow key={snap.path}>
-                  <TableCell className="py-2 [overflow-wrap:anywhere]">
+                  <TableCell className="[overflow-wrap:anywhere]">
                     <Identifier dir="auto" className="whitespace-nowrap">
                       {snap.name}
                     </Identifier>
@@ -379,10 +379,10 @@ export function ZfsSnapshots({
                       {t("zfsSnap.col.holds")}: {formatBytes(snap.used)}
                     </span>
                   </TableCell>
-                  <TableCell numeric className="py-2 max-sm:hidden">
+                  <TableCell numeric className="max-sm:hidden">
                     {formatBytes(snap.used)}
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>
                     <span className="flex flex-wrap gap-2">
                       {isNewest && blocker === null ? (
                         <Button

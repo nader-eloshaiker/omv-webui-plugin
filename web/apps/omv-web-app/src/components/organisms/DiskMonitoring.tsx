@@ -22,6 +22,7 @@ import {
   DisclosureTrigger,
   InlineAlert,
   NumberField,
+  PageSection,
   RadioGroupField,
   RadioOption,
   ServerMessage,
@@ -69,7 +70,6 @@ export function DiskMonitoring({
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const device = useDeviceSettings(disk.devicefile);
   const noSettings = isNoDeviceSettings(device.error);
 
@@ -99,13 +99,10 @@ export function DiskMonitoring({
   }
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-4">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("disk.monitoring.title")}
-      </h2>
+    <PageSection heading={t("disk.monitoring.title")}>
       {form}
       {children}
-    </section>
+    </PageSection>
   );
 }
 

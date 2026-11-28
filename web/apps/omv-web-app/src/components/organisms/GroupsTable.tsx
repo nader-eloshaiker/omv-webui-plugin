@@ -127,7 +127,7 @@ function GroupRow({
     );
   return (
     <TableRow>
-      <TableCell className="min-w-32 py-2">
+      <TableCell className="min-w-32">
         <GroupName name={row.name} />
         {/* Under the small breakpoint the description and the folder count are said here (8.2). */}
         <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
@@ -139,11 +139,11 @@ function GroupRow({
           </span>
         </span>
       </TableCell>
-      <TableCell className="min-w-40 py-2 text-muted-foreground max-sm:hidden">
+      <TableCell className="min-w-40 text-muted-foreground max-sm:hidden">
         <span dir="auto">{description}</span>
       </TableCell>
-      <TableCell className="min-w-40 py-2">{members}</TableCell>
-      <TableCell className="py-2 max-sm:hidden">{folders}</TableCell>
+      <TableCell className="min-w-40">{members}</TableCell>
+      <TableCell className="max-sm:hidden">{folders}</TableCell>
     </TableRow>
   );
 }

@@ -252,7 +252,7 @@ export function ZfsPoolDisks({
         );
         out.push(
           <TableRow key={`pair:${d.pair.vdev}`}>
-            <TableCell colSpan={COLUMNS} className="py-2">
+            <TableCell colSpan={COLUMNS}>
               <span className="flex flex-col gap-1">
                 <span>
                   <Trans
@@ -301,7 +301,7 @@ export function ZfsPoolDisks({
       noteReason(decisions.replace);
       out.push(
         <TableRow key={d.path}>
-          <TableCell className="py-2 whitespace-nowrap">
+          <TableCell className="whitespace-nowrap">
             <DiskCell d={d} disk={disk} />
             <span className="mt-1 flex flex-col gap-0.5 text-sm whitespace-normal sm:hidden">
               <span dir="auto">
@@ -322,7 +322,7 @@ export function ZfsPoolDisks({
               )}
             </span>
           </TableCell>
-          <TableCell className="min-w-40 py-2 max-sm:hidden">
+          <TableCell className="min-w-40 max-sm:hidden">
             <span className="block" dir="auto">
               {disk?.model.trim() ?? ""}
             </span>
@@ -335,13 +335,13 @@ export function ZfsPoolDisks({
               </span>
             )}
           </TableCell>
-          <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
+          <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
             {size === null || size === 0 ? "" : formatBytes(size)}
           </TableCell>
-          <TableCell className="py-2 sm:min-w-32">
+          <TableCell className="sm:min-w-32">
             <RoleCell d={d} view={view} />
           </TableCell>
-          <TableCell className="min-w-32 py-2 max-sm:hidden">
+          <TableCell className="min-w-32 max-sm:hidden">
             <DiskHealthStatus
               checked={check.result !== undefined}
               reading={
@@ -351,7 +351,7 @@ export function ZfsPoolDisks({
               }
             />
           </TableCell>
-          <TableCell className="py-2">
+          <TableCell>
             <span className="flex flex-wrap gap-2">
               {decisions.replace.allowed ? (
                 <Button

@@ -34,7 +34,10 @@ export function DiskHealthLine() {
   }
 
   return (
-    <section aria-label={t("disks.col.health")} className="flex flex-col gap-2">
+    <section
+      aria-label={t("disks.col.health")}
+      className="flex flex-col gap-pair"
+    >
       {check.failed ? (
         <InlineAlert tone="critical" title={t("diskCheck.failed")}>
           {isRpcError(check.error) ? (

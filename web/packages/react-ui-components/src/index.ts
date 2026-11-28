@@ -181,6 +181,7 @@ export * from "./components/nas-front/nas-front-model";
 export * from "./components/nas-map/nas-map";
 export * from "./components/nas-map/nas-map-model";
 export type * from "./components/nas-map/nas-map-words";
+export * from "./components/page-layout/page-layout";
 export * from "./components/panel/panel";
 export { panelClass } from "./components/panel/panel-class";
 export * from "./components/scan-line/scan-line";

@@ -10,6 +10,10 @@ import {
   buttonClass,
   ExternalLink,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   rollUp,
   StatusPill,
   TableToolbar,
@@ -157,109 +161,115 @@ function FileSystems() {
       ?.canonicaldevicefile ?? fs.parentdevicefile;
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("filesystems.title")}</PageTitle>
-      <p className="max-w-prose">{t("filesystems.intro")}</p>
-
-      {showRollUp ? (
-        <p role="status" className="flex flex-wrap items-center gap-2">
-          <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
-          <span>
-            {t("filesystems.rollUp", {
-              count: summary.count,
-              total: summary.total,
-              status: t(`health.${worst}`),
-            })}
-          </span>
-        </p>
-      ) : null}
-
-      {notMounted.map((fs) => (
-        <InlineAlert key={`nm:${fs.uuid}:${fs.devicefile}`} tone="neutral">
-          <p>
-            <Trans
-              i18nKey="filesystems.unfinished.notMounted"
-              components={{
-                disk: <IdentifierText value={diskOfCandidate(fs)} />,
-              }}
-            />
+    <Page>
+      <PageHeader title={<PageTitle>{t("filesystems.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("filesystems.intro")}</p>
+        {showRollUp ? (
+          <p role="status" className="flex flex-wrap items-center gap-2">
+            <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
+            <span>
+              {t("filesystems.rollUp", {
+                count: summary.count,
+                total: summary.total,
+                status: t(`health.${worst}`),
+              })}
+            </span>
           </p>
-          <p className="mt-2">
-            <Button
-              variant="neutral"
-              size="sm"
-              aria-label={t("filesystems.found.mountName", {
+        ) : null}
+
+        {notMounted.map((fs) => (
+          <InlineAlert key={`nm:${fs.uuid}:${fs.devicefile}`} tone="neutral">
+            <p>
+              <Trans
+                i18nKey="filesystems.unfinished.notMounted"
+                components={{
+                  disk: <IdentifierText value={diskOfCandidate(fs)} />,
+                }}
+              />
+            </p>
+            <p className="mt-2">
+              <Button
+                variant="neutral"
+                size="sm"
+                aria-label={t("filesystems.found.mountName", {
+                  name: words.nameText(fs),
+                })}
+                onClick={() => setMounting(fs)}
+              >
+                {t("filesystems.found.mount")}
+              </Button>
+            </p>
+          </InlineAlert>
+        ))}
+        {notShared.map((fs) => (
+          <InlineAlert key={`ns:${fs.uuid}`} tone="neutral">
+            <p>
+              {t("filesystems.unfinished.notShared", {
                 name: words.nameText(fs),
               })}
-              onClick={() => setMounting(fs)}
-            >
-              {t("filesystems.found.mount")}
-            </Button>
-          </p>
-        </InlineAlert>
-      ))}
-      {notShared.map((fs) => (
-        <InlineAlert key={`ns:${fs.uuid}`} tone="neutral">
-          <p>
-            {t("filesystems.unfinished.notShared", {
-              name: words.nameText(fs),
-            })}
-          </p>
-          <p className="mt-2">
+            </p>
+            <p className="mt-2">
+              <Link
+                to="/storage/filesystems/$fs"
+                params={{ fs: fsAddress(fs) ?? "" }}
+                className={routerLinkClass}
+              >
+                {t("filesystems.unfinished.howToShare")}
+              </Link>
+            </p>
+          </InlineAlert>
+        ))}
+      </PageHeader>
+
+      <PageSection>
+        <PairStack>
+          <TableToolbar className="pb-0">
             <Link
-              to="/storage/filesystems/$fs"
-              params={{ fs: fsAddress(fs) ?? "" }}
-              className={routerLinkClass}
+              to="/storage/filesystems/add"
+              className={buttonClass({ variant: "primary" })}
             >
-              {t("filesystems.unfinished.howToShare")}
+              {t("filesystems.add")}
             </Link>
-          </p>
-        </InlineAlert>
-      ))}
+            <Link
+              to="/storage/filesystems/add-multi"
+              className={buttonClass({ variant: "neutral" })}
+            >
+              {t("filesystems.addMulti")}
+            </Link>
+            <Button
+              ref={refreshRef}
+              variant="neutral"
+              loading={refreshing}
+              onClick={refreshing ? undefined : () => void refresh()}
+            >
+              {refreshing
+                ? t("filesystems.refreshing")
+                : t("filesystems.refresh")}
+            </Button>
+            <p
+              role="status"
+              className="ms-auto text-xs text-muted-foreground tabular-nums"
+            >
+              {rows !== undefined && configured.dataUpdatedAt > 0
+                ? t("filesystems.readAt", {
+                    time: format.clock(configured.dataUpdatedAt),
+                  })
+                : ""}
+            </p>
+          </TableToolbar>
 
-      <TableToolbar className="pb-0">
-        <Link
-          to="/storage/filesystems/add"
-          className={buttonClass({ variant: "primary" })}
-        >
-          {t("filesystems.add")}
-        </Link>
-        <Link
-          to="/storage/filesystems/add-multi"
-          className={buttonClass({ variant: "neutral" })}
-        >
-          {t("filesystems.addMulti")}
-        </Link>
-        <Button
-          ref={refreshRef}
-          variant="neutral"
-          loading={refreshing}
-          onClick={refreshing ? undefined : () => void refresh()}
-        >
-          {refreshing ? t("filesystems.refreshing") : t("filesystems.refresh")}
-        </Button>
-        <p
-          role="status"
-          className="ms-auto text-xs text-muted-foreground tabular-nums"
-        >
-          {rows !== undefined && configured.dataUpdatedAt > 0
-            ? t("filesystems.readAt", {
-                time: format.clock(configured.dataUpdatedAt),
-              })
-            : ""}
-        </p>
-      </TableToolbar>
-
-      <FileSystemsTable
-        rows={rows}
-        system={system}
-        pending={pending}
-        disks={diskRows}
-        error={configured.error}
-        failed={configured.isError}
-        refreshing={refreshing}
-        onRetry={() => void refresh()}
-      />
+          <FileSystemsTable
+            rows={rows}
+            system={system}
+            pending={pending}
+            disks={diskRows}
+            error={configured.error}
+            failed={configured.isError}
+            refreshing={refreshing}
+            onRetry={() => void refresh()}
+          />
+        </PairStack>
+      </PageSection>
 
       <FoundFileSystems
         found={found}
@@ -271,26 +281,28 @@ function FileSystems() {
         onMount={setMounting}
       />
 
-      {zfsUnknown > 0 ? (
-        <p className="max-w-prose text-sm">
-          {t("filesystems.zfsUnknown", { count: zfsUnknown })}{" "}
-          <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
-            {t("filesystems.zfsUnknownLink")}
-          </ExternalLink>
-        </p>
-      ) : null}
+      <footer className="flex flex-col gap-group text-sm">
+        {zfsUnknown > 0 ? (
+          <p className="max-w-prose">
+            {t("filesystems.zfsUnknown", { count: zfsUnknown })}{" "}
+            <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
+              {t("filesystems.zfsUnknownLink")}
+            </ExternalLink>
+          </p>
+        ) : null}
 
-      <div className="flex flex-col gap-1 text-sm">
-        <p className="text-muted-foreground">{t("filesystems.footerLine")}</p>
-        <p>
-          <ExternalLink
-            href={CLASSIC.fileSystems}
-            newTabLabel={t("app.newTab")}
-          >
-            {t("filesystems.classicLink")}
-          </ExternalLink>
-        </p>
-      </div>
+        <div className="flex flex-col gap-line">
+          <p className="text-muted-foreground">{t("filesystems.footerLine")}</p>
+          <p>
+            <ExternalLink
+              href={CLASSIC.fileSystems}
+              newTabLabel={t("app.newTab")}
+            >
+              {t("filesystems.classicLink")}
+            </ExternalLink>
+          </p>
+        </div>
+      </footer>
 
       <p role="status" className="sr-only">
         {announcement}
@@ -307,6 +319,6 @@ function FileSystems() {
           void refresh();
         }}
       />
-    </div>
+    </Page>
   );
 }

@@ -413,7 +413,8 @@ in `--font-features`.
 | --- | --- | --- | --- |
 | `--density-card` | `p-card` | 24px | 16px |
 | `--density-grid` | `gap-grid` | 20px | 12px |
-| `--density-cell-y` | `py-cell-y` | 10px | 5px |
+| `--density-cell-y` | `py-cell-y` | 14px | 8px |
+| `--density-head-y` | `py-head-y` | 10px | 6px |
 | `--density-cell-x` | `px-cell-x` | 12px | 10px |
 | `--density-row` | `py-row` | 12px | 8px |
 | `--density-control-sm` | `h-control-sm` | 28px | 24px |
@@ -422,7 +423,8 @@ in `--font-features`.
 | `--text-body`, `--text-caption` | `text-body`, `text-caption` | 15px, 13px | 13px, 12px |
 | `--font-readout` | `font-readout` | Inter | Roboto Mono |
 
-Radii do not change with density (section 6). Every control height stays at or above the 24px
+The vertical spacing of pages, sections and tables follows the spacing rule in
+[style guide 4.7](style-guide.md#47-spacing-shows-the-hierarchy) (owner, 2026-11-28). Radii do not change with density (section 6). Every control height stays at or above the 24px
 target minimum (WCAG 2.5.8).
 
 ## 6. Surfaces and elevation

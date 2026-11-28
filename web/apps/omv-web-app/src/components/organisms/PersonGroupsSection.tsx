@@ -12,9 +12,10 @@ import type {
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
-  InlineAlert,
-  ServerMessage,
   buttonRowClass,
+  InlineAlert,
+  PageSection,
+  ServerMessage,
   useToast,
 } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState, type ReactNode } from "react";
@@ -169,10 +170,7 @@ export function PersonGroupsSection({
   }
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("personGroups.title")}
-      </h2>
+    <PageSection heading={t("personGroups.title")}>
       <p id={hintId} className="max-w-prose text-sm">
         {t("shares.term.group")} {t("personGroups.noPowers")}
       </p>
@@ -234,6 +232,6 @@ export function PersonGroupsSection({
           <p>{t("personGroups.reconnect")}</p>
         </div>
       ) : null}
-    </section>
+    </PageSection>
   );
 }

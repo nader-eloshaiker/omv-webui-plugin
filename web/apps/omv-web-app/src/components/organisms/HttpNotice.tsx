@@ -16,6 +16,8 @@ export function HttpNotice({ role }: { role: Role }) {
   return (
     <NoticeBanner
       label={t("httpNotice.label")}
+      tone="warning"
+      title={t("httpNotice.title")}
       icon={<LockOpen />}
       action={
         role === "admin" ? (

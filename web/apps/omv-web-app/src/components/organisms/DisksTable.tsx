@@ -70,13 +70,13 @@ function DiskRow({
   const model = disk.model.trim();
   return (
     <TableRow>
-      <TableCell className="py-2 whitespace-nowrap">
+      <TableCell className="whitespace-nowrap">
         <DiskLink
           devicename={disk.devicename}
           device={disk.canonicaldevicefile}
         />
       </TableCell>
-      <TableCell className="min-w-48 py-2">
+      <TableCell className="min-w-48">
         {model === "" ? (
           <span className="text-muted-foreground">{t("disks.noModel")}</span>
         ) : (
@@ -90,13 +90,13 @@ function DiskRow({
           </span>
         )}
       </TableCell>
-      <TableCell numeric className="py-2 whitespace-nowrap">
+      <TableCell numeric className="whitespace-nowrap">
         {size === null ? "" : formatBytes(size)}
       </TableCell>
-      <TableCell className="min-w-56 py-2">
+      <TableCell className="min-w-56">
         <DisksUseLines uses={use?.uses} loading={usesLoading} />
       </TableCell>
-      <TableCell className="min-w-40 py-2">
+      <TableCell className="min-w-40">
         <span className="flex flex-col items-start gap-1">
           <DiskHealthStatus
             checked={check.result !== undefined}
@@ -109,7 +109,7 @@ function DiskRow({
           )}
         </span>
       </TableCell>
-      <TableCell className="py-2 whitespace-nowrap">
+      <TableCell className="whitespace-nowrap">
         {power === "unknown" ? (
           <span className="text-muted-foreground">
             {t("disks.power.unknown")}

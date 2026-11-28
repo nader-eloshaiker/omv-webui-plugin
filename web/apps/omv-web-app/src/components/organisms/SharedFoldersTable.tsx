@@ -229,7 +229,7 @@ function FolderRow({
   const full = folder.absdirpath ?? "";
   return (
     <TableRow>
-      <TableCell className="min-w-32 py-2">
+      <TableCell className="min-w-32">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <FolderName folder={folder} />
           {pending ? <PendingMark /> : null}
@@ -243,22 +243,22 @@ function FolderRow({
           </span>
         </span>
       </TableCell>
-      <TableCell className="py-2 sm:min-w-40">
+      <TableCell className="sm:min-w-40">
         <FolderStatus status={folder.status} />
       </TableCell>
-      <TableCell className="min-w-32 py-2 max-sm:hidden">
+      <TableCell className="min-w-32 max-sm:hidden">
         <DeviceText device={device} />
       </TableCell>
-      <TableCell className="min-w-32 py-2 max-sm:hidden">
+      <TableCell className="min-w-32 max-sm:hidden">
         <SharingText cell={sharing} nfs={nfs} />
       </TableCell>
       <TableCell
         mono
-        className="min-w-28 py-2 [overflow-wrap:anywhere] max-sm:hidden"
+        className="min-w-28 [overflow-wrap:anywhere] max-sm:hidden"
       >
         {folder.reldirpath}
       </TableCell>
-      <TableCell className="min-w-48 py-2 max-sm:hidden">
+      <TableCell className="min-w-48 max-sm:hidden">
         {full === "" ? (
           <Missing />
         ) : (
@@ -278,12 +278,12 @@ function FolderRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="min-w-40 py-2 text-muted-foreground max-sm:hidden">
+      <TableCell className="min-w-40 text-muted-foreground max-sm:hidden">
         {folder.comment === "" ? null : (
           <ClampedText>{inertBidi(folder.comment)}</ClampedText>
         )}
       </TableCell>
-      <TableCell className="py-2 max-sm:hidden">
+      <TableCell className="max-sm:hidden">
         {folder._used ? t("sharedFolders.yes") : t("sharedFolders.no")}
       </TableCell>
     </TableRow>

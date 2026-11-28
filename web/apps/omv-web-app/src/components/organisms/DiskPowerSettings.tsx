@@ -15,6 +15,7 @@ import {
   Button,
   CheckboxField,
   InlineAlert,
+  PageSection,
   Select,
   SelectContent,
   SelectGroup,
@@ -56,14 +57,10 @@ import { LeaveGuard } from "../molecules/LeaveGuard.tsx";
 
 export function DiskPowerSettings({ disk }: { disk: DiskDevice }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const [chosen, setChosen] = useState(false);
   const saved = disk.hdparm;
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-4">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("disk.power.title")}
-      </h2>
+    <PageSection heading={t("disk.power.title")}>
       {saved === undefined && !chosen ? (
         <div className="flex max-w-prose flex-col items-start gap-2">
           <p>{t("disk.power.notSet")}</p>
@@ -77,7 +74,7 @@ export function DiskPowerSettings({ disk }: { disk: DiskDevice }) {
       ) : (
         <PowerForm disk={disk} focusFirst={saved === undefined} />
       )}
-    </section>
+    </PageSection>
   );
 }
 

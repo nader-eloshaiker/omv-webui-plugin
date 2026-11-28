@@ -28,7 +28,7 @@ type PageTitleProps = (
 };
 
 const TITLE_CLASS = {
-  page: "text-2xl leading-tight font-semibold outline-hidden",
+  page: "text-title text-foreground outline-hidden",
   eyebrow: "text-section text-muted-foreground outline-hidden",
 } as const;
 

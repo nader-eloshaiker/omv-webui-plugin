@@ -903,7 +903,8 @@
   },
   "httpNotice": {
     "label": "Connection notice",
-    "body": "This connection is not encrypted. Passwords and settings you send can be read by others on the network.",
+    "title": "This connection is not encrypted.",
+    "body": "Passwords and settings you send can be read by others on the network.",
     "adminLink": "Use a secure connection (HTTPS)",
     "userBody": "Ask an administrator to turn on HTTPS."
   },

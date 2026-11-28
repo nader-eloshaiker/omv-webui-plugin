@@ -80,7 +80,8 @@ interface TableRowProps extends React.ComponentProps<"tr"> {
 
 /**
  * Hover is the neutral step on body rows; selected is the `selected` tint (3.10). No zebra stripes.
- * Row height follows the density through the cells' `py-cell-y` (foundation 5).
+ * Row height follows the density through the cells' `py-cell-y` (foundation 5); a cell's padding is
+ * never overridden, so one disk stays apart from the next (spacing rule, style guide 4.7).
  */
 function TableRow({
   selected,
@@ -139,7 +140,7 @@ function TableHead({
       scope="col"
       aria-sort={sortable ? sort : undefined}
       className={cn(
-        "px-cell-x py-cell-y text-start align-middle text-sm font-normal whitespace-nowrap text-muted-foreground",
+        "px-cell-x py-head-y text-start align-middle text-sm font-normal whitespace-nowrap text-muted-foreground",
         numeric && "text-end",
         className,
       )}
@@ -177,12 +178,16 @@ interface TableCellProps extends React.ComponentProps<"td"> {
   mono?: boolean;
 }
 
+/**
+ * A cell. A second line inside it (a block under the first: a disk's serial under its model) sits a
+ * line step under the first, so the lines of one cell read as one thing (style guide 4.7).
+ */
 function TableCell({ numeric, mono, className, ...props }: TableCellProps) {
   return (
     <td
       data-slot="table-cell"
       className={cn(
-        "px-cell-x py-cell-y align-middle",
+        "px-cell-x py-cell-y align-middle [&>*+*]:mt-line",
         numeric && "text-end tabular-nums",
         mono && "font-mono text-sm",
         className,
@@ -306,7 +311,8 @@ function TableSkeletonRows({
 
 /**
  * The bar above a table: search, filters, and the actions that apply to the selection. Put
- * destructive actions apart, at the end, with `className="ms-auto"` on their group (5.2).
+ * destructive actions apart, at the end, with `className="ms-auto"` on their group (5.2). It belongs
+ * to its table alone: put the two in a `PairStack`, a pair step apart (style guide 4.7).
  */
 function TableToolbar({ className, ...props }: React.ComponentProps<"div">) {
   return (

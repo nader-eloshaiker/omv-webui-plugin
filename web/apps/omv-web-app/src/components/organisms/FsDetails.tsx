@@ -9,10 +9,11 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   InlineAlert,
+  PageSection,
   ServerMessage,
   TaskLog,
 } from "@omv-webui/react-ui-components";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { taskLines } from "../../filesystems/terminal.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -30,7 +31,6 @@ export function FsDetails({
 }) {
   const { t } = useTranslation();
   const format = useFormat();
-  const headingId = useId();
   const details = useFsDetails(fs.canonicaldevicefile);
   const [shown, setShown] = useState(details.data !== undefined);
   const reading = details.isFetching;
@@ -48,11 +48,10 @@ export function FsDetails({
   const open = shown && details.data !== undefined;
   const failed = shown && details.isError && !reading;
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("filesystem.details.title")}
-      </h2>
-      <p className="max-w-prose">{t("filesystem.details.intro")}</p>
+    <PageSection
+      heading={t("filesystem.details.title")}
+      lead={t("filesystem.details.intro")}
+    >
       {open ? (
         <>
           <p className="text-sm text-muted-foreground tabular-nums">
@@ -120,6 +119,6 @@ export function FsDetails({
           </p>
         </InlineAlert>
       ) : null}
-    </section>
+    </PageSection>
   );
 }

@@ -31,6 +31,7 @@ import {
   FactListSkeleton,
   FactListValue,
   Identifier,
+  PageSection,
   rollUp,
   ServerMessage,
   StatusPill,
@@ -42,7 +43,7 @@ import {
   TableRow,
   TaskLog,
 } from "@omv-webui/react-ui-components";
-import { useId, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SLOT, splitSlots } from "../../disks/disksList.ts";
 import {
@@ -312,7 +313,7 @@ function Readings({
               {attributes.map((a) => (
                 <TableRow key={`${String(a.id)}-${a.attrname}`}>
                   <TableCell numeric>{a.id}</TableCell>
-                  <TableCell className="py-2 [overflow-wrap:anywhere]">
+                  <TableCell className="[overflow-wrap:anywhere]">
                     <Identifier>{a.attrname}</Identifier>
                   </TableCell>
                   <TableCell numeric>{a.value}</TableCell>
@@ -322,15 +323,15 @@ function Readings({
                       ? t("disk.details.limitNone")
                       : a.threshold}
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>
                     <Identifier>{a.rawvalue}</Identifier>
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>
                     {a.prefailure
                       ? t("disk.details.kindPrefail")
                       : t("disk.details.kindAge")}
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>
                     <span className="flex flex-wrap items-center gap-2">
                       <Assessment assessment={a.assessment} showOk />
                       {a.whenfailed.trim() === "" ||
@@ -448,24 +449,24 @@ function SelfTests({
           const block = entry.lbaoffirsterror.trim();
           return (
             <TableRow key={`${entry.num}-${String(i)}`}>
-              <TableCell className="py-2 tabular-nums">
+              <TableCell className="tabular-nums">
                 {ago === null
                   ? t("disk.details.testAtHours", {
                       hours: entry.lifetime.trim(),
                     })
                   : t("disk.details.testAgo", { duration: hours(ago) })}
               </TableCell>
-              <TableCell className="py-2">
+              <TableCell>
                 {kind === "short"
                   ? t("disk.details.testShort")
                   : kind === "long"
                     ? t("disk.details.testLong")
                     : kind.text}
               </TableCell>
-              <TableCell className="py-2">
+              <TableCell>
                 <TestResult entry={entry} />
               </TableCell>
-              <TableCell className="py-2">
+              <TableCell>
                 {block === "" || block === "-" ? null : <Block value={block} />}
               </TableCell>
             </TableRow>
@@ -483,7 +484,6 @@ function PartSkeleton({ rows }: { rows: number }) {
 export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
   const { t } = useTranslation();
   const format = useFormat();
-  const headingId = useId();
   const device = disk.canonicaldevicefile;
   // The row's stable device file, never the address (UI-4).
   const params = { devicefile: disk.devicefile };
@@ -606,13 +606,7 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
   }
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="flex min-w-0 flex-col gap-3"
-    >
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("disk.details.title")}
-      </h2>
+    <PageSection heading={t("disk.details.title")} className="min-w-0">
       {read ? null : (
         <p className="max-w-prose">
           {t("disk.details.intro")}
@@ -698,6 +692,6 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
           ) : null}
         </>
       ) : null}
-    </section>
+    </PageSection>
   );
 }

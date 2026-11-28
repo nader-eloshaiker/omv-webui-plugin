@@ -70,26 +70,26 @@ function SystemRow({
   const usage = fileSystemState(fs);
   return (
     <TableRow>
-      <TableCell className="min-w-48 py-2">
+      <TableCell className="min-w-48">
         <span className="font-medium">{t("filesystems.system.name")}</span>
         <span className="block text-xs text-muted-foreground">
           {t("filesystems.system.line")}
         </span>
       </TableCell>
-      <TableCell className="min-w-40 py-2">
+      <TableCell className="min-w-40">
         <FsStateView state="ok" />
       </TableCell>
-      <TableCell className="min-w-56 py-2">
+      <TableCell className="min-w-56">
         <FsUsageView
           row={fs}
           usage={usage}
           label={t("filesystems.system.name")}
         />
       </TableCell>
-      <TableCell className="py-2 whitespace-nowrap">
+      <TableCell className="whitespace-nowrap">
         <FsTypeView type={fs.type} />
       </TableCell>
-      <TableCell className="py-2">
+      <TableCell>
         <FsOnDisks
           fs={{
             parentdevicefile: fs.parentdevicefile ?? "",
@@ -100,7 +100,7 @@ function SystemRow({
           disks={disks}
         />
       </TableCell>
-      <TableCell className="py-2">{t("filesystems.usedBy.yes")}</TableCell>
+      <TableCell>{t("filesystems.usedBy.yes")}</TableCell>
     </TableRow>
   );
 }
@@ -139,7 +139,7 @@ function FsRow({
     );
   return (
     <TableRow>
-      <TableCell className="min-w-48 py-2">
+      <TableCell className="min-w-48">
         {zfsPage !== null ? (
           <Link
             to="/storage/zfs/fs/$"
@@ -182,7 +182,7 @@ function FsRow({
           </span>
         ) : null}
       </TableCell>
-      <TableCell className="min-w-40 py-2">
+      <TableCell className="min-w-40">
         <FsStateView state={state} />
         {progress ? (
           <Link
@@ -197,13 +197,13 @@ function FsRow({
           </Link>
         ) : null}
       </TableCell>
-      <TableCell className="min-w-56 py-2">
+      <TableCell className="min-w-56">
         <FsUsageView row={fs} usage={usage} label={nameText} />
       </TableCell>
-      <TableCell className="py-2 whitespace-nowrap">
+      <TableCell className="whitespace-nowrap">
         <FsTypeView type={fs.type} />
       </TableCell>
-      <TableCell className="py-2">
+      <TableCell>
         {isZfs(fs) && zfsPlugin ? (
           <Trans
             i18nKey="filesystems.zfsOn"
@@ -213,7 +213,7 @@ function FsRow({
           <FsOnDisks fs={fs} disks={disks} />
         )}
       </TableCell>
-      <TableCell className="py-2">
+      <TableCell>
         {fs._used ? t("filesystems.usedBy.yes") : t("filesystems.usedBy.no")}
       </TableCell>
     </TableRow>
@@ -334,7 +334,7 @@ export function FileSystemsTable({
   const usageLabel = t("filesystems.col.usage");
   const sortable = rows !== undefined && rows.length > 1;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-pair">
       <Table
         aria-label={t("filesystems.tableLabel")}
         frameLabel={t("filesystems.tableLabel")}

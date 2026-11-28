@@ -245,26 +245,26 @@ function ProcessRowView({ row }: { row: ProcessRow }) {
     <TableRow>
       <TableCell
         dir="auto"
-        className="min-w-48 py-2 align-top font-mono text-sm [overflow-wrap:anywhere]"
+        className="min-w-48 align-top font-mono text-sm [overflow-wrap:anywhere]"
       >
         {row.command}
       </TableCell>
-      <TableCell numeric className="py-2 align-top">
+      <TableCell numeric className="align-top">
         {row.cpu === null ? <NotReported /> : format.percent(row.cpu)}
       </TableCell>
-      <TableCell numeric className="py-2 align-top whitespace-nowrap">
+      <TableCell numeric className="align-top whitespace-nowrap">
         {row.memory === null ? <NotReported /> : formatBytes(row.memory)}
       </TableCell>
-      <TableCell className="py-2 align-top">
+      <TableCell className="align-top">
         <StateWord letter={row.state} />
       </TableCell>
-      <TableCell dir="auto" className="py-2 align-top break-words">
+      <TableCell dir="auto" className="align-top break-words">
         {row.user}
       </TableCell>
-      <TableCell mono className="py-2 align-top tabular-nums">
+      <TableCell mono className="align-top tabular-nums">
         {row.cpuTimeText}
       </TableCell>
-      <TableCell numeric mono className="py-2 align-top">
+      <TableCell numeric mono className="align-top">
         {row.pidText}
       </TableCell>
     </TableRow>

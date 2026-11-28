@@ -219,7 +219,7 @@ export function ZfsPoolsTable({
             : null;
       return (
         <TableRow key={view.row.path}>
-          <TableCell className="min-w-32 py-2 max-sm:max-w-40">
+          <TableCell className="min-w-32 max-sm:max-w-40">
             {/* A name stays on one line; at a phone's width a long one ends in an ellipsis (its
                 full name is the link's accessible name). */}
             <span className="block max-w-36 truncate sm:max-w-none">
@@ -237,23 +237,23 @@ export function ZfsPoolsTable({
               <LastCheck view={view} now={now} />
             </span>
           </TableCell>
-          <TableCell className="py-2 sm:min-w-56">
+          <TableCell className="sm:min-w-56">
             {view.reportRead === "loading" ? (
               <Skeleton className="h-5 w-20" />
             ) : (
               <ZfsStateView state={view.state} report={view.report} compact />
             )}
           </TableCell>
-          <TableCell className="py-2 max-sm:hidden">
+          <TableCell className="max-sm:hidden">
             {layout ?? <Skeleton className="h-3 w-24" />}
           </TableCell>
-          <TableCell className="min-w-44 py-2 max-sm:hidden">
+          <TableCell className="min-w-44 max-sm:hidden">
             <PoolSpace view={view} compact />
           </TableCell>
-          <TableCell className="min-w-36 py-2 max-sm:hidden">
+          <TableCell className="min-w-36 max-sm:hidden">
             <LastCheck view={view} now={now} />
           </TableCell>
-          <TableCell className="py-2 max-sm:hidden">
+          <TableCell className="max-sm:hidden">
             <Counts rows={rows} pool={view.row.path} />
           </TableCell>
         </TableRow>
