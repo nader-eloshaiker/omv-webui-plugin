@@ -474,10 +474,18 @@ function SharesTable({
             const root = givesRoot(entry);
             const other = otherOptionsDiffer(entry);
             return (
-              <TableRow key={entry.uuid}>
+              <TableRow
+                key={entry.uuid}
+                // Stacked, a later entry of the same folder continues its block without a rule.
+                className={index > 0 ? "@max-[40rem]:border-t-0" : undefined}
+              >
                 {/* A long unbroken name wraps anywhere within a capped column, so no other column
-                    is squeezed to a sliver; the table still scrolls only in its own region. */}
-                <TableCell className="max-w-56 min-w-32 [overflow-wrap:anywhere] [&_a]:[overflow-wrap:anywhere] [&_bdi]:[overflow-wrap:anywhere]">
+                    is squeezed to a sliver; the table still scrolls only in its own region. Stacked,
+                    the folder heads its first entry; a later entry of the same folder has no title. */}
+                <TableCell
+                  narrow={index > 0 ? "hidden" : "title"}
+                  className="[overflow-wrap:anywhere] @min-[40rem]:max-w-56 @min-[40rem]:min-w-32 [&_a]:[overflow-wrap:anywhere] [&_bdi]:[overflow-wrap:anywhere]"
+                >
                   {index > 0 ? null : foldersFailed ? (
                     <span>{t("nfs.shares.unreadFolder")}</span>
                   ) : (
@@ -487,17 +495,26 @@ function SharesTable({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="max-w-64 min-w-40 [overflow-wrap:anywhere]">
+                <TableCell
+                  label={t("nfs.shares.col.client")}
+                  className="[overflow-wrap:anywhere] @min-[40rem]:max-w-64 @min-[40rem]:min-w-40"
+                >
                   <NfsClientWords client={entryClient(entry)} />
                 </TableCell>
-                <TableCell className="max-w-48 min-w-28 [overflow-wrap:anywhere]">
+                <TableCell
+                  label={t("nfs.shares.col.access")}
+                  className="[overflow-wrap:anywhere] @min-[40rem]:max-w-48 @min-[40rem]:min-w-28"
+                >
                   {access.kind === "classic"
                     ? t("nfs.shares.classicValue", {
                         value: inertBidi(access.value),
                       })
                     : t(`access.${access.kind}`)}
                 </TableCell>
-                <TableCell className="max-w-72 min-w-48">
+                <TableCell
+                  label={t("nfs.shares.col.address")}
+                  className="@min-[40rem]:max-w-72 @min-[40rem]:min-w-48"
+                >
                   {index > 0 || hostname === undefined ? null : (
                     <NfsAddressList
                       hostname={hostname}
@@ -506,29 +523,34 @@ function SharesTable({
                     />
                   )}
                 </TableCell>
-                <TableCell className="max-w-64 min-w-40 [overflow-wrap:anywhere]">
-                  <span className="flex flex-col gap-1">
-                    {root ? (
-                      <span className="flex items-start gap-1.5">
-                        <TriangleAlert
-                          aria-hidden="true"
-                          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                        />
-                        <span>{t("nfs.shares.rootNote")}</span>
-                      </span>
-                    ) : null}
-                    {other ? (
-                      <span className="text-sm">
-                        {t("nfs.shares.otherOptions")}{" "}
-                        <Identifier
-                          dir="ltr"
-                          className="[overflow-wrap:anywhere]"
-                        >
-                          {inertBidi(entry.extraoptions ?? "")}
-                        </Identifier>
-                      </span>
-                    ) : null}
-                  </span>
+                <TableCell
+                  label={t("nfs.shares.col.note")}
+                  className="[overflow-wrap:anywhere] @min-[40rem]:max-w-64 @min-[40rem]:min-w-40"
+                >
+                  {root || other ? (
+                    <span className="flex flex-col gap-1">
+                      {root ? (
+                        <span className="flex items-start gap-1.5">
+                          <TriangleAlert
+                            aria-hidden="true"
+                            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                          />
+                          <span>{t("nfs.shares.rootNote")}</span>
+                        </span>
+                      ) : null}
+                      {other ? (
+                        <span className="text-sm">
+                          {t("nfs.shares.otherOptions")}{" "}
+                          <Identifier
+                            dir="ltr"
+                            className="[overflow-wrap:anywhere]"
+                          >
+                            {inertBidi(entry.extraoptions ?? "")}
+                          </Identifier>
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : null}
                 </TableCell>
               </TableRow>
             );

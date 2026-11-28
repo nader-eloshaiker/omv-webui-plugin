@@ -312,26 +312,46 @@ function Readings({
             <TableBody>
               {attributes.map((a) => (
                 <TableRow key={`${String(a.id)}-${a.attrname}`}>
-                  <TableCell numeric>{a.id}</TableCell>
-                  <TableCell className="[overflow-wrap:anywhere]">
+                  {/* Stacked, the ID is the last line: the name and status come first. */}
+                  <TableCell
+                    label={t("disk.details.col.id")}
+                    numeric
+                    className="@max-[40rem]:order-last"
+                  >
+                    {a.id}
+                  </TableCell>
+                  <TableCell
+                    narrow="title"
+                    className="[overflow-wrap:anywhere]"
+                  >
                     <Identifier>{a.attrname}</Identifier>
                   </TableCell>
-                  <TableCell numeric>{a.value}</TableCell>
-                  <TableCell numeric>{a.worst}</TableCell>
-                  <TableCell numeric>
+                  <TableCell label={t("disk.details.col.value")} numeric>
+                    {a.value}
+                  </TableCell>
+                  {/* Left out when stacked: the status already says when a reading was outside
+                      its limit in the past, which is what the worst score shows. */}
+                  <TableCell narrow="hidden" numeric>
+                    {a.worst}
+                  </TableCell>
+                  <TableCell label={t("disk.details.col.limit")} numeric>
                     {a.threshold === 0
                       ? t("disk.details.limitNone")
                       : a.threshold}
                   </TableCell>
-                  <TableCell>
+                  <TableCell label={t("disk.details.col.raw")}>
                     <Identifier>{a.rawvalue}</Identifier>
                   </TableCell>
-                  <TableCell>
+                  <TableCell label={t("disk.details.col.kind")}>
                     {a.prefailure
                       ? t("disk.details.kindPrefail")
                       : t("disk.details.kindAge")}
                   </TableCell>
-                  <TableCell>
+                  {/* A line, not an aside, for its reason; stacked, the first line under the name. */}
+                  <TableCell
+                    label={t("disk.details.col.status")}
+                    className="@max-[40rem]:order-first"
+                  >
                     <span className="flex flex-wrap items-center gap-2">
                       <Assessment assessment={a.assessment} showOk />
                       {a.whenfailed.trim() === "" ||
@@ -449,24 +469,24 @@ function SelfTests({
           const block = entry.lbaoffirsterror.trim();
           return (
             <TableRow key={`${entry.num}-${String(i)}`}>
-              <TableCell className="tabular-nums">
+              <TableCell narrow="title" className="tabular-nums">
                 {ago === null
                   ? t("disk.details.testAtHours", {
                       hours: entry.lifetime.trim(),
                     })
                   : t("disk.details.testAgo", { duration: hours(ago) })}
               </TableCell>
-              <TableCell>
+              <TableCell label={t("disk.details.testsCol.test")}>
                 {kind === "short"
                   ? t("disk.details.testShort")
                   : kind === "long"
                     ? t("disk.details.testLong")
                     : kind.text}
               </TableCell>
-              <TableCell>
+              <TableCell label={t("disk.details.testsCol.result")}>
                 <TestResult entry={entry} />
               </TableCell>
-              <TableCell>
+              <TableCell label={t("disk.details.testsCol.firstProblem")}>
                 {block === "" || block === "-" ? null : <Block value={block} />}
               </TableCell>
             </TableRow>

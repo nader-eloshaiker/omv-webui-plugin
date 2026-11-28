@@ -18,6 +18,7 @@ import { findDashboard } from "../../test/dashboard.ts";
 import { openNavGroup } from "../../test/nav.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls, server } from "../../test/server.ts";
+import { cellValue } from "../../test/tableText.ts";
 
 const FOLDER = CONTRACT_EXAMPLES.shareMgmtGetList.populated.value.data[0];
 const SHARE = CONTRACT_EXAMPLES.smbGetShareList.one.value.data[0];
@@ -150,7 +151,7 @@ describe("the shared folders table", () => {
       "href",
       `/ui/storage/shared-folders/${FOLDER.uuid}`,
     );
-    const text = cells.slice(1).map((c) => c.textContent);
+    const text = cells.slice(1).map(cellValue);
     expect(text[0]).toBe("OK");
     expect(text[1]).toBe("/dev/sda1");
     // Not shared: the Sharing cell is empty.
@@ -383,9 +384,8 @@ describe("the shared folders table", () => {
     ).toBeInTheDocument();
     // A folder without a file system or a full path says so in words, with nothing to copy.
     const old = within(table()).getByRole("row", { name: /old-disk/ });
-    // Twice for the file system (its column, and the narrow layout's line under the name) and once
-    // for the full path.
-    expect(within(old).getAllByText("Not available")).toHaveLength(3);
+    // Once for the file system and once for the full path.
+    expect(within(old).getAllByText("Not available")).toHaveLength(2);
     expect(within(old).queryByRole("button", { name: /Copy/ })).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "Show these first" }));
@@ -493,12 +493,14 @@ describe("the shared folders table", () => {
 describe("how each folder is shared (design 1.1 to 1.4)", () => {
   const row = () => within(table()).findByRole("row", { name: /a4share/ });
   const sharingCellOf = async () => (await row()).querySelectorAll("td")[3];
+  /** The Sharing cell's words, without the column's word a stacked row says before them. */
+  const sharingOf = async () => cellValue((await sharingCellOf())!);
 
   it("says Windows and Mac when its share is on and SMB is on, and hides the SMB-off line", async () => {
     await sharedFolders({
       answers: { ...SMB_ON, smbGetShareList: shareOfFolder() },
     });
-    expect(await sharingCellOf()).toHaveTextContent(/^Windows and Mac$/);
+    expect(await sharingOf()).toMatch(/^Windows and Mac$/);
     expect(
       screen.queryByText(/^Windows and Mac sharing is off/),
     ).not.toBeInTheDocument();
@@ -519,9 +521,7 @@ describe("how each folder is shared (design 1.1 to 1.4)", () => {
     await sharedFolders({
       answers: { ...SMB_ON, smbGetShareList: shareOfFolder({ enable: false }) },
     });
-    expect(await sharingCellOf()).toHaveTextContent(
-      /^Windows and Mac \(off\)$/,
-    );
+    expect(await sharingOf()).toMatch(/^Windows and Mac \(off\)$/);
   });
 
   it("says (off) and links to Windows and Mac sharing when SMB is off for the NAS", async () => {
@@ -532,9 +532,7 @@ describe("how each folder is shared (design 1.1 to 1.4)", () => {
         smbGetShareList: shareOfFolder(),
       },
     });
-    expect(await sharingCellOf()).toHaveTextContent(
-      /^Windows and Mac \(off\)$/,
-    );
+    expect(await sharingOf()).toMatch(/^Windows and Mac \(off\)$/);
     const line = screen.getByText(
       "Windows and Mac sharing is off, so no folder can be reached from Windows or Mac computers.",
     );
@@ -552,7 +550,7 @@ describe("how each folder is shared (design 1.1 to 1.4)", () => {
       },
     });
     // An enabled share reads as shared while SMB's own state is not known.
-    expect(await sharingCellOf()).toHaveTextContent(/^Windows and Mac$/);
+    expect(await sharingOf()).toMatch(/^Windows and Mac$/);
     expect(
       screen.queryByText(/^Windows and Mac sharing is off/),
     ).not.toBeInTheDocument();
@@ -569,7 +567,7 @@ describe("how each folder is shared (design 1.1 to 1.4)", () => {
             : shareOfFolder(),
       },
     });
-    expect(await sharingCellOf()).toHaveTextContent(/^Not known$/);
+    expect(await sharingOf()).toMatch(/^Not known$/);
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent(
       "Could not read which folders are shared with Windows and Mac computers.",
@@ -580,25 +578,52 @@ describe("how each folder is shared (design 1.1 to 1.4)", () => {
     fail = false;
     await user.click(within(alert).getByRole("button", { name: "Try again" }));
     await waitFor(async () =>
-      expect(await sharingCellOf()).toHaveTextContent(/^Windows and Mac$/),
+      expect(await sharingOf()).toMatch(/^Windows and Mac$/),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("lays a row out for a narrow screen with the file system, sharing and path under the name", async () => {
+  it("stacks a row for a narrow screen: the name on top, each other column a line after its own word, each fact once", async () => {
     await sharedFolders({
       answers: { ...SMB_ON, smbGetShareList: shareOfFolder() },
     });
-    const first = (await row()).querySelectorAll("td")[0]!;
-    const narrow = first.querySelector(".sm\\:hidden");
-    expect(narrow).toHaveTextContent("/dev/sda1");
-    expect(narrow).toHaveTextContent("Windows and Mac");
-    expect(narrow).toHaveTextContent("a4share");
-    // The other columns are hidden at that width.
-    const hidden = [...(await row()).querySelectorAll("td")].filter((td) =>
-      td.classList.contains("max-sm:hidden"),
+    const folder = await row();
+    const cells = [...folder.querySelectorAll("td")];
+    expect(cells[0]).toHaveAttribute("data-narrow", "title");
+    // Every other cell is a line that says its column's header word (without the Used note's mark),
+    // except the path, which the full path under it ends with.
+    const heads = within(table())
+      .getAllByRole("columnheader")
+      .map((h) => (h.textContent ?? "").replace(/\*$/u, ""));
+    const lines = cells.slice(1).map((c) => ({
+      narrow: c.getAttribute("data-narrow"),
+      label: c.querySelector('[data-slot="table-cell-label"]')?.textContent,
+    }));
+    expect(lines).toEqual(
+      heads
+        .slice(1)
+        .map((head) =>
+          head === "Path"
+            ? { narrow: "hidden", label: undefined }
+            : { narrow: "line", label: head },
+        ),
     );
-    expect(hidden).toHaveLength(6);
+    expect(cells[5]).toHaveTextContent(
+      "/srv/dev-disk-by-uuid-00000000-0000-4000-8000-000000000003/a4share/",
+    );
+    // The file system and the sharing words are each said once.
+    expect(within(folder).getAllByText("/dev/sda1")).toHaveLength(1);
+    expect(within(folder).getAllByText("Windows and Mac")).toHaveLength(1);
+  });
+
+  it("keeps the path as a line on a narrow screen when the full path is not known", async () => {
+    await sharedFolders({ scenario: "folderProblems" });
+    const old = await within(table()).findByRole("row", { name: /old-disk/ });
+    const path = old.querySelectorAll("td")[4];
+    expect(path).toHaveAttribute("data-narrow", "line");
+    expect(
+      path?.querySelector('[data-slot="table-cell-label"]'),
+    ).toHaveTextContent("Path");
   });
 });
 

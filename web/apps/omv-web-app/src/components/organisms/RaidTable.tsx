@@ -3,7 +3,8 @@
 // the reader sorts by name or size; not paged, in its own named frame. The disks column counts from each
 // array's report (the VM showed that `devices` lists failed members and spares too), and says only
 // "2 disks" when the report could not be read. No row selection and no row action: each array's
-// actions are on its page.
+// actions are on its page. A narrow table stacks: the array's name on top, each other column a line
+// under it after its word.
 import type {
   ConfiguredFilesystem,
   DiskDevice,
@@ -206,7 +207,7 @@ export function RaidTable({
   } else {
     body = sorted(rows).map(({ row, state, report, used }) => (
       <TableRow key={`${row.uuid}:${row.devicefile}`}>
-        <TableCell className="min-w-32">
+        <TableCell narrow="title" className="@min-[40rem]:min-w-32">
           <span className="whitespace-nowrap">
             <ArrayLink devicefile={row.devicefile} />
           </span>
@@ -215,38 +216,34 @@ export function RaidTable({
               {t("raid.noPage")}
             </span>
           )}
-          {/* Under the small breakpoint the columns after State are hidden, and said here. */}
-          <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
-            <span>
-              {t("array.subtitle", {
-                level: words.levelWord(row.level),
-                size: words.sizeText(row.size),
-              })}
-            </span>
-            <span>{words.disksText(row, report)}</span>
-            <MemberDisks devices={row.devices} disks={disks} />
-            <span className="flex flex-wrap gap-x-1">
-              <span className="text-muted-foreground">
-                {t("raid.usedByLabel")}
-              </span>
-              <UsedByCell used={used} />
-            </span>
-          </span>
         </TableCell>
-        <TableCell className="sm:min-w-56">
+        {/* A line, not an aside: the state's reason and progress need the row's width. */}
+        <TableCell
+          label={t("raid.col.state")}
+          className="@min-[40rem]:min-w-56"
+        >
           <RaidStateView row={row} state={state} compact />
         </TableCell>
-        <TableCell className="max-sm:hidden">
+        <TableCell label={t("raid.col.level")}>
           {words.levelWord(row.level)}
         </TableCell>
-        <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
+        <TableCell
+          label={t("raid.col.size")}
+          className="text-end whitespace-nowrap tabular-nums"
+        >
           {words.sizeText(row.size)}
         </TableCell>
-        <TableCell className="min-w-40 max-sm:hidden">
+        <TableCell
+          label={t("raid.col.disks")}
+          className="@min-[40rem]:min-w-40"
+        >
           <span className="block">{words.disksText(row, report)}</span>
           <MemberDisks devices={row.devices} disks={disks} />
         </TableCell>
-        <TableCell className="min-w-32 max-sm:hidden">
+        <TableCell
+          label={t("raid.col.usedBy")}
+          className="@min-[40rem]:min-w-32"
+        >
           <UsedByCell used={used} />
         </TableCell>
       </TableRow>
@@ -273,22 +270,16 @@ export function RaidTable({
               {arrayLabel}
             </TableHead>
             <TableHead>{t("raid.col.state")}</TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("raid.col.level")}
-            </TableHead>
+            <TableHead>{t("raid.col.level")}</TableHead>
             <TableHead
-              className="text-end max-sm:hidden"
+              className="text-end"
               sort={sortable ? sortOf("size") : undefined}
               onSort={() => sortBy("size", sizeLabel)}
             >
               {sizeLabel}
             </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("raid.col.disks")}
-            </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("raid.col.usedBy")}
-            </TableHead>
+            <TableHead>{t("raid.col.disks")}</TableHead>
+            <TableHead>{t("raid.col.usedBy")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>{body}</TableBody>

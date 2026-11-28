@@ -93,11 +93,15 @@ function columnsOf(layout: LogLayout): Column[] {
 /** Every field of a log line is cleaned before it is shown (logView.ts). */
 const str = cleanLogText;
 
+/** Stacked ("Table"), the time heads the line. */
 function TimeCell({ ts }: { ts: LogRow["ts"] }) {
   const { t } = useTranslation();
   const format = useFormat();
   return (
-    <TableCell className="align-top whitespace-nowrap tabular-nums">
+    <TableCell
+      narrow="title"
+      className="align-top whitespace-nowrap tabular-nums"
+    >
       {typeof ts === "number" ? (
         format.dateTime(ts)
       ) : (
@@ -108,13 +112,14 @@ function TimeCell({ ts }: { ts: LogRow["ts"] }) {
 }
 
 function MessageCell({ message }: { message: unknown }) {
-  // A table cell ignores min-width, so the block inside holds the column at a readable width; on a
-  // narrow screen the frame scrolls sideways instead of squeezing a line into a tall strip.
+  // A table cell ignores min-width, so the block inside holds the column at a readable width, and the
+  // frame scrolls sideways instead of squeezing a line into a tall strip. Stacked ("Table"), the
+  // message is a line of its own under the time, the row's whole width, with no word before it.
   return (
     <TableCell className="align-top">
       <div
         dir="auto"
-        className="min-w-72 font-mono text-[13px] whitespace-pre-wrap [overflow-wrap:anywhere]"
+        className="font-mono @min-[40rem]:min-w-72 text-[13px] whitespace-pre-wrap [overflow-wrap:anywhere]"
       >
         {str(message)}
       </div>
@@ -123,6 +128,7 @@ function MessageCell({ message }: { message: unknown }) {
 }
 
 function LogRowView({ row, layout }: { row: LogRow; layout: LogLayout }) {
+  const { t } = useTranslation();
   if (layout === "message") {
     return (
       <TableRow>
@@ -136,16 +142,31 @@ function LogRowView({ row, layout }: { row: LogRow; layout: LogLayout }) {
     return (
       <TableRow>
         <TimeCell ts={row.ts} />
-        <TableCell dir="auto" className="align-top break-words">
+        <TableCell
+          label={t("logs.col.user")}
+          dir="auto"
+          className="align-top break-words"
+        >
           {str(row.username)}
         </TableCell>
-        <TableCell mono className="align-top [overflow-wrap:anywhere]">
-          {str(row.clientipaddr)}
+        {/* The value is in the mono face, not the cell, so the word before it when stacked is not. */}
+        <TableCell
+          label={t("logs.col.computer")}
+          className="align-top [overflow-wrap:anywhere]"
+        >
+          <span className="font-mono text-sm">{str(row.clientipaddr)}</span>
         </TableCell>
-        <TableCell dir="auto" className="align-top break-words">
+        <TableCell
+          label={t("logs.col.share")}
+          dir="auto"
+          className="align-top break-words"
+        >
           {str(row.servicename)}
         </TableCell>
-        <TableCell className="min-w-40 align-top">
+        <TableCell
+          label={t("logs.col.file")}
+          className="align-top @min-[40rem]:min-w-40"
+        >
           <span
             dir="auto"
             className="block font-mono text-sm [overflow-wrap:anywhere]"
@@ -161,10 +182,11 @@ function LogRowView({ row, layout }: { row: LogRow; layout: LogLayout }) {
             </span>
           ) : null}
         </TableCell>
-        <TableCell mono className="align-top">
-          {str(row.operation)}
+        <TableCell label={t("logs.col.action")} className="align-top">
+          <span className="font-mono text-sm">{str(row.operation)}</span>
         </TableCell>
-        <TableCell dir="auto" className="align-top break-words">
+        {/* A short word ("ok", "fail"): stacked, it stands beside the time. */}
+        <TableCell narrow="aside" dir="auto" className="align-top break-words">
           {str(row.result)}
         </TableCell>
       </TableRow>

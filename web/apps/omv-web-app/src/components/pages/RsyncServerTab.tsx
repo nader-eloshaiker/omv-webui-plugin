@@ -93,7 +93,7 @@ import {
 const NAMED = 5;
 /** A cell that holds a name or address from the backend: it wraps anywhere, within a cap. */
 const NAME_CELL =
-  "min-w-40 max-w-64 [overflow-wrap:anywhere] whitespace-normal";
+  "@min-[40rem]:min-w-40 @min-[40rem]:max-w-64 [overflow-wrap:anywhere] whitespace-normal";
 
 export function RsyncServerTab() {
   const { t } = useTranslation();
@@ -417,8 +417,9 @@ function Modules({
     body = (
       <Table
         frameLabel={t("rsyncd.modules.title")}
-        // Wide enough to read at 320 px: the table scrolls in its own frame, never the page.
-        className="min-w-[56rem]"
+        // With its columns, wide enough to read: the table scrolls in its own frame, never the page.
+        // Narrower than 40rem it stacks instead ("Table").
+        className="@min-[40rem]:min-w-[56rem]"
       >
         <TableHeader>
           <TableRow>
@@ -532,7 +533,7 @@ function ModuleRow({
   const signIn = moduleSignIn(row);
   return (
     <TableRow>
-      <TableCell className={NAME_CELL}>
+      <TableCell narrow="title" className={NAME_CELL}>
         <span className="flex flex-col">
           <span className="flex flex-wrap items-center gap-2">
             {folder === undefined && folders !== undefined ? (
@@ -549,7 +550,7 @@ function ModuleRow({
           )}
         </span>
       </TableCell>
-      <TableCell className={NAME_CELL}>
+      <TableCell label={t("rsyncd.col.as")} className={NAME_CELL}>
         {address === null ? (
           <Identifier>{inertBidi(row.name)}</Identifier>
         ) : (
@@ -565,8 +566,10 @@ function ModuleRow({
           </span>
         )}
       </TableCell>
-      <TableCell>{t(`rsyncd.may.${moduleMay(row)}`)}</TableCell>
-      <TableCell className={NAME_CELL}>
+      <TableCell label={t("rsyncd.col.may")}>
+        {t(`rsyncd.may.${moduleMay(row)}`)}
+      </TableCell>
+      <TableCell label={t("rsyncd.col.signIn")} className={NAME_CELL}>
         {signIn.kind === "none" ? (
           <span className="flex flex-col gap-0.5">
             <span className="inline-flex items-start gap-1.5">
@@ -591,7 +594,7 @@ function ModuleRow({
           t("rsyncd.signIn.many", { count: signIn.count })
         )}
       </TableCell>
-      <TableCell className={NAME_CELL}>
+      <TableCell label={t("rsyncd.col.who")} className={NAME_CELL}>
         <RsyncWhoText who={moduleWho(row)} />
       </TableCell>
       <TableCell>

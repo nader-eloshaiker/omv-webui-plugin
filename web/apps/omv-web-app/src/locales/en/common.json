@@ -2890,7 +2890,16 @@
       "alsoBodyList": "Also pending from elsewhere: <list></list>. Applying applies them too.",
       "notInCheckNoDisks": "No disk reported its health in the check, so there is no disk to watch."
     },
-    "documentTitle": "{{tab}} – Disk health"
+    "documentTitle": "{{tab}} – Disk health",
+    "answer": {
+      "label": "How your disks are",
+      "allOk_one": "The disk reports no problems.",
+      "allOk_other": "All {{count}} disks report no problems.",
+      "attention_one": "{{count}} of {{total}} disks needs your attention.",
+      "attention_other": "{{count}} of {{total}} disks need your attention.",
+      "none": "The check found no disks that report their health.",
+      "announce": "Disk health checked. {{sentence}}"
+    }
   },
   "filesystems": {
     "title": "File systems",
@@ -3435,8 +3444,7 @@
     "otherRun": "Another change to RAID is under way in this session. Its steps are shown on its own page; wait until it ends, or dismiss its result there.",
     "otherRunLink": "Show that change",
     "rollUp_one": "{{number}} of {{count}} array: {{status}}",
-    "rollUp_other": "{{number}} of {{count}} arrays: {{status}}",
-    "usedByLabel": "Used by:"
+    "rollUp_other": "{{number}} of {{count}} arrays: {{status}}"
   },
   "raidState": {
     "unread": "Could not read its state.",

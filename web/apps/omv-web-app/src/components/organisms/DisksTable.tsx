@@ -2,7 +2,8 @@
 // The Disks list's table (phase 5 disks design 1.3, 1.6): every disk, not paged, with its model and
 // serial number, size, what it holds, its health from the session's check, and its power state as a
 // word. No row is selectable and there is no row action: each disk's actions are on its page. The rows
-// keep the device order unless the reader sorts by Disk or Size.
+// keep the device order unless the reader sorts by Disk or Size. A narrow table stacks: the disk's name
+// on top, each other column a line under it after its word.
 import type { DiskDevice } from "@omv-webui/react-api-omv/generated";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
@@ -70,13 +71,13 @@ function DiskRow({
   const model = disk.model.trim();
   return (
     <TableRow>
-      <TableCell className="whitespace-nowrap">
+      <TableCell narrow="title" className="whitespace-nowrap">
         <DiskLink
           devicename={disk.devicename}
           device={disk.canonicaldevicefile}
         />
       </TableCell>
-      <TableCell className="min-w-48">
+      <TableCell label={t("disks.col.model")} className="@min-[40rem]:min-w-48">
         {model === "" ? (
           <span className="text-muted-foreground">{t("disks.noModel")}</span>
         ) : (
@@ -90,13 +91,20 @@ function DiskRow({
           </span>
         )}
       </TableCell>
-      <TableCell numeric className="whitespace-nowrap">
+      <TableCell
+        label={t("disks.col.size")}
+        numeric
+        className="whitespace-nowrap"
+      >
         {size === null ? "" : formatBytes(size)}
       </TableCell>
-      <TableCell className="min-w-56">
+      <TableCell label={t("disks.col.use")} className="@min-[40rem]:min-w-56">
         <DisksUseLines uses={use?.uses} loading={usesLoading} />
       </TableCell>
-      <TableCell className="min-w-40">
+      <TableCell
+        label={t("disks.col.health")}
+        className="@min-[40rem]:min-w-40"
+      >
         <span className="flex flex-col items-start gap-1">
           <DiskHealthStatus
             checked={check.result !== undefined}
@@ -109,7 +117,7 @@ function DiskRow({
           )}
         </span>
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell label={t("disks.col.power")} className="whitespace-nowrap">
         {power === "unknown" ? (
           <span className="text-muted-foreground">
             {t("disks.power.unknown")}

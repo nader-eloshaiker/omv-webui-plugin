@@ -81,8 +81,8 @@ describe("the Shared folders list (12.1)", () => {
       {},
       LONG,
     );
-    // Said once in the wide column and once under the name on a narrow screen, for that folder only.
-    expect(cells).toHaveLength(2);
+    // Said once, for that folder only: a narrow table stacks the same cell under its column's word.
+    expect(cells).toHaveLength(1);
     expect(cells[0]?.closest("tr")).toHaveTextContent(FOLDER.name);
   }, 30_000);
 

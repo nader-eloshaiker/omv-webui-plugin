@@ -152,4 +152,77 @@ describe("TableGroupRow", () => {
     expect(screen.getByText("<script>alert(1)</script>")).toBeInTheDocument();
     expect(document.querySelector("img, script")).toBeNull();
   });
+
+  describe("when narrow", () => {
+    function stacked() {
+      render(
+        <Table aria-label="Disks">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Disk</TableHead>
+              <TableHead>Health</TableHead>
+              <TableHead>Temperature</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell narrow="title">/dev/sda</TableCell>
+              <TableCell narrow="aside">OK</TableCell>
+              <TableCell label="Temperature">{null}</TableCell>
+              <TableCell>
+                <button type="button">Open</button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>,
+      );
+    }
+
+    it("says a line's column word before its value, hidden until the table stacks", () => {
+      stacked();
+      const [, , temperature] = screen.getAllByRole("cell");
+      const label = temperature?.querySelector("[data-slot=table-cell-label]");
+      expect(label).toHaveTextContent("Temperature");
+      expect(label).toHaveClass("hidden", "@max-[40rem]:block");
+    });
+
+    it("leaves out a line with no value when stacked", () => {
+      stacked();
+      const [, , temperature] = screen.getAllByRole("cell");
+      expect(
+        temperature?.querySelector("[data-slot=table-cell-value]"),
+      ).toBeEmptyDOMElement();
+      expect(temperature).toHaveClass(
+        "@max-[40rem]:has-[>[data-slot=table-cell-value]:empty]:hidden",
+      );
+    });
+
+    it("places the title, its aside and the lines, and hides the header", () => {
+      stacked();
+      const [title, aside, , actions] = screen.getAllByRole("cell");
+      expect(title).toHaveAttribute("data-narrow", "title");
+      expect(aside).toHaveAttribute("data-narrow", "aside");
+      expect(actions).toHaveAttribute("data-narrow", "line");
+      // A line with no label carries no word of its own.
+      expect(actions?.querySelector("[data-slot=table-cell-label]")).toBeNull();
+      expect(document.querySelector("thead")).toHaveClass(
+        "@max-[40rem]:hidden",
+      );
+    });
+
+    it("keeps the table's roles when it is drawn as blocks", () => {
+      stacked();
+      expect(screen.getByRole("table", { name: "Disks" })).toHaveAttribute(
+        "role",
+        "table",
+      );
+      for (const row of screen.getAllByRole("row")) {
+        expect(row).toHaveAttribute("role", "row");
+      }
+      for (const cell of screen.getAllByRole("cell")) {
+        expect(cell).toHaveAttribute("role", "cell");
+      }
+    });
+  });
 });

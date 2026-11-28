@@ -7,6 +7,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
+import { rowValues } from "../../test/tableText.ts";
 
 async function processes(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({
@@ -64,9 +65,15 @@ describe("Processes", () => {
     ).toHaveAttribute("aria-sort", "descending");
     const rows = within(table()).getAllByRole("row");
     expect(rows).toHaveLength(9);
-    expect(rows[1]).toHaveTextContent("systemd0%14.9 MiBSleepingroot1:06.401");
-    expect(rows[4]).toHaveTextContent(
+    // Spaces as a reader sees them: a figure and its unit are held together by a no-break space.
+    const values = (row: HTMLElement) => rowValues(row).replace(/\s+/g, " ");
+    expect(values(rows[1]!)).toBe("systemd0%14.9 MiBSleepingroot1:06.401");
+    expect(values(rows[4]!)).toBe(
       "kworker/R-kvfree_rcu_reclaim0%0 BIdleroot0:00.004",
+    );
+    // Stacked on a narrow screen, every value after the program says its column's word.
+    expect(rows[1]).toHaveTextContent(
+      "systemdProcessor0%Memory14.9 MiBStateSleepingUserrootProcessor time1:06.40ID1",
     );
     expect(
       screen.getByText(

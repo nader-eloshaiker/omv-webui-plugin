@@ -2,7 +2,8 @@
 // The scheduled self-tests and their actions (phase 5 disks design 6.3 to 6.6, 2.6): one table, used
 // on the Self-tests page for every disk and on a disk's page for that disk (without the Disk column).
 // Each row has a visible "Actions" menu button (D22): Run now, Edit, Delete. Every read here is
-// configuration and wakes no disk; only "Run now", after its confirmation, starts a test (D15).
+// configuration and wakes no disk; only "Run now", after its confirmation, starts a test (D15). A
+// narrow table stacks: the disk (or, on a disk's page, the test) on top, the other columns as lines.
 import type {
   DiskDevice,
   SmartScheduleEntry,
@@ -257,7 +258,7 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
     body = rows.map((row) => (
       <TableRow key={row.entry.uuid}>
         {showDisk ? (
-          <TableCell className="min-w-40">
+          <TableCell narrow="title" className="@min-[40rem]:min-w-40">
             {row.disk && row.connected ? (
               <span className="flex flex-col whitespace-nowrap">
                 <DiskLink
@@ -283,16 +284,28 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
             )}
           </TableCell>
         ) : null}
-        <TableCell>{words.typeName(row.entry.type)}</TableCell>
-        <TableCell>{words.when(row.entry)}</TableCell>
-        <TableCell>
+        {/* On a disk's page, with no Disk column, the test is the row's name. */}
+        <TableCell
+          narrow={showDisk ? "line" : "title"}
+          label={showDisk ? t("smart.tests.col.test") : undefined}
+        >
+          {words.typeName(row.entry.type)}
+        </TableCell>
+        <TableCell label={t("smart.tests.col.when")}>
+          {words.when(row.entry)}
+        </TableCell>
+        <TableCell label={t("smart.tests.col.runs")}>
           <RunsCell row={row} globalOn={globalOn} />
         </TableCell>
-        <TableCell>
-          <span dir="auto" className="line-clamp-2 max-w-64 break-words">
-            {row.entry.comment}
-          </span>
+        <TableCell label={t("smart.tests.col.note")}>
+          {/* Nothing without a note, so a stacked row leaves the line out. */}
+          {row.entry.comment === "" ? null : (
+            <span dir="auto" className="line-clamp-2 max-w-64 break-words">
+              {row.entry.comment}
+            </span>
+          )}
         </TableCell>
+        {/* Stacked, the actions are a line of their own under the facts. */}
         <TableCell className="text-end">
           <ActionsMenu
             row={row}

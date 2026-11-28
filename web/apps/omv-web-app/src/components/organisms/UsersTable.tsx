@@ -2,9 +2,8 @@
 // The people on the Users page (phase 5 users design 1.2 items 5 to 7, 1.3, 1.4, 1.6): the toolbar
 // (search, the Show filter, "Add a person"), the table searched, filtered, sorted and paged at 50 in
 // the browser (the list is read whole, D2), and its states. The table's choices live in this view only:
-// never in the address (UI-4) or storage (UI-13). Under 640px the table shows Name and Administrator,
-// with the description, the SSH word and the groups under the name. Everything from the server is
-// text (UI-2); a name with no page here (`add`) is shown as text with the classic list's link.
+// never in the address (UI-4) or storage (UI-13). A narrow table stacks: the name at the top and every
+// other column a line under it with its word ("Table"). Everything from the server is text (UI-2); a name with no page here (`add`) is shown as text with the classic list's link.
 import type {
   UserAccount,
   UserGroup,
@@ -56,16 +55,15 @@ import { PersonLink } from "../atoms/PersonLink.tsx";
 import { ClampedText } from "../molecules/ClampedText.tsx";
 
 const COLUMNS = [
-  { field: "name", label: "users.col.name", narrow: true },
-  { field: "description", label: "users.col.description", narrow: false },
-  { field: "email", label: "users.col.email", narrow: false },
-  { field: null, label: "users.col.groups", narrow: false },
-  { field: "admin", label: "users.col.admin", narrow: true },
-  { field: "ssh", label: "users.col.ssh", narrow: false },
+  { field: "name", label: "users.col.name" },
+  { field: "description", label: "users.col.description" },
+  { field: "email", label: "users.col.email" },
+  { field: null, label: "users.col.groups" },
+  { field: "admin", label: "users.col.admin" },
+  { field: "ssh", label: "users.col.ssh" },
 ] as const satisfies readonly {
   field: UsersSortField | null;
   label: `users.col.${string}`;
-  narrow: boolean;
 }[];
 
 function None() {
@@ -122,7 +120,7 @@ function UserRow({
   const ssh = sshAllowed(user) ? t("users.sshAllowed") : t("users.no");
   return (
     <TableRow>
-      <TableCell className="min-w-32">
+      <TableCell narrow="title" className="@min-[40rem]:min-w-32">
         <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <PersonLink name={user.name} className="font-medium" />
           {self ? (
@@ -131,29 +129,18 @@ function UserRow({
             </span>
           ) : null}
         </span>
-        {/* Under the small breakpoint the description, the SSH word and the groups are said here. */}
-        <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
-          {comment === "" ? null : (
-            <span dir="auto" className="[overflow-wrap:anywhere]">
-              {inertBidi(comment)}
-            </span>
-          )}
-          <span>
-            {t("users.col.ssh")}: {ssh}
-          </span>
-          <span>
-            {t("users.col.groups")}: <GroupsCell user={user} groups={groups} />
-          </span>
-        </span>
       </TableCell>
-      <TableCell className="min-w-40 max-sm:hidden">
+      <TableCell
+        label={t("users.col.description")}
+        className="@min-[40rem]:min-w-40"
+      >
         {comment === "" ? (
           <None />
         ) : (
           <ClampedText>{inertBidi(comment)}</ClampedText>
         )}
       </TableCell>
-      <TableCell className="min-w-40 max-sm:hidden">
+      <TableCell label={t("users.col.email")} className="@min-[40rem]:min-w-40">
         {email === "" ? (
           <None />
         ) : (
@@ -162,13 +149,16 @@ function UserRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="min-w-32 max-sm:hidden">
+      <TableCell
+        label={t("users.col.groups")}
+        className="@min-[40rem]:min-w-32"
+      >
         <GroupsCell user={user} groups={groups} />
       </TableCell>
-      <TableCell>
+      <TableCell label={t("users.col.admin")}>
         {isAdministrator(user) ? t("users.yes") : t("users.no")}
       </TableCell>
-      <TableCell className="max-sm:hidden">{ssh}</TableCell>
+      <TableCell label={t("users.col.ssh")}>{ssh}</TableCell>
     </TableRow>
   );
 }
@@ -370,20 +360,14 @@ export function UsersTable({
       >
         <TableHeader>
           <TableRow>
-            {COLUMNS.map(({ field, label, narrow }) => {
+            {COLUMNS.map(({ field, label }) => {
               const text = t(label);
-              const hide = narrow ? undefined : "max-sm:hidden";
               if (field === null) {
-                return (
-                  <TableHead key={label} className={hide}>
-                    {text}
-                  </TableHead>
-                );
+                return <TableHead key={label}>{text}</TableHead>;
               }
               return (
                 <TableHead
                   key={field}
-                  className={hide}
                   sort={
                     sort.field === field
                       ? sort.direction === "asc"

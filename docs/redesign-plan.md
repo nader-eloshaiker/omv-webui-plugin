@@ -203,10 +203,15 @@ twenty habits of generated design. Done on `main`:
 - **Spacing and the connection notice** (#36, `a63207e`): the owner's feedback of 2026-11-28. Four
   spacing steps (style guide 4.7) in `Page`, `PageHeader`, `PageSection` and `PairStack`, on every
   page; the unencrypted-connection notice in the warning family.
-- **A disk's page**: the health answer in the header, the disk drawn as its kind beside it (from the
-  cache only, never a read of its own), what it holds as segment bars, and jump links to its
-  sections.
+- **A disk's page** (#37, `f9e9b39`): the health answer in the header, the disk drawn as its kind
+  beside it (from the cache only, never a read of its own), what it holds as segment bars, and jump
+  links to its sections.
+- **Disk health, and every table on a narrow screen**: the overview answers first how the disks are
+  (all well, or each disk that needs the person, with what it means), then monitoring, then the
+  disks. Every table stacks under 40rem of its own width (style guide 5.2), from `TableCell`'s
+  `narrow` and `label`.
 
-Next: the remaining pages in the order of step 5: disk health, the rest of file systems and Add
+Next: each disk's kind kept in OMV's per-user store, so it is read once per disk and never wakes one
+(journal, 2026-11-28). Then the remaining pages in the order of step 5: the rest of file systems and Add
 storage, RAID, ZFS, shared folders, users and groups, services, network, logs and processes, and the
 account pages.

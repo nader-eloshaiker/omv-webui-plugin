@@ -96,11 +96,19 @@ describe("LiveChart", () => {
       name: "Processor readings, newest first",
     });
     const rows = within(table).getAllByRole("row").slice(1);
-    expect(rows.map((r) => r.textContent)).toEqual([
-      "T+425%",
-      "T+2No reading",
-      "T+012%",
-    ]);
+    // Each row as a wide table shows it: the time, then the values without the column's word a
+    // stacked row says before each ("TableCell" "label"), which is in the DOM at every width.
+    const wide = (row: HTMLElement) =>
+      [...row.children]
+        .map(
+          (cell) =>
+            cell.querySelector(':scope > [data-slot="table-cell-value"]')
+              ?.textContent ?? cell.textContent,
+        )
+        .join("");
+    expect(rows.map(wide)).toEqual(["T+425%", "T+2No reading", "T+012%"]);
+    // Stacked, each value says its column's word.
+    expect(rows[0]).toHaveTextContent("T+4Processor25%");
   });
 
   it("draws alert lines given as props, with their words", () => {

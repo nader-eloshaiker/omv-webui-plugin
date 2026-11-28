@@ -9,6 +9,7 @@ import { NEW_OBJECT_UUID } from "../../disks/diskWords.ts";
 import { hourText } from "../../hooks/useSmartWords.ts";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
+import { rowValues } from "../../test/tableText.ts";
 
 async function selfTests(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({
@@ -75,9 +76,9 @@ describe("Scheduled self-tests", () => {
     await selfTests({ scenario: "disksNas" });
     await within(table()).findByText("Custom schedule");
     const rows = within(table()).getAllByRole("row").slice(1);
-    const text = rows.map((r) => r.textContent ?? "");
+    const text = rows.map(rowValues);
     await waitFor(() =>
-      expect(rows[0]).toHaveTextContent(
+      expect(rowValues(rows[0]!)).toMatch(
         new RegExp(
           `^/dev/sdaExample HDD 4TBShort self-testEvery Sunday at ${at(3)}Yes`,
         ),
@@ -89,7 +90,7 @@ describe("Scheduled self-tests", () => {
       ),
     );
     await waitFor(() =>
-      expect(rows[2]).toHaveTextContent(
+      expect(rowValues(rows[2]!)).toMatch(
         new RegExp(
           `^/dev/sdc.*Every day at ${at(2)}No, the disk is not watched`,
         ),
@@ -102,7 +103,7 @@ describe("Scheduled self-tests", () => {
     );
     expect(text[4]).toMatch(/^\/dev\/sdf.*No, turned offTurned off for now/);
     await waitFor(() =>
-      expect(rows[5]).toHaveTextContent(
+      expect(rowValues(rows[5]!)).toMatch(
         new RegExp(
           `^/dev/disk/by-id/.+Not connectedShort self-testEvery Saturday at ${at(1)}No, the disk is not connected`,
         ),

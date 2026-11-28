@@ -298,35 +298,24 @@ export function ZfsPoolDisks({
       const device = deviceOf(d, omvDisks);
       const size = disk === undefined ? null : bytesOf(disk.size);
       const serial = disk?.serialnumber.trim() ?? "";
+      const model = disk?.model.trim() ?? "";
       const decisions = decisionsOf(d);
       noteReason(decisions.replace);
       out.push(
         <TableRow key={d.path}>
-          <TableCell className="whitespace-nowrap">
+          <TableCell narrow="title" className="whitespace-nowrap">
             <DiskCell d={d} disk={disk} />
-            <span className="mt-1 flex flex-col gap-0.5 text-sm whitespace-normal sm:hidden">
-              <span dir="auto">
-                {[
-                  disk?.model.trim() ?? "",
-                  size === null ? "" : formatBytes(size),
-                ]
-                  .filter((x) => x !== "")
-                  .join(", ")}
-              </span>
-              {serial === "" ? null : (
-                <span className="text-xs text-muted-foreground">
-                  <Trans
-                    i18nKey="wipe.serial"
-                    components={{ serial: <IdentifierText value={serial} /> }}
-                  />
-                </span>
-              )}
-            </span>
           </TableCell>
-          <TableCell className="min-w-40 max-sm:hidden">
-            <span className="block" dir="auto">
-              {disk?.model.trim() ?? ""}
-            </span>
+          <TableCell
+            label={t("zfsPool.disks.col.model")}
+            className="@min-[40rem]:min-w-40"
+          >
+            {/* Nothing when there is no model, so a stacked row leaves the line out. */}
+            {model === "" ? null : (
+              <span className="block" dir="auto">
+                {model}
+              </span>
+            )}
             {serial === "" ? null : (
               <span className="block text-xs text-muted-foreground">
                 <Trans
@@ -336,13 +325,22 @@ export function ZfsPoolDisks({
               </span>
             )}
           </TableCell>
-          <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
+          <TableCell
+            label={t("zfsPool.disks.col.size")}
+            className="text-end whitespace-nowrap tabular-nums"
+          >
             {size === null || size === 0 ? "" : formatBytes(size)}
           </TableCell>
-          <TableCell className="sm:min-w-32">
+          <TableCell
+            label={t("zfsPool.disks.col.role")}
+            className="@min-[40rem]:min-w-32"
+          >
             <RoleCell d={d} view={view} />
           </TableCell>
-          <TableCell className="min-w-32 max-sm:hidden">
+          <TableCell
+            label={t("zfsPool.disks.col.health")}
+            className="@min-[40rem]:min-w-32"
+          >
             <DiskHealthStatus
               checked={check.result !== undefined}
               reading={
@@ -352,7 +350,16 @@ export function ZfsPoolDisks({
               }
             />
           </TableCell>
-          <TableCell>
+          {/* Stacked, the actions are a line of their own; with none the line is left out. */}
+          <TableCell
+            className={
+              decisions.replace.allowed ||
+              decisions.offline.allowed ||
+              decisions.online.allowed
+                ? undefined
+                : "@max-[40rem]:hidden"
+            }
+          >
             <span className="flex flex-wrap gap-2">
               {decisions.replace.allowed ? (
                 <Button
@@ -460,16 +467,12 @@ export function ZfsPoolDisks({
           <TableHeader>
             <TableRow>
               <TableHead>{t("zfsPool.disks.col.disk")}</TableHead>
-              <TableHead className="max-sm:hidden">
-                {t("zfsPool.disks.col.model")}
-              </TableHead>
-              <TableHead className="text-end max-sm:hidden">
+              <TableHead>{t("zfsPool.disks.col.model")}</TableHead>
+              <TableHead className="text-end">
                 {t("zfsPool.disks.col.size")}
               </TableHead>
               <TableHead>{t("zfsPool.disks.col.role")}</TableHead>
-              <TableHead className="max-sm:hidden">
-                {t("zfsPool.disks.col.health")}
-              </TableHead>
+              <TableHead>{t("zfsPool.disks.col.health")}</TableHead>
               <TableHead>
                 <span className="sr-only">
                   {t("zfsPool.disks.col.actions")}

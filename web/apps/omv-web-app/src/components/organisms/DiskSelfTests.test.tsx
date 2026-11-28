@@ -6,6 +6,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
+import { rowValues } from "../../test/tableText.ts";
 
 async function diskPage(
   name: string,
@@ -35,7 +36,7 @@ describe("a disk's scheduled self-tests", () => {
     expect(headers).toEqual(["Test", "When", "Runs", "Note", "Actions"]);
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveTextContent(/^Short self-testEvery Sunday at/);
+    expect(rowValues(rows[0]!)).toMatch(/^Short self-testEvery Sunday at/);
     expect(
       within(section).getByRole("link", { name: "All scheduled self-tests" }),
     ).toHaveAttribute("href", "/ui/storage/smart/self-tests");

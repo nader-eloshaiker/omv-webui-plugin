@@ -130,6 +130,64 @@ describe("Disk health overview", () => {
     );
   });
 
+  it("answers first how the disks are: all well under the OK label, and says so when the check ends", async () => {
+    const { user } = await overview({ scenario: "dashboardAllOk" });
+    const answer = screen.getByRole("region", { name: "How your disks are" });
+    expect(answer).toHaveTextContent(
+      "Disk health is read only when you ask. Reading it wakes any disk that has gone to sleep to save power.",
+    );
+    await user.click(
+      within(answer).getByRole("button", { name: "Check disk health" }),
+    );
+    const sentence = await within(answer).findByText(
+      /^All \d+ disks report no problems\.$/,
+      undefined,
+      { timeout: 5000 },
+    );
+    expect(within(answer).getByText("OK")).toBeInTheDocument();
+    expect(within(answer).queryByRole("list")).toBeNull();
+    expect(
+      within(answer).getByRole("button", { name: "Check again" }),
+    ).toBeInTheDocument();
+    expect(
+      within(answer)
+        .getAllByRole("status")
+        .some(
+          (el) =>
+            el.textContent ===
+            `Disk health checked. ${sentence.textContent ?? ""}`,
+        ),
+    ).toBe(true);
+  });
+
+  it("names each disk that needs the reader, with what it means, and says it once", async () => {
+    const { user } = await overview({ scenario: "disksNas" });
+    const answer = screen.getByRole("region", { name: "How your disks are" });
+    await user.click(
+      within(answer).getByRole("button", { name: "Check disk health" }),
+    );
+    expect(
+      await within(answer).findByText(
+        "1 of 6 disks needs your attention.",
+        undefined,
+        { timeout: 5000 },
+      ),
+    ).toBeInTheDocument();
+    const [item, ...others] = within(answer).getAllByRole("listitem");
+    expect(others).toHaveLength(0);
+    expect(
+      within(item as HTMLElement).getByRole("link", {
+        name: "Open disk /dev/sdb",
+      }),
+    ).toBeInTheDocument();
+    expect(item).toHaveTextContent("Warning");
+    expect(item).toHaveTextContent("A few damaged areas (bad sectors).");
+    // The table gives the state, not the reason again.
+    const row = await rowOf("/dev/sdb");
+    expect(row).toHaveTextContent("Warning");
+    expect(row).not.toHaveTextContent("bad sectors");
+  });
+
   it("says an interval under a minute in seconds", async () => {
     await overview({ scenario: "smartOddInterval" });
     expect(

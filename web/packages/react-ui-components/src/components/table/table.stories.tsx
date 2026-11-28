@@ -481,6 +481,50 @@ export const GroupRowLongHeadingAt320: Story = {
   ),
 };
 
+/**
+ * A narrow table stacks (under 40rem of its own width): the header goes, the disk's name is the
+ * title, its status sits beside it, and every other column is a line that says its word first. A
+ * disk with no temperature has no Temperature line.
+ */
+export const StacksWhenNarrow: Story = {
+  decorators: [(Story) => <div className="w-[390px]">{Story()}</div>],
+  render: () => (
+    <Table aria-label="Disks">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Disk</TableHead>
+          <TableHead>Health</TableHead>
+          <TableHead numeric>Size</TableHead>
+          <TableHead>Temperature</TableHead>
+          <TableHead>Self-tests</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {DISKS.map((disk) => (
+          <TableRow key={disk.device}>
+            <TableCell narrow="title">
+              <Identifier>{disk.device}</Identifier>
+              <div className="text-sm text-muted-foreground">{disk.model}</div>
+            </TableCell>
+            <TableCell narrow="aside">
+              <StatusLabel status={disk.status}>
+                {WORDS[disk.status]}
+              </StatusLabel>
+            </TableCell>
+            <TableCell label="Size" numeric>
+              {disk.capacity}
+            </TableCell>
+            <TableCell label="Temperature">{disk.temperature}</TableCell>
+            <TableCell label="Self-tests">
+              Short self-test, every Sunday at 03:00 AM
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  ),
+};
+
 /** The compact phone layout: two columns, the disk and its role, at 320px. */
 export const GroupRowCompactPhoneLayout: Story = {
   decorators: [(Story) => <div className="w-80">{Story()}</div>],
