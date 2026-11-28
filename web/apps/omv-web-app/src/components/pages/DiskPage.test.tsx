@@ -33,7 +33,7 @@ async function diskPage(
   return app;
 }
 
-/** The summary card's value for a label. */
+/** The page's value for a label: the facts beside the drawing, and the model and serial number. */
 function fact(label: string): HTMLElement {
   const term = screen.getByText(label, { selector: "dt" });
   const value = term.nextElementSibling;
@@ -41,6 +41,22 @@ function fact(label: string): HTMLElement {
     throw new Error(`No value for ${label}`);
   }
   return value;
+}
+
+/** A section of the page, by its heading. */
+function section(name: string): HTMLElement {
+  return screen.getByRole("region", { name });
+}
+
+/** The health answer under the title. */
+function healthAnswer(): HTMLElement {
+  const answer = screen
+    .getAllByRole("status")
+    .find((el) => el.closest("[data-slot=page-header]") !== null);
+  if (answer === undefined) {
+    throw new Error("No health answer in the header");
+  }
+  return answer;
 }
 
 describe("a disk's page", () => {
@@ -196,23 +212,23 @@ describe("a disk's page", () => {
   });
 });
 
-describe("the summary card", () => {
+describe("what the page says about the disk", () => {
   it("states what the disk holds and how to recognise it", async () => {
     const { user } = await diskPage("sda");
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sda" });
     await waitFor(() =>
-      expect(fact("Used for")).toHaveTextContent(
-        "File system EXT4 on /dev/sda1, in useShared folders or services use it.",
+      expect(section("What it holds")).toHaveTextContent(
+        /File system EXT4 on \/dev\/sda1, in use.*Shared folders or services use it\./,
       ),
     );
-    expect(fact("Health")).toHaveTextContent(
-      "Not checked this session.Check disk health on the Disk health page",
+    expect(healthAnswer()).toHaveTextContent(
+      /^This disk's health has not been checked yet\..*Check disk health$/,
     );
     expect(
-      within(fact("Health")).getByRole("link", {
-        name: "Check disk health on the Disk health page",
-      }),
+      within(healthAnswer()).getByRole("link", { name: "Check disk health" }),
     ).toHaveAttribute("href", "/ui/storage/smart/overview");
+    // Its kind is not known: nothing has read it this visit, and the page does not read it.
+    expect(fact("Kind")).toHaveTextContent(/^Kind not known$/);
     expect(fact("Temperature")).toHaveTextContent("Not read");
     expect(fact("Power")).toHaveTextContent("Awake");
     // "ATA" is the bus, not a maker: the model alone.
@@ -253,9 +269,11 @@ describe("the summary card", () => {
     expect(fact("Temperature")).toHaveTextContent(/^30\s°C$/);
     expect(fact("Power")).toHaveTextContent("Not reported");
     expect(fact("Connection")).toHaveTextContent("Built in");
+    // An NVMe disk is known by its name.
+    expect(fact("Kind")).toHaveTextContent(/^NVMe SSD$/);
     await waitFor(() =>
-      expect(fact("Used for")).toHaveTextContent(
-        /^System disk \(openmediavault runs from it\)/,
+      expect(section("What it holds")).toHaveTextContent(
+        /System disk \(openmediavault runs from it\)/,
       ),
     );
   });
@@ -264,7 +282,9 @@ describe("the summary card", () => {
     await diskPage("sdb", { scenario: "disksAsleep" });
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sdb" });
     expect(fact("Power")).toHaveTextContent("Asleep (spun down)");
-    expect(fact("Temperature")).toHaveTextContent("Not read");
+    expect(fact("Temperature")).toHaveTextContent(
+      /^It is asleep, so its temperature was not read\.$/,
+    );
   });
 
   it.each([
@@ -340,9 +360,11 @@ describe("the summary card", () => {
       }),
     );
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sdb" });
-    expect(fact("Health")).toHaveTextContent(
+    expect(healthAnswer()).toHaveTextContent(
       /^WarningA few damaged areas \(bad sectors\)\..*Checked at /,
     );
+    // The dashboard read its kind, so its page draws it as one.
+    expect(fact("Kind")).toHaveTextContent(/^Hard disk$/);
     await act(() =>
       app.router.navigate({
         to: "/storage/disks/$disk",
@@ -350,7 +372,9 @@ describe("the summary card", () => {
       }),
     );
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sdd" });
-    expect(fact("Health")).toHaveTextContent(/^Not reported/);
+    expect(healthAnswer()).toHaveTextContent(
+      /^This disk does not report its health\.Checked at /,
+    );
     // Only the press read every disk; opening the pages read nothing that wakes one.
     expect(seenCalls.filter((c) => c.call === "Smart.getListBg")).toHaveLength(
       1,

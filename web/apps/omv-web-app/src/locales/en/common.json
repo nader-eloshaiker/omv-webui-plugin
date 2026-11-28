@@ -2264,7 +2264,8 @@
       "sizeLabel": "{{size}} ({{label}} on the label)",
       "connection": "Connection",
       "removable": "Removable while running (USB or a hot-swap bay)",
-      "builtIn": "Built in"
+      "builtIn": "Built in",
+      "kind": "Kind"
     },
     "names": {
       "show": "Other names for this disk",
@@ -2450,7 +2451,23 @@
       "applyWakes": "Applying sends these settings to the disk, which wakes it if it is asleep.",
       "saveFailed": "The power settings were not saved."
     },
-    "addStorage": "Add storage on this disk"
+    "addStorage": "Add storage on this disk",
+    "answer": {
+      "notChecked": "This disk's health has not been checked yet. Disks report their health only when asked, and asking wakes any that are asleep.",
+      "check": "Check disk health",
+      "ok": "This disk reports no problems.",
+      "notReported": "This disk does not report its health."
+    },
+    "holds": {
+      "title": "What it holds"
+    },
+    "about": {
+      "title": "Model and serial number"
+    },
+    "onThisPage": "On this page",
+    "aside": {
+      "asleep": "It is asleep, so its temperature was not read."
+    }
   },
   "wipe": {
     "title": "Wipe this disk",

@@ -606,7 +606,11 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
   }
 
   return (
-    <PageSection heading={t("disk.details.title")} className="min-w-0">
+    <PageSection
+      id="disk-health-details"
+      heading={t("disk.details.title")}
+      className="min-w-0"
+    >
       {read ? null : (
         <p className="max-w-prose">
           {t("disk.details.intro")}

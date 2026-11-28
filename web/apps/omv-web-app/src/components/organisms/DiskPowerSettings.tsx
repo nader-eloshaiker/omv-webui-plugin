@@ -60,7 +60,7 @@ export function DiskPowerSettings({ disk }: { disk: DiskDevice }) {
   const [chosen, setChosen] = useState(false);
   const saved = disk.hdparm;
   return (
-    <PageSection heading={t("disk.power.title")}>
+    <PageSection id="disk-power" heading={t("disk.power.title")}>
       {saved === undefined && !chosen ? (
         <div className="flex max-w-prose flex-col items-start gap-2">
           <p>{t("disk.power.notSet")}</p>
