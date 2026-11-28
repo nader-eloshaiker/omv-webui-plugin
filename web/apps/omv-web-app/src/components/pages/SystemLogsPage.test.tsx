@@ -8,6 +8,7 @@ import type { UserEvent } from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls } from "../../test/server.ts";
+import { rowValues } from "../../test/tableText.ts";
 
 async function logs(options: Parameters<typeof renderApp>[0] = {}) {
   const app = await renderApp({
@@ -207,8 +208,13 @@ describe("System logs", () => {
       "Result",
     ]);
     const rows = within(table()).getAllByRole("row");
-    expect(rows[1]).toHaveTextContent(
+    expect(rowValues(rows[1]!)).toContain(
       "example-user192.0.2.10mediaold.jpgphotos/old.jpgunlinkatok",
+    );
+    // Stacked on a narrow screen, the time heads the row, the result beside it, and every other
+    // value says its column's word.
+    expect(rows[1]).toHaveTextContent(
+      "Userexample-userComputer192.0.2.10Shared foldermediaFileold.jpgphotos/old.jpgActionunlinkatok",
     );
     // The host name is not shown.
     expect(table()).not.toHaveTextContent("EXAMPLE-PC");

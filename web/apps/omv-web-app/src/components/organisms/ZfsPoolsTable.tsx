@@ -3,7 +3,8 @@
 // reader sorts by name or by how full it is; not paged, in its own named frame. Space for files comes
 // from each pool's own folder, and the meter shows the pool row's `capacity` (D6, D7). A pool whose
 // report could not be read is Unknown with "Not known" beside it; the other rows stay. No row selection
-// and no row action: each pool's actions are on its page.
+// and no row action: each pool's actions are on its page. A narrow table stacks: the pool's name on
+// top, each other column a line under it after its word.
 import type { ZfsObject } from "@omv-webui/react-api-omv/generated";
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
@@ -219,10 +220,10 @@ export function ZfsPoolsTable({
             : null;
       return (
         <TableRow key={view.row.path}>
-          <TableCell className="min-w-32 max-sm:max-w-40">
-            {/* A name stays on one line; at a phone's width a long one ends in an ellipsis (its
-                full name is the link's accessible name). */}
-            <span className="block max-w-36 truncate sm:max-w-none">
+          <TableCell narrow="title" className="@min-[40rem]:min-w-32">
+            {/* A name stays on one line; stacked, a long one ends in an ellipsis (its full name is
+                the link's accessible name). */}
+            <span className="block truncate">
               <PoolLink pool={view.row.path} />
             </span>
             {hasPage(view.row) ? null : (
@@ -230,30 +231,34 @@ export function ZfsPoolsTable({
                 {t("zfs.noPage")}
               </span>
             )}
-            {/* Under the small breakpoint the columns after State are said here (1.8). */}
-            <span className="mt-1 flex flex-col gap-1 text-sm sm:hidden">
-              <span>{layout}</span>
-              <PoolSpace view={view} compact />
-              <LastCheck view={view} now={now} />
-            </span>
           </TableCell>
-          <TableCell className="sm:min-w-56">
+          {/* A line, not an aside: the state's reason and progress need the row's width. */}
+          <TableCell
+            label={t("zfs.col.state")}
+            className="@min-[40rem]:min-w-56"
+          >
             {view.reportRead === "loading" ? (
               <Skeleton className="h-5 w-20" />
             ) : (
               <ZfsStateView state={view.state} report={view.report} compact />
             )}
           </TableCell>
-          <TableCell className="max-sm:hidden">
+          <TableCell label={t("zfs.col.layout")}>
             {layout ?? <Skeleton className="h-3 w-24" />}
           </TableCell>
-          <TableCell className="min-w-44 max-sm:hidden">
+          <TableCell
+            label={t("zfs.col.space")}
+            className="@min-[40rem]:min-w-44"
+          >
             <PoolSpace view={view} compact />
           </TableCell>
-          <TableCell className="min-w-36 max-sm:hidden">
+          <TableCell
+            label={t("zfs.col.lastCheck")}
+            className="@min-[40rem]:min-w-36"
+          >
             <LastCheck view={view} now={now} />
           </TableCell>
-          <TableCell className="max-sm:hidden">
+          <TableCell label={t("zfs.col.fileSystems")}>
             <Counts rows={rows} pool={view.row.path} />
           </TableCell>
         </TableRow>
@@ -281,22 +286,15 @@ export function ZfsPoolsTable({
               {poolLabel}
             </TableHead>
             <TableHead>{t("zfs.col.state")}</TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("zfs.col.layout")}
-            </TableHead>
+            <TableHead>{t("zfs.col.layout")}</TableHead>
             <TableHead
-              className="max-sm:hidden"
               sort={sortable ? sortOf("space") : undefined}
               onSort={() => sortBy("space", spaceLabel)}
             >
               {spaceLabel}
             </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("zfs.col.lastCheck")}
-            </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("zfs.col.fileSystems")}
-            </TableHead>
+            <TableHead>{t("zfs.col.lastCheck")}</TableHead>
+            <TableHead>{t("zfs.col.fileSystems")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>{body}</TableBody>

@@ -3,7 +3,8 @@
 // order; a snapshot this page takes is named by the NAS's date and time, so the last is the newest),
 // pages of 50 past 50 rows, "Take a snapshot now" without a confirmation, "Roll back…" on the newest
 // only (ZFS refuses an older one), and "Delete…" on each. Rolling back and deleting are red, with the
-// name typed; both read again first. Deleting applies the change it leaves pending (P15).
+// name typed; both read again first. Deleting applies the change it leaves pending (P15). A narrow
+// table stacks: the name on top, what it holds a line under it, then its buttons.
 import type {
   SharedFolder,
   ZfsObject,
@@ -349,7 +350,7 @@ export function ZfsSnapshots({
           <TableHeader>
             <TableRow>
               <TableHead>{t("zfsSnap.col.snapshot")}</TableHead>
-              <TableHead className="text-end max-sm:hidden">
+              <TableHead className="text-end">
                 <span className="block">{t("zfsSnap.col.holds")}</span>
                 <span className="block text-xs font-normal tracking-normal normal-case">
                   {t("zfsSnap.col.holdsHint")}
@@ -366,8 +367,15 @@ export function ZfsSnapshots({
               const running = isDeleting(deleteRunOf(snap.path));
               return (
                 <TableRow key={snap.path}>
-                  <TableCell className="[overflow-wrap:anywhere]">
-                    <Identifier dir="auto" className="whitespace-nowrap">
+                  <TableCell
+                    narrow="title"
+                    className="[overflow-wrap:anywhere]"
+                  >
+                    {/* Stacked, a long name may wrap rather than run out of its row. */}
+                    <Identifier
+                      dir="auto"
+                      className="whitespace-nowrap @max-[40rem]:whitespace-normal"
+                    >
                       {snap.name}
                     </Identifier>
                     {isNewest ? (
@@ -375,12 +383,8 @@ export function ZfsSnapshots({
                         {t("zfsSnap.newest")}
                       </span>
                     ) : null}
-                    {/* Under the small breakpoint the Holds column is hidden and said here. */}
-                    <span className="block text-sm text-muted-foreground tabular-nums sm:hidden">
-                      {t("zfsSnap.col.holds")}: {formatBytes(snap.used)}
-                    </span>
                   </TableCell>
-                  <TableCell numeric className="max-sm:hidden">
+                  <TableCell label={t("zfsSnap.col.holds")} numeric>
                     {formatBytes(snap.used)}
                   </TableCell>
                   <TableCell>

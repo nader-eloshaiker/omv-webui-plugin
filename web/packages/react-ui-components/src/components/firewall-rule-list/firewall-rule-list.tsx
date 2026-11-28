@@ -177,7 +177,9 @@ function MoveControl({
  * with the caller's save button and Discard.
  *
  * The table scrolls sideways in its own named region with the position column held at the start, so
- * the page never scrolls sideways at 320px or 200% zoom.
+ * the page never scrolls sideways at 320px or 200% zoom. Narrower than 40rem it stacks ("Table"): the
+ * position and what the rule does at the top, the traffic, the other computer and the note as lines
+ * with their words, and the buttons under them.
  */
 function FirewallRuleList<Row extends FirewallRuleRow>({
   rules,
@@ -309,18 +311,23 @@ function FirewallRuleList<Row extends FirewallRuleRow>({
                   key={rule.id}
                   data-slot="firewall-rule-row"
                   data-action={rule.action}
-                  className="align-top"
+                  // Stacked, the position stands before the rule's title instead of an aside after it.
+                  className="align-top @max-[40rem]:grid-cols-[auto_minmax(0,1fr)]"
                 >
                   <th
                     scope="row"
                     className={cn(
                       stickyCell,
                       "px-cell-x py-cell-y text-end font-regular tabular-nums text-foreground",
+                      "@max-[40rem]:col-start-1 @max-[40rem]:row-start-1 @max-[40rem]:block @max-[40rem]:p-0 @max-[40rem]:text-start",
                     )}
                   >
                     {position}
                   </th>
-                  <TableCell className="py-2 whitespace-nowrap">
+                  <TableCell
+                    narrow="title"
+                    className="py-2 whitespace-nowrap @max-[40rem]:col-start-2"
+                  >
                     <span className="inline-flex items-center gap-1.5">
                       <Icon
                         aria-hidden="true"
@@ -332,13 +339,22 @@ function FirewallRuleList<Row extends FirewallRuleRow>({
                       {labels.actions[rule.action]}
                     </span>
                   </TableCell>
-                  <TableCell className="min-w-48 [overflow-wrap:anywhere]">
+                  <TableCell
+                    label={labels.columns.traffic}
+                    className="[overflow-wrap:anywhere] @min-[40rem]:min-w-48"
+                  >
                     {rule.traffic}
                   </TableCell>
-                  <TableCell className="min-w-48 [overflow-wrap:anywhere]">
+                  <TableCell
+                    label={labels.columns.peer}
+                    className="[overflow-wrap:anywhere] @min-[40rem]:min-w-48"
+                  >
                     {rule.peer}
                   </TableCell>
-                  <TableCell className="min-w-40 text-muted-foreground [overflow-wrap:anywhere]">
+                  <TableCell
+                    label={labels.columns.note}
+                    className="text-muted-foreground [overflow-wrap:anywhere] @min-[40rem]:min-w-40"
+                  >
                     {rule.note}
                   </TableCell>
                   <TableCell className="py-1">

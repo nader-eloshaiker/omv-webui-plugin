@@ -2,7 +2,8 @@
 // The File systems list's table (phase 5 file-systems design 1.3, 1.7): the system drive first, then
 // every file system OMV has set up or is creating, in the server's order unless the reader sorts by
 // name or usage. Not paged; it scrolls in its own named frame. No row selection and no row action:
-// each file system's actions are on its page.
+// each file system's actions are on its page. A narrow table stacks: the name on top, each other
+// column a line under it after its word.
 import type {
   ConfiguredFilesystem,
   DiskDevice,
@@ -53,6 +54,13 @@ import { FsStateView, FsUsageView } from "../molecules/FsStatus.tsx";
 
 const COLUMNS = 6;
 
+/**
+ * The usage cell. Stacked, the meter's figures go under its bar: beside it they need more than a
+ * phone's value column has.
+ */
+const USAGE_CELL =
+  "@min-[40rem]:min-w-56 @max-[40rem]:[&_[data-slot=segment-bar]]:flex-wrap @max-[40rem]:[&_[data-slot=segment-bar]]:gap-y-1";
+
 type SortField = "device" | "name" | "usage";
 interface Sort {
   field: SortField;
@@ -70,26 +78,32 @@ function SystemRow({
   const usage = fileSystemState(fs);
   return (
     <TableRow>
-      <TableCell className="min-w-48">
+      <TableCell narrow="title" className="@min-[40rem]:min-w-48">
         <span className="font-medium">{t("filesystems.system.name")}</span>
         <span className="block text-xs text-muted-foreground">
           {t("filesystems.system.line")}
         </span>
       </TableCell>
-      <TableCell className="min-w-40">
+      <TableCell
+        label={t("filesystems.col.state")}
+        className="@min-[40rem]:min-w-40"
+      >
         <FsStateView state="ok" />
       </TableCell>
-      <TableCell className="min-w-56">
+      <TableCell label={t("filesystems.col.usage")} className={USAGE_CELL}>
         <FsUsageView
           row={fs}
           usage={usage}
           label={t("filesystems.system.name")}
         />
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell
+        label={t("filesystems.col.type")}
+        className="whitespace-nowrap"
+      >
         <FsTypeView type={fs.type} />
       </TableCell>
-      <TableCell>
+      <TableCell label={t("filesystems.col.on")}>
         <FsOnDisks
           fs={{
             parentdevicefile: fs.parentdevicefile ?? "",
@@ -100,7 +114,9 @@ function SystemRow({
           disks={disks}
         />
       </TableCell>
-      <TableCell>{t("filesystems.usedBy.yes")}</TableCell>
+      <TableCell label={t("filesystems.col.usedBy")}>
+        {t("filesystems.usedBy.yes")}
+      </TableCell>
     </TableRow>
   );
 }
@@ -139,7 +155,7 @@ function FsRow({
     );
   return (
     <TableRow>
-      <TableCell className="min-w-48">
+      <TableCell narrow="title" className="@min-[40rem]:min-w-48">
         {zfsPage !== null ? (
           <Link
             to="/storage/zfs/fs/$"
@@ -182,7 +198,11 @@ function FsRow({
           </span>
         ) : null}
       </TableCell>
-      <TableCell className="min-w-40">
+      {/* A line, not an aside: a state other than OK says why. */}
+      <TableCell
+        label={t("filesystems.col.state")}
+        className="@min-[40rem]:min-w-40"
+      >
         <FsStateView state={state} />
         {progress ? (
           <Link
@@ -197,13 +217,16 @@ function FsRow({
           </Link>
         ) : null}
       </TableCell>
-      <TableCell className="min-w-56">
+      <TableCell label={t("filesystems.col.usage")} className={USAGE_CELL}>
         <FsUsageView row={fs} usage={usage} label={nameText} />
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell
+        label={t("filesystems.col.type")}
+        className="whitespace-nowrap"
+      >
         <FsTypeView type={fs.type} />
       </TableCell>
-      <TableCell>
+      <TableCell label={t("filesystems.col.on")}>
         {isZfs(fs) && zfsPlugin ? (
           <Trans
             i18nKey="filesystems.zfsOn"
@@ -213,7 +236,7 @@ function FsRow({
           <FsOnDisks fs={fs} disks={disks} />
         )}
       </TableCell>
-      <TableCell>
+      <TableCell label={t("filesystems.col.usedBy")}>
         {fs._used ? t("filesystems.usedBy.yes") : t("filesystems.usedBy.no")}
       </TableCell>
     </TableRow>

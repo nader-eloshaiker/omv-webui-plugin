@@ -57,14 +57,13 @@ import { ClampedText } from "../molecules/ClampedText.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
 
 const COLUMNS = [
-  { field: "name", label: "groups.col.name", narrow: true },
-  { field: "comment", label: "groups.col.description", narrow: false },
-  { field: "members", label: "groups.col.members", narrow: true },
-  { field: "folders", label: "groups.col.folders", narrow: false },
+  { field: "name", label: "groups.col.name" },
+  { field: "comment", label: "groups.col.description" },
+  { field: "members", label: "groups.col.members" },
+  { field: "folders", label: "groups.col.folders" },
 ] as const satisfies readonly {
   field: GroupSortField;
   label: `groups.col.${string}`;
-  narrow: boolean;
 }[];
 
 /** At most three names in the Members column (8.2). */
@@ -128,23 +127,23 @@ function GroupRow({
     );
   return (
     <TableRow>
-      <TableCell className="min-w-32">
+      {/* A narrow table stacks: the name at the top, every other column a line under it (8.2). */}
+      <TableCell narrow="title" className="@min-[40rem]:min-w-32">
         <GroupName name={row.name} />
-        {/* Under the small breakpoint the description and the folder count are said here (8.2). */}
-        <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
-          <span dir="auto" className="text-muted-foreground">
-            {description}
-          </span>
-          <span>
-            {t("groups.col.folders")}: {folders}
-          </span>
-        </span>
       </TableCell>
-      <TableCell className="min-w-40 text-muted-foreground max-sm:hidden">
+      <TableCell
+        label={t("groups.col.description")}
+        className="text-muted-foreground @min-[40rem]:min-w-40"
+      >
         <span dir="auto">{description}</span>
       </TableCell>
-      <TableCell className="min-w-40">{members}</TableCell>
-      <TableCell className="max-sm:hidden">{folders}</TableCell>
+      <TableCell
+        label={t("groups.col.members")}
+        className="@min-[40rem]:min-w-40"
+      >
+        {members}
+      </TableCell>
+      <TableCell label={t("groups.col.folders")}>{folders}</TableCell>
     </TableRow>
   );
 }
@@ -325,12 +324,11 @@ export function GroupsTable() {
       >
         <TableHeader>
           <TableRow>
-            {COLUMNS.map(({ field, label, narrow }) => {
+            {COLUMNS.map(({ field, label }) => {
               const text = t(label);
               return (
                 <TableHead
                   key={field}
-                  className={narrow ? undefined : "max-sm:hidden"}
                   sort={
                     sort.field === field
                       ? sort.direction === "asc"

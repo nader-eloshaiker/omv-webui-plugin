@@ -2,7 +2,8 @@
 // "Found on the disks, not mounted" (phase 5 file-systems design 1.5, D6): file systems the NAS can see
 // that are not set up, such as a disk from another computer or one created in a session that ended
 // before it was mounted (R8). Each has a visible "Mount…". Shown only when there are any; a failed read
-// says so here and leaves the main table alone.
+// says so here and leaves the main table alone. A narrow table stacks: the name on top, its type and
+// disks as lines, then "Mount…".
 import type {
   DetectedFilesystem,
   DiskDevice,
@@ -93,15 +94,19 @@ export function FoundFileSystems({
         <TableBody>
           {found.map((fs) => (
             <TableRow key={`${fs.uuid}:${fs.devicefile}`}>
-              <TableCell className="min-w-48">
+              <TableCell narrow="title" className="@min-[40rem]:min-w-48">
                 <FsNameView name={fsName(fs)} />
               </TableCell>
-              <TableCell className="whitespace-nowrap">
+              <TableCell
+                label={t("filesystems.col.type")}
+                className="whitespace-nowrap"
+              >
                 <FsTypeView type={fs.type} />
               </TableCell>
-              <TableCell>
+              <TableCell label={t("filesystems.col.on")}>
                 <FsOnDisks fs={fs} disks={disks} />
               </TableCell>
+              {/* Stacked, the button is a line of its own under the facts. */}
               <TableCell className="text-end">
                 <Button
                   variant="neutral"

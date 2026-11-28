@@ -293,7 +293,7 @@ function JobRow({
         });
   return (
     <TableRow>
-      <TableCell>
+      <TableCell narrow="title">
         <span className="flex flex-wrap items-center gap-2">
           <Link
             to="/services/rsync/jobs/$job"
@@ -305,7 +305,7 @@ function JobRow({
           {marked ? <PendingMark /> : null}
         </span>
       </TableCell>
-      <TableCell>
+      <TableCell label={t("jobs.col.from")}>
         {sides === null ? (
           <FolderNameText value={row.srcname} />
         ) : (
@@ -313,20 +313,20 @@ function JobRow({
         )}
         <span className="sr-only"> {t("jobs.between")}</span>
       </TableCell>
-      <TableCell>
+      <TableCell label={t("jobs.col.to")}>
         {sides === null ? (
           <FolderNameText value={row.destname} />
         ) : (
           <JobSideView side={sides.to} folders={folders} name={row.destname} />
         )}
       </TableCell>
-      <TableCell>
+      <TableCell label={t("jobs.col.when")}>
         <span className="flex flex-col gap-1">
           <span>{when}</span>
           {trial ? <WarningWords>{t("jobs.trialOnly")}</WarningWords> : null}
         </span>
       </TableCell>
-      <TableCell>
+      <TableCell label={t("jobs.col.deletes")}>
         {deletion === "option" ? (
           <WarningWords>{t("jobs.deletes.yes")}</WarningWords>
         ) : deletion === "extra" ? (
@@ -335,7 +335,7 @@ function JobRow({
           t("jobs.deletes.no")
         )}
       </TableCell>
-      <TableCell>
+      <TableCell narrow="aside">
         {task === undefined ? null : (
           <StatusPill status={TASK_STATUS[task.state]}>
             {t(`tasks.${task.state}`)}

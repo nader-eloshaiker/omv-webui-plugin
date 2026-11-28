@@ -2,7 +2,8 @@
 // A pool's file systems and volumes (phase 5 ZFS design 2.6): the pool's own folder first, each file
 // system with its state (mounted, locked, not mounted, or no folder), what it holds, the snapshot count
 // once its page has counted them this session (the snapshot list is not read here, 0.6), and how many
-// shared folders use it. "Add a file system" under it, unavailable with the reason when refused.
+// shared folders use it. "Add a file system" under it, unavailable with the reason when refused. A
+// narrow table stacks: the name on top, each other column a line under it after its word.
 import type {
   SharedFolder,
   ZfsObject,
@@ -153,12 +154,8 @@ export function ZfsPoolFileSystems({
             <TableHead className="text-end">
               {t("zfsPool.fs.col.used")}
             </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("zfsPool.fs.col.snapshots")}
-            </TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("zfsPool.fs.col.shared")}
-            </TableHead>
+            <TableHead>{t("zfsPool.fs.col.snapshots")}</TableHead>
+            <TableHead>{t("zfsPool.fs.col.shared")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -167,28 +164,37 @@ export function ZfsPoolFileSystems({
             const count = memory.snapshotCounts[row.path];
             return (
               <TableRow key={row.path}>
-                <TableCell className="min-w-28 [overflow-wrap:anywhere] sm:min-w-40">
+                <TableCell
+                  narrow="title"
+                  className="[overflow-wrap:anywhere] @min-[40rem]:min-w-40"
+                >
                   <FsName row={row} />
                   {isVolumeRow(row) ? (
                     <span className="block text-sm text-muted-foreground">
                       {t("zfsPool.fs.volume")}
                     </span>
                   ) : null}
-                  {/* Under the small breakpoint the Used column is hidden and said here. */}
-                  <span className="block text-sm whitespace-nowrap tabular-nums sm:hidden">
-                    {usedText(row)}
-                  </span>
                 </TableCell>
-                <TableCell className="sm:min-w-40">
+                {/* A line, not an aside: a locked or unmounted file system says why. */}
+                <TableCell
+                  label={t("zfsPool.fs.col.state")}
+                  className="@min-[40rem]:min-w-40"
+                >
                   <FsState row={row} />
                 </TableCell>
-                <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
+                <TableCell
+                  label={t("zfsPool.fs.col.used")}
+                  className="text-end whitespace-nowrap tabular-nums"
+                >
                   {usedText(row)}
                 </TableCell>
-                <TableCell className="tabular-nums max-sm:hidden">
+                <TableCell
+                  label={t("zfsPool.fs.col.snapshots")}
+                  className="tabular-nums"
+                >
                   {count === undefined ? "" : String(count)}
                 </TableCell>
-                <TableCell className="max-sm:hidden">
+                <TableCell label={t("zfsPool.fs.col.shared")}>
                   {isVolumeRow(row)
                     ? ""
                     : found === undefined

@@ -6,7 +6,7 @@ import { cn } from "../../utils";
 interface TableProps extends React.ComponentProps<"table"> {
   /** Loading: set while skeleton rows stand in for data, so assistive technology hears it is busy. */
   busy?: boolean;
-  /** Announced while `busy`, since the skeleton rows are hidden from assistive technology: "Loading disks…". */
+  /** Announced while "busy", since the skeleton rows are hidden from assistive technology: "Loading disks…". */
   busyLabel?: string;
   /** Classes for the scrolling frame around the table. */
   frameClassName?: string;
@@ -18,9 +18,18 @@ interface TableProps extends React.ComponentProps<"table"> {
   frameLabel?: string;
 }
 
+/*
+ * A narrow table stacks (owner, 2026-11-28: columns squeezed to a word's width help no one). Under
+ * "@max-[40rem]" (its frame narrower than 40rem: a phone, or a narrow column on a wide screen) the header
+ * goes and each row becomes a block: its title cell at the top, an aside cell (a status) beside it,
+ * and every other cell a line under them that says its column's word ("TableCell" "label") before
+ * its value. A line with no value is left out. The roles are set explicitly, since a table drawn as
+ * blocks loses them in some browsers.
+ */
 /**
  * A data table (style guide 5.2) in its own horizontal scroll region, so a wide table never makes the
- * page scroll sideways (6, reflow). Name it with `aria-label` or a `<caption>`.
+ * page scroll sideways (6, reflow). Name it with "aria-label" or a "<caption>". Narrower than 40rem it
+ * stacks (above): give every cell its "label" and its "narrow" place.
  */
 function Table({
   busy,
@@ -37,8 +46,8 @@ function Table({
       aria-label={frameLabel}
       tabIndex={frameLabel === undefined ? undefined : 0}
       className={cn(
-        // `relative` keeps absolutely placed text inside (a visually hidden label would otherwise
-        // widen the page); `@container` lets a state row measure the visible width (TableStateRow).
+        // "relative" keeps absolutely placed text inside (a visually hidden label would otherwise
+        // widen the page); "@container" lets a state row measure the visible width (TableStateRow).
         "@container relative w-full overflow-x-auto rounded-card surface-raised",
         frameClassName,
       )}
@@ -48,39 +57,59 @@ function Table({
       </span>
       <table
         data-slot="table"
+        // The role is explicit: some browsers drop it when the table stacks as blocks.
+        role="table"
         aria-busy={busy || undefined}
-        className={cn("w-full border-collapse text-base", className)}
+        className={cn(
+          "w-full border-collapse text-base",
+          "@max-[40rem]:block",
+          className,
+        )}
         {...props}
       />
     </div>
   );
 }
 
-/** Header on `muted`, short labels in sentence case, regular weight, secondary ink (5.2, style guide 10). */
+/** Header on "muted", short labels in sentence case, regular weight, secondary ink (5.2, style guide 10). */
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-muted", className)}
+      // Stacked, every line says its column's word, so the header row goes, unless a column sorts:
+      // then its sort buttons stay, in one row above the blocks.
+      className={cn(
+        "bg-muted",
+        "@max-[40rem]:hidden @max-[40rem]:has-[th[aria-sort]]:block @max-[40rem]:[&>tr]:flex! @max-[40rem]:[&>tr]:flex-wrap @max-[40rem]:[&>tr]:gap-x-5",
+        className,
+      )}
       {...props}
     />
   );
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return <tbody data-slot="table-body" className={className} {...props} />;
+  return (
+    <tbody
+      data-slot="table-body"
+      // The role is explicit: some browsers drop it when the table stacks as blocks.
+      role="rowgroup"
+      className={cn("@max-[40rem]:block", className)}
+      {...props}
+    />
+  );
 }
 
 interface TableRowProps extends React.ComponentProps<"tr"> {
   /** The row is selected. The row also needs its checked checkbox: selection is never colour alone. */
   selected?: boolean;
-  /** `touch`: 44px, where the row is the main touch target on a narrow screen (style guide 4.2). */
+  /** "touch": 44px, where the row is the main touch target on a narrow screen (style guide 4.2). */
   size?: "default" | "touch";
 }
 
 /**
- * Hover is the neutral step on body rows; selected is the `selected` tint (3.10). No zebra stripes.
- * Row height follows the density through the cells' `py-cell-y` (foundation 5); a cell's padding is
+ * Hover is the neutral step on body rows; selected is the "selected" tint (3.10). No zebra stripes.
+ * Row height follows the density through the cells' "py-cell-y" (foundation 5); a cell's padding is
  * never overridden, so one disk stays apart from the next (spacing rule, style guide 4.7).
  */
 function TableRow({
@@ -92,12 +121,17 @@ function TableRow({
   return (
     <tr
       data-slot="table-row"
+      // The role is explicit: some browsers drop it when the table stacks as blocks.
+      role="row"
       data-selected={selected || undefined}
       data-size={size}
       className={cn(
         // Hover only on body rows: the header row is not a target.
         "border-t border-border first:border-t-0 transition-colors duration-fast ease-standard [tbody>&]:hover:bg-muted data-selected:bg-selected",
         "data-[size=touch]:*:h-11",
+        // Stacked: the title and its aside on the first line, every other cell a line under them,
+        // the row's own padding around the whole block.
+        "@max-[40rem]:grid @max-[40rem]:grid-cols-[minmax(0,1fr)_auto] @max-[40rem]:gap-x-4 @max-[40rem]:gap-y-line @max-[40rem]:px-cell-x @max-[40rem]:py-cell-y @max-[40rem]:data-[size=touch]:*:h-auto",
         className,
       )}
       {...props}
@@ -111,8 +145,8 @@ interface TableHeadProps extends React.ComponentProps<"th"> {
   /** Right-aligns a numeric column. */
   numeric?: boolean;
   /**
-   * Makes the column sortable: `none` when sortable but not the sort column, or the direction. The
-   * header becomes a button, and `aria-sort` states the direction to assistive technology.
+   * Makes the column sortable: "none" when sortable but not the sort column, or the direction. The
+   * header becomes a button, and "aria-sort" states the direction to assistive technology.
    */
   sort?: SortDirection | "none";
   /** Called when the sort button is pressed; the caller decides the next direction. */
@@ -137,11 +171,15 @@ function TableHead({
   return (
     <th
       data-slot="table-head"
+      // The role is explicit: some browsers drop it when the table stacks as blocks.
+      role="columnheader"
       scope="col"
       aria-sort={sortable ? sort : undefined}
       className={cn(
         "px-cell-x py-head-y text-start align-middle text-sm font-normal whitespace-nowrap text-muted-foreground",
         numeric && "text-end",
+        // Stacked, only a sortable column's button stays (TableHeader).
+        "@max-[40rem]:p-0 @max-[40rem]:not-[[aria-sort]]:hidden",
         className,
       )}
       {...props}
@@ -171,29 +209,89 @@ function TableHead({
   );
 }
 
+/** Where a cell goes when its table stacks ("Table"). */
+type TableCellNarrow = "title" | "aside" | "line" | "hidden";
+
 interface TableCellProps extends React.ComponentProps<"td"> {
   /** Right-aligned, tabular figures (5.2). */
   numeric?: boolean;
   /** Identifiers: device paths, UUIDs, addresses (4.1). */
   mono?: boolean;
+  /**
+   * The column's word, said before the value when the table stacks: the same word as its header.
+   * Leave it out for a line that reads on its own (a row's actions).
+   */
+  label?: React.ReactNode;
+  /**
+   * Where the cell goes when the table stacks: "title" (the row's name, at the top), "aside" (a
+   * status, beside the title), "line" (the default: a line under them, after its "label") or "hidden"
+   * (said elsewhere in the row, or of no use on a narrow screen).
+   */
+  narrow?: TableCellNarrow;
 }
 
 /**
  * A cell. A second line inside it (a block under the first: a disk's serial under its model) sits a
  * line step under the first, so the lines of one cell read as one thing (style guide 4.7).
  */
-function TableCell({ numeric, mono, className, ...props }: TableCellProps) {
+function TableCell({
+  numeric,
+  mono,
+  label,
+  narrow = "line",
+  className,
+  children,
+  ...props
+}: TableCellProps) {
+  const labelled = narrow === "line" && label !== undefined && label !== null;
   return (
     <td
       data-slot="table-cell"
+      data-narrow={narrow}
+      // The role is explicit: some browsers drop it when the table stacks as blocks.
+      role="cell"
       className={cn(
-        "px-cell-x py-cell-y align-middle [&>*+*]:mt-line",
+        "px-cell-x py-cell-y align-middle [&>*+*]:mt-line [&>[data-slot=table-cell-value]>*+*]:mt-line",
         numeric && "text-end tabular-nums",
         mono && "font-mono text-sm",
+        // Stacked: the row holds the padding; a line with no value, or an empty cell, is left out.
+        "@max-[40rem]:block @max-[40rem]:p-0 @max-[40rem]:text-start @max-[40rem]:has-[>[data-slot=table-cell-value]:empty]:hidden @max-[40rem]:empty:hidden",
+        narrow === "title" &&
+          "@max-[40rem]:col-start-1 @max-[40rem]:row-start-1 @max-[40rem]:mb-[calc(var(--space-pair)-var(--space-line))]",
+        narrow === "aside" &&
+          "@max-[40rem]:col-start-2 @max-[40rem]:row-start-1 @max-[40rem]:justify-self-end",
+        narrow === "line" && "@max-[40rem]:col-span-2",
+        labelled &&
+          "@max-[40rem]:grid @max-[40rem]:grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)] @max-[40rem]:gap-x-3",
+        narrow === "hidden" && "@max-[40rem]:hidden",
         className,
       )}
       {...props}
-    />
+    >
+      {labelled ? (
+        <span
+          data-slot="table-cell-label"
+          className={cn(
+            // The sans face even in a mono cell: the word is the column's, not the value's.
+            "hidden font-sans text-sm text-muted-foreground",
+            "@max-[40rem]:block @max-[40rem]:pt-px",
+          )}
+        >
+          {label}
+        </span>
+      ) : null}
+      {labelled ? (
+        <span
+          data-slot="table-cell-value"
+          // Wide, the cell's own content; stacked, one block in the value column.
+          className="contents @max-[40rem]:block @max-[40rem]:min-w-0"
+        >
+          {children}
+        </span>
+      ) : (
+        children
+      )}
+    </td>
   );
 }
 
@@ -206,8 +304,8 @@ function TableStateRow({
   children: React.ReactNode;
 }) {
   return (
-    <tr data-slot="table-state-row">
-      <td colSpan={colSpan}>
+    <tr data-slot="table-state-row" className={"@max-[40rem]:block"}>
+      <td colSpan={colSpan} className={"@max-[40rem]:block"}>
         {/* As wide as the frame's visible part, and held there while the table scrolls sideways,
             so an empty or error state is never centred off-screen on a wide table. */}
         <div className="sticky start-0 w-[100cqw]">{children}</div>
@@ -223,7 +321,7 @@ interface TableGroupRowProps {
   heading: React.ReactNode;
   /** A second line under the heading, e.g. the group's protection sentence. */
   description?: React.ReactNode;
-  /** The header cell's id, for cells that name it with `headers`. */
+  /** The header cell's id, for cells that name it with "headers". */
   id?: string;
   /** Classes for the row. */
   className?: string;
@@ -231,8 +329,8 @@ interface TableGroupRowProps {
 
 /**
  * A heading row inside a table body, spanning its columns, for rows that belong together (a pool's
- * disk groups). Put each group in its own `TableBody` with this row first: the heading is a row-group
- * header (`scope="rowgroup"`), so assistive technology reads every row of the body with its group.
+ * disk groups). Put each group in its own "TableBody" with this row first: the heading is a row-group
+ * header ("scope="rowgroup""), so assistive technology reads every row of the body with its group.
  */
 function TableGroupRow({
   colSpan,
@@ -247,6 +345,7 @@ function TableGroupRow({
       className={cn(
         // A line between groups, none under the header: the first body's group row opens the table.
         "border-t border-border [tbody:first-of-type>&]:border-t-0",
+        "@max-[40rem]:block @max-[40rem]:*:block",
         className,
       )}
     >
@@ -288,12 +387,20 @@ function TableSkeletonRows({
           key={`skeleton-${String(row)}`}
           data-slot="table-skeleton-row"
           aria-hidden="true"
-          className="border-t border-border first:border-t-0"
+          className={cn(
+            "border-t border-border first:border-t-0",
+            "@max-[40rem]:flex @max-[40rem]:flex-col @max-[40rem]:gap-y-line @max-[40rem]:px-cell-x @max-[40rem]:py-cell-y",
+          )}
         >
           {Array.from({ length: columns }, (_, column) => (
             <td
               key={`skeleton-${String(column)}`}
-              className="px-cell-x py-cell-y"
+              className={cn(
+                "px-cell-x py-cell-y",
+                "@max-[40rem]:block @max-[40rem]:p-0",
+                // Stacked, three lines stand for a row.
+                column > 2 && "@max-[40rem]:hidden",
+              )}
             >
               <div
                 className={cn(
@@ -366,6 +473,7 @@ export {
 };
 export type {
   SortDirection,
+  TableCellNarrow,
   TableCellProps,
   TableGroupRowProps,
   TableHeadProps,

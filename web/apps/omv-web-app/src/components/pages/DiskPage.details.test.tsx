@@ -11,6 +11,7 @@ import { delay, http } from "msw";
 import { afterEach, describe, expect, it } from "vitest";
 import { renderApp } from "../../test/renderApp.tsx";
 import { callNames, seenCalls, server } from "../../test/server.ts";
+import { rowValues } from "../../test/tableText.ts";
 
 const WAKING = [
   "Smart.getListBg",
@@ -222,7 +223,7 @@ describe("a disk's health details", () => {
       name: "Self-test results of /dev/sda",
     });
     const rows = within(tests).getAllByRole("row").slice(1);
-    expect(rows[0]).toHaveTextContent(/^About 10 hours agoShortPassed/);
+    expect(rowValues(rows[0]!)).toMatch(/^About 10 hours agoShortPassed/);
     expect(rows[2]).toHaveTextContent("Running, 40% left");
     expect(rows[3]).toHaveTextContent("Stopped before it finished");
     expect(rows[3]).toHaveTextContent("Aborted by host");

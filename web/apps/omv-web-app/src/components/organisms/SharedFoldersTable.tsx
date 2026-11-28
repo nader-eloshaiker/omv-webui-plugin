@@ -52,7 +52,6 @@ import {
   type NfsSharingCell,
 } from "../../services/nfsModel.ts";
 import { isFolderAddress } from "../../sharedFolders/folderAddress.ts";
-import { displayPath } from "../../sharedFolders/nameRules.ts";
 import {
   folderPending,
   sharesSession,
@@ -91,19 +90,17 @@ const SEARCH_DELAY_MS = 300;
 
 /** The columns in order (1.3); `field` null for Sharing, which the server cannot sort. */
 const COLUMNS = [
-  { field: "name", label: "sharedFolders.col.name", narrow: true },
-  { field: "status", label: "sharedFolders.col.status", narrow: true },
-  { field: "device", label: "sharedFolders.col.device", narrow: false },
-  { field: null, label: "sharedFolders.col.sharing", narrow: false },
-  { field: "reldirpath", label: "sharedFolders.col.path", narrow: false },
-  { field: "absdirpath", label: "sharedFolders.col.fullPath", narrow: false },
-  { field: "comment", label: "sharedFolders.col.description", narrow: false },
-  { field: "_used", label: "sharedFolders.col.used", narrow: false },
+  { field: "name", label: "sharedFolders.col.name" },
+  { field: "status", label: "sharedFolders.col.status" },
+  { field: "device", label: "sharedFolders.col.device" },
+  { field: null, label: "sharedFolders.col.sharing" },
+  { field: "reldirpath", label: "sharedFolders.col.path" },
+  { field: "absdirpath", label: "sharedFolders.col.fullPath" },
+  { field: "comment", label: "sharedFolders.col.description" },
+  { field: "_used", label: "sharedFolders.col.used" },
 ] as const satisfies readonly {
   field: SortField | null;
   label: `sharedFolders.col.${string}`;
-  /** Shown as its own column under the small breakpoint (1.3). */
-  narrow: boolean;
 }[];
 
 const store = sharedFoldersTable;
@@ -228,36 +225,45 @@ function FolderRow({
   const full = folder.absdirpath ?? "";
   return (
     <TableRow>
-      <TableCell className="min-w-32">
+      <TableCell narrow="title" className="@min-[40rem]:min-w-32">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <FolderName folder={folder} />
           {pending ? <PendingMark /> : null}
         </span>
-        {/* Under the small breakpoint the file system, the sharing words and the path are said here. */}
-        <span className="mt-1 flex flex-col gap-0.5 text-sm sm:hidden">
-          <DeviceText device={device} />
-          <SharingText cell={sharing} nfs={nfs} />
-          <span className="font-mono [overflow-wrap:anywhere]">
-            {displayPath(folder.reldirpath)}
-          </span>
-        </span>
       </TableCell>
-      <TableCell className="sm:min-w-40">
+      {/* A line, not an aside: a status other than OK says what it means. */}
+      <TableCell
+        label={t("sharedFolders.col.status")}
+        className="@min-[40rem]:min-w-40"
+      >
         <FolderStatus status={folder.status} />
       </TableCell>
-      <TableCell className="min-w-32 max-sm:hidden">
+      <TableCell
+        label={t("sharedFolders.col.device")}
+        className="@min-[40rem]:min-w-32"
+      >
         <DeviceText device={device} />
       </TableCell>
-      <TableCell className="min-w-32 max-sm:hidden">
+      <TableCell
+        label={t("sharedFolders.col.sharing")}
+        className="@min-[40rem]:min-w-32"
+      >
         <SharingText cell={sharing} nfs={nfs} />
       </TableCell>
+      {/* Stacked, the path is said by the full path, which ends with it; it stays a line only
+          when the full path is not known. */}
       <TableCell
+        label={t("sharedFolders.col.path")}
+        narrow={full === "" ? "line" : "hidden"}
         mono
-        className="min-w-28 [overflow-wrap:anywhere] max-sm:hidden"
+        className="[overflow-wrap:anywhere] @min-[40rem]:min-w-28"
       >
         {folder.reldirpath}
       </TableCell>
-      <TableCell className="min-w-48 max-sm:hidden">
+      <TableCell
+        label={t("sharedFolders.col.fullPath")}
+        className="@min-[40rem]:min-w-48"
+      >
         {full === "" ? (
           <Missing />
         ) : (
@@ -277,12 +283,15 @@ function FolderRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="min-w-40 text-muted-foreground max-sm:hidden">
+      <TableCell
+        label={t("sharedFolders.col.description")}
+        className="text-muted-foreground @min-[40rem]:min-w-40"
+      >
         {folder.comment === "" ? null : (
           <ClampedText>{inertBidi(folder.comment)}</ClampedText>
         )}
       </TableCell>
-      <TableCell className="max-sm:hidden">
+      <TableCell label={t("sharedFolders.col.used")}>
         {folder._used ? t("sharedFolders.yes") : t("sharedFolders.no")}
       </TableCell>
     </TableRow>
@@ -605,19 +614,14 @@ export function SharedFoldersTable() {
         >
           <TableHeader>
             <TableRow>
-              {COLUMNS.map(({ field, label, narrow }) => {
+              {COLUMNS.map(({ field, label }) => {
                 const text = t(label);
                 if (field === null) {
-                  return (
-                    <TableHead key={label} className="max-sm:hidden">
-                      {text}
-                    </TableHead>
-                  );
+                  return <TableHead key={label}>{text}</TableHead>;
                 }
                 return (
                   <TableHead
                     key={field}
-                    className={narrow ? undefined : "max-sm:hidden"}
                     aria-describedby={
                       field === "_used" ? usedNoteId : undefined
                     }

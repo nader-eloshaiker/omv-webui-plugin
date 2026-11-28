@@ -137,7 +137,11 @@ export interface ChartTableWords {
   caption: string;
 }
 
-/** The numbers behind a chart, as a plain table (rows already in reading order). */
+/**
+ * The numbers behind a chart, as a plain table (rows already in reading order). Narrower than 40rem
+ * it stacks ("Table"): the first column (the time) heads each row, every other value a line after its
+ * column's words.
+ */
 export function ChartTable<Row>({
   rows,
   rowKey,
@@ -172,6 +176,8 @@ export function ChartTable<Row>({
                   className={cn(
                     "h-9 px-3 text-start align-middle font-medium tabular-nums",
                     column.mono && "font-mono text-sm",
+                    // Stacked, the row's title: as a "TableCell" with narrow="title".
+                    "@max-[40rem]:col-start-1 @max-[40rem]:row-start-1 @max-[40rem]:block @max-[40rem]:h-auto @max-[40rem]:p-0",
                   )}
                 >
                   {column.cell(row)}
@@ -179,10 +185,18 @@ export function ChartTable<Row>({
               ) : (
                 <TableCell
                   key={column.id}
+                  label={column.header}
                   numeric={column.numeric}
-                  mono={column.mono}
                 >
-                  {column.cell(row)}
+                  {/* The mono face on the value, not the cell, so the column's word before it when
+                      stacked keeps the text face. */}
+                  {column.mono ? (
+                    <span className="font-mono text-sm">
+                      {column.cell(row)}
+                    </span>
+                  ) : (
+                    column.cell(row)
+                  )}
                 </TableCell>
               ),
             )}

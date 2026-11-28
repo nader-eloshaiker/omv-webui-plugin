@@ -15,7 +15,7 @@ import {
   ExternalLink,
   PageSection,
   Skeleton,
-  StatusPill,
+  StatusLabel,
   Table,
   TableBody,
   TableCell,
@@ -44,8 +44,8 @@ import { useSession } from "../../session/sessionContext.ts";
 import { DiskLink } from "../atoms/DiskLink.tsx";
 import { DiskHealthStatus } from "../molecules/DiskHealthStatus.tsx";
 import { ReadFailed } from "../molecules/ReadFailed.tsx";
-import { DiskHealthLine } from "../organisms/DiskHealthLine.tsx";
-import { SmartMonitoringCard } from "../organisms/SmartMonitoringCard.tsx";
+import { SmartHealthAnswer } from "../organisms/SmartHealthAnswer.tsx";
+import { SmartMonitoring } from "../organisms/SmartMonitoring.tsx";
 import { SmartTabsFrame } from "../templates/SmartTabsFrame.tsx";
 import { AdminOnlyPage } from "./AdminOnlyPage.tsx";
 
@@ -92,13 +92,13 @@ function TemperatureCell({
       : 0;
   const status = tempStatus(value, own, settings?.tempmax ?? 0);
   return (
-    <span className="flex flex-col items-start gap-1 tabular-nums">
+    <span className="flex flex-col items-start gap-line tabular-nums">
       <span>{format.celsius(value)}</span>
       {status === null ? null : (
-        <span className="flex flex-wrap items-center gap-2">
-          <StatusPill status={status.status}>
+        <span className="flex flex-wrap items-center gap-x-2">
+          <StatusLabel status={status.status}>
             {t(`health.${status.status}`)}
-          </StatusPill>
+          </StatusLabel>
           <span className="text-sm">
             {status.status === "critical"
               ? t("disk.fact.tempAtAlert", {
@@ -204,7 +204,7 @@ function Overview() {
       const watch = watched.of(disk.devicefile);
       return (
         <TableRow key={disk.devicename}>
-          <TableCell>
+          <TableCell narrow="title">
             <span className="flex flex-col">
               <DiskLink
                 devicename={disk.devicename}
@@ -217,13 +217,16 @@ function Overview() {
               )}
             </span>
           </TableCell>
-          <TableCell>
+          <TableCell narrow="aside">
+            {/* Without its reason: the answer at the top of the page says it for each disk that
+                needs the reader, so a problem is explained once. */}
             <DiskHealthStatus
               checked={check.result !== undefined}
               reading={reading}
+              reason={false}
             />
           </TableCell>
-          <TableCell>
+          <TableCell label={t("smart.overview.col.temperature")}>
             <TemperatureCell
               disk={disk}
               reading={reading?.temperature}
@@ -231,10 +234,10 @@ function Overview() {
               settings={settings.data}
             />
           </TableCell>
-          <TableCell>
+          <TableCell label={t("smart.overview.col.watched")}>
             <WatchedCell watch={watch} globalOn={globalOn} />
           </TableCell>
-          <TableCell>
+          <TableCell label={t("smart.overview.col.tests")}>
             {entries === undefined ? (
               <Skeleton className="w-24" />
             ) : (
@@ -248,19 +251,17 @@ function Overview() {
 
   return (
     <>
-      <PageSection>
-        <SmartMonitoringCard
-          settings={settings.data}
-          settingsError={settings.isError ? settings.error : undefined}
-          onRetrySettings={() => void settings.refetch()}
-          retrying={settings.isFetching}
-          counts={counts}
-          tests={entries?.length}
-          email={email.data}
-          emailFailed={email.data === undefined && email.isError}
-        />
-        <DiskHealthLine />
-      </PageSection>
+      <SmartHealthAnswer />
+      <SmartMonitoring
+        settings={settings.data}
+        settingsError={settings.isError ? settings.error : undefined}
+        onRetrySettings={() => void settings.refetch()}
+        retrying={settings.isFetching}
+        counts={counts}
+        tests={entries?.length}
+        email={email.data}
+        emailFailed={email.data === undefined && email.isError}
+      />
       <PageSection heading={t("smart.overview.disks")} className="min-w-0">
         {watched.failedCount > 0 ? (
           <p className="flex flex-wrap items-center gap-2 text-sm">

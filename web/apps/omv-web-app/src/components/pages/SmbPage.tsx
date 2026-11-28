@@ -452,7 +452,7 @@ function SharesTable({
               : shareAddresses(hostname, folder.name).windows;
           return (
             <TableRow key={share.uuid}>
-              <TableCell>
+              <TableCell narrow="title">
                 <span className="flex flex-col">
                   {folder === undefined && folders !== undefined ? (
                     <span>{t("smb.shares.gone")}</span>
@@ -466,7 +466,10 @@ function SharesTable({
                   )}
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell
+                label={t("smb.shares.col.address")}
+                className="@max-[40rem]:[overflow-wrap:anywhere]"
+              >
                 {address === null ? null : (
                   <span className="flex items-center gap-1">
                     <Identifier>{inertBidi(address)}</Identifier>
@@ -482,11 +485,15 @@ function SharesTable({
                   </span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell label={t("smb.shares.col.guest")}>
                 {t(`smb.shares.guest.${guestMode(share.guest)}`)}
               </TableCell>
-              <TableCell>{yesNo(share.readonly)}</TableCell>
-              <TableCell>{yesNo(share.browseable)}</TableCell>
+              <TableCell label={t("smb.shares.col.readonly")}>
+                {yesNo(share.readonly)}
+              </TableCell>
+              <TableCell label={t("smb.shares.col.browseable")}>
+                {yesNo(share.browseable)}
+              </TableCell>
             </TableRow>
           );
         })}

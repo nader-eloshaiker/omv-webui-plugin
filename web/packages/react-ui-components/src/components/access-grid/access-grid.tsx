@@ -189,6 +189,8 @@ const PAGE_SIZES = [25, 50, 100] as const;
 // change shape: from 42rem a row is Name | Kind | Access; below it, Name and Kind share a line and the
 // choice moves under them at the full width (320px, 200% zoom), so nothing scrolls sideways. A table
 // whose display changes keeps its semantics only through explicit roles, so each part states its own.
+// Narrower than 40rem the table stacks ("Table") in the same shape: the name as the row's title, the
+// kind as its aside, and the choice a line of its own under them, so the two narrow forms agree.
 const tableClass =
   "grid grid-cols-1 @2xl:grid-cols-[minmax(0,1fr)_auto_max-content]";
 const rowGroupClass = "grid @2xl:col-span-3 @2xl:grid-cols-subgrid";
@@ -271,7 +273,7 @@ function GridRow<V extends string>({
       <th
         scope="row"
         role="rowheader"
-        className="flex min-w-0 flex-col gap-0.5 px-3 py-2 text-start font-regular"
+        className="flex min-w-0 flex-col gap-0.5 px-3 py-2 text-start font-regular @max-[40rem]:p-0"
       >
         {/* In its own direction, but at the column's start: a right-to-left name keeps its order
             without jumping to the far edge of a left-to-right table. */}
@@ -326,15 +328,16 @@ function GridRow<V extends string>({
       </th>
       <TableCell
         role="cell"
+        narrow="aside"
         // Status words and a status label wrap inside the cell, which never takes more than its share of a
         // narrow row from the name beside it.
-        className="flex h-auto max-w-40 min-w-0 flex-wrap content-start items-start gap-x-2 gap-y-1 py-2 [overflow-wrap:anywhere] text-foreground @2xl:max-w-56 @2xl:content-center @2xl:items-center"
+        className="flex @max-[40rem]:flex h-auto max-w-40 min-w-0 flex-wrap content-start items-start gap-x-2 gap-y-1 py-2 [overflow-wrap:anywhere] text-foreground @2xl:max-w-56 @2xl:content-center @2xl:items-center"
       >
         {row.kind}
       </TableCell>
       <TableCell
         role="cell"
-        className="col-span-2 flex h-auto flex-wrap items-center gap-x-3 gap-y-1 pb-2 @2xl:col-span-1 @2xl:py-1.5"
+        className="col-span-2 flex @max-[40rem]:flex h-auto flex-wrap items-center gap-x-3 gap-y-1 pb-2 @2xl:col-span-1 @2xl:py-1.5"
       >
         <SegmentedChoice<V>
           size="sm"

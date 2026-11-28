@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The Overview's monitoring card (phase 5 disks design 4.4): does the NAS watch the disks, how often,
+// The Overview's monitoring section (phase 5 disks design 4.4; on the page ground since 2026-11-28): does the NAS watch the disks, how often,
 // what it does with a sleeping disk, whether any self-test is scheduled, and how it tells the reader.
 // Worst first: what is off comes before what is on. "Set up monitoring" is the page's one filled
 // action, a router link to the set-up flow.
@@ -9,16 +9,12 @@ import type {
 } from "@omv-webui/react-api-omv/generated";
 import {
   buttonClass,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   FactListSkeleton,
   InlineAlert,
+  PageSection,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { isPowerMode } from "../../disks/smartSettingsForm.ts";
 import { useFormat } from "../../format/useFormat.ts";
@@ -34,7 +30,7 @@ export interface MonitoringCounts {
   loading: boolean;
 }
 
-export function SmartMonitoringCard({
+export function SmartMonitoring({
   settings,
   settingsError,
   onRetrySettings,
@@ -56,7 +52,6 @@ export function SmartMonitoringCard({
 }) {
   const { t } = useTranslation();
   const format = useFormat();
-  const titleId = useId();
 
   let content;
   if (settings === undefined && settingsError !== undefined) {
@@ -85,13 +80,13 @@ export function SmartMonitoringCard({
     );
     const mode = isPowerMode(settings.powermode) ? settings.powermode : "never";
     content = (
-      <div className="flex flex-col gap-3">
+      <div className="flex max-w-prose flex-col items-start gap-group">
         {!settings.enable ? (
           <>
             <InlineAlert tone="neutral" role="note">
               {t("smart.overview.off")}
             </InlineAlert>
-            <div>{setUp}</div>
+            {setUp}
           </>
         ) : counts === undefined || counts.loading ? (
           <Skeleton className="w-64" />
@@ -103,7 +98,7 @@ export function SmartMonitoringCard({
                 total: counts.total,
               })}
             </p>
-            <div>{setUp}</div>
+            {setUp}
           </>
         ) : (
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -135,13 +130,11 @@ export function SmartMonitoringCard({
   }
 
   return (
-    <Card render={<section aria-labelledby={titleId} />}>
-      <CardHeader>
-        <CardTitle id={titleId}>{t("smart.overview.monitoring")}</CardTitle>
-      </CardHeader>
-      <CardContent aria-busy={settings === undefined || undefined}>
-        {content}
-      </CardContent>
-    </Card>
+    <PageSection
+      heading={t("smart.overview.monitoring")}
+      aria-busy={settings === undefined || undefined}
+    >
+      {content}
+    </PageSection>
   );
 }

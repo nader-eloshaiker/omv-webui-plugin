@@ -291,9 +291,12 @@ function SetUpMenu({ menu }: { menu: Record<SetUpItem, SetUpAvailability> }) {
   );
 }
 
-/** Below 720px the table scrolls in its own region with the first column fixed (3.2 item 5). */
+/**
+ * Below 720px, while the table still has its columns, it scrolls in its own region with the first
+ * column fixed (3.2 item 5). Narrower than 40rem it stacks instead ("Table"), and nothing is fixed.
+ */
 const FIXED_FIRST =
-  "max-[720px]:sticky max-[720px]:left-0 max-[720px]:z-10 max-[720px]:bg-surface";
+  "@min-[40rem]:max-[720px]:sticky @min-[40rem]:max-[720px]:left-0 @min-[40rem]:max-[720px]:z-10 @min-[40rem]:max-[720px]:bg-surface";
 
 /** 3.2 item 5. */
 function InterfacesTable({ rows }: { rows: readonly IfaceListRow[] }) {
@@ -318,7 +321,9 @@ function InterfacesTable({ rows }: { rows: readonly IfaceListRow[] }) {
     <Table ref={tableRef} frameLabel={t("interfaces.title")}>
       <TableHeader>
         <TableRow>
-          <TableHead className={`${FIXED_FIRST} max-[720px]:bg-muted`}>
+          <TableHead
+            className={`${FIXED_FIRST} @min-[40rem]:max-[720px]:bg-muted`}
+          >
             {t("interfaces.col.iface")}
           </TableHead>
           <TableHead>{t("interfaces.col.connection")}</TableHead>
@@ -333,11 +338,14 @@ function InterfacesTable({ rows }: { rows: readonly IfaceListRow[] }) {
         {rows.map((row) => (
           <TableRow
             key={row.devicename}
-            className="max-[720px]:*:h-11"
+            className="@min-[40rem]:max-[720px]:*:h-11"
             data-depth={row.depth}
             data-iface={row.devicename}
           >
-            <TableCell className={`max-w-72 min-w-40 ${FIXED_FIRST}`}>
+            <TableCell
+              narrow="title"
+              className={`@min-[40rem]:max-w-72 @min-[40rem]:min-w-40 ${FIXED_FIRST}`}
+            >
               <div
                 className={
                   row.depth === 0
@@ -388,16 +396,27 @@ function InterfacesTable({ rows }: { rows: readonly IfaceListRow[] }) {
                 ) : null}
               </div>
             </TableCell>
-            <TableCell className="min-w-36">
+            <TableCell
+              label={t("interfaces.col.connection")}
+              className="@min-[40rem]:min-w-36"
+            >
               <IfaceConnection word={row.connection} />
             </TableCell>
-            <TableCell className="min-w-44">
+            <TableCell
+              label={t("interfaces.col.ipv4")}
+              className="@min-[40rem]:min-w-44"
+            >
               <FamilyCell family={row.ipv4} />
             </TableCell>
-            <TableCell className="min-w-44">
+            <TableCell
+              label={t("interfaces.col.ipv6")}
+              className="@min-[40rem]:min-w-44"
+            >
               <FamilyCell family={row.ipv6} />
             </TableCell>
-            <TableCell>{row.notApplied ? <PendingMark /> : null}</TableCell>
+            <TableCell narrow="aside">
+              {row.notApplied ? <PendingMark /> : null}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

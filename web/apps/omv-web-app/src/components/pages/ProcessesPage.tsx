@@ -244,32 +244,46 @@ function StateWord({ letter }: { letter: string }) {
 }
 
 function ProcessRowView({ row }: { row: ProcessRow }) {
+  const { t } = useTranslation();
   const format = useFormat();
   return (
     <TableRow>
       <TableCell
+        narrow="title"
         dir="auto"
-        className="min-w-48 align-top font-mono text-sm [overflow-wrap:anywhere]"
+        className="align-top font-mono text-sm [overflow-wrap:anywhere] @min-[40rem]:min-w-48"
       >
         {row.command}
       </TableCell>
-      <TableCell numeric className="align-top">
+      <TableCell label={t("processes.col.cpu")} numeric className="align-top">
         {row.cpu === null ? <NotReported /> : format.percent(row.cpu)}
       </TableCell>
-      <TableCell numeric className="align-top whitespace-nowrap">
+      <TableCell
+        label={t("processes.col.memory")}
+        numeric
+        className="align-top whitespace-nowrap"
+      >
         {row.memory === null ? <NotReported /> : formatBytes(row.memory)}
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell label={t("processes.col.state")} className="align-top">
         <StateWord letter={row.state} />
       </TableCell>
-      <TableCell dir="auto" className="align-top break-words">
+      <TableCell
+        label={t("processes.col.user")}
+        dir="auto"
+        className="align-top break-words"
+      >
         {row.user}
       </TableCell>
-      <TableCell mono className="align-top tabular-nums">
-        {row.cpuTimeText}
+      {/* The value is in the mono face, not the cell, so the word before it when stacked is not. */}
+      <TableCell
+        label={t("processes.col.time")}
+        className="align-top tabular-nums"
+      >
+        <span className="font-mono text-sm">{row.cpuTimeText}</span>
       </TableCell>
-      <TableCell numeric mono className="align-top">
-        {row.pidText}
+      <TableCell label={t("processes.col.pid")} numeric className="align-top">
+        <span className="font-mono text-sm">{row.pidText}</span>
       </TableCell>
     </TableRow>
   );

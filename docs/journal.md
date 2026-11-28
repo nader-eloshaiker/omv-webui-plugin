@@ -949,6 +949,7 @@ The owner chose from the chart prototype (`/ui/lab?screen=charts`):
    - dark: about `#3b495b`, 3.68:1 from the used blue.
 
    Both existing candidates failed in light. The divider colour faded into the page, and the track's outline colour was 1.16:1 from the used squares. The slate goes through the colour audit before it becomes a token.
+
 2. **Live readouts are two charts with four series.** Processor and memory share one percent scale. The network is mirrored, in above the line and out below, and each half has its own scale with a minimum of 1 MiB/s, so a small out stays visible. The two hues are teal (solid) and violet (dashed), the series on either side of the Sky base, replacing magenta and moss, which the owner found did not harmonise. Each line is named at its end.
 3. **Temperatures** have two candidates, both built for ties and a 24-disk bay:
    - stacked along one scale, where disks at the same degree form a column;
@@ -1129,4 +1130,74 @@ The owner asked whether the kind could be kept in a JSON file, or read through a
 - Keeping it on the NAS (a JSON file, or a method reading udev) needs PHP shipped by this plugin. `docs/05-security.md` rules that out ("no PHP, ... no new backend methods").
 - Keeping it in the browser is ruled out by UI-13, since it is server data keyed by a disk identifier.
 
-The owner's decision is pending.
+The owner's decision is in the entry that follows.
+
+## 2026-11-28 — A disk's kind is kept in OMV's per-user store, and PHP waits for history charts (owner)
+
+Asked about relaxing the rule against PHP, the owner said: "If we have to use PHP to keep the app
+functional, then lets do it given that we are not removing the original frontend". The owner then
+asked what not using PHP had gained.
+
+- D1 rejected a separate gateway: its own port, login and binaries. Its reasons do not apply to a
+  plugin's own backend methods, which run inside OMV's backend behind its session.
+- The "no PHP, no new backend methods" line in `docs/05-security.md` was a blanket rule on top of D1.
+  It bought:
+  - no code of ours running as root;
+  - no backend restart on install;
+  - no coupling to OMV's internal PHP;
+  - one toolchain.
+- If it is relaxed, the limits would be read-only, administrator-only methods with fixed inputs, each
+  listed in that document. Writes would still need the owner first.
+
+Asked what the options were without PHP, OMV's source turned up a fourth: OMV's own per-user store
+(`WebGui.getLocalStorageItems`, `WebGui.setLocalStorageItem`). It is a JSON file per user under
+`/var/lib/openmediavault/workbench/localstorage.d/`. The stock interface keeps its own settings there.
+
+The owner chose it ("I like option 4, validate it"). Checked on the test VM:
+
+- A value round-trips exactly.
+- Thirty writes at once from five sessions keep every key; OMV holds an exclusive lock while it reads,
+  changes and writes the file.
+- Two sessions writing the same key leave a readable file; the last write wins.
+- A map of 200 entries round-trips.
+- Another user sees only their own store.
+- The stock interface loads a foreign key cleanly when someone signs in to it.
+
+What follows from it:
+
+- **A key with a dot** is split into a nested path, so the key is `omvwebui_drivekinds`.
+- **The value is a JSON string, not an object.** The stock interface copies every key of the store
+  into its own browser storage at sign-in, as `<user>@<key>`, and an object would be copied as junk.
+- **No serial number in clear.** Because of that copy (UI-13), each disk is keyed by a short hash of
+  its model and serial number. The model alone is not enough: virtual disks and USB enclosures share
+  one. `DiskMgmt.enumerateDevices` gives both without waking a disk.
+- **The stock interface's "Reset UI to defaults" clears the store.** The kinds are then learned
+  again.
+- **When a kind is learned:** when a disk is read anyway (awake on a visit, or during the person's
+  health check). It is saved once and read from the store from then on.
+- **The PHP question waits** until the history charts, the one gain that still needs it.
+
+## 2026-11-28 — Disk health answers first, and every table stacks on a narrow screen (owner)
+
+**The disk health overview** answers first how the disks are. Before the check it says why the check
+waits for the person, with its button. After it, there are two cases:
+
+- every disk is well: one sentence under the OK label;
+- otherwise: "1 of 6 disks needs your attention", then each such disk by name under its own state,
+  with what it means and what to do.
+
+Monitoring follows as a section of its own, then the disks. The disks table gives each disk's state
+without its reason, which the answer has already said.
+
+**Tables on a phone.** Seeing the overview's table on a phone, the owner said: "this is a little
+silly ... the text is multiline thing vertical paragraph. That's not usefull to anyone". Then: "make
+sure that this change is applied to all tables, not just this one".
+
+Every table in the app now stacks when its own width is under 40rem (style guide 5.2):
+
+- The header goes. A sortable table keeps its sort buttons, as one row.
+- The row's name is its title.
+- A short status may sit beside the title.
+- Every other column is a line that says its word, then its value. Empty lines are left out.
+
+Half the tables had a phone layout of their own that said some facts twice; those are gone.

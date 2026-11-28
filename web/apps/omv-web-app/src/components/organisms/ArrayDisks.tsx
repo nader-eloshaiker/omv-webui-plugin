@@ -389,16 +389,12 @@ export function ArrayDisks({
         <TableHeader>
           <TableRow>
             <TableHead>{t("array.disks.col.disk")}</TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("array.disks.col.model")}
-            </TableHead>
-            <TableHead className="text-end max-sm:hidden">
+            <TableHead>{t("array.disks.col.model")}</TableHead>
+            <TableHead className="text-end">
               {t("array.disks.col.size")}
             </TableHead>
             <TableHead>{t("array.disks.col.role")}</TableHead>
-            <TableHead className="max-sm:hidden">
-              {t("array.disks.col.health")}
-            </TableHead>
+            <TableHead>{t("array.disks.col.health")}</TableHead>
             <TableHead>
               <span className="sr-only">{t("array.disks.takeOut")}</span>
             </TableHead>
@@ -409,12 +405,12 @@ export function ArrayDisks({
             if (m === null) {
               return (
                 <TableRow key={k}>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell narrow="title" className="text-muted-foreground">
                     {t("array.disks.missing")}
                   </TableCell>
-                  <TableCell className="max-sm:hidden" />
-                  <TableCell className="max-sm:hidden" />
-                  <TableCell>
+                  <TableCell narrow="hidden" />
+                  <TableCell narrow="hidden" />
+                  <TableCell label={t("array.disks.col.role")}>
                     <span className="flex flex-wrap items-center gap-2">
                       <StatusPill status="critical">
                         {t("health.critical")}
@@ -422,13 +418,14 @@ export function ArrayDisks({
                       <span>{t("raidRole.missing")}</span>
                     </span>
                   </TableCell>
-                  <TableCell className="max-sm:hidden" />
-                  <TableCell />
+                  <TableCell narrow="hidden" />
+                  <TableCell narrow="hidden" />
                 </TableRow>
               );
             }
             const disk = diskOf(m.device, disks);
             const size = sizeOf(m.device);
+            const model = disk?.model.trim() ?? "";
             const decision = decisions[i];
             const serial =
               disk?.serialnumber.trim() ??
@@ -438,7 +435,7 @@ export function ArrayDisks({
               "";
             return (
               <TableRow key={k}>
-                <TableCell className="whitespace-nowrap">
+                <TableCell narrow="title" className="whitespace-nowrap">
                   {disk !== undefined &&
                   disk.canonicaldevicefile === m.device ? (
                     <Link
@@ -452,36 +449,17 @@ export function ArrayDisks({
                   ) : (
                     <Identifier>{m.device}</Identifier>
                   )}
-                  {/* Under the small breakpoint, Model, Size and Health are hidden and said here. */}
-                  <span className="mt-1 flex flex-col gap-0.5 text-sm whitespace-normal sm:hidden">
-                    <span dir="auto">
-                      {[
-                        disk?.model.trim() ?? "",
-                        size === null ? "" : formatBytes(size),
-                      ]
-                        .filter((x) => x !== "")
-                        .join(", ")}
-                    </span>
-                    {serial === "" ? null : (
-                      <span className="text-xs text-muted-foreground">
-                        <Slotted
-                          sentence={(tokens) => t("array.disks.serial", tokens)}
-                          values={{ serial: <Identifier>{serial}</Identifier> }}
-                        />
-                      </span>
-                    )}
-                    <DiskHealthStatus
-                      checked={check.result !== undefined}
-                      reading={check.reading(
-                        disk?.canonicaldevicefile ?? m.device,
-                      )}
-                    />
-                  </span>
                 </TableCell>
-                <TableCell className="min-w-40 max-sm:hidden">
-                  <span className="block" dir="auto">
-                    {disk?.model.trim() ?? ""}
-                  </span>
+                <TableCell
+                  label={t("array.disks.col.model")}
+                  className="@min-[40rem]:min-w-40"
+                >
+                  {/* Nothing when there is no model, so a stacked row leaves the line out. */}
+                  {model === "" ? null : (
+                    <span className="block" dir="auto">
+                      {model}
+                    </span>
+                  )}
                   {serial === "" ? null : (
                     <span className="block text-xs text-muted-foreground">
                       <Slotted
@@ -491,10 +469,16 @@ export function ArrayDisks({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
+                <TableCell
+                  label={t("array.disks.col.size")}
+                  className="text-end whitespace-nowrap tabular-nums"
+                >
                   {size === null ? "" : formatBytes(size)}
                 </TableCell>
-                <TableCell className="sm:min-w-32">
+                <TableCell
+                  label={t("array.disks.col.role")}
+                  className="@min-[40rem]:min-w-32"
+                >
                   {!rolesKnown ? (
                     <span className="text-muted-foreground">
                       {t("raidRole.unknown")}
@@ -526,7 +510,10 @@ export function ArrayDisks({
                     t("raidRole.working")
                   )}
                 </TableCell>
-                <TableCell className="min-w-32 max-sm:hidden">
+                <TableCell
+                  label={t("array.disks.col.health")}
+                  className="@min-[40rem]:min-w-32"
+                >
                   <DiskHealthStatus
                     checked={check.result !== undefined}
                     reading={check.reading(
@@ -534,7 +521,8 @@ export function ArrayDisks({
                     )}
                   />
                 </TableCell>
-                <TableCell>
+                {/* Stacked, "Take out…" is a line of its own; with no button the line is left out. */}
+                <TableCell className="@max-[40rem]:empty:hidden">
                   {decision?.allowed === true ? (
                     <Button
                       variant="neutral"
