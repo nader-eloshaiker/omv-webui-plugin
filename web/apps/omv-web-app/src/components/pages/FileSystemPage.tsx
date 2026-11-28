@@ -10,6 +10,8 @@ import {
   Breadcrumbs,
   EmptyState,
   FactListSkeleton,
+  Page,
+  PageHeader,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useParams } from "@tanstack/react-router";
@@ -207,10 +209,10 @@ function Sections({
   const missing = state === "missing";
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Crumbs current={<FsNameView name={name} />} />
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <Page>
+      <PageHeader
+        before={<Crumbs current={<FsNameView name={name} />} />}
+        title={
           <PageTitle
             documentTitle={t("filesystem.documentTitle", { name: nameText })}
           >
@@ -219,34 +221,33 @@ function Sections({
               values={{ name: <FsNameView name={name} /> }}
             />
           </PageTitle>
-          {pendingMark ? <PendingMark /> : null}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {size === null
+        }
+        besideTitle={pendingMark ? <PendingMark /> : undefined}
+        subtitle={
+          size === null
             ? words.typeWord(fs.type)
             : t("filesystem.subtitle", {
                 type: words.typeWord(fs.type),
                 size: formatBytes(size),
-              })}
-        </p>
-      </div>
-
-      <div role="status" className="flex flex-col gap-2">
-        <FsStateView
+              })
+        }
+      >
+        <div role="status" className="flex flex-col gap-pair">
+          <FsStateView
+            state={state}
+            className="flex flex-wrap items-center gap-2"
+          />
+          {missing ? (
+            <p className="max-w-prose">{t("filesystem.missingBody")}</p>
+          ) : null}
+        </div>
+        <FsSummary
+          fs={fs}
           state={state}
-          className="flex flex-wrap items-center gap-2"
+          name={nameText}
+          disks={disks.data?.data}
         />
-        {missing ? (
-          <p className="max-w-prose">{t("filesystem.missingBody")}</p>
-        ) : null}
-      </div>
-
-      <FsSummary
-        fs={fs}
-        state={state}
-        name={nameText}
-        disks={disks.data?.data}
-      />
+      </PageHeader>
 
       <FsUsedBy
         fs={fs}
@@ -282,6 +283,6 @@ function Sections({
           disk={disk}
         />
       )}
-    </div>
+    </Page>
   );
 }

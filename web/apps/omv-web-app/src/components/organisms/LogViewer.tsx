@@ -12,6 +12,7 @@ import { useLogFileGetList } from "@omv-webui/react-api-omv/generated";
 import {
   Button,
   EmptyState,
+  PairStack,
   SearchField,
   Select,
   SelectContent,
@@ -96,7 +97,7 @@ function TimeCell({ ts }: { ts: LogRow["ts"] }) {
   const { t } = useTranslation();
   const format = useFormat();
   return (
-    <TableCell className="py-2 align-top whitespace-nowrap tabular-nums">
+    <TableCell className="align-top whitespace-nowrap tabular-nums">
       {typeof ts === "number" ? (
         format.dateTime(ts)
       ) : (
@@ -110,7 +111,7 @@ function MessageCell({ message }: { message: unknown }) {
   // A table cell ignores min-width, so the block inside holds the column at a readable width; on a
   // narrow screen the frame scrolls sideways instead of squeezing a line into a tall strip.
   return (
-    <TableCell className="py-2 align-top">
+    <TableCell className="align-top">
       <div
         dir="auto"
         className="min-w-72 font-mono text-[13px] whitespace-pre-wrap [overflow-wrap:anywhere]"
@@ -135,16 +136,16 @@ function LogRowView({ row, layout }: { row: LogRow; layout: LogLayout }) {
     return (
       <TableRow>
         <TimeCell ts={row.ts} />
-        <TableCell dir="auto" className="py-2 align-top break-words">
+        <TableCell dir="auto" className="align-top break-words">
           {str(row.username)}
         </TableCell>
-        <TableCell mono className="py-2 align-top [overflow-wrap:anywhere]">
+        <TableCell mono className="align-top [overflow-wrap:anywhere]">
           {str(row.clientipaddr)}
         </TableCell>
-        <TableCell dir="auto" className="py-2 align-top break-words">
+        <TableCell dir="auto" className="align-top break-words">
           {str(row.servicename)}
         </TableCell>
-        <TableCell className="min-w-40 py-2 align-top">
+        <TableCell className="min-w-40 align-top">
           <span
             dir="auto"
             className="block font-mono text-sm [overflow-wrap:anywhere]"
@@ -160,10 +161,10 @@ function LogRowView({ row, layout }: { row: LogRow; layout: LogLayout }) {
             </span>
           ) : null}
         </TableCell>
-        <TableCell mono className="py-2 align-top">
+        <TableCell mono className="align-top">
           {str(row.operation)}
         </TableCell>
-        <TableCell dir="auto" className="py-2 align-top break-words">
+        <TableCell dir="auto" className="align-top break-words">
           {str(row.result)}
         </TableCell>
       </TableRow>
@@ -377,7 +378,7 @@ export function LogViewer() {
     state.sort.field === "rownum" && state.sort.direction === "asc";
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <PairStack>
       <TableToolbar className="items-end gap-x-3 gap-y-3">
         <div className="flex w-full max-w-sm flex-col gap-1">
           <Select items={items} value={id ?? null} onValueChange={choose}>
@@ -537,6 +538,6 @@ export function LogViewer() {
           ) : null}
         </div>
       )}
-    </div>
+    </PairStack>
   );
 }

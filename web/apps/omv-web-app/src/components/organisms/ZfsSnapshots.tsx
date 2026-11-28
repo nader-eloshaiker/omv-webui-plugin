@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Identifier,
   InlineAlert,
+  PageSection,
   ServerMessage,
   Table,
   TableBody,
@@ -365,7 +366,7 @@ export function ZfsSnapshots({
               const running = isDeleting(deleteRunOf(snap.path));
               return (
                 <TableRow key={snap.path}>
-                  <TableCell className="py-2 [overflow-wrap:anywhere]">
+                  <TableCell className="[overflow-wrap:anywhere]">
                     <Identifier dir="auto" className="whitespace-nowrap">
                       {snap.name}
                     </Identifier>
@@ -379,10 +380,10 @@ export function ZfsSnapshots({
                       {t("zfsSnap.col.holds")}: {formatBytes(snap.used)}
                     </span>
                   </TableCell>
-                  <TableCell numeric className="py-2 max-sm:hidden">
+                  <TableCell numeric className="max-sm:hidden">
                     {formatBytes(snap.used)}
                   </TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>
                     <span className="flex flex-wrap gap-2">
                       {isNewest && blocker === null ? (
                         <Button
@@ -457,13 +458,14 @@ export function ZfsSnapshots({
   }
 
   return (
-    <section aria-labelledby="zfs-snapshots" className="flex flex-col gap-3">
-      <h2 id="zfs-snapshots" className="text-lg font-semibold">
-        {t("zfsSnap.title")}
-      </h2>
-      <p className="max-w-prose text-sm text-muted-foreground">
-        {t("zfs.term.snapshot")} {t("zfsSnap.singleFile")}
-      </p>
+    <PageSection
+      heading={t("zfsSnap.title")}
+      lead={
+        <>
+          {t("zfs.term.snapshot")} {t("zfsSnap.singleFile")}
+        </>
+      }
+    >
       <p role="status" className="sr-only">
         {announce}
       </p>
@@ -619,6 +621,6 @@ export function ZfsSnapshots({
           }}
         />
       )}
-    </section>
+    </PageSection>
   );
 }

@@ -8,7 +8,7 @@
 // runs, or has ended and is not dismissed, the section shows it instead.
 import type { DiskDevice } from "@omv-webui/react-api-omv/generated";
 import { taskRegistry, useTasks } from "@omv-webui/react-api-omv/tasks";
-import { Button } from "@omv-webui/react-ui-components";
+import { Button, PageSection } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { diskSession, forgetWipe } from "../../disks/diskSession.ts";
@@ -22,7 +22,6 @@ import { WipePanel } from "./WipePanel.tsx";
 
 export function WipeSection({ disk }: { disk: DiskDevice }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const blockersId = useId();
   const inventory = useDiskInventory();
   const session = useMemoryStore(diskSession);
@@ -69,14 +68,11 @@ export function WipeSection({ disk }: { disk: DiskDevice }) {
   };
 
   return (
-    <section
-      aria-labelledby={headingId}
+    <PageSection
       data-slot="wipe-section"
-      className="flex flex-col gap-3 border-t border-border pt-6"
+      heading={t("wipe.title")}
+      className="border-t border-border pt-6"
     >
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("wipe.title")}
-      </h2>
       {record !== undefined && task !== undefined ? (
         <WipePanel
           record={record}
@@ -127,7 +123,7 @@ export function WipeSection({ disk }: { disk: DiskDevice }) {
         panelHeadingRef={panelHeadingRef}
         onStarted={(device) => setAnnouncement(t("wipe.started", { device }))}
       />
-    </section>
+    </PageSection>
   );
 }
 

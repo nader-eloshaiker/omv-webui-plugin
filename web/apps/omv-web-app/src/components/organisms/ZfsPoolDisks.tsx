@@ -11,6 +11,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   Identifier,
+  PageSection,
   ServerMessage,
   StatusPill,
   Table,
@@ -252,7 +253,7 @@ export function ZfsPoolDisks({
         );
         out.push(
           <TableRow key={`pair:${d.pair.vdev}`}>
-            <TableCell colSpan={COLUMNS} className="py-2">
+            <TableCell colSpan={COLUMNS}>
               <span className="flex flex-col gap-1">
                 <span>
                   <Trans
@@ -301,7 +302,7 @@ export function ZfsPoolDisks({
       noteReason(decisions.replace);
       out.push(
         <TableRow key={d.path}>
-          <TableCell className="py-2 whitespace-nowrap">
+          <TableCell className="whitespace-nowrap">
             <DiskCell d={d} disk={disk} />
             <span className="mt-1 flex flex-col gap-0.5 text-sm whitespace-normal sm:hidden">
               <span dir="auto">
@@ -322,7 +323,7 @@ export function ZfsPoolDisks({
               )}
             </span>
           </TableCell>
-          <TableCell className="min-w-40 py-2 max-sm:hidden">
+          <TableCell className="min-w-40 max-sm:hidden">
             <span className="block" dir="auto">
               {disk?.model.trim() ?? ""}
             </span>
@@ -335,13 +336,13 @@ export function ZfsPoolDisks({
               </span>
             )}
           </TableCell>
-          <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
+          <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
             {size === null || size === 0 ? "" : formatBytes(size)}
           </TableCell>
-          <TableCell className="py-2 sm:min-w-32">
+          <TableCell className="sm:min-w-32">
             <RoleCell d={d} view={view} />
           </TableCell>
-          <TableCell className="min-w-32 py-2 max-sm:hidden">
+          <TableCell className="min-w-32 max-sm:hidden">
             <DiskHealthStatus
               checked={check.result !== undefined}
               reading={
@@ -351,7 +352,7 @@ export function ZfsPoolDisks({
               }
             />
           </TableCell>
-          <TableCell className="py-2">
+          <TableCell>
             <span className="flex flex-wrap gap-2">
               {decisions.replace.allowed ? (
                 <Button
@@ -441,15 +442,12 @@ export function ZfsPoolDisks({
         })();
 
   return (
-    <section aria-labelledby="zfs-disks" className="flex flex-col gap-2">
-      <h2 id="zfs-disks" className="text-lg font-semibold">
-        {t("zfsPool.disks.title")}
-      </h2>
+    <PageSection heading={t("zfsPool.disks.title")}>
       {!poolDisks.known ? (
         <p className="max-w-prose">{t("zfsRole.notKnownBlocks")}</p>
       ) : null}
       {poolDisks.known && !poolDisks.byId ? (
-        <div className="flex max-w-prose flex-col gap-1">
+        <div className="flex max-w-prose flex-col gap-pair">
           <h3 className="font-semibold">{t("zfsPool.notById")}</h3>
           <p>{t("zfsBlock.notById")}</p>
         </div>
@@ -584,6 +582,6 @@ export function ZfsPoolDisks({
         onConfirm={() => void confirm()}
         openerRef={openerRef}
       />
-    </section>
+    </PageSection>
   );
 }

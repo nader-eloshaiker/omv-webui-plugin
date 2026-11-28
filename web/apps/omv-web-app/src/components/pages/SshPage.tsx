@@ -9,6 +9,9 @@ import {
   Button,
   EmptyState,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { useState } from "react";
@@ -98,19 +101,20 @@ function SshSettings() {
   }
 
   return (
-    <div className="flex max-w-3xl flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <PageTitle>{t("ssh.title")}</PageTitle>
-        {pending ? <PendingMark /> : null}
-      </div>
-      <p className="max-w-prose">{t("ssh.intro")}</p>
-      <SshFirewallLine />
-      {pendingOnArrival && pending ? (
-        <InlineAlert tone="neutral" role="note">
-          {t("ssh.pendingOnArrival")}
-        </InlineAlert>
-      ) : null}
-      {content}
-    </div>
+    <Page className="max-w-3xl">
+      <PageHeader
+        title={<PageTitle>{t("ssh.title")}</PageTitle>}
+        besideTitle={pending ? <PendingMark /> : undefined}
+      >
+        <p className="max-w-prose">{t("ssh.intro")}</p>
+        <SshFirewallLine />
+        {pendingOnArrival && pending ? (
+          <InlineAlert tone="neutral" role="note">
+            {t("ssh.pendingOnArrival")}
+          </InlineAlert>
+        ) : null}
+      </PageHeader>
+      <PageSection>{content}</PageSection>
+    </Page>
   );
 }

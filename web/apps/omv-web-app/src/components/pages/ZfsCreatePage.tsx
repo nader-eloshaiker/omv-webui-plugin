@@ -3,7 +3,12 @@
 // reads (R9). While anything is pending the flow does not start (R1, Q2). A run of this session, under
 // way or ended and not dismissed, is shown instead of the form: one ZFS run at a time. A normal user
 // gets the "only administrators" page, and nothing is called first (UI-4).
-import { JobRunner } from "@omv-webui/react-ui-components";
+import {
+  JobRunner,
+  Page,
+  PageHeader,
+  PageSection,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useSystemInformation } from "../../hooks/useSystemInformation.ts";
@@ -38,7 +43,7 @@ export function OtherZfsRun({ run }: { run: ZfsRun }) {
   const { t } = useTranslation();
   const { choices } = run;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-pair">
       <p className="max-w-prose">{t("zfs.otherRun")}</p>
       <p>
         {choices.kind === "create" ? (
@@ -92,12 +97,18 @@ function ZfsCreate() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <ZfsCrumbs pool={null} current={t("zfsCreate.breadcrumb")} />
-      <PageTitle documentTitle={t("zfsCreate.documentTitle")}>
-        {t("zfsCreate.title")}
-      </PageTitle>
-      <JobRunner title={t("zfsCreate.runnerTitle")}>{content}</JobRunner>
-    </div>
+    <Page>
+      <PageHeader
+        before={<ZfsCrumbs pool={null} current={t("zfsCreate.breadcrumb")} />}
+        title={
+          <PageTitle documentTitle={t("zfsCreate.documentTitle")}>
+            {t("zfsCreate.title")}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner title={t("zfsCreate.runnerTitle")}>{content}</JobRunner>
+      </PageSection>
+    </Page>
   );
 }

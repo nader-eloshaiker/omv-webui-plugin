@@ -13,6 +13,7 @@ import { useEmailNotificationGet } from "@omv-webui/react-api-omv/generated";
 import {
   Button,
   ExternalLink,
+  PageSection,
   Skeleton,
   StatusPill,
   Table,
@@ -24,7 +25,6 @@ import {
   TableSkeletonRows,
   TableStateRow,
 } from "@omv-webui/react-ui-components";
-import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { byDeviceOrder } from "../../disks/diskUse.ts";
 import { degrees, tempStatus } from "../../disks/diskWords.ts";
@@ -153,7 +153,6 @@ function TestsCell({ tests }: { tests: readonly SmartScheduleEntry[] }) {
 
 function Overview() {
   const { t } = useTranslation();
-  const headingId = useId();
   const settings = useSmartSettings();
   const diskList = useDiskList();
   const schedule = useScheduleList();
@@ -249,24 +248,20 @@ function Overview() {
 
   return (
     <>
-      <SmartMonitoringCard
-        settings={settings.data}
-        settingsError={settings.isError ? settings.error : undefined}
-        onRetrySettings={() => void settings.refetch()}
-        retrying={settings.isFetching}
-        counts={counts}
-        tests={entries?.length}
-        email={email.data}
-        emailFailed={email.data === undefined && email.isError}
-      />
-      <DiskHealthLine />
-      <section
-        aria-labelledby={headingId}
-        className="flex min-w-0 flex-col gap-3"
-      >
-        <h2 id={headingId} className="text-lg font-semibold">
-          {t("smart.overview.disks")}
-        </h2>
+      <PageSection>
+        <SmartMonitoringCard
+          settings={settings.data}
+          settingsError={settings.isError ? settings.error : undefined}
+          onRetrySettings={() => void settings.refetch()}
+          retrying={settings.isFetching}
+          counts={counts}
+          tests={entries?.length}
+          email={email.data}
+          emailFailed={email.data === undefined && email.isError}
+        />
+        <DiskHealthLine />
+      </PageSection>
+      <PageSection heading={t("smart.overview.disks")} className="min-w-0">
         {watched.failedCount > 0 ? (
           <p className="flex flex-wrap items-center gap-2 text-sm">
             {t("smart.overview.watchFailed", { count: watched.failedCount })}
@@ -297,12 +292,12 @@ function Overview() {
           </TableHeader>
           <TableBody>{body}</TableBody>
         </Table>
-      </section>
-      <p className="text-sm">
+      </PageSection>
+      <footer className="text-sm">
         <ExternalLink href={CLASSIC.smartDevices} newTabLabel={t("app.newTab")}>
           {t("smart.overview.classicLink")}
         </ExternalLink>
-      </p>
+      </footer>
     </>
   );
 }

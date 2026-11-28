@@ -18,6 +18,9 @@ import {
   EmptyState,
   FactListSkeleton,
   JobResult,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
   useToast,
 } from "@omv-webui/react-ui-components";
@@ -105,44 +108,50 @@ function Crumbs({ current }: { current?: string }) {
 function NotFound({ name }: { name: string | null }) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("groups.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/usermgmt/groups" className={routerLinkClass}>
-            {t("group.toList")}
-          </Link>
-        }
-      >
-        {name === null
-          ? t("group.notFoundPlain")
-          : t("group.notFound", { group: isolateName(name) })}
-      </EmptyState>
-    </div>
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("groups.title")}</PageTitle>}
+      />
+      <PageSection>
+        <EmptyState
+          action={
+            <Link to="/usermgmt/groups" className={routerLinkClass}>
+              {t("group.toList")}
+            </Link>
+          }
+        >
+          {name === null
+            ? t("group.notFoundPlain")
+            : t("group.notFound", { group: isolateName(name) })}
+        </EmptyState>
+      </PageSection>
+    </Page>
   );
 }
 
 function Loading() {
   const { t } = useTranslation();
   return (
-    <div aria-busy="true" className="flex min-w-0 flex-col gap-6">
+    <Page aria-busy="true">
       <p role="status" className="sr-only">
         {t("group.loading")}
       </p>
-      <div aria-hidden="true" className="flex flex-col gap-2">
-        <Skeleton className="w-24" />
-        <Skeleton shape="block" className="h-8 w-56" />
-        <Skeleton className="w-40" />
+      <div className="flex flex-col gap-group">
+        <div aria-hidden="true" className="flex flex-col gap-pair">
+          <Skeleton className="w-24" />
+          <Skeleton shape="block" className="h-8 w-56" />
+          <Skeleton className="w-40" />
+        </div>
+        <FactListSkeleton rows={3} />
       </div>
-      <FactListSkeleton rows={3} />
       {["members", "access"].map((part) => (
-        <div key={part} aria-hidden="true" className="flex flex-col gap-2">
+        <div key={part} aria-hidden="true" className="flex flex-col gap-pair">
           <Skeleton shape="block" className="h-6 w-48" />
           <Skeleton className="w-2/3" />
         </div>
       ))}
-    </div>
+    </Page>
   );
 }
 
@@ -152,41 +161,45 @@ function DeletedResult({ name, pending }: { name: string; pending: boolean }) {
   const navigate = useNavigate();
   const slot = <GroupNameText value={name} />;
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("groups.title")}</PageTitle>
-      <JobResult
-        result={{
-          status: "succeeded",
-          statusLabel: t("addStorage.state.succeeded"),
-          message: (
-            <>
-              <span className="block">
-                <Trans
-                  i18nKey="groupDelete.done"
-                  components={{ group: slot }}
-                />
-              </span>
-              {pending ? (
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("groups.title")}</PageTitle>}
+      />
+      <PageSection>
+        <JobResult
+          result={{
+            status: "succeeded",
+            statusLabel: t("addStorage.state.succeeded"),
+            message: (
+              <>
                 <span className="block">
                   <Trans
-                    i18nKey="groupDelete.stoppedBody"
+                    i18nKey="groupDelete.done"
                     components={{ group: slot }}
                   />
                 </span>
-              ) : null}
-            </>
-          ),
-        }}
-        dismissLabel={t("zfsDelete.dismiss")}
-        onDismiss={() => void navigate({ to: "/usermgmt/groups" })}
-      />
-      <p>
-        <Link to="/usermgmt/groups" className={routerLinkClass}>
-          {t("groupDelete.toList")}
-        </Link>
-      </p>
-    </div>
+                {pending ? (
+                  <span className="block">
+                    <Trans
+                      i18nKey="groupDelete.stoppedBody"
+                      components={{ group: slot }}
+                    />
+                  </span>
+                ) : null}
+              </>
+            ),
+          }}
+          dismissLabel={t("zfsDelete.dismiss")}
+          onDismiss={() => void navigate({ to: "/usermgmt/groups" })}
+        />
+        <p>
+          <Link to="/usermgmt/groups" className={routerLinkClass}>
+            {t("groupDelete.toList")}
+          </Link>
+        </p>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -234,17 +247,21 @@ function Found({ address }: { address: string }) {
   if (groups.data === undefined) {
     if (groups.isError) {
       return (
-        <div className="flex min-w-0 flex-col gap-4">
-          <Crumbs />
-          <PageTitle>{t("groups.title")}</PageTitle>
-          <ReadFailed
-            error={groups.error}
-            retrying={groups.isFetching}
-            onRetry={() => void groups.refetch()}
-          >
-            {t("group.loadFailed")}
-          </ReadFailed>
-        </div>
+        <Page>
+          <PageHeader
+            before={<Crumbs />}
+            title={<PageTitle>{t("groups.title")}</PageTitle>}
+          />
+          <PageSection>
+            <ReadFailed
+              error={groups.error}
+              retrying={groups.isFetching}
+              onRetry={() => void groups.refetch()}
+            >
+              {t("group.loadFailed")}
+            </ReadFailed>
+          </PageSection>
+        </Page>
       );
     }
     return <Loading />;
@@ -253,9 +270,11 @@ function Found({ address }: { address: string }) {
     if (groupDeleteOf(address) !== undefined) {
       // The group is gone from the list while its deletion's run lasts: its dialog stays (11.3).
       return (
-        <div className="flex min-w-0 flex-col gap-4">
-          <Crumbs />
-          <PageTitle>{t("groups.title")}</PageTitle>
+        <Page>
+          <PageHeader
+            before={<Crumbs />}
+            title={<PageTitle>{t("groups.title")}</PageTitle>}
+          />
           <GroupDeleteDialog
             open
             onClose={() => undefined}
@@ -263,7 +282,7 @@ function Found({ address }: { address: string }) {
             check={() => Promise.resolve({ kind: "gone" })}
             onDone={onDone}
           />
-        </div>
+        </Page>
       );
     }
     return <NotFound name={address} />;
@@ -360,25 +379,24 @@ function Sections({
   const comment = row.comment ?? "";
 
   return (
-    <div
-      aria-busy={refreshing || undefined}
-      className="flex min-w-0 flex-col gap-6"
-    >
-      <div className="flex flex-col gap-2">
-        <Crumbs current={row.name} />
-        <PageTitle
-          documentTitle={t("group.docTitle", { group: inertBidi(row.name) })}
-        >
-          <bdi dir="auto" className="[overflow-wrap:anywhere]">
-            {inertBidi(row.name)}
-          </bdi>
-        </PageTitle>
-        <p
-          dir="auto"
-          className="text-sm text-muted-foreground [overflow-wrap:anywhere]"
-        >
-          {comment === "" ? t("group.subtitleNone") : inertBidi(comment)}
-        </p>
+    <Page aria-busy={refreshing || undefined}>
+      <PageHeader
+        before={<Crumbs current={row.name} />}
+        title={
+          <PageTitle
+            documentTitle={t("group.docTitle", { group: inertBidi(row.name) })}
+          >
+            <bdi dir="auto" className="[overflow-wrap:anywhere]">
+              {inertBidi(row.name)}
+            </bdi>
+          </PageTitle>
+        }
+        subtitle={
+          <p dir="auto" className="[overflow-wrap:anywhere]">
+            {comment === "" ? t("group.subtitleNone") : inertBidi(comment)}
+          </p>
+        }
+      >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <p
             role="status"
@@ -397,17 +415,17 @@ function Sections({
             {t("group.refresh")}
           </Button>
         </div>
-      </div>
 
-      <GroupSummary
-        group={row}
-        memberCount={(row.members?.length ?? 0) + mainGroup.length}
-        descriptionPending={mark("description")}
-        editing={description}
-        onEditingChange={onDescriptionChange}
-        onSaved={reread}
-        onShowCurrent={reread}
-      />
+        <GroupSummary
+          group={row}
+          memberCount={(row.members?.length ?? 0) + mainGroup.length}
+          descriptionPending={mark("description")}
+          editing={description}
+          onEditingChange={onDescriptionChange}
+          onSaved={reread}
+          onShowCurrent={reread}
+        />
+      </PageHeader>
 
       <GroupMembersSection
         key={row.name}
@@ -468,6 +486,6 @@ function Sections({
           cancel: t("sharedFolder.unsaved.keep"),
         }}
       />
-    </div>
+    </Page>
   );
 }

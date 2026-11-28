@@ -206,7 +206,7 @@ export function RaidTable({
   } else {
     body = sorted(rows).map(({ row, state, report, used }) => (
       <TableRow key={`${row.uuid}:${row.devicefile}`}>
-        <TableCell className="min-w-32 py-2">
+        <TableCell className="min-w-32">
           <span className="whitespace-nowrap">
             <ArrayLink devicefile={row.devicefile} />
           </span>
@@ -233,20 +233,20 @@ export function RaidTable({
             </span>
           </span>
         </TableCell>
-        <TableCell className="py-2 sm:min-w-56">
+        <TableCell className="sm:min-w-56">
           <RaidStateView row={row} state={state} compact />
         </TableCell>
-        <TableCell className="py-2 max-sm:hidden">
+        <TableCell className="max-sm:hidden">
           {words.levelWord(row.level)}
         </TableCell>
-        <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
+        <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
           {words.sizeText(row.size)}
         </TableCell>
-        <TableCell className="min-w-40 py-2 max-sm:hidden">
+        <TableCell className="min-w-40 max-sm:hidden">
           <span className="block">{words.disksText(row, report)}</span>
           <MemberDisks devices={row.devices} disks={disks} />
         </TableCell>
-        <TableCell className="min-w-32 py-2 max-sm:hidden">
+        <TableCell className="min-w-32 max-sm:hidden">
           <UsedByCell used={used} />
         </TableCell>
       </TableRow>

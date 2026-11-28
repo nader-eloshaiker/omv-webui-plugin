@@ -14,6 +14,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   InlineAlert,
+  PageSection,
   ServerMessage,
   Skeleton,
 } from "@omv-webui/react-ui-components";
@@ -41,7 +42,6 @@ export function FsSettingsForm({
   address: string;
 }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const entry = useMountEntry(fs.devicefile);
 
   let body;
@@ -83,12 +83,7 @@ export function FsSettingsForm({
   }
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-4">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("filesystem.settings.title")}
-      </h2>
-      {body}
-    </section>
+    <PageSection heading={t("filesystem.settings.title")}>{body}</PageSection>
   );
 }
 

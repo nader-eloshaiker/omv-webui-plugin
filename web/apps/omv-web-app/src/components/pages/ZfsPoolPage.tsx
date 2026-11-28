@@ -13,10 +13,12 @@ import {
   FactListSkeleton,
   InlineAlert,
   JobResult,
+  Page,
+  PageHeader,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useParams } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfiguredFs, useDiskList } from "../../hooks/useDiskReads.ts";
 import { useFsApi } from "../../hooks/useFsApi.ts";
@@ -99,19 +101,22 @@ export function ZfsCrumbs({
 function NotFound() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <ZfsCrumbs pool={null} />
-      <PageTitle>{t("zfs.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/storage/zfs" className={routerLinkClass}>
-            {t("zfsPool.showAll")}
-          </Link>
-        }
+    <Page>
+      <PageHeader
+        before={<ZfsCrumbs pool={null} />}
+        title={<PageTitle>{t("zfs.title")}</PageTitle>}
       >
-        {t("zfsPool.notFound")}
-      </EmptyState>
-    </div>
+        <EmptyState
+          action={
+            <Link to="/storage/zfs" className={routerLinkClass}>
+              {t("zfsPool.showAll")}
+            </Link>
+          }
+        >
+          {t("zfsPool.notFound")}
+        </EmptyState>
+      </PageHeader>
+    </Page>
   );
 }
 
@@ -167,55 +172,59 @@ function ZfsPool({ address }: { address: string | null }) {
 
   if (v.missing) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <ZfsNotInstalled />
-      </div>
+      <Page>
+        <PageHeader title={<PageTitle>{t("zfs.title")}</PageTitle>}>
+          <ZfsNotInstalled />
+        </PageHeader>
+      </Page>
     );
   }
   if (deleted !== null) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={null} />
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <JobResult
-          result={{
-            status: "succeeded",
-            statusLabel: t("addStorage.state.succeeded"),
-            message: (
-              <>
-                <span className="block font-semibold">
-                  {t("zfsDelete.pool.doneTitle", { pool: deleted.pool })}
-                </span>
-                <span className="block">
-                  {t("zfsDelete.pool.doneBody", {
-                    list: deleted.disks.map((d) => d.device).join(", "),
-                  })}
-                </span>
-              </>
-            ),
-          }}
-          dismissLabel={t("zfsDelete.dismiss")}
-          onDismiss={() => setDeleted(null)}
-        />
-        <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link to="/storage/zfs" className={routerLinkClass}>
-            {t("zfsDelete.pool.toList")}
-          </Link>
-          {deleted.disks.map((d) =>
-            d.devicename === null ? null : (
-              <Link
-                key={d.device}
-                to="/storage/disks/$disk"
-                params={{ disk: d.devicename }}
-                className={routerLinkClass}
-              >
-                {t("zfsDelete.pool.openDisk", { device: d.device })}
-              </Link>
-            ),
-          )}
-        </p>
-      </div>
+      <Page>
+        <PageHeader
+          before={<ZfsCrumbs pool={null} />}
+          title={<PageTitle>{t("zfs.title")}</PageTitle>}
+        >
+          <JobResult
+            result={{
+              status: "succeeded",
+              statusLabel: t("addStorage.state.succeeded"),
+              message: (
+                <>
+                  <span className="block font-semibold">
+                    {t("zfsDelete.pool.doneTitle", { pool: deleted.pool })}
+                  </span>
+                  <span className="block">
+                    {t("zfsDelete.pool.doneBody", {
+                      list: deleted.disks.map((d) => d.device).join(", "),
+                    })}
+                  </span>
+                </>
+              ),
+            }}
+            dismissLabel={t("zfsDelete.dismiss")}
+            onDismiss={() => setDeleted(null)}
+          />
+          <p className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link to="/storage/zfs" className={routerLinkClass}>
+              {t("zfsDelete.pool.toList")}
+            </Link>
+            {deleted.disks.map((d) =>
+              d.devicename === null ? null : (
+                <Link
+                  key={d.device}
+                  to="/storage/disks/$disk"
+                  params={{ disk: d.devicename }}
+                  className={routerLinkClass}
+                >
+                  {t("zfsDelete.pool.openDisk", { device: d.device })}
+                </Link>
+              ),
+            )}
+          </p>
+        </PageHeader>
+      </Page>
     );
   }
   if (address === null) {
@@ -225,29 +234,33 @@ function ZfsPool({ address }: { address: string | null }) {
   if (deleting !== undefined && (v.rows === undefined || v.view === null)) {
     // The pool is gone from the list while its deletion's run lasts: its dialog stays (9.2).
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={address} />
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <ZfsPoolDeleteRun
-          pool={address}
-          onDeleted={(d) => {
-            if (d === null) {
-              setCut(true);
-            } else {
-              setDeleted(d);
-            }
-          }}
-        />
-      </div>
+      <Page>
+        <PageHeader
+          before={<ZfsCrumbs pool={address} />}
+          title={<PageTitle>{t("zfs.title")}</PageTitle>}
+        >
+          <ZfsPoolDeleteRun
+            pool={address}
+            onDeleted={(d) => {
+              if (d === null) {
+                setCut(true);
+              } else {
+                setDeleted(d);
+              }
+            }}
+          />
+        </PageHeader>
+      </Page>
     );
   }
   if (v.rows === undefined) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={null} />
+      <Page>
         {v.list.isError ? (
-          <>
-            <PageTitle>{t("zfs.title")}</PageTitle>
+          <PageHeader
+            before={<ZfsCrumbs pool={null} />}
+            title={<PageTitle>{t("zfs.title")}</PageTitle>}
+          >
             <ReadFailed
               error={v.list.error}
               retrying={v.list.isFetching}
@@ -255,15 +268,22 @@ function ZfsPool({ address }: { address: string | null }) {
             >
               {t("zfsPool.loadFailed")}
             </ReadFailed>
-          </>
+          </PageHeader>
         ) : (
-          <div role="status" aria-busy="true" className="flex flex-col gap-4">
-            <span className="sr-only">{t("zfsPool.loading")}</span>
-            <Skeleton className="h-8 w-48" />
-            <FactListSkeleton rows={4} />
+          <div className="flex flex-col gap-pair">
+            <ZfsCrumbs pool={null} />
+            <div
+              role="status"
+              aria-busy="true"
+              className="flex flex-col gap-group"
+            >
+              <span className="sr-only">{t("zfsPool.loading")}</span>
+              <Skeleton className="h-8 w-48" />
+              <FactListSkeleton rows={4} />
+            </div>
           </div>
         )}
-      </div>
+      </Page>
     );
   }
   const view = v.view;
@@ -276,66 +296,74 @@ function ZfsPool({ address }: { address: string | null }) {
   const statusWord = words.statusWord(view.state.status);
 
   return (
-    <div className="flex min-w-0 flex-col gap-5">
-      <ZfsCrumbs pool={pool} />
-      {changedAlert ? (
-        <InlineAlert tone="neutral" title={t("zfsPool.changed")} />
-      ) : null}
-      <div className="flex flex-col gap-1">
-        <PageTitle documentTitle={t("zfsPool.documentTitle", { pool })}>
-          {t("zfsPool.title", { pool })}
-        </PageTitle>
-        <p className="text-sm text-muted-foreground">
-          {t("zfsPool.subtitle", {
-            layout: words.poolLayout(view.report),
-            space: words.spaceText(view.root),
-          })}
-        </p>
-      </div>
+    <Page>
+      <PageHeader
+        before={
+          <>
+            <ZfsCrumbs pool={pool} />
+            {changedAlert ? (
+              <InlineAlert tone="neutral" title={t("zfsPool.changed")} />
+            ) : null}
+          </>
+        }
+        title={
+          <PageTitle documentTitle={t("zfsPool.documentTitle", { pool })}>
+            {t("zfsPool.title", { pool })}
+          </PageTitle>
+        }
+        subtitle={t("zfsPool.subtitle", {
+          layout: words.poolLayout(view.report),
+          space: words.spaceText(view.root),
+        })}
+      >
+        <div className="flex flex-col gap-pair">
+          {view.reportRead === "loading" ? (
+            <Skeleton className="h-5 w-40" />
+          ) : (
+            <ZfsStateView state={view.state} report={view.report} />
+          )}
+          <p role="status" className="sr-only">
+            {view.reportRead === "loading" ? "" : statusWord}
+          </p>
+          <ZfsReadAt
+            at={v.list.dataUpdatedAt}
+            pollFailed={pollFailed}
+            polling={v.busy}
+            onRetry={() => void refresh()}
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        {view.reportRead === "loading" ? (
-          <Skeleton className="h-5 w-40" />
-        ) : (
-          <ZfsStateView state={view.state} report={view.report} />
-        )}
-        <p role="status" className="sr-only">
-          {view.reportRead === "loading" ? "" : statusWord}
-        </p>
-        <ZfsReadAt
-          at={v.list.dataUpdatedAt}
-          pollFailed={pollFailed}
-          polling={v.busy}
-          onRetry={() => void refresh()}
-        />
-      </div>
+        {cut ? (
+          <InlineAlert
+            tone="neutral"
+            title={t("zfsDelete.pool.unknown", { pool })}
+          />
+        ) : null}
 
-      {cut ? (
-        <InlineAlert
-          tone="neutral"
-          title={t("zfsDelete.pool.unknown", { pool })}
-        />
-      ) : null}
+        {/* Keyed by the pool: another pool under this address starts afresh (2.9). */}
+        <Fragment key={pool}>
+          <ZfsNowCard
+            view={view}
+            disks={v.disks}
+            omvDisks={omvDisks.data?.data}
+            changing={changing}
+            disksRef={disksRef}
+            checkRef={checkRef}
+            detailsId="zfs-details"
+            onRescan={async () => {
+              try {
+                await fsApi.rescan();
+              } finally {
+                await refresh();
+              }
+            }}
+            onChanged={() => void refresh()}
+          />
+          <ZfsPoolSummary view={view} />
+        </Fragment>
+      </PageHeader>
 
-      <div key={pool} className="flex min-w-0 flex-col gap-5">
-        <ZfsNowCard
-          view={view}
-          disks={v.disks}
-          omvDisks={omvDisks.data?.data}
-          changing={changing}
-          disksRef={disksRef}
-          checkRef={checkRef}
-          detailsId="zfs-details"
-          onRescan={async () => {
-            try {
-              await fsApi.rescan();
-            } finally {
-              await refresh();
-            }
-          }}
-          onChanged={() => void refresh()}
-        />
-        <ZfsPoolSummary view={view} />
+      <Fragment key={pool}>
         <ZfsPoolDisks
           view={view}
           disks={v.disks}
@@ -396,7 +424,7 @@ function ZfsPool({ address }: { address: string | null }) {
             ]);
           }}
         />
-      </div>
-    </div>
+      </Fragment>
+    </Page>
   );
 }

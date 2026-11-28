@@ -19,6 +19,9 @@ import {
   EmptyState,
   FactListSkeleton,
   JobResult,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -111,42 +114,48 @@ function Crumbs({ current }: { current?: string }) {
 function NotFound() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("sharedFolders.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/storage/shared-folders" className={routerLinkClass}>
-            {t("sharedFolder.toList")}
-          </Link>
-        }
-      >
-        {t("sharedFolder.notFound")}
-      </EmptyState>
-    </div>
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("sharedFolders.title")}</PageTitle>}
+      />
+      <PageSection>
+        <EmptyState
+          action={
+            <Link to="/storage/shared-folders" className={routerLinkClass}>
+              {t("sharedFolder.toList")}
+            </Link>
+          }
+        >
+          {t("sharedFolder.notFound")}
+        </EmptyState>
+      </PageSection>
+    </Page>
   );
 }
 
 function Loading() {
   const { t } = useTranslation();
   return (
-    <div aria-busy="true" className="flex min-w-0 flex-col gap-6">
+    <Page aria-busy="true">
       <p role="status" className="sr-only">
         {t("sharedFolder.loading")}
       </p>
-      <div aria-hidden="true" className="flex flex-col gap-2">
-        <Skeleton className="w-24" />
-        <Skeleton shape="block" className="h-8 w-56" />
-        <Skeleton className="w-40" />
+      <div className="flex flex-col gap-group">
+        <div aria-hidden="true" className="flex flex-col gap-pair">
+          <Skeleton className="w-24" />
+          <Skeleton shape="block" className="h-8 w-56" />
+          <Skeleton className="w-40" />
+        </div>
+        <FactListSkeleton rows={6} />
       </div>
-      <FactListSkeleton rows={6} />
       {["access", "sharing"].map((part) => (
-        <div key={part} aria-hidden="true" className="flex flex-col gap-2">
+        <div key={part} aria-hidden="true" className="flex flex-col gap-pair">
           <Skeleton shape="block" className="h-6 w-48" />
           <Skeleton className="w-2/3" />
         </div>
       ))}
-    </div>
+    </Page>
   );
 }
 
@@ -163,46 +172,52 @@ function DeletedResult({ deleted }: { deleted: Deleted }) {
   const navigate = useNavigate();
   const { words } = deleted;
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("sharedFolders.title")}</PageTitle>
-      <JobResult
-        result={{
-          status: "succeeded",
-          statusLabel: t("addStorage.state.succeeded"),
-          message: (
-            <>
-              <span className="block">
-                <Trans
-                  i18nKey={
-                    deleted.way === "keep"
-                      ? "shareDelete.done.keep"
-                      : "shareDelete.done.files"
-                  }
-                  components={{
-                    folder: <FolderNameText value={words.folder} />,
-                    fs: <FolderNameText value={words.fs} />,
-                    path: <IdentifierText value={inertBidi(words.fullPath)} />,
-                  }}
-                />
-              </span>
-              {deleted.pending ? (
-                <span className="block">
-                  {t("shareDelete.failed.saveBody")}
-                </span>
-              ) : null}
-            </>
-          ),
-        }}
-        dismissLabel={t("zfsDelete.dismiss")}
-        onDismiss={() => void navigate({ to: "/storage/shared-folders" })}
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("sharedFolders.title")}</PageTitle>}
       />
-      <p>
-        <Link to="/storage/shared-folders" className={routerLinkClass}>
-          {t("shareDelete.done.toList")}
-        </Link>
-      </p>
-    </div>
+      <PageSection>
+        <JobResult
+          result={{
+            status: "succeeded",
+            statusLabel: t("addStorage.state.succeeded"),
+            message: (
+              <>
+                <span className="block">
+                  <Trans
+                    i18nKey={
+                      deleted.way === "keep"
+                        ? "shareDelete.done.keep"
+                        : "shareDelete.done.files"
+                    }
+                    components={{
+                      folder: <FolderNameText value={words.folder} />,
+                      fs: <FolderNameText value={words.fs} />,
+                      path: (
+                        <IdentifierText value={inertBidi(words.fullPath)} />
+                      ),
+                    }}
+                  />
+                </span>
+                {deleted.pending ? (
+                  <span className="block">
+                    {t("shareDelete.failed.saveBody")}
+                  </span>
+                ) : null}
+              </>
+            ),
+          }}
+          dismissLabel={t("zfsDelete.dismiss")}
+          onDismiss={() => void navigate({ to: "/storage/shared-folders" })}
+        />
+        <p>
+          <Link to="/storage/shared-folders" className={routerLinkClass}>
+            {t("shareDelete.done.toList")}
+          </Link>
+        </p>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -222,17 +237,21 @@ function Found({ address }: { address: string }) {
   if (v.folders.data === undefined) {
     if (v.folders.isError) {
       return (
-        <div className="flex min-w-0 flex-col gap-4">
-          <Crumbs />
-          <PageTitle>{t("sharedFolders.title")}</PageTitle>
-          <ReadFailed
-            error={v.folders.error}
-            retrying={v.folders.isFetching}
-            onRetry={() => void v.folders.refetch()}
-          >
-            {t("sharedFolder.loadFailed")}
-          </ReadFailed>
-        </div>
+        <Page>
+          <PageHeader
+            before={<Crumbs />}
+            title={<PageTitle>{t("sharedFolders.title")}</PageTitle>}
+          />
+          <PageSection>
+            <ReadFailed
+              error={v.folders.error}
+              retrying={v.folders.isFetching}
+              onRetry={() => void v.folders.refetch()}
+            >
+              {t("sharedFolder.loadFailed")}
+            </ReadFailed>
+          </PageSection>
+        </Page>
       );
     }
     return <Loading />;
@@ -242,9 +261,11 @@ function Found({ address }: { address: string }) {
     if (run !== undefined) {
       // The folder is gone from the list while its deletion's run lasts: its dialog stays (8.5).
       return (
-        <div className="flex min-w-0 flex-col gap-4">
-          <Crumbs />
-          <PageTitle>{t("sharedFolders.title")}</PageTitle>
+        <Page>
+          <PageHeader
+            before={<Crumbs />}
+            title={<PageTitle>{t("sharedFolders.title")}</PageTitle>}
+          />
           <ShareDeleteDialog
             open
             onClose={() => undefined}
@@ -261,7 +282,7 @@ function Found({ address }: { address: string }) {
               setDeleted({ way, pending: outcome === "pending", words });
             }}
           />
-        </div>
+        </Page>
       );
     }
     return <NotFound />;
@@ -356,80 +377,83 @@ function Sections({
   const readAt = v.folders.dataUpdatedAt;
 
   return (
-    <div
-      aria-busy={v.refreshing || undefined}
-      className="flex min-w-0 flex-col gap-6"
-    >
-      <div className="flex flex-col gap-2">
-        <Crumbs current={row.name} />
-        <PageTitle
-          documentTitle={t("sharedFolder.docTitle", {
-            folder: inertBidi(row.name),
-          })}
-        >
-          <bdi dir="auto" className="[overflow-wrap:anywhere]">
-            {inertBidi(row.name)}
-          </bdi>
-        </PageTitle>
-        {v.fs !== undefined || row.device !== "" ? (
-          <p className="text-sm text-muted-foreground">
-            <Trans
-              i18nKey="sharedFolder.subtitle"
-              components={{
-                fs: <FsNameSlot fs={v.fs} fallback={row.device} />,
-              }}
-            />
-          </p>
-        ) : null}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <div
-          ref={stateRef}
-          tabIndex={-1}
-          role="status"
-          className="outline-hidden"
-        >
-          <FolderStateView state={v.state} fs={v.fs} />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <p
+    <Page aria-busy={v.refreshing || undefined}>
+      <PageHeader
+        before={<Crumbs current={row.name} />}
+        title={
+          <PageTitle
+            documentTitle={t("sharedFolder.docTitle", {
+              folder: inertBidi(row.name),
+            })}
+          >
+            <bdi dir="auto" className="[overflow-wrap:anywhere]">
+              {inertBidi(row.name)}
+            </bdi>
+          </PageTitle>
+        }
+        subtitle={
+          v.fs !== undefined || row.device !== "" ? (
+            <p>
+              <Trans
+                i18nKey="sharedFolder.subtitle"
+                components={{
+                  fs: <FsNameSlot fs={v.fs} fallback={row.device} />,
+                }}
+              />
+            </p>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-pair">
+          <div
+            ref={stateRef}
+            tabIndex={-1}
             role="status"
-            className="text-xs text-muted-foreground tabular-nums"
+            className="outline-hidden"
           >
-            {readAt === 0 || v.refreshing
-              ? ""
-              : t("sharedFolder.readAt", { time: format.clock(readAt) })}
-          </p>
-          <Button
-            variant="neutral"
-            size="sm"
-            loading={v.refreshing}
-            onClick={refresh}
-          >
-            {t("sharedFolders.refresh")}
-          </Button>
+            <FolderStateView state={v.state} fs={v.fs} />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p
+              role="status"
+              className="text-xs text-muted-foreground tabular-nums"
+            >
+              {readAt === 0 || v.refreshing
+                ? ""
+                : t("sharedFolder.readAt", { time: format.clock(readAt) })}
+            </p>
+            <Button
+              variant="neutral"
+              size="sm"
+              loading={v.refreshing}
+              onClick={refresh}
+            >
+              {t("sharedFolders.refresh")}
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {v.todo === null ? null : (
-        <FolderTodoCard
-          todo={v.todo}
+        {v.todo === null ? null : (
+          <FolderTodoCard
+            todo={v.todo}
+            folder={row}
+            fs={v.fs}
+            repointRef={repointRef}
+            onRepoint={() => setRepointOpen(true)}
+          />
+        )}
+
+        <SharedFolderSummary
           folder={row}
           fs={v.fs}
-          repointRef={repointRef}
-          onRepoint={() => setRepointOpen(true)}
+          state={v.state}
+          hostname={v.system.hostname}
+          shared={
+            shareView.kind === "shared" && v.settings.data?.enable === true
+          }
+          descriptionPending={mark("description")}
         />
-      )}
-
-      <SharedFolderSummary
-        folder={row}
-        fs={v.fs}
-        state={v.state}
-        hostname={v.system.hostname}
-        shared={shareView.kind === "shared" && v.settings.data?.enable === true}
-        descriptionPending={mark("description")}
-      />
+      </PageHeader>
 
       <FolderAccessSection
         key={row.uuid}
@@ -530,6 +554,6 @@ function Sections({
           cancel: t("sharedFolder.unsaved.keep"),
         }}
       />
-    </div>
+    </Page>
   );
 }

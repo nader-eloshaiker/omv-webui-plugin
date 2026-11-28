@@ -8,6 +8,8 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   JobRunner,
+  Page,
+  PageHeader,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -58,17 +60,23 @@ function AddSharedFolder() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/storage/shared-folders" />}>
-          {t("sharedFolders.title")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>{t("addShare.breadcrumb")}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle documentTitle={t("addShare.title")}>
-        {t("sharedFolders.title")}
-      </PageTitle>
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/storage/shared-folders" />}>
+              {t("sharedFolders.title")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>{t("addShare.breadcrumb")}</BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={
+          <PageTitle documentTitle={t("addShare.title")}>
+            {t("sharedFolders.title")}
+          </PageTitle>
+        }
+      />
       <JobRunner title={t("addShare.title")}>{content}</JobRunner>
-    </div>
+    </Page>
   );
 }

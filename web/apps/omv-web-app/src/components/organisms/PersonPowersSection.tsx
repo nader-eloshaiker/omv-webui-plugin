@@ -14,12 +14,13 @@ import type {
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
+  buttonRowClass,
   ConfirmDialog,
   ExternalLink,
   InlineAlert,
+  PageSection,
   ServerMessage,
   Skeleton,
-  buttonRowClass,
   useToast,
 } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState, type ReactNode } from "react";
@@ -98,7 +99,6 @@ export function PersonPowersSection({
   const api = useUsersApi();
   const toast = useToast();
   const session = useSession();
-  const headingId = useId();
   const nothingId = useId();
   const saveRef = useRef<HTMLButtonElement>(null);
   const [confirming, setConfirming] = useState(false);
@@ -250,10 +250,7 @@ export function PersonPowersSection({
   });
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("personCan.title", { name: isolateName(name) })}
-      </h2>
+    <PageSection heading={t("personCan.title", { name: isolateName(name) })}>
       <p className="max-w-prose text-sm">{t("personCan.intro")}</p>
       {groups === undefined ? (
         <div aria-hidden="true" className="flex flex-col gap-3">
@@ -377,6 +374,6 @@ export function PersonPowersSection({
         confirmLabel={t("personCan.confirm.save")}
         onConfirm={() => void save()}
       />
-    </section>
+    </PageSection>
   );
 }

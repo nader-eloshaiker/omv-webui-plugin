@@ -9,6 +9,9 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   JobRunner,
+  Page,
+  PageHeader,
+  PageSection,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -71,31 +74,39 @@ function AddStorage({ kind: requested }: { kind: FlowKind }) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/storage/filesystems" />}>
-          {t("filesystem.breadcrumb")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>
-          {multi
-            ? t("addStorage.multi.breadcrumb")
-            : t("addStorage.breadcrumb")}
-        </BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle
-        documentTitle={
-          multi
-            ? t("addStorage.multi.documentTitle")
-            : t("addStorage.documentTitle")
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/storage/filesystems" />}>
+              {t("filesystem.breadcrumb")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>
+              {multi
+                ? t("addStorage.multi.breadcrumb")
+                : t("addStorage.breadcrumb")}
+            </BreadcrumbItem>
+          </Breadcrumbs>
         }
-      >
-        {t("filesystems.title")}
-      </PageTitle>
-      <JobRunner
-        title={multi ? t("addStorage.multi.title") : t("addStorage.title")}
-      >
-        {content}
-      </JobRunner>
-    </div>
+        title={
+          <PageTitle
+            documentTitle={
+              multi
+                ? t("addStorage.multi.documentTitle")
+                : t("addStorage.documentTitle")
+            }
+          >
+            {t("filesystems.title")}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner
+          title={multi ? t("addStorage.multi.title") : t("addStorage.title")}
+        >
+          {content}
+        </JobRunner>
+      </PageSection>
+    </Page>
   );
 }

@@ -1088,3 +1088,26 @@ Drawing a disk as its kind needs `Smart.getInformation`, which can wake a sleepi
 The alert limit (`Smart.getSettings`) and, with the ZFS plugin, each pool's disks are read once per visit as on the dashboard. The arrays, the pools' status and the configured file systems are the entries the page already reads.
 
 A kind read, once asked, is no longer cancelled when its page unmounts (leaving it, or React's development double mount). The disk is awake by then, so the answer is kept instead of asking the disk a second time.
+
+## 2026-11-28 — Spacing shows the hierarchy, app wide; the connection notice stands out (owner)
+
+After looking at the merged pages the owner said:
+
+- "The notification bar doesn't stand out, it is easy to see it as background noise."
+- "The Dashboard is fine."
+- "File system looks very crammed together; perhaps line spacing needs to be properly addressed to indicate hierarchy."
+- "The disks section looks crammed like the previous, and the table is even worse."
+- "Once again, line spacing app wide."
+
+What was wrong: every page stacked its title, intro, status line, toolbar, table, section headings and their text 16px apart, one rhythm for every level. The page title was 24px, under the 28px title step. And 102 table cells in 15 tables set their own 8px vertical padding, so the density's cell padding never applied; the Disks table, with two lines in most cells, was the worst.
+
+The rule, now style guide 4.7: four spacing steps, one per level of the hierarchy, each following the density.
+
+- **Line**, 4px (compact 2px): the lines of one thing.
+- **Pair**, 8px (compact 6px): a thing and what belongs to it alone, such as a heading and its lead, or a table and its toolbar.
+- **Group**, 16px (compact 12px): the things inside one section.
+- **Section**, 56px (compact 36px): the sections of a page, and the header to the first section.
+
+The library carries it: the `--space-*` tokens and their utilities, `Page`, `PageHeader`, `PageSection` and `PairStack`, the page title at `text-title`, and table cells at 14px (compact 8px) whose padding is never overridden. The owner saw it prototyped on File systems, a file system's page and Disks, said "They look great", and it is rolled out to every page. The dashboard keeps its own composition.
+
+**The notification bar** is the unencrypted-connection notice (UI-12); the pending band is already solid gold. It now sits on the raised ground between two rules in the warning stroke, with the lock icon in the warning stroke and its first sentence, "This connection is not encrypted.", in the warning label. It has no wash, since a wash is never a status ground, and no orange fill, which would shout louder than what needs the person on the dashboard.

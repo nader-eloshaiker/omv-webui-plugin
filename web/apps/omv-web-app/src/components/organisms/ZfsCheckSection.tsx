@@ -8,6 +8,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   ExternalLink,
+  PageSection,
   ServerMessage,
 } from "@omv-webui/react-ui-components";
 import { useId, useImperativeHandle, useRef, useState, type Ref } from "react";
@@ -149,13 +150,14 @@ export function ZfsCheckSection({
   };
 
   return (
-    <section aria-labelledby="zfs-check" className="flex flex-col gap-2">
-      <h2 id="zfs-check" className="text-lg font-semibold">
-        {t("zfsCheck.title")}
-      </h2>
-      <p className="max-w-prose">
-        {t("zfs.term.check")} {t("zfsCheck.cost")}
-      </p>
+    <PageSection
+      heading={t("zfsCheck.title")}
+      lead={
+        <>
+          {t("zfs.term.check")} {t("zfsCheck.cost")}
+        </>
+      }
+    >
       {finished && scan.repaired !== null && !/^0B?$/.test(scan.repaired) ? (
         <p className="max-w-prose">
           {t("zfsCheck.repaired", { amount: scan.repaired })}
@@ -242,6 +244,6 @@ export function ZfsCheckSection({
         onConfirm={() => void confirm()}
         openerRef={openerRef}
       />
-    </section>
+    </PageSection>
   );
 }

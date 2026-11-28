@@ -11,6 +11,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   InlineAlert,
+  PageSection,
   ServerMessage,
   Table,
   TableBody,
@@ -19,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@omv-webui/react-ui-components";
-import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { fsName } from "../../filesystems/fsModel.ts";
 import { useFsWords } from "../../hooks/useFsWords.ts";
@@ -45,13 +45,9 @@ export function FoundFileSystems({
 }) {
   const { t } = useTranslation();
   const words = useFsWords();
-  const headingId = useId();
   if (found === undefined && failed) {
     return (
-      <section aria-labelledby={headingId} className="flex flex-col gap-3">
-        <h2 id={headingId} className="text-lg font-semibold">
-          {t("filesystems.found.title")}
-        </h2>
+      <PageSection heading={t("filesystems.found.title")}>
         <InlineAlert tone="critical" title={t("filesystems.found.failed")}>
           {isRpcError(error) ? (
             <ServerMessage label={t("app.serverMessage")}>
@@ -69,18 +65,17 @@ export function FoundFileSystems({
             </Button>
           </p>
         </InlineAlert>
-      </section>
+      </PageSection>
     );
   }
   if (found === undefined || found.length === 0) {
     return null;
   }
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("filesystems.found.title")}
-      </h2>
-      <p className="max-w-prose">{t("filesystems.found.intro")}</p>
+    <PageSection
+      heading={t("filesystems.found.title")}
+      lead={t("filesystems.found.intro")}
+    >
       <Table
         aria-label={t("filesystems.found.tableLabel")}
         frameLabel={t("filesystems.found.tableLabel")}
@@ -98,16 +93,16 @@ export function FoundFileSystems({
         <TableBody>
           {found.map((fs) => (
             <TableRow key={`${fs.uuid}:${fs.devicefile}`}>
-              <TableCell className="min-w-48 py-2">
+              <TableCell className="min-w-48">
                 <FsNameView name={fsName(fs)} />
               </TableCell>
-              <TableCell className="py-2 whitespace-nowrap">
+              <TableCell className="whitespace-nowrap">
                 <FsTypeView type={fs.type} />
               </TableCell>
-              <TableCell className="py-2">
+              <TableCell>
                 <FsOnDisks fs={fs} disks={disks} />
               </TableCell>
-              <TableCell className="py-2 text-end">
+              <TableCell className="text-end">
                 <Button
                   variant="neutral"
                   size="sm"
@@ -123,6 +118,6 @@ export function FoundFileSystems({
           ))}
         </TableBody>
       </Table>
-    </section>
+    </PageSection>
   );
 }

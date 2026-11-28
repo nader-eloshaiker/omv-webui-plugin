@@ -17,6 +17,7 @@ import {
   InlineAlert,
   JobFailure,
   JobResult,
+  PageSection,
   StatusPill,
 } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
@@ -51,7 +52,6 @@ export function GrowSection({
 }) {
   const { t } = useTranslation();
   const api = useFsApi();
-  const headingId = useId();
   const reasonId = useId();
   const openerRef = useRef<HTMLButtonElement>(null);
   useMemoryStore(fsActions);
@@ -177,11 +177,7 @@ export function GrowSection({
   }
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("fsGrow.title")}
-      </h2>
-      <p className="max-w-prose">{t("fsGrow.intro")}</p>
+    <PageSection heading={t("fsGrow.title")} lead={t("fsGrow.intro")}>
       {phase?.kind === "running" ? (
         <p role="status" className="flex flex-wrap items-center gap-2">
           <StatusPill status="running">{t("tasks.running")}</StatusPill>
@@ -251,6 +247,6 @@ export function GrowSection({
         </ul>
         <p>{t("fsGrow.safe")}</p>
       </ConfirmDialog>
-    </section>
+    </PageSection>
   );
 }

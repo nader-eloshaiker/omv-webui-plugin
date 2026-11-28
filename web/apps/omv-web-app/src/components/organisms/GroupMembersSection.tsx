@@ -238,19 +238,24 @@ export function GroupMembersSection({
   const ready = users.data !== undefined;
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 id={headingId} className="text-lg font-semibold">
-          {t("group.members.title")}
-        </h2>
-        {pending ? <PendingMark /> : null}
+    <section
+      aria-labelledby={headingId}
+      className="flex min-w-0 flex-col gap-group"
+    >
+      <div className="flex min-w-0 flex-col gap-pair">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 id={headingId} className="text-section text-foreground">
+            {t("group.members.title")}
+          </h2>
+          {pending ? <PendingMark /> : null}
+        </div>
+        <p className="max-w-prose text-sm">
+          <Trans
+            i18nKey="group.members.intro"
+            components={{ group: groupSlot }}
+          />
+        </p>
       </div>
-      <p className="max-w-prose text-sm">
-        <Trans
-          i18nKey="group.members.intro"
-          components={{ group: groupSlot }}
-        />
-      </p>
       <MemberPicker
         aria-labelledby={headingId}
         rows={rows}

@@ -20,11 +20,12 @@ import {
   DialogTitle,
   InlineAlert,
   NewPasswordFields,
+  PageSection,
   ServerMessage,
   useToast,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { isCut } from "../../filesystems/fsTasks.ts";
 import { isolateName } from "../../format/isolate.ts";
@@ -63,7 +64,6 @@ export function PersonPasswordSection({
   const { t } = useTranslation();
   const api = useUsersApi();
   const toast = useToast();
-  const headingId = useId();
   const openRef = useRef<HTMLButtonElement>(null);
   const firstRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -201,10 +201,7 @@ export function PersonPasswordSection({
   }
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-3">
-      <h2 id={headingId} className="text-lg font-semibold">
-        {t("password.title")}
-      </h2>
+    <PageSection heading={t("password.title")}>
       <p className="max-w-prose text-sm">{t("password.intro")}</p>
       {self === "self" ? (
         <p className="text-sm">
@@ -297,6 +294,6 @@ export function PersonPasswordSection({
           </form>
         </DialogContent>
       </Dialog>
-    </section>
+    </PageSection>
   );
 }

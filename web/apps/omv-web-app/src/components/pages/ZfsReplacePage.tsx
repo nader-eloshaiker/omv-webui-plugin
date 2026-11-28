@@ -13,6 +13,9 @@ import {
   EmptyState,
   JobRunner,
   JobSummary,
+  Page,
+  PageHeader,
+  PageSection,
   RadioGroupField,
   RadioOption,
   RadioOptionGroup,
@@ -121,13 +124,21 @@ function ZfsReplace({ address }: { address: string | null }) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <ZfsCrumbs pool={address} current={t("zfsReplace.breadcrumb")} />
-      <PageTitle documentTitle={t("zfsReplace.documentTitle", { pool })}>
-        {t("zfsReplace.title", { pool })}
-      </PageTitle>
-      <JobRunner title={t("zfsReplace.runnerTitle")}>{content}</JobRunner>
-    </div>
+    <Page>
+      <PageHeader
+        before={
+          <ZfsCrumbs pool={address} current={t("zfsReplace.breadcrumb")} />
+        }
+        title={
+          <PageTitle documentTitle={t("zfsReplace.documentTitle", { pool })}>
+            {t("zfsReplace.title", { pool })}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner title={t("zfsReplace.runnerTitle")}>{content}</JobRunner>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -216,7 +227,7 @@ function ReplaceDecisions({ address }: { address: string }) {
   }
   if (allowed.length === 0) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         <p className="max-w-prose">{t("zfsReplace.nothingToReplace")}</p>
         <p>
           <Link

@@ -15,6 +15,7 @@ import {
   buttonClass,
   EmptyState,
   InlineAlert,
+  PairStack,
   SearchField,
   Select,
   SelectContent,
@@ -121,7 +122,7 @@ function UserRow({
   const ssh = sshAllowed(user) ? t("users.sshAllowed") : t("users.no");
   return (
     <TableRow>
-      <TableCell className="min-w-32 py-2">
+      <TableCell className="min-w-32">
         <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <PersonLink name={user.name} className="font-medium" />
           {self ? (
@@ -145,14 +146,14 @@ function UserRow({
           </span>
         </span>
       </TableCell>
-      <TableCell className="min-w-40 py-2 max-sm:hidden">
+      <TableCell className="min-w-40 max-sm:hidden">
         {comment === "" ? (
           <None />
         ) : (
           <ClampedText>{inertBidi(comment)}</ClampedText>
         )}
       </TableCell>
-      <TableCell className="min-w-40 py-2 max-sm:hidden">
+      <TableCell className="min-w-40 max-sm:hidden">
         {email === "" ? (
           <None />
         ) : (
@@ -161,13 +162,13 @@ function UserRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="min-w-32 py-2 max-sm:hidden">
+      <TableCell className="min-w-32 max-sm:hidden">
         <GroupsCell user={user} groups={groups} />
       </TableCell>
-      <TableCell className="py-2">
+      <TableCell>
         {isAdministrator(user) ? t("users.yes") : t("users.no")}
       </TableCell>
-      <TableCell className="py-2 max-sm:hidden">{ssh}</TableCell>
+      <TableCell className="max-sm:hidden">{ssh}</TableCell>
     </TableRow>
   );
 }
@@ -179,7 +180,6 @@ export function UsersTable({
   readAt,
   refreshing,
   onRefresh,
-  footer,
 }: {
   users: readonly UserAccount[];
   groups: GroupsRead;
@@ -188,7 +188,6 @@ export function UsersTable({
   readAt: ReactNode;
   refreshing: boolean;
   onRefresh: () => void;
-  footer: ReactNode;
 }) {
   const { t } = useTranslation();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -294,7 +293,7 @@ export function UsersTable({
   const to = Math.min(visible.length, shown.page * pageSize + pageSize);
 
   return (
-    <div className="flex flex-col gap-3">
+    <PairStack>
       <TableToolbar className="items-end">
         {noPeople ? null : (
           <>
@@ -447,7 +446,6 @@ export function UsersTable({
           {t("sharedFolders.refresh")}
         </Button>
       </div>
-      {footer}
-    </div>
+    </PairStack>
   );
 }

@@ -15,6 +15,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   Identifier,
+  PageSection,
   ServerMessage,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
@@ -310,14 +311,11 @@ export function ArrayDeleteSection({
   };
 
   return (
-    <section
-      aria-labelledby="array-delete"
-      className="mt-6 flex flex-col gap-2 border-t border-border pt-6"
+    <PageSection
+      heading={t("raidDelete.title")}
+      lead={t("raidDelete.intro")}
+      className="border-t border-border pt-6"
     >
-      <h2 id="array-delete" className="text-lg font-semibold">
-        {t("raidDelete.title")}
-      </h2>
-      <p className="max-w-prose">{t("raidDelete.intro")}</p>
       {blockers === null ? (
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("raidDelete.checking")}
@@ -339,7 +337,7 @@ export function ArrayDeleteSection({
           {t("raidDelete.open")}
         </Button>
         {blockers !== null && blockers.length > 0 ? (
-          <div id={reasonId} className="flex flex-col gap-2">
+          <div id={reasonId} className="flex flex-col gap-pair">
             <BlockerLines blockers={blockers} />
             {blockers.some((b) => b.kind === "unread") ? (
               <p>
@@ -420,6 +418,6 @@ export function ArrayDeleteSection({
           </ul>
         </div>
       </CheckedDialog>
-    </section>
+    </PageSection>
   );
 }

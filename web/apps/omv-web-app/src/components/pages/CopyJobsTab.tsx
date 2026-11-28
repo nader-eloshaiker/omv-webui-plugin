@@ -21,6 +21,8 @@ import {
   MenuItem,
   MenuSeparator,
   MenuTrigger,
+  PageSection,
+  PairStack,
   Skeleton,
   StatusPill,
   Table,
@@ -98,7 +100,7 @@ export function CopyJobsTab() {
     );
   } else if (jobs.data === undefined) {
     table = (
-      <div role="status" aria-busy="true" className="flex flex-col gap-2">
+      <div role="status" aria-busy="true" className="flex flex-col gap-pair">
         <span className="sr-only">{t("jobs.loading")}</span>
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-8 w-full" />
@@ -134,43 +136,49 @@ export function CopyJobsTab() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <p className="max-w-prose">{t("services.term.job")}</p>
-      {pending?.includes("rsync") ? (
-        <InlineAlert tone="neutral">{t("jobs.pendingBlocksRun")}</InlineAlert>
-      ) : null}
-      <TableToolbar>
-        <Link
-          to="/services/rsync/jobs/add"
-          className={buttonClass({ variant: "primary" })}
-        >
-          {t("jobs.add")}
-        </Link>
-      </TableToolbar>
-      {table}
-      <p className="text-sm text-muted-foreground">
-        {t("jobs.lastRunUnknown")}{" "}
-        <Link to="/diagnostics/system-logs" className={routerLinkClass}>
-          {t("jobs.logLink")}
-        </Link>
-      </p>
-      <p className="text-sm text-muted-foreground">
-        {t("jobs.footerLine")}{" "}
-        <ExternalLink href={CLASSIC.rsyncTasks} newTabLabel={t("app.newTab")}>
-          {t("jobs.classicLink")}
-        </ExternalLink>
-      </p>
-      <RunJobConfirm
-        target={running}
-        folders={folders.data?.data}
-        onClose={() => setRunning(null)}
-      />
-      <DeleteJobDialog
-        target={deleting}
-        folders={folders.data?.data}
-        onClose={() => setDeleting(null)}
-      />
-    </div>
+    <>
+      <PageSection>
+        <p className="max-w-prose">{t("services.term.job")}</p>
+        {pending?.includes("rsync") ? (
+          <InlineAlert tone="neutral">{t("jobs.pendingBlocksRun")}</InlineAlert>
+        ) : null}
+        <PairStack>
+          <TableToolbar>
+            <Link
+              to="/services/rsync/jobs/add"
+              className={buttonClass({ variant: "primary" })}
+            >
+              {t("jobs.add")}
+            </Link>
+          </TableToolbar>
+          {table}
+          <p className="text-sm text-muted-foreground">
+            {t("jobs.lastRunUnknown")}{" "}
+            <Link to="/diagnostics/system-logs" className={routerLinkClass}>
+              {t("jobs.logLink")}
+            </Link>
+          </p>
+        </PairStack>
+        <RunJobConfirm
+          target={running}
+          folders={folders.data?.data}
+          onClose={() => setRunning(null)}
+        />
+        <DeleteJobDialog
+          target={deleting}
+          folders={folders.data?.data}
+          onClose={() => setDeleting(null)}
+        />
+      </PageSection>
+      <footer className="text-sm text-muted-foreground">
+        <p>
+          {t("jobs.footerLine")}{" "}
+          <ExternalLink href={CLASSIC.rsyncTasks} newTabLabel={t("app.newTab")}>
+            {t("jobs.classicLink")}
+          </ExternalLink>
+        </p>
+      </footer>
+    </>
   );
 }
 

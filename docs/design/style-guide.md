@@ -422,8 +422,9 @@ body, the seven named steps, compact density). The faces, numerals, units and zo
 ### 4.2 Space and density
 
 **Superseded** for card padding, gaps, control and row heights by [visual
-foundation](visual-foundation.md), section 5 (Sky, and Instrument's values as the compact density).
-The base and the form rhythm stand.
+foundation](visual-foundation.md), section 5 (Sky, and Instrument's values as the compact density),
+and for the vertical spacing of pages, sections and tables by 4.7. The base and the form rhythm
+stand.
 
 A 4px base (`--spacing`). Use the steps 4, 8, 12, 16, 24, 32, 48; nothing off the scale.
 
@@ -505,6 +506,45 @@ easings and the catalogue). The reduced-motion rule stands and is stricter there
 - Focus order follows reading order. Opening a dialog moves focus into it; closing returns focus to
   the control that opened it.
 
+### 4.7 Spacing shows the hierarchy
+
+The owner, 2026-11-28: the pages read crammed, the Disks table worst, because everything on them sat
+at one rhythm. Space is how a page says what belongs together. Four steps, one per level of the
+hierarchy; each is a token (`--space-*`) and a spacing utility (`gap-line`, `mt-pair`, ...), and each
+follows the density:
+
+| Step | Separates | Comfortable | Compact |
+| --- | --- | --- | --- |
+| `line` | The lines of one thing: a disk's model and its serial, a cell's second line | 4px | 2px |
+| `pair` | A thing and what belongs to it alone: a title and its subtitle, a section heading and its lead, a table and its toolbar or note, a status and its sentence | 8px | 6px |
+| `group` | The things inside one section: paragraphs, an alert, fields, a heading block and its content | 16px | 12px |
+| `section` | The sections of a page, and the page's header to its first section | 56px | 36px |
+
+- **Each step at least doubles the one under it,** so a reader sees the levels without counting
+  pixels. Nothing between two things on a page uses a gap off this scale.
+- **The page is built from the layout pieces** in `react-ui-components`, so every page takes the
+  rule from one place:
+  - `Page`: the page's header, then its sections, a section step apart. A section with no heading
+    straight under the header (a list page's table) sits two group steps under it instead, since it
+    has no heading to open it.
+  - `PageHeader`: the parent page's link, the title (`text-title`, 28px) and its subtitle a pair
+    step apart; then the intro, the status line and the page's own actions a group step apart.
+  - `PageSection`: its heading (`text-section`) and lead a pair step apart, then its content a group
+    step under them. It is a `section` named by its heading. A heading is never followed by a
+    section step, and never preceded by less than one.
+  - A part of a section (`PageSection headingLevel={3}`, or a bare `h3` among a section's
+    children) has its heading at the body size, semibold, and sits two group steps under what comes
+    before it, so it reads as a part of its section and not as one more paragraph.
+  - `PairStack`: a table with its toolbar and note, or anything else that belongs to one thing.
+- **Tables** take their row height from the density alone: cells `py-cell-y` (14px, compact 8px),
+  the header `py-head-y` (10px, compact 6px). A cell's padding is never overridden. A block under the
+  first line in a cell sits a line step under it (`TableCell` does this), so a row reads as one disk
+  and the next row as the next.
+- **Inside a panel or a card** the same steps apply at their own scale: the panel's padding stands
+  in for the section step around it.
+- The dashboard keeps its own composition (2026-11-28, the owner: "The Dashboard is fine"): its
+  regions are on grounds, and the grounds' padding and the gutter do the section step's work.
+
 ---
 
 ## 5. Components
@@ -533,6 +573,12 @@ foundation](visual-foundation.md), section 10. The stacking order and the skip l
   never cover a focused control (6); only the top bar may be sticky, and it carries the pending
   indicator, so nothing is lost when the bands scroll away. A skip link to the main content is the
   first focusable element on every page.
+- **The unencrypted-connection notice reads as a notice, not as the frame** (owner, 2026-11-28: it
+  was "easy to see as background noise"). `NoticeBanner tone="warning"`: the raised ground between
+  two rules in `warning-stroke`, the lock icon in `warning-stroke`, the first sentence ("This
+  connection is not encrypted.") semibold in `warning-label`, the rest in the body ink, and the HTTPS
+  link. No wash and no orange fill: a wash is never a status ground (3.10), and a filled band would
+  outshout what needs the person on the dashboard. The pending band keeps its gold.
 - One page title per page, in the content area. Breadcrumbs only below the second level.
 - **Breadcrumbs show only the parent page** (owner, 2026-11-25): one plain link in the link colour,
   underlined, above the page title ("Shared folders" over "Photos"). No separator (no chevron,

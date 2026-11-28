@@ -723,24 +723,26 @@ export function AccountAccessSection({
     <section
       id={sectionId}
       aria-labelledby={headingId}
-      className="flex flex-col gap-3"
+      className="flex min-w-0 flex-col gap-group"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <Heading
-          id={headingId}
-          ref={headingRef}
-          tabIndex={-1}
-          className={
-            headingLevel === 2
-              ? "text-lg font-semibold outline-hidden"
-              : "text-base font-semibold outline-hidden"
-          }
-        >
-          {t("personAccess.title")}
-        </Heading>
-        {marked ? <PendingMark /> : null}
+      <div className="flex min-w-0 flex-col gap-pair">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Heading
+            id={headingId}
+            ref={headingRef}
+            tabIndex={-1}
+            className={
+              headingLevel === 2
+                ? "text-section text-foreground outline-hidden"
+                : "text-base font-semibold outline-hidden"
+            }
+          >
+            {t("personAccess.title")}
+          </Heading>
+          {marked ? <PendingMark /> : null}
+        </div>
+        <p className="max-w-prose text-sm">{introText}</p>
       </div>
-      <p className="max-w-prose text-sm">{introText}</p>
       {error === undefined || error === null ? null : (
         <p className="text-sm text-critical-label" data-slot="field-error">
           {error}

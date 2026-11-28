@@ -6,6 +6,7 @@ import { Button, IconButton } from "../button/button";
 import { Checkbox } from "../checkbox/checkbox";
 import { EmptyState } from "../empty-state/empty-state";
 import { Input } from "../field/field";
+import { PairStack } from "../page-layout/page-layout";
 import { StatusIcon, StatusLabel } from "../status/status";
 import type { HealthStatus } from "../status/status-kinds";
 import { Identifier } from "../text/identifier";
@@ -99,7 +100,7 @@ function DisksTable({
         : [...current, device],
     );
   return (
-    <div>
+    <PairStack>
       <TableToolbar aria-label="Disk actions">
         <Input
           aria-label="Search disks"
@@ -256,7 +257,7 @@ function DisksTable({
       >
         Last refreshed 12:04
       </TableLastRefreshed>
-    </div>
+    </PairStack>
   );
 }
 

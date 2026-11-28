@@ -320,13 +320,13 @@ export function ArrayDisks({
   return (
     <section
       aria-labelledby="array-disks"
-      className="flex min-w-0 flex-col gap-3"
+      className="flex min-w-0 flex-col gap-group"
     >
       <h2
         id="array-disks"
         ref={headingRef}
         tabIndex={-1}
-        className="text-lg font-semibold outline-hidden"
+        className="text-section text-foreground outline-hidden"
       >
         {t("array.disks.title")}
       </h2>
@@ -409,12 +409,12 @@ export function ArrayDisks({
             if (m === null) {
               return (
                 <TableRow key={k}>
-                  <TableCell className="py-2 text-muted-foreground">
+                  <TableCell className="text-muted-foreground">
                     {t("array.disks.missing")}
                   </TableCell>
-                  <TableCell className="py-2 max-sm:hidden" />
-                  <TableCell className="py-2 max-sm:hidden" />
-                  <TableCell className="py-2">
+                  <TableCell className="max-sm:hidden" />
+                  <TableCell className="max-sm:hidden" />
+                  <TableCell>
                     <span className="flex flex-wrap items-center gap-2">
                       <StatusPill status="critical">
                         {t("health.critical")}
@@ -422,8 +422,8 @@ export function ArrayDisks({
                       <span>{t("raidRole.missing")}</span>
                     </span>
                   </TableCell>
-                  <TableCell className="py-2 max-sm:hidden" />
-                  <TableCell className="py-2" />
+                  <TableCell className="max-sm:hidden" />
+                  <TableCell />
                 </TableRow>
               );
             }
@@ -438,7 +438,7 @@ export function ArrayDisks({
               "";
             return (
               <TableRow key={k}>
-                <TableCell className="py-2 whitespace-nowrap">
+                <TableCell className="whitespace-nowrap">
                   {disk !== undefined &&
                   disk.canonicaldevicefile === m.device ? (
                     <Link
@@ -478,7 +478,7 @@ export function ArrayDisks({
                     />
                   </span>
                 </TableCell>
-                <TableCell className="min-w-40 py-2 max-sm:hidden">
+                <TableCell className="min-w-40 max-sm:hidden">
                   <span className="block" dir="auto">
                     {disk?.model.trim() ?? ""}
                   </span>
@@ -491,10 +491,10 @@ export function ArrayDisks({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
+                <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
                   {size === null ? "" : formatBytes(size)}
                 </TableCell>
-                <TableCell className="py-2 sm:min-w-32">
+                <TableCell className="sm:min-w-32">
                   {!rolesKnown ? (
                     <span className="text-muted-foreground">
                       {t("raidRole.unknown")}
@@ -526,7 +526,7 @@ export function ArrayDisks({
                     t("raidRole.working")
                   )}
                 </TableCell>
-                <TableCell className="min-w-32 py-2 max-sm:hidden">
+                <TableCell className="min-w-32 max-sm:hidden">
                   <DiskHealthStatus
                     checked={check.result !== undefined}
                     reading={check.reading(
@@ -534,7 +534,7 @@ export function ArrayDisks({
                     )}
                   />
                 </TableCell>
-                <TableCell className="py-2">
+                <TableCell>
                   {decision?.allowed === true ? (
                     <Button
                       variant="neutral"

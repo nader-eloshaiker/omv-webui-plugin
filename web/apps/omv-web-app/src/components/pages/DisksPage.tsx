@@ -22,6 +22,9 @@ import {
   Button,
   ExternalLink,
   InlineAlert,
+  Page,
+  PageHeader,
+  PairStack,
   ServerMessage,
   TableToolbar,
 } from "@omv-webui/react-ui-components";
@@ -130,82 +133,87 @@ function Disks() {
   const hasRows = inventory.disks !== undefined;
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle documentTitle={t("disks.documentTitle")}>
-        {t("disks.title")}
-      </PageTitle>
-      <p className="max-w-prose">{t("disks.intro")}</p>
-      <DiskHealthLine />
+    <Page>
+      <PageHeader
+        title={
+          <PageTitle documentTitle={t("disks.documentTitle")}>
+            {t("disks.title")}
+          </PageTitle>
+        }
+      >
+        <p className="max-w-prose">{t("disks.intro")}</p>
+        <DiskHealthLine />
 
-      <div className="flex flex-col gap-2">
-        <TableToolbar className="pb-0">
-          <Button
-            variant="neutral"
-            loading={looking}
-            onClick={looking ? undefined : () => void lookForNewDisks()}
-          >
-            {looking ? t("disks.rescanning") : t("disks.rescan")}
-          </Button>
-          <Button
-            variant="neutral"
-            loading={refreshing}
-            onClick={busy ? undefined : () => void refresh()}
-          >
-            {refreshing ? t("disks.refreshing") : t("disks.refresh")}
-          </Button>
-          <p
-            role="status"
-            className="ms-auto text-xs text-muted-foreground tabular-nums"
-          >
-            {hasRows && list.dataUpdatedAt > 0
-              ? t("disks.readAt", { time: format.clock(list.dataUpdatedAt) })
-              : ""}
-          </p>
-        </TableToolbar>
-
-        <p role="status" className="text-sm empty:hidden">
-          {rescanState.state === "done" ? (
-            <>
-              {t("disks.rescanDone", { time: format.clock(rescanState.at) })}{" "}
-              {rescanState.found.length > 0
-                ? t("disks.rescanFound", {
-                    count: rescanState.found.length,
-                    list: rescanState.found.join(", "),
-                  })
-                : t("disks.rescanNone")}
-            </>
-          ) : null}
-        </p>
-        {rescanState.state === "failed" ? (
-          <InlineAlert tone="critical" title={t("disks.rescanFailed")}>
-            {isRpcError(rescanState.error) ? (
-              <ServerMessage label={t("app.serverMessage")}>
-                {rescanState.error.message}
-              </ServerMessage>
-            ) : null}
-          </InlineAlert>
-        ) : null}
-      </div>
-
-      {hasRows && inventory.useState === "failed" ? (
-        <InlineAlert tone="critical" title={t("disks.useFailed")}>
-          {isRpcError(inventory.useError) ? (
-            <ServerMessage label={t("app.serverMessage")}>
-              {inventory.useError.message}
-            </ServerMessage>
-          ) : null}
-          <p className="mt-2">
+        <PairStack>
+          <TableToolbar>
             <Button
               variant="neutral"
-              size="sm"
+              loading={looking}
+              onClick={looking ? undefined : () => void lookForNewDisks()}
+            >
+              {looking ? t("disks.rescanning") : t("disks.rescan")}
+            </Button>
+            <Button
+              variant="neutral"
               loading={refreshing}
               onClick={busy ? undefined : () => void refresh()}
             >
-              {t("common.tryAgain")}
+              {refreshing ? t("disks.refreshing") : t("disks.refresh")}
             </Button>
+            <p
+              role="status"
+              className="ms-auto text-xs text-muted-foreground tabular-nums"
+            >
+              {hasRows && list.dataUpdatedAt > 0
+                ? t("disks.readAt", { time: format.clock(list.dataUpdatedAt) })
+                : ""}
+            </p>
+          </TableToolbar>
+
+          <p role="status" className="text-sm empty:hidden">
+            {rescanState.state === "done" ? (
+              <>
+                {t("disks.rescanDone", { time: format.clock(rescanState.at) })}{" "}
+                {rescanState.found.length > 0
+                  ? t("disks.rescanFound", {
+                      count: rescanState.found.length,
+                      list: rescanState.found.join(", "),
+                    })
+                  : t("disks.rescanNone")}
+              </>
+            ) : null}
           </p>
-        </InlineAlert>
-      ) : null}
+          {rescanState.state === "failed" ? (
+            <InlineAlert tone="critical" title={t("disks.rescanFailed")}>
+              {isRpcError(rescanState.error) ? (
+                <ServerMessage label={t("app.serverMessage")}>
+                  {rescanState.error.message}
+                </ServerMessage>
+              ) : null}
+            </InlineAlert>
+          ) : null}
+        </PairStack>
+
+        {hasRows && inventory.useState === "failed" ? (
+          <InlineAlert tone="critical" title={t("disks.useFailed")}>
+            {isRpcError(inventory.useError) ? (
+              <ServerMessage label={t("app.serverMessage")}>
+                {inventory.useError.message}
+              </ServerMessage>
+            ) : null}
+            <p className="mt-2">
+              <Button
+                variant="neutral"
+                size="sm"
+                loading={refreshing}
+                onClick={busy ? undefined : () => void refresh()}
+              >
+                {t("common.tryAgain")}
+              </Button>
+            </p>
+          </InlineAlert>
+        ) : null}
+      </PageHeader>
 
       {/* Once the list is read: while it loads or after it failed, the table says so, once. */}
       {hasRows && !list.isError ? (
@@ -230,11 +238,11 @@ function Disks() {
         onRetry={() => void refresh()}
       />
 
-      <p className="text-sm">
+      <footer className="text-sm">
         <ExternalLink href={CLASSIC.disks} newTabLabel={t("app.newTab")}>
           {t("disks.classicLink")}
         </ExternalLink>
-      </p>
-    </div>
+      </footer>
+    </Page>
   );
 }

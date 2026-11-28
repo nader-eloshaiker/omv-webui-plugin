@@ -10,7 +10,7 @@ import type {
   DiskDevice,
   MountEntry,
 } from "@omv-webui/react-api-omv/generated";
-import { Button } from "@omv-webui/react-ui-components";
+import { Button, PageSection } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { actionOf, fsActions, isBusy } from "../../filesystems/fsActions.ts";
@@ -44,7 +44,6 @@ export function UnmountSection({
   disk: DiskDevice | undefined;
 }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const blockersId = useId();
   const openerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -58,14 +57,11 @@ export function UnmountSection({
   const remove = kind === "remove";
 
   return (
-    <section
-      aria-labelledby={headingId}
+    <PageSection
       data-slot="unmount-section"
-      className="flex flex-col gap-3 border-t border-border pt-6"
+      heading={remove ? t("fsRemove.title") : t("fsUnmount.title")}
+      className="border-t border-border pt-6"
     >
-      <h2 id={headingId} className="text-lg font-semibold">
-        {remove ? t("fsRemove.title") : t("fsUnmount.title")}
-      </h2>
       {running ? (
         <div ref={panelRef} tabIndex={-1} className="outline-hidden">
           <UnmountPanel address={address} onTryAgain={() => dialog.open()} />
@@ -119,6 +115,6 @@ export function UnmountSection({
           )
         }
       />
-    </section>
+    </PageSection>
   );
 }

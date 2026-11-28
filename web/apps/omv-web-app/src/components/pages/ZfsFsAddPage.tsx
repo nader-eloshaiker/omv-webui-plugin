@@ -9,6 +9,9 @@ import {
   EmptyState,
   JobRunner,
   JobSummary,
+  Page,
+  PageHeader,
+  PageSection,
   RadioGroupField,
   RadioOption,
   SizeField,
@@ -114,13 +117,19 @@ function ZfsFsAdd({ address }: { address: string | null }) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <ZfsCrumbs pool={address} current={t("zfsFsAdd.breadcrumb")} />
-      <PageTitle documentTitle={t("zfsFsAdd.documentTitle", { pool })}>
-        {t("zfsFsAdd.title", { pool })}
-      </PageTitle>
-      <JobRunner title={t("zfsFsAdd.runnerTitle")}>{content}</JobRunner>
-    </div>
+    <Page>
+      <PageHeader
+        before={<ZfsCrumbs pool={address} current={t("zfsFsAdd.breadcrumb")} />}
+        title={
+          <PageTitle documentTitle={t("zfsFsAdd.documentTitle", { pool })}>
+            {t("zfsFsAdd.title", { pool })}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner title={t("zfsFsAdd.runnerTitle")}>{content}</JobRunner>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -157,7 +166,7 @@ function AddDecisions({ address }: { address: string }) {
   );
   if (blocker !== null) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         <p className="font-semibold">{t("zfsFsAdd.refused")}</p>
         <p className="max-w-prose">{words.blockerText(blocker)}</p>
         <p>

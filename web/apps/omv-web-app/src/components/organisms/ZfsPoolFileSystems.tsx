@@ -14,6 +14,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
   Identifier,
+  PageSection,
   StatusPill,
   Table,
   TableBody,
@@ -133,10 +134,7 @@ export function ZfsPoolFileSystems({
       : formatBytes(row.used);
   const onlyRoot = list.every((r) => r.poolroot === true);
   return (
-    <section aria-labelledby="zfs-fs" className="flex flex-col gap-2">
-      <h2 id="zfs-fs" className="text-lg font-semibold">
-        {t("zfsPool.fs.title")}
-      </h2>
+    <PageSection heading={t("zfsPool.fs.title")}>
       <Disclosure open={whatOpen} onOpenChange={setWhatOpen}>
         <DisclosureTrigger>{t("zfsPool.fs.what")}</DisclosureTrigger>
         <DisclosurePanel>
@@ -169,7 +167,7 @@ export function ZfsPoolFileSystems({
             const count = memory.snapshotCounts[row.path];
             return (
               <TableRow key={row.path}>
-                <TableCell className="min-w-28 py-2 [overflow-wrap:anywhere] sm:min-w-40">
+                <TableCell className="min-w-28 [overflow-wrap:anywhere] sm:min-w-40">
                   <FsName row={row} />
                   {isVolumeRow(row) ? (
                     <span className="block text-sm text-muted-foreground">
@@ -181,16 +179,16 @@ export function ZfsPoolFileSystems({
                     {usedText(row)}
                   </span>
                 </TableCell>
-                <TableCell className="py-2 sm:min-w-40">
+                <TableCell className="sm:min-w-40">
                   <FsState row={row} />
                 </TableCell>
-                <TableCell className="py-2 text-end whitespace-nowrap tabular-nums max-sm:hidden">
+                <TableCell className="text-end whitespace-nowrap tabular-nums max-sm:hidden">
                   {usedText(row)}
                 </TableCell>
-                <TableCell className="py-2 tabular-nums max-sm:hidden">
+                <TableCell className="tabular-nums max-sm:hidden">
                   {count === undefined ? "" : String(count)}
                 </TableCell>
-                <TableCell className="py-2 max-sm:hidden">
+                <TableCell className="max-sm:hidden">
                   {isVolumeRow(row)
                     ? ""
                     : found === undefined
@@ -236,6 +234,6 @@ export function ZfsPoolFileSystems({
           </>
         )}
       </div>
-    </section>
+    </PageSection>
   );
 }

@@ -17,6 +17,8 @@ import {
   FactListSkeleton,
   FactListValue,
   InlineAlert,
+  Page,
+  PageHeader,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { useRouterState } from "@tanstack/react-router";
@@ -47,6 +49,10 @@ export function AccountPage({ focus }: { focus: "top" | "password" }) {
   return <Account role={session.role} focus={focus} />;
 }
 
+/**
+ * A section of the page, as `PageSection` lays one out, with the heading's id and focus kept here:
+ * the forms are named by the heading, and "Change password" takes focus on arrival.
+ */
 function Section({
   id,
   title,
@@ -59,12 +65,12 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
+    <section aria-labelledby={id} className="flex min-w-0 flex-col gap-group">
       <h2
         id={id}
         ref={headingRef}
         tabIndex={headingRef ? -1 : undefined}
-        className="text-lg leading-tight font-semibold outline-hidden"
+        className="text-section text-foreground outline-hidden"
       >
         {title}
       </h2>
@@ -103,34 +109,36 @@ function Account({ role, focus }: { role: Role; focus: "top" | "password" }) {
 
   if (data === undefined && account.isError) {
     return (
-      <div className="flex max-w-3xl flex-col gap-4">
-        {title}
-        <EmptyState
-          variant="error"
-          serverMessage={
-            isRpcError(account.error)
-              ? { label: t("app.serverMessage"), text: account.error.message }
-              : undefined
-          }
-          action={
-            <Button variant="neutral" onClick={() => void account.refetch()}>
-              {t("common.tryAgain")}
-            </Button>
-          }
-        >
-          {t("account.loadFailed")}
-        </EmptyState>
-      </div>
+      <Page className="max-w-3xl">
+        <PageHeader title={title}>
+          <EmptyState
+            variant="error"
+            serverMessage={
+              isRpcError(account.error)
+                ? { label: t("app.serverMessage"), text: account.error.message }
+                : undefined
+            }
+            action={
+              <Button variant="neutral" onClick={() => void account.refetch()}>
+                {t("common.tryAgain")}
+              </Button>
+            }
+          >
+            {t("account.loadFailed")}
+          </EmptyState>
+        </PageHeader>
+      </Page>
     );
   }
 
   if (data === undefined) {
     return (
-      <div className="flex max-w-3xl flex-col gap-6" aria-busy="true">
-        {title}
-        <p role="status" className="sr-only">
-          {t("account.loading")}
-        </p>
+      <Page className="max-w-3xl" aria-busy="true">
+        <PageHeader title={title}>
+          <p role="status" className="sr-only">
+            {t("account.loading")}
+          </p>
+        </PageHeader>
         <Section id={detailsId} title={t("account.details")}>
           <FactListSkeleton rows={3} />
         </Section>
@@ -140,7 +148,7 @@ function Account({ role, focus }: { role: Role; focus: "top" | "password" }) {
         <Section id={keysId} title={t("account.keys")}>
           <Skeleton className="w-1/2" />
         </Section>
-      </div>
+      </Page>
     );
   }
 
@@ -159,17 +167,17 @@ function Account({ role, focus }: { role: Role; focus: "top" | "password" }) {
   );
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
+    <Page className="max-w-3xl">
       <LeaveGuard when={detailsDirty || passwordTyped} />
-      <div className="flex flex-col gap-1">
-        {title}
-        <p className="text-muted-foreground">
+      <PageHeader
+        title={title}
+        subtitle={
           <Trans
             i18nKey="account.signedInAs"
             components={{ name: <IdentifierText value={data.name} /> }}
           />
-        </p>
-      </div>
+        }
+      />
 
       <Section id={detailsId} title={t("account.details")}>
         {editable ? (
@@ -254,6 +262,6 @@ function Account({ role, focus }: { role: Role; focus: "top" | "password" }) {
       <Section id={keysId} title={t("account.keys")}>
         <SshKeyList keys={data.sshpubkeys} admin={admin} />
       </Section>
-    </div>
+    </Page>
   );
 }

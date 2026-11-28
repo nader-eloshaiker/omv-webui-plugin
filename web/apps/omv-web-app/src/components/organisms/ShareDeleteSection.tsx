@@ -13,7 +13,7 @@ import type {
   SharedFolder,
   SmbShareRow,
 } from "@omv-webui/react-api-omv/generated";
-import { Button } from "@omv-webui/react-ui-components";
+import { Button, PageSection } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { holdsHomeFolders } from "../../homeFolders/homeModel.ts";
@@ -204,16 +204,13 @@ export function ShareDeleteSection({
   };
 
   return (
-    <section
-      aria-labelledby="folder-delete"
-      className="mt-6 flex flex-col gap-3 border-t border-border pt-6"
+    <PageSection
+      heading={t("shareDelete.title")}
+      className="border-t border-border pt-6"
     >
-      <h2 id="folder-delete" className="text-lg font-semibold">
-        {t("shareDelete.title")}
-      </h2>
       <p className="max-w-prose text-sm">{t("shareDelete.intro")}</p>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col gap-group">
+        <div className="flex flex-col items-start gap-pair">
           <Button
             ref={keepRef}
             variant="neutral"
@@ -237,7 +234,7 @@ export function ShareDeleteSection({
             </div>
           ) : null}
         </div>
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex flex-col items-start gap-pair">
           <Button
             ref={filesRef}
             variant="neutral"
@@ -284,6 +281,6 @@ export function ShareDeleteSection({
           onDone(outcome, doneWay, words);
         }}
       />
-    </section>
+    </PageSection>
   );
 }

@@ -17,6 +17,9 @@ import {
   Identifier,
   JobRunner,
   JobSummary,
+  Page,
+  PageHeader,
+  PageSection,
   RadioGroupField,
   RadioOption,
   RadioOptionGroup,
@@ -91,7 +94,7 @@ export function OtherRaidRun({ run }: { run: RaidRun }) {
   const address =
     run.choices.kind === "add" ? arrayAddress(run.choices.array) : null;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-pair">
       <p className="max-w-prose">{t("raid.otherRun")}</p>
       <p>
         {address === null ? (
@@ -189,7 +192,7 @@ function RaidAdd({ address }: { address: string | null }) {
         minSize={smallestMember(slaves.data)}
       />
     ) : (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         <p className="max-w-prose">
           {blockerText(decision.blocker, v.view.row.level)}
         </p>
@@ -209,27 +212,35 @@ function RaidAdd({ address }: { address: string | null }) {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/storage/md" />}>
-          {t("array.breadcrumb")}
-        </BreadcrumbItem>
-        {address === null ? null : (
-          <BreadcrumbItem
-            render={
-              <Link to="/storage/md/$array" params={{ array: address }} />
-            }
-          >
-            {t("array.title", { device })}
-          </BreadcrumbItem>
-        )}
-        <BreadcrumbItem current>{t("raidAdd.breadcrumb")}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle documentTitle={t("raidAdd.documentTitle", { device })}>
-        {t("raid.title")}
-      </PageTitle>
-      <JobRunner title={t("raidAdd.title", { device })}>{content}</JobRunner>
-    </div>
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/storage/md" />}>
+              {t("array.breadcrumb")}
+            </BreadcrumbItem>
+            {address === null ? null : (
+              <BreadcrumbItem
+                render={
+                  <Link to="/storage/md/$array" params={{ array: address }} />
+                }
+              >
+                {t("array.title", { device })}
+              </BreadcrumbItem>
+            )}
+            <BreadcrumbItem current>{t("raidAdd.breadcrumb")}</BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={
+          <PageTitle documentTitle={t("raidAdd.documentTitle", { device })}>
+            {t("raid.title")}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner title={t("raidAdd.title", { device })}>{content}</JobRunner>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -399,7 +410,7 @@ function AddDecisions({
 
   if (offered.length === 0) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-group">
         <EmptyState
           action={
             <Button

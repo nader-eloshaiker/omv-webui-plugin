@@ -249,7 +249,7 @@ export function FolderSmbSection({
   } else if (view.kind === "notShared") {
     body =
       draft === null ? (
-        <div className="flex flex-col items-start gap-2">
+        <div className="flex flex-col items-start gap-pair">
           <p className="text-sm">{t("folderSmb.notShared")}</p>
           <Button
             ref={shareButtonRef}
@@ -263,7 +263,7 @@ export function FolderSmbSection({
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-pair">
           <p className="text-sm">{t("folderSmb.notShared")}</p>
           <ShareForm
             folder={folder}
@@ -289,7 +289,7 @@ export function FolderSmbSection({
     const row = view.share;
     const guest = guestMode(row.guest);
     body = (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-group">
         <FactList>
           <FactListItem>
             <FactListLabel>{t("folderSmb.fact.sharedAs")}</FactListLabel>
@@ -439,14 +439,14 @@ export function FolderSmbSection({
     <section
       id="sharing"
       aria-labelledby="folder-smb"
-      className="flex flex-col gap-3"
+      className="flex min-w-0 flex-col gap-group"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2
           id="folder-smb"
           ref={headingRef}
           tabIndex={-1}
-          className="text-lg font-semibold outline-hidden"
+          className="text-section text-foreground outline-hidden"
         >
           {t("folderSmb.title")}
         </h2>

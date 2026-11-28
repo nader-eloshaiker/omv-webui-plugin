@@ -3,7 +3,13 @@
 // folders are shared, how computers reach them, and whether any is broken. Leads to a folder's page
 // and to adding a shared folder. A normal user who types the address gets the "only administrators"
 // page, and nothing is called first (UI-4).
-import { StatusPill } from "@omv-webui/react-ui-components";
+import {
+  ExternalLink,
+  Page,
+  PageHeader,
+  PageSection,
+  StatusPill,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +17,7 @@ import {
   useSharesSystem,
   useSmbSettings,
 } from "../../hooks/useSharesReads.ts";
+import { CLASSIC } from "../../navigation/navigation.ts";
 import { useSession } from "../../session/sessionContext.ts";
 import { smbState } from "../../sharedFolders/smbModel.ts";
 import { routerLinkClass } from "../../shell/linkClass.ts";
@@ -28,12 +35,26 @@ export function SharedFoldersPage() {
     return <AdminOnlyPage title={t("sharedFolders.title")} />;
   }
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("sharedFolders.title")}</PageTitle>
-      <p className="max-w-prose">{t("sharedFolders.intro")}</p>
-      <SmbOffLine />
-      <SharedFoldersTable />
-    </div>
+    <Page>
+      <PageHeader title={<PageTitle>{t("sharedFolders.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("sharedFolders.intro")}</p>
+        <SmbOffLine />
+      </PageHeader>
+      <PageSection>
+        <SharedFoldersTable />
+      </PageSection>
+      <footer className="text-sm text-muted-foreground">
+        <p>
+          {t("sharedFolders.footerLine")}{" "}
+          <ExternalLink
+            href={CLASSIC.sharedFolders}
+            newTabLabel={t("app.newTab")}
+          >
+            {t("sharedFolders.classicLink")}
+          </ExternalLink>
+        </p>
+      </footer>
+    </Page>
   );
 }
 

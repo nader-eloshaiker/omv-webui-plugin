@@ -19,6 +19,10 @@ import {
   ExternalLink,
   Identifier,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   ServerMessage,
   Skeleton,
   StatusPill,
@@ -138,20 +142,23 @@ function Nfs() {
     </div>
   );
 
+  let header = null;
   let content;
   if (settings.data === undefined && settings.isError) {
     content = (
-      <ReadFailed
-        error={settings.error}
-        onRetry={() => void settings.refetch()}
-        retrying={settings.isFetching}
-      >
-        {t("nfs.state.unread")}
-      </ReadFailed>
+      <PageSection>
+        <ReadFailed
+          error={settings.error}
+          onRetry={() => void settings.refetch()}
+          retrying={settings.isFetching}
+        >
+          {t("nfs.state.unread")}
+        </ReadFailed>
+      </PageSection>
     );
   } else if (settings.data === undefined) {
     content = (
-      <div className="flex flex-col gap-4">
+      <PageSection>
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("nfs.loading")}
         </p>
@@ -160,10 +167,10 @@ function Nfs() {
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-8 w-full" />
         ))}
-      </div>
+      </PageSection>
     );
   } else {
-    content = (
+    header = (
       <>
         <StateLine state={state} pending={nfsSwitchPending(memory, pending)} />
         <SwitchCard
@@ -171,42 +178,44 @@ function Nfs() {
           versions={settings.data.versions}
           shares={shares.data?.data}
         />
-        <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t("nfs.shares.title")}</h2>
-          {shares.data === undefined && shares.isError ? (
-            <ReadFailed
-              error={shares.error}
-              onRetry={() => void shares.refetch()}
-              retrying={shares.isFetching}
-            >
-              {t("nfs.shares.loadFailed")}
-            </ReadFailed>
-          ) : shares.data === undefined ? (
-            <div className="flex flex-col gap-2">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-8 w-full" />
-              ))}
-            </div>
-          ) : shares.data.data.length === 0 ? (
-            <EmptyState action={addButton}>{t("nfs.shares.empty")}</EmptyState>
-          ) : (
-            <>
-              <TableToolbar aria-label={t("nfs.shares.title")}>
-                {addButton}
-              </TableToolbar>
-              <SharesTable
-                shares={shares.data.data}
-                folders={folders.data?.data}
-                foldersFailed={foldersFailed}
-                hostname={system.hostname}
-                versions={settings.data.versions}
-                pendingFolder={(uuid) =>
-                  nfsFolderPending(memory, uuid, pending)
-                }
-              />
-            </>
-          )}
-        </div>
+      </>
+    );
+    content = (
+      <div className="flex min-w-0 flex-col gap-group">
+        <h2 className="text-section text-foreground">
+          {t("nfs.shares.title")}
+        </h2>
+        {shares.data === undefined && shares.isError ? (
+          <ReadFailed
+            error={shares.error}
+            onRetry={() => void shares.refetch()}
+            retrying={shares.isFetching}
+          >
+            {t("nfs.shares.loadFailed")}
+          </ReadFailed>
+        ) : shares.data === undefined ? (
+          <div className="flex flex-col gap-pair">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-8 w-full" />
+            ))}
+          </div>
+        ) : shares.data.data.length === 0 ? (
+          <EmptyState action={addButton}>{t("nfs.shares.empty")}</EmptyState>
+        ) : (
+          <PairStack>
+            <TableToolbar aria-label={t("nfs.shares.title")}>
+              {addButton}
+            </TableToolbar>
+            <SharesTable
+              shares={shares.data.data}
+              folders={folders.data?.data}
+              foldersFailed={foldersFailed}
+              hostname={system.hostname}
+              versions={settings.data.versions}
+              pendingFolder={(uuid) => nfsFolderPending(memory, uuid, pending)}
+            />
+          </PairStack>
+        )}
         <p>
           <Link to="/diagnostics/services/nfs" className={routerLinkClass}>
             {t("nfs.whatIsShared")}
@@ -220,21 +229,23 @@ function Nfs() {
           finalFocus={addRef}
           onSaved={() => setAdding(false)}
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <PageTitle>{t("nfs.title")}</PageTitle>
-        <p className="text-sm text-muted-foreground">{t("nfs.subtitle")}</p>
-      </div>
-      <p className="max-w-prose">
-        {t("services.term.nfs")} {t("nfs.intro")}
-      </p>
+    <Page>
+      <PageHeader
+        title={<PageTitle>{t("nfs.title")}</PageTitle>}
+        subtitle={t("nfs.subtitle")}
+      >
+        <p className="max-w-prose">
+          {t("services.term.nfs")} {t("nfs.intro")}
+        </p>
+        {header}
+      </PageHeader>
       {content}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>{t("nfs.footerLine")}</p>
         <p>
           <ExternalLink
@@ -245,7 +256,7 @@ function Nfs() {
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </Page>
   );
 }
 

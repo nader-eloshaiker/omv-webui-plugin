@@ -4,7 +4,12 @@
 // as the disk health pages are. The tab's content is the caller's. Every method behind either tab is
 // administrator-only, so a normal user who types the address gets the "only administrators" page and
 // the tab's content is never mounted: nothing is called first (13.1).
-import { PageTab, PageTabs } from "@omv-webui/react-ui-components";
+import {
+  Page,
+  PageHeader,
+  PageTab,
+  PageTabs,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,26 +40,31 @@ export function RsyncPage({
     return <AdminOnlyPage title={t("rsync.title")} />;
   }
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle
-        documentTitle={t("rsync.documentTitle", {
-          tab: t(`rsync.tab.${tab}`),
-        })}
-      >
-        {t("rsync.title")}
-      </PageTitle>
-      <PageTabs aria-label={t("rsync.tabs")}>
-        {TABS.map((each) => (
-          <PageTab
-            key={each}
-            current={each === tab}
-            render={<Link to={TAB_ROUTE[each]} />}
+    <Page>
+      <PageHeader
+        title={
+          <PageTitle
+            documentTitle={t("rsync.documentTitle", {
+              tab: t(`rsync.tab.${tab}`),
+            })}
           >
-            {t(`rsync.tab.${each}`)}
-          </PageTab>
-        ))}
-      </PageTabs>
+            {t("rsync.title")}
+          </PageTitle>
+        }
+      >
+        <PageTabs aria-label={t("rsync.tabs")}>
+          {TABS.map((each) => (
+            <PageTab
+              key={each}
+              current={each === tab}
+              render={<Link to={TAB_ROUTE[each]} />}
+            >
+              {t(`rsync.tab.${each}`)}
+            </PageTab>
+          ))}
+        </PageTabs>
+      </PageHeader>
       {children}
-    </div>
+    </Page>
   );
 }

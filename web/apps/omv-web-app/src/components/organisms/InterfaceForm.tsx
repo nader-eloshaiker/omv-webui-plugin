@@ -870,7 +870,7 @@ function InterfaceFormBody({
       }}
     >
       {isNew ? null : (
-        <h2 className="text-xl font-semibold [overflow-wrap:anywhere]">
+        <h2 className="text-section text-foreground [overflow-wrap:anywhere]">
           <Trans
             i18nKey="ifaceForm.titleChange"
             components={{ iface: <Name value={displayName} /> }}

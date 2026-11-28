@@ -9,6 +9,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   InlineAlert,
+  PageSection,
   RadioGroupField,
   RadioOption,
   ServerMessage,
@@ -151,10 +152,7 @@ export function ZfsFsSettings({
         : undefined;
 
   return (
-    <section aria-labelledby="zfs-fs-settings" className="flex flex-col gap-4">
-      <h2 id="zfs-fs-settings" className="text-lg font-semibold">
-        {t("zfsFsSettings.title")}
-      </h2>
+    <PageSection heading={t("zfsFsSettings.title")}>
       {readOnly ? (
         <p className="max-w-prose">{t("zfsFsSettings.readOnly")}</p>
       ) : null}
@@ -244,6 +242,6 @@ export function ZfsFsSettings({
               : ""}
         </p>
       </div>
-    </section>
+    </PageSection>
   );
 }

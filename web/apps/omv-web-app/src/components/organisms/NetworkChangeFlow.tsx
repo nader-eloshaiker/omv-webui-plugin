@@ -767,8 +767,11 @@ export function NetworkChangeFlow({
   const putBackState = putBackReason ?? after?.putBack ?? null;
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby={`${hintId}-run`}>
-      <h2 id={`${hintId}-run`} className="text-lg font-semibold">
+    <section
+      className="flex min-w-0 flex-col gap-group"
+      aria-labelledby={`${hintId}-run`}
+    >
+      <h2 id={`${hintId}-run`} className="text-section text-foreground">
         <Trans
           i18nKey="netChange.title"
           components={{ object: <NodeSlot value={objectNode} /> }}
@@ -1017,10 +1020,13 @@ function Summary({
   }, [cancelRef]);
   const others = change.others ?? [];
   return (
-    <section className="flex flex-col gap-4" aria-labelledby={titleId}>
+    <section
+      className="flex min-w-0 flex-col gap-group"
+      aria-labelledby={titleId}
+    >
       <h2
         id={titleId}
-        className="text-lg font-semibold [overflow-wrap:anywhere]"
+        className="text-section text-foreground [overflow-wrap:anywhere]"
       >
         <Trans
           i18nKey="netChange.title"
@@ -1038,7 +1044,7 @@ function Summary({
           unchanged: t("netChange.unchanged"),
         }}
       />
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         <h3 className="text-base font-semibold">
           {t("netChange.effectTitle")}
         </h3>
@@ -1049,7 +1055,7 @@ function Summary({
         />
       </div>
       {others.length > 0 ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-pair">
           <h3 className="text-base font-semibold">
             {t("netChange.othersTitle")}
           </h3>

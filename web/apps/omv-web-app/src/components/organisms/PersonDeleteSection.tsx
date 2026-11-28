@@ -6,7 +6,7 @@
 // read the dialog rests on failed, or an action on them running in this session. Pressing it opens the
 // dialog, which reads everything again before it shows anything (7.2).
 import type { UserAccount } from "@omv-webui/react-api-omv/generated";
-import { Button } from "@omv-webui/react-ui-components";
+import { Button, PageSection } from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { isolateName } from "../../format/isolate.ts";
@@ -58,20 +58,17 @@ export function PersonDeleteSection({
     : deleteBlocker({ self, person, unread, running });
 
   return (
-    <section
-      aria-labelledby="person-delete"
-      className="mt-6 flex flex-col gap-3 border-t border-border pt-6"
+    <PageSection
+      heading={t("personDelete.title")}
+      className="border-t border-border pt-6"
     >
-      <h2 id="person-delete" className="text-lg font-semibold">
-        {t("personDelete.title")}
-      </h2>
       <p className="max-w-prose text-sm">
         <Trans
           i18nKey="personDelete.intro"
           components={{ name: <PersonNameText value={name} /> }}
         />
       </p>
-      <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col items-start gap-pair">
         <Button
           ref={openRef}
           variant="neutral"
@@ -104,6 +101,6 @@ export function PersonDeleteSection({
           onDone(outcome, at);
         }}
       />
-    </section>
+    </PageSection>
   );
 }

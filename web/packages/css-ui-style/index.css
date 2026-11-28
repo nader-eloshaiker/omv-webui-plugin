@@ -105,6 +105,13 @@
   --spacing-cell-y: var(--density-cell-y);
   --spacing-cell-x: var(--density-cell-x);
   --spacing-row: var(--density-row);
+  --spacing-head-y: var(--density-head-y);
+  /* The spacing rule (style guide 4.7): `gap-line`, `gap-pair`, `gap-group`, `gap-section` (and the
+     same steps for margin and padding), from the lines of one thing up to the sections of a page. */
+  --spacing-line: var(--space-line);
+  --spacing-pair: var(--space-pair);
+  --spacing-group: var(--space-group);
+  --spacing-section: var(--space-section);
   --spacing-control-sm: var(--density-control-sm);
   --spacing-control: var(--density-control);
   --spacing-control-lg: var(--density-control-lg);
