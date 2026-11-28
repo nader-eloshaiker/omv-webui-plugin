@@ -200,8 +200,13 @@ twenty habits of generated design. Done on `main`:
 - **File systems** (#33, `3687372`): space used as `SegmentBar`, in the table and on a file system's
   page.
 - **Disks** (#34, `ac92a8d`): every awake disk's temperature by kind (`DiskTemperatures mode="all"`).
+- **Spacing and the connection notice** (#36, `a63207e`): the owner's feedback of 2026-11-28. Four
+  spacing steps (style guide 4.7) in `Page`, `PageHeader`, `PageSection` and `PairStack`, on every
+  page; the unencrypted-connection notice in the warning family.
+- **A disk's page**: the health answer in the header, the disk drawn as its kind beside it (from the
+  cache only, never a read of its own), what it holds as segment bars, and jump links to its
+  sections.
 
-Next: the owner's feedback of 2026-11-28 (the notification bar, and line spacing and hierarchy app
-wide), then the remaining pages in the order of step 5: a disk's page and disk health, the rest of
-file systems and Add storage, RAID, ZFS, shared folders, users and groups, services, network, logs
-and processes, and the account pages.
+Next: the remaining pages in the order of step 5: disk health, the rest of file systems and Add
+storage, RAID, ZFS, shared folders, users and groups, services, network, logs and processes, and the
+account pages.

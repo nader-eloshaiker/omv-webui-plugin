@@ -1111,3 +1111,22 @@ The rule, now style guide 4.7: four spacing steps, one per level of the hierarch
 The library carries it: the `--space-*` tokens and their utilities, `Page`, `PageHeader`, `PageSection` and `PairStack`, the page title at `text-title`, and table cells at 14px (compact 8px) whose padding is never overridden. The owner saw it prototyped on File systems, a file system's page and Disks, said "They look great", and it is rolled out to every page. The dashboard keeps its own composition.
 
 **The notification bar** is the unencrypted-connection notice (UI-12); the pending band is already solid gold. It now sits on the raised ground between two rules in the warning stroke, with the lock icon in the warning stroke and its first sentence, "This connection is not encrypted.", in the warning label. It has no wash, since a wash is never a status ground, and no orange fill, which would shout louder than what needs the person on the dashboard.
+
+## 2026-11-28 — A disk's page in the new look, and its kind never wakes the disk (owner)
+
+The owner saw the disk page's screens and said "the disk page design is fine". From top to bottom:
+
+- **The header** holds the title, the model and size, and the health answer in one sentence. Before a check this session it says why the check waits for the person and links to it. After the check, the status sits over a sentence saying what it means and what to do. Under that, a row of links jumps to each section.
+- **The disk drawn as its kind** sits beside the header on a plate, with its kind, its temperature as a figure (with its limit when it is over), and whether it is awake.
+- **The sections** follow: what it holds (each file system's space as its segment bar), its model and serial number (on the page ground, with no card), health details, monitoring (self-tests as its sub-section), power settings, and wipe.
+
+**The disk's kind**: the owner said "The app shouldn't wake the drive just to read its type constantly. We need to cache this information as much as possible." The disk page reads nothing new. It shows the kind only when the dashboard or the Disks page has already read it this visit, under their once-per-visit rule. Otherwise it draws a plain disk, "Kind not known".
+
+The owner asked whether the kind could be kept in a JSON file, or read through a method that does not wake the disk. What was found in OMV's source:
+
+- No existing backend method returns it without `smartctl`. `DiskMgmt.getList` and `Smart.getList` return no kind. `Smart.getInformation` runs `smartctl --xall` with no standby check, which is what wakes a sleeping disk.
+- OMV knows it without touching the disk. `StorageDevice::isRotational()` reads the udev properties `ID_SSD` and `ID_ATA_ROTATION_RATE_RPM`, then sysfs `queue/rotational`. It uses this only when it mounts a file system, and no backend method exposes it.
+- Keeping it on the NAS (a JSON file, or a method reading udev) needs PHP shipped by this plugin. `docs/05-security.md` rules that out ("no PHP, ... no new backend methods").
+- Keeping it in the browser is ruled out by UI-13, since it is server data keyed by a disk identifier.
+
+The owner's decision is pending.

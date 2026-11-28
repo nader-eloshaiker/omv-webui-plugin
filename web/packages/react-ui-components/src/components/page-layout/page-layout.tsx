@@ -19,7 +19,7 @@ function Page({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="page"
       className={cn(
-        "flex min-w-0 flex-col gap-section",
+        "@container/page flex min-w-0 flex-col gap-section",
         "[&>[data-slot=page-header]+[data-headed=false]]:-mt-[calc(var(--space-section)-2*var(--space-group))]",
         className,
       )}
@@ -45,6 +45,11 @@ interface PageHeaderProps extends Omit<
    * status line, the page's own actions.
    */
   children?: React.ReactNode;
+  /**
+   * Beside the words on a wide page, under them on a narrow one: the thing drawn (a disk, an
+   * array), with the few figures read off it. Aligned to the top of the title.
+   */
+  aside?: React.ReactNode;
 }
 
 /** The top of a page: the parent's link, the title and its subtitle close together, then the intro. */
@@ -53,16 +58,13 @@ function PageHeader({
   before,
   besideTitle,
   subtitle,
+  aside,
   className,
   children,
   ...props
 }: PageHeaderProps) {
-  return (
-    <header
-      data-slot="page-header"
-      className={cn("flex min-w-0 flex-col gap-group", className)}
-      {...props}
-    >
+  const words = (
+    <>
       <div className="flex min-w-0 flex-col gap-pair">
         {before}
         {besideTitle ? (
@@ -78,6 +80,29 @@ function PageHeader({
         ) : null}
       </div>
       {children}
+    </>
+  );
+  return (
+    <header
+      data-slot="page-header"
+      className={cn(
+        aside
+          ? "grid min-w-0 grid-cols-1 items-start gap-section @min-[48rem]/page:grid-cols-[minmax(0,1fr)_auto] @min-[48rem]/page:gap-x-12"
+          : "flex min-w-0 flex-col gap-group",
+        className,
+      )}
+      {...props}
+    >
+      {aside ? (
+        <>
+          <div className="flex min-w-0 flex-col gap-group">{words}</div>
+          <div data-slot="page-header-aside" className="min-w-0">
+            {aside}
+          </div>
+        </>
+      ) : (
+        words
+      )}
     </header>
   );
 }

@@ -31,7 +31,13 @@ import { DiskHealthDetails } from "../organisms/DiskHealthDetails.tsx";
 import { DiskMonitoring } from "../organisms/DiskMonitoring.tsx";
 import { DiskPowerSettings } from "../organisms/DiskPowerSettings.tsx";
 import { DiskSelfTests } from "../organisms/DiskSelfTests.tsx";
-import { DiskSummary } from "../organisms/DiskSummary.tsx";
+import {
+  DiskAbout,
+  DiskAside,
+  DiskHealthAnswer,
+  DiskHolds,
+  DiskOnThisPage,
+} from "../organisms/DiskSummary.tsx";
 import {
   WipePanelForGoneDisk,
   WipeSection,
@@ -183,9 +189,13 @@ function DiskSections({ disk }: { disk: DiskDevice }) {
             }}
           />
         }
+        aside={<DiskAside disk={disk} />}
       >
-        <DiskSummary disk={disk} />
+        <DiskHealthAnswer disk={disk} />
+        <DiskOnThisPage />
       </PageHeader>
+      <DiskHolds disk={disk} />
+      <DiskAbout disk={disk} />
       <DiskHealthDetails disk={disk} />
       <DiskMonitoring disk={disk}>
         <DiskSelfTests disk={disk} />

@@ -99,7 +99,7 @@ export function DiskMonitoring({
   }
 
   return (
-    <PageSection heading={t("disk.monitoring.title")}>
+    <PageSection id="disk-monitoring" heading={t("disk.monitoring.title")}>
       {form}
       {children}
     </PageSection>

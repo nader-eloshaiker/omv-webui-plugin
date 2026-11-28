@@ -69,6 +69,7 @@ export function WipeSection({ disk }: { disk: DiskDevice }) {
 
   return (
     <PageSection
+      id="disk-wipe"
       data-slot="wipe-section"
       heading={t("wipe.title")}
       className="border-t border-border pt-6"
