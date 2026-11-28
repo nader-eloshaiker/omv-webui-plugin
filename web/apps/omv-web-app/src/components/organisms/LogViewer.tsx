@@ -12,6 +12,7 @@ import { useLogFileGetList } from "@omv-webui/react-api-omv/generated";
 import {
   Button,
   EmptyState,
+  PairStack,
   SearchField,
   Select,
   SelectContent,
@@ -377,7 +378,7 @@ export function LogViewer() {
     state.sort.field === "rownum" && state.sort.direction === "asc";
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <PairStack>
       <TableToolbar className="items-end gap-x-3 gap-y-3">
         <div className="flex w-full max-w-sm flex-col gap-1">
           <Select items={items} value={id ?? null} onValueChange={choose}>
@@ -537,6 +538,6 @@ export function LogViewer() {
           ) : null}
         </div>
       )}
-    </div>
+    </PairStack>
   );
 }

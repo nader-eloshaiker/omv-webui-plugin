@@ -11,6 +11,10 @@ import {
   buttonClass,
   ExternalLink,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   rollUp,
   StatusPill,
   TableToolbar,
@@ -67,7 +71,7 @@ export function ZfsReadAt({
     return null;
   }
   return (
-    <div className="flex flex-col gap-0.5 text-xs text-muted-foreground tabular-nums">
+    <div className="flex flex-col gap-line text-xs text-muted-foreground tabular-nums">
       {pollFailed ? (
         <p className="flex flex-wrap items-center gap-2">
           <span>{t("zfs.pollFailed", { time: format.clock(at) })}</span>
@@ -100,10 +104,11 @@ function Zfs() {
 
   if (list.missing) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <ZfsNotInstalled />
-      </div>
+      <Page>
+        <PageHeader title={<PageTitle>{t("zfs.title")}</PageTitle>}>
+          <ZfsNotInstalled />
+        </PageHeader>
+      </Page>
     );
   }
 
@@ -144,115 +149,122 @@ function Zfs() {
     list.list.data !== undefined && (list.list.isError || list.poll.isError);
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("zfs.title")}</PageTitle>
-      <p className="max-w-prose">{t("zfs.intro")}</p>
+    <Page>
+      <PageHeader title={<PageTitle>{t("zfs.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("zfs.intro")}</p>
 
-      {showRollUp ? (
-        <p role="status" className="flex flex-wrap items-center gap-2">
-          <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
-          <span>
-            {t("zfs.rollUp", {
-              count: summary.total,
-              number: statuses.filter((s) => s === worst).length,
-              status: t(`health.${worst}`),
-            })}
-          </span>
-        </p>
-      ) : null}
-
-      {noFs.map((v) => (
-        <InlineAlert key={`nofs:${v.row.path}`} tone="neutral">
-          <p>
-            <Trans
-              i18nKey="zfs.unfinished.noFs"
-              components={{ pool: <IdentifierText value={v.row.path} /> }}
-            />
+        {showRollUp ? (
+          <p role="status" className="flex flex-wrap items-center gap-2">
+            <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
+            <span>
+              {t("zfs.rollUp", {
+                count: summary.total,
+                number: statuses.filter((s) => s === worst).length,
+                status: t(`health.${worst}`),
+              })}
+            </span>
           </p>
-          <p className="mt-2">
+        ) : null}
+
+        {noFs.map((v) => (
+          <InlineAlert key={`nofs:${v.row.path}`} tone="neutral">
+            <p>
+              <Trans
+                i18nKey="zfs.unfinished.noFs"
+                components={{ pool: <IdentifierText value={v.row.path} /> }}
+              />
+            </p>
+            <p className="mt-2">
+              <Link
+                to="/storage/zfs/pools/$pool/add"
+                params={{ pool: v.row.path }}
+                className={routerLinkClass}
+              >
+                {t("zfs.unfinished.addFs")}
+              </Link>
+            </p>
+          </InlineAlert>
+        ))}
+        {notSaved.map((v) => (
+          <InlineAlert key={`ns:${v.row.path}`} tone="neutral">
+            <p>
+              <Trans
+                i18nKey="zfs.unfinished.notSaved"
+                components={{ pool: <IdentifierText value={v.row.path} /> }}
+              />
+            </p>
+          </InlineAlert>
+        ))}
+      </PageHeader>
+
+      <PageSection>
+        <PairStack>
+          <TableToolbar>
             <Link
-              to="/storage/zfs/pools/$pool/add"
-              params={{ pool: v.row.path }}
-              className={routerLinkClass}
+              to="/storage/zfs/create"
+              className={buttonClass({ variant: "primary" })}
             >
-              {t("zfs.unfinished.addFs")}
+              {t("zfs.create")}
             </Link>
+            <Button
+              variant="neutral"
+              loading={refreshing}
+              onClick={refreshing ? undefined : () => void refresh()}
+            >
+              {refreshing ? t("zfs.refreshing") : t("zfs.refresh")}
+            </Button>
+            <div className="ms-auto">
+              <ZfsReadAt
+                at={list.list.dataUpdatedAt}
+                pollFailed={pollFailed}
+                polling={list.anyBusy}
+                onRetry={() => void refresh()}
+              />
+            </div>
+          </TableToolbar>
+          <p role="status" className="sr-only">
+            {readAt}
           </p>
-        </InlineAlert>
-      ))}
-      {notSaved.map((v) => (
-        <InlineAlert key={`ns:${v.row.path}`} tone="neutral">
-          <p>
-            <Trans
-              i18nKey="zfs.unfinished.notSaved"
-              components={{ pool: <IdentifierText value={v.row.path} /> }}
-            />
-          </p>
-        </InlineAlert>
-      ))}
 
-      <TableToolbar className="pb-0">
-        <Link
-          to="/storage/zfs/create"
-          className={buttonClass({ variant: "primary" })}
-        >
-          {t("zfs.create")}
-        </Link>
-        <Button
-          variant="neutral"
-          loading={refreshing}
-          onClick={refreshing ? undefined : () => void refresh()}
-        >
-          {refreshing ? t("zfs.refreshing") : t("zfs.refresh")}
-        </Button>
-        <div className="ms-auto">
-          <ZfsReadAt
-            at={list.list.dataUpdatedAt}
-            pollFailed={pollFailed}
-            polling={list.anyBusy}
+          <ZfsPoolsTable
+            views={views}
+            rows={rows}
+            error={list.list.error}
+            failed={list.list.isError}
+            refreshing={refreshing}
             onRetry={() => void refresh()}
           />
+        </PairStack>
+      </PageSection>
+
+      <footer className="flex flex-col gap-group text-sm">
+        {email.data === undefined ? null : (
+          <p className="max-w-prose">
+            {emailSetUp(email.data) ? t("zfs.alerts.on") : t("zfs.alerts.off")}{" "}
+            <ExternalLink
+              href={
+                emailSetUp(email.data)
+                  ? CLASSIC.notificationEvents
+                  : CLASSIC.notifications
+              }
+              newTabLabel={t("app.newTab")}
+            >
+              {emailSetUp(email.data)
+                ? t("zfs.alerts.onLink")
+                : t("zfs.alerts.offLink")}
+            </ExternalLink>
+          </p>
+        )}
+
+        <div className="flex flex-col gap-line">
+          <p className="text-muted-foreground">{t("zfs.footerLine")}</p>
+          <p>
+            <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
+              {t("zfs.classicLink")}
+            </ExternalLink>
+          </p>
         </div>
-      </TableToolbar>
-      <p role="status" className="sr-only">
-        {readAt}
-      </p>
-
-      <ZfsPoolsTable
-        views={views}
-        rows={rows}
-        error={list.list.error}
-        failed={list.list.isError}
-        refreshing={refreshing}
-        onRetry={() => void refresh()}
-      />
-
-      {email.data === undefined ? null : (
-        <p className="max-w-prose text-sm">
-          {emailSetUp(email.data) ? t("zfs.alerts.on") : t("zfs.alerts.off")}{" "}
-          <ExternalLink
-            href={
-              emailSetUp(email.data)
-                ? CLASSIC.notificationEvents
-                : CLASSIC.notifications
-            }
-            newTabLabel={t("app.newTab")}
-          >
-            {emailSetUp(email.data)
-              ? t("zfs.alerts.onLink")
-              : t("zfs.alerts.offLink")}
-          </ExternalLink>
-        </p>
-      )}
-
-      <div className="flex flex-col gap-1 text-sm">
-        <p className="text-muted-foreground">{t("zfs.footerLine")}</p>
-        <p>
-          <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
-            {t("zfs.classicLink")}
-          </ExternalLink>
-        </p>
-      </div>
-    </div>
+      </footer>
+    </Page>
   );
 }

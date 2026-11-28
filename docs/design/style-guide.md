@@ -532,6 +532,9 @@ follows the density:
   - `PageSection`: its heading (`text-section`) and lead a pair step apart, then its content a group
     step under them. It is a `section` named by its heading. A heading is never followed by a
     section step, and never preceded by less than one.
+  - A part of a section (`PageSection headingLevel={3}`, or a bare `h3` among a section's
+    children) has its heading at the body size, semibold, and sits two group steps under what comes
+    before it, so it reads as a part of its section and not as one more paragraph.
   - `PairStack`: a table with its toolbar and note, or anything else that belongs to one thing.
 - **Tables** take their row height from the density alone: cells `py-cell-y` (14px, compact 8px),
   the header `py-head-y` (10px, compact 6px). A cell's padding is never overridden. A block under the

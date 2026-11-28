@@ -78,15 +78,17 @@ export function SmbWorkgroupCard({
   return (
     <Card
       render={<section aria-labelledby={headingId} />}
-      className="flex max-w-xl flex-col gap-3 p-4"
+      className="flex max-w-xl flex-col gap-group p-4"
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 id={headingId} className="text-lg font-semibold">
-          {t("smb.workgroup.title")}
-        </h2>
-        {pending ? <PendingMark /> : null}
+      <div className="flex flex-col gap-pair">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 id={headingId} className="text-section text-foreground">
+            {t("smb.workgroup.title")}
+          </h2>
+          {pending ? <PendingMark /> : null}
+        </div>
+        <p className="text-sm">{t("services.term.workgroup")}</p>
       </div>
-      <p className="text-sm">{t("services.term.workgroup")}</p>
       {error === null ? null : (
         <InlineAlert tone="critical" title={t("smb.workgroup.failed")}>
           {isRpcError(error) ? (

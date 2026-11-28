@@ -223,7 +223,7 @@ function FileSystems() {
 
       <PageSection>
         <PairStack>
-          <TableToolbar className="pb-0">
+          <TableToolbar>
             <Link
               to="/storage/filesystems/add"
               className={buttonClass({ variant: "primary" })}

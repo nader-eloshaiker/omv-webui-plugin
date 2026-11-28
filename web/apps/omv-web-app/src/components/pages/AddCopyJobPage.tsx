@@ -9,6 +9,9 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -108,42 +111,46 @@ function AddCopyJob() {
     );
   };
 
+  let alerts = null;
   let content;
   if (run !== null) {
     content = (
       <AddJobRun run={run} folders={reads.folders} nasZone={reads.nasZone} />
     );
   } else if (summary !== null) {
+    alerts =
+      blocked && pending !== undefined ? (
+        <FlowPreflight modules={pending} body={t("addJob.preflightBody")} />
+      ) : null;
     content = (
-      <div className="flex flex-col gap-4">
-        {blocked && pending !== undefined ? (
-          <FlowPreflight modules={pending} body={t("addJob.preflightBody")} />
-        ) : null}
-        <CopyJobSummary
-          choices={summary.choices}
-          folders={reads.folders}
-          keys={reads.keys}
-          nasZone={reads.nasZone}
-          hasPassword={summary.password !== ""}
-          busy={blocked}
-          onTry={() => start("try")}
-          {...(summary.choices.deletes ? {} : { onTurnOn: () => start("on") })}
-          onBack={() => {
-            setDraft(summary.choices);
-            setSummary(null);
-          }}
-        />
-      </div>
+      <CopyJobSummary
+        choices={summary.choices}
+        folders={reads.folders}
+        keys={reads.keys}
+        nasZone={reads.nasZone}
+        hasPassword={summary.password !== ""}
+        busy={blocked}
+        onTry={() => start("try")}
+        {...(summary.choices.deletes ? {} : { onTurnOn: () => start("on") })}
+        onBack={() => {
+          setDraft(summary.choices);
+          setSummary(null);
+        }}
+      />
     );
   } else {
-    content = (
-      <div className="flex flex-col gap-4">
+    alerts = (
+      <>
         {pending !== undefined && pending.length > 0 ? (
           <FlowPreflight modules={pending} body={t("addJob.preflightBody")} />
         ) : null}
         {system.failed ? (
           <InlineAlert tone="critical">{t("addJob.err.reads")}</InlineAlert>
         ) : null}
+      </>
+    );
+    content = (
+      <PageSection>
         <CopyJobForm
           key={JSON.stringify(draft.from) + JSON.stringify(draft.to)}
           heading={t("addJob.title")}
@@ -157,20 +164,26 @@ function AddCopyJob() {
             })
           }
         />
-      </div>
+      </PageSection>
     );
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/services/rsync" />}>
-          {t("rsync.tab.jobs")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>{t("addJob.title")}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle>{t("addJob.title")}</PageTitle>
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/services/rsync" />}>
+              {t("rsync.tab.jobs")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>{t("addJob.title")}</BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={<PageTitle>{t("addJob.title")}</PageTitle>}
+      >
+        {alerts}
+      </PageHeader>
       {content}
-    </div>
+    </Page>
   );
 }

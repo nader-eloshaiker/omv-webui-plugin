@@ -343,7 +343,7 @@ export function FolderNfsSection({
     );
   } else if (entries.length === 0) {
     body = (
-      <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col items-start gap-pair">
         <p className="text-sm">{t("folderNfs.notShared")}</p>
         {editing?.kind === "new"
           ? form(undefined)
@@ -353,7 +353,7 @@ export function FolderNfsSection({
   } else {
     const versions = settings.data.versions;
     body = (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-group">
         <div className="flex max-w-prose flex-col gap-1 text-sm">
           <p id={noPasswordId}>{t("folderNfs.noPassword")}</p>
           <p id={accessNotUsedId}>{t("folderNfs.accessNotUsed")}</p>
@@ -493,14 +493,14 @@ export function FolderNfsSection({
     <section
       id="nfs"
       aria-labelledby="folder-nfs"
-      className="flex flex-col gap-3"
+      className="flex min-w-0 flex-col gap-group"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2
           id="folder-nfs"
           ref={headingRef}
           tabIndex={-1}
-          className="text-lg font-semibold outline-hidden"
+          className="text-section text-foreground outline-hidden"
         >
           {t("folderNfs.title")}
         </h2>

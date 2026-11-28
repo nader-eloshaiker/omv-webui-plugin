@@ -10,6 +10,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
   InlineAlert,
+  PageSection,
   ServerMessage,
   TaskLog,
 } from "@omv-webui/react-ui-components";
@@ -36,14 +37,10 @@ export function ArrayDetails({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
-    <section
-      aria-labelledby="array-details"
-      className="flex min-w-0 flex-col gap-2"
+    <PageSection
+      heading={t("array.details.title")}
+      lead={t("array.details.intro")}
     >
-      <h2 id="array-details" className="text-lg font-semibold">
-        {t("array.details.title")}
-      </h2>
-      <p className="max-w-prose">{t("array.details.intro")}</p>
       {failed ? (
         <InlineAlert tone="critical" title={t("array.details.failed")}>
           {isRpcError(error) ? (
@@ -80,6 +77,6 @@ export function ArrayDetails({
           </DisclosurePanel>
         </Disclosure>
       )}
-    </section>
+    </PageSection>
   );
 }

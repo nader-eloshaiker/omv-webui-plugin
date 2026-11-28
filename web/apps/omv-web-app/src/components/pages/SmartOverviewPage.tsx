@@ -248,17 +248,19 @@ function Overview() {
 
   return (
     <>
-      <SmartMonitoringCard
-        settings={settings.data}
-        settingsError={settings.isError ? settings.error : undefined}
-        onRetrySettings={() => void settings.refetch()}
-        retrying={settings.isFetching}
-        counts={counts}
-        tests={entries?.length}
-        email={email.data}
-        emailFailed={email.data === undefined && email.isError}
-      />
-      <DiskHealthLine />
+      <PageSection>
+        <SmartMonitoringCard
+          settings={settings.data}
+          settingsError={settings.isError ? settings.error : undefined}
+          onRetrySettings={() => void settings.refetch()}
+          retrying={settings.isFetching}
+          counts={counts}
+          tests={entries?.length}
+          email={email.data}
+          emailFailed={email.data === undefined && email.isError}
+        />
+        <DiskHealthLine />
+      </PageSection>
       <PageSection heading={t("smart.overview.disks")} className="min-w-0">
         {watched.failedCount > 0 ? (
           <p className="flex flex-wrap items-center gap-2 text-sm">
@@ -291,11 +293,11 @@ function Overview() {
           <TableBody>{body}</TableBody>
         </Table>
       </PageSection>
-      <p className="text-sm">
+      <footer className="text-sm">
         <ExternalLink href={CLASSIC.smartDevices} newTabLabel={t("app.newTab")}>
           {t("smart.overview.classicLink")}
         </ExternalLink>
-      </p>
+      </footer>
     </>
   );
 }

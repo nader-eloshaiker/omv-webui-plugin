@@ -19,6 +19,9 @@ import {
   FieldLabel,
   InlineAlert,
   IsolatedIdentifier,
+  Page,
+  PageHeader,
+  PageSection,
   ServerMessage,
   Skeleton,
   useToast,
@@ -106,27 +109,31 @@ function General() {
   let content: ReactNode;
   if (general.data === undefined && general.isError) {
     content = (
-      <ReadFailed
-        error={general.error}
-        onRetry={() => void general.refetch()}
-        retrying={general.isFetching}
-      >
-        {t("netGeneral.loadFailed")}
-      </ReadFailed>
+      <PageSection>
+        <ReadFailed
+          error={general.error}
+          onRetry={() => void general.refetch()}
+          retrying={general.isFetching}
+        >
+          {t("netGeneral.loadFailed")}
+        </ReadFailed>
+      </PageSection>
     );
   } else if (general.data === undefined) {
     content = (
-      <Card className="flex max-w-xl flex-col gap-4 p-4">
-        <p role="status" aria-busy="true" className="text-muted-foreground">
-          {t("netGeneral.loading")}
-        </p>
-        {[0, 1].map((i) => (
-          <div key={i} className="flex flex-col gap-1.5">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-9 w-full max-w-sm" />
-          </div>
-        ))}
-      </Card>
+      <PageSection>
+        <Card className="flex max-w-xl flex-col gap-group p-4">
+          <p role="status" aria-busy="true" className="text-muted-foreground">
+            {t("netGeneral.loading")}
+          </p>
+          {[0, 1].map((i) => (
+            <div key={i} className="flex flex-col gap-1.5">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-9 w-full max-w-sm" />
+            </div>
+          ))}
+        </Card>
+      </PageSection>
     );
   } else if (change !== null) {
     content = (
@@ -160,14 +167,15 @@ function General() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("netGeneral.title")}</PageTitle>
-      <p className="max-w-prose">{t("network.term.hostname")}</p>
-      {change === null && openedByName(connection) !== null ? (
-        <NetworkConnectionLine connection={connection} />
-      ) : null}
+    <Page>
+      <PageHeader title={<PageTitle>{t("netGeneral.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("network.term.hostname")}</p>
+        {change === null && openedByName(connection) !== null ? (
+          <NetworkConnectionLine connection={connection} />
+        ) : null}
+      </PageHeader>
       {content}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>
           <ExternalLink
             href={CLASSIC.networkGeneral}
@@ -177,7 +185,7 @@ function General() {
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </Page>
   );
 }
 
@@ -410,10 +418,10 @@ function NameCard({
   return (
     <Card
       render={<section aria-labelledby={headingId} />}
-      className="flex max-w-xl flex-col gap-4 p-4"
+      className="flex max-w-xl flex-col gap-group p-4"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 id={headingId} className="text-lg font-semibold">
+        <h2 id={headingId} className="text-section text-foreground">
           {t("netGeneral.title")}
         </h2>
         {pending ? <PendingMark /> : null}

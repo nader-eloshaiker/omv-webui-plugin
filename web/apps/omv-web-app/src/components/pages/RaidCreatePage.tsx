@@ -7,6 +7,9 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   JobRunner,
+  Page,
+  PageHeader,
+  PageSection,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -65,17 +68,27 @@ function RaidCreate() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/storage/md" />}>
-          {t("array.breadcrumb")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>{t("raidCreate.breadcrumb")}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle documentTitle={t("raidCreate.documentTitle")}>
-        {t("raid.title")}
-      </PageTitle>
-      <JobRunner title={t("raidCreate.title")}>{content}</JobRunner>
-    </div>
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/storage/md" />}>
+              {t("array.breadcrumb")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>
+              {t("raidCreate.breadcrumb")}
+            </BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={
+          <PageTitle documentTitle={t("raidCreate.documentTitle")}>
+            {t("raid.title")}
+          </PageTitle>
+        }
+      />
+      <PageSection>
+        <JobRunner title={t("raidCreate.title")}>{content}</JobRunner>
+      </PageSection>
+    </Page>
   );
 }

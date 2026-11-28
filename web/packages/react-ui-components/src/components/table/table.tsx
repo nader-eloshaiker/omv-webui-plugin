@@ -319,14 +319,15 @@ function TableToolbar({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="table-toolbar"
       role="toolbar"
-      className={cn("flex flex-wrap items-center gap-2 pb-2", className)}
+      className={cn("flex flex-wrap items-center gap-2", className)}
       {...props}
     />
   );
 }
 
 /**
- * When a table that is not live was last read, so a stale table never looks current (5.2). The words
+ * When a table that is not live was last read, so a stale table never looks current (5.2). It sits
+ * with its table in a `PairStack` (style guide 4.7). The words
  * and the time come from the caller ("Last refreshed 12:04"); `action` is a refresh control.
  */
 function TableLastRefreshed({
@@ -339,7 +340,7 @@ function TableLastRefreshed({
     <div
       data-slot="table-last-refreshed"
       className={cn(
-        "flex items-center gap-2 pt-2 text-xs text-muted-foreground tabular-nums",
+        "flex items-center gap-2 text-xs text-muted-foreground tabular-nums",
         className,
       )}
       {...props}

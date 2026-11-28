@@ -598,7 +598,7 @@ export function DiskHealthDetails({ disk }: { disk: DiskDevice }) {
           <span
             key={i}
             aria-hidden="true"
-            className={`block h-3 rounded-sm bg-terminal-muted/30 motion-safe:animate-pulse ${i % 2 === 0 ? "w-2/3" : "w-1/2"}`}
+            className={`block h-3 rounded-sm bg-terminal-muted/30 ${i % 2 === 0 ? "w-2/3" : "w-1/2"}`}
           />
         ))}
       </div>

@@ -14,6 +14,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
   Identifier,
+  PageSection,
   StatusPill,
   Table,
   TableBody,
@@ -133,10 +134,7 @@ export function ZfsPoolFileSystems({
       : formatBytes(row.used);
   const onlyRoot = list.every((r) => r.poolroot === true);
   return (
-    <section aria-labelledby="zfs-fs" className="flex flex-col gap-2">
-      <h2 id="zfs-fs" className="text-lg font-semibold">
-        {t("zfsPool.fs.title")}
-      </h2>
+    <PageSection heading={t("zfsPool.fs.title")}>
       <Disclosure open={whatOpen} onOpenChange={setWhatOpen}>
         <DisclosureTrigger>{t("zfsPool.fs.what")}</DisclosureTrigger>
         <DisclosurePanel>
@@ -236,6 +234,6 @@ export function ZfsPoolFileSystems({
           </>
         )}
       </div>
-    </section>
+    </PageSection>
   );
 }

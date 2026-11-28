@@ -5,7 +5,13 @@
 // interface's page arrives in memory (portHandover.ts), never in the address. On save the Interfaces
 // page opens with focus on the new interface's row (5.7); Cancel goes back there. A normal user gets
 // the "only administrators" page, and nothing is called first (14.1).
-import { BreadcrumbItem, Breadcrumbs } from "@omv-webui/react-ui-components";
+import {
+  BreadcrumbItem,
+  Breadcrumbs,
+  Page,
+  PageHeader,
+  PageSection,
+} from "@omv-webui/react-ui-components";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,15 +57,19 @@ function AddInterface({ kind }: { kind: InterfaceKind }) {
   const title = t(TITLE[kind]);
   const toList = () => void navigate({ to: "/network/interfaces" });
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/network/interfaces" />}>
-          {t("interfaces.title")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>{title}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle>{title}</PageTitle>
-      <div className="max-w-3xl">
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/network/interfaces" />}>
+              {t("interfaces.title")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>{title}</BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={<PageTitle>{title}</PageTitle>}
+      />
+      <PageSection className="max-w-3xl">
         <InterfaceForm
           mode="new"
           kind={kind}
@@ -72,7 +82,7 @@ function AddInterface({ kind }: { kind: InterfaceKind }) {
             toList();
           }}
         />
-      </div>
-    </div>
+      </PageSection>
+    </Page>
   );
 }

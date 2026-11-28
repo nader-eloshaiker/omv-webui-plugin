@@ -3,7 +3,11 @@
 // is, and the button to the add flow; unavailable (focusable, the reason beside it) for a level without
 // copies, an array that is not running, Unknown, rebuilding or busy, roles not read, or while this
 // session changes it.
-import { Button, buttonClass } from "@omv-webui/react-ui-components";
+import {
+  Button,
+  buttonClass,
+  PageSection,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,10 +29,7 @@ export function ArrayAddSection({
   const decision = addDecision(levelKey(row.level), state, report, changing);
   const address = arrayAddress(row);
   return (
-    <section aria-labelledby="array-add" className="flex flex-col gap-2">
-      <h2 id="array-add" className="text-lg font-semibold">
-        {t("raidAdd.section")}
-      </h2>
+    <PageSection heading={t("raidAdd.section")}>
       {decision.allowed && address !== null ? (
         <>
           <p className="max-w-prose">{t(`raidAdd.sec.${decision.mode}`)}</p>
@@ -61,6 +62,6 @@ export function ArrayAddSection({
           </p>
         </div>
       )}
-    </section>
+    </PageSection>
   );
 }

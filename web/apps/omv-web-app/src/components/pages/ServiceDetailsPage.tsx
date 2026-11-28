@@ -19,6 +19,9 @@ import {
   Button,
   EmptyState,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
   PageTab,
   PageTabs,
   Skeleton,
@@ -26,7 +29,7 @@ import {
   TaskLog,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFormat } from "../../format/useFormat.ts";
 import {
@@ -177,7 +180,6 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
   const { t } = useTranslation();
   const format = useFormat();
   const read = useForegroundRead();
-  const headingId = useId();
   const info = useSystemInformation();
   const status = useServiceStatus();
   const name = t(`serviceDetails.name.${tab}`);
@@ -237,7 +239,7 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
           <span
             key={i}
             aria-hidden="true"
-            className={`block h-3 rounded-sm bg-terminal-muted/30 motion-safe:animate-pulse ${i % 2 === 0 ? "w-2/3" : "w-1/2"}`}
+            className={`block h-3 rounded-sm bg-terminal-muted/30 ${i % 2 === 0 ? "w-2/3" : "w-1/2"}`}
           />
         ))}
       </div>
@@ -269,39 +271,40 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
   const showRead = !pending && !off && stats.data !== undefined;
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle
-        documentTitle={t("serviceDetails.documentTitle", { tab: name })}
-      >
-        {t("serviceDetails.title")}
-      </PageTitle>
-      <p className="max-w-prose">{t("serviceDetails.intro")}</p>
-      <PageTabs aria-label={t("serviceDetails.tabs")}>
-        {TABS.map((each) => (
-          <PageTab
-            key={each}
-            current={each === tab}
-            render={<Link to={TAB_ROUTE[each]} />}
+    <Page>
+      <PageHeader
+        title={
+          <PageTitle
+            documentTitle={t("serviceDetails.documentTitle", { tab: name })}
           >
-            {t(`serviceDetails.name.${each}`)}
-          </PageTab>
-        ))}
-      </PageTabs>
-
-      <section
-        aria-labelledby={headingId}
-        className="flex min-w-0 flex-col gap-3"
+            {t("serviceDetails.title")}
+          </PageTitle>
+        }
       >
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h2 id={headingId} className="text-lg font-semibold">
-            {name}
-          </h2>
+        <p className="max-w-prose">{t("serviceDetails.intro")}</p>
+        <PageTabs aria-label={t("serviceDetails.tabs")}>
+          {TABS.map((each) => (
+            <PageTab
+              key={each}
+              current={each === tab}
+              render={<Link to={TAB_ROUTE[each]} />}
+            >
+              {t(`serviceDetails.name.${each}`)}
+            </PageTab>
+          ))}
+        </PageTabs>
+      </PageHeader>
+
+      <PageSection
+        heading={name}
+        besideHeading={
           <StatusBeside
             service={service}
             pending={pending}
             known={statusKnown}
           />
-        </div>
+        }
+      >
         {status.data === undefined && status.isError ? (
           <p className="flex flex-wrap items-center gap-2 text-sm">
             {t("serviceDetails.statusFailed", { service: name })}
@@ -345,7 +348,7 @@ function ServiceDetails({ tab }: { tab: ServiceTab }) {
             <SettingsLink tab={tab} />
           </p>
         )}
-      </section>
-    </div>
+      </PageSection>
+    </Page>
   );
 }

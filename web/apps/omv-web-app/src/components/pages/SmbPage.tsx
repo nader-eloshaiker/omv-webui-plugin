@@ -20,6 +20,9 @@ import {
   ExternalLink,
   Identifier,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
   ServerMessage,
   Skeleton,
   StatusPill,
@@ -109,20 +112,23 @@ function Smb() {
     pending,
   );
 
+  let header = null;
   let content;
   if (settings.data === undefined && settings.isError) {
     content = (
-      <ReadFailed
-        error={settings.error}
-        onRetry={() => void settings.refetch()}
-        retrying={settings.isFetching}
-      >
-        {t("smb.state.unread")}
-      </ReadFailed>
+      <PageSection>
+        <ReadFailed
+          error={settings.error}
+          onRetry={() => void settings.refetch()}
+          retrying={settings.isFetching}
+        >
+          {t("smb.state.unread")}
+        </ReadFailed>
+      </PageSection>
     );
   } else if (settings.data === undefined) {
     content = (
-      <div className="flex flex-col gap-4">
+      <PageSection>
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("smb.loading")}
         </p>
@@ -131,11 +137,11 @@ function Smb() {
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-8 w-full" />
         ))}
-      </div>
+      </PageSection>
     );
   } else {
     const enabled = settings.data.enable;
-    content = (
+    header = (
       <>
         <StateLine state={state} pending={smbSwitchPending(memory, pending)} />
         <SwitchCard
@@ -143,13 +149,19 @@ function Smb() {
           hostname={system.hostname}
           shares={shares.data?.data}
         />
+      </>
+    );
+    content = (
+      <>
         <SmbWorkgroupCard
           settings={settings.data}
           pending={memory.workgroupSaved && pending.includes("samba")}
           onSaved={recordWorkgroupSaved}
         />
-        <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{t("smb.shares.title")}</h2>
+        <div className="flex min-w-0 flex-col gap-group">
+          <h2 className="text-section text-foreground">
+            {t("smb.shares.title")}
+          </h2>
           {shares.data === undefined && shares.isError ? (
             <ReadFailed
               error={shares.error}
@@ -159,7 +171,7 @@ function Smb() {
               {t("smb.shares.loadFailed")}
             </ReadFailed>
           ) : shares.data === undefined ? (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-pair">
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-8 w-full" />
               ))}
@@ -181,27 +193,29 @@ function Smb() {
               hostname={system.hostname}
             />
           )}
+          <p>
+            <Link to="/diagnostics/services/smb" className={routerLinkClass}>
+              {t("smb.connected")}
+            </Link>
+          </p>
         </div>
-        <p>
-          <Link to="/diagnostics/services/smb" className={routerLinkClass}>
-            {t("smb.connected")}
-          </Link>
-        </p>
       </>
     );
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <PageTitle>{t("smb.title")}</PageTitle>
-        <p className="text-sm text-muted-foreground">{t("smb.subtitle")}</p>
-      </div>
-      <p className="max-w-prose">
-        {t("shares.term.smb")} {t("smb.intro")}
-      </p>
+    <Page>
+      <PageHeader
+        title={<PageTitle>{t("smb.title")}</PageTitle>}
+        subtitle={t("smb.subtitle")}
+      >
+        <p className="max-w-prose">
+          {t("shares.term.smb")} {t("smb.intro")}
+        </p>
+        {header}
+      </PageHeader>
       {content}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>{t("smb.footerLine")}</p>
         <p>
           <ExternalLink
@@ -212,7 +226,7 @@ function Smb() {
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </Page>
   );
 }
 

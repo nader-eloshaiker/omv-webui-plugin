@@ -66,7 +66,7 @@ export const ListPage: Story = {
       </PageHeader>
       <PageSection>
         <PairStack>
-          <TableToolbar className="pb-0">
+          <TableToolbar>
             <Button variant="neutral">Refresh</Button>
           </TableToolbar>
           <DisksTable />

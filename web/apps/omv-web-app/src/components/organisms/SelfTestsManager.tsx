@@ -25,6 +25,7 @@ import {
   MenuItem,
   MenuSeparator,
   MenuTrigger,
+  PairStack,
   Table,
   TableBody,
   TableCell,
@@ -350,11 +351,13 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
   );
 
   return (
-    <div className="flex min-w-0 flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-group">
       {showDisk ? (
         <>
-          <TableToolbar>{addButton}</TableToolbar>
-          {savedLine}
+          <PairStack>
+            <TableToolbar>{addButton}</TableToolbar>
+            {savedLine}
+          </PairStack>
           <SelfTestResults />
         </>
       ) : diskWatch?.state === "notWatched" ? (
@@ -388,8 +391,10 @@ export function SelfTestsManager({ disk }: { disk?: DiskDevice }) {
         </p>
       ) : (
         <>
-          <div>{addButton}</div>
-          {savedLine}
+          <PairStack>
+            <div>{addButton}</div>
+            {savedLine}
+          </PairStack>
           <SelfTestResults devices={devices} />
           <p className="text-sm">
             <Link to="/storage/smart/self-tests" className={routerLinkClass}>

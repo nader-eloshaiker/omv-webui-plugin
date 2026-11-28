@@ -13,10 +13,12 @@ import {
   FactListSkeleton,
   InlineAlert,
   JobResult,
+  Page,
+  PageHeader,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useParams } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDiskList } from "../../hooks/useDiskReads.ts";
 import { useFsApi } from "../../hooks/useFsApi.ts";
@@ -79,19 +81,22 @@ function Crumbs({ device }: { device: string | null }) {
 function NotFound() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs device={null} />
-      <PageTitle>{t("raid.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/storage/md" className={routerLinkClass}>
-            {t("array.showAll")}
-          </Link>
-        }
+    <Page>
+      <PageHeader
+        before={<Crumbs device={null} />}
+        title={<PageTitle>{t("raid.title")}</PageTitle>}
       >
-        {t("array.notFound")}
-      </EmptyState>
-    </div>
+        <EmptyState
+          action={
+            <Link to="/storage/md" className={routerLinkClass}>
+              {t("array.showAll")}
+            </Link>
+          }
+        >
+          {t("array.notFound")}
+        </EmptyState>
+      </PageHeader>
+    </Page>
   );
 }
 
@@ -142,55 +147,59 @@ function RaidArray({ address }: { address: string | null }) {
 
   if (v.missing) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <PageTitle>{t("raid.title")}</PageTitle>
-        <RaidNotInstalled />
-      </div>
+      <Page>
+        <PageHeader title={<PageTitle>{t("raid.title")}</PageTitle>}>
+          <RaidNotInstalled />
+        </PageHeader>
+      </Page>
     );
   }
   if (deleted !== null) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <Crumbs device={null} />
-        <PageTitle>{t("raid.title")}</PageTitle>
-        <JobResult
-          result={{
-            status: "succeeded",
-            statusLabel: t("addStorage.state.succeeded"),
-            message: (
-              <>
-                <span className="block font-semibold">
-                  {t("raidDelete.doneTitle", { array: deleted.devicefile })}
-                </span>
-                <span className="block">
-                  {t("raidDelete.doneBody", {
-                    list: deleted.disks.map((d) => d.device).join(", "),
-                  })}
-                </span>
-              </>
-            ),
-          }}
-          dismissLabel={t("raidRemove.dismiss")}
-          onDismiss={() => setDeleted(null)}
-        />
-        <p className="flex flex-wrap gap-x-4 gap-y-1">
-          <Link to="/storage/md" className={routerLinkClass}>
-            {t("raidDelete.toList")}
-          </Link>
-          {deleted.disks.map((d) =>
-            d.devicename === null ? null : (
-              <Link
-                key={d.device}
-                to="/storage/disks/$disk"
-                params={{ disk: d.devicename }}
-                className={routerLinkClass}
-              >
-                {t("raidRemove.openDisk", { device: d.device })}
-              </Link>
-            ),
-          )}
-        </p>
-      </div>
+      <Page>
+        <PageHeader
+          before={<Crumbs device={null} />}
+          title={<PageTitle>{t("raid.title")}</PageTitle>}
+        >
+          <JobResult
+            result={{
+              status: "succeeded",
+              statusLabel: t("addStorage.state.succeeded"),
+              message: (
+                <>
+                  <span className="block font-semibold">
+                    {t("raidDelete.doneTitle", { array: deleted.devicefile })}
+                  </span>
+                  <span className="block">
+                    {t("raidDelete.doneBody", {
+                      list: deleted.disks.map((d) => d.device).join(", "),
+                    })}
+                  </span>
+                </>
+              ),
+            }}
+            dismissLabel={t("raidRemove.dismiss")}
+            onDismiss={() => setDeleted(null)}
+          />
+          <p className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link to="/storage/md" className={routerLinkClass}>
+              {t("raidDelete.toList")}
+            </Link>
+            {deleted.disks.map((d) =>
+              d.devicename === null ? null : (
+                <Link
+                  key={d.device}
+                  to="/storage/disks/$disk"
+                  params={{ disk: d.devicename }}
+                  className={routerLinkClass}
+                >
+                  {t("raidRemove.openDisk", { device: d.device })}
+                </Link>
+              ),
+            )}
+          </p>
+        </PageHeader>
+      </Page>
     );
   }
   if (address === null) {
@@ -198,11 +207,12 @@ function RaidArray({ address }: { address: string | null }) {
   }
   if (v.arrays.data === undefined) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <Crumbs device={null} />
+      <Page>
         {v.arrays.isError ? (
-          <>
-            <PageTitle>{t("raid.title")}</PageTitle>
+          <PageHeader
+            before={<Crumbs device={null} />}
+            title={<PageTitle>{t("raid.title")}</PageTitle>}
+          >
             <ReadFailed
               error={v.arrays.error}
               retrying={v.arrays.isFetching}
@@ -210,15 +220,22 @@ function RaidArray({ address }: { address: string | null }) {
             >
               {t("array.loadFailed")}
             </ReadFailed>
-          </>
+          </PageHeader>
         ) : (
-          <div role="status" aria-busy="true" className="flex flex-col gap-4">
-            <span className="sr-only">{t("array.loading")}</span>
-            <Skeleton className="h-8 w-48" />
-            <FactListSkeleton rows={4} />
+          <div className="flex flex-col gap-pair">
+            <Crumbs device={null} />
+            <div
+              role="status"
+              aria-busy="true"
+              className="flex flex-col gap-group"
+            >
+              <span className="sr-only">{t("array.loading")}</span>
+              <Skeleton className="h-8 w-48" />
+              <FactListSkeleton rows={4} />
+            </div>
           </div>
         )}
-      </div>
+      </Page>
     );
   }
   const view = v.view;
@@ -241,63 +258,69 @@ function RaidArray({ address }: { address: string | null }) {
     view.state.kind === "ok";
 
   return (
-    <div className="flex min-w-0 flex-col gap-5">
-      <Crumbs device={row.devicefile} />
-      {changedAlert ? (
-        <InlineAlert tone="neutral" title={t("array.changed")} />
-      ) : null}
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
+    <Page>
+      <PageHeader
+        before={
+          <>
+            <Crumbs device={row.devicefile} />
+            {changedAlert ? (
+              <InlineAlert tone="neutral" title={t("array.changed")} />
+            ) : null}
+          </>
+        }
+        title={
           <PageTitle
             documentTitle={t("array.documentTitle", { device: row.devicefile })}
           >
             {words.arrayName(row.devicefile)}
           </PageTitle>
-          {marked ? <PendingMark /> : null}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {t("array.subtitle", {
-            level: words.levelWord(row.level),
-            size: words.sizeText(row.size),
-          })}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <RaidStateView row={row} state={view.state} />
-        <p role="status" className="sr-only">
-          {statusWord}
-        </p>
-        <ReadAtLine
-          at={v.arrays.dataUpdatedAt}
-          pollFailed={pollFailed}
-          polling={v.busy}
-          onRetry={() => void refresh()}
-        />
-      </div>
-
-      {cut ? (
-        <InlineAlert tone="neutral" title={t("raidDelete.unknown")} />
-      ) : null}
-
-      <div key={row.uuid} className="flex min-w-0 flex-col gap-5">
-        {showNow ? (
-          <ArrayNowCard
-            view={view}
-            disks={disks.data?.data}
-            slaves={slaves.data}
-            addBlocked={!add.allowed}
-            onTakeOut={(member) => disksRef.current?.takeOut(member)}
-            onRescan={async () => {
-              try {
-                await fsApi.rescan();
-              } finally {
-                await refresh();
-              }
-            }}
+        }
+        besideTitle={marked ? <PendingMark /> : undefined}
+        subtitle={t("array.subtitle", {
+          level: words.levelWord(row.level),
+          size: words.sizeText(row.size),
+        })}
+      >
+        <div className="flex flex-col gap-pair">
+          <RaidStateView row={row} state={view.state} />
+          <p role="status" className="sr-only">
+            {statusWord}
+          </p>
+          <ReadAtLine
+            at={v.arrays.dataUpdatedAt}
+            pollFailed={pollFailed}
+            polling={v.busy}
+            onRetry={() => void refresh()}
           />
+        </div>
+
+        {cut ? (
+          <InlineAlert tone="neutral" title={t("raidDelete.unknown")} />
         ) : null}
-        <ArraySummary view={view} />
+
+        {/* Keyed by the array's UUID: a different array under the same name starts afresh (D2). */}
+        <Fragment key={row.uuid}>
+          {showNow ? (
+            <ArrayNowCard
+              view={view}
+              disks={disks.data?.data}
+              slaves={slaves.data}
+              addBlocked={!add.allowed}
+              onTakeOut={(member) => disksRef.current?.takeOut(member)}
+              onRescan={async () => {
+                try {
+                  await fsApi.rescan();
+                } finally {
+                  await refresh();
+                }
+              }}
+            />
+          ) : null}
+          <ArraySummary view={view} />
+        </Fragment>
+      </PageHeader>
+
+      <Fragment key={row.uuid}>
         <ArrayDisks
           ref={disksRef}
           view={view}
@@ -344,7 +367,7 @@ function RaidArray({ address }: { address: string | null }) {
             void refresh();
           }}
         />
-      </div>
-    </div>
+      </Fragment>
+    </Page>
   );
 }

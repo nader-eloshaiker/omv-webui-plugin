@@ -2,7 +2,7 @@
 // Storage > Disk health > Self-tests (phase 5 disks design 6), for administrators: which self-tests the
 // NAS runs on its disks, and when. A normal user who types the address gets the "only administrators"
 // page, and nothing is called first (UI-4). Nothing here wakes a disk until "Run now" is confirmed.
-import { InlineAlert } from "@omv-webui/react-ui-components";
+import { InlineAlert, PageSection } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useSmartSettings } from "../../hooks/useDiskReads.ts";
@@ -32,7 +32,7 @@ function SelfTests() {
   const { t } = useTranslation();
   const settings = useSmartSettings();
   return (
-    <>
+    <PageSection>
       <p className="max-w-prose">{t("smart.tests.intro")}</p>
       {settings.data?.enable === false ? (
         <InlineAlert tone="neutral" role="note">
@@ -45,6 +45,6 @@ function SelfTests() {
         </InlineAlert>
       ) : null}
       <SelfTestsManager />
-    </>
+    </PageSection>
   );
 }

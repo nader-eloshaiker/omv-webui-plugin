@@ -12,6 +12,8 @@ import {
   EmptyState,
   FactListSkeleton,
   Identifier,
+  Page,
+  PageHeader,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useParams } from "@tanstack/react-router";
@@ -76,17 +78,20 @@ function Disk({ name }: { name: string }) {
   const list = useDiskList();
   if (list.data === undefined && list.isError) {
     return (
-      <div className="flex flex-col gap-4">
-        <Crumbs />
-        <PageTitle>{t("disks.title")}</PageTitle>
-        <ReadFailed
-          error={list.error}
-          retrying={list.isFetching}
-          onRetry={() => void list.refetch()}
+      <Page>
+        <PageHeader
+          before={<Crumbs />}
+          title={<PageTitle>{t("disks.title")}</PageTitle>}
         >
-          {t("disk.loadFailed")}
-        </ReadFailed>
-      </div>
+          <ReadFailed
+            error={list.error}
+            retrying={list.isFetching}
+            onRetry={() => void list.refetch()}
+          >
+            {t("disk.loadFailed")}
+          </ReadFailed>
+        </PageHeader>
+      </Page>
     );
   }
   if (list.data === undefined) {
@@ -102,18 +107,20 @@ function Disk({ name }: { name: string }) {
 function Loading() {
   const { t } = useTranslation();
   return (
-    <div aria-busy="true" className="flex flex-col gap-6">
+    <div aria-busy="true" className="flex flex-col gap-section">
       <p role="status" className="sr-only">
         {t("disk.loading")}
       </p>
-      <div aria-hidden="true" className="flex flex-col gap-2">
-        <Skeleton className="w-24" />
-        <Skeleton shape="block" className="h-8 w-56" />
-        <Skeleton className="w-72" />
+      <div className="flex flex-col gap-group">
+        <div aria-hidden="true" className="flex flex-col gap-pair">
+          <Skeleton className="w-24" />
+          <Skeleton shape="block" className="h-8 w-56" />
+          <Skeleton className="w-72" />
+        </div>
+        <FactListSkeleton rows={8} />
       </div>
-      <FactListSkeleton rows={8} />
       {["details", "monitoring", "power"].map((part) => (
-        <div key={part} aria-hidden="true" className="flex flex-col gap-2">
+        <div key={part} aria-hidden="true" className="flex flex-col gap-pair">
           <Skeleton shape="block" className="h-6 w-40" />
           <Skeleton className="w-2/3" />
         </div>
@@ -125,22 +132,25 @@ function Loading() {
 function NotFound({ name }: { name: string | null }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("disks.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/storage/disks" className={routerLinkClass}>
-            {t("disk.showAll")}
-          </Link>
-        }
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("disks.title")}</PageTitle>}
       >
-        {name === null
-          ? t("disk.notFoundNoName")
-          : t("disk.notFound", { name })}
-      </EmptyState>
-      {name === null ? null : <WipePanelForGoneDisk devicename={name} />}
-    </div>
+        <EmptyState
+          action={
+            <Link to="/storage/disks" className={routerLinkClass}>
+              {t("disk.showAll")}
+            </Link>
+          }
+        >
+          {name === null
+            ? t("disk.notFoundNoName")
+            : t("disk.notFound", { name })}
+        </EmptyState>
+        {name === null ? null : <WipePanelForGoneDisk devicename={name} />}
+      </PageHeader>
+    </Page>
   );
 }
 
@@ -152,19 +162,19 @@ function DiskSections({ disk }: { disk: DiskDevice }) {
   const bytes = parseByteCount(disk.size);
   const size = bytes === null ? "" : formatBytes(bytes);
   return (
-    <div className="flex max-w-4xl min-w-0 flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Crumbs current={device} />
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <Page className="max-w-4xl">
+      <PageHeader
+        before={<Crumbs current={device} />}
+        title={
           <PageTitle documentTitle={t("disk.documentTitle", { device })}>
             <Trans
               i18nKey="disk.title"
               components={{ device: <DeviceName value={device} /> }}
             />
           </PageTitle>
-          {pending ? <PendingMark /> : null}
-        </div>
-        <p className="text-sm text-muted-foreground">
+        }
+        besideTitle={pending ? <PendingMark /> : undefined}
+        subtitle={
           <Slotted
             sentence={(tokens) => t("disk.subtitle", tokens)}
             values={{
@@ -172,18 +182,19 @@ function DiskSections({ disk }: { disk: DiskDevice }) {
               size,
             }}
           />
-        </p>
-      </div>
-      <DiskSummary disk={disk} />
+        }
+      >
+        <DiskSummary disk={disk} />
+      </PageHeader>
       <DiskHealthDetails disk={disk} />
       <DiskMonitoring disk={disk}>
         <DiskSelfTests disk={disk} />
       </DiskMonitoring>
       <DiskPowerSettings disk={disk} />
-      {/* The destructive act sits apart from everything that is only a setting (style guide 5.2). */}
-      <hr className="mt-6 border-border" />
+      {/* The destructive act sits apart from everything that is only a setting (style guide 5.2):
+          a section step and its own rule above it. */}
       <WipeSection disk={disk} />
-    </div>
+    </Page>
   );
 }
 

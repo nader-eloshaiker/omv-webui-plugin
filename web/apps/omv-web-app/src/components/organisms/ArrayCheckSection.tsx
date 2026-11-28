@@ -5,7 +5,11 @@
 // still checking), then MdMgmt.setSyncAction. No repair. When a check this session started has ended,
 // where its finding is written.
 import { isRpcError } from "@omv-webui/react-api-omv/transport";
-import { Button, ServerMessage } from "@omv-webui/react-ui-components";
+import {
+  Button,
+  PageSection,
+  ServerMessage,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -114,11 +118,7 @@ export function ArrayCheckSection({
   };
 
   return (
-    <section aria-labelledby="array-check" className="flex flex-col gap-2">
-      <h2 id="array-check" className="text-lg font-semibold">
-        {t("raidCheck.title")}
-      </h2>
-      <p className="max-w-prose">{t("raidCheck.intro")}</p>
+    <PageSection heading={t("raidCheck.title")} lead={t("raidCheck.intro")}>
       {decision.allowed ? (
         <div className="flex flex-col gap-1">
           {decision.action === "idle" ? (
@@ -209,6 +209,6 @@ export function ArrayCheckSection({
         onConfirm={() => void confirm()}
         openerRef={openerRef}
       />
-    </section>
+    </PageSection>
   );
 }

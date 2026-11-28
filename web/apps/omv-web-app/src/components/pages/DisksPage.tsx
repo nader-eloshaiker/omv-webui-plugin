@@ -145,7 +145,7 @@ function Disks() {
         <DiskHealthLine />
 
         <PairStack>
-          <TableToolbar className="pb-0">
+          <TableToolbar>
             <Button
               variant="neutral"
               loading={looking}

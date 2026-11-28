@@ -12,7 +12,11 @@ import type {
   SharedFolder,
   ZfsSnapshot,
 } from "@omv-webui/react-api-omv/generated";
-import { Button, Identifier } from "@omv-webui/react-ui-components";
+import {
+  Button,
+  Identifier,
+  PageSection,
+} from "@omv-webui/react-ui-components";
 import { useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { labelSize } from "../../disks/diskWords.ts";
@@ -303,14 +307,11 @@ export function ZfsPoolDeleteSection({
   };
 
   return (
-    <section
-      aria-labelledby="zfs-pool-delete"
-      className="mt-6 flex flex-col gap-2 border-t border-border pt-6"
+    <PageSection
+      heading={t("zfsDelete.pool.title")}
+      lead={t("zfsDelete.pool.intro")}
+      className="border-t border-border pt-6"
     >
-      <h2 id="zfs-pool-delete" className="text-lg font-semibold">
-        {t("zfsDelete.pool.title")}
-      </h2>
-      <p className="max-w-prose">{t("zfsDelete.pool.intro")}</p>
       {blockers === null ? (
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("zfsDelete.pool.checking")}
@@ -334,7 +335,7 @@ export function ZfsPoolDeleteSection({
           {t("zfsDelete.pool.open")}
         </Button>
         {blockers !== null && blockers.length > 0 && !running ? (
-          <div id={reasonId} className="flex flex-col gap-2">
+          <div id={reasonId} className="flex flex-col gap-pair">
             <ZfsDeleteBlockers blockers={blockers} of="pool" />
             {blockers.some((b) => b.kind === "unread") ? (
               <p>
@@ -364,6 +365,6 @@ export function ZfsPoolDeleteSection({
           );
         }}
       />
-    </section>
+    </PageSection>
   );
 }

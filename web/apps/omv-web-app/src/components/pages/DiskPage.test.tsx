@@ -49,7 +49,7 @@ describe("a disk's page", () => {
     await screen.findByRole("heading", { level: 1, name: "Disk /dev/sdd" });
     const subtitle = screen.getByText(
       (_, element) =>
-        element?.tagName === "P" &&
+        element?.tagName === "DIV" &&
         /^قرص تخزين خارجي, 3\.6\sTiB$/.test(element.textContent),
     );
     expect(within(subtitle).getByText("قرص تخزين خارجي").tagName).toBe("BDI");
@@ -72,7 +72,7 @@ describe("a disk's page", () => {
     expect(
       screen.getByText(
         (_, element) =>
-          element?.tagName === "P" &&
+          element?.tagName === "DIV" &&
           /^VMware Virtual SATA Hard Drive, 8\.0\sGiB$/.test(
             element.textContent,
           ),

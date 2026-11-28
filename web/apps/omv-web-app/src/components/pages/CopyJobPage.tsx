@@ -33,6 +33,9 @@ import {
   FactListValue,
   Identifier,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
   ServerMessage,
   Skeleton,
   useToast,
@@ -144,15 +147,18 @@ function Crumbs({ name }: { name: string | null }) {
 function Gone() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs name={null} />
-      <PageTitle>{t("job.gone")}</PageTitle>
-      <p>
-        <Link to="/services/rsync" className={routerLinkClass}>
-          {t("job.goneLink")}
-        </Link>
-      </p>
-    </div>
+    <Page>
+      <PageHeader
+        before={<Crumbs name={null} />}
+        title={<PageTitle>{t("job.gone")}</PageTitle>}
+      >
+        <p>
+          <Link to="/services/rsync" className={routerLinkClass}>
+            {t("job.goneLink")}
+          </Link>
+        </p>
+      </PageHeader>
+    </Page>
   );
 }
 
@@ -170,17 +176,21 @@ function JobView({ uuid }: { uuid: string }) {
   }
   if (job.data === undefined && job.isError) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <Crumbs name={null} />
-        <PageTitle>{t("job.subtitle")}</PageTitle>
-        <ReadFailed
-          error={job.error}
-          onRetry={() => void job.refetch()}
-          retrying={job.isFetching}
-        >
-          {t("job.loadFailed")}
-        </ReadFailed>
-      </div>
+      <Page>
+        <PageHeader
+          before={<Crumbs name={null} />}
+          title={<PageTitle>{t("job.subtitle")}</PageTitle>}
+        />
+        <PageSection>
+          <ReadFailed
+            error={job.error}
+            onRetry={() => void job.refetch()}
+            retrying={job.isFetching}
+          >
+            {t("job.loadFailed")}
+          </ReadFailed>
+        </PageSection>
+      </Page>
     );
   }
   if (job.data === undefined) {
@@ -188,7 +198,7 @@ function JobView({ uuid }: { uuid: string }) {
       <div
         role="status"
         aria-busy="true"
-        className="flex min-w-0 flex-col gap-4"
+        className="flex min-w-0 flex-col gap-group"
       >
         <span className="sr-only">{t("job.loading")}</span>
         <Skeleton className="h-8 w-64" />
@@ -386,169 +396,175 @@ function JobLoaded({
           : "";
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Crumbs name={name} />
-        <PageTitle documentTitle={t("app.documentTitleJob", { job: name })}>
-          <bdi dir="auto">{inertBidi(name)}</bdi>
-        </PageTitle>
-        <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          {t("job.subtitle")}
-          {marked ? <PendingMark /> : null}
-        </p>
-      </div>
-      {sides === null ? (
-        <p>{t("job.sentence.unknown")}</p>
-      ) : (
-        <JobDirection sides={sides} folders={folders} link />
-      )}
+    <Page>
+      <PageHeader
+        before={<Crumbs name={name} />}
+        title={
+          <PageTitle documentTitle={t("app.documentTitleJob", { job: name })}>
+            <bdi dir="auto">{inertBidi(name)}</bdi>
+          </PageTitle>
+        }
+        subtitle={
+          <p className="flex flex-wrap items-center gap-2">
+            {t("job.subtitle")}
+            {marked ? <PendingMark /> : null}
+          </p>
+        }
+      >
+        {sides === null ? (
+          <p>{t("job.sentence.unknown")}</p>
+        ) : (
+          <JobDirection sides={sides} folders={folders} link />
+        )}
 
-      <NowSection
-        trial={trial}
-        notApplied={marked}
-        unreachable={unreachable ?? []}
-        folders={folders}
-        canTurnOn={!(deletion !== "no" && !triedNow)}
-        onTurnOn={() => setTurningOn(true)}
-      />
+        <NowSection
+          trial={trial}
+          notApplied={marked}
+          unreachable={unreachable ?? []}
+          folders={folders}
+          canTurnOn={!(deletion !== "no" && !triedNow)}
+          onTurnOn={() => setTurningOn(true)}
+        />
 
-      <FactList>
-        <FactListItem>
-          <FactListLabel>{t("job.fact.from")}</FactListLabel>
-          <FactListValue>
-            {sides === null ? null : (
-              <JobSideView side={sides.from} folders={folders} link />
-            )}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("job.fact.to")}</FactListLabel>
-          <FactListValue>
-            {sides === null ? null : (
-              <JobSideView side={sides.to} folders={folders} link />
-            )}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("job.fact.deletes")}</FactListLabel>
-          <FactListValue>
-            <DeletesValue sides={sides} folders={folders} deletion={deletion} />
-            {extra.removesSource && sides !== null ? (
-              <InlineAlert tone="neutral" icon="warning" className="mt-2">
-                <Trans
-                  i18nKey="job.removesSource"
-                  components={{
-                    src: <JobSideView side={sides.from} folders={folders} />,
-                  }}
-                />
-              </InlineAlert>
-            ) : null}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("job.fact.when")}</FactListLabel>
-          <FactListValue>
-            <span className="flex flex-col gap-1">
-              <span>{words.when(job)}</span>
-              {words.whenNote(job) === null ? null : (
-                <span className="text-sm text-muted-foreground">
-                  {words.whenNote(job)}
-                </span>
-              )}
-              {trial ? <Warn>{t("job.state.trialOnly")}</Warn> : null}
-            </span>
-          </FactListValue>
-        </FactListItem>
-        {job.type === "remote" ? (
+        <FactList>
           <FactListItem>
-            <FactListLabel>{t("job.fact.signIn")}</FactListLabel>
+            <FactListLabel>{t("job.fact.from")}</FactListLabel>
             <FactListValue>
-              {job.authentication === "pubkey" ? (
-                keyRow === undefined ? (
-                  t("job.signIn.keyUnread")
-                ) : (
-                  <span className="flex flex-col gap-1">
-                    <span>
-                      <Trans
-                        i18nKey="job.signIn.key"
-                        components={{
-                          key: <FolderNameText value={keyRow.comment} />,
-                        }}
-                      />
-                    </span>
-                    <Disclosure>
-                      <DisclosureTrigger>
-                        {t("job.signIn.showKey")}
-                      </DisclosureTrigger>
-                      <DisclosurePanel>
-                        <span className="flex items-start gap-1">
-                          <Identifier className="break-all whitespace-pre-wrap">
-                            {keyRow.publickey}
-                          </Identifier>
-                          <CopyButton
-                            text={keyRow.publickey}
-                            label={t("job.signIn.copyKey", {
-                              key: inertBidi(keyRow.comment),
-                            })}
-                            copiedLabel={t("common.copied")}
-                            selectedLabel={t("common.copySelected")}
-                            size="icon-sm"
-                          />
-                        </span>
-                      </DisclosurePanel>
-                    </Disclosure>
-                  </span>
-                )
-              ) : job.password === true ? (
-                t("job.signIn.passwordSet")
-              ) : job.password === false ? (
-                t("job.signIn.none")
-              ) : (
-                t("job.signIn.passwordMaybe")
+              {sides === null ? null : (
+                <JobSideView side={sides.from} folders={folders} link />
               )}
             </FactListValue>
           </FactListItem>
-        ) : null}
-        <FactListItem>
-          <FactListLabel>{t("job.fact.email")}</FactListLabel>
-          <FactListValue>
-            {job.sendemail === true ? t("job.email.on") : t("job.email.off")}
-            {job.sendemail === true && reads.emailSetUp === false ? (
-              <span className="block text-sm text-muted-foreground">
-                {t("job.email.notSetUp")}
-              </span>
-            ) : null}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("job.fact.note")}</FactListLabel>
-          <FactListValue>
-            {(job.comment ?? "").trim() === "" ? (
-              t("job.note.none")
-            ) : (
-              <bdi dir="auto">{inertBidi(job.comment ?? "")}</bdi>
-            )}
-          </FactListValue>
-        </FactListItem>
-        {otherOptionsSet(job) ? (
           <FactListItem>
-            <FactListLabel>{t("job.fact.other")}</FactListLabel>
+            <FactListLabel>{t("job.fact.to")}</FactListLabel>
+            <FactListValue>
+              {sides === null ? null : (
+                <JobSideView side={sides.to} folders={folders} link />
+              )}
+            </FactListValue>
+          </FactListItem>
+          <FactListItem>
+            <FactListLabel>{t("job.fact.deletes")}</FactListLabel>
+            <FactListValue>
+              <DeletesValue
+                sides={sides}
+                folders={folders}
+                deletion={deletion}
+              />
+              {extra.removesSource && sides !== null ? (
+                <InlineAlert tone="neutral" icon="warning" className="mt-2">
+                  <Trans
+                    i18nKey="job.removesSource"
+                    components={{
+                      src: <JobSideView side={sides.from} folders={folders} />,
+                    }}
+                  />
+                </InlineAlert>
+              ) : null}
+            </FactListValue>
+          </FactListItem>
+          <FactListItem>
+            <FactListLabel>{t("job.fact.when")}</FactListLabel>
             <FactListValue>
               <span className="flex flex-col gap-1">
-                <span>{t("job.other")}</span>
-                {(job.extraoptions ?? "").trim() === "" ? null : (
-                  <Identifier>{inertBidi(job.extraoptions ?? "")}</Identifier>
+                <span>{words.when(job)}</span>
+                {words.whenNote(job) === null ? null : (
+                  <span className="text-sm text-muted-foreground">
+                    {words.whenNote(job)}
+                  </span>
                 )}
+                {trial ? <Warn>{t("job.state.trialOnly")}</Warn> : null}
               </span>
             </FactListValue>
           </FactListItem>
-        ) : null}
-      </FactList>
+          {job.type === "remote" ? (
+            <FactListItem>
+              <FactListLabel>{t("job.fact.signIn")}</FactListLabel>
+              <FactListValue>
+                {job.authentication === "pubkey" ? (
+                  keyRow === undefined ? (
+                    t("job.signIn.keyUnread")
+                  ) : (
+                    <span className="flex flex-col gap-1">
+                      <span>
+                        <Trans
+                          i18nKey="job.signIn.key"
+                          components={{
+                            key: <FolderNameText value={keyRow.comment} />,
+                          }}
+                        />
+                      </span>
+                      <Disclosure>
+                        <DisclosureTrigger>
+                          {t("job.signIn.showKey")}
+                        </DisclosureTrigger>
+                        <DisclosurePanel>
+                          <span className="flex items-start gap-1">
+                            <Identifier className="break-all whitespace-pre-wrap">
+                              {keyRow.publickey}
+                            </Identifier>
+                            <CopyButton
+                              text={keyRow.publickey}
+                              label={t("job.signIn.copyKey", {
+                                key: inertBidi(keyRow.comment),
+                              })}
+                              copiedLabel={t("common.copied")}
+                              selectedLabel={t("common.copySelected")}
+                              size="icon-sm"
+                            />
+                          </span>
+                        </DisclosurePanel>
+                      </Disclosure>
+                    </span>
+                  )
+                ) : job.password === true ? (
+                  t("job.signIn.passwordSet")
+                ) : job.password === false ? (
+                  t("job.signIn.none")
+                ) : (
+                  t("job.signIn.passwordMaybe")
+                )}
+              </FactListValue>
+            </FactListItem>
+          ) : null}
+          <FactListItem>
+            <FactListLabel>{t("job.fact.email")}</FactListLabel>
+            <FactListValue>
+              {job.sendemail === true ? t("job.email.on") : t("job.email.off")}
+              {job.sendemail === true && reads.emailSetUp === false ? (
+                <span className="block text-sm text-muted-foreground">
+                  {t("job.email.notSetUp")}
+                </span>
+              ) : null}
+            </FactListValue>
+          </FactListItem>
+          <FactListItem>
+            <FactListLabel>{t("job.fact.note")}</FactListLabel>
+            <FactListValue>
+              {(job.comment ?? "").trim() === "" ? (
+                t("job.note.none")
+              ) : (
+                <bdi dir="auto">{inertBidi(job.comment ?? "")}</bdi>
+              )}
+            </FactListValue>
+          </FactListItem>
+          {otherOptionsSet(job) ? (
+            <FactListItem>
+              <FactListLabel>{t("job.fact.other")}</FactListLabel>
+              <FactListValue>
+                <span className="flex flex-col gap-1">
+                  <span>{t("job.other")}</span>
+                  {(job.extraoptions ?? "").trim() === "" ? null : (
+                    <Identifier>{inertBidi(job.extraoptions ?? "")}</Identifier>
+                  )}
+                </span>
+              </FactListValue>
+            </FactListItem>
+          ) : null}
+        </FactList>
+      </PageHeader>
 
-      <section className="flex flex-col gap-3" aria-labelledby="job-run-title">
-        <h2 id="job-run-title" className="text-lg font-semibold">
-          {t("job.run.title")}
-        </h2>
+      <PageSection heading={t("job.run.title")}>
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="neutral"
@@ -584,24 +600,24 @@ function JobLoaded({
             {t("jobs.logLink")}
           </Link>
         </p>
-      </section>
+      </PageSection>
 
       <section
-        className="flex flex-col gap-3"
+        className="flex min-w-0 flex-col gap-group"
         aria-labelledby="job-change-title"
       >
         <h2
           id="job-change-title"
           ref={formHeadingRef}
           tabIndex={-1}
-          className="text-lg font-semibold outline-hidden"
+          className="text-section text-foreground outline-hidden"
         >
           {t("job.change.title")}
         </h2>
         {ownRun !== null ? (
           <AddJobRun run={ownRun} folders={folders} nasZone={reads.nasZone} />
         ) : summary !== null ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-group">
             <p>{t("changeJob.retrial")}</p>
             {blocked && pending !== undefined ? (
               <FlowPreflight
@@ -691,7 +707,7 @@ function JobLoaded({
         )}
       </section>
 
-      <div className="flex flex-col gap-2 border-t border-border pt-4">
+      <div className="flex flex-col gap-pair border-t border-border pt-6">
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="neutral"
@@ -772,7 +788,7 @@ function JobLoaded({
           }}
         />
       )}
-    </div>
+    </Page>
   );
 }
 

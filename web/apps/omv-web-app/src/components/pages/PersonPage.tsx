@@ -22,6 +22,9 @@ import {
   EmptyState,
   FactListSkeleton,
   JobResult,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -126,48 +129,54 @@ function Crumbs({ current }: { current?: string }) {
 function NotFound({ name }: { name: string | null }) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("users.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/usermgmt/users" className={routerLinkClass}>
-            {t("person.toList")}
-          </Link>
-        }
-      >
-        {name === null ? (
-          t("person.notFoundPlain")
-        ) : (
-          <Slotted
-            sentence={(tokens) => t("person.notFound", tokens)}
-            values={{ name: <PersonNameText value={name} /> }}
-          />
-        )}
-      </EmptyState>
-    </div>
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("users.title")}</PageTitle>}
+      />
+      <PageSection>
+        <EmptyState
+          action={
+            <Link to="/usermgmt/users" className={routerLinkClass}>
+              {t("person.toList")}
+            </Link>
+          }
+        >
+          {name === null ? (
+            t("person.notFoundPlain")
+          ) : (
+            <Slotted
+              sentence={(tokens) => t("person.notFound", tokens)}
+              values={{ name: <PersonNameText value={name} /> }}
+            />
+          )}
+        </EmptyState>
+      </PageSection>
+    </Page>
   );
 }
 
 function Loading() {
   const { t } = useTranslation();
   return (
-    <div aria-busy="true" className="flex min-w-0 flex-col gap-6">
-      <p role="status" className="text-muted-foreground">
-        {t("person.loading")}
-      </p>
-      <div aria-hidden="true" className="flex flex-col gap-2">
-        <Skeleton className="w-24" />
-        <Skeleton shape="block" className="h-8 w-56" />
+    <Page aria-busy="true">
+      <div className="flex flex-col gap-group">
+        <p role="status" className="text-muted-foreground">
+          {t("person.loading")}
+        </p>
+        <div aria-hidden="true" className="flex flex-col gap-pair">
+          <Skeleton className="w-24" />
+          <Skeleton shape="block" className="h-8 w-56" />
+        </div>
+        <FactListSkeleton rows={6} />
       </div>
-      <FactListSkeleton rows={6} />
       {["can", "groups", "access", "password"].map((part) => (
-        <div key={part} aria-hidden="true" className="flex flex-col gap-2">
+        <div key={part} aria-hidden="true" className="flex flex-col gap-pair">
           <Skeleton shape="block" className="h-6 w-48" />
           <Skeleton className="w-2/3" />
         </div>
       ))}
-    </div>
+    </Page>
   );
 }
 
@@ -182,42 +191,46 @@ function DeletedResult({ deleted }: { deleted: Deleted }) {
   const navigate = useNavigate();
   const slot = { name: <PersonNameText value={deleted.name} /> };
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("users.title")}</PageTitle>
-      <JobResult
-        result={{
-          status: "succeeded",
-          statusLabel: t("addStorage.state.succeeded"),
-          message: (
-            <>
-              <span className="block">
-                <Trans i18nKey="personDelete.done" components={slot} />
-              </span>
-              {deleted.stoppedAt === "access" ? (
-                <span className="block">
-                  {t("personDelete.failed.accessStop")}
-                </span>
-              ) : deleted.stoppedAt === "save" ? (
-                <span className="block">
-                  <Trans
-                    i18nKey="personDelete.failed.saveBody"
-                    components={slot}
-                  />
-                </span>
-              ) : null}
-            </>
-          ),
-        }}
-        dismissLabel={t("zfsDelete.dismiss")}
-        onDismiss={() => void navigate({ to: "/usermgmt/users" })}
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("users.title")}</PageTitle>}
       />
-      <p>
-        <Link to="/usermgmt/users" className={routerLinkClass}>
-          {t("personDelete.toList")}
-        </Link>
-      </p>
-    </div>
+      <PageSection>
+        <JobResult
+          result={{
+            status: "succeeded",
+            statusLabel: t("addStorage.state.succeeded"),
+            message: (
+              <>
+                <span className="block">
+                  <Trans i18nKey="personDelete.done" components={slot} />
+                </span>
+                {deleted.stoppedAt === "access" ? (
+                  <span className="block">
+                    {t("personDelete.failed.accessStop")}
+                  </span>
+                ) : deleted.stoppedAt === "save" ? (
+                  <span className="block">
+                    <Trans
+                      i18nKey="personDelete.failed.saveBody"
+                      components={slot}
+                    />
+                  </span>
+                ) : null}
+              </>
+            ),
+          }}
+          dismissLabel={t("zfsDelete.dismiss")}
+          onDismiss={() => void navigate({ to: "/usermgmt/users" })}
+        />
+        <p>
+          <Link to="/usermgmt/users" className={routerLinkClass}>
+            {t("personDelete.toList")}
+          </Link>
+        </p>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -263,17 +276,21 @@ function Found({
   if (people.data === undefined) {
     if (people.isError) {
       return (
-        <div className="flex min-w-0 flex-col gap-4">
-          <Crumbs />
-          <PageTitle>{t("users.title")}</PageTitle>
-          <ReadFailed
-            error={people.error}
-            retrying={people.isFetching}
-            onRetry={() => void people.refetch()}
-          >
-            {t("person.loadFailed")}
-          </ReadFailed>
-        </div>
+        <Page>
+          <PageHeader
+            before={<Crumbs />}
+            title={<PageTitle>{t("users.title")}</PageTitle>}
+          />
+          <PageSection>
+            <ReadFailed
+              error={people.error}
+              retrying={people.isFetching}
+              onRetry={() => void people.refetch()}
+            >
+              {t("person.loadFailed")}
+            </ReadFailed>
+          </PageSection>
+        </Page>
       );
     }
     return <Loading />;
@@ -420,28 +437,30 @@ function Sections({
         : null;
 
   return (
-    <div
-      aria-busy={refreshing || undefined}
-      className="flex min-w-0 flex-col gap-6"
-    >
-      <div className="flex flex-col gap-2">
-        <Crumbs current={name} />
-        <PageTitle
-          documentTitle={t("person.docTitle", { name: inertBidi(name) })}
-        >
-          <bdi dir="auto" className="[overflow-wrap:anywhere]">
-            {inertBidi(name)}
-          </bdi>
-        </PageTitle>
-        <p className="text-sm text-muted-foreground">
-          {(person.comment ?? "") === "" ? (
-            t("person.subtitleNone")
-          ) : (
+    <Page aria-busy={refreshing || undefined}>
+      <PageHeader
+        before={<Crumbs current={name} />}
+        title={
+          <PageTitle
+            documentTitle={t("person.docTitle", { name: inertBidi(name) })}
+          >
             <bdi dir="auto" className="[overflow-wrap:anywhere]">
-              {inertBidi(person.comment ?? "")}
+              {inertBidi(name)}
             </bdi>
-          )}
-        </p>
+          </PageTitle>
+        }
+        subtitle={
+          <p>
+            {(person.comment ?? "") === "" ? (
+              t("person.subtitleNone")
+            ) : (
+              <bdi dir="auto" className="[overflow-wrap:anywhere]">
+                {inertBidi(person.comment ?? "")}
+              </bdi>
+            )}
+          </p>
+        }
+      >
         {self === "self" ? (
           <p className="text-sm">
             {t("person.isYou")}{" "}
@@ -468,24 +487,24 @@ function Sections({
             {t("sharedFolders.refresh")}
           </Button>
         </div>
-      </div>
 
-      {todo === null ? null : (
-        <PersonTodoCard
-          todo={todo}
-          name={name}
-          onChooseFolders={() => accessRef.current?.focus()}
+        {todo === null ? null : (
+          <PersonTodoCard
+            todo={todo}
+            name={name}
+            onChooseFolders={() => accessRef.current?.focus()}
+          />
+        )}
+
+        <PersonSummaryCard
+          person={person}
+          home={homeFact}
+          emailPending={accountSectionPending(memory, id, "email", pending)}
+          draft={drafts.details}
+          onDraftChange={(details) => edit({ details })}
+          onShowCurrent={showCurrent}
         />
-      )}
-
-      <PersonSummaryCard
-        person={person}
-        home={homeFact}
-        emailPending={accountSectionPending(memory, id, "email", pending)}
-        draft={drafts.details}
-        onDraftChange={(details) => edit({ details })}
-        onShowCurrent={showCurrent}
-      />
+      </PageHeader>
 
       <PersonPowersSection
         person={person}
@@ -574,6 +593,6 @@ function Sections({
           cancel: t("sharedFolder.unsaved.keep"),
         }}
       />
-    </div>
+    </Page>
   );
 }

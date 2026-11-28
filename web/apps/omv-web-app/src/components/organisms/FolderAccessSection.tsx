@@ -258,16 +258,21 @@ export function FolderAccessSection({
 
   const stale = model?.stale ?? [];
   return (
-    <section aria-labelledby="folder-access" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h2 id="folder-access" className="text-lg font-semibold">
-          {t("access.title")}
-        </h2>
-        {pending ? <PendingMark /> : null}
+    <section
+      aria-labelledby="folder-access"
+      className="flex min-w-0 flex-col gap-group"
+    >
+      <div className="flex min-w-0 flex-col gap-pair">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 id="folder-access" className="text-section text-foreground">
+            {t("access.title")}
+          </h2>
+          {pending ? <PendingMark /> : null}
+        </div>
+        <p className="max-w-prose text-sm">
+          {guests ? t("access.introGuests") : t("access.intro")}
+        </p>
       </div>
-      <p className="max-w-prose text-sm">
-        {guests ? t("access.introGuests") : t("access.intro")}
-      </p>
       <AccessGridSection
         label={t("access.title")}
         model={failedList === null ? model : undefined}

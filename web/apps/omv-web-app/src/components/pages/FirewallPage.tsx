@@ -6,6 +6,9 @@
 // normal user who types the address gets the "only administrators" page, and nothing is called.
 import {
   ExternalLink,
+  Page,
+  PageHeader,
+  PageSection,
   PageTab,
   PageTabs,
 } from "@omv-webui/react-ui-components";
@@ -77,26 +80,29 @@ function Firewall() {
   );
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <PageTitle>{t("firewall.title")}</PageTitle>
-        {pending ? <PendingMark /> : null}
-      </div>
-      <p className="max-w-prose">{t("network.term.firewall")}</p>
-      <FirewallRules
-        key={family}
-        family={family}
-        context={context}
-        order={orders[family]}
-        onOrder={(order) => setOrders((o) => ({ ...o, [family]: order }))}
-        header={header}
-      />
+    <Page>
+      <PageHeader
+        title={<PageTitle>{t("firewall.title")}</PageTitle>}
+        besideTitle={pending ? <PendingMark /> : undefined}
+      >
+        <p className="max-w-prose">{t("network.term.firewall")}</p>
+      </PageHeader>
+      <PageSection>
+        <FirewallRules
+          key={family}
+          family={family}
+          context={context}
+          order={orders[family]}
+          onOrder={(order) => setOrders((o) => ({ ...o, [family]: order }))}
+          header={header}
+        />
+      </PageSection>
       <LeaveGuard when={unsaved} />
       <footer className="text-sm text-muted-foreground">
         <ExternalLink href={CLASSIC.firewall} newTabLabel={t("app.newTab")}>
           {t("firewall.classicLink")}
         </ExternalLink>
       </footer>
-    </div>
+    </Page>
   );
 }

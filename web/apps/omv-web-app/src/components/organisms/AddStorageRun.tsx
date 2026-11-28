@@ -395,7 +395,7 @@ export function AddStorageRun({ run }: { run: FlowRun }) {
   const address = done === null ? null : fsAddress(done);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-group">
       <JobStepList
         steps={steps}
         statusLabels={statusLabels}

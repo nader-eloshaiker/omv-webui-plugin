@@ -515,7 +515,7 @@ export function RaidRunView({ run }: { run: RaidRun }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-group">
       <JobStepList
         steps={steps}
         statusLabels={statusLabels}

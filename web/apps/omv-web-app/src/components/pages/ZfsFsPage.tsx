@@ -20,6 +20,9 @@ import {
   FactListValue,
   Identifier,
   JobResult,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
   StatusPill,
   UsedByPanel,
@@ -94,29 +97,32 @@ export function ZfsFsRoutePage() {
 function NotFound({ pool }: { pool: string | null }) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <ZfsCrumbs pool={null} />
-      <PageTitle>{t("zfs.title")}</PageTitle>
-      <EmptyState
-        action={
-          pool === null ? (
-            <Link to="/storage/zfs" className={routerLinkClass}>
-              {t("zfsFs.showAll")}
-            </Link>
-          ) : (
-            <Link
-              to="/storage/zfs/pools/$pool"
-              params={{ pool }}
-              className={routerLinkClass}
-            >
-              {t("zfsFs.showPool", { pool })}
-            </Link>
-          )
-        }
+    <Page>
+      <PageHeader
+        before={<ZfsCrumbs pool={null} />}
+        title={<PageTitle>{t("zfs.title")}</PageTitle>}
       >
-        {t("zfsFs.notFound")}
-      </EmptyState>
-    </div>
+        <EmptyState
+          action={
+            pool === null ? (
+              <Link to="/storage/zfs" className={routerLinkClass}>
+                {t("zfsFs.showAll")}
+              </Link>
+            ) : (
+              <Link
+                to="/storage/zfs/pools/$pool"
+                params={{ pool }}
+                className={routerLinkClass}
+              >
+                {t("zfsFs.showPool", { pool })}
+              </Link>
+            )
+          }
+        >
+          {t("zfsFs.notFound")}
+        </EmptyState>
+      </PageHeader>
+    </Page>
   );
 }
 
@@ -301,10 +307,11 @@ function ZfsFs({ address }: { address: string | null }) {
 
   if (v.missing) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <ZfsNotInstalled />
-      </div>
+      <Page>
+        <PageHeader title={<PageTitle>{t("zfs.title")}</PageTitle>}>
+          <ZfsNotInstalled />
+        </PageHeader>
+      </Page>
     );
   }
   if (
@@ -314,53 +321,59 @@ function ZfsFs({ address }: { address: string | null }) {
     (v.rows === undefined || findFs(v.rows, address) === undefined)
   ) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={pool} current={address} />
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        {deleteDialog(address, pool ?? "", () =>
-          Promise.resolve({ kind: "gone" }),
-        )}
-      </div>
+      <Page>
+        <PageHeader
+          before={<ZfsCrumbs pool={pool} current={address} />}
+          title={<PageTitle>{t("zfs.title")}</PageTitle>}
+        >
+          {deleteDialog(address, pool ?? "", () =>
+            Promise.resolve({ kind: "gone" }),
+          )}
+        </PageHeader>
+      </Page>
     );
   }
   if (deleted !== null) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={deleted.pool} current={deleted.fs} />
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <JobResult
-          result={{
-            status: "succeeded",
-            statusLabel: t("addStorage.state.succeeded"),
-            message: (
-              <>
-                <span className="block font-semibold">
-                  {t("zfsDelete.fs.doneTitle", { fs: deleted.fs })}
-                </span>
-                <span className="block">
-                  <Trans
-                    i18nKey="zfsDelete.fs.doneBody"
-                    components={{
-                      pool: <IdentifierText value={deleted.pool} />,
-                    }}
-                  />
-                </span>
-              </>
-            ),
-          }}
-          dismissLabel={t("zfsDelete.dismiss")}
-          onDismiss={() => setDeleted(null)}
-        />
-        <p>
-          <Link
-            to="/storage/zfs/pools/$pool"
-            params={{ pool: deleted.pool }}
-            className={routerLinkClass}
-          >
-            {t("zfsFs.openPool", { pool: deleted.pool })}
-          </Link>
-        </p>
-      </div>
+      <Page>
+        <PageHeader
+          before={<ZfsCrumbs pool={deleted.pool} current={deleted.fs} />}
+          title={<PageTitle>{t("zfs.title")}</PageTitle>}
+        >
+          <JobResult
+            result={{
+              status: "succeeded",
+              statusLabel: t("addStorage.state.succeeded"),
+              message: (
+                <>
+                  <span className="block font-semibold">
+                    {t("zfsDelete.fs.doneTitle", { fs: deleted.fs })}
+                  </span>
+                  <span className="block">
+                    <Trans
+                      i18nKey="zfsDelete.fs.doneBody"
+                      components={{
+                        pool: <IdentifierText value={deleted.pool} />,
+                      }}
+                    />
+                  </span>
+                </>
+              ),
+            }}
+            dismissLabel={t("zfsDelete.dismiss")}
+            onDismiss={() => setDeleted(null)}
+          />
+          <p>
+            <Link
+              to="/storage/zfs/pools/$pool"
+              params={{ pool: deleted.pool }}
+              className={routerLinkClass}
+            >
+              {t("zfsFs.openPool", { pool: deleted.pool })}
+            </Link>
+          </p>
+        </PageHeader>
+      </Page>
     );
   }
   if (address === null) {
@@ -368,11 +381,12 @@ function ZfsFs({ address }: { address: string | null }) {
   }
   if (v.rows === undefined) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={null} />
+      <Page>
         {v.list.isError ? (
-          <>
-            <PageTitle>{t("zfs.title")}</PageTitle>
+          <PageHeader
+            before={<ZfsCrumbs pool={null} />}
+            title={<PageTitle>{t("zfs.title")}</PageTitle>}
+          >
             <ReadFailed
               error={v.list.error}
               retrying={v.list.isFetching}
@@ -380,15 +394,22 @@ function ZfsFs({ address }: { address: string | null }) {
             >
               {t("zfsFs.loadFailed")}
             </ReadFailed>
-          </>
+          </PageHeader>
         ) : (
-          <div role="status" aria-busy="true" className="flex flex-col gap-4">
-            <span className="sr-only">{t("zfsFs.loading")}</span>
-            <Skeleton className="h-8 w-48" />
-            <FactListSkeleton rows={4} />
+          <div className="flex flex-col gap-pair">
+            <ZfsCrumbs pool={null} />
+            <div
+              role="status"
+              aria-busy="true"
+              className="flex flex-col gap-group"
+            >
+              <span className="sr-only">{t("zfsFs.loading")}</span>
+              <Skeleton className="h-8 w-48" />
+              <FactListSkeleton rows={4} />
+            </div>
           </div>
         )}
-      </div>
+      </Page>
     );
   }
   if (row === undefined) {
@@ -397,19 +418,22 @@ function ZfsFs({ address }: { address: string | null }) {
   const poolName = poolOf(row);
   if (isVolumeRow(row)) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <ZfsCrumbs pool={poolName} current={row.path} />
-        <PageTitle>{t("zfs.title")}</PageTitle>
-        <EmptyState
-          action={
-            <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
-              {t("zfs.classicLink")}
-            </ExternalLink>
-          }
+      <Page>
+        <PageHeader
+          before={<ZfsCrumbs pool={poolName} current={row.path} />}
+          title={<PageTitle>{t("zfs.title")}</PageTitle>}
         >
-          {t("zfsFs.volumeNoPage")}
-        </EmptyState>
-      </div>
+          <EmptyState
+            action={
+              <ExternalLink href={CLASSIC.zfs} newTabLabel={t("app.newTab")}>
+                {t("zfs.classicLink")}
+              </ExternalLink>
+            }
+          >
+            {t("zfsFs.volumeNoPage")}
+          </EmptyState>
+        </PageHeader>
+      </Page>
     );
   }
 
@@ -512,7 +536,7 @@ function ZfsFs({ address }: { address: string | null }) {
         recursive: false,
       },
       details: (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-pair">
           <p>
             <Trans
               i18nKey="zfsDelete.fs.facts"
@@ -543,131 +567,137 @@ function ZfsFs({ address }: { address: string | null }) {
 
   const limitBytes = row.size;
   return (
-    <div className="flex min-w-0 flex-col gap-5">
-      <ZfsCrumbs pool={poolName} current={row.path} />
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
+    <Page>
+      <PageHeader
+        before={<ZfsCrumbs pool={poolName} current={row.path} />}
+        title={
           <PageTitle documentTitle={t("zfsFs.documentTitle", { fs: row.path })}>
             {title}
           </PageTitle>
-          {marked ? <PendingMark /> : null}
+        }
+        besideTitle={marked ? <PendingMark /> : undefined}
+        subtitle={t("zfsFs.subtitle", { pool: poolName })}
+      >
+        <div className="flex flex-col gap-pair">
+          <FsState row={row} />
+          {state !== null && state.status !== "ok" ? (
+            <p className="flex flex-wrap items-start gap-2">
+              <StatusPill status={state.status}>
+                {words.statusWord(state.status)}
+              </StatusPill>
+              <span>
+                <Trans
+                  i18nKey="zfsFs.poolState"
+                  values={{
+                    status: words.statusWord(state.status),
+                    reason: "",
+                  }}
+                  components={{
+                    pool: (
+                      <Link
+                        to="/storage/zfs/pools/$pool"
+                        params={{ pool: poolName }}
+                        className={routerLinkClass}
+                      >
+                        <Identifier>{poolName}</Identifier>
+                      </Link>
+                    ),
+                  }}
+                />{" "}
+                {view === null ? null : words.stateReason(state, view.report)}
+              </span>
+            </p>
+          ) : null}
         </div>
-        <p className="text-sm text-muted-foreground">
-          {t("zfsFs.subtitle", { pool: poolName })}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <FsState row={row} />
-        {state !== null && state.status !== "ok" ? (
-          <p className="flex flex-wrap items-start gap-2">
-            <StatusPill status={state.status}>
-              {words.statusWord(state.status)}
-            </StatusPill>
-            <span>
-              <Trans
-                i18nKey="zfsFs.poolState"
-                values={{ status: words.statusWord(state.status), reason: "" }}
-                components={{
-                  pool: (
-                    <Link
-                      to="/storage/zfs/pools/$pool"
-                      params={{ pool: poolName }}
-                      className={routerLinkClass}
-                    >
-                      <Identifier>{poolName}</Identifier>
-                    </Link>
-                  ),
-                }}
-              />{" "}
-              {view === null ? null : words.stateReason(state, view.report)}
-            </span>
-          </p>
+        {cut ? (
+          <p role="status">{t("zfsDelete.fs.unknown", { fs: row.path })}</p>
         ) : null}
-      </div>
-      {cut ? (
-        <p role="status">{t("zfsDelete.fs.unknown", { fs: row.path })}</p>
-      ) : null}
 
-      <FactList>
-        <FactListItem>
-          <FactListLabel>{t("zfsFs.fact.space")}</FactListLabel>
-          <FactListValue>
-            {limitBytes !== null && limitBytes > 0 ? (
-              <CapacityMeter
-                label={t("zfsFs.fact.space")}
-                variant="compact"
-                value={Math.min(100, Math.round((row.used / limitBytes) * 100))}
-                max={100}
-                valueText={t("zfsFs.spaceLimit", {
+        <FactList>
+          <FactListItem>
+            <FactListLabel>{t("zfsFs.fact.space")}</FactListLabel>
+            <FactListValue>
+              {limitBytes !== null && limitBytes > 0 ? (
+                <CapacityMeter
+                  label={t("zfsFs.fact.space")}
+                  variant="compact"
+                  value={Math.min(
+                    100,
+                    Math.round((row.used / limitBytes) * 100),
+                  )}
+                  max={100}
+                  valueText={t("zfsFs.spaceLimit", {
+                    used: formatBytes(row.used),
+                    limit: formatBytes(limitBytes),
+                  })}
+                />
+              ) : (
+                t("zfsFs.spaceShared", {
                   used: formatBytes(row.used),
-                  limit: formatBytes(limitBytes),
-                })}
-              />
-            ) : (
-              t("zfsFs.spaceShared", {
-                used: formatBytes(row.used),
-                available: formatBytes(row.available),
-                pool: poolName,
-              })
-            )}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("zfsFs.fact.limit")}</FactListLabel>
-          <FactListValue>
-            {limitBytes === null ? t("zfsFs.noLimit") : formatBytes(limitBytes)}
-          </FactListValue>
-        </FactListItem>
-        <FactListItem>
-          <FactListLabel>{t("zfsFs.fact.compression")}</FactListLabel>
-          <FactListValue>{words.compressionText(row)}</FactListValue>
-        </FactListItem>
-        {row.mountpoint.trim() === "" || row.mountpoint === "none" ? null : (
-          <FactListItem>
-            <FactListLabel>{t("zfsFs.fact.folder")}</FactListLabel>
-            <FactListValue className="flex flex-wrap items-center gap-2">
-              <Identifier className="[overflow-wrap:anywhere]">
-                {row.mountpoint}
-              </Identifier>
-              <CopyButton
-                text={row.mountpoint}
-                label={t("filesystem.fact.copyFolder")}
-                copiedLabel={t("common.copied")}
-                selectedLabel={t("common.copySelected")}
-              />
+                  available: formatBytes(row.available),
+                  pool: poolName,
+                })
+              )}
             </FactListValue>
           </FactListItem>
-        )}
-        {isEncrypted(row) ? (
           <FactListItem>
-            <FactListLabel>{t("zfsFs.fact.encryption")}</FactListLabel>
+            <FactListLabel>{t("zfsFs.fact.limit")}</FactListLabel>
             <FactListValue>
-              <span className="block">
-                {isLocked(row)
-                  ? t("zfsFs.encryptedLocked")
-                  : t("zfsFs.encryptedUnlocked")}
-              </span>
-              <span className="block text-sm text-muted-foreground">
-                {t("zfsPool.encryptionClassic")}
-              </span>
+              {limitBytes === null
+                ? t("zfsFs.noLimit")
+                : formatBytes(limitBytes)}
             </FactListValue>
           </FactListItem>
-        ) : null}
-        {originOf(row) === null ? null : (
           <FactListItem>
-            <FactListLabel>{t("zfsFs.fact.origin")}</FactListLabel>
-            <FactListValue>
-              <Trans
-                i18nKey="zfsFs.origin"
-                components={{
-                  origin: <IdentifierText value={originOf(row) ?? ""} />,
-                }}
-              />
-            </FactListValue>
+            <FactListLabel>{t("zfsFs.fact.compression")}</FactListLabel>
+            <FactListValue>{words.compressionText(row)}</FactListValue>
           </FactListItem>
-        )}
-      </FactList>
+          {row.mountpoint.trim() === "" || row.mountpoint === "none" ? null : (
+            <FactListItem>
+              <FactListLabel>{t("zfsFs.fact.folder")}</FactListLabel>
+              <FactListValue className="flex flex-wrap items-center gap-2">
+                <Identifier className="[overflow-wrap:anywhere]">
+                  {row.mountpoint}
+                </Identifier>
+                <CopyButton
+                  text={row.mountpoint}
+                  label={t("filesystem.fact.copyFolder")}
+                  copiedLabel={t("common.copied")}
+                  selectedLabel={t("common.copySelected")}
+                />
+              </FactListValue>
+            </FactListItem>
+          )}
+          {isEncrypted(row) ? (
+            <FactListItem>
+              <FactListLabel>{t("zfsFs.fact.encryption")}</FactListLabel>
+              <FactListValue>
+                <span className="block">
+                  {isLocked(row)
+                    ? t("zfsFs.encryptedLocked")
+                    : t("zfsFs.encryptedUnlocked")}
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  {t("zfsPool.encryptionClassic")}
+                </span>
+              </FactListValue>
+            </FactListItem>
+          ) : null}
+          {originOf(row) === null ? null : (
+            <FactListItem>
+              <FactListLabel>{t("zfsFs.fact.origin")}</FactListLabel>
+              <FactListValue>
+                <Trans
+                  i18nKey="zfsFs.origin"
+                  components={{
+                    origin: <IdentifierText value={originOf(row) ?? ""} />,
+                  }}
+                />
+              </FactListValue>
+            </FactListItem>
+          )}
+        </FactList>
+      </PageHeader>
 
       <FsUsedByPanel used={used} onRetry={() => void refresh()} />
 
@@ -713,13 +743,11 @@ function ZfsFs({ address }: { address: string | null }) {
         }}
       />
 
-      <section
-        aria-labelledby="zfs-fs-delete"
-        className="mt-6 flex flex-col gap-2 border-t border-border pt-6"
+      <PageSection
+        heading={t("zfsDelete.fs.title")}
+        lead={row.poolroot === true ? undefined : t("zfsDelete.fs.intro")}
+        className="border-t border-border pt-6"
       >
-        <h2 id="zfs-fs-delete" className="text-lg font-semibold">
-          {t("zfsDelete.fs.title")}
-        </h2>
         {row.poolroot === true ? (
           <p className="max-w-prose">
             {t("zfsFs.poolFolderNote")}{" "}
@@ -733,7 +761,6 @@ function ZfsFs({ address }: { address: string | null }) {
           </p>
         ) : (
           <>
-            <p className="max-w-prose">{t("zfsDelete.fs.intro")}</p>
             {blockers === null ? (
               <p
                 role="status"
@@ -765,7 +792,7 @@ function ZfsFs({ address }: { address: string | null }) {
                 {t("zfsDelete.fs.open")}
               </Button>
               {blockers !== null && blockers.length > 0 && !running ? (
-                <div id="zfs-fs-delete-why" className="flex flex-col gap-2">
+                <div id="zfs-fs-delete-why" className="flex flex-col gap-pair">
                   <ZfsDeleteBlockers blockers={blockers} of="fs" />
                   {blockers.some((b) => b.kind === "unread") ? (
                     <p>
@@ -784,7 +811,7 @@ function ZfsFs({ address }: { address: string | null }) {
             {deleteDialog(row.path, poolName, check)}
           </>
         )}
-      </section>
-    </div>
+      </PageSection>
+    </Page>
   );
 }

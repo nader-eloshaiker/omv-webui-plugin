@@ -130,14 +130,14 @@ export function CopyJobSummary({
   }
   return (
     <section
-      className="flex max-w-2xl flex-col gap-3"
+      className="flex max-w-2xl flex-col gap-group"
       aria-labelledby="job-summary-title"
     >
       <h2
         id="job-summary-title"
         ref={titleRef}
         tabIndex={-1}
-        className="text-lg font-semibold outline-hidden"
+        className="text-section text-foreground outline-hidden"
       >
         {t("addJob.summary.title")}
       </h2>

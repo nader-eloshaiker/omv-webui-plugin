@@ -10,6 +10,9 @@
 // is called first.
 import {
   ExternalLink,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
   StatusPill,
 } from "@omv-webui/react-ui-components";
@@ -67,6 +70,7 @@ function HomeFolders() {
   const smbOn = smb.data?.enable === true;
   const homesShared = smbOn && smb.data?.homesenable === true;
 
+  let stateLine = null;
   let content;
   if (settings.data === undefined && settings.isError) {
     content = (
@@ -83,7 +87,7 @@ function HomeFolders() {
     (folders.data === undefined && !folders.isError)
   ) {
     content = (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-group">
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("homeFolders.loading")}
         </p>
@@ -118,7 +122,7 @@ function HomeFolders() {
       </ReadFailed>
     );
     const fsLoading = (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-8 w-full max-w-xl" />
         ))}
@@ -130,19 +134,21 @@ function HomeFolders() {
         : state.kind === "on"
           ? state.folder
           : undefined;
+    stateLine = (
+      <StateLine
+        state={state}
+        fsKnown={fsRows !== undefined}
+        fs={
+          shownFolder === undefined || fsRows === undefined
+            ? undefined
+            : folderFs(shownFolder, fsRows)
+        }
+        pending={homePending(memory, pending)}
+        stateRef={stateRef}
+      />
+    );
     content = (
       <>
-        <StateLine
-          state={state}
-          fsKnown={fsRows !== undefined}
-          fs={
-            shownFolder === undefined || fsRows === undefined
-              ? undefined
-              : folderFs(shownFolder, fsRows)
-          }
-          pending={homePending(memory, pending)}
-          stateRef={stateRef}
-        />
         {state.kind === "off" ? (
           fsFailed ? (
             fsRead
@@ -160,7 +166,7 @@ function HomeFolders() {
             />
           )
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-group">
             {state.kind === "on" ? (
               <p className="max-w-prose">
                 <Trans
@@ -202,16 +208,16 @@ function HomeFolders() {
   }
 
   return (
-    <div className="flex min-w-0 max-w-3xl flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <PageTitle>{t("homeFolders.title")}</PageTitle>
-        <p className="text-sm text-muted-foreground">
-          {t("homeFolders.subtitle")}
-        </p>
-      </div>
-      <p className="max-w-prose">{t("users.term.home")}</p>
-      {content}
-    </div>
+    <Page className="max-w-3xl">
+      <PageHeader
+        title={<PageTitle>{t("homeFolders.title")}</PageTitle>}
+        subtitle={t("homeFolders.subtitle")}
+      >
+        <p className="max-w-prose">{t("users.term.home")}</p>
+        {stateLine}
+      </PageHeader>
+      <PageSection>{content}</PageSection>
+    </Page>
   );
 }
 
@@ -253,7 +259,7 @@ function StateLine({
   const unreachable =
     state.kind === "on" && fsKnown && state.state.pill !== "ok";
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-pair">
       <p
         ref={stateRef}
         tabIndex={-1}
@@ -265,7 +271,7 @@ function StateLine({
         {pending ? <PendingMark /> : null}
       </p>
       {unreachable ? (
-        <div className="flex flex-col items-start gap-1">
+        <div className="flex flex-col items-start gap-line">
           <FolderStateView state={state.state} fs={fs} />
           <p>{t("homeFolders.state.unreachable")}</p>
         </div>

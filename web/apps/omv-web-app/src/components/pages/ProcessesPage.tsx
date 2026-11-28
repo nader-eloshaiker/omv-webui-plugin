@@ -24,6 +24,10 @@ import {
   FactListLabel,
   FactListSkeleton,
   FactListValue,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   SearchField,
   Table,
   TableBody,
@@ -170,7 +174,7 @@ function Summary({ top }: { top: TopInfo | undefined }) {
               {memory === null ? (
                 <NotReported />
               ) : (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-line">
                   <CapacityMeter
                     label={
                       <span className="sr-only">{t("processes.memory")}</span>
@@ -198,7 +202,7 @@ function Summary({ top }: { top: TopInfo | undefined }) {
               ) : swap === "none" ? (
                 t("processes.swapNone")
               ) : (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-line">
                   <CapacityMeter
                     label={
                       <span className="sr-only">{t("processes.swap")}</span>
@@ -357,15 +361,17 @@ function Processes() {
 
   if (data === undefined && top.isError) {
     return (
-      <Frame>
-        <ReadFailed
-          error={top.error}
-          onRetry={readNow}
-          retrying={top.isFetching}
-        >
-          {t("processes.loadFailed")}
-        </ReadFailed>
-      </Frame>
+      <Frame
+        header={
+          <ReadFailed
+            error={top.error}
+            onRetry={readNow}
+            retrying={top.isFetching}
+          >
+            {t("processes.loadFailed")}
+          </ReadFailed>
+        }
+      />
     );
   }
 
@@ -394,137 +400,152 @@ function Processes() {
   }
 
   return (
-    <Frame>
-      {loading ? (
-        <p role="status" className="sr-only">
-          {t("processes.loading")}
-        </p>
-      ) : null}
-      <Summary top={data} />
-
-      {loading ? null : (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground tabular-nums">
-          <p>
-            {view.paused
-              ? t("processes.paused", { time })
-              : stale
-                ? t("processes.stale", { time })
-                : t("processes.fresh", { time })}
-          </p>
-          <Button variant="neutral" size="sm" onClick={togglePause}>
-            {view.paused ? (
-              <Play aria-hidden="true" />
-            ) : (
-              <Pause aria-hidden="true" />
-            )}
-            {view.paused ? t("processes.resume") : t("processes.pause")}
-          </Button>
-          {stale ? (
-            <Button
-              variant="neutral"
-              size="sm"
-              loading={top.isFetching}
-              onClick={readNow}
-            >
-              {t("common.tryAgain")}
-            </Button>
+    <Frame
+      header={
+        <>
+          {loading ? (
+            <p role="status" className="sr-only">
+              {t("processes.loading")}
+            </p>
           ) : null}
-          <p role="status" className="sr-only">
-            {announcement}
-          </p>
-        </div>
-      )}
+          <Summary top={data} />
 
-      <div>
-        <TableToolbar>
-          <SearchField
-            ref={searchRef}
-            size="sm"
-            label={t("processes.search")}
-            placeholder={t("processes.searchPlaceholder")}
-            clearLabel={t("processes.clearSearch")}
-            value={view.searchInput}
-            onValueChange={changeSearch}
-            disabled={loading}
-            className="max-w-sm flex-1 basis-56"
-          />
-        </TableToolbar>
-        <Table
-          aria-label={t("processes.tableLabel")}
-          frameLabel={t("processes.tableLabel")}
-          busy={loading}
-          busyLabel={t("processes.loading")}
-        >
-          <TableHeader>
-            <TableRow>
-              {COLUMNS.map((column) => {
-                const label = t(column.label);
-                return (
-                  <TableHead
-                    key={column.field}
-                    numeric={column.numeric}
-                    sort={
-                      view.sort.field === column.field
-                        ? view.sort.direction === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
-                    onSort={() => sortBy(column.field, label)}
-                  >
-                    {label}
-                  </TableHead>
-                );
+          {loading ? null : (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground tabular-nums">
+              <p>
+                {view.paused
+                  ? t("processes.paused", { time })
+                  : stale
+                    ? t("processes.stale", { time })
+                    : t("processes.fresh", { time })}
+              </p>
+              <Button variant="neutral" size="sm" onClick={togglePause}>
+                {view.paused ? (
+                  <Play aria-hidden="true" />
+                ) : (
+                  <Pause aria-hidden="true" />
+                )}
+                {view.paused ? t("processes.resume") : t("processes.pause")}
+              </Button>
+              {stale ? (
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  loading={top.isFetching}
+                  onClick={readNow}
+                >
+                  {t("common.tryAgain")}
+                </Button>
+              ) : null}
+              <p role="status" className="sr-only">
+                {announcement}
+              </p>
+            </div>
+          )}
+        </>
+      }
+    >
+      <PageSection>
+        <PairStack>
+          <TableToolbar>
+            <SearchField
+              ref={searchRef}
+              size="sm"
+              label={t("processes.search")}
+              placeholder={t("processes.searchPlaceholder")}
+              clearLabel={t("processes.clearSearch")}
+              value={view.searchInput}
+              onValueChange={changeSearch}
+              disabled={loading}
+              className="max-w-sm flex-1 basis-56"
+            />
+          </TableToolbar>
+          <Table
+            aria-label={t("processes.tableLabel")}
+            frameLabel={t("processes.tableLabel")}
+            busy={loading}
+            busyLabel={t("processes.loading")}
+          >
+            <TableHeader>
+              <TableRow>
+                {COLUMNS.map((column) => {
+                  const label = t(column.label);
+                  return (
+                    <TableHead
+                      key={column.field}
+                      numeric={column.numeric}
+                      sort={
+                        view.sort.field === column.field
+                          ? view.sort.direction === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
+                      onSort={() => sortBy(column.field, label)}
+                    >
+                      {label}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+          </Table>
+          <p role="status" className="sr-only">
+            {sortAnnouncement}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("processes.stateNote")}
+          </p>
+          {matching.length > 0 ? (
+            <TablePagination
+              aria-label={t("processes.pages")}
+              page={page.page}
+              pageCount={page.pageCount}
+              onPageChange={(next) => processesView.set({ page: next })}
+              range={t(searching ? "table.rangeMatching" : "table.range", {
+                from: format.count(page.from),
+                to: format.count(page.to),
+                total: format.count(matching.length),
               })}
-            </TableRow>
-          </TableHeader>
-          <TableBody>{body}</TableBody>
-        </Table>
-        <p role="status" className="sr-only">
-          {sortAnnouncement}
-        </p>
-        <p className="pt-2 text-sm text-muted-foreground">
-          {t("processes.stateNote")}
-        </p>
-        {matching.length > 0 ? (
-          <TablePagination
-            aria-label={t("processes.pages")}
-            page={page.page}
-            pageCount={page.pageCount}
-            onPageChange={(next) => processesView.set({ page: next })}
-            range={t(searching ? "table.rangeMatching" : "table.range", {
-              from: format.count(page.from),
-              to: format.count(page.to),
-              total: format.count(matching.length),
-            })}
-            pageSize={view.pageSize}
-            pageSizeOptions={PROCESS_PAGE_SIZES}
-            onPageSizeChange={(pageSize) =>
-              processesView.set({ pageSize, page: 0 })
-            }
-            pageSizeLabel={t("table.pageSize")}
-            previous={{
-              label: t("table.previous"),
-              unavailableReason: t("table.firstPageReason"),
-            }}
-            next={{
-              label: t("table.next"),
-              unavailableReason: t("table.lastPageReason"),
-            }}
-          />
-        ) : null}
-      </div>
+              pageSize={view.pageSize}
+              pageSizeOptions={PROCESS_PAGE_SIZES}
+              onPageSizeChange={(pageSize) =>
+                processesView.set({ pageSize, page: 0 })
+              }
+              pageSizeLabel={t("table.pageSize")}
+              previous={{
+                label: t("table.previous"),
+                unavailableReason: t("table.firstPageReason"),
+              }}
+              next={{
+                label: t("table.next"),
+                unavailableReason: t("table.lastPageReason"),
+              }}
+            />
+          ) : null}
+        </PairStack>
+      </PageSection>
     </Frame>
   );
 }
 
-function Frame({ children }: { children: ReactNode }) {
+/** The page: its title and intro, what the header says after them, then its sections. */
+function Frame({
+  header,
+  children,
+}: {
+  header: ReactNode;
+  children?: ReactNode;
+}) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("processes.title")}</PageTitle>
-      <p className="max-w-prose">{t("processes.intro")}</p>
+    <Page>
+      <PageHeader title={<PageTitle>{t("processes.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("processes.intro")}</p>
+        {header}
+      </PageHeader>
       {children}
-    </div>
+    </Page>
   );
 }

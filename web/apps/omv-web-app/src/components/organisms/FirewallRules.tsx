@@ -13,6 +13,7 @@ import {
   EmptyState,
   FirewallRuleList,
   IsolatedIdentifier,
+  PairStack,
   ServerMessage,
   Skeleton,
   TableToolbar,
@@ -454,7 +455,7 @@ export function FirewallRules({
     );
   } else if (query.data === undefined) {
     content = (
-      <div className="flex flex-col gap-3" aria-busy="true">
+      <div className="flex flex-col gap-group" aria-busy="true">
         <p role="status" className="sr-only">
           {t("firewall.loading")}
         </p>
@@ -487,7 +488,7 @@ export function FirewallRules({
     });
     const offersBlock = offersBlockEverythingElse(stored);
     content = (
-      <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-group">
         {check === null ? (
           <Skeleton className="h-6 w-96 max-w-full" />
         ) : (
@@ -506,163 +507,168 @@ export function FirewallRules({
             />
           )}
         </p>
-        <TableToolbar aria-label={t("firewall.title")}>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              ref={addRef}
-              variant="neutral"
-              disabled={unsaved}
-              focusableWhenDisabled
-              aria-describedby={unsaved ? orderNoteId : undefined}
-              onClick={() =>
-                openDialog({ kind: "rule", mode: { kind: "add" } })
-              }
-            >
-              {t("firewall.add")}
-            </Button>
-            {offersBlock ? (
+        <PairStack>
+          <TableToolbar aria-label={t("firewall.title")}>
+            <div className="flex flex-wrap items-center gap-2">
               <Button
+                ref={addRef}
                 variant="neutral"
                 disabled={unsaved}
                 focusableWhenDisabled
                 aria-describedby={unsaved ? orderNoteId : undefined}
-                onClick={() => openDialog({ kind: "block" })}
-              >
-                {t("firewall.blockRest")}
-              </Button>
-            ) : null}
-            <Button
-              variant="ghost"
-              loading={query.isFetching}
-              disabled={unsaved}
-              focusableWhenDisabled
-              aria-describedby={unsaved ? orderNoteId : undefined}
-              onClick={() => {
-                void query.refetch();
-                void context.connection.refresh();
-              }}
-            >
-              <RefreshCw aria-hidden="true" />
-              {t("firewall.refresh")}
-            </Button>
-            {unsaved ? (
-              <span id={orderNoteId} className="text-sm text-muted-foreground">
-                {t("firewall.orderFirst")}
-              </span>
-            ) : null}
-          </div>
-        </TableToolbar>
-        {orderError !== null && !unsaved ? (
-          <p role="alert" className="text-sm text-critical-label">
-            {orderError}
-          </p>
-        ) : null}
-        <div ref={listRef} className="min-w-0">
-          <FirewallRuleList<Row>
-            rules={rows}
-            labels={{
-              name: t("firewall.title"),
-              columns: {
-                position: t("firewall.col.position"),
-                then: t("firewall.col.then"),
-                traffic: t("firewall.col.traffic"),
-                peer: t("firewall.col.who"),
-                note: t("firewall.col.note"),
-                actions: t("firewall.col.actions"),
-              },
-              actions: {
-                allow: t("firewall.action.accept"),
-                refuse: t("firewall.action.reject"),
-                ignore: t("firewall.action.drop"),
-                log: t("firewall.action.log"),
-                count: t("firewall.action.count"),
-              },
-              moveUp: (n) => t("firewall.moveUp", { n }),
-              moveDown: (n) => t("firewall.moveDown", { n }),
-              alreadyFirst: t("firewall.alreadyFirst"),
-              alreadyLast: t("firewall.alreadyLast"),
-              change: t("firewall.change"),
-              changeName: (n) => t("firewall.changeName", { n }),
-              delete: t("firewall.delete"),
-              deleteName: (n) => t("firewall.deleteName", { n }),
-              moved: (_from, to) => t("firewall.moved", { to }),
-              orderUnsaved: t("firewall.orderUnsaved"),
-              discard: t("firewall.discardOrder"),
-            }}
-            onOrderChange={(next) => {
-              setOrderError(null);
-              const base = order?.base ?? stored;
-              const same = next.every(
-                (row, i) => row.rule.uuid === base[i]?.uuid,
-              );
-              onOrder(
-                same ? null : { base, order: next.map((row) => row.rule) },
-              );
-            }}
-            onChange={
-              unsaved
-                ? undefined
-                : (row, position) =>
-                    openDialog({
-                      kind: "rule",
-                      mode: { kind: "change", rule: row.rule, position },
-                    })
-            }
-            onDelete={
-              unsaved
-                ? undefined
-                : (row, position) =>
-                    openDialog({ kind: "delete", rule: row.rule, position })
-            }
-            unsaved={unsaved}
-            saveLabel={
-              opensFlow(orderImpact)
-                ? t("netChange.review")
-                : t("firewall.saveOrder")
-            }
-            onSave={() => {
-              if (order === null || orderRefused) {
-                return;
-              }
-              void save({ kind: "order", order: order.order }, "order", {
-                toast: t("firewall.orderSaved"),
-                focus: { position: 1 },
-              });
-            }}
-            onDiscard={() => {
-              setOrderError(null);
-              onOrder(null);
-            }}
-            saving={saving && unsaved}
-            saveNote={
-              orderError !== null ? (
-                <p role="alert" className="text-sm text-critical-label">
-                  {orderError}
-                </p>
-              ) : orderRefused && check !== null ? (
-                <p className="text-sm">
-                  <VerdictSentence check={check} />
-                </p>
-              ) : null
-            }
-            empty={
-              <EmptyState
-                action={
-                  <Button
-                    variant="neutral"
-                    onClick={() =>
-                      openDialog({ kind: "rule", mode: { kind: "add" } })
-                    }
-                  >
-                    {t("firewall.add")}
-                  </Button>
+                onClick={() =>
+                  openDialog({ kind: "rule", mode: { kind: "add" } })
                 }
               >
-                {t("firewall.empty")}
-              </EmptyState>
-            }
-          />
-        </div>
+                {t("firewall.add")}
+              </Button>
+              {offersBlock ? (
+                <Button
+                  variant="neutral"
+                  disabled={unsaved}
+                  focusableWhenDisabled
+                  aria-describedby={unsaved ? orderNoteId : undefined}
+                  onClick={() => openDialog({ kind: "block" })}
+                >
+                  {t("firewall.blockRest")}
+                </Button>
+              ) : null}
+              <Button
+                variant="ghost"
+                loading={query.isFetching}
+                disabled={unsaved}
+                focusableWhenDisabled
+                aria-describedby={unsaved ? orderNoteId : undefined}
+                onClick={() => {
+                  void query.refetch();
+                  void context.connection.refresh();
+                }}
+              >
+                <RefreshCw aria-hidden="true" />
+                {t("firewall.refresh")}
+              </Button>
+              {unsaved ? (
+                <span
+                  id={orderNoteId}
+                  className="text-sm text-muted-foreground"
+                >
+                  {t("firewall.orderFirst")}
+                </span>
+              ) : null}
+            </div>
+          </TableToolbar>
+          {orderError !== null && !unsaved ? (
+            <p role="alert" className="text-sm text-critical-label">
+              {orderError}
+            </p>
+          ) : null}
+          <div ref={listRef} className="min-w-0">
+            <FirewallRuleList<Row>
+              rules={rows}
+              labels={{
+                name: t("firewall.title"),
+                columns: {
+                  position: t("firewall.col.position"),
+                  then: t("firewall.col.then"),
+                  traffic: t("firewall.col.traffic"),
+                  peer: t("firewall.col.who"),
+                  note: t("firewall.col.note"),
+                  actions: t("firewall.col.actions"),
+                },
+                actions: {
+                  allow: t("firewall.action.accept"),
+                  refuse: t("firewall.action.reject"),
+                  ignore: t("firewall.action.drop"),
+                  log: t("firewall.action.log"),
+                  count: t("firewall.action.count"),
+                },
+                moveUp: (n) => t("firewall.moveUp", { n }),
+                moveDown: (n) => t("firewall.moveDown", { n }),
+                alreadyFirst: t("firewall.alreadyFirst"),
+                alreadyLast: t("firewall.alreadyLast"),
+                change: t("firewall.change"),
+                changeName: (n) => t("firewall.changeName", { n }),
+                delete: t("firewall.delete"),
+                deleteName: (n) => t("firewall.deleteName", { n }),
+                moved: (_from, to) => t("firewall.moved", { to }),
+                orderUnsaved: t("firewall.orderUnsaved"),
+                discard: t("firewall.discardOrder"),
+              }}
+              onOrderChange={(next) => {
+                setOrderError(null);
+                const base = order?.base ?? stored;
+                const same = next.every(
+                  (row, i) => row.rule.uuid === base[i]?.uuid,
+                );
+                onOrder(
+                  same ? null : { base, order: next.map((row) => row.rule) },
+                );
+              }}
+              onChange={
+                unsaved
+                  ? undefined
+                  : (row, position) =>
+                      openDialog({
+                        kind: "rule",
+                        mode: { kind: "change", rule: row.rule, position },
+                      })
+              }
+              onDelete={
+                unsaved
+                  ? undefined
+                  : (row, position) =>
+                      openDialog({ kind: "delete", rule: row.rule, position })
+              }
+              unsaved={unsaved}
+              saveLabel={
+                opensFlow(orderImpact)
+                  ? t("netChange.review")
+                  : t("firewall.saveOrder")
+              }
+              onSave={() => {
+                if (order === null || orderRefused) {
+                  return;
+                }
+                void save({ kind: "order", order: order.order }, "order", {
+                  toast: t("firewall.orderSaved"),
+                  focus: { position: 1 },
+                });
+              }}
+              onDiscard={() => {
+                setOrderError(null);
+                onOrder(null);
+              }}
+              saving={saving && unsaved}
+              saveNote={
+                orderError !== null ? (
+                  <p role="alert" className="text-sm text-critical-label">
+                    {orderError}
+                  </p>
+                ) : orderRefused && check !== null ? (
+                  <p className="text-sm">
+                    <VerdictSentence check={check} />
+                  </p>
+                ) : null
+              }
+              empty={
+                <EmptyState
+                  action={
+                    <Button
+                      variant="neutral"
+                      onClick={() =>
+                        openDialog({ kind: "rule", mode: { kind: "add" } })
+                      }
+                    >
+                      {t("firewall.add")}
+                    </Button>
+                  }
+                >
+                  {t("firewall.empty")}
+                </EmptyState>
+              }
+            />
+          </div>
+        </PairStack>
       </div>
     );
   }

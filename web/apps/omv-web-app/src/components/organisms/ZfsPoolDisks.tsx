@@ -11,6 +11,7 @@ import { isRpcError } from "@omv-webui/react-api-omv/transport";
 import {
   Button,
   Identifier,
+  PageSection,
   ServerMessage,
   StatusPill,
   Table,
@@ -441,15 +442,12 @@ export function ZfsPoolDisks({
         })();
 
   return (
-    <section aria-labelledby="zfs-disks" className="flex flex-col gap-2">
-      <h2 id="zfs-disks" className="text-lg font-semibold">
-        {t("zfsPool.disks.title")}
-      </h2>
+    <PageSection heading={t("zfsPool.disks.title")}>
       {!poolDisks.known ? (
         <p className="max-w-prose">{t("zfsRole.notKnownBlocks")}</p>
       ) : null}
       {poolDisks.known && !poolDisks.byId ? (
-        <div className="flex max-w-prose flex-col gap-1">
+        <div className="flex max-w-prose flex-col gap-pair">
           <h3 className="font-semibold">{t("zfsPool.notById")}</h3>
           <p>{t("zfsBlock.notById")}</p>
         </div>
@@ -584,6 +582,6 @@ export function ZfsPoolDisks({
         onConfirm={() => void confirm()}
         openerRef={openerRef}
       />
-    </section>
+    </PageSection>
   );
 }

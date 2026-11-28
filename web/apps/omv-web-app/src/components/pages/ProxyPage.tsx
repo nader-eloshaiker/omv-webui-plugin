@@ -4,7 +4,14 @@
 // focus (not while the form holds unsaved work); every stored password is replaced by whether it is
 // set before anything sees the reply (the transport, UI-6). A normal user who types the address gets
 // the "only administrators" page, and nothing is called.
-import { Card, ExternalLink, Skeleton } from "@omv-webui/react-ui-components";
+import {
+  Card,
+  ExternalLink,
+  Page,
+  PageHeader,
+  PageSection,
+  Skeleton,
+} from "@omv-webui/react-ui-components";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProxySettings } from "../../hooks/useNetworkReads.ts";
@@ -75,20 +82,21 @@ function Proxy() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <PageTitle>{t("proxy.title")}</PageTitle>
-        {pending ? <PendingMark /> : null}
-      </div>
-      <p className="max-w-prose">
-        {t("network.term.proxy")} {t("proxy.uses")}
-      </p>
-      {content}
+    <Page>
+      <PageHeader
+        title={<PageTitle>{t("proxy.title")}</PageTitle>}
+        besideTitle={pending ? <PendingMark /> : undefined}
+      >
+        <p className="max-w-prose">
+          {t("network.term.proxy")} {t("proxy.uses")}
+        </p>
+      </PageHeader>
+      <PageSection>{content}</PageSection>
       <footer className="text-sm text-muted-foreground">
         <ExternalLink href={CLASSIC.proxy} newTabLabel={t("app.newTab")}>
           {t("proxy.classicLink")}
         </ExternalLink>
       </footer>
-    </div>
+    </Page>
   );
 }

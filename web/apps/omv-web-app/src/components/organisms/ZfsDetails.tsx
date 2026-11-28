@@ -10,6 +10,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
   InlineAlert,
+  PageSection,
   ServerMessage,
   TaskLog,
 } from "@omv-webui/react-ui-components";
@@ -44,11 +45,12 @@ export function ZfsDetails({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
-    <section aria-labelledby="zfs-details" className="flex flex-col gap-2">
-      <h2 id="zfs-details" className="text-lg font-semibold">
-        {t("zfsPool.details.title")}
-      </h2>
-      <p className="max-w-prose text-sm text-muted-foreground">{intro}</p>
+    <PageSection
+      // The pool's status card links here (#zfs-details).
+      id="zfs-details"
+      heading={t("zfsPool.details.title")}
+      lead={intro}
+    >
       {note !== undefined && !open ? (
         <p className="max-w-prose text-sm">{note}</p>
       ) : null}
@@ -100,6 +102,6 @@ export function ZfsDetails({
           )}
         </DisclosurePanel>
       </Disclosure>
-    </section>
+    </PageSection>
   );
 }

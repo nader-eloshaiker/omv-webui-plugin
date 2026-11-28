@@ -16,6 +16,7 @@ import {
   ExternalLink,
   Identifier,
   InlineAlert,
+  PageSection,
   ServerMessage,
   Table,
   TableBody,
@@ -457,13 +458,14 @@ export function ZfsSnapshots({
   }
 
   return (
-    <section aria-labelledby="zfs-snapshots" className="flex flex-col gap-3">
-      <h2 id="zfs-snapshots" className="text-lg font-semibold">
-        {t("zfsSnap.title")}
-      </h2>
-      <p className="max-w-prose text-sm text-muted-foreground">
-        {t("zfs.term.snapshot")} {t("zfsSnap.singleFile")}
-      </p>
+    <PageSection
+      heading={t("zfsSnap.title")}
+      lead={
+        <>
+          {t("zfs.term.snapshot")} {t("zfsSnap.singleFile")}
+        </>
+      }
+    >
       <p role="status" className="sr-only">
         {announce}
       </p>
@@ -619,6 +621,6 @@ export function ZfsSnapshots({
           }}
         />
       )}
-    </section>
+    </PageSection>
   );
 }

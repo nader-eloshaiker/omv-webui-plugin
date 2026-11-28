@@ -320,13 +320,13 @@ export function ArrayDisks({
   return (
     <section
       aria-labelledby="array-disks"
-      className="flex min-w-0 flex-col gap-3"
+      className="flex min-w-0 flex-col gap-group"
     >
       <h2
         id="array-disks"
         ref={headingRef}
         tabIndex={-1}
-        className="text-lg font-semibold outline-hidden"
+        className="text-section text-foreground outline-hidden"
       >
         {t("array.disks.title")}
       </h2>

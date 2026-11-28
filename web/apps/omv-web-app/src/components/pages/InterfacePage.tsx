@@ -20,6 +20,9 @@ import {
   ExternalLink,
   Identifier,
   IsolatedIdentifier,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
 } from "@omv-webui/react-ui-components";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -106,28 +109,32 @@ function Crumbs({ current }: { current?: string }) {
 function NotFound({ name }: { name: string | null }) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Crumbs />
-      <PageTitle>{t("interfaces.title")}</PageTitle>
-      <EmptyState
-        action={
-          <Link to="/network/interfaces" className={routerLinkClass}>
-            {t("iface.backToList")}
-          </Link>
-        }
-      >
-        {name === null ? (
-          t("iface.notFoundPlain")
-        ) : (
-          <Trans
-            i18nKey="iface.notFound"
-            components={{
-              iface: <IsolatedIdentifier value={inertBidi(name)} />,
-            }}
-          />
-        )}
-      </EmptyState>
-    </div>
+    <Page>
+      <PageHeader
+        before={<Crumbs />}
+        title={<PageTitle>{t("interfaces.title")}</PageTitle>}
+      />
+      <PageSection>
+        <EmptyState
+          action={
+            <Link to="/network/interfaces" className={routerLinkClass}>
+              {t("iface.backToList")}
+            </Link>
+          }
+        >
+          {name === null ? (
+            t("iface.notFoundPlain")
+          ) : (
+            <Trans
+              i18nKey="iface.notFound"
+              components={{
+                iface: <IsolatedIdentifier value={inertBidi(name)} />,
+              }}
+            />
+          )}
+        </EmptyState>
+      </PageSection>
+    </Page>
   );
 }
 
@@ -146,16 +153,20 @@ function Found({ name }: { name: string }) {
     }
   };
 
-  const header = (kindNode: ReactNode) => (
-    <>
-      <Crumbs current={name} />
-      <PageTitle documentTitle={name}>
-        <span className="flex flex-wrap items-baseline gap-x-3">
-          <Identifier dir="ltr">{name}</Identifier>
-          {kindNode}
-        </span>
-      </PageTitle>
-    </>
+  const header = (kindNode: ReactNode, children?: ReactNode) => (
+    <PageHeader
+      before={<Crumbs current={name} />}
+      title={
+        <PageTitle documentTitle={name}>
+          <span className="flex flex-wrap items-baseline gap-x-3">
+            <Identifier dir="ltr">{name}</Identifier>
+            {kindNode}
+          </span>
+        </PageTitle>
+      }
+    >
+      {children}
+    </PageHeader>
   );
 
   // The rows as last read: a later read that fails (the NAS restarting its network while a port
@@ -163,28 +174,34 @@ function Found({ name }: { name: string }) {
   const rows = devicesQuery.data?.data;
   if (rows === undefined && devices.state !== "failed") {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        {header(null)}
-        <p role="status" aria-busy="true" className="sr-only">
-          {t("interfaces.loading")}
-        </p>
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
+      <Page>
+        {header(
+          null,
+          <p role="status" aria-busy="true" className="sr-only">
+            {t("interfaces.loading")}
+          </p>,
+        )}
+        <PageSection>
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </PageSection>
+      </Page>
     );
   }
   if (rows === undefined) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
+      <Page>
         {header(null)}
-        <ReadFailed
-          error={devicesQuery.error}
-          onRetry={() => void retry()}
-          retrying={refreshing}
-        >
-          {t("interfaces.loadFailed")}
-        </ReadFailed>
-      </div>
+        <PageSection>
+          <ReadFailed
+            error={devicesQuery.error}
+            onRetry={() => void retry()}
+            retrying={refreshing}
+          >
+            {t("interfaces.loadFailed")}
+          </ReadFailed>
+        </PageSection>
+      </Page>
     );
   }
   const device = rows.find((d) => d.devicename === name && !isLoopback(d));
@@ -198,7 +215,9 @@ function Found({ name }: { name: string }) {
       connection={connection}
       hostname={general.state === "ok" ? general.data.hostname : ""}
       refresh={refresh}
-      header={header(<IfaceKind kind={kindOf(device)} />)}
+      header={(children) =>
+        header(<IfaceKind kind={kindOf(device)} />, children)
+      }
     />
   );
 }
@@ -218,7 +237,8 @@ function Interface({
   connection: ReturnType<typeof useConnection>["connection"];
   hostname: string;
   refresh: ReturnType<typeof useConnection>["refresh"];
-  header: ReactNode;
+  /** The page's header, with what it says first (the "this page" note) as children. */
+  header: (children?: ReactNode) => ReactNode;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -308,15 +328,15 @@ function Interface({
 
   if (change !== null) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        {header}
+      <Page>
+        {header()}
         <NetworkChangeFlow
           change={change}
           onBack={() => setChange(null)}
           onCancel={() => setChange(null)}
           onDone={() => flowDone(change)}
         />
-      </div>
+      </Page>
     );
   }
 
@@ -337,13 +357,13 @@ function Interface({
     settingsSection = (
       <Card
         render={<section aria-labelledby={settingsId} />}
-        className="flex flex-col gap-2 p-4"
+        className="flex flex-col gap-pair p-4"
       >
         <h2
           id={settingsId}
           ref={settingsHeadingRef}
           tabIndex={-1}
-          className="text-lg font-semibold"
+          className="text-section text-foreground"
         >
           {t("iface.settings")}
         </h2>
@@ -384,13 +404,13 @@ function Interface({
       settingsSection = (
         <Card
           render={<section aria-labelledby={settingsId} />}
-          className="flex flex-col gap-3 p-4"
+          className="flex flex-col gap-group p-4"
         >
           <h2
             id={settingsId}
             ref={settingsHeadingRef}
             tabIndex={-1}
-            className="text-lg font-semibold"
+            className="text-section text-foreground"
           >
             {t("iface.settings")}
           </h2>
@@ -412,13 +432,13 @@ function Interface({
       settingsSection = (
         <Card
           render={<section aria-labelledby={settingsId} />}
-          className="flex flex-col gap-2 p-4"
+          className="flex flex-col gap-pair p-4"
         >
           <h2
             id={settingsId}
             ref={settingsHeadingRef}
             tabIndex={-1}
-            className="text-lg font-semibold"
+            className="text-section text-foreground"
           >
             {t("iface.settings")}
           </h2>
@@ -444,13 +464,13 @@ function Interface({
     settingsSection = (
       <Card
         render={<section aria-labelledby={settingsId} />}
-        className="flex flex-col gap-3 p-4"
+        className="flex flex-col gap-group p-4"
       >
         <h2
           id={settingsId}
           ref={settingsHeadingRef}
           tabIndex={-1}
-          className="text-lg font-semibold"
+          className="text-section text-foreground"
         >
           {t("iface.settings")}
         </h2>
@@ -477,25 +497,26 @@ function Interface({
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      {header}
-      {thisPage ? (
-        <p className="flex max-w-prose items-start gap-2 rounded-card border border-border bg-muted p-3">
-          <Monitor
-            aria-hidden="true"
-            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-          />
-          <span>{t("iface.thisPage")}</span>
-        </p>
-      ) : null}
+    <Page>
+      {header(
+        thisPage ? (
+          <p className="flex max-w-prose items-start gap-2 rounded-card border border-border bg-muted p-3">
+            <Monitor
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+            />
+            <span>{t("iface.thisPage")}</span>
+          </p>
+        ) : null,
+      )}
       <IfaceNowCard device={device} devices={devices} />
       {settingsSection}
       {kind === "ethernet" ? (
         <Card
           render={<section aria-labelledby={findId} />}
-          className="flex flex-col gap-3 p-4"
+          className="flex flex-col gap-group p-4"
         >
-          <h2 id={findId} className="text-lg font-semibold">
+          <h2 id={findId} className="text-section text-foreground">
             {t("iface.find")}
           </h2>
           <div>
@@ -536,9 +557,9 @@ function Interface({
         stored.read.state === "failed" ? (
         <Card
           render={<section aria-labelledby={removeId} />}
-          className="flex flex-col gap-3 p-4"
+          className="flex flex-col gap-group p-4"
         >
-          <h2 id={removeId} className="text-lg font-semibold">
+          <h2 id={removeId} className="text-section text-foreground">
             {t("ifaceDelete.section")}
           </h2>
           <p className="max-w-prose">{t("ifaceDelete.sectionBody")}</p>
@@ -549,7 +570,7 @@ function Interface({
           </div>
         </Card>
       ) : null}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>
           <ExternalLink
             href={CLASSIC.networkInterfaces}
@@ -559,6 +580,6 @@ function Interface({
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </Page>
   );
 }

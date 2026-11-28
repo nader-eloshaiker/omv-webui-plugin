@@ -30,6 +30,8 @@ import {
   MenuItem,
   MenuSeparator,
   MenuTrigger,
+  PageSection,
+  PairStack,
   ServerMessage,
   Skeleton,
   StatusPill,
@@ -117,6 +119,7 @@ export function RsyncServerTab() {
     pending,
   );
 
+  let modulesSection = null;
   let content;
   if (settings.data === undefined && settings.isError) {
     content = (
@@ -130,7 +133,7 @@ export function RsyncServerTab() {
     );
   } else if (settings.data === undefined) {
     content = (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-group">
         <p role="status" aria-busy="true" className="text-muted-foreground">
           {t("rsyncd.loading")}
         </p>
@@ -149,32 +152,37 @@ export function RsyncServerTab() {
           pending={rsyncdSwitchPending(memory, pending)}
         />
         <SwitchCard settings={settings.data} modules={modules.data?.data} />
-        <Modules
-          modules={modules}
-          folders={folders.data?.data}
-          hostname={system.hostname}
-          settings={settings.data}
-          pending={pending}
-          saved={memory.saved}
-        />
       </>
+    );
+    modulesSection = (
+      <Modules
+        modules={modules}
+        folders={folders.data?.data}
+        hostname={system.hostname}
+        settings={settings.data}
+        pending={pending}
+        saved={memory.saved}
+      />
     );
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <p className="max-w-prose">{t("services.term.rsyncd")}</p>
-      <InlineAlert tone="neutral" icon="warning" role="note">
-        {t("rsyncd.noEncryption")}
-      </InlineAlert>
-      <p className="text-sm">
-        {t("rsyncd.sshInstead")}{" "}
-        <Link to="/services/ssh" className={routerLinkClass}>
-          {t("rsyncd.sshLink")}
-        </Link>
-      </p>
-      {content}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+    <>
+      <PageSection>
+        <p className="max-w-prose">{t("services.term.rsyncd")}</p>
+        <InlineAlert tone="neutral" icon="warning" role="note">
+          {t("rsyncd.noEncryption")}
+        </InlineAlert>
+        <p className="text-sm">
+          {t("rsyncd.sshInstead")}{" "}
+          <Link to="/services/ssh" className={routerLinkClass}>
+            {t("rsyncd.sshLink")}
+          </Link>
+        </p>
+        {content}
+      </PageSection>
+      {modulesSection}
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>{t("rsyncd.footerLine")}</p>
         <p>
           <ExternalLink
@@ -185,7 +193,7 @@ export function RsyncServerTab() {
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </>
   );
 }
 
@@ -397,7 +405,7 @@ function Modules({
     );
   } else if (rows === undefined) {
     body = (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-pair">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-8 w-full" />
         ))}
@@ -453,25 +461,24 @@ function Modules({
   }
 
   return (
-    <section aria-labelledby="rsyncd-modules" className="flex flex-col gap-3">
-      <h2 id="rsyncd-modules" className="text-lg font-semibold">
-        {t("rsyncd.modules.title")}
-      </h2>
-      {rows === undefined ? null : (
-        <TableToolbar>
-          <Button
-            ref={offerRef}
-            variant="neutral"
-            onClick={() => {
-              openerRef.current = offerRef.current;
-              setDialog({ kind: "new" });
-            }}
-          >
-            {t("rsyncd.modules.add")}
-          </Button>
-        </TableToolbar>
-      )}
-      {body}
+    <PageSection heading={t("rsyncd.modules.title")}>
+      <PairStack>
+        {rows === undefined ? null : (
+          <TableToolbar>
+            <Button
+              ref={offerRef}
+              variant="neutral"
+              onClick={() => {
+                openerRef.current = offerRef.current;
+                setDialog({ kind: "new" });
+              }}
+            >
+              {t("rsyncd.modules.add")}
+            </Button>
+          </TableToolbar>
+        )}
+        {body}
+      </PairStack>
       <RsyncModuleDialog
         target={dialog}
         onClose={() => setDialog(null)}
@@ -495,7 +502,7 @@ function Modules({
           offerRef.current?.focus();
         }}
       />
-    </section>
+    </PageSection>
   );
 }
 

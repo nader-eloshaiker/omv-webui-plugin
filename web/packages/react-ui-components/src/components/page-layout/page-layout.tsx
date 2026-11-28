@@ -88,7 +88,11 @@ interface PageSectionProps extends Omit<
 > {
   /** The section's heading, at the section step. Without one the section is a plain group. */
   heading?: React.ReactNode;
-  /** The heading's level: 2 under the page title, 3 inside another section. */
+  /**
+   * The heading's level: 2 under the page title; 3 for a part of another section, which sits two
+   * group steps under what comes before it in that section, so it reads as a part and not as one
+   * more paragraph.
+   */
   headingLevel?: 2 | 3;
   /** Beside the heading on its line: a count, when it was read, a pending mark. */
   besideHeading?: React.ReactNode;
@@ -99,7 +103,8 @@ interface PageSectionProps extends Omit<
 /**
  * A section of a page on the page ground: its heading and lead close together, then its content a
  * group step under them, the things inside a group step apart. Sections are a section step apart
- * (`Page`). Named by its heading.
+ * (`Page`). Named by its heading. A bare `h3` among its children (a part with no wrapper of its
+ * own) also sits two group steps under what comes before it.
  */
 function PageSection({
   heading,
@@ -118,14 +123,25 @@ function PageSection({
       data-slot="page-section"
       data-headed={headed}
       aria-labelledby={headed ? headingId : undefined}
-      className={cn("flex min-w-0 flex-col gap-group", className)}
+      className={cn(
+        "flex min-w-0 flex-col gap-group [&>h3:not(:first-child)]:mt-group",
+        headingLevel === 3 && "not-first:mt-group",
+        className,
+      )}
       {...props}
     >
       {headed || lead ? (
         <div className="flex min-w-0 flex-col gap-pair">
           {headed ? (
             <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
-              <Heading id={headingId} className="text-section text-foreground">
+              <Heading
+                id={headingId}
+                className={
+                  headingLevel === 2
+                    ? "text-section text-foreground"
+                    : "text-body font-semibold text-foreground"
+                }
+              >
                 {heading}
               </Heading>
               {besideHeading}

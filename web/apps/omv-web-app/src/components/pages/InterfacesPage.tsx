@@ -20,6 +20,10 @@ import {
   MenuContent,
   MenuItem,
   MenuTrigger,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   Skeleton,
   Table,
   TableBody,
@@ -127,7 +131,7 @@ function Interfaces() {
     );
   } else if (list === null) {
     content = (
-      <div className="flex flex-col gap-2" aria-hidden="true">
+      <div className="flex flex-col gap-pair" aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-11 w-full" />
         ))}
@@ -140,28 +144,33 @@ function Interfaces() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("interfaces.title")}</PageTitle>
-      <p className="max-w-prose">{t("network.term.interface")}</p>
-      <NetworkConnectionLine connection={connection} />
-      {attention.length > 0 ? <AttentionLines lines={attention} /> : null}
-      <TableToolbar aria-label={t("interfaces.title")}>
-        <SetUpMenu menu={menu} />
-        <IconButton
-          label={t("interfaces.refresh")}
-          icon={<RefreshCw />}
-          variant="neutral"
-          loading={refreshing}
-          onClick={() => void onRefresh()}
-        />
-      </TableToolbar>
-      {content}
-      {list !== null && list.virtualHidden > 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("interfaces.virtualHidden", { count: list.virtualHidden })}
-        </p>
-      ) : null}
-      <footer className="flex flex-col gap-1 text-sm text-muted-foreground">
+    <Page>
+      <PageHeader title={<PageTitle>{t("interfaces.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("network.term.interface")}</p>
+        <NetworkConnectionLine connection={connection} />
+        {attention.length > 0 ? <AttentionLines lines={attention} /> : null}
+      </PageHeader>
+      <PageSection>
+        <PairStack>
+          <TableToolbar aria-label={t("interfaces.title")}>
+            <SetUpMenu menu={menu} />
+            <IconButton
+              label={t("interfaces.refresh")}
+              icon={<RefreshCw />}
+              variant="neutral"
+              loading={refreshing}
+              onClick={() => void onRefresh()}
+            />
+          </TableToolbar>
+          {content}
+          {list !== null && list.virtualHidden > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("interfaces.virtualHidden", { count: list.virtualHidden })}
+            </p>
+          ) : null}
+        </PairStack>
+      </PageSection>
+      <footer className="flex flex-col gap-line text-sm text-muted-foreground">
         <p>{t("interfaces.footerLine")}</p>
         <p>
           <ExternalLink
@@ -172,7 +181,7 @@ function Interfaces() {
           </ExternalLink>
         </p>
       </footer>
-    </div>
+    </Page>
   );
 }
 

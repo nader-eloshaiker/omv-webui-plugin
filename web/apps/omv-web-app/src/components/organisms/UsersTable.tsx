@@ -15,6 +15,7 @@ import {
   buttonClass,
   EmptyState,
   InlineAlert,
+  PairStack,
   SearchField,
   Select,
   SelectContent,
@@ -179,7 +180,6 @@ export function UsersTable({
   readAt,
   refreshing,
   onRefresh,
-  footer,
 }: {
   users: readonly UserAccount[];
   groups: GroupsRead;
@@ -188,7 +188,6 @@ export function UsersTable({
   readAt: ReactNode;
   refreshing: boolean;
   onRefresh: () => void;
-  footer: ReactNode;
 }) {
   const { t } = useTranslation();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -294,7 +293,7 @@ export function UsersTable({
   const to = Math.min(visible.length, shown.page * pageSize + pageSize);
 
   return (
-    <div className="flex flex-col gap-3">
+    <PairStack>
       <TableToolbar className="items-end">
         {noPeople ? null : (
           <>
@@ -447,7 +446,6 @@ export function UsersTable({
           {t("sharedFolders.refresh")}
         </Button>
       </div>
-      {footer}
-    </div>
+    </PairStack>
   );
 }

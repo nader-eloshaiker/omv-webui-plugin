@@ -2,7 +2,7 @@
 // Storage > Disk health > Settings (phase 5 disks design 5), for administrators: how the NAS watches
 // the disks. A normal user who types the address gets the "only administrators" page, and nothing is
 // called first (UI-4). Smart.getSettings reads configuration only; it wakes no disk.
-import { Button, Skeleton } from "@omv-webui/react-ui-components";
+import { Button, PageSection, Skeleton } from "@omv-webui/react-ui-components";
 import { useTranslation } from "react-i18next";
 import { useSmartSettings } from "../../hooks/useDiskReads.ts";
 import { useSmartPending } from "../../hooks/useSmartPending.ts";
@@ -23,7 +23,9 @@ export function SmartSettingsPage() {
   }
   return (
     <SmartTabsFrame tab="settings">
-      <Settings />
+      <PageSection>
+        <Settings />
+      </PageSection>
     </SmartTabsFrame>
   );
 }

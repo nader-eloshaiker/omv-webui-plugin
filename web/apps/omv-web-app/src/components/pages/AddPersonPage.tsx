@@ -7,6 +7,8 @@ import {
   BreadcrumbItem,
   Breadcrumbs,
   JobRunner,
+  Page,
+  PageHeader,
 } from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -57,17 +59,23 @@ function AddPerson() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <Breadcrumbs aria-label={t("app.breadcrumb")}>
-        <BreadcrumbItem render={<Link to="/usermgmt/users" />}>
-          {t("users.title")}
-        </BreadcrumbItem>
-        <BreadcrumbItem current>{t("addPerson.breadcrumb")}</BreadcrumbItem>
-      </Breadcrumbs>
-      <PageTitle documentTitle={t("addPerson.title")}>
-        {t("users.title")}
-      </PageTitle>
+    <Page>
+      <PageHeader
+        before={
+          <Breadcrumbs aria-label={t("app.breadcrumb")}>
+            <BreadcrumbItem render={<Link to="/usermgmt/users" />}>
+              {t("users.title")}
+            </BreadcrumbItem>
+            <BreadcrumbItem current>{t("addPerson.breadcrumb")}</BreadcrumbItem>
+          </Breadcrumbs>
+        }
+        title={
+          <PageTitle documentTitle={t("addPerson.title")}>
+            {t("users.title")}
+          </PageTitle>
+        }
+      />
       <JobRunner title={t("addPerson.title")}>{content}</JobRunner>
-    </div>
+    </Page>
   );
 }

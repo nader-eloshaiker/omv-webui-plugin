@@ -17,8 +17,8 @@ import {
   buttonClass,
   CopyButton,
   EmptyState,
-  ExternalLink,
   InlineAlert,
+  PairStack,
   SearchField,
   ServerMessage,
   StatusPill,
@@ -47,7 +47,6 @@ import {
   useSmbSettings,
   useSmbShares,
 } from "../../hooks/useSharesReads.ts";
-import { CLASSIC } from "../../navigation/navigation.ts";
 import {
   nfsSharingCell,
   type NfsSharingCell,
@@ -508,7 +507,7 @@ export function SharedFoldersTable() {
   const range = data ? rangeOf(state.page, state.pageSize, data.total) : null;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-group">
       {issues && issues.count > 0 && issues.worst ? (
         <div className="flex flex-wrap items-center gap-3">
           <StatusPill status={issues.worst}>
@@ -545,7 +544,7 @@ export function SharedFoldersTable() {
         <UnfinishedLine key={`${work.kind}:${work.folder.uuid}`} work={work} />
       ))}
 
-      <div>
+      <PairStack>
         <TableToolbar className="items-start">
           {noFolders ? null : (
             <SearchField
@@ -580,7 +579,6 @@ export function SharedFoldersTable() {
           <InlineAlert
             tone="critical"
             title={t("sharedFolders.sharing.loadFailed")}
-            className="mb-3"
           >
             {isRpcError(shares.error) ? (
               <ServerMessage label={t("app.serverMessage")}>
@@ -643,7 +641,7 @@ export function SharedFoldersTable() {
           </TableHeader>
           <TableBody>{body}</TableBody>
         </Table>
-        <p id={usedNoteId} className="pt-2 text-sm text-muted-foreground">
+        <p id={usedNoteId} className="text-sm text-muted-foreground">
           <span aria-hidden="true">* </span>
           {t("sharedFolders.usedNote")}
         </p>
@@ -694,16 +692,7 @@ export function SharedFoldersTable() {
             })}
           </TableLastRefreshed>
         ) : null}
-        <p className="pt-3 text-sm text-muted-foreground">
-          {t("sharedFolders.footerLine")}{" "}
-          <ExternalLink
-            href={CLASSIC.sharedFolders}
-            newTabLabel={t("app.newTab")}
-          >
-            {t("sharedFolders.classicLink")}
-          </ExternalLink>
-        </p>
-      </div>
+      </PairStack>
     </div>
   );
 }

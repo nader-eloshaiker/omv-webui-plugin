@@ -12,6 +12,10 @@ import {
   buttonClass,
   ExternalLink,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
+  PairStack,
   rollUp,
   ServerMessage,
   StatusPill,
@@ -67,7 +71,7 @@ export function ReadAtLine({
     return null;
   }
   return (
-    <div className="flex flex-col gap-0.5 text-xs text-muted-foreground tabular-nums">
+    <div className="flex flex-col gap-line text-xs text-muted-foreground tabular-nums">
       {pollFailed ? (
         <p className="flex flex-wrap items-center gap-2">
           <span>{t("raid.pollFailed", { time: format.clock(at) })}</span>
@@ -109,10 +113,11 @@ function Raid() {
 
   if (list.missing) {
     return (
-      <div className="flex min-w-0 flex-col gap-4">
-        <PageTitle>{t("raid.title")}</PageTitle>
-        <RaidNotInstalled />
-      </div>
+      <Page>
+        <PageHeader title={<PageTitle>{t("raid.title")}</PageTitle>}>
+          <RaidNotInstalled />
+        </PageHeader>
+      </Page>
     );
   }
 
@@ -158,126 +163,144 @@ function Raid() {
     (list.arrays.isError || list.poll.isError);
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("raid.title")}</PageTitle>
-      <p className="max-w-prose">{t("raid.intro")}</p>
+    <Page>
+      <PageHeader title={<PageTitle>{t("raid.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("raid.intro")}</p>
 
-      {showRollUp ? (
-        <p role="status" className="flex flex-wrap items-center gap-2">
-          <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
-          <span>
-            {t("raid.rollUp", {
-              // The plural follows the number of arrays: "1 of 3 arrays".
-              count: summary.total,
-              number: statuses.filter((s) => s === worst).length,
-              status: t(`health.${worst}`),
-            })}
-          </span>
-        </p>
-      ) : null}
+        {showRollUp ? (
+          <p role="status" className="flex flex-wrap items-center gap-2">
+            <StatusPill status={worst}>{t(`health.${worst}`)}</StatusPill>
+            <span>
+              {t("raid.rollUp", {
+                // The plural follows the number of arrays: "1 of 3 arrays".
+                count: summary.total,
+                number: statuses.filter((s) => s === worst).length,
+                status: t(`health.${worst}`),
+              })}
+            </span>
+          </p>
+        ) : null}
 
-      {noFs.map((v) => (
-        <InlineAlert key={`nofs:${v.row.uuid}`} tone="neutral">
-          <p>{t("raid.unfinished.noFs", { device: v.row.devicefile })}</p>
-          <p className="mt-2">
+        {noFs.map((v) => (
+          <InlineAlert key={`nofs:${v.row.uuid}`} tone="neutral">
+            <p>{t("raid.unfinished.noFs", { device: v.row.devicefile })}</p>
+            <p className="mt-2">
+              <Button
+                variant="neutral"
+                size="sm"
+                onClick={() => {
+                  handOffDisk(v.row.devicefile);
+                  void navigate({ to: "/storage/filesystems/add" });
+                }}
+              >
+                {t("raid.unfinished.addStorage")}
+              </Button>
+            </p>
+          </InlineAlert>
+        ))}
+        {notWritten.map((v) => (
+          <InlineAlert key={`nw:${v.row.uuid}`} tone="neutral">
+            <p>
+              {t("raid.unfinished.notWritten", { device: v.row.devicefile })}
+            </p>
+          </InlineAlert>
+        ))}
+      </PageHeader>
+
+      <PageSection>
+        <PairStack>
+          <TableToolbar>
+            <Link
+              to="/storage/md/create"
+              className={buttonClass({ variant: "primary" })}
+            >
+              {t("raid.create")}
+            </Link>
             <Button
               variant="neutral"
-              size="sm"
-              onClick={() => {
-                handOffDisk(v.row.devicefile);
-                void navigate({ to: "/storage/filesystems/add" });
-              }}
+              loading={refreshing}
+              onClick={refreshing ? undefined : () => void refresh()}
             >
-              {t("raid.unfinished.addStorage")}
+              {refreshing ? t("raid.refreshing") : t("raid.refresh")}
             </Button>
+            <div className="ms-auto">
+              <ReadAtLine
+                at={list.arrays.dataUpdatedAt}
+                pollFailed={pollFailed}
+                polling={list.anyBusy}
+                onRetry={() => void refresh()}
+              />
+            </div>
+          </TableToolbar>
+          <p role="status" className="sr-only">
+            {readAt}
           </p>
-        </InlineAlert>
-      ))}
-      {notWritten.map((v) => (
-        <InlineAlert key={`nw:${v.row.uuid}`} tone="neutral">
-          <p>{t("raid.unfinished.notWritten", { device: v.row.devicefile })}</p>
-        </InlineAlert>
-      ))}
 
-      <TableToolbar className="pb-0">
-        <Link
-          to="/storage/md/create"
-          className={buttonClass({ variant: "primary" })}
-        >
-          {t("raid.create")}
-        </Link>
-        <Button
-          variant="neutral"
-          loading={refreshing}
-          onClick={refreshing ? undefined : () => void refresh()}
-        >
-          {refreshing ? t("raid.refreshing") : t("raid.refresh")}
-        </Button>
-        <div className="ms-auto">
-          <ReadAtLine
-            at={list.arrays.dataUpdatedAt}
-            pollFailed={pollFailed}
-            polling={list.anyBusy}
+          {list.usedFailed && views !== undefined ? (
+            <InlineAlert tone="critical" title={t("raid.usedUnknown")}>
+              {[list.configured.error, list.detected.error].map((error) =>
+                isRpcError(error) ? (
+                  <ServerMessage
+                    key={error.message}
+                    label={t("app.serverMessage")}
+                  >
+                    {error.message}
+                  </ServerMessage>
+                ) : null,
+              )}
+              <p>
+                <Button
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => void refresh()}
+                >
+                  {t("common.tryAgain")}
+                </Button>
+              </p>
+            </InlineAlert>
+          ) : null}
+
+          <RaidTable
+            rows={views}
+            disks={disks.data?.data}
+            error={list.arrays.error}
+            failed={list.arrays.isError}
+            refreshing={refreshing}
             onRetry={() => void refresh()}
           />
-        </div>
-      </TableToolbar>
-      <p role="status" className="sr-only">
-        {readAt}
-      </p>
+        </PairStack>
+      </PageSection>
 
-      {list.usedFailed && views !== undefined ? (
-        <InlineAlert tone="critical" title={t("raid.usedUnknown")}>
-          {[list.configured.error, list.detected.error].map((error) =>
-            isRpcError(error) ? (
-              <ServerMessage key={error.message} label={t("app.serverMessage")}>
-                {error.message}
-              </ServerMessage>
-            ) : null,
-          )}
-          <p>
-            <Button variant="neutral" size="sm" onClick={() => void refresh()}>
-              {t("common.tryAgain")}
-            </Button>
-          </p>
-        </InlineAlert>
-      ) : null}
-
-      <RaidTable
-        rows={views}
-        disks={disks.data?.data}
-        error={list.arrays.error}
-        failed={list.arrays.isError}
-        refreshing={refreshing}
-        onRetry={() => void refresh()}
-      />
-
-      {email.data === undefined ? null : (
-        <p className="max-w-prose text-sm">
-          {emailSetUp(email.data) ? t("raid.alerts.on") : t("raid.alerts.off")}{" "}
-          <ExternalLink
-            href={
-              emailSetUp(email.data)
-                ? CLASSIC.notificationEvents
-                : CLASSIC.notifications
-            }
-            newTabLabel={t("app.newTab")}
-          >
+      <footer className="flex flex-col gap-group text-sm">
+        {email.data === undefined ? null : (
+          <p className="max-w-prose">
             {emailSetUp(email.data)
-              ? t("raid.alerts.onLink")
-              : t("raid.alerts.offLink")}
-          </ExternalLink>
-        </p>
-      )}
+              ? t("raid.alerts.on")
+              : t("raid.alerts.off")}{" "}
+            <ExternalLink
+              href={
+                emailSetUp(email.data)
+                  ? CLASSIC.notificationEvents
+                  : CLASSIC.notifications
+              }
+              newTabLabel={t("app.newTab")}
+            >
+              {emailSetUp(email.data)
+                ? t("raid.alerts.onLink")
+                : t("raid.alerts.offLink")}
+            </ExternalLink>
+          </p>
+        )}
 
-      <div className="flex flex-col gap-1 text-sm">
-        <p className="text-muted-foreground">{t("raid.footerLine")}</p>
-        <p>
-          <ExternalLink href={CLASSIC.raid} newTabLabel={t("app.newTab")}>
-            {t("raid.classicLink")}
-          </ExternalLink>
-        </p>
-      </div>
-    </div>
+        <div className="flex flex-col gap-line">
+          <p className="text-muted-foreground">{t("raid.footerLine")}</p>
+          <p>
+            <ExternalLink href={CLASSIC.raid} newTabLabel={t("app.newTab")}>
+              {t("raid.classicLink")}
+            </ExternalLink>
+          </p>
+        </div>
+      </footer>
+    </Page>
   );
 }

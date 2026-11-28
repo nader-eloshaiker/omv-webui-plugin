@@ -2,7 +2,12 @@
 // The frame of the three Disk health pages (phase 5 disks design 4.1): the title with the pending mark
 // while the smartmontools module has saved changes, the intro, and the tabs, each its own static route
 // (UI-4), as the service details are. No business logic.
-import { PageTab, PageTabs } from "@omv-webui/react-ui-components";
+import {
+  Page,
+  PageHeader,
+  PageTab,
+  PageTabs,
+} from "@omv-webui/react-ui-components";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,30 +33,33 @@ export function SmartTabsFrame({
   const { t } = useTranslation();
   const pending = useSmartPending();
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <PageTitle
-          documentTitle={t("smart.documentTitle", {
-            tab: t(`smart.tab.${tab}`),
-          })}
-        >
-          {t("smart.title")}
-        </PageTitle>
-        {pending ? <PendingMark /> : null}
-      </div>
-      <p className="max-w-prose">{t("smart.intro")}</p>
-      <PageTabs aria-label={t("smart.tabs")}>
-        {TABS.map((each) => (
-          <PageTab
-            key={each}
-            current={each === tab}
-            render={<Link to={TAB_ROUTE[each]} />}
+    <Page>
+      <PageHeader
+        title={
+          <PageTitle
+            documentTitle={t("smart.documentTitle", {
+              tab: t(`smart.tab.${tab}`),
+            })}
           >
-            {t(`smart.tab.${each}`)}
-          </PageTab>
-        ))}
-      </PageTabs>
+            {t("smart.title")}
+          </PageTitle>
+        }
+        besideTitle={pending ? <PendingMark /> : undefined}
+      >
+        <p className="max-w-prose">{t("smart.intro")}</p>
+        <PageTabs aria-label={t("smart.tabs")}>
+          {TABS.map((each) => (
+            <PageTab
+              key={each}
+              current={each === tab}
+              render={<Link to={TAB_ROUTE[each]} />}
+            >
+              {t(`smart.tab.${each}`)}
+            </PageTab>
+          ))}
+        </PageTabs>
+      </PageHeader>
       {children}
-    </div>
+    </Page>
   );
 }

@@ -12,6 +12,7 @@ import {
   EmptyState,
   ExternalLink,
   InlineAlert,
+  PairStack,
   SearchField,
   ServerMessage,
   Table,
@@ -254,7 +255,7 @@ export function GroupsTable() {
   const noPage = all.filter((r) => !groupHasPage(r.name));
 
   return (
-    <div className="flex flex-col gap-3">
+    <PairStack>
       <TableToolbar className="items-start">
         <SearchField
           ref={searchRef}
@@ -402,6 +403,6 @@ export function GroupsTable() {
           })}
         </TableLastRefreshed>
       )}
-    </div>
+    </PairStack>
   );
 }

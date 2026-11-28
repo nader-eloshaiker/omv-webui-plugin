@@ -8,6 +8,9 @@
 import {
   ExternalLink,
   InlineAlert,
+  Page,
+  PageHeader,
+  PageSection,
   Skeleton,
   TableSkeletonRows,
 } from "@omv-webui/react-ui-components";
@@ -109,11 +112,11 @@ function UnfinishedLine({ work }: { work: UnfinishedPerson }) {
 function Loading() {
   const { t } = useTranslation();
   return (
-    <div aria-busy="true" className="flex flex-col gap-4">
+    <div aria-busy="true" className="flex flex-col gap-group">
       <p role="status" className="text-muted-foreground">
         {t("users.loading")}
       </p>
-      <div aria-hidden="true" className="flex flex-col gap-2">
+      <div aria-hidden="true" className="flex flex-col gap-pair">
         <Skeleton shape="block" className="h-6 w-56" />
         <Skeleton className="w-2/3" />
         <Skeleton className="w-1/2" />
@@ -137,7 +140,7 @@ function Users({ selfName }: { selfName: string | null }) {
   const memory = useMemoryStore(usersSession);
 
   const footer = (
-    <div className="flex flex-col gap-1 pt-3 text-sm text-muted-foreground">
+    <footer className="flex flex-col gap-line text-sm text-muted-foreground">
       <p>{t("users.footer.admin")}</p>
       <p>
         {t("users.footer.classic")}{" "}
@@ -145,22 +148,20 @@ function Users({ selfName }: { selfName: string | null }) {
           {t("users.classicLink")}
         </ExternalLink>
       </p>
-    </div>
+    </footer>
   );
 
+  let header = null;
   let content;
   if (people.data === undefined) {
     content = people.isError ? (
-      <>
-        <ReadFailed
-          error={people.error}
-          retrying={people.isFetching}
-          onRetry={() => void people.refetch()}
-        >
-          {t("users.loadFailed")}
-        </ReadFailed>
-        {footer}
-      </>
+      <ReadFailed
+        error={people.error}
+        retrying={people.isFetching}
+        onRetry={() => void people.refetch()}
+      >
+        {t("users.loadFailed")}
+      </ReadFailed>
     ) : (
       <Loading />
     );
@@ -174,7 +175,7 @@ function Users({ selfName }: { selfName: string | null }) {
       void ssh.refetch();
       void folders.refetch();
     };
-    content = (
+    header = (
       <>
         <UsersControlCard
           summary={controlSummary(list, omvGroups)}
@@ -184,32 +185,36 @@ function Users({ selfName }: { selfName: string | null }) {
         {unfinished.map((work) => (
           <UnfinishedLine key={`${work.kind}:${work.name}`} work={work} />
         ))}
-        <UsersTable
-          users={list}
-          groups={{
-            data: groups.data?.data,
-            failed: groups.isError && groups.data === undefined,
-            error: groups.error,
-            retrying: groups.isFetching,
-            retry: () => void groups.refetch(),
-          }}
-          selfName={selfName}
-          readAt={t("sharedFolders.lastRefreshed", {
-            time: format.clock(people.dataUpdatedAt),
-          })}
-          refreshing={people.isFetching}
-          onRefresh={refresh}
-          footer={footer}
-        />
       </>
+    );
+    content = (
+      <UsersTable
+        users={list}
+        groups={{
+          data: groups.data?.data,
+          failed: groups.isError && groups.data === undefined,
+          error: groups.error,
+          retrying: groups.isFetching,
+          retry: () => void groups.refetch(),
+        }}
+        selfName={selfName}
+        readAt={t("sharedFolders.lastRefreshed", {
+          time: format.clock(people.dataUpdatedAt),
+        })}
+        refreshing={people.isFetching}
+        onRefresh={refresh}
+      />
     );
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <PageTitle>{t("users.title")}</PageTitle>
-      <p className="max-w-prose">{t("users.term.person")}</p>
-      {content}
-    </div>
+    <Page>
+      <PageHeader title={<PageTitle>{t("users.title")}</PageTitle>}>
+        <p className="max-w-prose">{t("users.term.person")}</p>
+        {header}
+      </PageHeader>
+      <PageSection>{content}</PageSection>
+      {people.data === undefined && !people.isError ? null : footer}
+    </Page>
   );
 }
